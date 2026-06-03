@@ -1,0 +1,113 @@
+---
+// esa-breadcrumbs — presentational breadcrumb trail (.astro).
+// Faithful translation of the Angular esa-breadcrumbs: same item shape, size
+// variants, separator icon, and "last item = current page" semantics.
+// Angular host classes → class list; Angular @for/@if → JS map + conditionals.
+// Lucide icons are inlined as SVG (chevron-right separator by default).
+export interface EsaBreadcrumbItem {
+  label: string;
+  href?: string;
+  icon?: string;
+}
+interface Props {
+  items: EsaBreadcrumbItem[];
+  size?: 'small' | 'medium' | 'large';
+}
+const { items, size = 'medium' } = Astro.props;
+const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
+---
+<nav class={cls} aria-label="Breadcrumb">
+  <ol class="esa-breadcrumbs__list">
+    {items.map((item, i) => {
+      const last = i === items.length - 1;
+      return (
+        <li class="esa-breadcrumbs__item" aria-current={last ? 'page' : undefined}>
+          {!last && item.href ? (
+            <a href={item.href} class="esa-breadcrumbs__link">
+              {item.icon && <span class="esa-breadcrumbs__icon" set:html={item.icon} />}
+              {item.label}
+            </a>
+          ) : (
+            <span class="esa-breadcrumbs__current">
+              {item.icon && <span class="esa-breadcrumbs__icon" set:html={item.icon} />}
+              {item.label}
+            </span>
+          )}
+          {!last && (
+            <svg
+              class="esa-breadcrumbs__separator"
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          )}
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<style>
+  .esa-breadcrumbs {
+    --_crumb-font-size: var(--type-size-200, 0.875rem);
+    --_crumb-link-color: var(--breadcrumbs-link-color, #005862);
+    --_crumb-link-hover: var(--breadcrumbs-link-hover, #004752);
+    --_crumb-current-color: var(--color-text-primary, #171717);
+    --_crumb-separator-color: var(--breadcrumbs-separator-color, #737373);
+    --_crumb-gap: var(--spacing-200, 8px);
+
+    display: block;
+  }
+
+  .esa-breadcrumbs--small { --_crumb-font-size: var(--type-size-150, 0.75rem); }
+  .esa-breadcrumbs--large { --_crumb-font-size: var(--type-size-300, 1rem); }
+
+  .esa-breadcrumbs__list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--_crumb-gap);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: var(--_crumb-font-size);
+  }
+
+  .esa-breadcrumbs__item {
+    display: flex;
+    align-items: center;
+    gap: var(--_crumb-gap);
+  }
+
+  .esa-breadcrumbs__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-100, 4px);
+    color: var(--_crumb-link-color);
+    text-decoration: none;
+  }
+  .esa-breadcrumbs__link:hover {
+    color: var(--_crumb-link-hover);
+    text-decoration: underline;
+  }
+
+  .esa-breadcrumbs__current {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-100, 4px);
+    color: var(--_crumb-current-color);
+    font-weight: var(--font-weight-medium, 500);
+  }
+
+  .esa-breadcrumbs__icon {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .esa-breadcrumbs__separator {
+    flex-shrink: 0;
+    color: var(--_crumb-separator-color);
+  }
+</style>

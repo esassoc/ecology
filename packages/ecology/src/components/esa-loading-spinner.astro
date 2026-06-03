@@ -1,0 +1,46 @@
+---
+// esa-loading-spinner — presentational (.astro).
+// Faithful translation of the Angular esa-loading-spinner: small/medium/large sizes
+// and an optional custom color (CSS value, defaults to --color-primary).
+// Angular host classes + [style.--_spinner-color] → class list + inline style.
+interface Props {
+  size?: 'small' | 'medium' | 'large';
+  color?: string;
+}
+const { size = 'medium', color } = Astro.props;
+
+const cls = ['esa-loading-spinner', `esa-loading-spinner--${size}`].join(' ');
+const style = color ? `--_spinner-color: ${color}` : undefined;
+---
+<span class={cls} style={style}>
+  <span class="esa-loading-spinner__ring" role="status" aria-label="Loading"></span>
+</span>
+
+<style>
+  .esa-loading-spinner {
+    --_spinner-size: 32px;
+    --_spinner-border-width: 3px;
+    --_spinner-color: var(--color-primary, #005862);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .esa-loading-spinner--small { --_spinner-size: 20px; --_spinner-border-width: 2px; }
+  .esa-loading-spinner--large { --_spinner-size: 48px; --_spinner-border-width: 4px; }
+
+  .esa-loading-spinner__ring {
+    width: var(--_spinner-size);
+    height: var(--_spinner-size);
+    border: var(--_spinner-border-width) solid var(--color-border-light, #efefef);
+    border-top-color: var(--_spinner-color);
+    border-radius: var(--radius-full, 9999px);
+    animation: esa-spinner-rotate 0.75s linear infinite;
+    box-sizing: border-box;
+  }
+
+  @keyframes esa-spinner-rotate {
+    to { transform: rotate(360deg); }
+  }
+</style>

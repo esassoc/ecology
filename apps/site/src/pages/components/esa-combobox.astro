@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Combobox — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Combobox <code>[wc]</code></h1>
+      <p>Form-associated combobox with two modes (autocomplete / select), two trigger styles (field / text), multi-select chips, match highlighting, debounced search, and loading/empty/count states. Migrated from Angular <code>esa-combobox</code> to a Lit Web Component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Select mode (button trigger + in-panel search)</h2>
+      <esa-combobox label="State" mode="select" placeholder="Pick a state"></esa-combobox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Autocomplete mode (input trigger)</h2>
+      <esa-combobox label="Search states" mode="autocomplete" placeholder="Type to search"></esa-combobox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Text trigger style</h2>
+      <esa-combobox mode="select" trigger-style="text" placeholder="Filter by state"></esa-combobox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Multi-select with chips</h2>
+      <esa-combobox label="States visited" mode="select" multiple placeholder="Add states"></esa-combobox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Async-style states</h2>
+      <esa-combobox label="With results count" mode="select" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
+      <esa-combobox label="Loading" mode="select" loading></esa-combobox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes &amp; states</h2>
+      <esa-combobox label="Small" size="small"></esa-combobox>
+      <esa-combobox label="Large" size="large"></esa-combobox>
+      <esa-combobox label="Error" error-text="Selection required"></esa-combobox>
+      <esa-combobox label="Disabled" disabled></esa-combobox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Keyboard:</strong> ArrowUp/Down navigate, Enter selects, Escape/Tab close. Outside click closes.</li>
+        <li><strong>Events:</strong> composed <code>change</code> (value) and debounced <code>search</code> (term, 300ms default).</li>
+        <li><strong>Simplified:</strong> CDK Overlay + virtual scroll replaced by an absolutely-positioned, max-height scroll panel. Filtering, selection, value binding, highlight, loading/count all preserved.</li>
+        <li><strong>Tokens:</strong> primary, surface, surface-sunken, border, text-primary/muted, danger, warning-subtle (highlight), radius, spacing, z-dropdown.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-combobox';
+    const states = [
+      'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+      'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+      'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+      'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada',
+    ].map((s) => ({ label: s, value: s.toLowerCase() }));
+    customElements.whenDefined('esa-combobox').then(() => {
+      document.querySelectorAll('esa-combobox').forEach((el) => {
+        (el as any).options = states;
+      });
+    });
+  </script>
+</BaseLayout>

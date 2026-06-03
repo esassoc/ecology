@@ -1,0 +1,146 @@
+/*
+ * Ecology — Component Tokens (tier 3).
+ * Faithful port of the Angular lib's component/_*-tokens.scss. These are the
+ * per-component theming surface: each reads from semantic/primitive public
+ * tokens, so a spoke can retheme "all form borders" or "the sidebar" in one
+ * place without touching component internals.
+ *
+ * Shipped as authored CSS (not via Style Dictionary) because many values are
+ * composite/shorthand (e.g. `var(--spacing-200) 0`) that don't fit single-value
+ * DTCG — and keeping them as live var() chains preserves themeability.
+ * Load AFTER tokens.css.
+ */
+
+:root {
+  /* ===================== FORMS ===================== */
+  /* size — small */
+  --form-padding-y-small: var(--spacing-150);
+  --form-padding-x-small: var(--spacing-250);
+  --form-font-size-small: var(--type-size-100);
+  --form-height-small: 32px;
+  --form-radius-small: var(--radius-100);
+  /* size — medium (default) */
+  --form-padding-y-medium: var(--spacing-200);
+  --form-padding-x-medium: var(--spacing-300);
+  --form-font-size-medium: var(--type-size-200);
+  --form-height-medium: 40px;
+  --form-radius-medium: var(--radius-200);
+  /* size — large */
+  --form-padding-y-large: var(--spacing-300);
+  --form-padding-x-large: var(--spacing-400);
+  --form-font-size-large: var(--type-size-300);
+  --form-height-large: 48px;
+  --form-radius-large: var(--radius-200);
+  /* colors */
+  --form-bg: var(--color-surface);
+  --form-bg-hover: var(--color-surface);
+  --form-bg-disabled: var(--color-disabled-bg);
+  --form-border-color: var(--color-border);
+  --form-border-color-hover: var(--color-border-strong);
+  --form-border-color-focus: var(--color-border-focus);
+  --form-border-color-error: var(--color-danger);
+  --form-text-color: var(--color-text-primary);
+  --form-placeholder-color: var(--color-text-muted);
+  --form-label-color: var(--color-text-secondary);
+  --form-help-color: var(--color-text-muted);
+  --form-error-color: var(--color-danger);
+  /* structure */
+  --form-border-width: 1px;
+  --form-line-height: var(--line-height-normal);
+  --form-label-gap: var(--spacing-100);
+  --form-help-gap: var(--spacing-100);
+
+  /* ===================== FILTERS ===================== */
+  --filter-container-gap: var(--spacing-200);
+  --filter-container-padding: var(--spacing-200) 0;
+  --filter-dropdown-bg: var(--color-surface);
+  --filter-dropdown-border: 1px solid var(--color-border);
+  --filter-dropdown-radius: var(--radius-200);
+  --filter-dropdown-shadow: var(--shadow-200);
+  --filter-dropdown-min-width: 200px;
+  --filter-pill-bg: rgba(0, 88, 98, 0.08);
+  --filter-pill-bg-hover: rgba(0, 88, 98, 0.12);
+  --filter-pill-text: var(--color-primary);
+  --filter-pill-radius: var(--radius-full);
+  --filter-pill-padding: var(--spacing-100) var(--spacing-250);
+  --filter-pill-font-size: var(--type-size-100);
+  --filter-pill-remove-color: var(--color-text-muted);
+  --filter-pill-remove-color-hover: var(--color-danger);
+  --filter-clear-color: var(--color-text-muted);
+  --filter-clear-color-hover: var(--color-danger);
+
+  /* ===================== DATA GRID ===================== */
+  --grid-header-bg: var(--color-gray-50);
+  --grid-header-color: var(--color-text-primary);
+  --grid-header-weight: var(--font-weight-semibold);
+  --grid-header-font-size: var(--type-size-100);
+  --grid-header-border: 1px solid var(--color-border);
+  --grid-row-bg: var(--color-surface);
+  --grid-row-bg-hover: var(--color-gray-100);
+  --grid-row-bg-selected: rgba(0, 88, 98, 0.06);
+  --grid-row-stripe-bg: var(--color-gray-50);
+  --grid-row-border: 1px solid var(--color-border-light);
+  --grid-row-font-size: var(--type-size-150);
+  --grid-cell-padding: var(--spacing-200) var(--spacing-300);
+  --grid-pagination-bg: var(--color-surface);
+  --grid-pagination-border: 1px solid var(--color-border);
+  --grid-toolbar-bg: var(--color-surface);
+  --grid-toolbar-gap: var(--spacing-200);
+  --grid-toolbar-padding: var(--spacing-200) var(--spacing-300);
+  --grid-radius: var(--radius-200);
+
+  /* ===================== NAVIGATION — SIDEBAR ===================== */
+  --sidenav-bg: #f5f5f5;
+  --sidenav-border: #e4e4e7;
+  --sidenav-item-padding-y: var(--spacing-250);
+  --sidenav-item-padding-x: var(--spacing-300);
+  --sidenav-item-gap: var(--spacing-200);
+  --sidenav-icon-gap: var(--spacing-300);
+  --sidenav-icon-size: 20px;
+  --sidenav-icon-size-collapsed: 22px;
+  --sidenav-section-text: var(--color-text-muted);
+  --sidenav-section-spacing: var(--spacing-400);
+  --sidenav-section-margin-top: var(--spacing-500);
+  --sidenav-nested-gap: var(--spacing-150);
+  --sidenav-nested-indent: 36px;
+  --sidenav-link-text: var(--color-text-secondary);
+  --sidenav-link-bg: transparent;
+  --sidenav-link-text-hover: var(--color-text-primary);
+  --sidenav-link-bg-hover: transparent;
+  --sidenav-link-text-active: var(--color-primary);
+  --sidenav-link-bg-active: transparent;
+  --sidenav-link-weight-active: var(--font-weight-medium);
+  --sidenav-active-border-width: 2px;
+  --sidenav-active-border-color: var(--color-primary);
+  --sidenav-user-border: var(--color-border-light);
+  --sidenav-user-text: var(--color-text-secondary);
+  --sidenav-user-text-hover: var(--color-text-primary);
+  --sidenav-user-avatar-bg: var(--color-gray-200);
+  --sidenav-user-avatar-text: var(--color-text-secondary);
+  --sidenav-divider: var(--color-border-light);
+
+  /* ===================== NAVIGATION — HEADER / TOPBAR ===================== */
+  --topbar-bg: var(--color-gray-100);
+  --topbar-border: var(--color-gray-300);
+  --topbar-shadow: none;
+  --topbar-icon-color: var(--color-gray-600);
+  --topbar-icon-color-hover: var(--color-primary);
+  --topbar-icon-bg: transparent;
+  --topbar-icon-bg-hover: var(--color-gray-200);
+  --topbar-icon-radius: 6px;
+  --topbar-search-bg: var(--color-gray-0);
+  --topbar-search-bg-hover: var(--color-gray-50);
+  --topbar-search-text: var(--color-gray-500);
+  --topbar-search-radius: 8px;
+
+  /* ===================== NAVIGATION — BREADCRUMBS ===================== */
+  --breadcrumbs-bg: transparent;
+  --breadcrumbs-text-color: var(--color-text-secondary);
+  --breadcrumbs-link-color: var(--color-text-secondary);
+  --breadcrumbs-link-hover: var(--color-text-primary);
+  --breadcrumbs-separator-color: var(--color-gray-400);
+  --breadcrumbs-pill-bg: rgba(0, 88, 98, 0.06);
+  --breadcrumbs-pill-bg-hover: rgba(0, 88, 98, 0.1);
+  --breadcrumbs-pill-radius: var(--radius-full);
+  --breadcrumbs-pill-padding: var(--spacing-100) var(--spacing-250);
+}

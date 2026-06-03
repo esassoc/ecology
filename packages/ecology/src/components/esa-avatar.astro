@@ -1,0 +1,102 @@
+---
+// esa-avatar — presentational (.astro).
+// Faithful translation of the Angular esa-avatar: image → initials → icon fallback,
+// deterministic hue from the name hash, circle/square shapes and size variants.
+// Angular host classes → class list; @if/@else-if/@else → conditional render here.
+interface Props {
+  name?: string;
+  src?: string;
+  icon?: string;
+  size?: 'small' | 'medium' | 'large';
+  shape?: 'circle' | 'square';
+}
+const { name = '', src = '', icon = '', size = 'medium', shape = 'circle' } = Astro.props;
+
+const initials = (() => {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+})();
+
+const hue = (() => {
+  if (!name) return 200;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
+})();
+
+// Lucide "user" icon path — inlined to avoid an icon dependency.
+const iconSize = size === 'small' ? 16 : size === 'large' ? 24 : 20;
+
+const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
+  .filter(Boolean)
+  .join(' ');
+---
+<span class={cls} style={`--_avatar-hue: ${hue}`}>
+  {src ? (
+    <img class="esa-avatar__image" src={src} alt={name || 'Avatar'} />
+  ) : initials ? (
+    <span class="esa-avatar__initials">{initials}</span>
+  ) : (
+    <svg
+      class="esa-avatar__icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width={iconSize}
+      height={iconSize}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+  )}
+</span>
+
+<style>
+  .esa-avatar {
+    --_avatar-size: 40px;
+    --_avatar-font-size: 16px;
+    --_avatar-radius: var(--radius-full, 9999px);
+    --_avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
+    --_avatar-text: var(--color-text-inverse, #fff);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--_avatar-size);
+    height: var(--_avatar-size);
+    border-radius: var(--_avatar-radius);
+    background: var(--_avatar-bg);
+    color: var(--_avatar-text);
+    font-size: var(--_avatar-font-size);
+    font-weight: 600;
+    overflow: hidden;
+    flex-shrink: 0;
+    user-select: none;
+    box-sizing: border-box;
+  }
+
+  .esa-avatar--small { --_avatar-size: 28px; --_avatar-font-size: 11px; }
+  .esa-avatar--large { --_avatar-size: 56px; --_avatar-font-size: 22px; }
+
+  .esa-avatar--square { --_avatar-radius: var(--radius-200, 0.5rem); }
+
+  .esa-avatar__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .esa-avatar__initials {
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+</style>

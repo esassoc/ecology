@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="esa-sidebar-nav — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>esa-sidebar-nav <code>[wc]</code></h1>
+      <p>Collapsible side navigation with grouped sections, accordion children, badges, and a collapse toggle. Migrated as a Lit web component because the collapse and accordion-expand states are real runtime behavior.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Grouped, with badges and accordion children</h2>
+      <div style="height: 460px; display: flex; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden;">
+        <esa-sidebar-nav id="demo"></esa-sidebar-nav>
+      </div>
+      <p>Use the chevrons button at the top to collapse to an icon rail; click <strong>Reports</strong> to expand its children.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Non-collapsible</h2>
+      <div style="height: 320px; display: flex; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden;">
+        <esa-sidebar-nav id="demo2" collapsible="false"></esa-sidebar-nav>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Properties (set via JS):</strong> <code>items</code> (label / href / icon / badge / children / disabled / group / active), <code>collapsed</code>, <code>collapsible</code>.</li>
+        <li><strong>Events:</strong> <code>collapsedchange</code> with <code>{'{ collapsed }'}</code>.</li>
+        <li><strong>Slots:</strong> <code>header</code> (logo area).</li>
+        <li><strong>Tokens:</strong> <code>--sidebar-width</code> / <code>--sidebar-width-collapsed</code>, surface / border-light / text-secondary / primary / teal-50, spacing, radius.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-sidebar-nav';
+
+    const dot = (c: string) =>
+      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`;
+
+    const items = [
+      { label: 'Dashboard', href: '/dashboard', icon: dot('#005862'), active: true, group: 'Main' },
+      { label: 'Projects', href: '/projects', icon: dot('#525252'), badge: 12, group: 'Main' },
+      {
+        label: 'Reports',
+        icon: dot('#525252'),
+        group: 'Main',
+        children: [
+          { label: 'Monthly', href: '/reports/monthly' },
+          { label: 'Quarterly', href: '/reports/quarterly' },
+        ],
+      },
+      { label: 'Team', href: '/team', icon: dot('#525252'), group: 'Admin' },
+      { label: 'Billing', href: '/billing', icon: dot('#525252'), group: 'Admin', disabled: true },
+      { label: 'Settings', href: '/settings', icon: dot('#525252'), group: 'Admin' },
+    ];
+
+    const el = document.getElementById('demo') as any;
+    if (el) el.items = items;
+
+    const el2 = document.getElementById('demo2') as any;
+    if (el2) el2.items = items.slice(0, 4);
+  </script>
+</BaseLayout>

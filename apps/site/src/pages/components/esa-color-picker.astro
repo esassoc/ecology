@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+
+const brand = JSON.stringify(['#005862', '#0d9488', '#f9a134', '#ef4444', '#3b82f6', '#22c55e']);
+---
+<BaseLayout title="Color Picker — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Color Picker <code>[wc]</code></h1>
+      <p>Form-associated color picker — native color input + hex text field + optional swatch grid. Migrated from Angular <code>esa-color-picker</code> to a Lit Web Component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default (preview + hex input)</h2>
+      <esa-color-picker label="Brand color" value="#005862"></esa-color-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With swatches</h2>
+      <esa-color-picker label="Pick a brand color" value="#005862" swatches={brand}></esa-color-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-color-picker label="Small" size="small" value="#0d9488"></esa-color-picker>
+      <esa-color-picker label="Medium" size="medium" value="#f9a134"></esa-color-picker>
+      <esa-color-picker label="Large" size="large" value="#ef4444"></esa-color-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-color-picker label="No hex input" value="#3b82f6" show-input={false} swatches={brand}></esa-color-picker>
+      <esa-color-picker label="Disabled" value="#22c55e" disabled swatches={brand}></esa-color-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Form:</strong> form-associated — value is a hex string. Emits composed <code>change</code>. Hex input validates <code>#rgb</code> / <code>#rrggbb</code> on change.</li>
+        <li><strong>Tokens:</strong> surface, border-strong, primary (selected/focus), radius, spacing, font-mono (hex), type-size.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>import '@esa/ecology/esa-color-picker';</script>
+</BaseLayout>

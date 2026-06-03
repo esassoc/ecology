@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Checkbox — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Checkbox</h1>
+      <p>Form-associated Lit Web Component <code>[wc]</code>. Custom box with checked / indeterminate states, Space/Enter keyboard toggling, and an inlined Lucide check icon. Emits a composed <code>change</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-checkbox label="Unchecked"></esa-checkbox>
+      <esa-checkbox label="Checked" checked></esa-checkbox>
+      <esa-checkbox label="Indeterminate" indeterminate></esa-checkbox>
+      <esa-checkbox label="Disabled" disabled></esa-checkbox>
+      <esa-checkbox label="Disabled + checked" disabled checked></esa-checkbox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <esa-checkbox label="Small" size="small" checked></esa-checkbox>
+        <esa-checkbox label="Medium" size="medium" checked></esa-checkbox>
+        <esa-checkbox label="Large" size="large" checked></esa-checkbox>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>No label</h2>
+      <esa-checkbox checked></esa-checkbox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Form participation</h2>
+      <p>Checked boxes submit <code>on</code> under their <code>name</code>.</p>
+      <form id="cb-form">
+        <Stack gap="300">
+          <esa-checkbox label="Subscribe" name="subscribe" checked></esa-checkbox>
+          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
+          <output id="cb-out" style="font-family:var(--font-mono);"></output>
+        </Stack>
+      </form>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-checkbox';
+    const form = document.getElementById('cb-form');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form as HTMLFormElement);
+      document.getElementById('cb-out')!.textContent =
+        'subscribe = ' + JSON.stringify(data.get('subscribe'));
+    });
+  </script>
+</BaseLayout>

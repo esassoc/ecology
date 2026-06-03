@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+
+const options = JSON.stringify([
+  { label: 'Air quality', value: 'air' },
+  { label: 'Water quality', value: 'water' },
+  { label: 'Soil', value: 'soil' },
+  { label: 'Noise (unavailable)', value: 'noise', disabled: true },
+]);
+---
+<BaseLayout title="Checkbox Group — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Checkbox Group</h1>
+      <p>Form-associated Lit Web Component <code>[wc]</code>. Multi-select from an options list; value is a <code>string[]</code>. Vertical/horizontal orientation, per-option disabled, Space/Enter toggling. The <code>options</code> attribute accepts a JSON string. Emits a composed <code>change</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Vertical (default)</h2>
+      <esa-checkbox-group label="Monitored media" options={options} value={JSON.stringify(['water'])}></esa-checkbox-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Horizontal</h2>
+      <esa-checkbox-group label="Monitored media" orientation="horizontal" options={options}></esa-checkbox-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-checkbox-group label="Small" size="small" orientation="horizontal" options={options}></esa-checkbox-group>
+      <esa-checkbox-group label="Large" size="large" orientation="horizontal" options={options}></esa-checkbox-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Form participation</h2>
+      <p>Each selected value submits under <code>name</code>.</p>
+      <form id="cbg-form">
+        <Stack gap="300">
+          <esa-checkbox-group label="Media" name="media" options={options} value={JSON.stringify(['air'])}></esa-checkbox-group>
+          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
+          <output id="cbg-out" style="font-family:var(--font-mono);"></output>
+        </Stack>
+      </form>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-checkbox-group';
+    const form = document.getElementById('cbg-form');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form as HTMLFormElement);
+      document.getElementById('cbg-out')!.textContent =
+        'media = ' + JSON.stringify(data.getAll('media'));
+    });
+  </script>
+</BaseLayout>

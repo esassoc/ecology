@@ -1,0 +1,42 @@
+{
+  "font": {
+    "sans":           { "$value": "'DM Sans', sans-serif",  "$type": "fontFamily" },
+    "mono":           { "$value": "'DM Mono', monospace",   "$type": "fontFamily" },
+    "family-primary": { "$value": "{font.sans}",            "$type": "fontFamily" },
+    "weight": {
+      "light":    { "$value": "300", "$type": "fontWeight" },
+      "regular":  { "$value": "350", "$type": "fontWeight" },
+      "medium":   { "$value": "450", "$type": "fontWeight" },
+      "semibold": { "$value": "550", "$type": "fontWeight" },
+      "bold":     { "$value": "650", "$type": "fontWeight" }
+    }
+  },
+  "type": {
+    "size": {
+      "050":  { "$value": "clamp(0.5rem, 0.44rem + 0.3vw, 0.625rem)",    "$type": "dimension" },
+      "100":  { "$value": "clamp(0.625rem, 0.56rem + 0.32vw, 0.75rem)",  "$type": "dimension" },
+      "150":  { "$value": "clamp(0.6875rem, 0.61rem + 0.38vw, 0.875rem)","$type": "dimension" },
+      "200":  { "$value": "clamp(0.75rem, 0.66rem + 0.44vw, 0.9375rem)", "$type": "dimension" },
+      "250":  { "$value": "clamp(0.8125rem, 0.71rem + 0.5vw, 1.0625rem)","$type": "dimension" },
+      "300":  { "$value": "clamp(0.875rem, 0.77rem + 0.52vw, 1.125rem)", "$type": "dimension" },
+      "400":  { "$value": "clamp(1rem, 0.88rem + 0.6vw, 1.25rem)",       "$type": "dimension" },
+      "500":  { "$value": "clamp(1.125rem, 0.98rem + 0.72vw, 1.5rem)",   "$type": "dimension" },
+      "600":  { "$value": "clamp(1.375rem, 1.2rem + 0.88vw, 1.875rem)",  "$type": "dimension" },
+      "700":  { "$value": "clamp(1.625rem, 1.41rem + 1.08vw, 2.25rem)",  "$type": "dimension" },
+      "800":  { "$value": "clamp(2rem, 1.73rem + 1.35vw, 2.75rem)",      "$type": "dimension" },
+      "900":  { "$value": "clamp(2.5rem, 2.15rem + 1.75vw, 3.375rem)",   "$type": "dimension" },
+      "1000": { "$value": "clamp(3rem, 2.6rem + 2vw, 4rem)",             "$type": "dimension" }
+    }
+  },
+  "line-height": {
+    "tight":   { "$value": "1.3", "$type": "other" },
+    "normal":  { "$value": "1.6", "$type": "other" },
+    "relaxed": { "$value": "1.8", "$type": "other" }
+  },
+  "letter-spacing": {
+    "tight":  { "$value": "-0.01em", "$type": "dimension" },
+    "normal": { "$value": "0.01em",  "$type": "dimension" },
+    "wide":   { "$value": "0.03em",  "$type": "dimension" },
+    "wider":  { "$value": "0.06em",  "$type": "dimension" }
+  }
+}

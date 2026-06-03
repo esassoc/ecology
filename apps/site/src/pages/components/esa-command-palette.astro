@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Command Palette — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Command Palette <code>[wc]</code></h1>
+      <p>Filterable command overlay. Set the <code>commands</code> property, then open with the button or <kbd>⌘/Ctrl + K</kbd>. Arrow keys navigate, Enter runs, Esc closes.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <button class="trigger" id="open-cmdk">Open command palette</button>
+      <p id="result" class="result"></p>
+    </Stack>
+
+    <esa-command-palette id="cmdk"></esa-command-palette>
+  </Stack>
+</BaseLayout>
+
+<script>
+  import '@esa/ecology/esa-command-palette';
+
+  const result = document.getElementById('result')!;
+  const log = (m: string) => (result.textContent = `Ran: ${m}`);
+
+  const cmdk = document.getElementById('cmdk') as any;
+  cmdk.commands = [
+    { id: 'new', label: 'New file', description: 'Create a blank file', shortcut: '⌘N', group: 'File', keywords: ['create'], action: () => log('New file') },
+    { id: 'open', label: 'Open…', description: 'Open an existing file', shortcut: '⌘O', group: 'File', action: () => log('Open') },
+    { id: 'save', label: 'Save', shortcut: '⌘S', group: 'File', action: () => log('Save') },
+    { id: 'theme', label: 'Toggle theme', group: 'View', keywords: ['dark', 'light'], action: () => log('Toggle theme') },
+    { id: 'settings', label: 'Open settings', group: 'View', disabled: true, action: () => log('Settings') },
+  ];
+
+  document.getElementById('open-cmdk')!.addEventListener('click', () => cmdk.show());
+</script>
+
+<style>
+  .trigger {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+  }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; }
+  kbd {
+    padding: 1px 5px;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-100, 0.25rem);
+    background: var(--color-surface-sunken, #efefef);
+    font-size: 0.85em;
+  }
+</style>

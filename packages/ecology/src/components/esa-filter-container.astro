@@ -1,0 +1,33 @@
+---
+// esa-filter-container — presentational layout wrapper for filter components.
+// Faithful translation of the Angular esa-filter-container: a wrapping flex row
+// that lays out filter dropdowns, pills, and the clear button with consistent
+// wrap + gap.
+//
+// In Angular this also provided the EsaFilterService via DI so children could
+// share state. In the hub, the stateful esa-filter-dropdown WC owns its own
+// selection and emits events; pills/clear are presentational. This component is
+// therefore a pure layout primitive (mirrors the SCSS exactly) and carries no
+// runtime logic.
+interface Props {
+  gap?: string;
+  rowGap?: string;
+}
+const { gap = '300', rowGap = '200' } = Astro.props;
+const style = [
+  `--_filter-container-gap: var(--filter-container-gap, var(--spacing-${gap}, 0.75rem))`,
+  `--_filter-container-row-gap: var(--spacing-${rowGap}, 0.5rem)`,
+].join('; ');
+---
+<div class="esa-filter-container" style={style}>
+  <slot />
+</div>
+
+<style>
+  .esa-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--_filter-container-row-gap, 0.5rem) var(--_filter-container-gap, 0.75rem);
+  }
+</style>

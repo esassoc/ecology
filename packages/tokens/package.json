@@ -1,0 +1,23 @@
+{
+  "name": "@esa/tokens",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Ecology design tokens — DTCG source compiled to CSS / JS (and later SCSS, Tailwind, Figma).",
+  "exports": {
+    "./tokens.css": "./dist/tokens.css",
+    "./tokens.js": "./dist/tokens.js",
+    "./type-roles.css": "./src/type-roles.css",
+    "./component-tokens.css": "./src/component-tokens.css"
+  },
+  "files": [
+    "dist",
+    "src",
+    "tokens"
+  ],
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.0.0"
+  }
+}

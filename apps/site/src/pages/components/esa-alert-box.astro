@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import AlertBox from '@esa/ecology/esa-alert-box.astro';
+---
+<BaseLayout title="Alert Box — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Alert Box</h1>
+      <p>Inline status message with a variant-mapped icon, optional title, and optional dismiss control.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Variants</h2>
+      <Stack gap="300">
+        <AlertBox variant="info" title="Heads up">This is an informational message.</AlertBox>
+        <AlertBox variant="success" title="Saved">Your changes were saved successfully.</AlertBox>
+        <AlertBox variant="warning" title="Check this">Some fields need your attention.</AlertBox>
+        <AlertBox variant="danger" title="Error">Something went wrong while saving.</AlertBox>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Without title</h2>
+      <AlertBox variant="info">A compact, single-line alert with just a message.</AlertBox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Dismissable</h2>
+      <AlertBox variant="warning" title="Dismiss me" dismissable={true}>
+        Click the × to hide this alert. A <code>dismissed</code> event bubbles on close.
+      </AlertBox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Icons:</strong> auto-mapped per variant (info / circle-check / triangle-alert / circle-alert), inlined Lucide SVG.</li>
+        <li><strong>Dismiss:</strong> tiny inline script hides the box and dispatches a bubbling <code>dismissed</code> event.</li>
+        <li><strong>Tokens consumed:</strong> <code>--color-info / success / warning / danger</code> + <code>-subtle</code>/<code>-border</code>, radius-200, spacing scale.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

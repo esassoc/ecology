@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Tooltip — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Tooltip <code>[wc]</code></h1>
+      <p>Hover/focus tooltip. Wrap a trigger in the default slot and set <code>text</code>. Shows after <code>delay</code> ms (default 200), hides on leave/blur.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Positions</h2>
+      <Stack gap="600" direction="row" wrap={true} align="center" justify="center">
+        <esa-tooltip text="Tooltip above" position="above">
+          <button class="trigger">Above</button>
+        </esa-tooltip>
+        <esa-tooltip text="Tooltip below" position="below">
+          <button class="trigger">Below</button>
+        </esa-tooltip>
+        <esa-tooltip text="Left side" position="left">
+          <button class="trigger">Left</button>
+        </esa-tooltip>
+        <esa-tooltip text="Right side" position="right">
+          <button class="trigger">Right</button>
+        </esa-tooltip>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Focusable trigger</h2>
+      <esa-tooltip text="Shows on focus too" position="above">
+        <a href="#" class="trigger">Tab to me</a>
+      </esa-tooltip>
+    </Stack>
+  </Stack>
+</BaseLayout>
+
+<script>import '@esa/ecology/esa-tooltip';</script>
+
+<style>
+  .trigger {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+    text-decoration: none;
+  }
+</style>

@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Range Slider — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Range Slider <code>[wc]</code></h1>
+      <p>Form-associated range slider with a token-driven fill gradient and live value readout. Migrated from Angular <code>esa-range-slider</code> to a Lit Web Component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default</h2>
+      <esa-range-slider label="Volume" value="40"></esa-range-slider>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-range-slider label="Small" size="small" value="25"></esa-range-slider>
+      <esa-range-slider label="Medium" size="medium" value="50"></esa-range-slider>
+      <esa-range-slider label="Large" size="large" value="75"></esa-range-slider>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Custom range &amp; step</h2>
+      <esa-range-slider label="Temperature (°F)" min="60" max="90" step="5" value="72"></esa-range-slider>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-range-slider label="Hidden value" value="60" show-value={false}></esa-range-slider>
+      <esa-range-slider label="Disabled" value="30" disabled></esa-range-slider>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Keyboard:</strong> native range-input handling — Arrow keys step, Home/End jump to min/max, PageUp/Down for large steps.</li>
+        <li><strong>Form:</strong> form-associated — value is a number string. Emits composed <code>change</code> on input.</li>
+        <li><strong>Tokens:</strong> primary (fill/thumb), border (track), surface (thumb), shadow-50, focus-ring, type-size.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>import '@esa/ecology/esa-range-slider';</script>
+</BaseLayout>

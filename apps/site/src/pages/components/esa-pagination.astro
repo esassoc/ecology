@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="esa-pagination — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>esa-pagination <code>[wc]</code></h1>
+      <p>Page navigation with a page-size selector, range label, and first / prev / next / last controls. Migrated as a Lit web component (page state, prev/next, keyboard-focusable buttons). Migrated from the Angular <code>data</code> entry point.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default</h2>
+      <esa-pagination id="p1" total-items="237"></esa-pagination>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>No page-size selector, no first/last buttons</h2>
+      <esa-pagination
+        id="p2"
+        total-items="80"
+        page-size="20"
+        show-page-size-selector="false"
+        show-first-last-buttons="false"
+      ></esa-pagination>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Disabled</h2>
+      <esa-pagination id="p3" total-items="100" disabled></esa-pagination>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Attributes / properties:</strong> <code>total-items</code>, <code>page-size</code>, <code>current-page</code>, <code>page-size-options</code>, <code>show-page-size-selector</code>, <code>show-first-last-buttons</code>, <code>disabled</code>.</li>
+        <li><strong>Events:</strong> <code>pagechange</code> (<code>{'{ page }'}</code>, zero-based) and <code>pagesizechange</code> (<code>{'{ pageSize }'}</code>); changing page size resets to page 0.</li>
+        <li><strong>Range label:</strong> derived "start – end of total" string; "0 of 0" when empty.</li>
+        <li><strong>Icons:</strong> inline Lucide chevron-first / left / right / last.</li>
+        <li><strong>Tokens:</strong> surface / border / text-secondary / text-primary / hover-overlay / disabled-text, radius-full, spacing, transition-fast.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-pagination';
+
+    // page-size-options is an array property, not an attribute — set it in JS.
+    const p1 = document.getElementById('p1') as any;
+    if (p1) {
+      p1.pageSizeOptions = [10, 25, 50, 100];
+      p1.addEventListener('pagechange', (e: CustomEvent) =>
+        console.log('pagechange', e.detail)
+      );
+    }
+  </script>
+</BaseLayout>

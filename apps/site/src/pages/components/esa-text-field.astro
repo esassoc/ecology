@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Text Field — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Text Field</h1>
+      <p>Form-associated Lit Web Component <code>[wc]</code>. Self-contained label + input + help/error. Participates in native forms via <code>ElementInternals</code> and emits a composed <code>change</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default</h2>
+      <esa-text-field label="Full name" placeholder="Jane Doe" help-text="As it appears on the permit."></esa-text-field>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Types</h2>
+      <esa-text-field label="Email" type="email" placeholder="you@example.com"></esa-text-field>
+      <esa-text-field label="Password" type="password"></esa-text-field>
+      <esa-text-field label="Count" type="number"></esa-text-field>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-text-field label="Required" required placeholder="Cannot be empty"></esa-text-field>
+      <esa-text-field label="With error" error-text="This field is required." required></esa-text-field>
+      <esa-text-field label="Disabled" disabled value="Read only"></esa-text-field>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-text-field label="Small" size="small" placeholder="Small"></esa-text-field>
+      <esa-text-field label="Medium" size="medium" placeholder="Medium"></esa-text-field>
+      <esa-text-field label="Large" size="large" placeholder="Large"></esa-text-field>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Form participation</h2>
+      <p>Submitting logs the <code>FormData</code> entry for <code>contact</code>.</p>
+      <form id="tf-form">
+        <Stack gap="300">
+          <esa-text-field label="Contact" name="contact" placeholder="Type then submit"></esa-text-field>
+          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
+          <output id="tf-out" style="font-family:var(--font-mono);"></output>
+        </Stack>
+      </form>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-text-field';
+    const form = document.getElementById('tf-form');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form as HTMLFormElement);
+      document.getElementById('tf-out')!.textContent =
+        'contact = ' + JSON.stringify(data.get('contact'));
+    });
+  </script>
+</BaseLayout>

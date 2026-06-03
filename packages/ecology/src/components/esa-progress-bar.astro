@@ -1,0 +1,125 @@
+---
+// esa-progress-bar — presentational (.astro).
+// Faithful translation of the Angular esa-progress-bar: determinate/indeterminate
+// modes, size and color variants, optional label + percentage value, and the
+// clamped 0–100 fill. Angular host classes/aria bindings → class list + attributes;
+// @if → conditional render. (Static value snapshot — for live updates use a stack's
+// own binding; the visual + token contract is preserved.)
+interface Props {
+  value?: number;
+  mode?: 'determinate' | 'indeterminate';
+  size?: 'small' | 'medium' | 'large';
+  variant?: 'primary' | 'success' | 'warning' | 'danger';
+  label?: string;
+  showValue?: boolean;
+}
+const {
+  value = 0,
+  mode = 'determinate',
+  size = 'medium',
+  variant = 'primary',
+  label = '',
+  showValue = false,
+} = Astro.props;
+
+const clampedValue = Math.max(0, Math.min(100, value));
+const isDeterminate = mode === 'determinate';
+
+const cls = [
+  'esa-progress-bar',
+  `esa-progress-bar--${size}`,
+  `esa-progress-bar--${variant}`,
+  mode === 'indeterminate' && 'esa-progress-bar--indeterminate',
+]
+  .filter(Boolean)
+  .join(' ');
+
+const showHeader = !!label || showValue;
+---
+<div
+  class={cls}
+  role="progressbar"
+  aria-valuenow={isDeterminate ? clampedValue : undefined}
+  aria-valuemin="0"
+  aria-valuemax="100"
+  aria-label={label || 'Progress'}
+>
+  {showHeader && (
+    <div class="esa-progress-bar__header">
+      {label && <span class="esa-progress-bar__label">{label}</span>}
+      {showValue && isDeterminate && (
+        <span class="esa-progress-bar__value">{clampedValue}%</span>
+      )}
+    </div>
+  )}
+  <div class="esa-progress-bar__track">
+    <div
+      class="esa-progress-bar__fill"
+      style={isDeterminate ? `width: ${clampedValue}%` : undefined}
+    ></div>
+  </div>
+</div>
+
+<style>
+  .esa-progress-bar {
+    --_progress-height: 8px;
+    --_progress-radius: var(--radius-full, 9999px);
+    --_progress-track-bg: var(--color-surface-sunken, #efefef);
+    --_progress-fill-bg: var(--color-primary, #005862);
+    --_progress-font-size: 13px;
+
+    display: block;
+    width: 100%;
+  }
+
+  .esa-progress-bar__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--spacing-100, 0.25rem);
+    font-size: var(--_progress-font-size);
+  }
+
+  .esa-progress-bar__label {
+    color: var(--color-text-primary, #171717);
+    font-weight: 500;
+  }
+
+  .esa-progress-bar__value {
+    color: var(--color-text-secondary, #525252);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .esa-progress-bar__track {
+    position: relative;
+    height: var(--_progress-height);
+    border-radius: var(--_progress-radius);
+    background: var(--_progress-track-bg);
+    overflow: hidden;
+  }
+
+  .esa-progress-bar__fill {
+    height: 100%;
+    border-radius: var(--_progress-radius);
+    background: var(--_progress-fill-bg);
+    transition: width 300ms ease;
+  }
+
+  .esa-progress-bar--small { --_progress-height: 4px; --_progress-font-size: 11px; }
+  .esa-progress-bar--large { --_progress-height: 12px; --_progress-font-size: 14px; }
+
+  .esa-progress-bar--success { --_progress-fill-bg: var(--color-success, #22c55e); }
+  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-warning, #f59e0b); }
+  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-danger, #ef4444); }
+
+  .esa-progress-bar--indeterminate .esa-progress-bar__fill {
+    width: 40% !important;
+    animation: esa-progress-indeterminate 1.5s ease-in-out infinite;
+  }
+
+  @keyframes esa-progress-indeterminate {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(150%); }
+    100% { transform: translateX(-100%); }
+  }
+</style>

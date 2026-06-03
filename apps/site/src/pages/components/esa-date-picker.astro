@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Date Picker — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Date Picker <code>[wc]</code></h1>
+      <p>Form-associated date input wrapping the native calendar UI. Migrated from Angular <code>esa-date-picker</code> to a Lit Web Component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default</h2>
+      <esa-date-picker label="Event date" help-text="Pick any day"></esa-date-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-date-picker label="Small" size="small"></esa-date-picker>
+      <esa-date-picker label="Medium" size="medium"></esa-date-picker>
+      <esa-date-picker label="Large" size="large"></esa-date-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Constrained range</h2>
+      <esa-date-picker label="Within 2026" min="2026-01-01" max="2026-12-31"></esa-date-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-date-picker label="Preset value" value="2026-06-03"></esa-date-picker>
+      <esa-date-picker label="Required" required></esa-date-picker>
+      <esa-date-picker label="Error" error-text="Date is required"></esa-date-picker>
+      <esa-date-picker label="Disabled" disabled value="2026-06-03"></esa-date-picker>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Form:</strong> form-associated — value is an ISO <code>YYYY-MM-DD</code> string. Emits composed <code>change</code>.</li>
+        <li><strong>Keyboard:</strong> native date-input keyboard handling (browser calendar).</li>
+        <li><strong>Tokens:</strong> surface, border-strong, text-primary/muted, primary (focus), danger, radius, spacing, type-size.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>import '@esa/ecology/esa-date-picker';</script>
+</BaseLayout>

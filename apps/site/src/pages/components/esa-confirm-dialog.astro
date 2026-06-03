@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Confirm Dialog — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Confirm Dialog <code>[wc]</code></h1>
+      <p>Confirmation modal driven by attributes. Resolves a boolean through <code>confirm</code> / <code>cancel</code> / <code>resolved</code> events. Esc cancels.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Variants</h2>
+      <Stack gap="300" direction="row" wrap={true}>
+        <button class="trigger" data-target="cd-default">Default</button>
+        <button class="trigger" data-target="cd-warning">Warning</button>
+        <button class="trigger" data-target="cd-danger">Danger</button>
+      </Stack>
+      <p id="result" class="result"></p>
+    </Stack>
+
+    <esa-confirm-dialog
+      id="cd-default"
+      heading="Save changes?"
+      message="Your changes will be applied immediately."
+      confirm-label="Save"
+    ></esa-confirm-dialog>
+
+    <esa-confirm-dialog
+      id="cd-warning"
+      variant="warning"
+      heading="Unsaved changes"
+      message="You have unsaved changes that will be lost."
+      confirm-label="Discard"
+    ></esa-confirm-dialog>
+
+    <esa-confirm-dialog
+      id="cd-danger"
+      variant="danger"
+      heading="Delete project?"
+      message="This action cannot be undone."
+      confirm-label="Delete"
+    ></esa-confirm-dialog>
+  </Stack>
+</BaseLayout>
+
+<script>
+  import '@esa/ecology/esa-confirm-dialog';
+  const result = document.getElementById('result')!;
+  document.querySelectorAll('.trigger').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const el = document.getElementById((btn as HTMLElement).dataset.target!) as any;
+      el?.show();
+    }),
+  );
+  document.querySelectorAll('esa-confirm-dialog').forEach((el) =>
+    el.addEventListener('resolved', (e: Event) => {
+      const confirmed = (e as CustomEvent).detail.confirmed;
+      result.textContent = confirmed ? 'Confirmed ✓' : 'Cancelled ✕';
+    }),
+  );
+</script>
+
+<style>
+  .trigger {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+  }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; }
+</style>

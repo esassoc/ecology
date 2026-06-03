@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="esa-tab-layout — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>esa-tab-layout <code>[wc]</code></h1>
+      <p>ARIA tablist with active-tab state, roving keyboard navigation (Arrow / Home / End, skipping disabled tabs), badges, and a swapping panel. Migrated as a Lit web component. The Angular routed-tabs (RouterOutlet) branch is replaced with content panels via named slots.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Underline (default)</h2>
+      <esa-tab-layout id="t1">
+        <div slot="panel-0">Overview content — summary metrics and status.</div>
+        <div slot="panel-1">Activity content — recent events log.</div>
+        <div slot="panel-2">Settings content — configuration form.</div>
+      </esa-tab-layout>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Pill variant</h2>
+      <esa-tab-layout id="t2" variant="pill">
+        <div slot="panel-0">First panel.</div>
+        <div slot="panel-1">Second panel.</div>
+        <div slot="panel-2">Third panel.</div>
+      </esa-tab-layout>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="400">
+        <esa-tab-layout id="t3" size="small"><div slot="panel-0">Small.</div><div slot="panel-1">Two.</div></esa-tab-layout>
+        <esa-tab-layout id="t4" size="large"><div slot="panel-0">Large.</div><div slot="panel-1">Two.</div></esa-tab-layout>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With a disabled tab and badges</h2>
+      <esa-tab-layout id="t5">
+        <div slot="panel-0">Inbox.</div>
+        <div slot="panel-2">Archive (tab 2 is disabled).</div>
+      </esa-tab-layout>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Properties:</strong> <code>tabs</code> (label / icon / badge / disabled), <code>activeIndex</code>, <code>size</code>, <code>variant</code> (underline | pill).</li>
+        <li><strong>Events:</strong> <code>tabchange</code> with <code>{'{ index }'}</code>.</li>
+        <li><strong>Slots:</strong> <code>{'panel-{index}'}</code> per tab (falls back to the default slot).</li>
+        <li><strong>Keyboard:</strong> ArrowLeft / ArrowRight / Home / End move focus and selection, skipping disabled tabs; roving <code>tabindex</code>.</li>
+        <li><strong>Tokens:</strong> text-secondary / primary / surface-sunken / border, type-size scale, spacing, radius, shadow-50.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-tab-layout';
+
+    const basic = [
+      { label: 'Overview' },
+      { label: 'Activity' },
+      { label: 'Settings' },
+    ];
+    (['t1', 't2'] as const).forEach((id) => {
+      const el = document.getElementById(id) as any;
+      if (el) el.tabs = basic;
+    });
+
+    const small = document.getElementById('t3') as any;
+    if (small) small.tabs = [{ label: 'One' }, { label: 'Two' }];
+    const large = document.getElementById('t4') as any;
+    if (large) large.tabs = [{ label: 'One' }, { label: 'Two' }];
+
+    const t5 = document.getElementById('t5') as any;
+    if (t5)
+      t5.tabs = [
+        { label: 'Inbox', badge: 4 },
+        { label: 'Drafts', disabled: true },
+        { label: 'Archive', badge: 128 },
+      ];
+  </script>
+</BaseLayout>

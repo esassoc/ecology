@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Map — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Map</h1>
+      <p class="lede">
+        <code>esa-map</code> renders an interactive slippy map with markers, or a
+        themed placeholder when the mapping library is absent. In the Angular source
+        it is designed to wrap <strong>Leaflet</strong> (via
+        <code>@asymmetrik/ngx-leaflet</code>), defaulting to OpenStreetMap tiles — a
+        MapLibre GL backend would satisfy the same API. This is a
+        <strong>reference page</strong>: the production component embeds a real
+        mapping engine behind the inputs below.
+      </p>
+    </Stack>
+
+    <div class="ref-banner">
+      Non-functional reference. The frame below is a static, token-styled mock of
+      the map surface and its placeholder state — it does not pan, zoom, or load tiles.
+    </div>
+
+    <Stack gap="300">
+      <h2>What it wraps</h2>
+      <ul>
+        <li><strong>Third-party library:</strong> Leaflet, mounted through <code>@asymmetrik/ngx-leaflet</code>. The config shape (<code>center</code>, <code>zoom</code>, <code>tileUrl</code>, <code>attribution</code>, <code>scrollWheelZoom</code>) maps directly onto Leaflet map options; MapLibre GL is a drop-in alternative for vector tiles.</li>
+        <li><strong>Graceful fallback:</strong> until the engine is installed, the component renders a placeholder (map-pin icon + install hint + marker count) so layouts compile and reserve space without a hard dependency.</li>
+        <li><strong>Tiles:</strong> defaults to OpenStreetMap raster tiles (<code>https://{`{s}`}.tile.openstreetmap.org/{`{z}`}/{`{x}`}/{`{y}`}.png</code>).</li>
+      </ul>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Public API — inputs</h2>
+      <div class="api-table">
+        <table>
+          <thead><tr><th>Input</th><th>Type</th><th>Default</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>config</code></td><td><code>EsaMapConfig</code></td><td><code>{'{}'}</code></td><td>Map options, merged with <code>ESA_MAP_DEFAULTS</code>.</td></tr>
+            <tr><td><code>markers</code></td><td><code>EsaMapMarker[]</code></td><td><code>[]</code></td><td>Pins to place on the map.</td></tr>
+            <tr><td><code>height</code></td><td><code>string</code></td><td><code>'400px'</code></td><td>Container height.</td></tr>
+            <tr><td><code>disabled</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Dims and blocks interaction.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Public API — outputs</h2>
+      <div class="api-table">
+        <table>
+          <thead><tr><th>Output</th><th>Payload</th></tr></thead>
+          <tbody>
+            <tr><td><code>markerClick</code></td><td><code>EsaMapMarker</code></td></tr>
+            <tr><td><code>mapClick</code></td><td><code>{`{ lat: number; lng: number }`}</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>EsaMapConfig &amp; EsaMapMarker</h2>
+      <div class="api-table">
+        <table>
+          <thead><tr><th>EsaMapConfig key</th><th>Type</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td><code>center</code></td><td><code>[lat, lng]</code></td><td><code>[39.8283, -98.5795]</code> (center of US)</td></tr>
+            <tr><td><code>zoom</code></td><td><code>number</code></td><td><code>5</code></td></tr>
+            <tr><td><code>minZoom</code> / <code>maxZoom</code></td><td><code>number</code></td><td><code>2</code> / <code>18</code></td></tr>
+            <tr><td><code>tileUrl</code></td><td><code>string</code></td><td>OpenStreetMap tile template</td></tr>
+            <tr><td><code>attribution</code></td><td><code>string</code></td><td><code>'© OpenStreetMap contributors'</code></td></tr>
+            <tr><td><code>scrollWheelZoom</code></td><td><code>boolean</code></td><td><code>true</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="api-table">
+        <table>
+          <thead><tr><th>EsaMapMarker key</th><th>Type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td><code>string</code></td><td>Required identifier.</td></tr>
+            <tr><td><code>position</code></td><td><code>[lat, lng]</code></td><td>Required coordinates.</td></tr>
+            <tr><td><code>title</code></td><td><code>string</code></td><td>Hover / aria label.</td></tr>
+            <tr><td><code>popup</code></td><td><code>string</code></td><td>HTML content for the popup bubble.</td></tr>
+            <tr><td><code>icon</code></td><td><code>string</code></td><td>Custom marker icon URL.</td></tr>
+            <tr><td><code>draggable</code></td><td><code>boolean</code></td><td>Allow the user to move the pin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; key states</h2>
+
+      <h3 class="mock-label">Ready state (engine loaded) — static mock</h3>
+      <div class="map-mock" style="--_h: 320px;">
+        <div class="map-tiles"></div>
+        <div class="map-attribution">© OpenStreetMap contributors</div>
+        <div class="map-zoom"><button>+</button><button>−</button></div>
+        <span class="pin" style="left: 38%; top: 44%;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-primary, #005862)" stroke="var(--color-text-inverse, #fff)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-text-inverse, #fff)" stroke="none"/></svg>
+        </span>
+        <span class="pin" style="left: 60%; top: 56%;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-accent, #f9a134)" stroke="var(--color-text-inverse, #fff)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-text-inverse, #fff)" stroke="none"/></svg>
+          <span class="popup">Cedar Creek Outfall</span>
+        </span>
+      </div>
+
+      <h3 class="mock-label">Placeholder state (engine not installed) — actual source markup</h3>
+      <div class="map-mock map-mock--placeholder" style="--_h: 220px;">
+        <div class="ph">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <p class="ph-title">Map Component</p>
+          <p class="ph-text">Install <code>leaflet</code> and <code>@asymmetrik/ngx-leaflet</code> to enable interactive maps.</p>
+          <p class="ph-markers">2 marker(s) configured</p>
+        </div>
+      </div>
+      <p class="meta"><strong>Disabled state:</strong> host receives <code>opacity: 0.5; pointer-events: none</code>.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Theming tokens</h2>
+      <ul>
+        <li><strong>Frame:</strong> <code>--color-border</code> (1px border), <code>--radius-200</code> (corner radius), overflow clipped.</li>
+        <li><strong>Placeholder surface:</strong> <code>--color-surface-sunken</code> background, <code>--color-text-muted</code> body, <code>--color-text-secondary</code> title.</li>
+        <li><strong>Spacing:</strong> <code>--spacing-200</code> stack gap, <code>--spacing-500</code> padding.</li>
+        <li><strong>Marker / popup chrome (handoff):</strong> derive from <code>--color-primary</code>, <code>--color-accent</code>, <code>--color-surface</code>, <code>--shadow-200</code>, and <code>--radius-200</code> so pins and popups match the active theme.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <style>
+    .lede { max-width: 70ch; }
+    .ref-banner {
+      padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+      background: var(--color-warning-subtle, #fffbeb);
+      border: 1px solid var(--color-warning-border, #fde68a);
+      border-radius: var(--radius-200, 8px);
+      color: var(--color-text-secondary, #525252);
+      font-size: var(--type-size-150, 0.875rem);
+    }
+    .meta { color: var(--color-text-muted, #737373); font-size: var(--type-size-150, 0.875rem); max-width: 72ch; }
+    .mock-label { font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-semibold, 550); margin: 0; }
+
+    .api-table { overflow-x: auto; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); }
+    .api-table table { border-collapse: collapse; width: 100%; font-size: var(--type-size-150, 0.875rem); }
+    .api-table th, .api-table td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-light, #efefef); vertical-align: top; }
+    .api-table th { background: var(--color-surface-sunken, #efefef); font-weight: var(--font-weight-semibold, 550); }
+    .api-table tr:last-child td { border-bottom: 0; }
+
+    .map-mock {
+      position: relative;
+      height: var(--_h, 320px);
+      border: 1px solid var(--color-border, #e5e5e5);
+      border-radius: var(--radius-200, 8px);
+      overflow: hidden;
+    }
+    .map-tiles {
+      position: absolute; inset: 0;
+      background-color: var(--color-blue-50, #f3f8fb);
+      background-image:
+        linear-gradient(var(--color-blue-200, #cfe2ee) 1px, transparent 1px),
+        linear-gradient(90deg, var(--color-blue-200, #cfe2ee) 1px, transparent 1px),
+        radial-gradient(circle at 30% 40%, var(--color-green-200, #b9d6d2) 0 60px, transparent 90px),
+        radial-gradient(circle at 70% 65%, var(--color-green-100, #dcebe9) 0 50px, transparent 80px);
+      background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
+    }
+    .map-attribution {
+      position: absolute; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8);
+      color: var(--color-text-muted, #737373);
+      font-size: var(--type-size-100, 0.75rem);
+      padding: 2px 6px;
+      border-top-left-radius: var(--radius-100, 4px);
+    }
+    .map-zoom { position: absolute; left: var(--spacing-300, 0.75rem); top: var(--spacing-300, 0.75rem); display: flex; flex-direction: column; box-shadow: var(--shadow-200, 0 4px 20px -4px rgba(0,0,0,0.06)); border-radius: var(--radius-100, 4px); overflow: hidden; }
+    .map-zoom button { width: 30px; height: 30px; border: 0; border-bottom: 1px solid var(--color-border, #e5e5e5); background: var(--color-surface, #fff); color: var(--color-text-primary, #171717); font-size: 1.1rem; cursor: default; }
+    .map-zoom button:last-child { border-bottom: 0; }
+    .pin { position: absolute; transform: translate(-50%, -100%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
+    .pin .popup {
+      position: absolute; left: 50%; bottom: calc(100% + 4px); transform: translateX(-50%);
+      background: var(--color-surface, #fff); color: var(--color-text-primary, #171717);
+      border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
+      box-shadow: var(--shadow-200, 0 4px 20px -4px rgba(0,0,0,0.06));
+      padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
+      font-size: var(--type-size-150, 0.875rem); white-space: nowrap;
+    }
+
+    .map-mock--placeholder { background: var(--color-surface-sunken, #efefef); }
+    .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-200, 0.5rem); color: var(--color-text-muted, #737373); text-align: center; padding: var(--spacing-500, 1.5rem); }
+    .ph-title { font-size: 1rem; font-weight: var(--font-weight-semibold, 550); color: var(--color-text-secondary, #525252); margin: 0; }
+    .ph-text { font-size: var(--type-size-150, 0.875rem); max-width: 320px; margin: 0; }
+    .ph-markers { font-size: var(--type-size-100, 0.75rem); background: var(--color-surface, #fff); padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem); border-radius: var(--radius-full, 9999px); margin: 0; }
+  </style>
+</BaseLayout>

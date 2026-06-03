@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import EmptyState from '@esa/ecology/esa-empty-state.astro';
+---
+<BaseLayout title="Empty State — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Empty State</h1>
+      <p>Centered placeholder for empty lists or zero-result views: optional icon, required title, optional description, and slotted actions.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="300">
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="small" title="No results" description="Try adjusting your filters." />
+        </div>
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="medium" title="No results" description="Try adjusting your filters." />
+        </div>
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="large" title="No results" description="Try adjusting your filters." />
+        </div>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With icon &amp; actions</h2>
+      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+        <EmptyState title="No documents yet" description="Upload your first document to get started.">
+          <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+            <path d="M14 2v6h6"></path>
+          </svg>
+          <button type="button">Upload document</button>
+        </EmptyState>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Title only</h2>
+      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+        <EmptyState title="Nothing here" />
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Slots:</strong> <code>icon</code> (inline SVG, scaled per size), default → action buttons.</li>
+        <li><strong>Title</strong> is required; description and icon are optional.</li>
+        <li><strong>Tokens consumed:</strong> <code>--color-text-muted</code>, <code>--color-text-primary</code>, <code>--color-text-secondary</code>, spacing scale.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

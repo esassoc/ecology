@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import LoadingOverlay from '@esa/ecology/esa-loading-overlay.astro';
+---
+<BaseLayout title="Loading Overlay — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Loading Overlay</h1>
+      <p>Covers its positioned parent with a centered spinner and optional message while a region is busy. Opaque or semi-transparent backdrop.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Opaque (active)</h2>
+      <div style="position: relative; min-height: 180px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+        <p>Underlying content that is being covered while loading.</p>
+        <LoadingOverlay active={true} message="Loading data…" />
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Transparent backdrop</h2>
+      <div style="position: relative; min-height: 180px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+        <p>You can still see this content faintly through the overlay.</p>
+        <LoadingOverlay active={true} transparent={true} message="Saving…" />
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Inactive</h2>
+      <div style="position: relative; min-height: 120px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+        <p>When <code>active</code> is false the overlay renders nothing.</p>
+        <LoadingOverlay active={false} />
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Positioning:</strong> the backdrop is <code>position: absolute; inset: 0</code> — place it inside a <code>position: relative</code> container.</li>
+        <li><strong>Spinner:</strong> large ring inlined (mirrors esa-loading-spinner size="large").</li>
+        <li><strong>Tokens consumed:</strong> <code>--color-surface</code>, <code>--color-primary</code>, <code>--color-border-light</code>, <code>--color-text-secondary</code>, spacing scale.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Textarea — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Textarea</h1>
+      <p>Form-associated Lit Web Component <code>[wc]</code>. Multiline input with optional auto-resize. Participates in native forms via <code>ElementInternals</code> and emits a composed <code>change</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default</h2>
+      <esa-textarea label="Description" placeholder="Describe the project…" help-text="Plain text only."></esa-textarea>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Rows + auto-resize</h2>
+      <esa-textarea label="Fixed 5 rows" rows="5" placeholder="Five rows tall"></esa-textarea>
+      <esa-textarea label="Auto-resize" auto-resize max-rows="8" placeholder="Grows as you type, up to 8 rows"></esa-textarea>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-textarea label="Required" required placeholder="Cannot be empty"></esa-textarea>
+      <esa-textarea label="With error" error-text="A description is required." required></esa-textarea>
+      <esa-textarea label="Disabled" disabled value="Read only content"></esa-textarea>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-textarea label="Small" size="small" placeholder="Small"></esa-textarea>
+      <esa-textarea label="Medium" size="medium" placeholder="Medium"></esa-textarea>
+      <esa-textarea label="Large" size="large" placeholder="Large"></esa-textarea>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Form participation</h2>
+      <form id="ta-form">
+        <Stack gap="300">
+          <esa-textarea label="Notes" name="notes" placeholder="Type then submit"></esa-textarea>
+          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
+          <output id="ta-out" style="font-family:var(--font-mono);"></output>
+        </Stack>
+      </form>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-textarea';
+    const form = document.getElementById('ta-form');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form as HTMLFormElement);
+      document.getElementById('ta-out')!.textContent =
+        'notes = ' + JSON.stringify(data.get('notes'));
+    });
+  </script>
+</BaseLayout>

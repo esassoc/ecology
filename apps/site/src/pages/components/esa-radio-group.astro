@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+
+const options = JSON.stringify([
+  { label: 'Low', value: 'low' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'high' },
+  { label: 'Critical (locked)', value: 'critical', disabled: true },
+]);
+---
+<BaseLayout title="Radio Group — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Radio Group</h1>
+      <p>Form-associated Lit Web Component <code>[wc]</code>. Single-select from an options list; value is the chosen string. Vertical/horizontal orientation, per-option disabled, Space/Enter selection, pure-CSS dot. The <code>options</code> attribute accepts a JSON string. Emits a composed <code>change</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Vertical (default)</h2>
+      <esa-radio-group label="Priority" options={options} value="medium"></esa-radio-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Horizontal</h2>
+      <esa-radio-group label="Priority" orientation="horizontal" options={options} value="low"></esa-radio-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-radio-group label="Small" size="small" orientation="horizontal" options={options} value="low"></esa-radio-group>
+      <esa-radio-group label="Large" size="large" orientation="horizontal" options={options} value="high"></esa-radio-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Form participation</h2>
+      <p>The selected value submits under <code>name</code>.</p>
+      <form id="rg-form">
+        <Stack gap="300">
+          <esa-radio-group label="Priority" name="priority" options={options} value="low"></esa-radio-group>
+          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
+          <output id="rg-out" style="font-family:var(--font-mono);"></output>
+        </Stack>
+      </form>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-radio-group';
+    const form = document.getElementById('rg-form');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form as HTMLFormElement);
+      document.getElementById('rg-out')!.textContent =
+        'priority = ' + JSON.stringify(data.get('priority'));
+    });
+  </script>
+</BaseLayout>

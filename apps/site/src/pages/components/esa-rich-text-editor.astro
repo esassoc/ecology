@@ -1,0 +1,167 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Rich Text Editor — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Rich Text Editor</h1>
+      <p class="lede">
+        <code>esa-rich-text-editor</code> is a WYSIWYG field: a formatting toolbar
+        above an editable content area, wired as a form control. The Angular source
+        ships a dependency-free baseline (a <code>contenteditable</code> region driven
+        by <code>document.execCommand</code>) and is explicitly designed to be upgraded
+        to <strong>TinyMCE</strong> via <code>@tinymce/tinymce-angular</code> — its
+        config object (<code>menubar</code>, <code>plugins</code>, <code>toolbar</code>
+        string) is TinyMCE's <code>init</code> shape. ProseMirror/TipTap is an
+        equivalent target. This is a <strong>reference page</strong> documenting that
+        wrapper.
+      </p>
+    </Stack>
+
+    <div class="ref-banner">
+      Non-functional reference. The editor below is a static, token-styled mock —
+      its toolbar buttons and content area do not respond to input.
+    </div>
+
+    <Stack gap="300">
+      <h2>What it wraps</h2>
+      <ul>
+        <li><strong>Target library:</strong> TinyMCE (<code>tinymce</code> + <code>@tinymce/tinymce-angular</code>). The <code>EsaEditorConfig</code> fields are passed straight to TinyMCE's <code>init</code>.</li>
+        <li><strong>Baseline:</strong> with no library installed, a <code>contenteditable</code> div plus a small toolbar (bold, italic, underline, bullet/numbered lists, link) provides a working editor. Swapping to TinyMCE keeps the same inputs and form-control contract.</li>
+        <li><strong>Forms:</strong> implements Angular's <code>ControlValueAccessor</code>, so the value is HTML and binds via <code>ngModel</code> / reactive forms. In the Astro hub this corresponds to a form-associated custom element.</li>
+      </ul>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Public API — inputs</h2>
+      <div class="api-table">
+        <table>
+          <thead><tr><th>Input</th><th>Type</th><th>Default</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>config</code></td><td><code>EsaEditorConfig</code></td><td><code>{'{}'}</code></td><td>Editor config, merged with <code>ESA_EDITOR_DEFAULT_CONFIG</code>.</td></tr>
+            <tr><td><code>label</code></td><td><code>string</code></td><td><em>none</em></td><td>Label rendered above the editor.</td></tr>
+            <tr><td><code>size</code></td><td><code>'small' | 'medium' | 'large'</code></td><td><code>'medium'</code></td><td>Controls min content height (120 / 200 / 300px).</td></tr>
+            <tr><td><code>disabled</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Dims and blocks interaction.</td></tr>
+            <tr><td><code>required</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Renders an asterisk on the label.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="meta">Value is the editor's HTML string, exchanged through <code>ControlValueAccessor</code> (write + change). No dedicated <code>@Output</code> — the form value carries the content.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>EsaEditorConfig (TinyMCE init shape)</h2>
+      <div class="api-table">
+        <table>
+          <thead><tr><th>Key</th><th>Type</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td><code>height</code></td><td><code>number</code></td><td><code>300</code></td></tr>
+            <tr><td><code>menubar</code></td><td><code>boolean</code></td><td><code>false</code></td></tr>
+            <tr><td><code>plugins</code></td><td><code>string[]</code></td><td><code>['lists', 'link', 'paste', 'table', 'code']</code></td></tr>
+            <tr><td><code>toolbar</code></td><td><code>string</code></td><td><code>'undo redo | formatselect | bold italic underline | bullist numlist | link table | code'</code></td></tr>
+            <tr><td><code>placeholder</code></td><td><code>string</code></td><td><code>'Start typing...'</code></td></tr>
+            <tr><td><code>readonly</code></td><td><code>boolean</code></td><td><em>unset</em></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; static mock</h2>
+      <p class="meta">Label (with required marker), toolbar with grouped actions and dividers, then the content surface. The baseline toolbar exposes bold / italic / underline · bullet / numbered list · link.</p>
+
+      <div class="editor-mock">
+        <label class="ed-label">Project notes <span class="ed-required">*</span></label>
+        <div class="ed-shell">
+          <div class="ed-toolbar">
+            <button class="ed-btn" title="Bold"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h8a4 4 0 0 0 0-8H6v8Z"/><path d="M6 12h9a4 4 0 0 1 0 8H6v-8Z"/></svg></button>
+            <button class="ed-btn" title="Italic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg></button>
+            <button class="ed-btn" title="Underline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg></button>
+            <span class="ed-divider"></span>
+            <button class="ed-btn" title="Bullet List"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg></button>
+            <button class="ed-btn" title="Numbered List"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/><line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></button>
+            <span class="ed-divider"></span>
+            <button class="ed-btn" title="Insert Link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+          </div>
+          <div class="ed-content">
+            <p><strong>Site visit summary.</strong> Outfall flow within permitted range; <em>sampling</em> scheduled for next quarter.</p>
+            <ul><li>pH and turbidity nominal</li><li>Signage replaced at the north gate</li></ul>
+            <p><a href="#">View full inspection record →</a></p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="mock-label">Empty / placeholder &amp; sizes</h3>
+      <div class="size-row">
+        <div class="editor-mock">
+          <label class="ed-label">Small</label>
+          <div class="ed-shell">
+            <div class="ed-toolbar"><button class="ed-btn" disabled>B</button><span class="ed-divider"></span><button class="ed-btn" disabled>•</button></div>
+            <div class="ed-content ed-content--sm ed-empty">Start typing…</div>
+          </div>
+        </div>
+        <div class="editor-mock">
+          <label class="ed-label">Disabled</label>
+          <div class="ed-shell ed-shell--disabled">
+            <div class="ed-toolbar"><button class="ed-btn" disabled>B</button><span class="ed-divider"></span><button class="ed-btn" disabled>•</button></div>
+            <div class="ed-content ed-content--sm">Read-only content.</div>
+          </div>
+        </div>
+      </div>
+      <p class="meta"><strong>States:</strong> rest · focus-within (border switches to <code>--color-primary</code> + soft ring) · disabled (<code>opacity: 0.5; pointer-events: none</code>) · empty (placeholder text via <code>::before</code>).</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Theming tokens</h2>
+      <ul>
+        <li><strong>Shell:</strong> <code>--form-border-color → --color-border</code>, <code>--form-radius-medium → --radius-200</code>; focus uses <code>--form-border-color-focus → --color-primary</code> + <code>--form-focus-ring-width</code>.</li>
+        <li><strong>Toolbar:</strong> <code>--color-surface-sunken</code> background, buttons <code>--color-text-secondary</code> hovering to <code>--color-surface</code>; dividers <code>--color-border</code>; gap <code>--spacing-050</code>.</li>
+        <li><strong>Content:</strong> <code>--color-surface</code> background, <code>--color-text-primary</code> text, padding <code>--spacing-300</code>; placeholder <code>--color-text-muted</code>.</li>
+        <li><strong>Label / required:</strong> <code>--color-text-primary</code> label, <code>--color-danger</code> asterisk.</li>
+        <li><strong>Focus rings:</strong> <code>--focus-ring-width</code> / <code>--focus-ring-color</code> on toolbar buttons.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <style>
+    .lede { max-width: 70ch; }
+    .ref-banner {
+      padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+      background: var(--color-warning-subtle, #fffbeb);
+      border: 1px solid var(--color-warning-border, #fde68a);
+      border-radius: var(--radius-200, 8px);
+      color: var(--color-text-secondary, #525252);
+      font-size: var(--type-size-150, 0.875rem);
+    }
+    .meta { color: var(--color-text-muted, #737373); font-size: var(--type-size-150, 0.875rem); max-width: 72ch; }
+    .mock-label { font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-semibold, 550); margin: 0; }
+
+    .api-table { overflow-x: auto; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); }
+    .api-table table { border-collapse: collapse; width: 100%; font-size: var(--type-size-150, 0.875rem); }
+    .api-table th, .api-table td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-light, #efefef); vertical-align: top; }
+    .api-table th { background: var(--color-surface-sunken, #efefef); font-weight: var(--font-weight-semibold, 550); }
+    .api-table tr:last-child td { border-bottom: 0; }
+
+    .editor-mock { display: block; }
+    .ed-label { display: block; margin-bottom: var(--spacing-100, 0.25rem); font-size: var(--type-size-150, 0.875rem); font-weight: var(--font-weight-medium, 450); color: var(--color-text-primary, #171717); }
+    .ed-required { color: var(--color-danger, #ef4444); }
+    .ed-shell { border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden; }
+    .ed-shell--disabled { opacity: 0.5; }
+    .ed-toolbar { display: flex; align-items: center; gap: 2px; padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem); background: var(--color-surface-sunken, #efefef); border-bottom: 1px solid var(--color-border, #e5e5e5); }
+    .ed-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-100, 4px); background: transparent; color: var(--color-text-secondary, #525252); cursor: pointer; font-weight: var(--font-weight-bold, 650); }
+    .ed-btn:hover { background: var(--color-surface, #fff); }
+    .ed-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ed-divider { width: 1px; height: 20px; background: var(--color-border, #e5e5e5); margin: 0 var(--spacing-100, 0.25rem); }
+    .ed-content { min-height: 200px; padding: var(--spacing-300, 0.75rem); background: var(--color-surface, #fff); font-size: var(--type-size-150, 0.875rem); line-height: var(--line-height-normal, 1.6); color: var(--color-text-primary, #171717); }
+    .ed-content--sm { min-height: 120px; }
+    .ed-empty { color: var(--color-text-muted, #737373); }
+    .ed-content p { margin: 0 0 var(--spacing-300, 0.75rem); }
+    .ed-content ul { margin: 0 0 var(--spacing-300, 0.75rem); padding-left: 1.4rem; }
+    .ed-content a { color: var(--color-text-link, #005862); }
+
+    .size-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400, 1rem); }
+    @media (max-width: 640px) { .size-row { grid-template-columns: 1fr; } }
+  </style>
+</BaseLayout>

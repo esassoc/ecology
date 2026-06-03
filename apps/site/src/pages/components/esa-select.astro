@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Select — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Select <code>[wc]</code></h1>
+      <p>Form-associated searchable select with single/multi-select, chips, and keyboard navigation. Migrated from Angular <code>esa-select</code> to a Lit Web Component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Single select (searchable)</h2>
+      <esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <esa-select label="Small" size="small"></esa-select>
+      <esa-select label="Medium" size="medium"></esa-select>
+      <esa-select label="Large" size="large"></esa-select>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Multi-select with chips</h2>
+      <esa-select label="Toppings" multiple chip-mode placeholder="Add toppings"></esa-select>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <esa-select label="Required" required></esa-select>
+      <esa-select label="Error" error-text="Please make a selection"></esa-select>
+      <esa-select label="Disabled" disabled></esa-select>
+      <esa-select label="Read-only (not searchable)" searchable={false}></esa-select>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Keyboard:</strong> ArrowUp/Down navigate, Enter selects, Escape/Tab close. Outside click closes.</li>
+        <li><strong>Form:</strong> form-associated — single value as string, multi joined with commas. Emits a composed <code>change</code> event.</li>
+        <li><strong>Tokens:</strong> primary, surface, surface-sunken, border, text-primary/muted, danger, radius, spacing, z-dropdown.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-select';
+    const opts = [
+      { label: 'Apple', value: 'apple' },
+      { label: 'Banana', value: 'banana' },
+      { label: 'Cherry', value: 'cherry' },
+      { label: 'Date', value: 'date', disabled: true },
+      { label: 'Elderberry', value: 'elderberry' },
+      { label: 'Fig', value: 'fig' },
+      { label: 'Grape', value: 'grape' },
+    ];
+    customElements.whenDefined('esa-select').then(() => {
+      document.querySelectorAll('esa-select').forEach((el) => {
+        (el as any).options = opts;
+      });
+    });
+  </script>
+</BaseLayout>

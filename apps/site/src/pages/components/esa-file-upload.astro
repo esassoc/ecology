@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="File Upload — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>File Upload <code>[wc]</code></h1>
+      <p>Form-associated drop zone with drag &amp; drop, browse, size validation, and a removable file list. Migrated from Angular <code>esa-file-upload</code> to a Lit Web Component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Single file</h2>
+      <esa-file-upload label="Upload a document"></esa-file-upload>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Multiple files</h2>
+      <esa-file-upload label="Upload images" multiple accept="image/*"></esa-file-upload>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Size limit</h2>
+      <esa-file-upload label="Max 2 MB" max-size-mb="2"></esa-file-upload>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Disabled</h2>
+      <esa-file-upload label="Upload disabled" disabled></esa-file-upload>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Interaction:</strong> click or Enter/Space opens the native picker; drag-over highlights the zone; drop adds files. Oversized files are rejected with an inline error.</li>
+        <li><strong>Form:</strong> form-associated — selected files are set as a <code>FormData</code> payload (name <code>files</code>) so they submit with the enclosing form. Emits composed <code>change</code> with <code>detail.files</code>.</li>
+        <li><strong>Tokens:</strong> surface, surface-sunken, border-strong, primary (active/browse), active-overlay (dragging), danger (error), radius, spacing, icon-size.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>import '@esa/ecology/esa-file-upload';</script>
+</BaseLayout>

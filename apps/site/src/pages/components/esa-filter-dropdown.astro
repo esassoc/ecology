@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Filter Dropdown — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Filter Dropdown</h1>
+      <p>Interactive dropdown filter (Lit web component). Open/close panel,
+        searchable options, keyboard nav (Arrow/Enter/Escape), single + multi
+        select, outside-click and Escape to close. Overlay positioned with plain
+        CSS — no CDK. Emits <code>selection-change</code> and
+        <code>esa-filter-change</code> events.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Single select</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <esa-filter-dropdown data-opts="status" name="status" label="Status"></esa-filter-dropdown>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Multi select</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <esa-filter-dropdown data-opts="dept" name="dept" label="Department" multiple></esa-filter-dropdown>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <esa-filter-dropdown data-opts="status" name="s1" label="Small" size="small"></esa-filter-dropdown>
+        <esa-filter-dropdown data-opts="status" name="s2" label="Medium" size="medium"></esa-filter-dropdown>
+        <esa-filter-dropdown data-opts="status" name="s3" label="Large" size="large"></esa-filter-dropdown>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With a disabled option</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <esa-filter-dropdown data-opts="withDisabled" name="priority" label="Priority"></esa-filter-dropdown>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Props:</strong> <code>name</code>, <code>label</code>, <code>options</code>, <code>multiple</code>, <code>placeholder</code>, <code>size</code>.</li>
+        <li><strong>Keyboard:</strong> ArrowUp/Down highlight (skip disabled), Enter selects, Escape closes.</li>
+        <li><strong>Active trigger:</strong> filled with primary when selected or open; shows inline clear x.</li>
+        <li><strong>Events:</strong> <code>selection-change</code> (value), <code>esa-filter-change</code> (name + active filters).</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-filter-dropdown';
+    const sets: Record<string, { label: string; value: string; disabled?: boolean }[]> = {
+      status: [
+        { label: 'Open', value: 'open' },
+        { label: 'In review', value: 'review' },
+        { label: 'Closed', value: 'closed' },
+        { label: 'Archived', value: 'archived' },
+      ],
+      dept: [
+        { label: 'Water Quality', value: 'water' },
+        { label: 'Air Quality', value: 'air' },
+        { label: 'Toxics Cleanup', value: 'toxics' },
+        { label: 'Waste Management', value: 'waste' },
+      ],
+      withDisabled: [
+        { label: 'Low', value: 'low' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'High', value: 'high', disabled: true },
+        { label: 'Critical', value: 'critical' },
+      ],
+    };
+    customElements.whenDefined('esa-filter-dropdown').then(() => {
+      document.querySelectorAll('esa-filter-dropdown').forEach((el) => {
+        const key = el.getAttribute('data-opts');
+        if (key && sets[key]) (el as any).options = sets[key];
+      });
+    });
+  </script>
+</BaseLayout>

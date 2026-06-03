@@ -1,0 +1,13 @@
+{
+  "sidebar": {
+    "width":           { "$value": "280px", "$type": "dimension" },
+    "width-collapsed": { "$value": "72px",  "$type": "dimension" }
+  },
+  "header": { "height": { "$value": "52px", "$type": "dimension" } },
+  "footer": { "height": { "$value": "52px", "$type": "dimension" } },
+  "content": {
+    "max-width":    { "$value": "1200px", "$type": "dimension" },
+    "narrow-width": { "$value": "800px",  "$type": "dimension" },
+    "wide-width":   { "$value": "1440px", "$type": "dimension" }
+  }
+}

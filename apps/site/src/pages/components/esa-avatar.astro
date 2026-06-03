@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import Avatar from '@esa/ecology/esa-avatar.astro';
+---
+<BaseLayout title="Avatar — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Avatar</h1>
+      <p>Compact identity marker. Falls back image → initials → user icon, with a deterministic background hue derived from the name.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <Avatar name="Ada Lovelace" size="small" />
+        <Avatar name="Ada Lovelace" size="medium" />
+        <Avatar name="Ada Lovelace" size="large" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Shapes</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <Avatar name="Grace Hopper" shape="circle" />
+        <Avatar name="Grace Hopper" shape="square" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Deterministic hue from name</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <Avatar name="Alan Turing" />
+        <Avatar name="Katherine Johnson" />
+        <Avatar name="Margaret Hamilton" />
+        <Avatar name="Dennis Ritchie" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Fallbacks</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <Avatar name="Single" />
+        <Avatar />
+        <Avatar src="https://i.pravatar.cc/100?img=12" name="Photo User" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Fallback order:</strong> src image → initials (up to 2 chars) → inline Lucide user icon.</li>
+        <li><strong>Hue:</strong> hashed from <code>name</code> → <code>hsl(hue 45% 65%)</code>, stable per name.</li>
+        <li><strong>Tokens consumed:</strong> <code>--radius-full</code>, <code>--radius-200</code>, <code>--color-text-inverse</code>.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

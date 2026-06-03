@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import FilterClearButton from '@esa/ecology/esa-filter-clear-button.astro';
+---
+<BaseLayout title="Filter Clear Button — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Filter Clear Button</h1>
+      <p>Ghost/link-style button that clears all active filters. Optional leading
+        <code>filter-x</code> icon. Dispatches a bubbling <code>esa-filter-clear</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Default</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <FilterClearButton />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Custom label</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <FilterClearButton label="Reset filters" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>No icon</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <FilterClearButton label="Clear all" showIcon={false} />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Props:</strong> <code>label</code>, <code>showIcon</code>, <code>hidden</code>.</li>
+        <li><strong>States:</strong> rest, hover (primary-hover + hover-overlay), focus-visible (2px primary outline).</li>
+        <li><strong>Event:</strong> emits bubbling/composed <code>esa-filter-clear</code> on click for a parent container to handle.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

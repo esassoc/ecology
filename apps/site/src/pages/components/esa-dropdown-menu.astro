@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Dropdown Menu — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Dropdown Menu <code>[wc]</code></h1>
+      <p>Click-toggled menu. Trigger is slotted; items are set via the <code>items</code> property. Selecting emits a <code>menu-action</code> event. Outside-click and Esc close.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Positions</h2>
+      <Stack gap="600" direction="row" wrap={true}>
+        <esa-dropdown-menu id="dd-start" position="below-start">
+          <button class="trigger">below-start ▾</button>
+        </esa-dropdown-menu>
+        <esa-dropdown-menu id="dd-end" position="below-end">
+          <button class="trigger">below-end ▾</button>
+        </esa-dropdown-menu>
+      </Stack>
+      <p id="result" class="result"></p>
+    </Stack>
+  </Stack>
+</BaseLayout>
+
+<script>
+  import '@esa/ecology/esa-dropdown-menu';
+
+  const items = [
+    { label: 'Edit', icon: 'pencil', action: 'edit' },
+    { label: 'Duplicate', icon: 'copy', action: 'duplicate' },
+    { divider: true },
+    { label: 'Archive', icon: 'archive', action: 'archive', disabled: true },
+    { label: 'Delete', icon: 'trash', action: 'delete', variant: 'danger' },
+  ];
+
+  const result = document.getElementById('result')!;
+  document.querySelectorAll('esa-dropdown-menu').forEach((el: any) => {
+    el.items = items;
+    el.addEventListener('menu-action', (e: Event) => {
+      result.textContent = `Selected: ${(e as CustomEvent).detail}`;
+    });
+  });
+</script>
+
+<style>
+  .trigger {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+  }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; }
+</style>

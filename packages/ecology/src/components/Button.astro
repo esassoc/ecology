@@ -1,0 +1,52 @@
+---
+// Button — presentational primitive. Reads real Ecology semantic tokens via
+// private --_* tokens with literal fallbacks (the SCSS convention from the lib).
+interface Props {
+  variant?: 'primary' | 'secondary';
+  size?: 'small' | 'medium' | 'large';
+  type?: 'button' | 'submit' | 'reset';
+}
+const { variant = 'primary', size = 'medium', type = 'button' } = Astro.props;
+---
+<button class={`esa-btn esa-btn--${variant} esa-btn--${size}`} type={type}>
+  <slot />
+</button>
+
+<style>
+  .esa-btn {
+    --_bg: var(--color-primary, #005862);
+    --_fg: var(--color-text-inverse, #ffffff);
+    --_bg-hover: var(--color-primary-hover, #004752);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-200, 0.5rem);
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-weight: var(--font-weight-medium, 450);
+    line-height: 1;
+    border: 1px solid transparent;
+    border-radius: var(--radius-200, 8px);
+    background: var(--_bg);
+    color: var(--_fg);
+    cursor: pointer;
+    transition: background-color var(--transition-fast, 150ms ease);
+  }
+
+  .esa-btn:hover { background: var(--_bg-hover); }
+  .esa-btn:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+
+  .esa-btn--secondary {
+    --_bg: transparent;
+    --_fg: var(--color-primary, #005862);
+    --_bg-hover: var(--color-surface-sunken, #efefef);
+    border-color: var(--color-border, #e5e5e5);
+  }
+
+  .esa-btn--small  { font-size: var(--type-size-100, 0.75rem);  padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); }
+  .esa-btn--medium { font-size: var(--type-size-200, 0.9375rem); padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); }
+  .esa-btn--large  { font-size: var(--type-size-300, 1.125rem); padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); }
+</style>

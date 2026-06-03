@@ -1,0 +1,62 @@
+---
+// esa-badge — GOLDEN PRESENTATIONAL PATTERN (.astro).
+// Faithful translation of the Angular esa-badge: same variants, sizes, dot mode,
+// same private --_* tokens reading public semantic tokens with literal fallbacks.
+// Angular host classes → class list here; Angular @if(!dot) → conditional render.
+interface Props {
+  value?: string | number;
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+  size?: 'small' | 'medium' | 'large';
+  dot?: boolean;
+}
+const { value, variant = 'primary', size = 'medium', dot = false } = Astro.props;
+const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 'esa-badge--dot']
+  .filter(Boolean)
+  .join(' ');
+---
+<span class={cls}>
+  {!dot && <span class="esa-badge__text">{value}</span>}
+</span>
+
+<style>
+  .esa-badge {
+    --_badge-bg: var(--color-primary, #005862);
+    --_badge-text: var(--color-text-inverse, #fff);
+    --_badge-height: 20px;
+    --_badge-font-size: 11px;
+    --_badge-padding-x: 6px;
+    --_badge-min-width: 20px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--_badge-height);
+    min-width: var(--_badge-min-width);
+    padding-inline: var(--_badge-padding-x);
+    border-radius: var(--radius-full, 9999px);
+    background: var(--_badge-bg);
+    color: var(--_badge-text);
+    font-size: var(--_badge-font-size);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  .esa-badge--small { --_badge-height: 16px; --_badge-font-size: 10px; --_badge-padding-x: 4px; --_badge-min-width: 16px; }
+  .esa-badge--large { --_badge-height: 24px; --_badge-font-size: 12px; --_badge-padding-x: 8px; --_badge-min-width: 24px; }
+
+  .esa-badge--secondary { --_badge-bg: var(--color-secondary, #0d9488); }
+  .esa-badge--success   { --_badge-bg: var(--color-success, #22c55e); }
+  .esa-badge--warning   { --_badge-bg: var(--color-warning, #f59e0b); }
+  .esa-badge--danger    { --_badge-bg: var(--color-danger, #ef4444); }
+  .esa-badge--info      { --_badge-bg: var(--color-info, #3b82f6); }
+
+  .esa-badge--dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    padding: 0;
+    border-radius: var(--radius-full, 9999px);
+  }
+</style>

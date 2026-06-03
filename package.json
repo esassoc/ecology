@@ -1,0 +1,17 @@
+{
+  "name": "ecology-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ecology — the framework-agnostic design system hub (tokens + specs + Astro specimens).",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:tokens": "npm run build --workspace=@esa/tokens",
+    "dev": "npm run build:tokens && npm run dev --workspace=@esa/site",
+    "build": "npm run build:tokens && npm run build --workspace=@esa/site",
+    "preview": "npm run preview --workspace=@esa/site"
+  }
+}

@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Popover — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Popover <code>[wc]</code></h1>
+      <p>Anchored floating panel. Trigger goes in the default slot, content in <code>slot="content"</code>. Click mode closes on outside-click + Esc; hover mode opens after a short delay.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Positions (click)</h2>
+      <Stack gap="600" direction="row" wrap={true} align="center" justify="center">
+        <esa-popover position="top">
+          <button class="trigger">Top</button>
+          <div slot="content">Popover above the trigger.</div>
+        </esa-popover>
+        <esa-popover position="bottom">
+          <button class="trigger">Bottom</button>
+          <div slot="content">Popover below the trigger.</div>
+        </esa-popover>
+        <esa-popover position="left">
+          <button class="trigger">Left</button>
+          <div slot="content">Left side.</div>
+        </esa-popover>
+        <esa-popover position="right">
+          <button class="trigger">Right</button>
+          <div slot="content">Right side.</div>
+        </esa-popover>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Hover trigger &amp; no arrow</h2>
+      <Stack gap="600" direction="row" wrap={true} align="center">
+        <esa-popover position="bottom" trigger="hover">
+          <button class="trigger">Hover me</button>
+          <div slot="content">Opens on hover after 200ms.</div>
+        </esa-popover>
+        <esa-popover position="bottom" has-arrow={false}>
+          <button class="trigger">No arrow</button>
+          <div slot="content">Arrowless popover.</div>
+        </esa-popover>
+      </Stack>
+    </Stack>
+  </Stack>
+</BaseLayout>
+
+<script>import '@esa/ecology/esa-popover';</script>
+
+<style>
+  .trigger {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+  }
+</style>

@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+---
+<BaseLayout title="esa-button — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>esa-button</h1>
+      <p>
+        Primary action control migrated from <code>@esa/ecology/core</code>. Four variants,
+        three sizes, plus disabled / loading / icon / icon-only states. Themes via
+        <code>--color-primary*</code>, <code>--color-secondary*</code>, and the form size tokens.
+      </p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Variants</h2>
+      <Stack gap="300" direction="row" wrap={true}>
+        <EsaButton variant="primary">Primary</EsaButton>
+        <EsaButton variant="secondary">Secondary</EsaButton>
+        <EsaButton variant="outline">Outline</EsaButton>
+        <EsaButton variant="ghost">Ghost</EsaButton>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <EsaButton size="small">Small</EsaButton>
+        <EsaButton size="medium">Medium</EsaButton>
+        <EsaButton size="large">Large</EsaButton>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With icon</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <EsaButton icon="download">Download</EsaButton>
+        <EsaButton variant="outline" icon="plus">Add item</EsaButton>
+        <EsaButton variant="ghost" icon="trash-2">Delete</EsaButton>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Icon-only</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <EsaButton iconOnly icon="settings" size="small" />
+        <EsaButton iconOnly icon="settings" size="medium" />
+        <EsaButton iconOnly icon="settings" size="large" />
+        <EsaButton variant="outline" iconOnly icon="pencil" />
+        <EsaButton variant="ghost" iconOnly icon="x" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>States</h2>
+      <Stack gap="300" direction="row" align="center" wrap={true}>
+        <EsaButton>Rest</EsaButton>
+        <EsaButton disabled>Disabled</EsaButton>
+        <EsaButton loading>Loading</EsaButton>
+        <EsaButton variant="secondary" loading>Saving</EsaButton>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Variants:</strong> primary, secondary (filled teal), outline (bordered), ghost (text-only).</li>
+        <li><strong>States:</strong> rest, hover (<code>--color-primary-hover</code>), active, focus-visible (2px primary outline), disabled (50% opacity, no pointer events), loading (CSS spinner, label held in place).</li>
+        <li><strong>Icon:</strong> composes <code>esa-icon</code> at the matching size; hidden while loading.</li>
+        <li><strong>Tokens consumed:</strong> color-primary / -hover / -active, color-secondary / -hover, surface overlays, border, text-inverse / -primary; form-height / -padding / -font / -radius per size; transition-fast, focus-ring-*.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

@@ -1,0 +1,32 @@
+---
+// esa-pillbox — presentational (.astro).
+// Faithful translation of the Angular esa-pillbox: a flex-wrap container that lays
+// out pills with a configurable gap. Angular host class bindings on gap() become a
+// class string here; <ng-content> becomes <slot />.
+interface Props {
+  /** Spacing between pills. */
+  gap?: 'small' | 'medium' | 'large';
+}
+const { gap = 'small' } = Astro.props;
+const cls = ['esa-pillbox', `esa-pillbox--${gap}`].join(' ');
+---
+<div class={cls}><slot /></div>
+
+<style>
+  .esa-pillbox {
+    --_pillbox-gap: var(--spacing-100, 4px);
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--_pillbox-gap);
+    align-items: center;
+  }
+
+  .esa-pillbox--medium {
+    --_pillbox-gap: var(--spacing-200, 8px);
+  }
+
+  .esa-pillbox--large {
+    --_pillbox-gap: var(--spacing-300, 12px);
+  }
+</style>

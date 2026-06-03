@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import FilterContainer from '@esa/ecology/esa-filter-container.astro';
+import FilterPills from '@esa/ecology/esa-filter-pills.astro';
+import FilterClearButton from '@esa/ecology/esa-filter-clear-button.astro';
+
+const sampleFilters = [
+  { name: 'status', label: 'Status', value: 'open', displayValue: 'Open' },
+  { name: 'dept', label: 'Department', value: 'water', displayValue: 'Water Quality' },
+];
+const statusOptions = [
+  { label: 'Open', value: 'open' },
+  { label: 'In review', value: 'review' },
+  { label: 'Closed', value: 'closed' },
+];
+---
+<BaseLayout title="Filter Container — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Filter Container</h1>
+      <p>Layout wrapper that lays out filter dropdowns, pills, and the clear button
+        in a wrapping flex row with consistent gap. A pure layout primitive —
+        it carries no runtime logic.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Composed filter bar</h2>
+      <FilterContainer>
+        <esa-filter-dropdown name="status" label="Status" multiple></esa-filter-dropdown>
+        <FilterPills filters={sampleFilters} />
+        <FilterClearButton />
+      </FilterContainer>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Custom gap</h2>
+      <FilterContainer gap="500" rowGap="300">
+        <esa-filter-dropdown name="priority" label="Priority"></esa-filter-dropdown>
+        <FilterClearButton label="Reset" />
+      </FilterContainer>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Props:</strong> <code>gap</code>, <code>rowGap</code> — space-token steps.</li>
+        <li><strong>Layout:</strong> <code>display: flex; flex-wrap: wrap; align-items: center</code> with token-driven gaps.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <script>
+    import '@esa/ecology/esa-filter-dropdown';
+    const opts = [
+      { label: 'Open', value: 'open' },
+      { label: 'In review', value: 'review' },
+      { label: 'Closed', value: 'closed' },
+    ];
+    customElements.whenDefined('esa-filter-dropdown').then(() => {
+      document.querySelectorAll('esa-filter-dropdown').forEach((el) => {
+        (el as any).options = opts;
+      });
+    });
+  </script>
+</BaseLayout>

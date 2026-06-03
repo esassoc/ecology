@@ -1,0 +1,93 @@
+---
+// esa-empty-state — presentational (.astro).
+// Faithful translation of the Angular esa-empty-state: optional icon, required title,
+// optional description, slotted actions, and small/medium/large size variants.
+// Angular host classes → class list; @if → conditional render; required title input
+// → required `title` prop. The icon prop names a Lucide icon; pass an inline SVG via
+// the "icon" slot for full fidelity, or omit it.
+interface Props {
+  title: string;
+  description?: string;
+  size?: 'small' | 'medium' | 'large';
+}
+const { title, description, size = 'medium' } = Astro.props;
+
+const hasIconSlot = Astro.slots.has('icon');
+const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
+---
+<div class={cls}>
+  {hasIconSlot && (
+    <div class="esa-empty-state__icon">
+      <slot name="icon" />
+    </div>
+  )}
+  <h3 class="esa-empty-state__title">{title}</h3>
+  {description && <p class="esa-empty-state__description">{description}</p>}
+  <div class="esa-empty-state__actions">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .esa-empty-state {
+    --_empty-icon-size: 48px;
+    --_empty-title-size: 16px;
+    --_empty-desc-size: 14px;
+    --_empty-gap: var(--spacing-200, 0.5rem);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--spacing-600, 2rem) var(--spacing-400, 1rem);
+    gap: var(--_empty-gap);
+  }
+
+  .esa-empty-state--small {
+    --_empty-icon-size: 32px;
+    --_empty-title-size: 14px;
+    --_empty-desc-size: 12px;
+    padding: var(--spacing-400, 1rem) var(--spacing-300, 0.75rem);
+  }
+
+  .esa-empty-state--large {
+    --_empty-icon-size: 64px;
+    --_empty-title-size: 20px;
+    --_empty-desc-size: 16px;
+    padding: var(--spacing-800, 4rem) var(--spacing-400, 1rem);
+  }
+
+  .esa-empty-state__icon {
+    color: var(--color-text-muted, #737373);
+    margin-bottom: var(--spacing-100, 0.25rem);
+    display: inline-flex;
+  }
+
+  .esa-empty-state__icon :global(svg) {
+    width: var(--_empty-icon-size);
+    height: var(--_empty-icon-size);
+  }
+
+  .esa-empty-state__title {
+    margin: 0;
+    font-size: var(--_empty-title-size);
+    font-weight: 600;
+    color: var(--color-text-primary, #171717);
+  }
+
+  .esa-empty-state__description {
+    margin: 0;
+    font-size: var(--_empty-desc-size);
+    color: var(--color-text-secondary, #525252);
+    max-width: 360px;
+  }
+
+  .esa-empty-state__actions {
+    margin-top: var(--spacing-200, 0.5rem);
+  }
+
+  .esa-empty-state__actions:empty {
+    display: none;
+  }
+</style>

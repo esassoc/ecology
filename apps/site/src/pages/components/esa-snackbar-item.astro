@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Snackbar Item — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Snackbar Item <code>[wc]</code></h1>
+      <p>A single toast: variant color, leading icon, message, optional action and dismiss buttons. Emits <code>action</code> / <code>dismiss</code>. Usually managed by <a href="/components/esa-snackbar-container">esa-snackbar-container</a>, but renders standalone too.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Variants</h2>
+      <Stack gap="300" style="max-width: 420px">
+        <esa-snackbar-item variant="info" message="Heads up — this is an info toast."></esa-snackbar-item>
+        <esa-snackbar-item variant="success" message="Saved successfully."></esa-snackbar-item>
+        <esa-snackbar-item variant="warning" message="Your session expires soon."></esa-snackbar-item>
+        <esa-snackbar-item variant="danger" message="Something went wrong."></esa-snackbar-item>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With action / non-dismissable</h2>
+      <Stack gap="300" style="max-width: 420px">
+        <esa-snackbar-item variant="success" message="Item deleted." action="Undo"></esa-snackbar-item>
+        <esa-snackbar-item variant="info" message="Cannot be dismissed manually." dismissable={false}></esa-snackbar-item>
+      </Stack>
+    </Stack>
+  </Stack>
+</BaseLayout>
+
+<script>import '@esa/ecology/esa-snackbar-item';</script>

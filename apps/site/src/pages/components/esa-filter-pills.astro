@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import FilterPills from '@esa/ecology/esa-filter-pills.astro';
+
+const sampleFilters = [
+  { name: 'status', label: 'Status', value: 'open', displayValue: 'Open' },
+  { name: 'status', label: 'Status', value: 'review', displayValue: 'In review' },
+  { name: 'dept', label: 'Department', value: 'water', displayValue: 'Water Quality' },
+];
+const single = [
+  { name: 'priority', label: 'Priority', value: 'high', displayValue: 'High' },
+];
+---
+<BaseLayout title="Filter Pills — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Filter Pills</h1>
+      <p>Active filters rendered as removable chips. Each chip shows
+        <code>label: displayValue</code> and an x remove button that dispatches a
+        bubbling <code>esa-filter-remove</code> event carrying <code>{'{ name, value }'}</code>.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Single active filter</h2>
+      <FilterPills filters={single} />
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Multiple active filters</h2>
+      <FilterPills filters={sampleFilters} />
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Empty (renders nothing)</h2>
+      <p>With no filters the component renders no DOM — matching the Angular
+        <code>@if (activeFilters().length &gt; 0)</code> guard.</p>
+      <FilterPills filters={[]} />
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Props:</strong> <code>filters</code> — array of <code>{'{ name, label, value, displayValue }'}</code>.</li>
+        <li><strong>Tokens:</strong> surface-sunken chip bg, border on hover, radius-full, text-muted label.</li>
+        <li><strong>Event:</strong> remove buttons emit <code>esa-filter-remove</code> for a parent container.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

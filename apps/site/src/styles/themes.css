@@ -1,0 +1,29 @@
+/*
+ * Spoke themes = overrides of the SEMANTIC layer only.
+ * tokens.css (from @esa/tokens) defines primitives + default semantics on :root
+ * (default brand = Ecology teal). A theme re-skins by reassigning semantic tokens
+ * under a [data-theme] scope — it never touches primitives or component internals.
+ *
+ * In production each block lives in its own spoke repo (beacon-design/, qanat-design/)
+ * and ideally is generated from a per-theme DTCG set. Hand-authored here to show it.
+ *
+ * ⬇ CONTRIBUTION POINT (Andy): Beacon values below are placeholders.
+ *   Drop in Beacon's real brand palette to prove the hub/spoke story with a
+ *   project you actually know.
+ */
+
+[data-theme="beacon"] {
+  --color-primary:        #1f7a6d; /* TODO: real Beacon brand */
+  --color-primary-hover:  #155a50; /* TODO */
+  --color-secondary:      #2a9d8f; /* TODO */
+  --color-surface-sunken: #f0f6f4; /* TODO */
+  --radius-200:           6px;
+}
+
+[data-theme="qanat"] {
+  --color-primary:        #1769aa;
+  --color-primary-hover:  #11507f;
+  --color-secondary:      #4a90c2;
+  --color-surface-sunken: #eef4f8;
+  --radius-200:           10px;
+}

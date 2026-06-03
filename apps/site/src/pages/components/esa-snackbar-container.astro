@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Snackbar Container — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Snackbar Container <code>[wc]</code></h1>
+      <p>Bottom-right toast stack with auto-dismiss. Drive it imperatively: <code>show(config)</code>, <code>success/info/warning/danger(msg)</code>, <code>dismiss(id)</code>, <code>clearAll()</code>. Defaults to info / 5000ms / dismissable, with <code>uniqueKey</code> dedupe.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Trigger toasts</h2>
+      <Stack gap="300" direction="row" wrap={true}>
+        <button class="trigger" data-kind="info">Info</button>
+        <button class="trigger" data-kind="success">Success</button>
+        <button class="trigger" data-kind="warning">Warning</button>
+        <button class="trigger" data-kind="danger">Danger</button>
+        <button class="trigger" data-kind="action">With action</button>
+        <button class="trigger" data-kind="clear">Clear all</button>
+      </Stack>
+    </Stack>
+
+    <esa-snackbar-container id="toasts"></esa-snackbar-container>
+  </Stack>
+</BaseLayout>
+
+<script>
+  import '@esa/ecology/esa-snackbar-container';
+
+  const toasts = document.getElementById('toasts') as any;
+  document.querySelectorAll('.trigger').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const kind = (btn as HTMLElement).dataset.kind;
+      switch (kind) {
+        case 'info': toasts.info('A neutral notification.'); break;
+        case 'success': toasts.success('Changes saved.'); break;
+        case 'warning': toasts.warning('Low disk space.'); break;
+        case 'danger': toasts.danger('Upload failed.'); break;
+        case 'action': toasts.show({ message: 'Item archived.', variant: 'success', action: 'Undo' }); break;
+        case 'clear': toasts.clearAll(); break;
+      }
+    }),
+  );
+</script>
+
+<style>
+  .trigger {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+  }
+</style>

@@ -1,0 +1,174 @@
+---
+// esa-alert-box — presentational (.astro).
+// Faithful translation of the Angular esa-alert-box: info/success/warning/danger
+// variants with auto-mapped Lucide icons, optional title, slotted message, and an
+// optional dismiss button. Angular host classes → class list; @if → conditional render.
+// The dismiss interaction (hide on click) is handled by a tiny inline script — light
+// enough to stay in the presentational bucket without becoming a web component.
+interface Props {
+  variant?: 'info' | 'success' | 'warning' | 'danger';
+  title?: string;
+  dismissable?: boolean;
+}
+const { variant = 'info', title, dismissable = false } = Astro.props;
+
+const cls = ['esa-alert-box', `esa-alert-box--${variant}`].join(' ');
+
+// Inlined Lucide icon paths per variant (avoids an icon dependency).
+const ICON_PATHS: Record<string, string> = {
+  // Info
+  info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>',
+  // CircleCheck
+  success: '<circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path>',
+  // TriangleAlert
+  warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>',
+  // CircleAlert
+  danger: '<circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path>',
+};
+const iconPath = ICON_PATHS[variant];
+---
+<div class={cls}>
+  <div class="esa-alert-box__icon">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      set:html={iconPath}
+    />
+  </div>
+
+  <div class="esa-alert-box__body">
+    {title && <strong class="esa-alert-box__title">{title}</strong>}
+    <div class="esa-alert-box__message">
+      <slot />
+    </div>
+  </div>
+
+  {dismissable && (
+    <button class="esa-alert-box__dismiss" type="button" aria-label="Dismiss" data-esa-alert-dismiss>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  )}
+</div>
+
+{dismissable && (
+  <script>
+    document.querySelectorAll('[data-esa-alert-dismiss]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const box = (btn as HTMLElement).closest('.esa-alert-box') as HTMLElement | null;
+        if (box) {
+          box.style.display = 'none';
+          box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
+        }
+      });
+    });
+  </script>
+)}
+
+<style>
+  .esa-alert-box {
+    --_alert-bg: var(--color-info-subtle, #eff6ff);
+    --_alert-border: var(--color-info-border, #bfdbfe);
+    --_alert-icon-color: var(--color-info, #3b82f6);
+    --_alert-title-color: var(--color-text-primary, #171717);
+    --_alert-text-color: var(--color-text-secondary, #525252);
+
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-300, 0.75rem);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border: 1px solid var(--_alert-border);
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--_alert-bg);
+    font-size: var(--type-size-150, 0.875rem);
+    line-height: 1.5;
+  }
+
+  .esa-alert-box--success {
+    --_alert-bg: var(--color-success-subtle, #f0fdf4);
+    --_alert-border: var(--color-success-border, #bbf7d0);
+    --_alert-icon-color: var(--color-success, #22c55e);
+  }
+
+  .esa-alert-box--warning {
+    --_alert-bg: var(--color-warning-subtle, #fffbeb);
+    --_alert-border: var(--color-warning-border, #fde68a);
+    --_alert-icon-color: var(--color-warning, #f59e0b);
+  }
+
+  .esa-alert-box--danger {
+    --_alert-bg: var(--color-danger-subtle, #fef2f2);
+    --_alert-border: var(--color-danger-border, #fecaca);
+    --_alert-icon-color: var(--color-danger, #ef4444);
+  }
+
+  .esa-alert-box__icon {
+    flex-shrink: 0;
+    color: var(--_alert-icon-color);
+    padding-top: 1px;
+  }
+
+  .esa-alert-box__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .esa-alert-box__title {
+    display: block;
+    font-weight: 600;
+    color: var(--_alert-title-color);
+    margin-bottom: var(--spacing-050, 0.125rem);
+  }
+
+  .esa-alert-box__message {
+    color: var(--_alert-text-color);
+  }
+
+  .esa-alert-box__dismiss {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-100, 0.25rem);
+    background: transparent;
+    color: var(--color-text-muted, #737373);
+    cursor: pointer;
+    transition: color var(--transition-fast, 150ms ease),
+                background var(--transition-fast, 150ms ease);
+  }
+
+  .esa-alert-box__dismiss:hover {
+    color: var(--color-text-primary, #171717);
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .esa-alert-box__dismiss:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+</style>

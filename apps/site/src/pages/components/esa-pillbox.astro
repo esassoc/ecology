@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import Pillbox from '@esa/ecology/esa-pillbox.astro';
+import Pill from '@esa/ecology/esa-pill.astro';
+---
+<BaseLayout title="Pillbox — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Pillbox</h1>
+      <p>A flex-wrap container that lays out a collection of pills with a configurable gap. Purely presentational — it owns layout, the pills own their own appearance and behavior.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Gaps</h2>
+
+      <Stack gap="150">
+        <h3>Small (default)</h3>
+        <Pillbox gap="small">
+          <Pill label="Wetlands" variant="success" removable={false} />
+          <Pill label="Air quality" variant="info" removable={false} />
+          <Pill label="Overdue" variant="danger" removable={false} />
+          <Pill label="Permitting" variant="primary" removable={false} />
+          <Pill label="Stormwater" removable={false} />
+        </Pillbox>
+      </Stack>
+
+      <Stack gap="150">
+        <h3>Medium</h3>
+        <Pillbox gap="medium">
+          <Pill label="Wetlands" variant="success" removable={false} />
+          <Pill label="Air quality" variant="info" removable={false} />
+          <Pill label="Overdue" variant="danger" removable={false} />
+          <Pill label="Permitting" variant="primary" removable={false} />
+          <Pill label="Stormwater" removable={false} />
+        </Pillbox>
+      </Stack>
+
+      <Stack gap="150">
+        <h3>Large</h3>
+        <Pillbox gap="large">
+          <Pill label="Wetlands" variant="success" removable={false} />
+          <Pill label="Air quality" variant="info" removable={false} />
+          <Pill label="Overdue" variant="danger" removable={false} />
+          <Pill label="Permitting" variant="primary" removable={false} />
+          <Pill label="Stormwater" removable={false} />
+        </Pillbox>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Wrapping</h2>
+      <p>Pills wrap to a new row when they exceed the container width.</p>
+      <div style="max-width: 360px;">
+        <Pillbox gap="small">
+          <Pill label="Endangered species" variant="warning" removable={false} />
+          <Pill label="Water rights" variant="info" removable={false} />
+          <Pill label="Coastal" variant="success" removable={false} />
+          <Pill label="NEPA review" variant="primary" removable={false} />
+          <Pill label="Habitat restoration" removable={false} />
+          <Pill label="Discharge permit" variant="danger" removable={false} />
+        </Pillbox>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Removable pills</h2>
+      <p>Pillbox is agnostic to pill behavior — removable pills work as-is.</p>
+      <Pillbox gap="medium">
+        <Pill label="Filter: 2024" variant="primary" />
+        <Pill label="Status: Active" variant="success" />
+        <Pill label="Region: North" variant="info" />
+      </Pillbox>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Slot:</strong> default slot holds any number of pills (or other inline tags).</li>
+        <li><strong>Prop:</strong> <code>gap</code> — <code>small</code> (default), <code>medium</code>, <code>large</code>.</li>
+        <li><strong>Tokens consumed:</strong> spacing scale via the private <code>--_pillbox-gap</code> token.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

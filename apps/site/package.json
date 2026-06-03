@@ -1,0 +1,16 @@
+{
+  "name": "@esa/site",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@esa/ecology": "*",
+    "@esa/tokens": "*",
+    "astro": "^5.0.0"
+  }
+}

@@ -1,0 +1,103 @@
+---
+// esa-filter-clear-button — presentational ghost button to clear all active filters.
+// Faithful translation of the Angular esa-filter-clear-button: same ghost/link
+// styling, optional leading icon (Lucide filter-x), and "Clear all" default label.
+//
+// In Angular, visibility was driven by the injected EsaFilterService
+// (hasActiveFilters). Here it is presentational: pass `hidden` to suppress it, or
+// let the surrounding esa-filter-container WC toggle it at runtime. The button
+// dispatches a bubbling `esa-filter-clear` event so a parent container can clear
+// all filters without coupling this file to a service.
+interface Props {
+  label?: string;
+  showIcon?: boolean;
+  hidden?: boolean;
+}
+const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
+---
+{!hidden && (
+  <button
+    class="esa-filter-clear-button"
+    type="button"
+    data-esa-filter-clear
+    aria-label="Clear all filters"
+  >
+    {showIcon && (
+      <svg
+        class="esa-filter-clear-button__icon"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M13.013 3H2l8 9.46V19l4 2v-8.54l.9-1.055" />
+        <path d="m22 3-5 5" />
+        <path d="m17 3 5 5" />
+      </svg>
+    )}
+    <span class="esa-filter-clear-button__label">{label}</span>
+  </button>
+)}
+
+<style>
+  .esa-filter-clear-button {
+    --_clear-text: var(--filter-clear-color, var(--color-primary, #005862));
+    --_clear-text-hover: var(--filter-clear-color-hover, var(--color-primary-hover, #004752));
+    --_clear-font-size: var(--type-size-150, 0.875rem);
+    --_clear-icon-size: 18px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-100, 0.25rem);
+    padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+    border: none;
+    border-radius: var(--radius-100, 0.25rem);
+    background: transparent;
+    color: var(--_clear-text);
+    font-family: var(--font-sans, inherit);
+    font-size: var(--_clear-font-size);
+    font-weight: var(--font-weight-medium, 450);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition:
+      color var(--transition-fast, 150ms ease),
+      background var(--transition-fast, 150ms ease);
+  }
+
+  .esa-filter-clear-button:hover {
+    color: var(--_clear-text-hover);
+    background: var(--color-hover-overlay, rgba(0, 0, 0, 0.03));
+  }
+
+  .esa-filter-clear-button:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+
+  .esa-filter-clear-button__icon {
+    width: var(--_clear-icon-size);
+    height: var(--_clear-icon-size);
+    flex: none;
+  }
+
+  .esa-filter-clear-button__label {
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  // Forward clicks as a bubbling, composed event so a parent esa-filter-container
+  // can clear filters — keeps this file presentational and service-free.
+  document.querySelectorAll('[data-esa-filter-clear]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      btn.dispatchEvent(
+        new CustomEvent('esa-filter-clear', { bubbles: true, composed: true })
+      );
+    });
+  });
+</script>

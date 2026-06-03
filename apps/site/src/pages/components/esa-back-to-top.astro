@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+---
+<BaseLayout title="Back to Top — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Back to Top</h1>
+      <p>Floating button that appears once the page is scrolled past a threshold and smooth-scrolls back to the top on click. Lit web component.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Behavior</h2>
+      <ul>
+        <li><strong>threshold</strong> (default 300px) — scroll distance before the button fades in.</li>
+        <li><strong>smooth-scroll</strong> (default true) — smooth vs instant scroll-to-top.</li>
+        <li><strong>scrollTarget</strong> — optional element to track instead of <code>window</code> (set via JS property).</li>
+      </ul>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Try it</h2>
+      <p>Scroll this page down past ~300px — the button appears in the bottom-right corner. Click it to scroll back up.</p>
+      <div style="height: 1800px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--spacing-600, 2rem); color: var(--color-text-muted, #737373);">
+        <span>Keep scrolling… the back-to-top button is pinned bottom-right.</span>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Listener:</strong> passive scroll listener toggles the reflected <code>visible</code> attribute (fade + translate transition).</li>
+        <li><strong>Tokens consumed:</strong> <code>--color-primary</code>/<code>-hover</code>, <code>--color-text-inverse</code>, <code>--shadow-300</code>/<code>-400</code>, <code>--radius-full</code>, spacing scale, <code>--z-sidebar</code>.</li>
+      </ul>
+    </Stack>
+  </Stack>
+
+  <esa-back-to-top></esa-back-to-top>
+</BaseLayout>
+
+<script>import '@esa/ecology/esa-back-to-top';</script>

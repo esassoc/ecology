@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import LoadingSpinner from '@esa/ecology/esa-loading-spinner.astro';
+---
+<BaseLayout title="Loading Spinner — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Loading Spinner</h1>
+      <p>Rotating ring indicator. Three sizes plus an optional custom color.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="500" direction="row" align="center" wrap={true}>
+        <LoadingSpinner size="small" />
+        <LoadingSpinner size="medium" />
+        <LoadingSpinner size="large" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Custom color</h2>
+      <Stack gap="500" direction="row" align="center" wrap={true}>
+        <LoadingSpinner color="var(--color-success, #22c55e)" />
+        <LoadingSpinner color="var(--color-warning, #f59e0b)" />
+        <LoadingSpinner color="var(--color-danger, #ef4444)" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Ring:</strong> light track with a colored top border rotating at 0.75s linear infinite.</li>
+        <li><strong>A11y:</strong> <code>role="status"</code> with <code>aria-label="Loading"</code>.</li>
+        <li><strong>Tokens consumed:</strong> <code>--color-primary</code> (default), <code>--color-border-light</code>, <code>--radius-full</code>.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

@@ -1,0 +1,153 @@
+---
+// esa-filter-pills — presentational list of active-filter chips, each removable.
+// Faithful translation of the Angular esa-filter-pills: rounded chips showing
+// "<label>: <displayValue>" with an x remove button.
+//
+// In Angular the chips came from the injected EsaFilterService. Here they are
+// passed in as `filters`, keeping the component presentational. Each remove
+// button dispatches a bubbling `esa-filter-remove` event carrying { name, value }
+// so a parent esa-filter-container WC can update live state.
+interface ActiveFilter {
+  name: string;
+  label: string;
+  value: string;
+  displayValue: string;
+}
+interface Props {
+  filters?: ActiveFilter[];
+}
+const { filters = [] } = Astro.props;
+---
+{filters.length > 0 && (
+  <div class="esa-filter-pills">
+    {filters.map((filter) => (
+      <span
+        class="esa-filter-pills__chip"
+        aria-label={`${filter.label}: ${filter.displayValue}`}
+      >
+        <span class="esa-filter-pills__label">{filter.label}:</span>
+        <span class="esa-filter-pills__value">{filter.displayValue}</span>
+        <button
+          class="esa-filter-pills__remove"
+          type="button"
+          data-esa-filter-remove
+          data-name={filter.name}
+          data-value={filter.value}
+          aria-label={`Remove ${filter.label} ${filter.displayValue}`}
+        >
+          <svg
+            class="esa-filter-pills__remove-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </span>
+    ))}
+  </div>
+)}
+
+<style>
+  .esa-filter-pills {
+    --_pill-gap: var(--spacing-200, 0.5rem);
+    --_pill-bg: var(--filter-pill-bg, var(--color-surface-sunken, #efefef));
+    --_pill-text: var(--filter-pill-text, var(--color-text-primary, #171717));
+    --_pill-font-size: var(--filter-pill-font-size, var(--type-size-150, 0.875rem));
+    --_pill-radius: var(--filter-pill-radius, var(--radius-full, 9999px));
+    --_pill-padding-x: var(--spacing-300, 0.75rem);
+    --_pill-height: 28px;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--_pill-gap);
+  }
+
+  .esa-filter-pills__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-100, 0.25rem);
+    height: var(--_pill-height);
+    padding-inline: var(--_pill-padding-x);
+    background: var(--_pill-bg);
+    border-radius: var(--_pill-radius);
+    font-size: var(--_pill-font-size);
+    font-family: var(--font-sans, inherit);
+    line-height: 1;
+    white-space: nowrap;
+    transition: background var(--transition-fast, 150ms ease);
+  }
+
+  .esa-filter-pills__chip:hover {
+    background: var(--filter-pill-bg-hover, var(--color-border, #e5e5e5));
+  }
+
+  .esa-filter-pills__label {
+    font-weight: var(--font-weight-medium, 450);
+    margin-inline-end: var(--spacing-100, 0.25rem);
+    color: var(--color-text-muted, #737373);
+  }
+
+  .esa-filter-pills__value {
+    color: var(--_pill-text);
+  }
+
+  .esa-filter-pills__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    margin-inline-start: var(--spacing-050, 0.125rem);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text-muted, #737373);
+    border-radius: var(--radius-full, 9999px);
+    transition:
+      color var(--transition-fast, 150ms ease),
+      background var(--transition-fast, 150ms ease);
+  }
+
+  .esa-filter-pills__remove:hover {
+    color: var(--color-text-primary, #171717);
+  }
+
+  .esa-filter-pills__remove:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+    outline-offset: 1px;
+  }
+
+  .esa-filter-pills__remove-icon {
+    width: 16px;
+    height: 16px;
+    line-height: 1;
+  }
+</style>
+
+<script>
+  // Forward each remove click as a bubbling, composed event with the filter
+  // identity, so a parent esa-filter-container can drop that value from state.
+  document.querySelectorAll('[data-esa-filter-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      btn.dispatchEvent(
+        new CustomEvent('esa-filter-remove', {
+          detail: {
+            name: btn.getAttribute('data-name'),
+            value: btn.getAttribute('data-value'),
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    });
+  });
+</script>

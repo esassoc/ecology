@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import Button from '@esa/ecology/Button.astro';
+---
+<BaseLayout title="Button Group — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Button Group</h1>
+      <p>Groups buttons with connected borders. <code>selection-mode="none"</code> is visual-only; <code>selection-mode="single"</code> is a radio-like segmented control emitting a composed <code>change</code> event.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Visual grouping (selection-mode="none")</h2>
+      <esa-button-group>
+        <Button variant="secondary">Day</Button>
+        <Button variant="secondary">Week</Button>
+        <Button variant="secondary">Month</Button>
+      </esa-button-group>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Single selection (segmented control)</h2>
+      <esa-button-group selection-mode="single" value="week" id="seg">
+        <button class="seg-btn" data-value="day">Day</button>
+        <button class="seg-btn" data-value="week">Week</button>
+        <button class="seg-btn" data-value="month">Month</button>
+      </esa-button-group>
+      <p>Selected: <code id="seg-out">week</code></p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Modes:</strong> <code>none</code> (grouping) / <code>single</code> (one active child, <code>data-value</code> per child).</li>
+        <li><strong>Event:</strong> <code>change</code> with <code>{'{ value }'}</code> in single mode.</li>
+        <li><strong>Styling:</strong> connected corners via <code>::slotted</code>; active child gets <code>data-selected</code> + <code>aria-pressed</code>.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>
+
+<style>
+  .seg-btn {
+    font: inherit;
+    font-size: var(--type-size-200, 1rem);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border: 1px solid var(--color-border, #e5e5e5);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    cursor: pointer;
+  }
+  .seg-btn[data-selected] {
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    border-color: var(--color-primary, #005862);
+  }
+</style>
+
+<script>
+  import '@esa/ecology/esa-button-group';
+  const seg = document.getElementById('seg');
+  const out = document.getElementById('seg-out');
+  seg?.addEventListener('change', (e) => {
+    out.textContent = (e as CustomEvent).detail.value;
+  });
+</script>

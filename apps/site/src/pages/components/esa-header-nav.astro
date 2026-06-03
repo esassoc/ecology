@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import EsaHeaderNav from '@esa/ecology/esa-header-nav.astro';
+
+const items = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Projects', href: '/projects' },
+  {
+    label: 'Reports',
+    children: [
+      { label: 'Monthly', href: '/reports/monthly' },
+      { label: 'Quarterly', href: '/reports/quarterly' },
+      { label: 'Annual', href: '/reports/annual' },
+    ],
+  },
+  { label: 'Settings', href: '/settings' },
+];
+
+const user = { name: 'Jordan Rivers', email: 'jordan@esassoc.com' };
+---
+<BaseLayout title="esa-header-nav — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>esa-header-nav <code>[.astro]</code></h1>
+      <p>Presentational top app bar: brand slot, primary nav with dropdowns, actions slot, user menu, and a mobile hamburger. Dropdowns / user menu / mobile menu use native <code>&lt;details&gt;</code> disclosures, so no runtime JS is required.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With nav, dropdown, and user menu</h2>
+      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: visible;">
+        <EsaHeaderNav items={items} user={user}>
+          <strong slot="brand" style="color: var(--color-primary, #005862); font-size: var(--type-size-300, 1.125rem);">ESA</strong>
+        </EsaHeaderNav>
+      </div>
+      <p>Open <strong>Reports</strong> or the avatar to expand the disclosures.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Brand only (no user)</h2>
+      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: visible;">
+        <EsaHeaderNav items={items}>
+          <strong slot="brand" style="color: var(--color-primary, #005862); font-size: var(--type-size-300, 1.125rem);">Beacon</strong>
+        </EsaHeaderNav>
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Props:</strong> <code>items</code> (label / href / icon / children), <code>user</code> (name / email / avatarUrl / initials).</li>
+        <li><strong>Slots:</strong> <code>brand</code> (left logo), <code>actions</code> (right, before user menu).</li>
+        <li><strong>Interactivity:</strong> nav dropdowns, user menu, and the &lt;768px hamburger are native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> — zero JS.</li>
+        <li><strong>Tokens:</strong> <code>--header-height</code>, surface / border / text-secondary / primary, spacing, radius, shadow-200, z-dropdown / z-header.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>

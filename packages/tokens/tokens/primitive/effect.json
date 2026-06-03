@@ -1,0 +1,44 @@
+{
+  "shadow": {
+    "50":  { "$value": "0 1px 4px 0 rgba(0, 0, 0, 0.03)",    "$type": "other" },
+    "100": { "$value": "0 2px 12px 0 rgba(0, 0, 0, 0.04)",   "$type": "other" },
+    "200": { "$value": "0 4px 20px -4px rgba(0, 0, 0, 0.06)","$type": "other" },
+    "300": { "$value": "0 6px 24px -6px rgba(0, 0, 0, 0.07)","$type": "other" },
+    "400": { "$value": "0 8px 32px -8px rgba(0, 0, 0, 0.08)","$type": "other" }
+  },
+  "transition": {
+    "fast": { "$value": "150ms ease", "$type": "other" },
+    "base": { "$value": "200ms ease", "$type": "other" },
+    "slow": { "$value": "350ms ease", "$type": "other" }
+  },
+  "z": {
+    "dropdown":       { "$value": "50",  "$type": "other" },
+    "sidebar":        { "$value": "100", "$type": "other" },
+    "header":         { "$value": "200", "$type": "other" },
+    "modal-backdrop": { "$value": "300", "$type": "other" },
+    "modal":          { "$value": "400", "$type": "other" },
+    "toast":          { "$value": "500", "$type": "other" },
+    "tooltip":        { "$value": "600", "$type": "other" }
+  },
+  "focus-ring": {
+    "color":  { "$value": "{color.primary}", "$type": "color" },
+    "width":  { "$value": "2px", "$type": "dimension" },
+    "offset": { "$value": "2px", "$type": "dimension" }
+  },
+  "icon": {
+    "size": {
+      "small":  { "$value": "16px", "$type": "dimension" },
+      "medium": { "$value": "20px", "$type": "dimension" },
+      "large":  { "$value": "24px", "$type": "dimension" }
+    }
+  },
+  "color": {
+    "hover-overlay":        { "$value": "rgba(0, 0, 0, 0.03)",   "$type": "color" },
+    "hover-overlay-strong": { "$value": "rgba(0, 0, 0, 0.05)",   "$type": "color" },
+    "active-overlay":       { "$value": "rgba(0, 88, 98, 0.08)", "$type": "color" },
+    "backdrop":             { "$value": "rgba(0, 0, 0, 0.5)",    "$type": "color" }
+  },
+  "touch-target": {
+    "min": { "$value": "44px", "$type": "dimension" }
+  }
+}

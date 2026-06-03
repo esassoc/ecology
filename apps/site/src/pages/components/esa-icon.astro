@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import EsaIcon from '@esa/ecology/esa-icon.astro';
+
+// The names available in the inlined Lucide lookup (see esa-icon.astro).
+const names = [
+  'home', 'settings', 'plus', 'x', 'check',
+  'chevron-down', 'chevron-up', 'chevron-left', 'chevron-right',
+  'chevrons-left', 'chevrons-right', 'search', 'filter',
+  'arrow-left', 'arrow-right', 'arrow-up', 'arrow-down',
+  'circle-alert', 'circle-check', 'circle-x', 'info', 'eye',
+  'pencil', 'trash-2', 'copy', 'download', 'upload', 'external-link',
+  'calendar', 'user', 'users', 'star', 'loader', 'menu', 'bell',
+  'triangle-alert', 'save', 'circle-question-mark',
+];
+---
+<BaseLayout title="esa-icon — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>esa-icon</h1>
+      <p>
+        Icon primitive migrated from <code>@esa/ecology/core</code>. The Angular version wrapped
+        <code>lucide-angular</code>; this build inlines the Lucide SVGs it needs (paths from
+        lucide.dev) with no icon dependency. Size mapping: small=16, medium=20, large=24.
+        Color inherits via <code>currentColor</code>.
+      </p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="400" direction="row" align="center" wrap={true}>
+        <EsaIcon name="star" size="small" />
+        <EsaIcon name="star" size="medium" />
+        <EsaIcon name="star" size="large" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Color inheritance</h2>
+      <Stack gap="400" direction="row" align="center" wrap={true}>
+        <span style="color: var(--color-primary, #005862)"><EsaIcon name="circle-check" size="large" /></span>
+        <span style="color: var(--color-warning, #f59e0b)"><EsaIcon name="triangle-alert" size="large" /></span>
+        <span style="color: var(--color-danger, #ef4444)"><EsaIcon name="circle-x" size="large" /></span>
+        <span style="color: var(--color-info, #3b82f6)"><EsaIcon name="info" size="large" /></span>
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Gallery</h2>
+      <div class="icon-grid">
+        {names.map((n) => (
+          <div class="icon-cell">
+            <EsaIcon name={n} size="medium" />
+            <code>{n}</code>
+          </div>
+        ))}
+      </div>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Accessibility</h2>
+      <ul>
+        <li><strong>Decorative (default):</strong> no <code>label</code> → <code>aria-hidden="true"</code>.</li>
+        <li><strong>Meaningful:</strong> pass <code>label</code> → <code>role="img"</code> + <code>aria-label</code>. Example: <EsaIcon name="bell" label="Notifications" /></li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>
+
+<style>
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--spacing-300, 0.75rem);
+  }
+  .icon-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-200, 0.5rem);
+    padding: var(--spacing-300, 0.75rem);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-200, 8px);
+    text-align: center;
+  }
+  .icon-cell code { font-size: var(--type-size-100, 0.75rem); background: none; }
+</style>

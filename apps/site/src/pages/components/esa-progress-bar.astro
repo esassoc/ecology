@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stack from '@esa/ecology/Stack.astro';
+import ProgressBar from '@esa/ecology/esa-progress-bar.astro';
+---
+<BaseLayout title="Progress Bar — Ecology">
+  <Stack gap="500">
+    <Stack gap="200">
+      <p><a href="/">← Ecology</a></p>
+      <h1>Progress Bar</h1>
+      <p>Linear progress indicator with determinate and indeterminate modes, sizes, color variants, and an optional label + percentage.</p>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Determinate values</h2>
+      <Stack gap="400">
+        <ProgressBar value={25} />
+        <ProgressBar value={50} />
+        <ProgressBar value={75} />
+        <ProgressBar value={100} />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>With label &amp; value</h2>
+      <Stack gap="400">
+        <ProgressBar value={68} label="Uploading" showValue={true} />
+        <ProgressBar value={40} label="Processing" showValue={true} variant="warning" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Variants</h2>
+      <Stack gap="400">
+        <ProgressBar value={60} variant="primary" />
+        <ProgressBar value={60} variant="success" />
+        <ProgressBar value={60} variant="warning" />
+        <ProgressBar value={60} variant="danger" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Sizes</h2>
+      <Stack gap="400">
+        <ProgressBar value={50} size="small" />
+        <ProgressBar value={50} size="medium" />
+        <ProgressBar value={50} size="large" />
+      </Stack>
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Indeterminate</h2>
+      <ProgressBar mode="indeterminate" label="Loading…" />
+    </Stack>
+
+    <Stack gap="300">
+      <h2>Anatomy &amp; behavior</h2>
+      <ul>
+        <li><strong>Value</strong> is clamped to 0–100; indeterminate mode runs a looping translate animation.</li>
+        <li><strong>A11y:</strong> <code>role="progressbar"</code> with <code>aria-valuenow/min/max</code> and <code>aria-label</code>.</li>
+        <li><strong>Tokens consumed:</strong> primary / success / warning / danger fills, surface-sunken track, radius-full, spacing scale.</li>
+      </ul>
+    </Stack>
+  </Stack>
+</BaseLayout>
