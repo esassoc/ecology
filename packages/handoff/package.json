@@ -1,0 +1,21 @@
+{
+  "name": "@esa/handoff",
+  "version": "0.0.1",
+  "description": "Dev-mode handoff export for Ecology spokes — turns a rendered Astro prototype URL into a self-contained, de-scoped HTML/CSS bundle + token contract + component manifest.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "handoff": "./bin/handoff.mjs"
+  },
+  "exports": {
+    "./integration": "./integration.mjs",
+    "./toolbar-app.js": "./toolbar-app.js"
+  },
+  "scripts": {
+    "handoff": "node bin/handoff.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.60.0",
+    "prettier": "^3.0.0"
+  }
+}
