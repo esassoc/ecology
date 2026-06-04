@@ -1,0 +1,74 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaDangerZone from '@esa/ecology/esa-danger-zone.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+
+const props = [
+  { name: 'heading', type: 'string', default: "'Danger Zone'", description: 'Section heading, rendered in danger color and wired to the group via aria-labelledby.' },
+  { name: 'description', type: 'string', description: 'Optional supporting copy explaining the consequence of the actions.' },
+];
+---
+<ComponentDoc name="Danger Zone" category="Display" slug="esa-danger-zone" type=".astro" status="stable"
+  summary="A bordered section that corrals one or more destructive actions behind clear danger-colored chrome — a tinted background, danger border, and danger-colored heading — so a misclick is harder to make by accident.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaDangerZone description="Deleting this project also removes its annotations and history. This cannot be undone.">
+  <EsaButton color="danger">Delete project</EsaButton>
+</EsaDangerZone>`}>
+      <EsaDangerZone description="Deleting this project also removes its annotations and history. This cannot be undone.">
+        <EsaButton color="danger">Delete project</EsaButton>
+      </EsaDangerZone>
+    </Preview>
+  </Section>
+
+  <Section id="multiple-actions" title="Multiple actions">
+    <p>Project any number of destructive actions into the default slot — they wrap on a shared gap.</p>
+    <Preview code={`<EsaDangerZone heading="Irreversible actions" description="These operations cannot be undone.">
+  <EsaButton color="danger" appearance="outline">Archive</EsaButton>
+  <EsaButton color="danger">Delete</EsaButton>
+</EsaDangerZone>`}>
+      <EsaDangerZone heading="Irreversible actions" description="These operations cannot be undone.">
+        <EsaButton color="danger" appearance="outline">Archive</EsaButton>
+        <EsaButton color="danger">Delete</EsaButton>
+      </EsaDangerZone>
+    </Preview>
+  </Section>
+
+  <Section id="heading-only" title="Heading only">
+    <p>The <code>description</code> is optional — omit it for a compact zone.</p>
+    <Preview code={`<EsaDangerZone>
+  <EsaButton color="danger">Revoke access</EsaButton>
+</EsaDangerZone>`}>
+      <EsaDangerZone>
+        <EsaButton color="danger">Revoke access</EsaButton>
+      </EsaDangerZone>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <p class="slot-note">The <strong>default slot</strong> holds the destructive action(s) or content — typically one or more <code>esa-button</code> elements with <code>color="danger"</code>.</p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a <code>&lt;section role="group"&gt;</code> labelled by its heading via <code>aria-labelledby</code>, so assistive tech announces the grouping and its name.</li>
+      <li>The heading is a real <code>&lt;h3&gt;</code> — keep the document outline in mind and override the level in your own markup if the surrounding context needs it.</li>
+      <li>Danger emphasis is conveyed by a tinted background, full border, and heading color — never by color alone for meaning; the heading text itself names the intent.</li>
+      <li>Pair each destructive action with a confirmation step (e.g. a confirm dialog) so the zone is the warning and the dialog is the gate.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>The zone reads danger semantic tokens with literal fallbacks. Override to re-skin:</p>
+    <ul class="tokens">
+      <li><code>--color-danger-subtle</code> (background) · <code>--color-danger-border</code> (border)</li>
+      <li><code>--color-red-800</code> (heading) · <code>--color-text-secondary</code> (description)</li>
+      <li><code>--radius-200</code> (corners) · <code>--spacing-300</code> (padding) · <code>--spacing-200</code> (gap)</li>
+      <li><code>--type-size-250</code> (heading) · <code>--type-size-200</code> (description) · <code>--font-sans</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

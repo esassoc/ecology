@@ -1,0 +1,119 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, teal, amber." },
+  { name: 'value', type: 'string', default: "''", description: 'The selected option value. Exactly one chip is active at a time.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Chip size on the shared form scale.' },
+  { name: 'name', type: 'string', default: "''", description: 'Field name the selected value is submitted under.' },
+  { name: 'label', type: 'string', default: "''", description: 'Accessible label applied to the radiogroup (aria-label).' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when the selection changes via click or keyboard. Composed and bubbling; detail.value is the newly selected value.' },
+];
+---
+<ComponentDoc name="Chip Group" category="Display" slug="esa-chip-group" type="wc" status="stable"
+  summary="Single-select pill toggles — a horizontal row where exactly one chip is active. Each option carries a <code>tone</code> (neutral, neutral-strong, teal, or amber) that colors its active state. Arrow keys move, Enter or Space select. Form-associated; emits a composed <code>change</code> event.">
+
+  <Section id="preview" title="Preview">
+    <p>Set the <code>options</code> property to a list of <code>{'{ value, label, tone? }'}</code>. Exactly one chip is active, tracked by <code>value</code>.</p>
+    <Preview align="start" code={`<esa-chip-group label="Status filter" value="open"></esa-chip-group>
+
+<script>
+  document.querySelector('esa-chip-group').options = [
+    { value: 'all', label: 'All', tone: 'neutral' },
+    { value: 'open', label: 'Open', tone: 'teal' },
+    { value: 'flagged', label: 'Flagged', tone: 'amber' },
+  ];
+</script>`}>
+      <esa-chip-group data-demo="preview" label="Status filter" value="open"></esa-chip-group>
+    </Preview>
+  </Section>
+
+  <Section id="tones" title="Tones">
+    <p>Each option's <code>tone</code> sets the palette of its active state, mapped to Ecology semantic tokens. <code>neutral</code> is the default.</p>
+    <Preview align="start" code={`{ value: 'n',  label: 'Neutral',        tone: 'neutral' }
+{ value: 'ns', label: 'Neutral strong', tone: 'neutral-strong' }
+{ value: 't',  label: 'Teal',           tone: 'teal' }
+{ value: 'a',  label: 'Amber',          tone: 'amber' }`}>
+      <esa-chip-group data-demo="tones" label="Tone showcase" value="t"></esa-chip-group>
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <p>Chips follow the shared form size scale.</p>
+    <Preview align="start" code={`<esa-chip-group size="xs" ...></esa-chip-group>
+<esa-chip-group size="sm" ...></esa-chip-group>
+<esa-chip-group size="md" ...></esa-chip-group>
+<esa-chip-group size="lg" ...></esa-chip-group>`}>
+      <div class="col">
+        <esa-chip-group data-demo="size-xs" label="Extra small" size="xs" value="open"></esa-chip-group>
+        <esa-chip-group data-demo="size-sm" label="Small" size="sm" value="open"></esa-chip-group>
+        <esa-chip-group data-demo="size-md" label="Medium" size="md" value="open"></esa-chip-group>
+        <esa-chip-group data-demo="size-lg" label="Large" size="lg" value="open"></esa-chip-group>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The host carries <code>role="radiogroup"</code> labeled by <code>label</code> (aria-label).</li>
+      <li>Each chip is a <code>role="radio"</code> with <code>aria-checked</code>; only the active chip is in the tab order (roving tabindex).</li>
+      <li>Arrow keys move selection with wrap-around; <code>Home</code> and <code>End</code> jump to the ends; selection follows arrow focus per the WAI-ARIA radio pattern.</li>
+      <li><code>Enter</code> and <code>Space</code> select the focused chip.</li>
+      <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Resting chrome reads the form and surface layers; each tone reads its semantic token for the active state. Override to re-skin:</p>
+    <ul class="tokens">
+      <li><code>--color-surface</code> / <code>--color-border</code> · <code>--color-text-secondary</code> (resting chrome)</li>
+      <li><code>--color-surface-sunken</code> / <code>--color-border-strong</code> (neutral and neutral-strong active)</li>
+      <li><code>--color-teal-50</code> / <code>--color-teal-200</code> / <code>--color-primary</code> (teal active)</li>
+      <li><code>--color-warning-subtle</code> / <code>--color-warning-border</code> / <code>--color-warning</code> (amber active)</li>
+      <li><code>{'--form-{padding-x,font-size}-{xs,sm,md,lg}'}</code> (size scale) · <code>--radius-full</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> · <code>--transition-fast</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); align-items: flex-start; }
+</style>
+
+<script>
+  import '@esa/ecology/esa-chip-group';
+  type ChipEl = HTMLElement & { options: unknown };
+
+  const statusSet = [
+    { value: 'all', label: 'All', tone: 'neutral' },
+    { value: 'open', label: 'Open', tone: 'teal' },
+    { value: 'flagged', label: 'Flagged', tone: 'amber' },
+  ];
+  const toneSet = [
+    { value: 'n', label: 'Neutral', tone: 'neutral' },
+    { value: 'ns', label: 'Neutral strong', tone: 'neutral-strong' },
+    { value: 't', label: 'Teal', tone: 'teal' },
+    { value: 'a', label: 'Amber', tone: 'amber' },
+  ];
+
+  const set = (selector: string, options: unknown) => {
+    const el = document.querySelector(selector) as ChipEl | null;
+    if (el) el.options = options;
+  };
+
+  set('[data-demo="preview"]', statusSet);
+  set('[data-demo="tones"]', toneSet);
+  for (const size of ['xs', 'sm', 'md', 'lg']) {
+    set(`[data-demo="size-${size}"]`, statusSet);
+  }
+</script>

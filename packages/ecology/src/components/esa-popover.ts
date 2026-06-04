@@ -22,6 +22,7 @@ export class EsaPopover extends LitElement {
     hasArrow: { type: Boolean, attribute: 'has-arrow' },
     offset: { type: Number },
     open: { type: Boolean, reflect: true },
+    appearance: { type: String, reflect: true },
   };
 
   declare position: PopoverPosition;
@@ -29,6 +30,8 @@ export class EsaPopover extends LitElement {
   declare hasArrow: boolean;
   declare offset: number;
   declare open: boolean;
+  /** Aligned to Beacon's PopoverAppearance: light surface vs dark inverse. */
+  declare appearance: 'default' | 'inverse';
 
   private showTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -39,6 +42,7 @@ export class EsaPopover extends LitElement {
     this.hasArrow = true;
     this.offset = 8;
     this.open = false;
+    this.appearance = 'default';
   }
 
   disconnectedCallback(): void {
@@ -129,7 +133,17 @@ export class EsaPopover extends LitElement {
       --_popover-radius: var(--radius-200, 0.5rem);
       --_popover-padding: var(--spacing-300, 0.75rem);
       --_popover-arrow-size: 8px;
+      --_popover-color: var(--color-text-primary, #171717);
       display: inline-block;
+    }
+
+    /* Inverse appearance (Beacon PopoverAppearance='inverse'): dark panel, light
+       text — for documentation/help content. Overriding the private bg/border
+       tokens re-skins both the panel and the arrow. */
+    :host([appearance='inverse']) {
+      --_popover-bg: var(--color-gray-900, #171717);
+      --_popover-border: var(--color-gray-900, #171717);
+      --_popover-color: var(--color-text-inverse, #ffffff);
     }
 
     .esa-popover-anchor {
@@ -147,7 +161,7 @@ export class EsaPopover extends LitElement {
       box-shadow: var(--_popover-shadow);
       animation: esa-popover-fade-in 150ms ease-out;
       font-family: var(--font-sans, 'DM Sans', sans-serif);
-      color: var(--color-text-primary, #171717);
+      color: var(--_popover-color);
     }
 
     .esa-popover--bottom {

@@ -1,0 +1,74 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '../../components/docs/Section.astro';
+
+const shadows = [
+  { token: '--shadow-50', value: '0 1px 4px rgba(0,0,0,.03)', role: 'Rest state, subtle lift' },
+  { token: '--shadow-100', value: '0 2px 12px rgba(0,0,0,.04)', role: 'Cards, list items' },
+  { token: '--shadow-200', value: '0 4px 20px -4px rgba(0,0,0,.06)', role: 'Hover, raised cards' },
+  { token: '--shadow-300', value: '0 6px 24px -6px rgba(0,0,0,.07)', role: 'Dropdowns, popovers' },
+  { token: '--shadow-400', value: '0 8px 32px -8px rgba(0,0,0,.08)', role: 'Modals, dialogs' },
+];
+
+const zIndex = [
+  { token: '--z-dropdown', value: '50', role: 'Menus, comboboxes' },
+  { token: '--z-sidebar', value: '100', role: 'App sidebar' },
+  { token: '--z-header', value: '200', role: 'Sticky header / topbar' },
+  { token: '--z-modal-backdrop', value: '300', role: 'Dialog scrim' },
+  { token: '--z-modal', value: '400', role: 'Dialog surface' },
+  { token: '--z-toast', value: '500', role: 'Toasts / notifications' },
+  { token: '--z-tooltip', value: '600', role: 'Tooltips (always on top)' },
+];
+---
+<DocsLayout title="Elevation — Ecology" activeHref="/foundations/elevation">
+  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Elevation</span></nav>
+  <h1>Elevation</h1>
+  <p class="lede">Two systems work together to build depth: soft <strong>shadows</strong> imply lift off the surface, and a fixed <strong>z-index</strong> ladder keeps overlapping layers in a predictable stacking order.</p>
+
+  <Section id="shadows" title="Shadows">
+    <p>Deliberately soft and low-contrast — elevation should be felt, not seen. Each card below has its shadow token applied directly.</p>
+    <div class="cards">
+      {shadows.map((s) => (
+        <div class="card" style={`box-shadow: var(${s.token})`}>
+          <code>{s.token}</code>
+          <span class="card__value">{s.value}</span>
+          <span class="card__role">{s.role}</span>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="z-index" title="Z-index">
+    <p>Overlay layers reference these tokens instead of ad-hoc numbers, so stacking conflicts can't happen. The order is canonical — tooltips always win.</p>
+    <table class="z-table">
+      <thead>
+        <tr><th>Token</th><th>Value</th><th>Layer</th></tr>
+      </thead>
+      <tbody>
+        {zIndex.map((z) => (
+          <tr>
+            <td><code>{z.token}</code></td>
+            <td class="z-table__val">{z.value}</td>
+            <td class="z-table__role">{z.role}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+</DocsLayout>
+
+<style>
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--spacing-500, 1.5rem); padding: var(--spacing-300, 0.75rem) var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem); }
+  .card { display: flex; flex-direction: column; gap: 3px; background: var(--color-surface, #fff); border: 1px solid var(--color-border-light, #efefef); border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-400, 1rem); min-height: 96px; }
+  .card code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .card__value { font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--color-text-secondary, #525252); margin-top: auto; }
+  .card__role { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+
+  .z-table { width: 100%; border-collapse: collapse; border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; overflow: hidden; }
+  .z-table th { text-align: left; font-size: 13px; font-weight: 600; color: var(--color-text-secondary, #525252); padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem); background: var(--color-surface-sunken, #f5f5f5); border-bottom: 1px solid var(--color-border, #e5e5e5); }
+  .z-table td { padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem); border-bottom: 1px solid var(--color-border-light, #efefef); font-size: 14px; }
+  .z-table tr:last-child td { border-bottom: none; }
+  .z-table td code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .z-table__val { font-family: var(--font-mono, monospace); color: var(--color-text-secondary, #525252); }
+  .z-table__role { color: var(--color-text-muted, #737373); }
+</style>

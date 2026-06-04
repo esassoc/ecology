@@ -10,9 +10,9 @@ interface Props {
   label: string;
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
   removable?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
-const { label, variant = 'default', removable = true, size = 'medium' } = Astro.props;
+const { label, variant = 'default', removable = true, size = 'md' } = Astro.props;
 
 const hasIconSlot = Astro.slots.has('icon');
 const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
@@ -85,13 +85,19 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     box-sizing: border-box;
   }
 
-  .esa-pill--small {
+  .esa-pill--xs {
+    --_pill-height: 18px;
+    --_pill-font-size: 10px;
+    --_pill-padding-x: var(--spacing-100, 0.25rem);
+  }
+
+  .esa-pill--sm {
     --_pill-height: 22px;
     --_pill-font-size: 11px;
     --_pill-padding-x: var(--spacing-150, 0.375rem);
   }
 
-  .esa-pill--large {
+  .esa-pill--lg {
     --_pill-height: 34px;
     --_pill-font-size: 14px;
     --_pill-padding-x: var(--spacing-300, 0.75rem);

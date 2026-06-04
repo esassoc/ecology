@@ -1,30 +1,71 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
+
+const methods = [
+  { name: 'show(config)', type: 'method', description: 'Shows a toast. config: { message, variant?, duration?, action?, dismissable?, uniqueKey? }. Returns its id.' },
+  { name: 'success / info / warning / danger(msg, config?)', type: 'method', description: 'Shorthands for show() with that variant.' },
+  { name: 'dismiss(id)', type: 'method', description: 'Removes the toast with that id.' },
+  { name: 'clearAll()', type: 'method', description: 'Removes every active toast.' },
+];
+
+const config = [
+  { name: 'message', type: 'string', description: 'Toast body text.' },
+  { name: 'variant', type: "'info' | 'success' | 'warning' | 'danger'", default: "'info'", description: 'Color and leading icon.' },
+  { name: 'duration', type: 'number', default: '5000', description: 'Auto-dismiss delay in ms; 0 keeps it until dismissed.' },
+  { name: 'action', type: 'string', description: 'Optional action button label.' },
+  { name: 'dismissable', type: 'boolean', default: 'true', description: 'Renders the close button.' },
+  { name: 'uniqueKey', type: 'string', description: 'Dedupe key — a second show() with the same key is ignored.' },
+];
+
+const events = [
+  { name: 'snackbar-action', type: 'CustomEvent<{ id: string }>', description: "Fired when a toast's action button is pressed." },
+];
 ---
-<BaseLayout title="Snackbar Container — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Snackbar Container <code>[wc]</code></h1>
-      <p>Bottom-right toast stack with auto-dismiss. Drive it imperatively: <code>show(config)</code>, <code>success/info/warning/danger(msg)</code>, <code>dismiss(id)</code>, <code>clearAll()</code>. Defaults to info / 5000ms / dismissable, with <code>uniqueKey</code> dedupe.</p>
-    </Stack>
+<ComponentDoc name="Snackbar Container" category="Overlays" slug="esa-snackbar-container" type="wc" status="stable"
+  summary="Bottom-right toast stack with auto-dismiss. Drive it imperatively — <code>show(config)</code>, the variant shorthands, <code>dismiss(id)</code>, and <code>clearAll()</code>. Defaults to info / 5000ms / dismissable, with <code>uniqueKey</code> dedupe.">
 
-    <Stack gap="300">
-      <h2>Trigger toasts</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <button class="trigger" data-kind="info">Info</button>
-        <button class="trigger" data-kind="success">Success</button>
-        <button class="trigger" data-kind="warning">Warning</button>
-        <button class="trigger" data-kind="danger">Danger</button>
-        <button class="trigger" data-kind="action">With action</button>
-        <button class="trigger" data-kind="clear">Clear all</button>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <p>Place one container on the page, then call its methods: <code>el.success('Saved.')</code>.</p>
+    <Preview code={`<button data-kind="success">Success</button>
 
-    <esa-snackbar-container id="toasts"></esa-snackbar-container>
-  </Stack>
-</BaseLayout>
+<esa-snackbar-container id="toasts"></esa-snackbar-container>`}>
+      <button class="trigger" data-kind="info">Info</button>
+      <button class="trigger" data-kind="success">Success</button>
+      <button class="trigger" data-kind="warning">Warning</button>
+      <button class="trigger" data-kind="danger">Danger</button>
+      <button class="trigger" data-kind="action">With action</button>
+      <button class="trigger" data-kind="clear">Clear all</button>
+      <esa-snackbar-container id="toasts"></esa-snackbar-container>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <h3>Methods</h3>
+    <PropsTable rows={methods} />
+    <h3>Config object (show)</h3>
+    <PropsTable rows={config} />
+    <Api events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Toasts auto-dismiss after <code>duration</code>; provide enough time to read, or set <code>duration: 0</code> for important messages.</li>
+      <li>Each toast renders an <a href="/components/esa-snackbar-item">esa-snackbar-item</a> with a labelled dismiss button.</li>
+      <li>The newest toast appears at the bottom of the stack (column-reverse), nearest the user's attention.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--z-toast</code> · <code>--spacing-200</code> / <code>--spacing-500</code> (stack gap + offset)</li>
+      <li>Item colors come from <a href="/components/esa-snackbar-item">esa-snackbar-item</a>: <code>--color-green-800</code> / <code>--color-blue-800</code> / <code>--color-orange-800</code> / <code>--color-red-700</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>
   import '@esa/ecology/esa-snackbar-container';

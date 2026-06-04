@@ -1,65 +1,104 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
+  { name: 'options', type: '{ label, value, disabled? }[]', default: '[]', description: 'Selectable options. Set as a property (not an attribute).' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
+  { name: 'placeholder', type: 'string', default: "'Select...'", description: 'Placeholder shown when nothing is selected.' },
+  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the control.' },
+  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (renders a * after the label).' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
+  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections.' },
+  { name: 'searchable', type: 'boolean', default: 'true', description: 'Type-to-filter the option list. When false the input is read-only.' },
+  { name: 'chip-mode', type: 'boolean', default: 'false', description: 'In multi-select, render selected values as removable chips.' },
+  { name: 'value', type: 'string | string[]', description: 'Property accessor. Single = string; multiple = string array.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string | string[] }>', description: 'Fired on selection change. Composed and bubbles. Form value is the string (single) or comma-joined values (multiple).' },
+];
 ---
-<BaseLayout title="Select — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Select <code>[wc]</code></h1>
-      <p>Form-associated searchable select with single/multi-select, chips, and keyboard navigation. Migrated from Angular <code>esa-select</code> to a Lit Web Component.</p>
-    </Stack>
+<ComponentDoc name="Select" category="Forms" slug="esa-select" type="wc" status="stable"
+  summary="Form-associated searchable select with single/multi-select, chips, and full keyboard navigation. A Lit Web Component migrated from the Angular <code>esa-select</code>.">
 
-    <Stack gap="300">
-      <h2>Single select (searchable)</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>`}>
       <esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-select label="Small" size="small"></esa-select>
-      <esa-select label="Medium" size="medium"></esa-select>
-      <esa-select label="Large" size="large"></esa-select>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-select label="Extra small" size="xs"></esa-select>
+<esa-select label="Small" size="sm"></esa-select>
+<esa-select label="Medium" size="md"></esa-select>
+<esa-select label="Large" size="lg"></esa-select>`}>
+      <esa-select label="Extra small" size="xs"></esa-select>
+      <esa-select label="Small" size="sm"></esa-select>
+      <esa-select label="Medium" size="md"></esa-select>
+      <esa-select label="Large" size="lg"></esa-select>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Multi-select with chips</h2>
+  <Section id="states" title="States">
+    <p>Multi-select renders chips with <code>chip-mode</code>. Error, required, disabled, and read-only states are all driven by attributes.</p>
+    <Preview code={`<esa-select label="Toppings" multiple chip-mode placeholder="Add toppings"></esa-select>
+<esa-select label="Required" required></esa-select>
+<esa-select label="Error" error-text="Please make a selection"></esa-select>
+<esa-select label="Disabled" disabled></esa-select>`}>
       <esa-select label="Toppings" multiple chip-mode placeholder="Add toppings"></esa-select>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>States</h2>
       <esa-select label="Required" required></esa-select>
       <esa-select label="Error" error-text="Please make a selection"></esa-select>
       <esa-select label="Disabled" disabled></esa-select>
-      <esa-select label="Read-only (not searchable)" searchable={false}></esa-select>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Keyboard:</strong> ArrowUp/Down navigate, Enter selects, Escape/Tab close. Outside click closes.</li>
-        <li><strong>Form:</strong> form-associated — single value as string, multi joined with commas. Emits a composed <code>change</code> event.</li>
-        <li><strong>Tokens:</strong> primary, surface, surface-sunken, border, text-primary/muted, danger, radius, spacing, z-dropdown.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-select';
-    const opts = [
-      { label: 'Apple', value: 'apple' },
-      { label: 'Banana', value: 'banana' },
-      { label: 'Cherry', value: 'cherry' },
-      { label: 'Date', value: 'date', disabled: true },
-      { label: 'Elderberry', value: 'elderberry' },
-      { label: 'Fig', value: 'fig' },
-      { label: 'Grape', value: 'grape' },
-    ];
-    customElements.whenDefined('esa-select').then(() => {
-      document.querySelectorAll('esa-select').forEach((el) => {
-        (el as any).options = opts;
-      });
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Input has <code>role="combobox"</code> with <code>aria-expanded</code>, <code>aria-haspopup="listbox"</code>, and <code>aria-autocomplete="list"</code>.</li>
+      <li>Dropdown is <code>role="listbox"</code>; options are <code>role="option"</code> with <code>aria-selected</code> / <code>aria-disabled</code>.</li>
+      <li>Keyboard: ArrowUp/Down navigate, Enter selects, Escape/Tab close. Outside-click closes.</li>
+      <li>Chip remove buttons carry an <code>aria-label</code> ("Remove {'{label}'}").</li>
+      <li>Form-associated via <code>ElementInternals</code> — value submits with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--form-bg</code> · <code>--form-text-color</code> · <code>--form-border-color</code> / <code>--form-border-color-focus</code> / <code>--form-border-color-error</code></li>
+      <li><code>--form-height-*</code> · <code>--form-padding-*</code> · <code>--form-radius-*</code> · <code>--form-font-size-*</code></li>
+      <li><code>--color-surface</code> · <code>--color-surface-sunken</code> · <code>--color-active-overlay</code> · <code>--color-primary</code></li>
+      <li><code>--color-danger</code> · <code>--focus-ring-color</code> · <code>--z-dropdown</code> · <code>--shadow-200</code> · <code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>
+  import '@esa/ecology/esa-select';
+  const opts = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Banana', value: 'banana' },
+    { label: 'Cherry', value: 'cherry' },
+    { label: 'Date', value: 'date', disabled: true },
+    { label: 'Elderberry', value: 'elderberry' },
+    { label: 'Fig', value: 'fig' },
+    { label: 'Grape', value: 'grape' },
+  ];
+  customElements.whenDefined('esa-select').then(() => {
+    document.querySelectorAll('esa-select').forEach((el) => {
+      (el as any).options = opts;
     });
-  </script>
-</BaseLayout>
+  });
+</script>
+
+<style>
+  h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+</style>

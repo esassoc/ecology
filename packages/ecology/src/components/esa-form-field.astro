@@ -5,7 +5,7 @@
 // the label font-size. Angular @if → conditional render; host classes → class list.
 interface Props {
   label?: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   helpText?: string;
   errorText?: string;
   required?: boolean;
@@ -13,7 +13,7 @@ interface Props {
 }
 const {
   label = '',
-  size = 'medium',
+  size = 'md',
   helpText = '',
   errorText = '',
   required = false,
@@ -59,14 +59,15 @@ const cls = [
     --_font-weight: var(--font-weight-medium, 450);
     --_help-font-size: var(--type-size-100, 0.75rem);
     --_required-color: var(--color-danger, #ef4444);
-    --_label-font-size: var(--form-font-size-medium, 0.9375rem);
+    --_label-font-size: var(--form-font-size-md, 0.9375rem);
 
     display: flex;
     flex-direction: column;
   }
 
-  .esa-form-field--small { --_label-font-size: var(--form-font-size-small, 0.875rem); }
-  .esa-form-field--large { --_label-font-size: var(--form-font-size-large, 1.125rem); }
+  .esa-form-field--xs { --_label-font-size: var(--form-font-size-xs, 0.8125rem); }
+  .esa-form-field--sm { --_label-font-size: var(--form-font-size-sm, 0.875rem); }
+  .esa-form-field--lg { --_label-font-size: var(--form-font-size-lg, 1.125rem); }
 
   .esa-form-field__label {
     color: var(--_label-color);

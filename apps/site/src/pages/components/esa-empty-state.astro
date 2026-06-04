@@ -1,34 +1,62 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
 import EmptyState from '@esa/ecology/esa-empty-state.astro';
+
+const props = [
+  { name: 'title', type: 'string', description: 'Required. The primary heading of the empty state.' },
+  { name: 'description', type: 'string', description: 'Optional supporting line below the title.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Scales icon, text, and padding.' },
+];
+
+const slots = [
+  { name: 'icon', type: 'slot', description: 'Inline SVG, scaled to the size variant.' },
+  { name: 'default', type: 'slot', description: 'Action buttons rendered below the description.' },
+];
 ---
-<BaseLayout title="Empty State — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Empty State</h1>
-      <p>Centered placeholder for empty lists or zero-result views: optional icon, required title, optional description, and slotted actions.</p>
-    </Stack>
+<ComponentDoc name="Empty State" category="Display" slug="esa-empty-state" type=".astro" status="stable"
+  summary="Centered placeholder for empty lists or zero-result views: optional icon, required title, optional description, and slotted actions.">
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300">
-        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
-          <EmptyState size="small" title="No results" description="Try adjusting your filters." />
-        </div>
-        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
-          <EmptyState size="medium" title="No results" description="Try adjusting your filters." />
-        </div>
-        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
-          <EmptyState size="large" title="No results" description="Try adjusting your filters." />
-        </div>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<EmptyState title="No results" description="Try adjusting your filters." />`}>
+      <div style="width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+        <EmptyState title="No results" description="Try adjusting your filters." />
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With icon &amp; actions</h2>
-      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+  <Section id="sizes" title="Sizes">
+    <Preview align="start" code={`<EmptyState size="xs" title="No results" description="Try adjusting your filters." />
+<EmptyState size="sm" title="No results" description="Try adjusting your filters." />
+<EmptyState size="md" title="No results" description="Try adjusting your filters." />
+<EmptyState size="lg" title="No results" description="Try adjusting your filters." />`}>
+      <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="xs" title="No results" description="Try adjusting your filters." />
+        </div>
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="sm" title="No results" description="Try adjusting your filters." />
+        </div>
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="md" title="No results" description="Try adjusting your filters." />
+        </div>
+        <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
+          <EmptyState size="lg" title="No results" description="Try adjusting your filters." />
+        </div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="Icon & actions">
+    <p>Pass an icon via the <code>icon</code> slot and action buttons via the default slot. The title alone is enough for a minimal state.</p>
+    <Preview align="start" code={`<EmptyState title="No documents yet" description="Upload your first document to get started.">
+  <svg slot="icon">…</svg>
+  <button type="button">Upload document</button>
+</EmptyState>`}>
+      <div style="width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
         <EmptyState title="No documents yet" description="Upload your first document to get started.">
           <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
@@ -37,22 +65,27 @@ import EmptyState from '@esa/ecology/esa-empty-state.astro';
           <button type="button">Upload document</button>
         </EmptyState>
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Title only</h2>
-      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem);">
-        <EmptyState title="Nothing here" />
-      </div>
-    </Stack>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} />
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Slots:</strong> <code>icon</code> (inline SVG, scaled per size), default → action buttons.</li>
-        <li><strong>Title</strong> is required; description and icon are optional.</li>
-        <li><strong>Tokens consumed:</strong> <code>--color-text-muted</code>, <code>--color-text-primary</code>, <code>--color-text-secondary</code>, spacing scale.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The title renders as an <code>&lt;h3&gt;</code> — keep heading order coherent within the page.</li>
+      <li>The icon is decorative (<code>aria-hidden</code>); meaning comes from the title and description.</li>
+      <li>Action buttons in the default slot keep native button semantics and focus order.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-text-muted</code> (icon) · <code>--color-text-primary</code> (title) · <code>--color-text-secondary</code> (description)</li>
+      <li><code>--spacing-*</code> — padding and gap scale per size</li>
+    </ul>
+  </Section>
+</ComponentDoc>

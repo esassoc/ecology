@@ -1,6 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import EsaBreadcrumbs from '@esa/ecology/esa-breadcrumbs.astro';
 
 const homeIcon =
@@ -17,42 +19,71 @@ const withIcon = [
   { label: 'Permits', href: '/compliance/permits' },
   { label: 'NPDES-2024-118' },
 ];
+
+const props = [
+  { name: 'items', type: 'EsaBreadcrumbItem[]', description: 'Trail of crumbs. Each item is { label; href?; icon? }. The last item is rendered as the current page.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Type scale of the trail.' },
+];
 ---
-<BaseLayout title="esa-breadcrumbs — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-breadcrumbs <code>[.astro]</code></h1>
-      <p>Presentational breadcrumb trail. The last item is treated as the current page. Migrated from the Angular <code>navigation</code> entry point.</p>
-    </Stack>
+<ComponentDoc name="Breadcrumbs" category="Navigation" slug="esa-breadcrumbs" type=".astro" status="stable"
+  summary="Presentational breadcrumb trail showing the path to the current page. The last item is treated as the current page and is not a link.">
 
-    <Stack gap="300">
-      <h2>Basic</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaBreadcrumbs items={[
+  { label: 'Home', href: '/' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Wetland Survey' },
+]} />`}>
       <EsaBreadcrumbs items={basic} />
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With a leading icon</h2>
+  <Section id="states" title="States">
+    <p>Crumbs accept an optional leading icon (raw inline SVG) on any item — useful for a home glyph.</p>
+    <Preview code={`<EsaBreadcrumbs items={[
+  { label: 'Home', href: '/', icon: homeIconSvg },
+  { label: 'Compliance', href: '/compliance' },
+  { label: 'Permits', href: '/compliance/permits' },
+  { label: 'NPDES-2024-118' },
+]} />`}>
       <EsaBreadcrumbs items={withIcon} />
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300">
-        <EsaBreadcrumbs items={basic} size="small" />
-        <EsaBreadcrumbs items={basic} size="medium" />
-        <EsaBreadcrumbs items={basic} size="large" />
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview align="start" code={`<EsaBreadcrumbs items={items} size="xs" />
+<EsaBreadcrumbs items={items} size="sm" />
+<EsaBreadcrumbs items={items} size="md" />
+<EsaBreadcrumbs items={items} size="lg" />`}>
+      <div style="display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem);">
+        <EsaBreadcrumbs items={basic} size="xs" />
+        <EsaBreadcrumbs items={basic} size="sm" />
+        <EsaBreadcrumbs items={basic} size="md" />
+        <EsaBreadcrumbs items={basic} size="lg" />
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Props:</strong> <code>items</code> (label / optional href / optional icon SVG), <code>size</code>.</li>
-        <li><strong>Separator:</strong> inline Lucide <code>chevron-right</code> SVG, <code>aria-hidden</code>.</li>
-        <li><strong>A11y:</strong> <code>&lt;nav aria-label="Breadcrumb"&gt;</code>, last crumb gets <code>aria-current="page"</code>.</li>
-        <li><strong>Tokens:</strong> text-link / text-link-hover / text-primary / text-muted, type-size scale, spacing.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <p>Each <code>EsaBreadcrumbItem</code> is <code>{'{ label: string; href?: string; icon?: string }'}</code>. Omit <code>href</code> on the final item; <code>icon</code> is a raw inline SVG string.</p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Wraps the trail in <code>&lt;nav aria-label="Breadcrumb"&gt;</code> with an ordered <code>&lt;ol&gt;</code>.</li>
+      <li>The last crumb receives <code>aria-current="page"</code> and renders as plain text, not a link.</li>
+      <li>The chevron separator is decorative — marked <code>aria-hidden="true"</code>.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override these to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--breadcrumbs-link-color</code> / <code>--breadcrumbs-link-hover</code> · <code>--breadcrumbs-separator-color</code></li>
+      <li><code>--color-text-primary</code> (current page) · <code>--color-text-muted</code></li>
+      <li><code>--type-size-150</code> / <code>--type-size-200</code> / <code>--type-size-300</code> · <code>--spacing-100</code> / <code>--spacing-200</code></li>
+      <li><code>--font-weight-medium</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

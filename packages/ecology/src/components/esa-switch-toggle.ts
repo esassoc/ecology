@@ -28,7 +28,7 @@ export class EsaSwitchToggle extends LitElement {
   };
 
   declare label: string;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
   declare labelPosition: 'before' | 'after';
   declare checked: boolean;
@@ -38,7 +38,7 @@ export class EsaSwitchToggle extends LitElement {
   constructor() {
     super();
     this.label = '';
-    this.size = 'medium';
+    this.size = 'md';
     this.disabled = false;
     this.labelPosition = 'after';
     this.checked = false;
@@ -104,8 +104,9 @@ export class EsaSwitchToggle extends LitElement {
       --_thumb-color: var(--color-surface, #fff);
       display: inline-block;
     }
-    :host([size='small']) { --_track-w: 32px; --_track-h: 18px; --_thumb: 14px; }
-    :host([size='large']) { --_track-w: 48px; --_track-h: 26px; --_thumb: 22px; }
+    :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
+    :host([size='sm']) { --_track-w: 32px; --_track-h: 18px; --_thumb: 14px; }
+    :host([size='lg']) { --_track-w: 48px; --_track-h: 26px; --_thumb: 22px; }
     :host([disabled]) { opacity: 0.5; }
 
     .root {

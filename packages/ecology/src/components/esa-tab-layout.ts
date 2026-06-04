@@ -32,19 +32,24 @@ export class EsaTabLayout extends LitElement {
     activeIndex: { type: Number, attribute: 'active-index' },
     size: { type: String, reflect: true },
     variant: { type: String, reflect: true },
+    appearance: { type: String, reflect: true },
   };
 
   declare tabs: EsaTab[];
   declare activeIndex: number;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
+  /** @deprecated legacy alias for `appearance` ('pill' === 'segmented'). */
   declare variant: 'underline' | 'pill';
+  /** Aligned to Beacon's UiTabsAppearance. */
+  declare appearance: 'underline' | 'segmented';
 
   constructor() {
     super();
     this.tabs = [];
     this.activeIndex = 0;
-    this.size = 'medium';
+    this.size = 'md';
     this.variant = 'underline';
+    this.appearance = 'underline';
   }
 
   private selectTab(index: number): void {
@@ -140,12 +145,18 @@ export class EsaTabLayout extends LitElement {
       display: block;
     }
 
-    :host([size='small']) {
+    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
+    :host([size='xs']) {
+      --_tab-height: 30px;
+      --_tab-font-size: var(--type-size-100, 0.6875rem);
+      --_tab-padding-x: var(--spacing-200, 8px);
+    }
+    :host([size='sm']) {
       --_tab-height: 36px;
       --_tab-font-size: var(--type-size-150, 0.75rem);
       --_tab-padding-x: var(--spacing-300, 12px);
     }
-    :host([size='large']) {
+    :host([size='lg']) {
       --_tab-height: 52px;
       --_tab-font-size: var(--type-size-300, 1rem);
       --_tab-padding-x: var(--spacing-500, 24px);
@@ -212,18 +223,26 @@ export class EsaTabLayout extends LitElement {
       border-radius: var(--radius-full, 9999px);
     }
 
-    /* Pill variant */
+    /* Segmented appearance (Beacon UiTabsAppearance='segmented').
+       variant='pill' is the legacy alias and shares these rules. */
+    :host([appearance='segmented']) .tabs,
     :host([variant='pill']) .tabs {
+      align-self: flex-start;
       border-bottom: none;
       background: var(--color-surface-sunken, #efefef);
+      border: 1px solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-200, 8px);
-      padding: var(--spacing-100, 4px);
+      padding: var(--spacing-050, 2px);
+      gap: var(--spacing-050, 2px);
     }
-    :host([variant='pill']) .tab { border-radius: var(--radius-200, 8px); }
+    :host([appearance='segmented']) .tab,
+    :host([variant='pill']) .tab { border-radius: var(--radius-100, 4px); }
+    :host([appearance='segmented']) .tab--active,
     :host([variant='pill']) .tab--active {
       background: var(--color-surface, #ffffff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.1));
+      box-shadow: var(--shadow-50, 0 1px 2px rgba(0, 0, 0, 0.06));
     }
+    :host([appearance='segmented']) .tab--active::after,
     :host([variant='pill']) .tab--active::after { display: none; }
 
     .panel { padding-top: var(--spacing-400, 16px); }

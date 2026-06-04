@@ -1,59 +1,126 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Text rendered beside the box.' },
+  { name: 'checked', type: 'boolean', default: 'false', description: 'Whether the box is checked.' },
+  { name: 'indeterminate', type: 'boolean', default: 'false', description: 'Renders the mixed/partial state with a dash.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ checked: boolean }>', description: 'Fired when toggled. Composed and bubbling; detail.checked is the new state.' },
+];
 ---
-<BaseLayout title="Checkbox — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Checkbox</h1>
-      <p>Form-associated Lit Web Component <code>[wc]</code>. Custom box with checked / indeterminate states, Space/Enter keyboard toggling, and an inlined Lucide check icon. Emits a composed <code>change</code> event.</p>
-    </Stack>
+<ComponentDoc name="Checkbox" category="Forms" slug="esa-checkbox" type="wc" status="stable"
+  summary="A custom box with checked, indeterminate, and disabled states, Space/Enter keyboard toggling, and an inlined Lucide check icon. Form-associated; emits a composed <code>change</code> event.">
 
-    <Stack gap="300">
-      <h2>States</h2>
-      <esa-checkbox label="Unchecked"></esa-checkbox>
-      <esa-checkbox label="Checked" checked></esa-checkbox>
-      <esa-checkbox label="Indeterminate" indeterminate></esa-checkbox>
-      <esa-checkbox label="Disabled" disabled></esa-checkbox>
-      <esa-checkbox label="Disabled + checked" disabled checked></esa-checkbox>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-checkbox label="Subscribe to updates" checked></esa-checkbox>`}>
+      <esa-checkbox label="Subscribe to updates" checked></esa-checkbox>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <esa-checkbox label="Small" size="small" checked></esa-checkbox>
-        <esa-checkbox label="Medium" size="medium" checked></esa-checkbox>
-        <esa-checkbox label="Large" size="large" checked></esa-checkbox>
-      </Stack>
-    </Stack>
+  <Section id="states" title="States">
+    <Preview align="start" code={`<esa-checkbox label="Unchecked"></esa-checkbox>
+<esa-checkbox label="Checked" checked></esa-checkbox>
+<esa-checkbox label="Indeterminate" indeterminate></esa-checkbox>
+<esa-checkbox label="Disabled" disabled></esa-checkbox>
+<esa-checkbox label="Disabled + checked" disabled checked></esa-checkbox>`}>
+      <div class="col">
+        <esa-checkbox label="Unchecked"></esa-checkbox>
+        <esa-checkbox label="Checked" checked></esa-checkbox>
+        <esa-checkbox label="Indeterminate" indeterminate></esa-checkbox>
+        <esa-checkbox label="Disabled" disabled></esa-checkbox>
+        <esa-checkbox label="Disabled + checked" disabled checked></esa-checkbox>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>No label</h2>
-      <esa-checkbox checked></esa-checkbox>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-checkbox label="Extra small" size="xs" checked></esa-checkbox>
+<esa-checkbox label="Small" size="sm" checked></esa-checkbox>
+<esa-checkbox label="Medium" size="md" checked></esa-checkbox>
+<esa-checkbox label="Large" size="lg" checked></esa-checkbox>`}>
+      <esa-checkbox label="Extra small" size="xs" checked></esa-checkbox>
+      <esa-checkbox label="Small" size="sm" checked></esa-checkbox>
+      <esa-checkbox label="Medium" size="md" checked></esa-checkbox>
+      <esa-checkbox label="Large" size="lg" checked></esa-checkbox>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Form participation</h2>
-      <p>Checked boxes submit <code>on</code> under their <code>name</code>.</p>
-      <form id="cb-form">
-        <Stack gap="300">
-          <esa-checkbox label="Subscribe" name="subscribe" checked></esa-checkbox>
-          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
-          <output id="cb-out" style="font-family:var(--font-mono);"></output>
-        </Stack>
+  <Section id="no-label" title="No label">
+    <p>Omit <code>label</code> for a bare box — supply an <code>aria-label</code> for an accessible name.</p>
+    <Preview code={`<esa-checkbox checked aria-label="Select row"></esa-checkbox>`}>
+      <esa-checkbox checked aria-label="Select row"></esa-checkbox>
+    </Preview>
+  </Section>
+
+  <Section id="form" title="Form participation">
+    <p>Checked boxes submit <code>on</code> under their <code>name</code>; unchecked boxes submit nothing.</p>
+    <Preview code={`<form>
+  <esa-checkbox label="Subscribe" name="subscribe" checked></esa-checkbox>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="cb-form" class="form-demo">
+        <esa-checkbox label="Subscribe" name="subscribe" checked></esa-checkbox>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="cb-out" class="demo-out"></output>
       </form>
-    </Stack>
-  </Stack>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-checkbox';
-    const form = document.getElementById('cb-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = new FormData(form as HTMLFormElement);
-      document.getElementById('cb-out')!.textContent =
-        'subscribe = ' + JSON.stringify(data.get('subscribe'));
-    });
-  </script>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The box has <code>role="checkbox"</code> with <code>aria-checked</code> reflecting checked or <code>mixed</code> (indeterminate).</li>
+      <li>Focusable via <code>tabindex</code> and toggles on Space or Enter.</li>
+      <li><code>aria-disabled</code> and a <code>-1</code> tabindex are applied when disabled.</li>
+      <li>Without a <code>label</code>, provide an <code>aria-label</code> for an accessible name.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form and semantic token layers to re-skin:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> — checked/indeterminate fill and border</li>
+      <li><code>--form-bg</code> / <code>--form-border-color</code> · <code>--form-border-color-focus</code></li>
+      <li><code>--form-radius-*</code> / <code>--form-font-size-*</code> · <code>--form-border-width</code></li>
+      <li><code>--color-text-primary</code> · <code>--color-text-inverse</code> · <code>--spacing-200</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .demo-submit {
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-checkbox';
+  const form = document.getElementById('cb-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('cb-out')!.textContent =
+      'subscribe = ' + JSON.stringify(data.get('subscribe'));
+  });
+</script>

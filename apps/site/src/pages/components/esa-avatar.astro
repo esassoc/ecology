@@ -1,59 +1,78 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import Avatar from '@esa/ecology/esa-avatar.astro';
+
+const props = [
+  { name: 'name', type: 'string', default: "''", description: 'Used to derive initials and a deterministic background hue.' },
+  { name: 'src', type: 'string', default: "''", description: 'Image URL. When set, renders the photo instead of initials.' },
+  { name: 'icon', type: 'string', default: "''", description: 'Lucide icon name for an icon fallback (defaults to a user glyph).' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Avatar diameter (20 / 28 / 40 / 56px).' },
+  { name: 'shape', type: "'circle' | 'square'", default: "'circle'", description: 'Fully rounded or rounded-square.' },
+];
 ---
-<BaseLayout title="Avatar — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Avatar</h1>
-      <p>Compact identity marker. Falls back image → initials → user icon, with a deterministic background hue derived from the name.</p>
-    </Stack>
+<ComponentDoc name="Avatar" category="Display" slug="esa-avatar" type=".astro" status="stable"
+  summary="Compact identity marker. Falls back image → initials → user icon, with a deterministic background hue derived from the name.">
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <Avatar name="Ada Lovelace" size="small" />
-        <Avatar name="Ada Lovelace" size="medium" />
-        <Avatar name="Ada Lovelace" size="large" />
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<Avatar name="Ada Lovelace" />`}>
+      <Avatar name="Ada Lovelace" />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Shapes</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <Avatar name="Grace Hopper" shape="circle" />
-        <Avatar name="Grace Hopper" shape="square" />
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<Avatar name="Ada Lovelace" size="xs" />
+<Avatar name="Ada Lovelace" size="sm" />
+<Avatar name="Ada Lovelace" size="md" />
+<Avatar name="Ada Lovelace" size="lg" />`}>
+      <Avatar name="Ada Lovelace" size="xs" />
+      <Avatar name="Ada Lovelace" size="sm" />
+      <Avatar name="Ada Lovelace" size="md" />
+      <Avatar name="Ada Lovelace" size="lg" />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Deterministic hue from name</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <Avatar name="Alan Turing" />
-        <Avatar name="Katherine Johnson" />
-        <Avatar name="Margaret Hamilton" />
-        <Avatar name="Dennis Ritchie" />
-      </Stack>
-    </Stack>
+  <Section id="shapes" title="Shapes">
+    <Preview code={`<Avatar name="Grace Hopper" shape="circle" />
+<Avatar name="Grace Hopper" shape="square" />`}>
+      <Avatar name="Grace Hopper" shape="circle" />
+      <Avatar name="Grace Hopper" shape="square" />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Fallbacks</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <Avatar name="Single" />
-        <Avatar />
-        <Avatar src="https://i.pravatar.cc/100?img=12" name="Photo User" />
-      </Stack>
-    </Stack>
+  <Section id="states" title="Fallbacks">
+    <p>The background hue is hashed from <code>name</code>, so each person gets a stable, distinct color. Resolution order is image → initials → user icon.</p>
+    <Preview code={`<Avatar src="https://i.pravatar.cc/100?img=12" name="Photo User" />
+<Avatar name="Alan Turing" />
+<Avatar name="Single" />
+<Avatar />`}>
+      <Avatar src="https://i.pravatar.cc/100?img=12" name="Photo User" />
+      <Avatar name="Alan Turing" />
+      <Avatar name="Katherine Johnson" />
+      <Avatar name="Single" />
+      <Avatar />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Fallback order:</strong> src image → initials (up to 2 chars) → inline Lucide user icon.</li>
-        <li><strong>Hue:</strong> hashed from <code>name</code> → <code>hsl(hue 45% 65%)</code>, stable per name.</li>
-        <li><strong>Tokens consumed:</strong> <code>--radius-full</code>, <code>--radius-200</code>, <code>--color-text-inverse</code>.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Image fallback uses <code>name</code> (or "Avatar") as its <code>alt</code> text.</li>
+      <li>The icon fallback is <code>aria-hidden</code> — pair the avatar with a visible name nearby for screen readers.</li>
+      <li>Content is non-selectable (<code>user-select: none</code>) so initials don't interfere with text selection.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--radius-full</code> (circle) · <code>--radius-200</code> (square)</li>
+      <li><code>--color-text-inverse</code> — initials / icon color</li>
+      <li>Background is <code>hsl(hue 45% 65%)</code>, hue derived from the name hash</li>
+    </ul>
+  </Section>
+</ComponentDoc>

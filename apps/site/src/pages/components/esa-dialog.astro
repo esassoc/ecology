@@ -1,46 +1,105 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
+
+const props = [
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Set imperatively via show() / close().' },
+  { name: 'heading', type: 'string', default: "''", description: 'Title shown in the header and used as the dialog accessible name.' },
+  { name: 'show-close-button', type: 'boolean', default: 'true', description: 'Renders the header close (×) button.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'fullscreen'", default: "'md'", description: 'Panel width: 280 / 360 / 480 / 640px, or edge-to-edge.' },
+];
+
+const methods = [
+  { name: 'show()', type: 'method', description: 'Opens the dialog and traps focus.' },
+  { name: 'close()', type: 'method', description: 'Closes the dialog, restores focus, and emits the close event.' },
+];
+
+const events = [
+  { name: 'close', type: 'CustomEvent', description: 'Fired when the dialog closes (close button, backdrop click, or Esc). Bubbles and is composed.' },
+];
 ---
-<BaseLayout title="Dialog — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Dialog <code>[wc]</code></h1>
-      <p>Modal dialog with backdrop, focus trap, Esc-to-close, and focus restore. Themes via <code>--z-modal</code> / <code>--z-modal-backdrop</code> and surface/border tokens.</p>
-    </Stack>
+<ComponentDoc name="Dialog" category="Overlays" slug="esa-dialog" type="wc" status="stable"
+  summary="Modal dialog with backdrop, focus trap, Esc-to-close, and focus restore. Slot the body as default content and footer actions into <code>slot=&quot;footer&quot;</code>.">
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <button class="trigger" data-target="dlg-small">Open small</button>
-        <button class="trigger" data-target="dlg-medium">Open medium</button>
-        <button class="trigger" data-target="dlg-large">Open large</button>
-        <button class="trigger" data-target="dlg-fullscreen">Open fullscreen</button>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<button data-target="dlg-md">Open dialog</button>
 
-    <esa-dialog id="dlg-small" size="small" heading="Small dialog">
-      <p>A compact dialog (360px). Tab cycles within; Esc closes.</p>
-      <button slot="footer" class="trigger-close" data-target="dlg-small">Close</button>
-    </esa-dialog>
+<esa-dialog id="dlg-md" heading="Medium dialog">
+  <p>The default md dialog. The close button, backdrop click, and Esc all dismiss it.</p>
+  <button slot="footer" data-close="dlg-md">Close</button>
+</esa-dialog>`}>
+      <button class="trigger" data-target="dlg-md">Open dialog</button>
+      <esa-dialog id="dlg-md" heading="Medium dialog">
+        <p>The default md dialog (480px). The close button, backdrop click, and Esc all dismiss it.</p>
+        <button slot="footer" class="trigger-close" data-close="dlg-md">Close</button>
+      </esa-dialog>
+    </Preview>
+  </Section>
 
-    <esa-dialog id="dlg-medium" heading="Medium dialog">
-      <p>The default medium dialog (480px). The close button, backdrop click, and Esc all dismiss it.</p>
-      <button slot="footer" class="trigger-close" data-target="dlg-medium">Close</button>
-    </esa-dialog>
+  <Section id="sizes" title="Sizes">
+    <p>Five widths cover compact prompts through immersive, edge-to-edge flows.</p>
+    <Preview code={`<esa-dialog size="xs" heading="Extra small dialog">…</esa-dialog>
+<esa-dialog size="sm" heading="Small dialog">…</esa-dialog>
+<esa-dialog heading="Medium dialog">…</esa-dialog>
+<esa-dialog size="lg" heading="Large dialog">…</esa-dialog>
+<esa-dialog size="fullscreen" heading="Fullscreen dialog">…</esa-dialog>`}>
+      <button class="trigger" data-target="dlg-xs">Open xs</button>
+      <button class="trigger" data-target="dlg-sm">Open sm</button>
+      <button class="trigger" data-target="dlg-md-sizes">Open md</button>
+      <button class="trigger" data-target="dlg-lg">Open lg</button>
+      <button class="trigger" data-target="dlg-fullscreen">Open fullscreen</button>
 
-    <esa-dialog id="dlg-large" size="large" heading="Large dialog">
-      <p>A large dialog (640px) for richer content.</p>
-      <button slot="footer" class="trigger-close" data-target="dlg-large">Close</button>
-    </esa-dialog>
+      <esa-dialog id="dlg-xs" size="xs" heading="Extra small dialog">
+        <p>The most compact dialog (280px), one step below sm. Tab cycles within; Esc closes.</p>
+        <button slot="footer" class="trigger-close" data-close="dlg-xs">Close</button>
+      </esa-dialog>
+      <esa-dialog id="dlg-sm" size="sm" heading="Small dialog">
+        <p>A compact dialog (360px). Tab cycles within; Esc closes.</p>
+        <button slot="footer" class="trigger-close" data-close="dlg-sm">Close</button>
+      </esa-dialog>
+      <esa-dialog id="dlg-md-sizes" size="md" heading="Medium dialog">
+        <p>The default md dialog (480px).</p>
+        <button slot="footer" class="trigger-close" data-close="dlg-md-sizes">Close</button>
+      </esa-dialog>
+      <esa-dialog id="dlg-lg" size="lg" heading="Large dialog">
+        <p>A large dialog (640px) for richer content.</p>
+        <button slot="footer" class="trigger-close" data-close="dlg-lg">Close</button>
+      </esa-dialog>
+      <esa-dialog id="dlg-fullscreen" size="fullscreen" heading="Fullscreen dialog">
+        <p>Edge-to-edge dialog for immersive flows.</p>
+        <button slot="footer" class="trigger-close" data-close="dlg-fullscreen">Close</button>
+      </esa-dialog>
+    </Preview>
+  </Section>
 
-    <esa-dialog id="dlg-fullscreen" size="fullscreen" heading="Fullscreen dialog">
-      <p>Edge-to-edge dialog for immersive flows.</p>
-      <button slot="footer" class="trigger-close" data-target="dlg-fullscreen">Close</button>
-    </esa-dialog>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3>Methods</h3>
+    <PropsTable rows={methods} />
+    <Api events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The panel is <code>role="dialog"</code> with <code>aria-modal="true"</code>; <code>heading</code> provides the accessible name.</li>
+      <li>Focus is trapped while open — Tab and Shift+Tab cycle within the panel.</li>
+      <li>Opening stores the previously focused element and restores it on close.</li>
+      <li><code>Escape</code> closes the dialog; the close button carries an <code>aria-label</code>.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface-elevated</code> · <code>--color-border-light</code> · <code>--color-text-primary</code></li>
+      <li><code>--color-backdrop</code> · <code>--z-modal</code> / <code>--z-modal-backdrop</code></li>
+      <li><code>--radius-400</code> · <code>--spacing-500</code> · <code>--type-size-400</code> · <code>--font-weight-semibold</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>
   import '@esa/ecology/esa-dialog';
@@ -52,7 +111,7 @@ import Stack from '@esa/ecology/Stack.astro';
   );
   document.querySelectorAll('.trigger-close').forEach((btn) =>
     btn.addEventListener('click', () => {
-      const el = document.getElementById((btn as HTMLElement).dataset.target!) as any;
+      const el = document.getElementById((btn as HTMLElement).dataset.close!) as any;
       el?.close();
     }),
   );

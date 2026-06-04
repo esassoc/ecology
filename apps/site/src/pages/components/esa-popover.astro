@@ -1,52 +1,108 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'position', type: "'top' | 'bottom' | 'left' | 'right'", default: "'bottom'", description: 'Side the panel opens on, relative to the trigger.' },
+  { name: 'trigger', type: "'click' | 'hover'", default: "'click'", description: 'Click toggles and closes on outside-click + Esc; hover opens after a 200ms delay.' },
+  { name: 'has-arrow', type: 'boolean', default: 'true', description: 'Renders the pointer arrow toward the trigger.' },
+  { name: 'offset', type: 'number', default: '8', description: 'Gap in pixels between trigger and panel.' },
+  { name: 'appearance', type: "'default' | 'inverse'", default: "'default'", description: 'Panel style (aligned to Beacon): default is a light surface; inverse is a dark panel with light text, for documentation/help content. Reflected as an attribute.' },
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
+];
 ---
-<BaseLayout title="Popover — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Popover <code>[wc]</code></h1>
-      <p>Anchored floating panel. Trigger goes in the default slot, content in <code>slot="content"</code>. Click mode closes on outside-click + Esc; hover mode opens after a short delay.</p>
-    </Stack>
+<ComponentDoc name="Popover" category="Overlays" slug="esa-popover" type="wc" status="stable"
+  summary="Anchored floating panel. The trigger goes in the default slot and the panel content in <code>slot=&quot;content&quot;</code>. Click mode closes on outside-click and Esc; hover mode opens after a short delay.">
 
-    <Stack gap="300">
-      <h2>Positions (click)</h2>
-      <Stack gap="600" direction="row" wrap={true} align="center" justify="center">
-        <esa-popover position="top">
-          <button class="trigger">Top</button>
-          <div slot="content">Popover above the trigger.</div>
-        </esa-popover>
-        <esa-popover position="bottom">
-          <button class="trigger">Bottom</button>
-          <div slot="content">Popover below the trigger.</div>
-        </esa-popover>
-        <esa-popover position="left">
-          <button class="trigger">Left</button>
-          <div slot="content">Left side.</div>
-        </esa-popover>
-        <esa-popover position="right">
-          <button class="trigger">Right</button>
-          <div slot="content">Right side.</div>
-        </esa-popover>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-popover position="bottom">
+  <button>Open popover</button>
+  <div slot="content">Popover below the trigger.</div>
+</esa-popover>`}>
+      <esa-popover position="bottom">
+        <button class="trigger">Open popover</button>
+        <div slot="content">Popover below the trigger.</div>
+      </esa-popover>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Hover trigger &amp; no arrow</h2>
-      <Stack gap="600" direction="row" wrap={true} align="center">
-        <esa-popover position="bottom" trigger="hover">
-          <button class="trigger">Hover me</button>
-          <div slot="content">Opens on hover after 200ms.</div>
-        </esa-popover>
-        <esa-popover position="bottom" has-arrow={false}>
-          <button class="trigger">No arrow</button>
-          <div slot="content">Arrowless popover.</div>
-        </esa-popover>
-      </Stack>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="positions" title="Positions">
+    <Preview align="center" code={`<esa-popover position="top">…</esa-popover>
+<esa-popover position="bottom">…</esa-popover>
+<esa-popover position="left">…</esa-popover>
+<esa-popover position="right">…</esa-popover>`}>
+      <esa-popover position="top">
+        <button class="trigger">Top</button>
+        <div slot="content">Popover above the trigger.</div>
+      </esa-popover>
+      <esa-popover position="bottom">
+        <button class="trigger">Bottom</button>
+        <div slot="content">Popover below the trigger.</div>
+      </esa-popover>
+      <esa-popover position="left">
+        <button class="trigger">Left</button>
+        <div slot="content">Left side.</div>
+      </esa-popover>
+      <esa-popover position="right">
+        <button class="trigger">Right</button>
+        <div slot="content">Right side.</div>
+      </esa-popover>
+    </Preview>
+  </Section>
+
+  <Section id="appearance" title="Appearance">
+    <p>Two appearances, aligned to Beacon's <code>PopoverAppearance</code>. <code>default</code> is a light surface panel; <code>inverse</code> is a dark panel with light text — use it to signal documentation or help content rather than form data.</p>
+    <Preview align="center" code={`<esa-popover appearance="default">…</esa-popover>
+<esa-popover appearance="inverse">…</esa-popover>`}>
+      <esa-popover position="bottom" appearance="default">
+        <button class="trigger">Default</button>
+        <div slot="content">Light surface panel.</div>
+      </esa-popover>
+      <esa-popover position="bottom" appearance="inverse">
+        <button class="trigger">Inverse</button>
+        <div slot="content">Dark panel, light text — for help content.</div>
+      </esa-popover>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="Trigger & arrow">
+    <p>Switch to <code>trigger="hover"</code> for a hover-revealed panel, or hide the pointer with <code>has-arrow={'{false}'}</code>.</p>
+    <Preview align="center" code={`<esa-popover position="bottom" trigger="hover">…</esa-popover>
+<esa-popover position="bottom" has-arrow={false}>…</esa-popover>`}>
+      <esa-popover position="bottom" trigger="hover">
+        <button class="trigger">Hover me</button>
+        <div slot="content">Opens on hover after 200ms.</div>
+      </esa-popover>
+      <esa-popover position="bottom" has-arrow={false}>
+        <button class="trigger">No arrow</button>
+        <div slot="content">Arrowless popover.</div>
+      </esa-popover>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The floating panel is <code>role="dialog"</code>.</li>
+      <li>Click mode closes on <code>Escape</code> and on any click outside the component.</li>
+      <li>Keyboard and focus behavior come from whatever element you slot as the trigger — use a real <code>&lt;button&gt;</code>.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface</code> · <code>--color-border</code> · <code>--color-text-primary</code></li>
+      <li><code>--color-gray-900</code> · <code>--color-text-inverse</code> (inverse appearance)</li>
+      <li><code>--shadow-300</code> · <code>--z-dropdown</code></li>
+      <li><code>--radius-200</code> · <code>--spacing-300</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>import '@esa/ecology/esa-popover';</script>
 

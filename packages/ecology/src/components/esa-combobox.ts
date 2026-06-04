@@ -56,7 +56,7 @@ export class EsaCombobox extends LitElement {
   declare triggerStyle: EsaComboboxTriggerStyle;
   declare options: EsaComboboxOption[];
   declare multiple: boolean;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare label: string;
   declare placeholder: string;
   declare disabled: boolean;
@@ -85,7 +85,7 @@ export class EsaCombobox extends LitElement {
     this.triggerStyle = 'field';
     this.options = [];
     this.multiple = false;
-    this.size = 'medium';
+    this.size = 'md';
     this.label = '';
     this.placeholder = 'Select...';
     this.disabled = false;
@@ -464,26 +464,33 @@ export class EsaCombobox extends LitElement {
   static styles = css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-medium, 8px);
-      --_field-padding-x: var(--form-padding-x-medium, 12px);
-      --_field-font-size: var(--form-font-size-medium, 14px);
-      --_field-height: var(--form-height-medium, 40px);
-      --_field-radius: var(--form-radius-medium, 8px);
+      --_field-padding-y: var(--form-padding-y-md, 8px);
+      --_field-padding-x: var(--form-padding-x-md, 12px);
+      --_field-font-size: var(--form-font-size-md, 14px);
+      --_field-height: var(--form-height-md, 40px);
+      --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
-    :host([size='small']) {
-      --_field-padding-y: var(--form-padding-y-small, 4px);
-      --_field-padding-x: var(--form-padding-x-small, 8px);
-      --_field-font-size: var(--form-font-size-small, 12px);
-      --_field-height: var(--form-height-small, 32px);
-      --_field-radius: var(--form-radius-small, 6px);
+    :host([size='xs']) {
+      --_field-padding-y: var(--form-padding-y-xs, 2px);
+      --_field-padding-x: var(--form-padding-x-xs, 8px);
+      --_field-font-size: var(--form-font-size-xs, 11px);
+      --_field-height: var(--form-height-xs, 28px);
+      --_field-radius: var(--form-radius-xs, 4px);
     }
-    :host([size='large']) {
-      --_field-padding-y: var(--form-padding-y-large, 12px);
-      --_field-padding-x: var(--form-padding-x-large, 16px);
-      --_field-font-size: var(--form-font-size-large, 16px);
-      --_field-height: var(--form-height-large, 48px);
-      --_field-radius: var(--form-radius-large, 10px);
+    :host([size='sm']) {
+      --_field-padding-y: var(--form-padding-y-sm, 4px);
+      --_field-padding-x: var(--form-padding-x-sm, 8px);
+      --_field-font-size: var(--form-font-size-sm, 12px);
+      --_field-height: var(--form-height-sm, 32px);
+      --_field-radius: var(--form-radius-sm, 6px);
+    }
+    :host([size='lg']) {
+      --_field-padding-y: var(--form-padding-y-lg, 12px);
+      --_field-padding-x: var(--form-padding-x-lg, 16px);
+      --_field-font-size: var(--form-font-size-lg, 16px);
+      --_field-height: var(--form-height-lg, 48px);
+      --_field-radius: var(--form-radius-lg, 10px);
     }
 
     .field {
@@ -682,7 +689,7 @@ export class EsaCombobox extends LitElement {
       margin-top: var(--spacing-100, 4px);
       background: var(--color-surface, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
-      border-radius: var(--form-radius-medium, 8px);
+      border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
       overflow: hidden;
     }

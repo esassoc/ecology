@@ -1,33 +1,76 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
----
-<BaseLayout title="Snackbar Item — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Snackbar Item <code>[wc]</code></h1>
-      <p>A single toast: variant color, leading icon, message, optional action and dismiss buttons. Emits <code>action</code> / <code>dismiss</code>. Usually managed by <a href="/components/esa-snackbar-container">esa-snackbar-container</a>, but renders standalone too.</p>
-    </Stack>
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 
-    <Stack gap="300">
-      <h2>Variants</h2>
-      <Stack gap="300" style="max-width: 420px">
+const props = [
+  { name: 'message', type: 'string', default: "''", description: 'Toast body text.' },
+  { name: 'variant', type: "'info' | 'success' | 'warning' | 'danger'", default: "'info'", description: 'Background color and leading icon.' },
+  { name: 'action', type: 'string', default: "''", description: 'Optional action button label. Omit to hide it.' },
+  { name: 'dismissable', type: 'boolean', default: 'true', description: 'Renders the close (×) button.' },
+];
+
+const events = [
+  { name: 'action', type: 'CustomEvent', description: 'Fired when the action button is pressed; the item also dismisses itself.' },
+  { name: 'dismiss', type: 'CustomEvent', description: 'Fired when the close button is pressed.' },
+];
+---
+<ComponentDoc name="Snackbar Item" category="Overlays" slug="esa-snackbar-item" type="wc" status="stable"
+  summary={`A single toast: variant color, leading icon, message, and optional action and dismiss buttons. It emits <code>action</code> and <code>dismiss</code>. Usually managed by <a href="/components/esa-snackbar-container">esa-snackbar-container</a>, but it renders standalone too.`}>
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-snackbar-item variant="success" message="Saved successfully."></esa-snackbar-item>`}>
+      <div style="width: 100%; max-width: 420px">
+        <esa-snackbar-item variant="success" message="Saved successfully."></esa-snackbar-item>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="variants" title="Variants">
+    <Preview code={`<esa-snackbar-item variant="info" message="Heads up — this is an info toast."></esa-snackbar-item>
+<esa-snackbar-item variant="success" message="Saved successfully."></esa-snackbar-item>
+<esa-snackbar-item variant="warning" message="Your session expires soon."></esa-snackbar-item>
+<esa-snackbar-item variant="danger" message="Something went wrong."></esa-snackbar-item>`}>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; max-width: 420px">
         <esa-snackbar-item variant="info" message="Heads up — this is an info toast."></esa-snackbar-item>
         <esa-snackbar-item variant="success" message="Saved successfully."></esa-snackbar-item>
         <esa-snackbar-item variant="warning" message="Your session expires soon."></esa-snackbar-item>
         <esa-snackbar-item variant="danger" message="Something went wrong."></esa-snackbar-item>
-      </Stack>
-    </Stack>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With action / non-dismissable</h2>
-      <Stack gap="300" style="max-width: 420px">
+  <Section id="states" title="States">
+    <p>Add an <code>action</code> label, or set <code>dismissable={'{false}'}</code> for a toast that cannot be manually closed.</p>
+    <Preview code={`<esa-snackbar-item variant="success" message="Item deleted." action="Undo"></esa-snackbar-item>
+<esa-snackbar-item variant="info" message="Cannot be dismissed manually." dismissable={false}></esa-snackbar-item>`}>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; max-width: 420px">
         <esa-snackbar-item variant="success" message="Item deleted." action="Undo"></esa-snackbar-item>
         <esa-snackbar-item variant="info" message="Cannot be dismissed manually." dismissable={false}></esa-snackbar-item>
-      </Stack>
-    </Stack>
-  </Stack>
-</BaseLayout>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The dismiss button carries an <code>aria-label="Dismiss"</code>; the leading icon is decorative (<code>aria-hidden</code>).</li>
+      <li>Variant color is paired with a distinct icon, so meaning is not conveyed by color alone.</li>
+      <li>When used standalone, announce the message in a live region appropriate to its urgency.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-blue-800</code> (info) · <code>--color-green-800</code> (success) · <code>--color-orange-800</code> (warning) · <code>--color-red-700</code> (danger)</li>
+      <li><code>--color-text-inverse</code> · <code>--shadow-300</code></li>
+      <li><code>--radius-200</code> · <code>--spacing-300</code> / <code>--spacing-400</code> · <code>--type-size-200</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>import '@esa/ecology/esa-snackbar-item';</script>

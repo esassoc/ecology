@@ -1,0 +1,142 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Visible label rendered above the field.' },
+  { name: 'hint', type: 'string', default: "''", description: 'Helper text shown below the field.' },
+  { name: 'placeholder', type: 'string', default: "'Search or add...'", description: 'Placeholder shown when no tokens are selected.' },
+  { name: 'options', type: '{ value, label }[]', default: '[]', description: 'Optional suggestion list. Set as a property. When provided, a chevron toggles a filtered dropdown.' },
+  { name: 'value', type: 'string[]', default: '[]', description: 'Selected tokens. Set/read as a property; mirrored to the form as a comma-joined string.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required and renders an asterisk on the label.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction and hides the remove buttons.' },
+  { name: 'name', type: 'string', default: "''", description: 'Form field name used when the element participates in a form.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string[] }>', description: 'Fired whenever tokens are added or removed. Composed and bubbling; detail.value is the current array of token values.' },
+];
+---
+<ComponentDoc name="Input Tag" category="Forms" slug="esa-input-tag" type="wc" status="stable"
+  summary="A tag / token multiselect. Type a value and press Enter to add a removable chip, or pick from an optional suggestion list. Form-associated via <code>ElementInternals</code> — the selected tokens submit with the enclosing form.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-input-tag label="Tags" placeholder="Add a tag"></esa-input-tag>`}>
+      <esa-input-tag label="Tags" placeholder="Add a tag"></esa-input-tag>
+    </Preview>
+  </Section>
+
+  <Section id="suggestions" title="Suggestions">
+    <p>Pass an <code>options</code> array (as a property) to drive a filtered suggestion dropdown. Typed values and picked suggestions coexist — anything not in the list is added as a free-form token.</p>
+    <Preview code={`<esa-input-tag label="Species" placeholder="Search or add a species"></esa-input-tag>
+<!-- el.options = [{ value, label }, ...] -->`}>
+      <esa-input-tag id="it-species" label="Species" placeholder="Search or add a species"></esa-input-tag>
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-input-tag label="Extra small" size="xs"></esa-input-tag>
+<esa-input-tag label="Small" size="sm"></esa-input-tag>
+<esa-input-tag label="Medium" size="md"></esa-input-tag>
+<esa-input-tag label="Large" size="lg"></esa-input-tag>`}>
+      <esa-input-tag label="Extra small" size="xs" placeholder="Add a tag"></esa-input-tag>
+      <esa-input-tag label="Small" size="sm" placeholder="Add a tag"></esa-input-tag>
+      <esa-input-tag label="Medium" size="md" placeholder="Add a tag"></esa-input-tag>
+      <esa-input-tag label="Large" size="lg" placeholder="Add a tag"></esa-input-tag>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="States">
+    <p>The required asterisk, hint text, and disabled state are attribute-driven. Disabled fields keep their chips but drop the remove buttons.</p>
+    <Preview code={`<esa-input-tag label="Required" required placeholder="At least one tag"></esa-input-tag>
+<esa-input-tag label="With hint" hint="Press Enter to add each tag."></esa-input-tag>
+<esa-input-tag label="Disabled" disabled></esa-input-tag>`}>
+      <esa-input-tag label="Required" required placeholder="At least one tag"></esa-input-tag>
+      <esa-input-tag label="With hint" hint="Press Enter to add each tag." placeholder="Add a tag"></esa-input-tag>
+      <esa-input-tag id="it-disabled" label="Disabled" disabled></esa-input-tag>
+    </Preview>
+  </Section>
+
+  <Section id="form" title="Form participation">
+    <p>The element is form-associated. Submitting logs the <code>FormData</code> entry for <code>tags</code> — a comma-joined list of token values.</p>
+    <Preview code={`<form>
+  <esa-input-tag label="Tags" name="tags" placeholder="Add then submit"></esa-input-tag>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="it-form" class="form-demo">
+        <esa-input-tag label="Tags" name="tags" placeholder="Add then submit"></esa-input-tag>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="it-out" class="demo-out"></output>
+      </form>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The text field carries <code>role="combobox"</code> with <code>aria-expanded</code>, <code>aria-haspopup="listbox"</code>, and <code>aria-autocomplete="list"</code>.</li>
+      <li>The dropdown is <code>role="listbox"</code>; each suggestion and the "Add" row are <code>role="option"</code> with <code>aria-selected</code>.</li>
+      <li>Keyboard: <code>Enter</code> adds the typed value or the highlighted suggestion, <code>ArrowUp</code>/<code>ArrowDown</code> move through suggestions, <code>Backspace</code> on an empty field removes the last token, <code>Escape</code> closes the dropdown.</li>
+      <li>Each chip's remove button has an <code>aria-label</code> naming the token it removes; outside-click closes the dropdown.</li>
+      <li>Form-associated via <code>ElementInternals</code> — values submit with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form token layer to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--form-bg</code> · <code>--form-text-color</code> · <code>--form-border-color</code> / <code>--form-border-color-hover</code> / <code>--form-border-color-focus</code></li>
+      <li><code>{'--form-{height,padding-x,padding-y,font-size,radius}-{xs,sm,md,lg}'}</code> (size scale)</li>
+      <li><code>--form-label-color</code> · <code>--form-help-color</code> · <code>--form-placeholder-color</code> · <code>--form-bg-disabled</code></li>
+      <li><code>--color-active-overlay</code> · <code>--color-primary</code> (chips) · <code>--color-surface</code> · <code>--color-surface-sunken</code> (dropdown)</li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> · <code>--z-dropdown</code> · <code>--shadow-200</code> · <code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); width: 100%; max-width: 360px; }
+  .demo-submit {
+    align-self: flex-start;
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-input-tag';
+
+  const species = [
+    'California red-legged frog', 'Steelhead trout', 'Chinook salmon',
+    'Western pond turtle', 'Coho salmon', 'Tidewater goby',
+    'Burrowing owl', 'Vernal pool fairy shrimp', 'Delta smelt',
+  ].map((s) => ({ label: s, value: s.toLowerCase().replace(/\s+/g, '-') }));
+
+  customElements.whenDefined('esa-input-tag').then(() => {
+    const speciesEl = document.getElementById('it-species') as any;
+    if (speciesEl) speciesEl.options = species;
+
+    const disabledEl = document.getElementById('it-disabled') as any;
+    if (disabledEl) disabledEl.value = ['wetland', 'riparian'];
+  });
+
+  const form = document.getElementById('it-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('it-out')!.textContent =
+      'tags = ' + JSON.stringify(data.get('tags'));
+  });
+</script>

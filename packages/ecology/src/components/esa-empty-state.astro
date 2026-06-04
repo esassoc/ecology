@@ -1,16 +1,16 @@
 ---
 // esa-empty-state — presentational (.astro).
 // Faithful translation of the Angular esa-empty-state: optional icon, required title,
-// optional description, slotted actions, and small/medium/large size variants.
+// optional description, slotted actions, and xs/sm/md/lg size variants.
 // Angular host classes → class list; @if → conditional render; required title input
 // → required `title` prop. The icon prop names a Lucide icon; pass an inline SVG via
 // the "icon" slot for full fidelity, or omit it.
 interface Props {
   title: string;
   description?: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
-const { title, description, size = 'medium' } = Astro.props;
+const { title, description, size = 'md' } = Astro.props;
 
 const hasIconSlot = Astro.slots.has('icon');
 const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
@@ -44,14 +44,21 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
     gap: var(--_empty-gap);
   }
 
-  .esa-empty-state--small {
+  .esa-empty-state--xs {
+    --_empty-icon-size: 24px;
+    --_empty-title-size: 13px;
+    --_empty-desc-size: 11px;
+    padding: var(--spacing-300, 0.75rem) var(--spacing-200, 0.5rem);
+  }
+
+  .esa-empty-state--sm {
     --_empty-icon-size: 32px;
     --_empty-title-size: 14px;
     --_empty-desc-size: 12px;
     padding: var(--spacing-400, 1rem) var(--spacing-300, 0.75rem);
   }
 
-  .esa-empty-state--large {
+  .esa-empty-state--lg {
     --_empty-icon-size: 64px;
     --_empty-title-size: 20px;
     --_empty-desc-size: 16px;

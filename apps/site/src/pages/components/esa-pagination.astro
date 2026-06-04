@@ -1,58 +1,103 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'total-items', type: 'number', default: '0', description: 'Total number of items across all pages; drives the range label and page count.' },
+  { name: 'page-size', type: 'number', default: '25', description: 'Items per page. Changing it resets to page 0.' },
+  { name: 'current-page', type: 'number', default: '0', description: 'Active page, zero-based.' },
+  { name: 'page-size-options', type: 'number[]', default: '[10, 25, 50, 100]', description: 'Choices in the page-size selector. Array property — set in JS.' },
+  { name: 'show-page-size-selector', type: 'boolean', default: 'true', description: 'Toggles the "Items per page" selector.' },
+  { name: 'show-first-last-buttons', type: 'boolean', default: 'true', description: 'Toggles the first / last jump buttons.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Dims and disables all controls. Reflected as an attribute.' },
+];
+
+const events = [
+  { name: 'pagechange', type: 'CustomEvent', description: 'Fired when the page changes. detail: { page: number } (zero-based). Bubbles and composed.' },
+  { name: 'pagesizechange', type: 'CustomEvent', description: 'Fired when the page size changes; page also resets to 0. detail: { pageSize: number }. Bubbles and composed.' },
+];
 ---
-<BaseLayout title="esa-pagination — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-pagination <code>[wc]</code></h1>
-      <p>Page navigation with a page-size selector, range label, and first / prev / next / last controls. Migrated as a Lit web component (page state, prev/next, keyboard-focusable buttons). Migrated from the Angular <code>data</code> entry point.</p>
-    </Stack>
+<ComponentDoc name="Pagination" category="Navigation" slug="esa-pagination" type="wc" status="stable"
+  summary="Page navigation with a page-size selector, a derived range label, and first / prev / next / last controls. A Lit web component — page state and prev/next are real runtime behavior.">
 
-    <Stack gap="300">
-      <h2>Default</h2>
-      <esa-pagination id="p1" total-items="237"></esa-pagination>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview align="start" lang="html" code={`<esa-pagination total-items="237"></esa-pagination>
 
-    <Stack gap="300">
-      <h2>No page-size selector, no first/last buttons</h2>
-      <esa-pagination
-        id="p2"
-        total-items="80"
-        page-size="20"
-        show-page-size-selector="false"
-        show-first-last-buttons="false"
-      ></esa-pagination>
-    </Stack>
+<script>
+  const p = document.querySelector('esa-pagination');
+  p.pageSizeOptions = [10, 25, 50, 100];
+  p.addEventListener('pagechange', (e) => console.log(e.detail));
+</script>`}>
+      <div style="width: 100%;">
+        <esa-pagination id="p1" total-items="237"></esa-pagination>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Disabled</h2>
-      <esa-pagination id="p3" total-items="100" disabled></esa-pagination>
-    </Stack>
+  <Section id="variants" title="Variants">
+    <p>Compact form — hide the page-size selector and the first/last jump buttons for tighter footers.</p>
+    <Preview align="start" lang="html" code={`<esa-pagination
+  total-items="80"
+  page-size="20"
+  show-page-size-selector="false"
+  show-first-last-buttons="false"
+></esa-pagination>`}>
+      <div style="width: 100%;">
+        <esa-pagination
+          id="p2"
+          total-items="80"
+          page-size="20"
+          show-page-size-selector="false"
+          show-first-last-buttons="false"
+        ></esa-pagination>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Attributes / properties:</strong> <code>total-items</code>, <code>page-size</code>, <code>current-page</code>, <code>page-size-options</code>, <code>show-page-size-selector</code>, <code>show-first-last-buttons</code>, <code>disabled</code>.</li>
-        <li><strong>Events:</strong> <code>pagechange</code> (<code>{'{ page }'}</code>, zero-based) and <code>pagesizechange</code> (<code>{'{ pageSize }'}</code>); changing page size resets to page 0.</li>
-        <li><strong>Range label:</strong> derived "start – end of total" string; "0 of 0" when empty.</li>
-        <li><strong>Icons:</strong> inline Lucide chevron-first / left / right / last.</li>
-        <li><strong>Tokens:</strong> surface / border / text-secondary / text-primary / hover-overlay / disabled-text, radius-full, spacing, transition-fast.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="states" title="States">
+    <p>Disabled — all controls are dimmed and inert.</p>
+    <Preview align="start" lang="html" code={`<esa-pagination total-items="100" disabled></esa-pagination>`}>
+      <div style="width: 100%;">
+        <esa-pagination id="p3" total-items="100" disabled></esa-pagination>
+      </div>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-pagination';
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+    <p><code>page-size-options</code> is an array property — set it in JS, not as an attribute. The range label is derived as "start – end of total" ("0 of 0" when empty).</p>
+  </Section>
 
-    // page-size-options is an array property, not an attribute — set it in JS.
-    const p1 = document.getElementById('p1') as any;
-    if (p1) {
-      p1.pageSizeOptions = [10, 25, 50, 100];
-      p1.addEventListener('pagechange', (e: CustomEvent) =>
-        console.log('pagechange', e.detail)
-      );
-    }
-  </script>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Wraps controls in <code>role="navigation"</code> with <code>aria-label="Pagination"</code>.</li>
+      <li>Each control button has a descriptive <code>aria-label</code> (First / Previous / Next / Last page).</li>
+      <li>The page-size selector is a native labeled <code>&lt;select&gt;</code>.</li>
+      <li>Boundary buttons disable at the first/last page rather than wrapping.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override these to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--color-surface</code> · <code>--color-border</code> · <code>--color-text-secondary</code> / <code>--color-text-primary</code></li>
+      <li><code>--color-hover-overlay</code> (button hover) · <code>--color-disabled-text</code></li>
+      <li><code>--radius-100</code> / <code>--radius-full</code> · <code>--spacing-*</code> · <code>--type-size-200</code> · <code>--transition-fast</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>
+  import '@esa/ecology/esa-pagination';
+
+  // page-size-options is an array property, not an attribute — set it in JS.
+  const p1 = document.getElementById('p1') as any;
+  if (p1) {
+    p1.pageSizeOptions = [10, 25, 50, 100];
+    p1.addEventListener('pagechange', (e: CustomEvent) =>
+      console.log('pagechange', e.detail)
+    );
+  }
+</script>

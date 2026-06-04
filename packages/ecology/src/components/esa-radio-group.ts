@@ -31,7 +31,7 @@ export class EsaRadioGroup extends LitElement {
 
   declare options: EsaOption[];
   declare label: string;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare orientation: 'vertical' | 'horizontal';
   declare value: string | null;
 
@@ -41,7 +41,7 @@ export class EsaRadioGroup extends LitElement {
     super();
     this.options = [];
     this.label = '';
-    this.size = 'medium';
+    this.size = 'md';
     this.orientation = 'vertical';
     this.value = null;
     this.internals = this.attachInternals();
@@ -117,18 +117,23 @@ export class EsaRadioGroup extends LitElement {
     :host {
       --_radio-size: 20px;
       --_radio-dot-size: 10px;
-      --_radio-font-size: var(--form-font-size-medium, 0.9375rem);
+      --_radio-font-size: var(--form-font-size-md, 0.9375rem);
       display: block;
     }
-    :host([size='small']) {
+    :host([size='xs']) {
+      --_radio-size: 14px;
+      --_radio-dot-size: 7px;
+      --_radio-font-size: var(--form-font-size-xs, 0.8125rem);
+    }
+    :host([size='sm']) {
       --_radio-size: 16px;
       --_radio-dot-size: 8px;
-      --_radio-font-size: var(--form-font-size-small, 0.875rem);
+      --_radio-font-size: var(--form-font-size-sm, 0.875rem);
     }
-    :host([size='large']) {
+    :host([size='lg']) {
       --_radio-size: 24px;
       --_radio-dot-size: 12px;
-      --_radio-font-size: var(--form-font-size-large, 1.125rem);
+      --_radio-font-size: var(--form-font-size-lg, 1.125rem);
     }
 
     .group-label {

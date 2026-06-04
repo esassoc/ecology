@@ -1,49 +1,86 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Field label above the input.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
+  { name: 'value', type: 'string', default: "''", description: 'ISO date value (YYYY-MM-DD).' },
+  { name: 'min', type: 'string', default: "''", description: 'Earliest selectable date (YYYY-MM-DD).' },
+  { name: 'max', type: 'string', default: "''", description: 'Latest selectable date (YYYY-MM-DD).' },
+  { name: 'placeholder', type: 'string', default: "'Select date...'", description: 'Placeholder text.' },
+  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the input.' },
+  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (renders a * after the label).' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired on input. Value is an ISO YYYY-MM-DD string. Composed and bubbles.' },
+];
 ---
-<BaseLayout title="Date Picker — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Date Picker <code>[wc]</code></h1>
-      <p>Form-associated date input wrapping the native calendar UI. Migrated from Angular <code>esa-date-picker</code> to a Lit Web Component.</p>
-    </Stack>
+<ComponentDoc name="Date Picker" category="Forms" slug="esa-date-picker" type="wc" status="stable"
+  summary="Form-associated date input wrapping the native calendar UI. A Lit Web Component migrated from the Angular <code>esa-date-picker</code>.">
 
-    <Stack gap="300">
-      <h2>Default</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-date-picker label="Event date" help-text="Pick any day"></esa-date-picker>`}>
       <esa-date-picker label="Event date" help-text="Pick any day"></esa-date-picker>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-date-picker label="Small" size="small"></esa-date-picker>
-      <esa-date-picker label="Medium" size="medium"></esa-date-picker>
-      <esa-date-picker label="Large" size="large"></esa-date-picker>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-date-picker label="Extra small" size="xs"></esa-date-picker>
+<esa-date-picker label="Small" size="sm"></esa-date-picker>
+<esa-date-picker label="Medium" size="md"></esa-date-picker>
+<esa-date-picker label="Large" size="lg"></esa-date-picker>`}>
+      <esa-date-picker label="Extra small" size="xs"></esa-date-picker>
+      <esa-date-picker label="Small" size="sm"></esa-date-picker>
+      <esa-date-picker label="Medium" size="md"></esa-date-picker>
+      <esa-date-picker label="Large" size="lg"></esa-date-picker>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Constrained range</h2>
+  <Section id="states" title="States">
+    <p>Constrain selectable days with <code>min</code>/<code>max</code>. Preset, required, error, and disabled states are attribute-driven.</p>
+    <Preview code={`<esa-date-picker label="Within 2026" min="2026-01-01" max="2026-12-31"></esa-date-picker>
+<esa-date-picker label="Preset value" value="2026-06-03"></esa-date-picker>
+<esa-date-picker label="Required" required></esa-date-picker>
+<esa-date-picker label="Error" error-text="Date is required"></esa-date-picker>
+<esa-date-picker label="Disabled" disabled value="2026-06-03"></esa-date-picker>`}>
       <esa-date-picker label="Within 2026" min="2026-01-01" max="2026-12-31"></esa-date-picker>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>States</h2>
       <esa-date-picker label="Preset value" value="2026-06-03"></esa-date-picker>
       <esa-date-picker label="Required" required></esa-date-picker>
       <esa-date-picker label="Error" error-text="Date is required"></esa-date-picker>
       <esa-date-picker label="Disabled" disabled value="2026-06-03"></esa-date-picker>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Form:</strong> form-associated — value is an ISO <code>YYYY-MM-DD</code> string. Emits composed <code>change</code>.</li>
-        <li><strong>Keyboard:</strong> native date-input keyboard handling (browser calendar).</li>
-        <li><strong>Tokens:</strong> surface, border-strong, text-primary/muted, primary (focus), danger, radius, spacing, type-size.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-  <script>import '@esa/ecology/esa-date-picker';</script>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;input type="date"&gt;</code> — the browser supplies the calendar and full keyboard handling.</li>
+      <li>The input is labelled via <code>aria-label</code> (falls back to "Date" when no label is set).</li>
+      <li><code>min</code>/<code>max</code> map to native input bounds, blocking out-of-range selection.</li>
+      <li>Form-associated via <code>ElementInternals</code> — value submits with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--form-bg</code> · <code>--form-text-color</code> · <code>--form-border-color</code> / <code>--form-border-color-focus</code> / <code>--form-border-color-error</code></li>
+      <li><code>--form-height-*</code> · <code>--form-padding-*</code> · <code>--form-radius-*</code> · <code>--form-font-size-*</code></li>
+      <li><code>--color-primary</code> (focus) · <code>--color-danger</code> · <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>import '@esa/ecology/esa-date-picker';</script>
+
+<style>
+  h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+</style>

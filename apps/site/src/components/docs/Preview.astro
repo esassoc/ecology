@@ -1,0 +1,81 @@
+---
+import { Code } from 'astro:components';
+interface Props { code: string; lang?: string; align?: 'center' | 'start' }
+const { code, lang = 'astro', align = 'center' } = Astro.props;
+---
+<figure class="preview" data-open="false">
+  <div class={`preview__canvas preview__canvas--${align}`}>
+    <slot />
+  </div>
+  <div class="preview__bar">
+    <button class="pv-toggle" type="button" aria-expanded="false">Show code</button>
+    <button class="pv-copy" type="button" data-code={code}>Copy</button>
+  </div>
+  <div class="preview__code">
+    <Code code={code} lang={lang as any} theme="vitesse-dark" />
+  </div>
+</figure>
+
+<style>
+  .preview {
+    margin: 0 0 var(--spacing-300, 0.75rem);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--color-surface, #fff);
+  }
+  .preview__canvas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-300, 0.75rem);
+    align-items: center;
+    padding: var(--spacing-600, 2rem);
+    min-height: 96px;
+  }
+  .preview__canvas--center { justify-content: center; }
+  .preview__canvas--start { justify-content: flex-start; }
+  .preview__bar {
+    display: flex;
+    gap: var(--spacing-100, 0.25rem);
+    padding: 6px var(--spacing-300, 0.75rem);
+    border-top: 1px solid var(--color-border, #e5e5e5);
+    background: var(--color-surface, #fff);
+  }
+  .preview__bar button {
+    font: inherit;
+    font-size: 13px;
+    color: var(--color-text-muted, #737373);
+    background: none;
+    border: 0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .preview__bar button:hover { background: var(--color-surface-sunken, #f5f5f5); color: var(--color-text-primary, #171717); }
+  .preview__code { display: none; border-top: 1px solid var(--color-border, #e5e5e5); }
+  .preview[data-open='true'] .preview__code { display: block; }
+  .preview__code :global(pre) { margin: 0; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
+</style>
+
+<script>
+  // Delegated once for all Preview instances.
+  document.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const toggle = t.closest('.pv-toggle');
+    if (toggle) {
+      const fig = toggle.closest('.preview') as HTMLElement;
+      const open = fig.getAttribute('data-open') === 'true';
+      fig.setAttribute('data-open', String(!open));
+      toggle.setAttribute('aria-expanded', String(!open));
+      toggle.textContent = open ? 'Show code' : 'Hide code';
+      return;
+    }
+    const copy = t.closest('.pv-copy') as HTMLElement;
+    if (copy) {
+      navigator.clipboard?.writeText(copy.getAttribute('data-code') || '');
+      const prev = copy.textContent;
+      copy.textContent = 'Copied';
+      setTimeout(() => { copy.textContent = prev; }, 1200);
+    }
+  });
+</script>

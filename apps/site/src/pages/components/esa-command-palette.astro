@@ -1,23 +1,60 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
+
+const props = [
+  { name: 'commands', type: 'EsaCommand[]', default: '[]', description: 'Command registry, set as a property. Each: { id, label, description?, shortcut?, group?, keywords?, disabled?, action }.' },
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
+  { name: 'hotkey', type: 'boolean', default: 'true', description: 'Registers the global Cmd/Ctrl+K toggle listener.' },
+];
+
+const methods = [
+  { name: 'show()', type: 'method', description: 'Opens the palette, clears the query, and focuses the input.' },
+  { name: 'close()', type: 'method', description: 'Closes the palette.' },
+  { name: 'toggle()', type: 'method', description: 'Toggles open state — also bound to Cmd/Ctrl+K.' },
+];
 ---
-<BaseLayout title="Command Palette — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Command Palette <code>[wc]</code></h1>
-      <p>Filterable command overlay. Set the <code>commands</code> property, then open with the button or <kbd>⌘/Ctrl + K</kbd>. Arrow keys navigate, Enter runs, Esc closes.</p>
-    </Stack>
+<ComponentDoc name="Command Palette" category="Overlays" slug="esa-command-palette" type="wc" status="stable"
+  summary="Filterable command overlay. Set the <code>commands</code> property, then open with the button or <kbd>⌘/Ctrl + K</kbd>. Arrow keys navigate, Enter runs, Esc closes.">
 
-    <Stack gap="300">
+  <Section id="preview" title="Preview">
+    <p>Commands are set in a script: <code>el.commands = [{'{ id, label, group, action }'}, …]</code>.</p>
+    <Preview code={`<button id="open-cmdk">Open command palette</button>
+
+<esa-command-palette id="cmdk"></esa-command-palette>`}>
       <button class="trigger" id="open-cmdk">Open command palette</button>
+      <esa-command-palette id="cmdk"></esa-command-palette>
       <p id="result" class="result"></p>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <esa-command-palette id="cmdk"></esa-command-palette>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3>Methods</h3>
+    <PropsTable rows={methods} />
+    <p>Selecting a command runs its <code>action</code> callback, then closes the palette — there is no separate event.</p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The overlay is <code>role="dialog"</code>; the results list is <code>role="listbox"</code> with <code>role="option"</code> items and <code>aria-selected</code>.</li>
+      <li>ArrowUp / ArrowDown move the active option (wrapping), Enter executes, Esc closes.</li>
+      <li>The search input is focused automatically when the palette opens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface-elevated</code> · <code>--color-border</code> / <code>--color-border-light</code></li>
+      <li><code>--color-text-primary</code> / <code>--color-text-muted</code> · <code>--color-surface-sunken</code> (active row + kbd)</li>
+      <li><code>--color-backdrop</code> · <code>--z-modal</code> / <code>--z-modal-backdrop</code></li>
+      <li><code>--radius-400</code> · <code>--spacing-200</code> – <code>--spacing-400</code> · <code>--focus-ring-*</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>
   import '@esa/ecology/esa-command-palette';
@@ -48,7 +85,7 @@ import Stack from '@esa/ecology/Stack.astro';
     font-size: var(--type-size-200, 0.9375rem);
     cursor: pointer;
   }
-  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; width: 100%; }
   kbd {
     padding: 1px 5px;
     border: 1px solid var(--color-border, #e5e5e5);

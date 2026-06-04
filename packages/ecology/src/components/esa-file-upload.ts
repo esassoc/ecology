@@ -247,7 +247,7 @@ export class EsaFileUpload extends LitElement {
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
       border: 2px dashed var(--form-border-color, #d4d4d4);
-      border-radius: var(--form-radius-medium, 8px);
+      border-radius: var(--form-radius-md, 8px);
       background: var(--form-bg, #fff);
       cursor: pointer;
       text-align: center;
@@ -283,13 +283,13 @@ export class EsaFileUpload extends LitElement {
 
     .zone__label {
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-medium, 14px);
+      font-size: var(--form-font-size-md, 14px);
       font-weight: var(--font-weight-medium, 450);
       color: var(--color-text-primary, #171717);
     }
     .zone__hint {
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-small, 12px);
+      font-size: var(--form-font-size-sm, 12px);
       color: var(--color-text-muted, #737373);
     }
     .browse {
@@ -305,7 +305,7 @@ export class EsaFileUpload extends LitElement {
     .error {
       margin-top: var(--spacing-100, 4px);
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-small, 12px);
+      font-size: var(--form-font-size-sm, 12px);
       color: var(--color-danger, #ef4444);
     }
 
@@ -323,13 +323,13 @@ export class EsaFileUpload extends LitElement {
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: var(--color-surface-sunken, #efefef);
-      border-radius: var(--form-radius-small, 6px);
+      border-radius: var(--form-radius-sm, 6px);
       color: var(--color-text-muted, #737373);
     }
     .file__name {
       flex: 1;
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-small, 12px);
+      font-size: var(--form-font-size-sm, 12px);
       color: var(--color-text-primary, #171717);
       overflow: hidden;
       text-overflow: ellipsis;

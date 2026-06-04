@@ -1,45 +1,61 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import FilterClearButton from '@esa/ecology/esa-filter-clear-button.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "'Clear all'", description: 'Visible button text.' },
+  { name: 'showIcon', type: 'boolean', default: 'true', description: 'Show the leading filter-x icon.' },
+  { name: 'hidden', type: 'boolean', default: 'false', description: 'Suppress rendering entirely (renders no DOM).' },
+];
+
+const events = [
+  { name: 'esa-filter-clear', type: '(no detail)', description: 'Bubbling/composed. Fires on click so a parent container can clear all active filters.' },
+];
 ---
-<BaseLayout title="Filter Clear Button — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Filter Clear Button</h1>
-      <p>Ghost/link-style button that clears all active filters. Optional leading
-        <code>filter-x</code> icon. Dispatches a bubbling <code>esa-filter-clear</code> event.</p>
-    </Stack>
+<ComponentDoc name="Filter Clear Button" category="Filters" slug="esa-filter-clear-button" type=".astro" status="stable"
+  summary="Ghost/link-style button that clears all active filters. Optional leading <code>filter-x</code> icon, customizable label, and a bubbling <code>esa-filter-clear</code> event on click.">
 
-    <Stack gap="300">
-      <h2>Default</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <FilterClearButton />
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<FilterClearButton />`}>
+      <FilterClearButton />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Custom label</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <FilterClearButton label="Reset filters" />
-      </Stack>
-    </Stack>
+  <Section id="variants" title="Variants">
+    <p>Override the label, and drop the icon for a plain link-style action.</p>
+    <Preview code={`<FilterClearButton label="Reset filters" />
+<FilterClearButton label="Clear all" showIcon={false} />`}>
+      <FilterClearButton label="Reset filters" />
+      <FilterClearButton label="Clear all" showIcon={false} />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>No icon</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <FilterClearButton label="Clear all" showIcon={false} />
-      </Stack>
-    </Stack>
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Props:</strong> <code>label</code>, <code>showIcon</code>, <code>hidden</code>.</li>
-        <li><strong>States:</strong> rest, hover (primary-hover + hover-overlay), focus-visible (2px primary outline).</li>
-        <li><strong>Event:</strong> emits bubbling/composed <code>esa-filter-clear</code> on click for a parent container to handle.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="events" title="Events">
+    <Api props={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;button&gt;</code> with a fixed <code>aria-label="Clear all filters"</code>, so the name is stable even when <code>label</code> changes.</li>
+      <li>The leading icon is <code>aria-hidden</code> — decorative only.</li>
+      <li>Hover applies a subtle overlay; focus-visible shows a 2px primary outline via <code>--focus-ring-*</code> tokens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the clear-button tokens to restyle the link treatment:</p>
+    <ul class="tokens">
+      <li><code>--filter-clear-color</code> / <code>--filter-clear-color-hover</code> · <code>--color-primary</code> / <code>--color-primary-hover</code></li>
+      <li><code>--color-hover-overlay</code> (hover background) · <code>--radius-100</code> · <code>--spacing-*</code></li>
+      <li><code>--type-size-150</code> · <code>--font-weight-medium</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

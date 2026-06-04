@@ -1,59 +1,100 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'name', type: 'string', default: "''", description: 'Filter key carried in emitted events.' },
+  { name: 'label', type: 'string', default: "''", description: 'Trigger label; selection appends "label: value".' },
+  { name: 'options', type: '{ label, value, disabled? }[]', default: '[]', description: 'Selectable options (set as a property, not an attribute).' },
+  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections; trigger shows "first +N".' },
+  { name: 'placeholder', type: 'string', default: "''", description: 'Search-input placeholder (defaults to "Search…").' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Trigger height, padding, font size, and radius.' },
+];
+
+const events = [
+  { name: 'selection-change', type: '{ value: string | string[] }', description: 'Fires on every selection change. value is a string in single mode, an array in multiple mode.' },
+  { name: 'esa-filter-change', type: '{ name, filters: ActiveFilter[] }', description: 'Bubbling/composed. Carries the filter name plus the full active-filter list for a parent container to coordinate state.' },
+];
 ---
-<BaseLayout title="Filter Dropdown — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Filter Dropdown</h1>
-      <p>Interactive dropdown filter (Lit web component). Open/close panel,
-        searchable options, keyboard nav (Arrow/Enter/Escape), single + multi
-        select, outside-click and Escape to close. Overlay positioned with plain
-        CSS — no CDK. Emits <code>selection-change</code> and
-        <code>esa-filter-change</code> events.</p>
-    </Stack>
+<ComponentDoc name="Filter Dropdown" category="Filters" slug="esa-filter-dropdown" type="wc" status="stable"
+  summary="Interactive dropdown filter (Lit web component) with a searchable panel, full keyboard navigation, and single or multi select. The trigger fills with the primary color when active and shows an inline clear control.">
 
-    <Stack gap="300">
-      <h2>Single select</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <esa-filter-dropdown data-opts="status" name="status" label="Status"></esa-filter-dropdown>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <p>Click the trigger to open the panel, type to filter, and use Arrow/Enter/Escape to navigate. Outside-click and Escape close it. Options are set as a property in a small init script.</p>
+    <Preview code={`<esa-filter-dropdown name="status" label="Status"></esa-filter-dropdown>
 
-    <Stack gap="300">
-      <h2>Multi select</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <esa-filter-dropdown data-opts="dept" name="dept" label="Department" multiple></esa-filter-dropdown>
-      </Stack>
-    </Stack>
+<script>
+  import '@esa/ecology/esa-filter-dropdown';
+  customElements.whenDefined('esa-filter-dropdown').then(() => {
+    document.querySelector('esa-filter-dropdown').options = [
+      { label: 'Open', value: 'open' },
+      { label: 'In review', value: 'review' },
+      { label: 'Closed', value: 'closed' },
+    ];
+  });
+<\/script>`}>
+      <esa-filter-dropdown data-opts="status" name="status" label="Status"></esa-filter-dropdown>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <esa-filter-dropdown data-opts="status" name="s1" label="Small" size="small"></esa-filter-dropdown>
-        <esa-filter-dropdown data-opts="status" name="s2" label="Medium" size="medium"></esa-filter-dropdown>
-        <esa-filter-dropdown data-opts="status" name="s3" label="Large" size="large"></esa-filter-dropdown>
-      </Stack>
-    </Stack>
+  <Section id="select-modes" title="Select modes">
+    <p>Single select closes on choice; <code>multiple</code> keeps the panel open, shows checkmarks, and renders "first +N" in the trigger.</p>
+    <Preview code={`<esa-filter-dropdown name="status" label="Status"></esa-filter-dropdown>
+<esa-filter-dropdown name="dept" label="Department" multiple></esa-filter-dropdown>`}>
+      <esa-filter-dropdown data-opts="status" name="status" label="Status"></esa-filter-dropdown>
+      <esa-filter-dropdown data-opts="dept" name="dept" label="Department" multiple></esa-filter-dropdown>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With a disabled option</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <esa-filter-dropdown data-opts="withDisabled" name="priority" label="Priority"></esa-filter-dropdown>
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-filter-dropdown label="XS" size="xs"></esa-filter-dropdown>
+<esa-filter-dropdown label="Small" size="sm"></esa-filter-dropdown>
+<esa-filter-dropdown label="Medium" size="md"></esa-filter-dropdown>
+<esa-filter-dropdown label="Large" size="lg"></esa-filter-dropdown>`}>
+      <esa-filter-dropdown data-opts="status" name="s0" label="XS" size="xs"></esa-filter-dropdown>
+      <esa-filter-dropdown data-opts="status" name="s1" label="Small" size="sm"></esa-filter-dropdown>
+      <esa-filter-dropdown data-opts="status" name="s2" label="Medium" size="md"></esa-filter-dropdown>
+      <esa-filter-dropdown data-opts="status" name="s3" label="Large" size="lg"></esa-filter-dropdown>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Props:</strong> <code>name</code>, <code>label</code>, <code>options</code>, <code>multiple</code>, <code>placeholder</code>, <code>size</code>.</li>
-        <li><strong>Keyboard:</strong> ArrowUp/Down highlight (skip disabled), Enter selects, Escape closes.</li>
-        <li><strong>Active trigger:</strong> filled with primary when selected or open; shows inline clear x.</li>
-        <li><strong>Events:</strong> <code>selection-change</code> (value), <code>esa-filter-change</code> (name + active filters).</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="states" title="States">
+    <p>Disabled options are dimmed, skipped by keyboard navigation, and not selectable.</p>
+    <Preview code={`<esa-filter-dropdown name="priority" label="Priority"></esa-filter-dropdown>
+<!-- options include { label: 'High', value: 'high', disabled: true } -->`}>
+      <esa-filter-dropdown data-opts="withDisabled" name="priority" label="Priority"></esa-filter-dropdown>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="events" title="Events">
+    <Api props={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Trigger is a native <code>&lt;button&gt;</code> with <code>aria-haspopup="listbox"</code> and <code>aria-expanded</code> reflecting open state.</li>
+      <li>Panel is a <code>role="listbox"</code>; each option is <code>role="option"</code> with <code>aria-selected</code> and <code>aria-disabled</code>.</li>
+      <li>Keyboard: ArrowUp/Down highlight (skipping disabled), Enter selects, Escape closes. Opening focuses the search input.</li>
+      <li>Visible focus ring on the trigger via <code>--focus-ring-*</code> tokens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the component-scoped tokens to re-skin the trigger and panel without forking the element:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> — active trigger fill, selected option, search focus</li>
+      <li><code>--color-surface</code> · <code>--color-border</code> · <code>--color-text-primary</code> / <code>--color-text-inverse</code></li>
+      <li><code>--filter-dropdown-bg</code> / <code>--filter-dropdown-border</code> / <code>--filter-dropdown-radius</code> / <code>--filter-dropdown-shadow</code> / <code>--filter-dropdown-min-width</code></li>
+      <li><code>--radius-*</code> · <code>--spacing-*</code> · <code>--type-size-*</code> · <code>--z-dropdown</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code></li>
+    </ul>
+  </Section>
 
   <script>
     import '@esa/ecology/esa-filter-dropdown';
@@ -84,4 +125,4 @@ import Stack from '@esa/ecology/Stack.astro';
       });
     });
   </script>
-</BaseLayout>
+</ComponentDoc>

@@ -1,47 +1,66 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import LoadingOverlay from '@esa/ecology/esa-loading-overlay.astro';
----
-<BaseLayout title="Loading Overlay — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Loading Overlay</h1>
-      <p>Covers its positioned parent with a centered spinner and optional message while a region is busy. Opaque or semi-transparent backdrop.</p>
-    </Stack>
 
-    <Stack gap="300">
-      <h2>Opaque (active)</h2>
-      <div style="position: relative; min-height: 180px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
-        <p>Underlying content that is being covered while loading.</p>
+const props = [
+  { name: 'active', type: 'boolean', default: 'false', description: 'When false the overlay renders nothing.' },
+  { name: 'message', type: 'string', description: 'Optional caption shown under the spinner.' },
+  { name: 'transparent', type: 'boolean', default: 'false', description: 'Semi-transparent backdrop instead of an opaque one.' },
+];
+---
+<ComponentDoc name="Loading Overlay" category="Display" slug="esa-loading-overlay" type=".astro" status="stable"
+  summary="Covers its positioned parent with a centered spinner and optional message while a region is busy. Opaque or semi-transparent backdrop.">
+
+  <Section id="preview" title="Preview">
+    <p>Place the overlay inside a <code>position: relative</code> container; its absolute backdrop fills the parent.</p>
+    <Preview align="start" code={`<div style="position: relative; min-height: 180px;">
+  <p>Underlying content being covered.</p>
+  <LoadingOverlay active={true} message="Loading data…" />
+</div>`}>
+      <div style="position: relative; min-height: 180px; width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+        <p style="margin: 0;">Underlying content that is being covered while loading.</p>
         <LoadingOverlay active={true} message="Loading data…" />
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Transparent backdrop</h2>
-      <div style="position: relative; min-height: 180px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
-        <p>You can still see this content faintly through the overlay.</p>
-        <LoadingOverlay active={true} transparent={true} message="Saving…" />
+  <Section id="states" title="States">
+    <p>A <code>transparent</code> backdrop lets the content show through faintly. When <code>active</code> is false the overlay renders nothing.</p>
+    <Preview align="start" code={`<LoadingOverlay active={true} transparent={true} message="Saving…" />
+<LoadingOverlay active={false} />`}>
+      <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <div style="position: relative; min-height: 160px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+          <p style="margin: 0;">You can still see this content faintly through the overlay.</p>
+          <LoadingOverlay active={true} transparent={true} message="Saving…" />
+        </div>
+        <div style="position: relative; min-height: 100px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+          <p style="margin: 0;">Inactive — the overlay renders nothing.</p>
+          <LoadingOverlay active={false} />
+        </div>
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Inactive</h2>
-      <div style="position: relative; min-height: 120px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
-        <p>When <code>active</code> is false the overlay renders nothing.</p>
-        <LoadingOverlay active={false} />
-      </div>
-    </Stack>
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Positioning:</strong> the backdrop is <code>position: absolute; inset: 0</code> — place it inside a <code>position: relative</code> container.</li>
-        <li><strong>Spinner:</strong> large ring inlined (mirrors esa-loading-spinner size="large").</li>
-        <li><strong>Tokens consumed:</strong> <code>--color-surface</code>, <code>--color-primary</code>, <code>--color-border-light</code>, <code>--color-text-secondary</code>, spacing scale.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The spinner carries <code>role="status"</code> and <code>aria-label="Loading"</code>.</li>
+      <li>The backdrop sits at <code>z-index: 10</code> over the parent and intercepts interaction while active.</li>
+      <li>For long operations, consider moving focus or announcing the busy state at the call site.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface</code> — opaque backdrop</li>
+      <li><code>--color-primary</code> / <code>--color-border-light</code> — spinner</li>
+      <li><code>--color-text-secondary</code> — message · <code>--radius-full</code> · <code>--type-size-150</code> · <code>--spacing-*</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

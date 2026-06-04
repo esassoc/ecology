@@ -1,6 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 
 const options = JSON.stringify([
   { label: 'Air quality', value: 'air' },
@@ -8,52 +10,115 @@ const options = JSON.stringify([
   { label: 'Soil', value: 'soil' },
   { label: 'Noise (unavailable)', value: 'noise', disabled: true },
 ]);
+
+const props = [
+  { name: 'options', type: 'EsaOption[] | string', default: '[]', description: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute." },
+  { name: 'value', type: 'string[]', default: '[]', description: 'Selected option values.' },
+  { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
+  { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
+  { name: 'name', type: 'string', default: "''", description: 'Field name each selected value is submitted under.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string[] }>', description: 'Fired when any option is toggled. Composed and bubbling; detail.value is the current selection array.' },
+];
 ---
-<BaseLayout title="Checkbox Group — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Checkbox Group</h1>
-      <p>Form-associated Lit Web Component <code>[wc]</code>. Multi-select from an options list; value is a <code>string[]</code>. Vertical/horizontal orientation, per-option disabled, Space/Enter toggling. The <code>options</code> attribute accepts a JSON string. Emits a composed <code>change</code> event.</p>
-    </Stack>
+<ComponentDoc name="Checkbox Group" category="Forms" slug="esa-checkbox-group" type="wc" status="stable"
+  summary="Multi-select from an options list; the value is a <code>string[]</code>. Vertical or horizontal orientation, per-option disabled, Space/Enter toggling. The <code>options</code> attribute accepts a JSON string. Emits a composed <code>change</code> event.">
 
-    <Stack gap="300">
-      <h2>Vertical (default)</h2>
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<esa-checkbox-group
+  label="Monitored media"
+  options='[{"label":"Air quality","value":"air"}, …]'
+  value='["water"]'
+></esa-checkbox-group>`}>
       <esa-checkbox-group label="Monitored media" options={options} value={JSON.stringify(['water'])}></esa-checkbox-group>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Horizontal</h2>
+  <Section id="orientation" title="Orientation">
+    <p><code>vertical</code> is the default; switch to <code>horizontal</code> to lay options out in a row.</p>
+    <Preview align="start" code={`<esa-checkbox-group label="Monitored media" orientation="horizontal" options="…"></esa-checkbox-group>`}>
       <esa-checkbox-group label="Monitored media" orientation="horizontal" options={options}></esa-checkbox-group>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-checkbox-group label="Small" size="small" orientation="horizontal" options={options}></esa-checkbox-group>
-      <esa-checkbox-group label="Large" size="large" orientation="horizontal" options={options}></esa-checkbox-group>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview align="start" code={`<esa-checkbox-group label="Extra small" size="xs" orientation="horizontal" options="…"></esa-checkbox-group>
+<esa-checkbox-group label="Small" size="sm" orientation="horizontal" options="…"></esa-checkbox-group>
+<esa-checkbox-group label="Medium" size="md" orientation="horizontal" options="…"></esa-checkbox-group>
+<esa-checkbox-group label="Large" size="lg" orientation="horizontal" options="…"></esa-checkbox-group>`}>
+      <div class="col">
+        <esa-checkbox-group label="Extra small" size="xs" orientation="horizontal" options={options}></esa-checkbox-group>
+        <esa-checkbox-group label="Small" size="sm" orientation="horizontal" options={options}></esa-checkbox-group>
+        <esa-checkbox-group label="Medium" size="md" orientation="horizontal" options={options}></esa-checkbox-group>
+        <esa-checkbox-group label="Large" size="lg" orientation="horizontal" options={options}></esa-checkbox-group>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Form participation</h2>
-      <p>Each selected value submits under <code>name</code>.</p>
-      <form id="cbg-form">
-        <Stack gap="300">
-          <esa-checkbox-group label="Media" name="media" options={options} value={JSON.stringify(['air'])}></esa-checkbox-group>
-          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
-          <output id="cbg-out" style="font-family:var(--font-mono);"></output>
-        </Stack>
+  <Section id="form" title="Form participation">
+    <p>Each selected value is submitted under <code>name</code>. Submitting logs all <code>media</code> entries.</p>
+    <Preview align="start" code={`<form>
+  <esa-checkbox-group label="Media" name="media" options="…" value='["air"]'></esa-checkbox-group>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="cbg-form" class="form-demo">
+        <esa-checkbox-group label="Media" name="media" options={options} value={JSON.stringify(['air'])}></esa-checkbox-group>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="cbg-out" class="demo-out"></output>
       </form>
-    </Stack>
-  </Stack>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-checkbox-group';
-    const form = document.getElementById('cbg-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = new FormData(form as HTMLFormElement);
-      document.getElementById('cbg-out')!.textContent =
-        'media = ' + JSON.stringify(data.getAll('media'));
-    });
-  </script>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The options container has <code>role="group"</code> labeled by the group label.</li>
+      <li>Each box has <code>role="checkbox"</code> with <code>aria-checked</code> and toggles on Space or Enter.</li>
+      <li>Disabled options carry <code>aria-disabled</code> and a <code>-1</code> tabindex.</li>
+      <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form and semantic token layers to re-skin:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> — checked box fill and border</li>
+      <li><code>--form-bg</code> / <code>--form-border-color</code> · <code>--form-border-color-focus</code></li>
+      <li><code>--form-radius-*</code> / <code>--form-font-size-*</code> · <code>--form-border-width</code></li>
+      <li><code>--color-text-primary</code> · <code>--spacing-200</code> · <code>--spacing-400</code> (horizontal gap)</li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); align-items: flex-start; }
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .demo-submit {
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-checkbox-group';
+  const form = document.getElementById('cbg-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('cbg-out')!.textContent =
+      'media = ' + JSON.stringify(data.getAll('media'));
+  });
+</script>

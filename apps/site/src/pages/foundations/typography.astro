@@ -1,0 +1,223 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '../../components/docs/Section.astro';
+
+const families = [
+  { token: '--font-sans', value: "'DM Sans', sans-serif", role: 'UI, body, headings' },
+  { token: '--font-mono', value: "'DM Mono', monospace", role: 'Code, tabular data, tokens' },
+];
+
+const scale = [
+  { token: '--type-size-050', min: '8px', max: '10px' },
+  { token: '--type-size-100', min: '10px', max: '12px' },
+  { token: '--type-size-150', min: '11px', max: '14px' },
+  { token: '--type-size-200', min: '12px', max: '15px' },
+  { token: '--type-size-250', min: '13px', max: '17px' },
+  { token: '--type-size-300', min: '14px', max: '18px' },
+  { token: '--type-size-400', min: '16px', max: '20px' },
+  { token: '--type-size-500', min: '18px', max: '24px' },
+  { token: '--type-size-600', min: '22px', max: '30px' },
+  { token: '--type-size-700', min: '26px', max: '36px' },
+  { token: '--type-size-800', min: '32px', max: '44px' },
+  { token: '--type-size-900', min: '40px', max: '54px' },
+  { token: '--type-size-1000', min: '48px', max: '64px' },
+];
+
+const weights = [
+  { token: '--font-weight-light', value: 300, label: 'Light' },
+  { token: '--font-weight-regular', value: 350, label: 'Regular' },
+  { token: '--font-weight-medium', value: 450, label: 'Medium' },
+  { token: '--font-weight-semibold', value: 550, label: 'Semibold' },
+  { token: '--font-weight-bold', value: 650, label: 'Bold' },
+];
+
+const lineHeights = [
+  { token: '--line-height-tight', value: '1.3', role: 'Headings, dense titles' },
+  { token: '--line-height-normal', value: '1.6', role: 'UI text, labels' },
+  { token: '--line-height-relaxed', value: '1.8', role: 'Long-form body copy' },
+];
+
+const letterSpacing = [
+  { token: '--letter-spacing-tight', value: '-0.01em', role: 'Large headings' },
+  { token: '--letter-spacing-normal', value: '0.01em', role: 'Body and UI' },
+  { token: '--letter-spacing-wide', value: '0.03em', role: 'Small caps emphasis' },
+  { token: '--letter-spacing-wider', value: '0.06em', role: 'Overlines, all-caps labels' },
+];
+
+const roles = [
+  { cls: 'type-display', token: '.type-display', note: 'size-800 · bold · tight' },
+  { cls: 'type-page-title', token: '.type-page-title', note: 'size-600 · semibold · tight' },
+  { cls: 'type-section-title', token: '.type-section-title', note: 'size-500 · semibold · tight' },
+  { cls: 'type-card-title', token: '.type-card-title', note: 'size-400 · medium · normal' },
+  { cls: 'type-body-large', token: '.type-body-large', note: 'size-300 · regular · relaxed' },
+  { cls: 'type-body', token: '.type-body', note: 'size-200 · regular · relaxed' },
+  { cls: 'type-body-small', token: '.type-body-small', note: 'size-150 · regular · normal' },
+  { cls: 'type-label', token: '.type-label', note: 'size-100 · medium · normal' },
+  { cls: 'type-caption', token: '.type-caption', note: 'size-100 · regular · normal' },
+  { cls: 'type-overline', token: '.type-overline', note: 'size-050 · semibold · uppercase' },
+  { cls: 'type-code', token: '.type-code', note: 'mono · size-100' },
+];
+---
+<DocsLayout title="Typography — Ecology" activeHref="/foundations/typography">
+  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Typography</span></nav>
+  <h1>Typography</h1>
+  <p class="lede">One <strong>fluid type scale</strong> that interpolates between a small-screen min and a large-screen max, two font families, and a set of <strong>semantic type roles</strong> that compose size, weight, line-height and tracking into one class.</p>
+
+  <Section id="families" title="Font families">
+    <p>DM Sans carries the entire UI. DM Mono is reserved for code, tokens and tabular figures.</p>
+    <div class="families">
+      {families.map((f) => (
+        <div class="family">
+          <div class="family__sample" style={`font-family: var(${f.token})`}>Aa Bb Cc 0123</div>
+          <div class="family__meta">
+            <code>{f.token}</code>
+            <span class="family__value">{f.value}</span>
+            <span class="family__role">{f.role}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="scale" title="Type scale">
+    <p>Each size is a <code>clamp()</code> — rendered here at its live computed value. The range shows the min (mobile) to max (desktop) px bounds.</p>
+    <div class="scale">
+      {scale.map((s) => (
+        <div class="scale__row">
+          <div class="scale__sample" style={`font-size: var(${s.token})`}>The quick brown fox</div>
+          <div class="scale__meta">
+            <code>{s.token}</code>
+            <span class="scale__range">{s.min} → {s.max}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="weights" title="Font weights">
+    <p>DM Sans is set on a custom axis — weights are intentionally a touch lighter than the usual 400/500/600/700 to read cleaner on screen.</p>
+    <div class="weights">
+      {weights.map((w) => (
+        <div class="weight">
+          <div class="weight__sample" style={`font-weight: var(${w.token})`}>{w.label}</div>
+          <div class="weight__meta">
+            <code>{w.token}</code>
+            <span>{w.value}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="line-heights" title="Line heights">
+    <div class="lh">
+      {lineHeights.map((l) => (
+        <div class="lh__row">
+          <p class="lh__sample" style={`line-height: var(${l.token})`}>Ecology is a token-driven Angular component library. Line height controls vertical rhythm — tighter for headings, looser for sustained reading.</p>
+          <div class="lh__meta">
+            <code>{l.token}</code>
+            <span class="lh__value">{l.value}</span>
+            <span class="lh__role">{l.role}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="letter-spacing" title="Letter spacing">
+    <div class="ls">
+      {letterSpacing.map((l) => (
+        <div class="ls__row">
+          <div class="ls__sample" style={`letter-spacing: var(${l.token})`}>Tracking sample · ESA Ecology</div>
+          <div class="ls__meta">
+            <code>{l.token}</code>
+            <span class="ls__value">{l.value}</span>
+            <span class="ls__role">{l.role}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="roles" title="Type roles">
+    <p>Utility classes that bundle the four type properties together. Components reference these instead of hand-tuning sizes — change a role once, it updates everywhere.</p>
+    <div class="roles">
+      {roles.map((r) => (
+        <div class="role">
+          <div class={`role__sample ${r.cls}`}>The quick brown fox</div>
+          <div class="role__meta">
+            <code>{r.token}</code>
+            <span>{r.note}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+</DocsLayout>
+
+<style>
+  .families { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-400, 1rem); }
+  .family { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .family__sample { font-size: 32px; color: var(--color-text-primary, #171717); margin-bottom: var(--spacing-300, 0.75rem); }
+  .family__meta { display: flex; flex-direction: column; gap: 3px; }
+  .family__meta code { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-primary, #171717); }
+  .family__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-secondary, #525252); }
+  .family__role { font-size: 13px; color: var(--color-text-muted, #737373); }
+
+  .scale { display: flex; flex-direction: column; }
+  .scale__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-300, 0.75rem) 0; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  .scale__row:last-child { border-bottom: none; }
+  .scale__sample { color: var(--color-text-primary, #171717); line-height: 1.2; min-width: 0; flex: 1; }
+  .scale__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
+  .scale__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .scale__range { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+
+  .weights { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--spacing-300, 0.75rem); }
+  .weight { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .weight__sample { font-size: 28px; color: var(--color-text-primary, #171717); margin-bottom: var(--spacing-250, 0.625rem); }
+  .weight__meta { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-200, 0.5rem); }
+  .weight__meta code { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-text-primary, #171717); }
+  .weight__meta span { font-size: 13px; color: var(--color-text-muted, #737373); }
+
+  .lh { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); }
+  .lh__row { display: grid; grid-template-columns: 1fr 220px; gap: var(--spacing-400, 1rem); align-items: start; border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .lh__sample { font-size: 16px; color: var(--color-text-primary, #171717); margin: 0; max-width: 56ch; }
+  .lh__meta { display: flex; flex-direction: column; gap: 2px; }
+  .lh__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .lh__value { font-size: 13px; color: var(--color-text-secondary, #525252); }
+  .lh__role { font-size: 13px; color: var(--color-text-muted, #737373); }
+
+  .ls { display: flex; flex-direction: column; }
+  .ls__row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-300, 0.75rem) 0; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  .ls__row:last-child { border-bottom: none; }
+  .ls__sample { font-size: 18px; color: var(--color-text-primary, #171717); }
+  .ls__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
+  .ls__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .ls__value { font-size: 13px; color: var(--color-text-secondary, #525252); }
+  .ls__role { font-size: 13px; color: var(--color-text-muted, #737373); }
+
+  .roles { display: flex; flex-direction: column; }
+  .role { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-400, 1rem) 0; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  .role:last-child { border-bottom: none; }
+  .role__sample { color: var(--color-text-primary, #171717); min-width: 0; flex: 1; }
+
+  /* Local copies of the semantic type-role utilities (type-roles.css isn't loaded globally on the site). */
+  .role__sample.type-display { font-size: var(--type-size-800); font-weight: var(--font-weight-bold, 650); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
+  .role__sample.type-page-title { font-size: var(--type-size-600); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
+  .role__sample.type-section-title { font-size: var(--type-size-500); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
+  .role__sample.type-card-title { font-size: var(--type-size-400); font-weight: var(--font-weight-medium, 450); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-body-large { font-size: var(--type-size-300); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-body { font-size: var(--type-size-200); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-body-small { font-size: var(--type-size-150); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-label { font-size: var(--type-size-100); font-weight: var(--font-weight-medium, 450); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-caption { font-size: var(--type-size-100); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-overline { font-size: var(--type-size-050); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-wider, 0.06em); text-transform: uppercase; }
+  .role__sample.type-code { font-family: var(--font-mono, monospace); font-size: var(--type-size-100); line-height: var(--line-height-normal, 1.6); }
+  .role__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
+  .role__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .role__meta span { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+
+  @media (max-width: 640px) {
+    .lh__row { grid-template-columns: 1fr; }
+  }
+</style>

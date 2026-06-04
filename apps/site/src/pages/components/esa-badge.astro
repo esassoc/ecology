@@ -1,0 +1,82 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import Badge from '@esa/ecology/esa-badge.astro';
+
+const props = [
+  { name: 'value', type: 'string | number', description: 'Text or count shown inside the badge. Ignored in dot mode.' },
+  { name: 'variant', type: "'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'", default: "'primary'", description: 'Background color intent.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Badge height and text size.' },
+  { name: 'dot', type: 'boolean', default: 'false', description: 'Renders a small status dot with no text.' },
+];
+---
+<ComponentDoc name="Badge" category="Display" slug="esa-badge" type=".astro" status="stable"
+  summary="A small pill for counts, statuses, and labels. Six color intents, three sizes, plus a dot mode for compact status indicators.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<Badge value="New" />`}>
+      <Badge value="New" />
+    </Preview>
+  </Section>
+
+  <Section id="variants" title="Variants">
+    <Preview code={`<Badge value="Primary" variant="primary" />
+<Badge value="Secondary" variant="secondary" />
+<Badge value="Success" variant="success" />
+<Badge value="Warning" variant="warning" />
+<Badge value="Danger" variant="danger" />
+<Badge value="Info" variant="info" />`}>
+      <Badge value="Primary" variant="primary" />
+      <Badge value="Secondary" variant="secondary" />
+      <Badge value="Success" variant="success" />
+      <Badge value="Warning" variant="warning" />
+      <Badge value="Danger" variant="danger" />
+      <Badge value="Info" variant="info" />
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<Badge value="3" size="xs" />
+<Badge value="9" size="sm" />
+<Badge value="42" size="md" />
+<Badge value="128" size="lg" />`}>
+      <Badge value="3" size="xs" />
+      <Badge value="9" size="sm" />
+      <Badge value="42" size="md" />
+      <Badge value="128" size="lg" />
+    </Preview>
+  </Section>
+
+  <Section id="states" title="Dot mode">
+    <p>With <code>dot</code>, the badge collapses to an 8px circle — useful as an inline status indicator next to a label.</p>
+    <Preview code={`<Badge dot variant="success" />
+<Badge dot variant="warning" />
+<Badge dot variant="danger" />`}>
+      <Badge dot variant="success" />
+      <Badge dot variant="warning" />
+      <Badge dot variant="danger" />
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Purely presentational — pair with adjacent visible text so the count or status has a label.</li>
+      <li>Dot mode has no text content; convey its meaning through surrounding copy or an <code>aria-label</code> on the wrapper.</li>
+      <li>Color is not the only signal where possible — prefer text counts over color alone.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-primary</code> / <code>--color-secondary</code> / <code>--color-success</code> / <code>--color-warning</code> / <code>--color-danger</code> / <code>--color-info</code></li>
+      <li><code>--color-text-inverse</code> — badge text color</li>
+      <li><code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

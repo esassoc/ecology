@@ -10,7 +10,7 @@ import { LitElement, html, css } from 'lit';
  *   - `open` attribute drives visibility
  *   - Esc closes, focus is trapped while open, and focus is restored on close
  *
- * Inputs preserved: title, show-close-button, size (small|medium|large|fullscreen).
+ * Inputs preserved: title, show-close-button, size (xs|sm|md|lg|fullscreen).
  * Slot the body as default content; slot footer content into slot="footer".
  *
  * Decorator-free Lit (matches esa-switch-toggle golden pattern).
@@ -26,7 +26,7 @@ export class EsaDialog extends LitElement {
   declare open: boolean;
   declare heading: string;
   declare showCloseButton: boolean;
-  declare size: 'small' | 'medium' | 'large' | 'fullscreen';
+  declare size: 'xs' | 'sm' | 'md' | 'lg' | 'fullscreen';
 
   private previousFocus: HTMLElement | null = null;
 
@@ -35,7 +35,7 @@ export class EsaDialog extends LitElement {
     this.open = false;
     this.heading = '';
     this.showCloseButton = true;
-    this.size = 'medium';
+    this.size = 'md';
   }
 
   connectedCallback(): void {
@@ -128,7 +128,7 @@ export class EsaDialog extends LitElement {
 
   render() {
     if (!this.open) return html``;
-    const hasHeader = this.heading || this.showCloseButton;
+    const hasHeader = this.heading || this.showCloseButton || !!this.querySelector('[slot="header"]');
     return html`
       <div class="esa-dialog-backdrop" @click=${this.onBackdropClick}></div>
       <div class="esa-dialog-panel">
@@ -136,9 +136,7 @@ export class EsaDialog extends LitElement {
           ${hasHeader
             ? html`
                 <div class="esa-dialog__header">
-                  ${this.heading
-                    ? html`<h2 class="esa-dialog__title">${this.heading}</h2>`
-                    : null}
+                  <slot name="header"><h2 class="esa-dialog__title">${this.heading}</h2></slot>
                   ${this.showCloseButton
                     ? html`
                         <button class="esa-dialog__close" @click=${this.close} aria-label="Close dialog">
@@ -166,8 +164,10 @@ export class EsaDialog extends LitElement {
       --_dialog-width: 480px;
       --_dialog-max-height: 85vh;
     }
-    :host([size='small']) { --_dialog-width: 360px; }
-    :host([size='large']) { --_dialog-width: 640px; }
+    /* base :host = md (480px). xs is one step below sm. */
+    :host([size='xs']) { --_dialog-width: 280px; }
+    :host([size='sm']) { --_dialog-width: 360px; }
+    :host([size='lg']) { --_dialog-width: 640px; }
     :host([size='fullscreen']) {
       --_dialog-width: 100vw;
       --_dialog-max-height: 100vh;

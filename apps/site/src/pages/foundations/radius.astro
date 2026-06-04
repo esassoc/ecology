@@ -1,0 +1,55 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '../../components/docs/Section.astro';
+
+const scale = [
+  { token: '--radius-050', value: '0.125rem · 2px', role: 'Hairline rounding, tags' },
+  { token: '--radius-100', value: '0.25rem · 4px', role: 'Inputs, small controls' },
+  { token: '--radius-200', value: '0.5rem · 8px', role: 'Buttons, chips' },
+  { token: '--radius-300', value: '0.5rem · 8px', role: 'Cards, menus' },
+  { token: '--radius-400', value: '0.75rem · 12px', role: 'Panels, dialogs' },
+  { token: '--radius-500', value: '1rem · 16px', role: 'Large surfaces, sheets' },
+  { token: '--radius-full', value: '9999px', role: 'Pills, avatars, toggles' },
+];
+---
+<DocsLayout title="Radius — Ecology" activeHref="/foundations/radius">
+  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Radius</span></nav>
+  <h1>Radius</h1>
+  <p class="lede">Corner rounding tokens, from a barely-there hairline to fully circular. Pick by element scale — small controls round tightly, large surfaces round softly.</p>
+
+  <Section id="scale" title="Radius scale">
+    <p>Each swatch is rendered with its actual token applied to all four corners.</p>
+    <div class="grid">
+      {scale.map((s) => (
+        <div class="cell">
+          <div class="cell__swatch" style={`border-radius: var(${s.token})`}></div>
+          <div class="cell__meta">
+            <code>{s.token}</code>
+            <span class="cell__value">{s.value}</span>
+            <span class="cell__role">{s.role}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="usage" title="Usage">
+    <p>Match radius to element size — mixing radii across nested elements (a sharp input inside a soft card) reads as intentional layering.</p>
+    <pre class="snippet"><code>{`.button { border-radius: var(--radius-200); }
+.card   { border-radius: var(--radius-400); }
+.avatar { border-radius: var(--radius-full); }`}</code></pre>
+  </Section>
+</DocsLayout>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--spacing-400, 1rem); }
+  .cell { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .cell__swatch { width: 100%; height: 88px; background: color-mix(in srgb, var(--color-primary, #005862) 14%, var(--color-surface, #fff)); border: 1.5px solid var(--color-primary, #005862); margin-bottom: var(--spacing-300, 0.75rem); }
+  .cell__meta { display: flex; flex-direction: column; gap: 2px; }
+  .cell__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .cell__value { font-size: 12.5px; color: var(--color-text-secondary, #525252); }
+  .cell__role { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+
+  .snippet { background: var(--color-surface-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
+  .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-text-primary, #171717); }
+</style>

@@ -1,57 +1,68 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
 import Pillbox from '@esa/ecology/esa-pillbox.astro';
 import Pill from '@esa/ecology/esa-pill.astro';
+
+const props = [
+  { name: 'gap', type: "'small' | 'medium' | 'large'", default: "'small'", description: 'Spacing between pills.' },
+];
+
+const slots = [
+  { name: 'default', type: 'slot', description: 'Any number of pills (or other inline tags) to lay out.' },
+];
 ---
-<BaseLayout title="Pillbox — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Pillbox</h1>
-      <p>A flex-wrap container that lays out a collection of pills with a configurable gap. Purely presentational — it owns layout, the pills own their own appearance and behavior.</p>
-    </Stack>
+<ComponentDoc name="Pillbox" category="Display" slug="esa-pillbox" type=".astro" status="stable"
+  summary="A flex-wrap container that lays out a collection of pills with a configurable gap. Purely presentational — it owns layout, the pills own their appearance and behavior.">
 
-    <Stack gap="300">
-      <h2>Gaps</h2>
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<Pillbox gap="small">
+  <Pill label="Wetlands" variant="success" removable={false} />
+  <Pill label="Air quality" variant="info" removable={false} />
+  <Pill label="Overdue" variant="danger" removable={false} />
+</Pillbox>`}>
+      <Pillbox gap="small">
+        <Pill label="Wetlands" variant="success" removable={false} />
+        <Pill label="Air quality" variant="info" removable={false} />
+        <Pill label="Overdue" variant="danger" removable={false} />
+        <Pill label="Permitting" variant="primary" removable={false} />
+        <Pill label="Stormwater" removable={false} />
+      </Pillbox>
+    </Preview>
+  </Section>
 
-      <Stack gap="150">
-        <h3>Small (default)</h3>
+  <Section id="gaps" title="Gaps">
+    <Preview align="start" code={`<Pillbox gap="small">…</Pillbox>
+<Pillbox gap="medium">…</Pillbox>
+<Pillbox gap="large">…</Pillbox>`}>
+      <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
         <Pillbox gap="small">
-          <Pill label="Wetlands" variant="success" removable={false} />
+          <Pill label="Small gap" variant="success" removable={false} />
           <Pill label="Air quality" variant="info" removable={false} />
           <Pill label="Overdue" variant="danger" removable={false} />
-          <Pill label="Permitting" variant="primary" removable={false} />
-          <Pill label="Stormwater" removable={false} />
         </Pillbox>
-      </Stack>
-
-      <Stack gap="150">
-        <h3>Medium</h3>
         <Pillbox gap="medium">
-          <Pill label="Wetlands" variant="success" removable={false} />
+          <Pill label="Medium gap" variant="success" removable={false} />
           <Pill label="Air quality" variant="info" removable={false} />
           <Pill label="Overdue" variant="danger" removable={false} />
-          <Pill label="Permitting" variant="primary" removable={false} />
-          <Pill label="Stormwater" removable={false} />
         </Pillbox>
-      </Stack>
-
-      <Stack gap="150">
-        <h3>Large</h3>
         <Pillbox gap="large">
-          <Pill label="Wetlands" variant="success" removable={false} />
+          <Pill label="Large gap" variant="success" removable={false} />
           <Pill label="Air quality" variant="info" removable={false} />
           <Pill label="Overdue" variant="danger" removable={false} />
-          <Pill label="Permitting" variant="primary" removable={false} />
-          <Pill label="Stormwater" removable={false} />
         </Pillbox>
-      </Stack>
-    </Stack>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Wrapping</h2>
-      <p>Pills wrap to a new row when they exceed the container width.</p>
+  <Section id="states" title="Wrapping">
+    <p>Pills wrap to a new row when they exceed the container width. Pillbox is agnostic to pill behavior — removable pills work as-is.</p>
+    <Preview align="start" code={`<div style="max-width: 360px;">
+  <Pillbox gap="small">…many pills…</Pillbox>
+</div>`}>
       <div style="max-width: 360px;">
         <Pillbox gap="small">
           <Pill label="Endangered species" variant="warning" removable={false} />
@@ -62,25 +73,25 @@ import Pill from '@esa/ecology/esa-pill.astro';
           <Pill label="Discharge permit" variant="danger" removable={false} />
         </Pillbox>
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Removable pills</h2>
-      <p>Pillbox is agnostic to pill behavior — removable pills work as-is.</p>
-      <Pillbox gap="medium">
-        <Pill label="Filter: 2024" variant="primary" />
-        <Pill label="Status: Active" variant="success" />
-        <Pill label="Region: North" variant="info" />
-      </Pillbox>
-    </Stack>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} />
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Slot:</strong> default slot holds any number of pills (or other inline tags).</li>
-        <li><strong>Prop:</strong> <code>gap</code> — <code>small</code> (default), <code>medium</code>, <code>large</code>.</li>
-        <li><strong>Tokens consumed:</strong> spacing scale via the private <code>--_pillbox-gap</code> token.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>A layout primitive only — adds no roles or semantics of its own.</li>
+      <li>If the pills represent a set of filters or selections, give the wrapper an <code>aria-label</code> or group role at the call site.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--spacing-100</code> (small) · <code>--spacing-200</code> (medium) · <code>--spacing-300</code> (large) — via the private <code>--_pillbox-gap</code> token</li>
+    </ul>
+  </Section>
+</ComponentDoc>

@@ -7,10 +7,10 @@ interface Props {
   name?: string;
   src?: string;
   icon?: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   shape?: 'circle' | 'square';
 }
-const { name = '', src = '', icon = '', size = 'medium', shape = 'circle' } = Astro.props;
+const { name = '', src = '', icon = '', size = 'md', shape = 'circle' } = Astro.props;
 
 const initials = (() => {
   if (!name) return '';
@@ -29,7 +29,7 @@ const hue = (() => {
 })();
 
 // Lucide "user" icon path — inlined to avoid an icon dependency.
-const iconSize = size === 'small' ? 16 : size === 'large' ? 24 : 20;
+const iconSize = size === 'xs' ? 14 : size === 'sm' ? 16 : size === 'lg' ? 24 : 20;
 
 const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
   .filter(Boolean)
@@ -84,8 +84,9 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     box-sizing: border-box;
   }
 
-  .esa-avatar--small { --_avatar-size: 28px; --_avatar-font-size: 11px; }
-  .esa-avatar--large { --_avatar-size: 56px; --_avatar-font-size: 22px; }
+  .esa-avatar--xs { --_avatar-size: 20px; --_avatar-font-size: 9px; }
+  .esa-avatar--sm { --_avatar-size: 28px; --_avatar-font-size: 11px; }
+  .esa-avatar--lg { --_avatar-size: 56px; --_avatar-font-size: 22px; }
 
   .esa-avatar--square { --_avatar-radius: var(--radius-200, 0.5rem); }
 

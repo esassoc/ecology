@@ -1,41 +1,80 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'text', type: 'string', default: "''", description: 'Tooltip label. The tooltip does not render when empty.' },
+  { name: 'position', type: "'above' | 'below' | 'left' | 'right'", default: "'above'", description: 'Side the tooltip appears on.' },
+  { name: 'delay', type: 'number', default: '200', description: 'Milliseconds to wait before showing on hover/focus.' },
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
+];
 ---
-<BaseLayout title="Tooltip — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Tooltip <code>[wc]</code></h1>
-      <p>Hover/focus tooltip. Wrap a trigger in the default slot and set <code>text</code>. Shows after <code>delay</code> ms (default 200), hides on leave/blur.</p>
-    </Stack>
+<ComponentDoc name="Tooltip" category="Overlays" slug="esa-tooltip" type="wc" status="stable"
+  summary="Hover and focus tooltip. Wrap a trigger in the default slot and set <code>text</code>. It shows after <code>delay</code> ms (default 200) and hides on leave or blur.">
 
-    <Stack gap="300">
-      <h2>Positions</h2>
-      <Stack gap="600" direction="row" wrap={true} align="center" justify="center">
-        <esa-tooltip text="Tooltip above" position="above">
-          <button class="trigger">Above</button>
-        </esa-tooltip>
-        <esa-tooltip text="Tooltip below" position="below">
-          <button class="trigger">Below</button>
-        </esa-tooltip>
-        <esa-tooltip text="Left side" position="left">
-          <button class="trigger">Left</button>
-        </esa-tooltip>
-        <esa-tooltip text="Right side" position="right">
-          <button class="trigger">Right</button>
-        </esa-tooltip>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-tooltip text="Tooltip above" position="above">
+  <button>Hover me</button>
+</esa-tooltip>`}>
+      <esa-tooltip text="Tooltip above" position="above">
+        <button class="trigger">Hover me</button>
+      </esa-tooltip>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Focusable trigger</h2>
+  <Section id="positions" title="Positions">
+    <Preview align="center" code={`<esa-tooltip text="Tooltip above" position="above">…</esa-tooltip>
+<esa-tooltip text="Tooltip below" position="below">…</esa-tooltip>
+<esa-tooltip text="Left side" position="left">…</esa-tooltip>
+<esa-tooltip text="Right side" position="right">…</esa-tooltip>`}>
+      <esa-tooltip text="Tooltip above" position="above">
+        <button class="trigger">Above</button>
+      </esa-tooltip>
+      <esa-tooltip text="Tooltip below" position="below">
+        <button class="trigger">Below</button>
+      </esa-tooltip>
+      <esa-tooltip text="Left side" position="left">
+        <button class="trigger">Left</button>
+      </esa-tooltip>
+      <esa-tooltip text="Right side" position="right">
+        <button class="trigger">Right</button>
+      </esa-tooltip>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="Focusable trigger">
+    <p>Any focusable element works — the tooltip shows on <code>focusin</code> as well as hover, so keyboard users get it too.</p>
+    <Preview align="center" code={`<esa-tooltip text="Shows on focus too" position="above">
+  <a href="#">Tab to me</a>
+</esa-tooltip>`}>
       <esa-tooltip text="Shows on focus too" position="above">
         <a href="#" class="trigger">Tab to me</a>
       </esa-tooltip>
-    </Stack>
-  </Stack>
-</BaseLayout>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The bubble is <code>role="tooltip"</code> and is <code>pointer-events: none</code> so it never intercepts clicks.</li>
+      <li>Shows on both hover and focus, so keyboard users see the same hint as pointer users.</li>
+      <li>Tooltips supplement — they should not be the only place critical information lives.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-gray-900</code> (bubble background) · <code>--color-text-inverse</code></li>
+      <li><code>--z-tooltip</code> · <code>--shadow-100</code></li>
+      <li><code>--radius-100</code> · <code>--spacing-100</code> / <code>--spacing-200</code> · <code>--type-size-150</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>import '@esa/ecology/esa-tooltip';</script>
 

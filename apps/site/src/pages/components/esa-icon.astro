@@ -1,6 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import EsaIcon from '@esa/ecology/esa-icon.astro';
 
 // The names available in the inlined Lucide lookup (see esa-icon.astro).
@@ -14,60 +16,82 @@ const names = [
   'calendar', 'user', 'users', 'star', 'loader', 'menu', 'bell',
   'triangle-alert', 'save', 'circle-question-mark',
 ];
+
+const props = [
+  { name: 'name', type: 'string', description: 'Lucide icon name (kebab-case), e.g. "chevron-down". Resolved against the inlined Lucide lookup; an unknown name renders an empty glyph.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl'", default: "'md'", description: 'Icon size — xs=14, sm=16, md=20, lg=24, xl=28.' },
+  { name: 'label', type: 'string', description: 'Accessible label. When provided the icon becomes role="img"; when omitted the icon is decorative (aria-hidden).' },
+];
 ---
-<BaseLayout title="esa-icon — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-icon</h1>
-      <p>
-        Icon primitive migrated from <code>@esa/ecology/core</code>. The Angular version wrapped
-        <code>lucide-angular</code>; this build inlines the Lucide SVGs it needs (paths from
-        lucide.dev) with no icon dependency. Size mapping: small=16, medium=20, large=24.
-        Color inherits via <code>currentColor</code>.
-      </p>
-    </Stack>
+<ComponentDoc name="Icon" category="Core" slug="esa-icon" type=".astro" status="stable"
+  summary="The icon primitive across Ecology. It inlines the Lucide SVGs it needs (no icon dependency), inherits color via <code>currentColor</code>, and maps to five sizes — xs=14, sm=16, md=20, lg=24, xl=28.">
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="400" direction="row" align="center" wrap={true}>
-        <EsaIcon name="star" size="small" />
-        <EsaIcon name="star" size="medium" />
-        <EsaIcon name="star" size="large" />
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaIcon name="star" size="md" />`}>
+      <EsaIcon name="star" size="md" />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Color inheritance</h2>
-      <Stack gap="400" direction="row" align="center" wrap={true}>
-        <span style="color: var(--color-primary, #005862)"><EsaIcon name="circle-check" size="large" /></span>
-        <span style="color: var(--color-warning, #f59e0b)"><EsaIcon name="triangle-alert" size="large" /></span>
-        <span style="color: var(--color-danger, #ef4444)"><EsaIcon name="circle-x" size="large" /></span>
-        <span style="color: var(--color-info, #3b82f6)"><EsaIcon name="info" size="large" /></span>
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <p>Three sizes map to fixed pixel boxes via the <code>--icon-size-*</code> tokens.</p>
+    <Preview align="center" code={`<EsaIcon name="star" size="xs" />
+<EsaIcon name="star" size="sm" />
+<EsaIcon name="star" size="md" />
+<EsaIcon name="star" size="lg" />
+<EsaIcon name="star" size="xl" />`}>
+      <EsaIcon name="star" size="xs" />
+      <EsaIcon name="star" size="sm" />
+      <EsaIcon name="star" size="md" />
+      <EsaIcon name="star" size="lg" />
+      <EsaIcon name="star" size="xl" />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Gallery</h2>
-      <div class="icon-grid">
-        {names.map((n) => (
-          <div class="icon-cell">
-            <EsaIcon name={n} size="medium" />
-            <code>{n}</code>
-          </div>
-        ))}
-      </div>
-    </Stack>
+  <Section id="color" title="Color">
+    <p>Icons inherit <code>currentColor</code>, so they take the text color of their context — set <code>color</code> on a wrapper to tint them.</p>
+    <Preview align="center" code={`<span style="color: var(--color-primary)"><EsaIcon name="circle-check" size="lg" /></span>
+<span style="color: var(--color-warning)"><EsaIcon name="triangle-alert" size="lg" /></span>
+<span style="color: var(--color-danger)"><EsaIcon name="circle-x" size="lg" /></span>
+<span style="color: var(--color-info)"><EsaIcon name="info" size="lg" /></span>`}>
+      <span style="color: var(--color-primary, #005862)"><EsaIcon name="circle-check" size="lg" /></span>
+      <span style="color: var(--color-warning, #f59e0b)"><EsaIcon name="triangle-alert" size="lg" /></span>
+      <span style="color: var(--color-danger, #ef4444)"><EsaIcon name="circle-x" size="lg" /></span>
+      <span style="color: var(--color-info, #3b82f6)"><EsaIcon name="info" size="lg" /></span>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Accessibility</h2>
-      <ul>
-        <li><strong>Decorative (default):</strong> no <code>label</code> → <code>aria-hidden="true"</code>.</li>
-        <li><strong>Meaningful:</strong> pass <code>label</code> → <code>role="img"</code> + <code>aria-label</code>. Example: <EsaIcon name="bell" label="Notifications" /></li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="gallery" title="Gallery">
+    <p>The icons currently inlined in the lookup. Add entries to <code>esa-icon.astro</code> as new components need them.</p>
+    <div class="icon-grid">
+      {names.map((n) => (
+        <div class="icon-cell">
+          <EsaIcon name={n} size="md" />
+          <code>{n}</code>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li><strong>Decorative (default):</strong> no <code>label</code> → the icon is <code>aria-hidden="true"</code> and skipped by screen readers.</li>
+      <li><strong>Meaningful:</strong> pass <code>label</code> → the icon gets <code>role="img"</code> + <code>aria-label</code>, e.g. <EsaIcon name="bell" label="Notifications" />.</li>
+      <li>The inner <code>&lt;svg&gt;</code> is <code>focusable="false"</code> to keep it out of the tab order in legacy browsers.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Sizing reads the public icon-size tokens (private <code>--_icon-size</code> with literal fallbacks); color comes from <code>currentColor</code>.</p>
+    <ul class="tokens">
+      <li><code>--icon-size-xs</code> (14) · <code>--icon-size-sm</code> (16) · <code>--icon-size-md</code> (20) · <code>--icon-size-lg</code> (24) · <code>--icon-size-xl</code> (28px)</li>
+      <li><code>currentColor</code> — no color token of its own; tint via the surrounding <code>color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <style>
   .icon-grid {

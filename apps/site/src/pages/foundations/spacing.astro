@@ -1,0 +1,68 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '../../components/docs/Section.astro';
+
+const scale = [
+  { token: '--spacing-050', rem: '0.125rem', px: '2px' },
+  { token: '--spacing-100', rem: '0.25rem', px: '4px' },
+  { token: '--spacing-150', rem: '0.375rem', px: '6px' },
+  { token: '--spacing-200', rem: '0.5rem', px: '8px' },
+  { token: '--spacing-250', rem: '0.625rem', px: '10px' },
+  { token: '--spacing-300', rem: '0.75rem', px: '12px' },
+  { token: '--spacing-400', rem: '1rem', px: '16px' },
+  { token: '--spacing-500', rem: '1.5rem', px: '24px' },
+  { token: '--spacing-600', rem: '2rem', px: '32px' },
+  { token: '--spacing-700', rem: '3rem', px: '48px' },
+  { token: '--spacing-800', rem: '4rem', px: '64px' },
+  { token: '--spacing-900', rem: '6rem', px: '96px' },
+  { token: '--spacing-950', rem: '7.5rem', px: '120px' },
+  { token: '--spacing-1000', rem: '15rem', px: '240px' },
+];
+---
+<DocsLayout title="Spacing — Ecology" activeHref="/foundations/spacing">
+  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Spacing</span></nav>
+  <h1>Spacing</h1>
+  <p class="lede">A single linear-then-modular scale drives every gap, pad and margin in the system. Use tokens — never raw pixels — so density stays consistent across components.</p>
+
+  <Section id="scale" title="Spacing scale">
+    <p>Each bar is rendered at its real token width. Steps step up in 2&ndash;4px increments through the dense UI range, then jump to layout-scale spacing.</p>
+    <div class="scale">
+      {scale.map((s) => (
+        <div class="row">
+          <div class="row__meta">
+            <code>{s.token}</code>
+            <span>{s.rem} · {s.px}</span>
+          </div>
+          <div class="row__track">
+            <div class="row__bar" style={`width: var(${s.token})`}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="usage" title="Usage">
+    <p>Reference tokens directly in component SCSS. Reach for the dense steps (<code>050</code>&ndash;<code>400</code>) inside controls and cards; the larger steps (<code>500</code>+) for section and page-level rhythm.</p>
+    <pre class="snippet"><code>{`.card {
+  padding: var(--spacing-400);          /* 16px */
+  gap: var(--spacing-300);              /* 12px */
+}
+.page-section + .page-section {
+  margin-top: var(--spacing-700);       /* 48px */
+}`}</code></pre>
+  </Section>
+</DocsLayout>
+
+<style>
+  .scale { display: flex; flex-direction: column; }
+  .row { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; gap: var(--spacing-400, 1rem); padding: var(--spacing-250, 0.625rem) 0; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  .row:last-child { border-bottom: none; }
+  .row__meta { display: flex; flex-direction: column; gap: 2px; }
+  .row__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .row__meta span { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .row__track { min-width: 0; overflow-x: auto; }
+  .row__bar { height: 22px; border-radius: 5px; background: var(--color-primary, #005862); min-width: 2px; }
+
+  .snippet { background: var(--color-surface-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
+  .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-text-primary, #171717); }
+</style>

@@ -28,7 +28,7 @@ export class EsaRangeSlider extends LitElement {
   declare min: number;
   declare max: number;
   declare step: number;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare label: string;
   declare showValue: boolean;
   declare disabled: boolean;
@@ -41,7 +41,7 @@ export class EsaRangeSlider extends LitElement {
     this.min = 0;
     this.max = 100;
     this.step = 1;
-    this.size = 'medium';
+    this.size = 'md';
     this.label = '';
     this.showValue = true;
     this.disabled = false;
@@ -99,17 +99,22 @@ export class EsaRangeSlider extends LitElement {
       display: block;
       --_track-height: 6px;
       --_thumb-size: 20px;
-      --_font-size: var(--form-font-size-medium, 14px);
+      --_font-size: var(--form-font-size-md, 14px);
     }
-    :host([size='small']) {
+    :host([size='xs']) {
+      --_track-height: 3px;
+      --_thumb-size: 14px;
+      --_font-size: var(--form-font-size-xs, 11px);
+    }
+    :host([size='sm']) {
       --_track-height: 4px;
       --_thumb-size: 16px;
-      --_font-size: var(--form-font-size-small, 12px);
+      --_font-size: var(--form-font-size-sm, 12px);
     }
-    :host([size='large']) {
+    :host([size='lg']) {
       --_track-height: 8px;
       --_thumb-size: 24px;
-      --_font-size: var(--form-font-size-large, 16px);
+      --_font-size: var(--form-font-size-lg, 16px);
     }
 
     .label {

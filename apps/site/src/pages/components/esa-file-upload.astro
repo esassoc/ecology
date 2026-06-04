@@ -1,44 +1,66 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "'Upload files'", description: 'Prompt text inside the drop zone.' },
+  { name: 'accept', type: 'string', default: "''", description: 'Native accept filter (e.g. image/*, .pdf).' },
+  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow selecting more than one file.' },
+  { name: 'max-size-mb', type: 'number', default: '10', description: 'Per-file size limit in MB. Oversized files are rejected inline.' },
+  { name: 'name', type: 'string', default: "'files'", description: 'FormData field name used when submitting.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables the drop zone and browse (reflected attribute).' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ files: File[] }>', description: 'Fired when the file list changes (add or remove). Composed and bubbles.' },
+];
 ---
-<BaseLayout title="File Upload — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>File Upload <code>[wc]</code></h1>
-      <p>Form-associated drop zone with drag &amp; drop, browse, size validation, and a removable file list. Migrated from Angular <code>esa-file-upload</code> to a Lit Web Component.</p>
-    </Stack>
+<ComponentDoc name="File Upload" category="Forms" slug="esa-file-upload" type="wc" status="stable"
+  summary="Form-associated drop zone with drag &amp; drop, browse, size validation, and a removable file list. A Lit Web Component migrated from the Angular <code>esa-file-upload</code>.">
 
-    <Stack gap="300">
-      <h2>Single file</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-file-upload label="Upload a document"></esa-file-upload>`}>
       <esa-file-upload label="Upload a document"></esa-file-upload>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Multiple files</h2>
+  <Section id="states" title="States">
+    <p>Allow multiple files with <code>multiple</code> + <code>accept</code>, cap each file with <code>max-size-mb</code>, or disable the zone entirely.</p>
+    <Preview code={`<esa-file-upload label="Upload images" multiple accept="image/*"></esa-file-upload>
+<esa-file-upload label="Max 2 MB" max-size-mb="2"></esa-file-upload>
+<esa-file-upload label="Upload disabled" disabled></esa-file-upload>`}>
       <esa-file-upload label="Upload images" multiple accept="image/*"></esa-file-upload>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Size limit</h2>
       <esa-file-upload label="Max 2 MB" max-size-mb="2"></esa-file-upload>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Disabled</h2>
       <esa-file-upload label="Upload disabled" disabled></esa-file-upload>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Interaction:</strong> click or Enter/Space opens the native picker; drag-over highlights the zone; drop adds files. Oversized files are rejected with an inline error.</li>
-        <li><strong>Form:</strong> form-associated — selected files are set as a <code>FormData</code> payload (name <code>files</code>) so they submit with the enclosing form. Emits composed <code>change</code> with <code>detail.files</code>.</li>
-        <li><strong>Tokens:</strong> surface, surface-sunken, border-strong, primary (active/browse), active-overlay (dragging), danger (error), radius, spacing, icon-size.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-  <script>import '@esa/ecology/esa-file-upload';</script>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The drop zone is keyboard-focusable; Enter or Space opens the native file picker.</li>
+      <li>Drag-over highlights the zone; drop adds the dragged files.</li>
+      <li>Oversized files are rejected with an inline error message rather than failing silently.</li>
+      <li>Form-associated via <code>ElementInternals</code> — selected files are set as a <code>FormData</code> payload (default name <code>files</code>) so they submit with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface</code> · <code>--color-surface-sunken</code> · <code>--color-border-strong</code></li>
+      <li><code>--color-primary</code> (active / browse) · <code>--color-active-overlay</code> (dragging) · <code>--color-danger</code> (error)</li>
+      <li><code>--form-radius-*</code> · <code>--spacing-*</code> · <code>--icon-size-*</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>import '@esa/ecology/esa-file-upload';</script>
+
+<style>
+  h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+</style>

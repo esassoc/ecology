@@ -1,0 +1,128 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Text rendered beside the track.' },
+  { name: 'checked', type: 'boolean', default: 'false', description: 'On/off state of the switch.' },
+  { name: 'label-position', type: "'before' | 'after'", default: "'after'", description: 'Whether the label sits before or after the track.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Track and thumb size.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ checked: boolean }>', description: 'Fired when toggled. Composed and bubbling; detail.checked is the new state.' },
+];
+---
+<ComponentDoc name="Switch Toggle" category="Forms" slug="esa-switch-toggle" type="wc" status="stable"
+  summary="An on/off switch for instant settings — a native <code>&lt;button role=&quot;switch&quot;&gt;</code> with Space/Enter toggling and a sliding thumb. Form-associated; emits a composed <code>change</code> event.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-switch-toggle label="Email notifications" checked></esa-switch-toggle>`}>
+      <esa-switch-toggle label="Email notifications" checked></esa-switch-toggle>
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-switch-toggle label="Extra small" size="xs" checked></esa-switch-toggle>
+<esa-switch-toggle label="Small" size="sm" checked></esa-switch-toggle>
+<esa-switch-toggle label="Medium" size="md" checked></esa-switch-toggle>
+<esa-switch-toggle label="Large" size="lg" checked></esa-switch-toggle>`}>
+      <esa-switch-toggle label="Extra small" size="xs" checked></esa-switch-toggle>
+      <esa-switch-toggle label="Small" size="sm" checked></esa-switch-toggle>
+      <esa-switch-toggle label="Medium" size="md" checked></esa-switch-toggle>
+      <esa-switch-toggle label="Large" size="lg" checked></esa-switch-toggle>
+    </Preview>
+  </Section>
+
+  <Section id="label-position" title="Label position">
+    <p>Place the label <code>after</code> the track (default) or <code>before</code> it.</p>
+    <Preview align="start" code={`<esa-switch-toggle label="Label after" checked></esa-switch-toggle>
+<esa-switch-toggle label="Label before" label-position="before" checked></esa-switch-toggle>`}>
+      <div class="col">
+        <esa-switch-toggle label="Label after" checked></esa-switch-toggle>
+        <esa-switch-toggle label="Label before" label-position="before" checked></esa-switch-toggle>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="States">
+    <Preview align="start" code={`<esa-switch-toggle label="Off"></esa-switch-toggle>
+<esa-switch-toggle label="On" checked></esa-switch-toggle>
+<esa-switch-toggle label="Disabled" disabled></esa-switch-toggle>
+<esa-switch-toggle label="Disabled + on" disabled checked></esa-switch-toggle>`}>
+      <div class="col">
+        <esa-switch-toggle label="Off"></esa-switch-toggle>
+        <esa-switch-toggle label="On" checked></esa-switch-toggle>
+        <esa-switch-toggle label="Disabled" disabled></esa-switch-toggle>
+        <esa-switch-toggle label="Disabled + on" disabled checked></esa-switch-toggle>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="form" title="Form participation">
+    <p>A checked switch submits <code>on</code> under its <code>name</code>; off submits nothing. Submitting logs the <code>alerts</code> entry.</p>
+    <Preview align="start" code={`<form>
+  <esa-switch-toggle label="Enable alerts" name="alerts" checked></esa-switch-toggle>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="sw-form" class="form-demo">
+        <esa-switch-toggle label="Enable alerts" name="alerts" checked></esa-switch-toggle>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="sw-out" class="demo-out"></output>
+      </form>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;button role="switch"&gt;</code> with <code>aria-checked</code> reflecting state.</li>
+      <li>Keyboard and activation come for free; Space/Enter toggle.</li>
+      <li>The <code>disabled</code> attribute disables the underlying button.</li>
+      <li>Visible focus ring on the track via <code>--focus-ring-*</code> tokens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the semantic token layer to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> — track color when on (private <code>--_bg-on</code>)</li>
+      <li><code>--color-border-strong</code> — track color when off (private <code>--_bg-off</code>)</li>
+      <li><code>--color-surface</code> — thumb color · <code>--shadow-50</code> — thumb shadow</li>
+      <li><code>--radius-full</code> · <code>--color-text-primary</code> · <code>--type-size-200</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .demo-submit {
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-switch-toggle';
+  const form = document.getElementById('sw-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('sw-out')!.textContent =
+      'alerts = ' + JSON.stringify(data.get('alerts'));
+  });
+</script>

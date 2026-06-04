@@ -1,0 +1,147 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'options', type: '{ value: string, label: string }[]', default: '[]', description: 'The segments. Set as a property (it is an array, not an attribute).' },
+  { name: 'value', type: 'string', default: "''", description: "Selected option's value. Single-select; bound to the form value." },
+  { name: 'label', type: 'string', default: "''", description: 'Optional visible label above the group; becomes the radiogroup name.' },
+  { name: 'hint', type: 'string', default: "''", description: 'Optional helper text below the group.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (adds an asterisk and aria-required).' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables every segment.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when the selection changes. Composed and bubbling; detail.value is the newly selected value.' },
+];
+---
+<ComponentDoc name="Button Toggle" category="Core" slug="esa-button-toggle" type="wc" status="stable"
+  summary="A segmented single-select — one-of-N choices rendered as a row of connected buttons. Form-associated, holds the selected value, and follows the WAI-ARIA radiogroup pattern with arrow-key navigation.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-button-toggle label="View" id="bt-preview"></esa-button-toggle>
+
+<script>
+  el.options = [
+    { value: 'list', label: 'List' },
+    { value: 'grid', label: 'Grid' },
+    { value: 'map', label: 'Map' },
+  ];
+  el.value = 'grid';
+</script>`}>
+      <esa-button-toggle label="View" data-demo="preview"></esa-button-toggle>
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <p>Four sizes share the form scale. Default is <code>md</code>.</p>
+    <Preview align="start" code={`<esa-button-toggle size="xs"></esa-button-toggle>
+<esa-button-toggle size="sm"></esa-button-toggle>
+<esa-button-toggle size="md"></esa-button-toggle>
+<esa-button-toggle size="lg"></esa-button-toggle>`}>
+      <div class="col">
+        <esa-button-toggle size="xs" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle size="sm" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle size="md" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle size="lg" data-demo="sizes"></esa-button-toggle>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="States">
+    <Preview align="start" code={`<esa-button-toggle label="Default"></esa-button-toggle>
+<esa-button-toggle label="With hint" hint="Pick a layout"></esa-button-toggle>
+<esa-button-toggle label="Disabled" disabled></esa-button-toggle>`}>
+      <div class="col">
+        <esa-button-toggle label="Default" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle label="With hint" hint="Pick a layout" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle label="Disabled" disabled data-demo="sizes"></esa-button-toggle>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="form" title="Form participation">
+    <p>The control submits its selected <code>value</code> under its <code>name</code>. Submitting logs the <code>view</code> entry.</p>
+    <Preview align="start" code={`<form>
+  <esa-button-toggle name="view" label="View"></esa-button-toggle>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="bt-form" class="form-demo">
+        <esa-button-toggle name="view" label="View" data-demo="sizes"></esa-button-toggle>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="bt-out" class="demo-out"></output>
+      </form>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders <code>role="radiogroup"</code> wrapping <code>role="radio"</code> buttons with <code>aria-checked</code> reflecting selection.</li>
+      <li>Roving tabindex: only the selected (or first) segment is tab-reachable; Arrow keys move selection through the group, wrapping at the ends.</li>
+      <li><code>Home</code> and <code>End</code> jump to the first and last segments; Enter and Space select the focused segment.</li>
+      <li>The <code>label</code> becomes the group's accessible name via <code>aria-labelledby</code>; <code>hint</code> is wired with <code>aria-describedby</code>.</li>
+      <li>Visible focus ring on the active segment via <code>--focus-ring-*</code> tokens; the focused segment is raised so its ring sits above neighbors.</li>
+      <li>Best for small fixed option sets — past about six options, prefer a select.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form and semantic token layers to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> · <code>--color-text-inverse</code> — selected segment fill and text</li>
+      <li><code>{'--form-{height,padding-x,font-size,radius}-{xs,sm,md,lg}'}</code> — size scale</li>
+      <li><code>--form-bg</code> · <code>--form-border-color</code> · <code>--form-text-color</code> — unselected segments</li>
+      <li><code>--color-surface-sunken</code> — hover tint · <code>--color-disabled-text</code> — disabled state</li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> — focus ring</li>
+      <li><code>--form-label-color</code> · <code>--form-help-color</code> — label and hint</li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .demo-submit {
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-button-toggle';
+
+  const layout = [
+    { value: 'list', label: 'List' },
+    { value: 'grid', label: 'Grid' },
+    { value: 'map', label: 'Map' },
+  ];
+
+  customElements.whenDefined('esa-button-toggle').then(() => {
+    document.querySelectorAll('esa-button-toggle').forEach((el) => {
+      (el as any).options = layout;
+    });
+    document.querySelector('esa-button-toggle[data-demo="preview"]')?.setAttribute('value', 'grid');
+    (document.querySelector('esa-button-toggle[data-demo="preview"]') as any).value = 'grid';
+  });
+
+  const form = document.getElementById('bt-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('bt-out')!.textContent =
+      'view = ' + JSON.stringify(data.get('view'));
+  });
+</script>

@@ -1,0 +1,35 @@
+---
+import DocsLayout from './DocsLayout.astro';
+
+interface Props {
+  name: string;          // display name, e.g. "Button"
+  category: string;      // e.g. "Core"
+  slug: string;          // component basename, e.g. "esa-button"
+  type: '.astro' | 'wc' | 'reference';
+  status?: 'stable' | 'reference';
+  summary: string;
+  wraps?: string;        // reference only, e.g. "AG Grid"
+}
+const { name, category, slug, type, status = 'stable', summary, wraps } = Astro.props;
+
+const activeHref = `/components/${slug}`;
+const pascal = slug.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+const importLine =
+  type === '.astro' ? `import ${pascal} from '@esa/ecology/${slug}.astro';`
+  : type === 'wc' ? `import '@esa/ecology/${slug}';`
+  : null;
+const statusLabel = type === 'reference' ? 'Reference' : 'Stable';
+const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
+---
+<DocsLayout title={`${name} — Ecology`} activeHref={activeHref}>
+  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>{category}</span> <span>/</span> <span>{name}</span></nav>
+  <h1>{name}</h1>
+  <p class="lede" set:html={summary} />
+  <div class="meta-row">
+    <span class={`pill ${statusClass}`}>{statusLabel}</span>
+    {type !== 'reference' && <span class="pill">{type}</span>}
+    {wraps && <span class="pill">wraps {wraps}</span>}
+    {importLine && <code class="imp">{importLine}</code>}
+  </div>
+  <slot />
+</DocsLayout>

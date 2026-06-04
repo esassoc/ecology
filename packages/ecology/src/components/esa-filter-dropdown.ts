@@ -42,7 +42,7 @@ export class EsaFilterDropdown extends LitElement {
   declare options: FilterOption[];
   declare multiple: boolean;
   declare placeholder: string;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
 
   declare _open: boolean;
   declare _searchText: string;
@@ -68,7 +68,7 @@ export class EsaFilterDropdown extends LitElement {
     this.options = [];
     this.multiple = false;
     this.placeholder = '';
-    this.size = 'medium';
+    this.size = 'md';
     this._open = false;
     this._searchText = '';
     this._selected = [];
@@ -286,13 +286,20 @@ export class EsaFilterDropdown extends LitElement {
       --_filter-border-active: var(--color-primary, #005862);
     }
 
-    :host([size='small']) {
+    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
+    :host([size='xs']) {
+      --_filter-height: 28px;
+      --_filter-padding-x: var(--spacing-200, 0.5rem);
+      --_filter-font-size: var(--type-size-100, 0.75rem);
+      --_filter-radius: var(--radius-100, 0.25rem);
+    }
+    :host([size='sm']) {
       --_filter-height: 32px;
       --_filter-padding-x: var(--spacing-300, 0.75rem);
       --_filter-font-size: var(--type-size-150, 0.875rem);
       --_filter-radius: var(--radius-100, 0.25rem);
     }
-    :host([size='large']) {
+    :host([size='lg']) {
       --_filter-height: 48px;
       --_filter-padding-x: var(--spacing-500, 1.5rem);
       --_filter-font-size: var(--type-size-300, 1.125rem);

@@ -1,65 +1,87 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import ProgressBar from '@esa/ecology/esa-progress-bar.astro';
+
+const props = [
+  { name: 'value', type: 'number', default: '0', description: 'Progress, clamped to 0–100. Ignored in indeterminate mode.' },
+  { name: 'mode', type: "'determinate' | 'indeterminate'", default: "'determinate'", description: 'Determinate fill vs a looping indeterminate animation.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Track height (2 / 4 / 8 / 12px).' },
+  { name: 'variant', type: "'primary' | 'success' | 'warning' | 'danger'", default: "'primary'", description: 'Fill color intent.' },
+  { name: 'label', type: 'string', default: "''", description: 'Optional text shown above the track; also used as the accessible label.' },
+  { name: 'showValue', type: 'boolean', default: 'false', description: 'Shows the percentage next to the label (determinate only).' },
+];
 ---
-<BaseLayout title="Progress Bar — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Progress Bar</h1>
-      <p>Linear progress indicator with determinate and indeterminate modes, sizes, color variants, and an optional label + percentage.</p>
-    </Stack>
+<ComponentDoc name="Progress Bar" category="Display" slug="esa-progress-bar" type=".astro" status="stable"
+  summary="Linear progress indicator with determinate and indeterminate modes, sizes, color variants, and an optional label and percentage.">
 
-    <Stack gap="300">
-      <h2>Determinate values</h2>
-      <Stack gap="400">
-        <ProgressBar value={25} />
-        <ProgressBar value={50} />
-        <ProgressBar value={75} />
-        <ProgressBar value={100} />
-      </Stack>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>With label &amp; value</h2>
-      <Stack gap="400">
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<ProgressBar value={68} label="Uploading" showValue={true} />`}>
+      <div style="width: 100%;">
         <ProgressBar value={68} label="Uploading" showValue={true} />
-        <ProgressBar value={40} label="Processing" showValue={true} variant="warning" />
-      </Stack>
-    </Stack>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Variants</h2>
-      <Stack gap="400">
+  <Section id="variants" title="Variants">
+    <Preview align="start" code={`<ProgressBar value={60} variant="primary" />
+<ProgressBar value={60} variant="success" />
+<ProgressBar value={60} variant="warning" />
+<ProgressBar value={60} variant="danger" />`}>
+      <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
         <ProgressBar value={60} variant="primary" />
         <ProgressBar value={60} variant="success" />
         <ProgressBar value={60} variant="warning" />
         <ProgressBar value={60} variant="danger" />
-      </Stack>
-    </Stack>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="400">
-        <ProgressBar value={50} size="small" />
-        <ProgressBar value={50} size="medium" />
-        <ProgressBar value={50} size="large" />
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview align="start" code={`<ProgressBar value={50} size="xs" />
+<ProgressBar value={50} size="sm" />
+<ProgressBar value={50} size="md" />
+<ProgressBar value={50} size="lg" />`}>
+      <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <ProgressBar value={50} size="xs" />
+        <ProgressBar value={50} size="sm" />
+        <ProgressBar value={50} size="md" />
+        <ProgressBar value={50} size="lg" />
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Indeterminate</h2>
-      <ProgressBar mode="indeterminate" label="Loading…" />
-    </Stack>
+  <Section id="states" title="Label & indeterminate">
+    <p>Add a <code>label</code> (and <code>showValue</code> for the percentage) above the track. Indeterminate mode runs a looping translate animation when the completion is unknown.</p>
+    <Preview align="start" code={`<ProgressBar value={40} label="Processing" showValue={true} variant="warning" />
+<ProgressBar mode="indeterminate" label="Loading…" />`}>
+      <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+        <ProgressBar value={40} label="Processing" showValue={true} variant="warning" />
+        <ProgressBar mode="indeterminate" label="Loading…" />
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Value</strong> is clamped to 0–100; indeterminate mode runs a looping translate animation.</li>
-        <li><strong>A11y:</strong> <code>role="progressbar"</code> with <code>aria-valuenow/min/max</code> and <code>aria-label</code>.</li>
-        <li><strong>Tokens consumed:</strong> primary / success / warning / danger fills, surface-sunken track, radius-full, spacing scale.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders <code>role="progressbar"</code> with <code>aria-valuemin="0"</code> and <code>aria-valuemax="100"</code>.</li>
+      <li><code>aria-valuenow</code> is set in determinate mode and omitted while indeterminate.</li>
+      <li><code>aria-label</code> falls back to "Progress" when no <code>label</code> is provided.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-primary</code> / <code>--color-success</code> / <code>--color-warning</code> / <code>--color-danger</code> — fill</li>
+      <li><code>--color-surface-sunken</code> — track</li>
+      <li><code>--color-text-primary</code> (label) · <code>--color-text-secondary</code> (value)</li>
+      <li><code>--radius-full</code> · <code>--spacing-100</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

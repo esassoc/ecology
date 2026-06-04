@@ -6,10 +6,10 @@
 interface Props {
   value?: string | number;
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   dot?: boolean;
 }
-const { value, variant = 'primary', size = 'medium', dot = false } = Astro.props;
+const { value, variant = 'primary', size = 'md', dot = false } = Astro.props;
 const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 'esa-badge--dot']
   .filter(Boolean)
   .join(' ');
@@ -43,8 +43,10 @@ const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 
     box-sizing: border-box;
   }
 
-  .esa-badge--small { --_badge-height: 16px; --_badge-font-size: 10px; --_badge-padding-x: 4px; --_badge-min-width: 16px; }
-  .esa-badge--large { --_badge-height: 24px; --_badge-font-size: 12px; --_badge-padding-x: 8px; --_badge-min-width: 24px; }
+  /* base .esa-badge = md. xs is one step below sm; sm/lg keep the old small/large values. */
+  .esa-badge--xs { --_badge-height: 14px; --_badge-font-size: 9px;  --_badge-padding-x: 3px; --_badge-min-width: 14px; }
+  .esa-badge--sm { --_badge-height: 16px; --_badge-font-size: 10px; --_badge-padding-x: 4px; --_badge-min-width: 16px; }
+  .esa-badge--lg { --_badge-height: 24px; --_badge-font-size: 12px; --_badge-padding-x: 8px; --_badge-min-width: 24px; }
 
   .esa-badge--secondary { --_badge-bg: var(--color-secondary, #0d9488); }
   .esa-badge--success   { --_badge-bg: var(--color-success, #22c55e); }

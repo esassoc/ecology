@@ -27,9 +27,11 @@
   },
   "icon": {
     "size": {
-      "small":  { "$value": "16px", "$type": "dimension" },
-      "medium": { "$value": "20px", "$type": "dimension" },
-      "large":  { "$value": "24px", "$type": "dimension" }
+      "xs": { "$value": "14px", "$type": "dimension" },
+      "sm": { "$value": "16px", "$type": "dimension" },
+      "md": { "$value": "20px", "$type": "dimension" },
+      "lg": { "$value": "24px", "$type": "dimension" },
+      "xl": { "$value": "28px", "$type": "dimension" }
     }
   },
   "color": {

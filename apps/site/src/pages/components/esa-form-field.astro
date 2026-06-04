@@ -1,55 +1,121 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import FormField from '@esa/ecology/esa-form-field.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Label rendered above the control slot.' },
+  { name: 'helpText', type: 'string', default: "''", description: 'Helper text shown below the control.' },
+  { name: 'errorText', type: 'string', default: "''", description: 'Error message; replaces help text when present.' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Renders an asterisk on the label.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Dims the field and blocks pointer events.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Scales the label font size.' },
+];
 ---
-<BaseLayout title="Form Field — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Form Field</h1>
-      <p>Presentational layout wrapper: label row + control slot + hint/error text. Pure <code>.astro</code> — no JS at runtime. Error text replaces help text when present.</p>
-    </Stack>
+<ComponentDoc name="Form Field" category="Forms" slug="esa-form-field" type=".astro" status="stable"
+  summary="A presentational layout wrapper — label row, control slot, and hint/error text. Pure <code>.astro</code> with no runtime JS; drop any control into the slot. Error text replaces help text when present.">
 
-    <Stack gap="300">
-      <h2>With help text</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<FormField label="Email" helpText="We will never share your email.">
+  <input type="email" placeholder="you@example.com" />
+</FormField>`}>
       <FormField label="Email" helpText="We will never share your email.">
-        <input type="email" style="width:100%;height:40px;padding:0 .75rem;border:1px solid var(--color-border);border-radius:var(--radius-200);font:inherit;" placeholder="you@example.com" />
+        <input type="email" class="demo-input" placeholder="you@example.com" />
       </FormField>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Required</h2>
-      <FormField label="Project name" required={true}>
-        <input type="text" style="width:100%;height:40px;padding:0 .75rem;border:1px solid var(--color-border);border-radius:var(--radius-200);font:inherit;" />
-      </FormField>
-    </Stack>
+  <Section id="states" title="States">
+    <p>Mark a field <code>required</code>, surface an <code>errorText</code> in place of help text, or <code>disabled</code> the whole field.</p>
+    <Preview code={`<FormField label="Project name" required>
+  <input type="text" />
+</FormField>
 
-    <Stack gap="300">
-      <h2>Error state</h2>
-      <FormField label="Permit ID" errorText="Permit ID is required." required={true}>
-        <input type="text" aria-invalid="true" style="width:100%;height:40px;padding:0 .75rem;border:1px solid var(--color-danger);border-radius:var(--radius-200);font:inherit;" />
-      </FormField>
-    </Stack>
+<FormField label="Permit ID" errorText="Permit ID is required." required>
+  <input type="text" aria-invalid="true" />
+</FormField>
 
-    <Stack gap="300">
-      <h2>Disabled</h2>
-      <FormField label="Locked field" helpText="This field cannot be edited." disabled={true}>
-        <input type="text" disabled value="Read only" style="width:100%;height:40px;padding:0 .75rem;border:1px solid var(--color-border);border-radius:var(--radius-200);font:inherit;background:var(--color-disabled-bg);" />
-      </FormField>
-    </Stack>
+<FormField label="Locked field" helpText="This field cannot be edited." disabled>
+  <input type="text" disabled value="Read only" />
+</FormField>`}>
+      <div class="col">
+        <FormField label="Project name" required={true}>
+          <input type="text" class="demo-input" />
+        </FormField>
+        <FormField label="Permit ID" errorText="Permit ID is required." required={true}>
+          <input type="text" aria-invalid="true" class="demo-input demo-input--error" />
+        </FormField>
+        <FormField label="Locked field" helpText="This field cannot be edited." disabled={true}>
+          <input type="text" disabled value="Read only" class="demo-input demo-input--disabled" />
+        </FormField>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes (label scales)</h2>
-      <FormField label="Small label" size="small">
-        <input type="text" style="width:100%;height:32px;padding:0 .5rem;border:1px solid var(--color-border);border-radius:var(--radius-100);font:inherit;" />
-      </FormField>
-      <FormField label="Medium label" size="medium">
-        <input type="text" style="width:100%;height:40px;padding:0 .75rem;border:1px solid var(--color-border);border-radius:var(--radius-200);font:inherit;" />
-      </FormField>
-      <FormField label="Large label" size="large">
-        <input type="text" style="width:100%;height:48px;padding:0 1rem;border:1px solid var(--color-border);border-radius:var(--radius-300);font:inherit;" />
-      </FormField>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="sizes" title="Sizes">
+    <p>The <code>size</code> prop scales the label; size the control yourself to match.</p>
+    <Preview code={`<FormField label="Extra small label" size="xs"> … </FormField>
+<FormField label="Small label" size="sm"> … </FormField>
+<FormField label="Medium label" size="md"> … </FormField>
+<FormField label="Large label" size="lg"> … </FormField>`}>
+      <div class="col">
+        <FormField label="Extra small label" size="xs">
+          <input type="text" class="demo-input demo-input--xs" />
+        </FormField>
+        <FormField label="Small label" size="sm">
+          <input type="text" class="demo-input demo-input--sm" />
+        </FormField>
+        <FormField label="Medium label" size="md">
+          <input type="text" class="demo-input" />
+        </FormField>
+        <FormField label="Large label" size="lg">
+          <input type="text" class="demo-input demo-input--lg" />
+        </FormField>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <p>The control goes in the default slot — the wrapper makes no assumptions about it.</p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The wrapper is presentational only; associate the label and control yourself (e.g. a <code>for</code>/<code>id</code> pair) since the slot content is opaque to it.</li>
+      <li>The required asterisk carries an <code>aria-label="required"</code>.</li>
+      <li>Set <code>aria-invalid="true"</code> on the slotted control whenever <code>errorText</code> is shown.</li>
+      <li><code>disabled</code> dims the field and blocks pointer events; also disable the underlying control for keyboard users.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>The wrapper maps these public tokens onto private <code>--_*</code> tokens with fallbacks:</p>
+    <ul class="tokens">
+      <li><code>--form-label-color</code> · <code>--form-help-color</code> · <code>--form-error-color</code></li>
+      <li><code>--form-font-size-small</code> / <code>--form-font-size-medium</code> / <code>--form-font-size-large</code> (label scale)</li>
+      <li><code>--form-label-gap</code> · <code>--form-help-gap</code> · <code>--type-size-100</code> (help/error size)</li>
+      <li><code>--font-weight-medium</code> · <code>--color-danger</code> (required asterisk)</li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); width: 100%; max-width: 360px; }
+  .demo-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 0.75rem;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-200, 0.5rem);
+    font: inherit;
+    box-sizing: border-box;
+  }
+  .demo-input--error { border-color: var(--color-danger, #ef4444); }
+  .demo-input--disabled { background: var(--form-bg-disabled, #efefef); }
+  .demo-input--xs { height: 28px; padding: 0 0.5rem; border-radius: var(--radius-100, 0.25rem); }
+  .demo-input--sm { height: 32px; padding: 0 0.5rem; border-radius: var(--radius-100, 0.25rem); }
+  .demo-input--lg { height: 48px; padding: 0 1rem; border-radius: var(--radius-300, 0.75rem); }
+</style>

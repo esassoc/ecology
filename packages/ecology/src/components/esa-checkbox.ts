@@ -27,7 +27,7 @@ export class EsaCheckbox extends LitElement {
   };
 
   declare label: string;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
   declare indeterminate: boolean;
   declare checked: boolean;
@@ -37,7 +37,7 @@ export class EsaCheckbox extends LitElement {
   constructor() {
     super();
     this.label = '';
-    this.size = 'medium';
+    this.size = 'md';
     this.disabled = false;
     this.indeterminate = false;
     this.checked = false;
@@ -97,21 +97,27 @@ export class EsaCheckbox extends LitElement {
   static styles = css`
     :host {
       --_checkbox-size: 20px;
-      --_checkbox-radius: var(--form-radius-medium, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-medium, 0.9375rem);
+      --_checkbox-radius: var(--form-radius-md, 0.5rem);
+      --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
       --_checkbox-icon-size: 16px;
       display: inline-block;
     }
-    :host([size='small']) {
+    :host([size='xs']) {
+      --_checkbox-size: 14px;
+      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
+      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
+      --_checkbox-icon-size: 10px;
+    }
+    :host([size='sm']) {
       --_checkbox-size: 16px;
-      --_checkbox-radius: var(--form-radius-small, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-small, 0.875rem);
+      --_checkbox-radius: var(--form-radius-sm, 0.25rem);
+      --_checkbox-font-size: var(--form-font-size-sm, 0.875rem);
       --_checkbox-icon-size: 12px;
     }
-    :host([size='large']) {
+    :host([size='lg']) {
       --_checkbox-size: 24px;
-      --_checkbox-radius: var(--form-radius-large, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-large, 1.125rem);
+      --_checkbox-radius: var(--form-radius-lg, 0.5rem);
+      --_checkbox-font-size: var(--form-font-size-lg, 1.125rem);
       --_checkbox-icon-size: 20px;
     }
     :host([disabled]) .wrapper {

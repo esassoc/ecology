@@ -1,10 +1,10 @@
 ---
 // esa-loading-overlay — presentational (.astro).
 // Faithful translation of the Angular esa-loading-overlay: covers its positioned
-// parent with a spinner (large) and an optional message when `active`; `transparent`
+// parent with a spinner (lg) and an optional message when `active`; `transparent`
 // switches the opaque backdrop to a semi-transparent one. Angular host classes +
 // @if(active) → class list + conditional render. The spinner markup is inlined
-// (mirrors esa-loading-spinner size="large"). Place inside a `position: relative`
+// (mirrors esa-loading-spinner size="lg"). Place inside a `position: relative`
 // container so the absolute backdrop fills it.
 interface Props {
   active?: boolean;
@@ -54,7 +54,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     gap: var(--spacing-300, 0.75rem);
   }
 
-  /* Inlined large spinner (mirrors esa-loading-spinner size="large"). */
+  /* Inlined large spinner (mirrors esa-loading-spinner size="lg"). */
   .esa-loading-overlay__spinner {
     width: 48px;
     height: 48px;

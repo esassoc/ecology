@@ -1,62 +1,128 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Visible label rendered above the input.' },
+  { name: 'type', type: "'text' | 'email' | 'password' | 'number' | 'tel' | 'url'", default: "'text'", description: 'Native input type.' },
+  { name: 'value', type: 'string', default: "''", description: 'Current value; mirrored to the form on every input.' },
+  { name: 'placeholder', type: 'string', default: "''", description: 'Placeholder shown when empty.' },
+  { name: 'help-text', type: 'string', default: "''", description: 'Helper text shown below the input.' },
+  { name: 'error-text', type: 'string', default: "''", description: 'Error message; replaces help text and turns the field red when present.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size.' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required and renders an asterisk on the label.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired on every input. Composed and bubbling; detail.value is the current string.' },
+];
 ---
-<BaseLayout title="Text Field — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Text Field</h1>
-      <p>Form-associated Lit Web Component <code>[wc]</code>. Self-contained label + input + help/error. Participates in native forms via <code>ElementInternals</code> and emits a composed <code>change</code> event.</p>
-    </Stack>
+<ComponentDoc name="Text Field" category="Forms" slug="esa-text-field" type="wc" status="stable"
+  summary="Self-contained label, input, and help/error text in one form-associated Web Component. Participates in native forms via <code>ElementInternals</code> and emits a composed <code>change</code> event.">
 
-    <Stack gap="300">
-      <h2>Default</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-text-field label="Full name" placeholder="Jane Doe" help-text="As it appears on the permit."></esa-text-field>`}>
       <esa-text-field label="Full name" placeholder="Jane Doe" help-text="As it appears on the permit."></esa-text-field>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Types</h2>
+  <Section id="types" title="Types">
+    <p>The <code>type</code> attribute maps straight to the native input type.</p>
+    <Preview code={`<esa-text-field label="Email" type="email" placeholder="you@example.com"></esa-text-field>
+<esa-text-field label="Password" type="password"></esa-text-field>
+<esa-text-field label="Count" type="number"></esa-text-field>`}>
       <esa-text-field label="Email" type="email" placeholder="you@example.com"></esa-text-field>
       <esa-text-field label="Password" type="password"></esa-text-field>
       <esa-text-field label="Count" type="number"></esa-text-field>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>States</h2>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-text-field label="Extra small" size="xs" placeholder="Extra small"></esa-text-field>
+<esa-text-field label="Small" size="sm" placeholder="Small"></esa-text-field>
+<esa-text-field label="Medium" size="md" placeholder="Medium"></esa-text-field>
+<esa-text-field label="Large" size="lg" placeholder="Large"></esa-text-field>`}>
+      <esa-text-field label="Extra small" size="xs" placeholder="Extra small"></esa-text-field>
+      <esa-text-field label="Small" size="sm" placeholder="Small"></esa-text-field>
+      <esa-text-field label="Medium" size="md" placeholder="Medium"></esa-text-field>
+      <esa-text-field label="Large" size="lg" placeholder="Large"></esa-text-field>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="States">
+    <Preview code={`<esa-text-field label="Required" required placeholder="Cannot be empty"></esa-text-field>
+<esa-text-field label="With error" error-text="This field is required." required></esa-text-field>
+<esa-text-field label="Disabled" disabled value="Read only"></esa-text-field>`}>
       <esa-text-field label="Required" required placeholder="Cannot be empty"></esa-text-field>
       <esa-text-field label="With error" error-text="This field is required." required></esa-text-field>
       <esa-text-field label="Disabled" disabled value="Read only"></esa-text-field>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-text-field label="Small" size="small" placeholder="Small"></esa-text-field>
-      <esa-text-field label="Medium" size="medium" placeholder="Medium"></esa-text-field>
-      <esa-text-field label="Large" size="large" placeholder="Large"></esa-text-field>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Form participation</h2>
-      <p>Submitting logs the <code>FormData</code> entry for <code>contact</code>.</p>
-      <form id="tf-form">
-        <Stack gap="300">
-          <esa-text-field label="Contact" name="contact" placeholder="Type then submit"></esa-text-field>
-          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
-          <output id="tf-out" style="font-family:var(--font-mono);"></output>
-        </Stack>
+  <Section id="form" title="Form participation">
+    <p>The element is form-associated. Submitting logs the <code>FormData</code> entry for <code>contact</code>.</p>
+    <Preview code={`<form>
+  <esa-text-field label="Contact" name="contact" placeholder="Type then submit"></esa-text-field>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="tf-form" class="form-demo">
+        <esa-text-field label="Contact" name="contact" placeholder="Type then submit"></esa-text-field>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="tf-out" class="demo-out"></output>
       </form>
-    </Stack>
-  </Stack>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-text-field';
-    const form = document.getElementById('tf-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = new FormData(form as HTMLFormElement);
-      document.getElementById('tf-out')!.textContent =
-        'contact = ' + JSON.stringify(data.get('contact'));
-    });
-  </script>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;input&gt;</code> associated to its <code>&lt;label&gt;</code> via <code>for</code>/<code>id</code>.</li>
+      <li>Sets <code>aria-invalid="true"</code> while <code>error-text</code> is present.</li>
+      <li>The required asterisk carries an <code>aria-label="required"</code>.</li>
+      <li>Visible focus ring via <code>--focus-ring-*</code> tokens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form token layer to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--form-bg</code> / <code>--form-text-color</code> / <code>--form-border-color</code></li>
+      <li><code>--form-border-color-focus</code> · <code>--form-border-color-error</code> · <code>--form-bg-disabled</code></li>
+      <li><code>--form-padding-y-*</code> / <code>--form-padding-x-*</code> / <code>--form-height-*</code> / <code>--form-radius-*</code></li>
+      <li><code>--form-label-color</code> · <code>--form-help-color</code> · <code>--form-error-color</code> · <code>--color-danger</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); width: 100%; max-width: 360px; }
+  .demo-submit {
+    align-self: flex-start;
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-text-field';
+  const form = document.getElementById('tf-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('tf-out')!.textContent =
+      'contact = ' + JSON.stringify(data.get('contact'));
+  });
+</script>

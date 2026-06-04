@@ -1,6 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import FilterPills from '@esa/ecology/esa-filter-pills.astro';
 
 const sampleFilters = [
@@ -11,41 +13,65 @@ const sampleFilters = [
 const single = [
   { name: 'priority', label: 'Priority', value: 'high', displayValue: 'High' },
 ];
+
+const props = [
+  { name: 'filters', type: 'ActiveFilter[]', default: '[]', description: 'Active filters to render. Each is { name, label, value, displayValue }. Empty renders no DOM.' },
+];
+
+const events = [
+  { name: 'esa-filter-remove', type: '{ name, value }', description: "Bubbling/composed. Fires when a chip's remove button is clicked, identifying which filter to drop." },
+];
 ---
-<BaseLayout title="Filter Pills — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Filter Pills</h1>
-      <p>Active filters rendered as removable chips. Each chip shows
-        <code>label: displayValue</code> and an x remove button that dispatches a
-        bubbling <code>esa-filter-remove</code> event carrying <code>{'{ name, value }'}</code>.</p>
-    </Stack>
+<ComponentDoc name="Filter Pills" category="Filters" slug="esa-filter-pills" type=".astro" status="stable"
+  summary={`Active filters rendered as removable chips. Each chip shows "label: displayValue" and an x button that dispatches a bubbling <code>esa-filter-remove</code> event carrying <code>{ name, value }</code>.`}>
 
-    <Stack gap="300">
-      <h2>Single active filter</h2>
-      <FilterPills filters={single} />
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Multiple active filters</h2>
+  <Section id="preview" title="Preview">
+    <p>Pass the current active filters; each becomes a removable chip.</p>
+    <Preview code={`<FilterPills filters={[
+  { name: 'status', label: 'Status', value: 'open', displayValue: 'Open' },
+  { name: 'status', label: 'Status', value: 'review', displayValue: 'In review' },
+  { name: 'dept', label: 'Department', value: 'water', displayValue: 'Water Quality' },
+]} />`}>
       <FilterPills filters={sampleFilters} />
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Empty (renders nothing)</h2>
-      <p>With no filters the component renders no DOM — matching the Angular
-        <code>@if (activeFilters().length &gt; 0)</code> guard.</p>
+  <Section id="states" title="States">
+    <p>A single chip renders inline; with no filters the component renders nothing at all — matching the Angular <code>@if (activeFilters().length &gt; 0)</code> guard.</p>
+    <Preview code={`<FilterPills filters={[
+  { name: 'priority', label: 'Priority', value: 'high', displayValue: 'High' },
+]} />
+
+<!-- Empty: renders no DOM -->
+<FilterPills filters={[]} />`}>
+      <FilterPills filters={single} />
       <FilterPills filters={[]} />
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Props:</strong> <code>filters</code> — array of <code>{'{ name, label, value, displayValue }'}</code>.</li>
-        <li><strong>Tokens:</strong> surface-sunken chip bg, border on hover, radius-full, text-muted label.</li>
-        <li><strong>Event:</strong> remove buttons emit <code>esa-filter-remove</code> for a parent container.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="events" title="Events">
+    <Api props={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Each chip carries an <code>aria-label</code> of "label: displayValue" so the pairing is announced as one unit.</li>
+      <li>Remove buttons are native <code>&lt;button&gt;</code>s with an explicit "Remove {'{label}'} {'{displayValue}'}" accessible name.</li>
+      <li>Remove buttons show a visible focus ring via <code>--focus-ring-*</code> tokens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the chip tokens to restyle without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--filter-pill-bg</code> / <code>--filter-pill-bg-hover</code> · <code>--color-surface-sunken</code> · <code>--color-border</code></li>
+      <li><code>--filter-pill-text</code> · <code>--color-text-muted</code> (label) · <code>--filter-pill-font-size</code></li>
+      <li><code>--filter-pill-radius</code> / <code>--radius-full</code> · <code>--spacing-*</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

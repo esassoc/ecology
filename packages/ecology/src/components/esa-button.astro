@@ -1,23 +1,25 @@
 ---
 // esa-button — presentational (.astro).
 //
-// Faithful translation of the Angular esa-button:
-//   - variant: primary | secondary | outline | ghost   (host classes → class list)
-//   - size:    small | medium | large
-//   - disabled / loading / iconOnly                      (boolean host classes)
-//   - icon:    Lucide name rendered left of the label (hidden while loading)
-//   - loading: CSS-only spinner; label kept in place but visually hidden
-//   - type:    native button type
+// Variant model aligned to Beacon's UiButton (two independent axes + toggle):
+//   - color:      primary | secondary | danger | success | warning | info | ai | ghost
+//   - appearance: fill | outline | dashed
+//   - active:     aria-pressed toggle (selected look)
+//   - size:       xs | sm | md | lg   (shared form size scale)
+//   - icon / iconOnly / loading / disabled / type
 //
-// The Angular form-height/form-padding/form-font tokens live in the forms entry
-// point (not present in the hub token build yet), so the private --_btn-* tokens
-// fall back to the same literal pixel values the SCSS used as fallbacks.
+// `ai` maps to the copper "AI context" tokens. Color sets a private --_accent;
+// appearance decides how that accent renders (solid fill vs bordered).
 import EsaIcon from './esa-icon.astro';
 
-type EsaSize = 'small' | 'medium' | 'large';
+type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
+type EsaButtonColor = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost';
+type EsaButtonAppearance = 'fill' | 'outline' | 'dashed';
 
 interface Props {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  color?: EsaButtonColor;
+  appearance?: EsaButtonAppearance;
+  active?: boolean;
   size?: EsaSize;
   disabled?: boolean;
   loading?: boolean;
@@ -29,8 +31,10 @@ interface Props {
 }
 
 const {
-  variant = 'primary',
-  size = 'medium',
+  color = 'primary',
+  appearance = 'fill',
+  active = false,
+  size = 'md',
   disabled = false,
   loading = false,
   icon = '',
@@ -40,8 +44,10 @@ const {
 
 const cls = [
   'esa-button',
-  `esa-button--${variant}`,
+  `esa-button--color-${color}`,
+  `esa-button--appearance-${appearance}`,
   `esa-button--${size}`,
+  active && 'esa-button--active',
   disabled && 'esa-button--disabled',
   loading && 'esa-button--loading',
   iconOnly && 'esa-button--icon-only',
@@ -50,11 +56,15 @@ const cls = [
   .join(' ');
 ---
 <span class={cls}>
-  <button class="esa-button__native" type={type} disabled={disabled || loading} aria-busy={loading ? 'true' : undefined}>
+  <button
+    class="esa-button__native"
+    type={type}
+    disabled={disabled || loading}
+    aria-busy={loading ? 'true' : undefined}
+    aria-pressed={active ? 'true' : undefined}
+  >
     {loading && <span class="esa-button__spinner" aria-hidden="true" />}
-
     {icon && !loading && <EsaIcon name={icon} size={size} />}
-
     {!iconOnly && (
       <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
         <slot />
@@ -65,74 +75,64 @@ const cls = [
 
 <style>
   .esa-button {
-    /* Size tokens — medium defaults (form-* tokens unavailable here → literals). */
-    --_btn-height: var(--form-height-medium, 40px);
-    --_btn-padding-x: var(--form-padding-x-medium, 16px);
-    --_btn-font-size: var(--form-font-size-medium, 14px);
-    --_btn-radius: var(--form-radius-medium, 6px);
-
-    /* Variant tokens — primary defaults. */
-    --_btn-bg: var(--color-primary, #005862);
-    --_btn-bg-hover: var(--color-primary-hover, #004752);
-    --_btn-bg-active: var(--color-primary-active, #003d47);
-    --_btn-text: var(--color-text-inverse, #ffffff);
-    --_btn-border: transparent;
-
+    /* Size tokens — md default. */
+    --_btn-height: var(--form-height-md, 40px);
+    --_btn-padding-x: var(--form-padding-x-md, 16px);
+    --_btn-font-size: var(--form-font-size-md, 14px);
+    --_btn-radius: var(--form-radius-md, 6px);
+    /* Color tokens — primary default. --_accent = the color; --_on = text on a solid fill. */
+    --_accent: var(--color-primary, #005862);
+    --_accent-hover: var(--color-primary-hover, #004752);
+    --_on: var(--color-text-inverse, #ffffff);
     display: inline-block;
   }
 
-  /* Sizes */
-  .esa-button--small {
-    --_btn-height: var(--form-height-small, 32px);
-    --_btn-padding-x: var(--form-padding-x-small, 12px);
-    --_btn-font-size: var(--form-font-size-small, 12px);
-    --_btn-radius: var(--form-radius-small, 4px);
-  }
-  .esa-button--large {
-    --_btn-height: var(--form-height-large, 48px);
-    --_btn-padding-x: var(--form-padding-x-large, 20px);
-    --_btn-font-size: var(--form-font-size-large, 16px);
-    --_btn-radius: var(--form-radius-large, 8px);
-  }
+  /* ---------- Sizes ---------- */
+  .esa-button--xs { --_btn-height: var(--form-height-xs, 28px); --_btn-padding-x: var(--form-padding-x-xs, 8px);  --_btn-font-size: var(--form-font-size-xs, 11px); --_btn-radius: var(--form-radius-xs, 4px); }
+  .esa-button--sm { --_btn-height: var(--form-height-sm, 32px); --_btn-padding-x: var(--form-padding-x-sm, 12px); --_btn-font-size: var(--form-font-size-sm, 12px); --_btn-radius: var(--form-radius-sm, 4px); }
+  .esa-button--lg { --_btn-height: var(--form-height-lg, 48px); --_btn-padding-x: var(--form-padding-x-lg, 20px); --_btn-font-size: var(--form-font-size-lg, 16px); --_btn-radius: var(--form-radius-lg, 8px); }
 
-  /* Variants */
-  .esa-button--secondary {
-    --_btn-bg: var(--color-secondary, #0d9488);
-    --_btn-bg-hover: var(--color-secondary-hover, #115e59);
-    --_btn-bg-active: var(--color-secondary-hover, #115e59);
-    --_btn-text: var(--color-text-inverse, #ffffff);
-    --_btn-border: transparent;
-  }
-  .esa-button--outline {
-    --_btn-bg: transparent;
-    --_btn-bg-hover: var(--color-hover-overlay, rgba(0, 0, 0, 0.03));
-    --_btn-bg-active: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-    --_btn-text: var(--color-text-primary, #171717);
-    --_btn-border: var(--color-border, #e5e5e5);
-  }
-  .esa-button--ghost {
-    --_btn-bg: transparent;
-    --_btn-bg-hover: var(--color-hover-overlay, rgba(0, 0, 0, 0.03));
-    --_btn-bg-active: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-    --_btn-text: var(--color-text-primary, #171717);
-    --_btn-border: transparent;
-  }
+  /* ---------- Colors (set the accent) ---------- */
+  .esa-button--color-secondary { --_accent: var(--color-secondary, #0d9488); --_accent-hover: var(--color-secondary-hover, #115e59); }
+  .esa-button--color-danger    { --_accent: var(--color-danger, #ef4444);  --_accent-hover: color-mix(in srgb, var(--color-danger, #ef4444) 85%, #000); }
+  .esa-button--color-success   { --_accent: var(--color-success, #22c55e); --_accent-hover: color-mix(in srgb, var(--color-success, #22c55e) 85%, #000); }
+  .esa-button--color-warning   { --_accent: var(--color-warning, #f59e0b); --_accent-hover: color-mix(in srgb, var(--color-warning, #f59e0b) 85%, #000); --_on: var(--color-gray-900, #171717); }
+  .esa-button--color-info      { --_accent: var(--color-info, #3b82f6);    --_accent-hover: color-mix(in srgb, var(--color-info, #3b82f6) 85%, #000); }
+  .esa-button--color-ai        { --_accent: var(--color-ai, #a45f3d);      --_accent-hover: var(--color-ai-hover, #8a4d31); }
 
-  /* Disabled */
-  .esa-button--disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
+  /* ---------- Appearances ---------- */
+  .esa-button--appearance-fill .esa-button__native {
+    background: var(--_accent);
+    color: var(--_on);
+    border-color: transparent;
   }
+  .esa-button--appearance-fill .esa-button__native:hover:not(:disabled) { background: var(--_accent-hover); }
+  .esa-button--appearance-fill.esa-button--active .esa-button__native { background: var(--_accent-hover); }
 
-  /* Icon-only */
-  .esa-button--icon-only .esa-button__native {
-    padding-inline: 0;
-    width: var(--_btn-height);
-    justify-content: center;
+  .esa-button--appearance-outline .esa-button__native,
+  .esa-button--appearance-dashed .esa-button__native {
+    background: transparent;
+    color: var(--_accent);
+    border-color: var(--_accent);
   }
+  .esa-button--appearance-dashed .esa-button__native { border-style: dashed; }
+  .esa-button--appearance-outline .esa-button__native:hover:not(:disabled),
+  .esa-button--appearance-dashed .esa-button__native:hover:not(:disabled) { background: color-mix(in srgb, var(--_accent) 8%, transparent); }
+  .esa-button--appearance-outline.esa-button--active .esa-button__native,
+  .esa-button--appearance-dashed.esa-button--active .esa-button__native { background: color-mix(in srgb, var(--_accent) 14%, transparent); }
 
-  /* Native button */
+  /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
+  .esa-button--color-ghost .esa-button__native {
+    background: transparent;
+    color: var(--color-text-primary, #171717);
+    border-color: transparent;
+  }
+  .esa-button--color-ghost.esa-button--appearance-outline .esa-button__native,
+  .esa-button--color-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border, #e5e5e5); }
+  .esa-button--color-ghost .esa-button__native:hover:not(:disabled),
+  .esa-button--color-ghost.esa-button--active .esa-button__native { background: var(--color-surface-sunken, #efefef); }
+
+  /* ---------- Native button ---------- */
   .esa-button__native {
     display: inline-flex;
     align-items: center;
@@ -141,53 +141,33 @@ const cls = [
     width: 100%;
     height: var(--_btn-height);
     padding-inline: var(--_btn-padding-x);
-    border: 1px solid var(--_btn-border);
+    border: 1px solid transparent;
     border-radius: var(--_btn-radius);
-    background: var(--_btn-bg);
-    color: var(--_btn-text);
     font-size: var(--_btn-font-size);
     font-family: var(--font-sans, system-ui, sans-serif);
     font-weight: var(--font-weight-medium, 500);
     line-height: 1;
     cursor: pointer;
-    transition:
-      background var(--transition-fast, 150ms ease),
-      border-color var(--transition-fast, 150ms ease),
-      box-shadow var(--transition-fast, 150ms ease);
+    transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
     -webkit-appearance: none;
     appearance: none;
   }
-
-  .esa-button__native:hover:not(:disabled) { background: var(--_btn-bg-hover); }
-  .esa-button__native:active:not(:disabled) { background: var(--_btn-bg-active); }
-
   .esa-button__native:focus-visible {
     outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 
-  .esa-button__native:disabled { cursor: not-allowed; }
+  /* States */
+  .esa-button--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+  .esa-button--icon-only .esa-button__native { padding-inline: 0; width: var(--_btn-height); }
 
-  /* Label */
+  /* Label + loading */
   .esa-button__label { white-space: nowrap; }
-  .esa-button__label--hidden {
-    visibility: hidden;
-    width: 0;
-    overflow: hidden;
-  }
-
-  /* Loading spinner (CSS-only) */
+  .esa-button__label--hidden { visibility: hidden; width: 0; overflow: hidden; }
   .esa-button__spinner {
-    display: inline-block;
-    width: 1em;
-    height: 1em;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
-    border-radius: 50%;
+    display: inline-block; width: 1em; height: 1em;
+    border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
     animation: esa-button-spin 0.6s linear infinite;
   }
-
-  @keyframes esa-button-spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes esa-button-spin { to { transform: rotate(360deg); } }
 </style>

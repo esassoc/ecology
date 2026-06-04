@@ -1,42 +1,50 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Api from '../../components/docs/Api.astro';
+
+const attrs = [
+  { name: 'threshold', type: 'number', default: '300', description: 'Scroll distance (px) before the button fades in.' },
+  { name: 'smooth-scroll', type: 'boolean', default: 'true', description: 'Smooth vs instant scroll-to-top. (Property: smoothScroll.)' },
+  { name: 'scrollTarget', type: 'HTMLElement | null', default: 'null', description: 'JS-only property — element to track instead of window.' },
+  { name: 'visible', type: 'boolean (reflected)', default: 'false', description: 'Reflected attribute set when scrolled past the threshold; drives the fade/translate.' },
+];
 ---
-<BaseLayout title="Back to Top — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Back to Top</h1>
-      <p>Floating button that appears once the page is scrolled past a threshold and smooth-scrolls back to the top on click. Lit web component.</p>
-    </Stack>
+<ComponentDoc name="Back to Top" category="Display" slug="esa-back-to-top" type="wc" status="stable"
+  summary="Floating button that appears once the page is scrolled past a threshold and smooth-scrolls back to the top on click.">
 
-    <Stack gap="300">
-      <h2>Behavior</h2>
-      <ul>
-        <li><strong>threshold</strong> (default 300px) — scroll distance before the button fades in.</li>
-        <li><strong>smooth-scroll</strong> (default true) — smooth vs instant scroll-to-top.</li>
-        <li><strong>scrollTarget</strong> — optional element to track instead of <code>window</code> (set via JS property).</li>
-      </ul>
-    </Stack>
+  <Section id="preview" title="Try it">
+    <p>The element is mounted on this page. Scroll down past ~300px and a button appears pinned to the bottom-right corner — click it to smooth-scroll back up.</p>
+    <p style="font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-muted, #737373); background: var(--color-surface-sunken, #f5f5f5); padding: 10px 12px; border-radius: 7px;">&lt;esa-back-to-top&gt;&lt;/esa-back-to-top&gt;</p>
+    <div style="height: 1400px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--spacing-600, 2rem); color: var(--color-text-muted, #737373);">
+      <span>Keep scrolling… the back-to-top button is pinned bottom-right.</span>
+    </div>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Try it</h2>
-      <p>Scroll this page down past ~300px — the button appears in the bottom-right corner. Click it to scroll back up.</p>
-      <div style="height: 1800px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--spacing-600, 2rem); color: var(--color-text-muted, #737373);">
-        <span>Keep scrolling… the back-to-top button is pinned bottom-right.</span>
-      </div>
-    </Stack>
+  <Section id="api" title="API">
+    <p>Attributes and properties:</p>
+    <Api props={attrs} />
+    <p style="margin-top: 1rem;">No custom events — clicking the button scrolls the target (or <code>window</code>) to the top directly.</p>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Listener:</strong> passive scroll listener toggles the reflected <code>visible</code> attribute (fade + translate transition).</li>
-        <li><strong>Tokens consumed:</strong> <code>--color-primary</code>/<code>-hover</code>, <code>--color-text-inverse</code>, <code>--shadow-300</code>/<code>-400</code>, <code>--radius-full</code>, spacing scale, <code>--z-sidebar</code>.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;button&gt;</code> with <code>aria-label="Back to top"</code>.</li>
+      <li>While hidden it is <code>pointer-events: none</code> with <code>opacity: 0</code>, so it isn't a click target until visible.</li>
+      <li>Visible focus ring via the <code>--focus-ring-*</code> tokens; the chevron icon is <code>aria-hidden</code>.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-primary</code> / <code>--color-primary-hover</code> · <code>--color-text-inverse</code></li>
+      <li><code>--shadow-300</code> / <code>--shadow-400</code> · <code>--radius-full</code></li>
+      <li><code>--z-sidebar</code> (stacking) · <code>--spacing-500</code> (offset)</li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code> · <code>--transition-base</code> / <code>--transition-fast</code></li>
+    </ul>
+  </Section>
 
   <esa-back-to-top></esa-back-to-top>
-</BaseLayout>
+</ComponentDoc>
 
 <script>import '@esa/ecology/esa-back-to-top';</script>

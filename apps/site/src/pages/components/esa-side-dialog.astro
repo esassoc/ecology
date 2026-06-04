@@ -1,0 +1,93 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'heading', type: 'string', description: 'Title shown in the header.' },
+  { name: 'position', type: "'left' | 'right'", default: "'right'", description: 'Edge the drawer slides in from.' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Panel width — 320 / 400 / 520px.' },
+  { name: 'show-close-button', type: 'boolean', default: 'true', description: 'Render the header close (✕) button.' },
+];
+const methods = [
+  { name: 'show()', type: 'method', description: 'Open the drawer.' },
+  { name: 'close()', type: 'method', description: 'Close it (restores focus, emits `close`).' },
+];
+const events = [
+  { name: 'close', type: 'CustomEvent', description: 'Fired when the drawer closes (Esc, backdrop, or close button).' },
+];
+---
+<ComponentDoc name="Side Dialog" category="Overlays" slug="esa-side-dialog" type="wc" status="stable"
+  summary="A slide-in <strong>drawer</strong> / side sheet. Full-height panel fixed to a side edge, with its own backdrop, focus trap, Esc-to-close, and focus restore — the modal mechanics of a dialog with edge-anchored layout.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<button id="open-sd">Open drawer</button>
+<esa-side-dialog id="sd" heading="Filters" position="right">
+  <p>Drawer body content…</p>
+  <button slot="footer">Apply</button>
+</esa-side-dialog>`}>
+      <button class="trigger" id="open-sd">Open drawer</button>
+      <esa-side-dialog id="sd" heading="Filters" position="right">
+        <p>Drawer body content goes here. It scrolls if it overflows, with the header and footer pinned.</p>
+        <p>Use it for filters, detail panes, and create/edit forms that don't warrant a full page.</p>
+        <button class="trigger" slot="footer">Apply</button>
+      </esa-side-dialog>
+    </Preview>
+  </Section>
+
+  <Section id="positions" title="Positions &amp; sizes">
+    <p>Slides from <code>left</code> or <code>right</code>; width via <code>size</code> (<code>sm</code> 320 · <code>md</code> 400 · <code>lg</code> 520).</p>
+    <Preview code={`<esa-side-dialog position="left" size="sm" heading="Left, sm">…</esa-side-dialog>`}>
+      <button class="trigger" id="open-left">Open left · sm</button>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 class="api-sub">Methods</h3>
+    <Api props={methods} />
+    <Api events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li><code>role="dialog"</code> + <code>aria-modal</code>; labelled by the <code>heading</code>.</li>
+      <li>Focus is trapped within the panel; Tab/Shift+Tab cycle, Esc closes, and focus is restored to the trigger on close.</li>
+      <li>The backdrop click and the ✕ button both close.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--z-modal</code> / <code>--z-modal-backdrop</code> · <code>--color-backdrop</code></li>
+      <li><code>--color-surface</code> · <code>--color-border</code> · <code>--shadow-400</code></li>
+      <li><code>--spacing-*</code> · <code>--type-size-400</code> · <code>--radius-100</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .trigger {
+    font: inherit; font-size: var(--type-size-200, 1rem);
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
+    background: var(--color-surface, #fff); color: var(--color-text-primary, #171717); cursor: pointer;
+  }
+  .trigger:hover { background: var(--color-surface-sunken, #efefef); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-side-dialog';
+  document.getElementById('open-sd')?.addEventListener('click', () => (document.getElementById('sd') as any)?.show());
+  document.getElementById('open-left')?.addEventListener('click', () => {
+    let d = document.getElementById('sd-left') as any;
+    if (!d) {
+      d = document.createElement('esa-side-dialog');
+      d.id = 'sd-left'; d.setAttribute('position', 'left'); d.setAttribute('size', 'sm'); d.heading = 'Left · sm';
+      d.innerHTML = '<p>A small drawer from the left edge.</p>';
+      document.body.appendChild(d);
+    }
+    d.show();
+  });
+</script>

@@ -1,0 +1,55 @@
+---
+// esa-field-error — PRESENTATIONAL error-text (.astro).
+//
+// Beacon's ui-field-error binds to an Angular AbstractControl and renders its
+// validation errors when the control is invalid + touched/dirty. That control
+// plumbing is framework-specific, so this is the portable presentational half:
+// give it the already-resolved `message` string and it renders the danger line
+// (or nothing). Pair it with whatever validation layer the host stack provides.
+//
+// Matches the error styling esa-form-field uses: --color-danger text at
+// --type-size-100. Collapses out of layout when empty so it doesn't reserve a
+// gap under the input. An optional leading icon mirrors common form patterns.
+import EsaIcon from './esa-icon.astro';
+
+interface Props {
+  /** Resolved error message. Renders nothing when null/empty. */
+  message?: string | null;
+  /** Show a small leading alert icon. */
+  icon?: boolean;
+}
+
+const { message = '', icon = false } = Astro.props;
+const show = !!(message && String(message).trim());
+---
+{show && (
+  <p class="esa-field-error" role="alert" aria-live="polite">
+    {icon && <span class="esa-field-error__icon"><EsaIcon name="circle-alert" size="xs" /></span>}
+    <span class="esa-field-error__text">{message}</span>
+  </p>
+)}
+
+<style>
+  .esa-field-error {
+    --_error-color: var(--color-danger, #ef4444);
+    --_error-font-size: var(--type-size-100, 0.75rem);
+    --_error-gap: var(--form-help-gap, 4px);
+
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-100, 4px);
+    margin: 0;
+    margin-block-start: var(--_error-gap);
+    color: var(--_error-color);
+    font-size: var(--_error-font-size);
+    line-height: 1.4;
+  }
+
+  .esa-field-error__icon {
+    flex: none;
+  }
+
+  .esa-field-error__text {
+    min-width: 0;
+  }
+</style>

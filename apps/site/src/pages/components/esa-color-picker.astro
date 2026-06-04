@@ -1,48 +1,85 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 
 const brand = JSON.stringify(['#005862', '#0d9488', '#f9a134', '#ef4444', '#3b82f6', '#22c55e']);
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
+  { name: 'value', type: 'string', default: "'#000000'", description: 'Current color as a hex string.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
+  { name: 'swatches', type: 'string[]', default: '[]', description: 'Preset colors. Accepts a string[] property or a JSON-encoded swatches attribute.' },
+  { name: 'show-input', type: 'boolean', default: 'true', description: 'Show the hex text input next to the preview.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when the color commits (native picker, valid hex input, or swatch click). Hex input validates #rgb / #rrggbb. Composed and bubbles.' },
+];
 ---
-<BaseLayout title="Color Picker — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Color Picker <code>[wc]</code></h1>
-      <p>Form-associated color picker — native color input + hex text field + optional swatch grid. Migrated from Angular <code>esa-color-picker</code> to a Lit Web Component.</p>
-    </Stack>
+<ComponentDoc name="Color Picker" category="Forms" slug="esa-color-picker" type="wc" status="stable"
+  summary="Form-associated color picker — native color input, hex text field, and an optional swatch grid. A Lit Web Component migrated from the Angular <code>esa-color-picker</code>.">
 
-    <Stack gap="300">
-      <h2>Default (preview + hex input)</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-color-picker label="Brand color" value="#005862"></esa-color-picker>`}>
       <esa-color-picker label="Brand color" value="#005862"></esa-color-picker>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With swatches</h2>
+  <Section id="swatches" title="Swatches">
+    <p>Pass preset colors as a JSON-encoded <code>swatches</code> attribute (or a <code>string[]</code> property). The selected swatch is highlighted.</p>
+    <Preview code={`<esa-color-picker label="Pick a brand color" value="#005862" swatches='["#005862","#0d9488","#f9a134","#ef4444","#3b82f6","#22c55e"]'></esa-color-picker>`}>
       <esa-color-picker label="Pick a brand color" value="#005862" swatches={brand}></esa-color-picker>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-color-picker label="Small" size="small" value="#0d9488"></esa-color-picker>
-      <esa-color-picker label="Medium" size="medium" value="#f9a134"></esa-color-picker>
-      <esa-color-picker label="Large" size="large" value="#ef4444"></esa-color-picker>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-color-picker label="Extra small" size="xs" value="#005862"></esa-color-picker>
+<esa-color-picker label="Small" size="sm" value="#0d9488"></esa-color-picker>
+<esa-color-picker label="Medium" size="md" value="#f9a134"></esa-color-picker>
+<esa-color-picker label="Large" size="lg" value="#ef4444"></esa-color-picker>`}>
+      <esa-color-picker label="Extra small" size="xs" value="#005862"></esa-color-picker>
+      <esa-color-picker label="Small" size="sm" value="#0d9488"></esa-color-picker>
+      <esa-color-picker label="Medium" size="md" value="#f9a134"></esa-color-picker>
+      <esa-color-picker label="Large" size="lg" value="#ef4444"></esa-color-picker>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>States</h2>
+  <Section id="states" title="States">
+    <p>Hide the hex input with <code>show-input={'{false}'}</code>; disable the whole control with <code>disabled</code>.</p>
+    <Preview code={`<esa-color-picker label="No hex input" value="#3b82f6" show-input="false" swatches="…"></esa-color-picker>
+<esa-color-picker label="Disabled" value="#22c55e" disabled swatches="…"></esa-color-picker>`}>
       <esa-color-picker label="No hex input" value="#3b82f6" show-input={false} swatches={brand}></esa-color-picker>
       <esa-color-picker label="Disabled" value="#22c55e" disabled swatches={brand}></esa-color-picker>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Form:</strong> form-associated — value is a hex string. Emits composed <code>change</code>. Hex input validates <code>#rgb</code> / <code>#rrggbb</code> on change.</li>
-        <li><strong>Tokens:</strong> surface, border-strong, primary (selected/focus), radius, spacing, font-mono (hex), type-size.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-  <script>import '@esa/ecology/esa-color-picker';</script>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The native <code>&lt;input type="color"&gt;</code> provides the OS color dialog and keyboard handling.</li>
+      <li>Swatches are a <code>role="listbox"</code> group; each swatch is <code>role="option"</code> with <code>aria-selected</code> and an <code>aria-label</code> ("Select color {'{hex}'}").</li>
+      <li>Hex input only commits valid <code>#rgb</code> / <code>#rrggbb</code> values, preventing invalid form state.</li>
+      <li>Form-associated via <code>ElementInternals</code> — value submits with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface</code> · <code>--color-border-strong</code> · <code>--color-primary</code> (selected/focus)</li>
+      <li><code>--form-radius-*</code> · <code>--form-font-size-*</code> · <code>--spacing-*</code></li>
+      <li><code>--font-mono</code> (hex value) · <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>import '@esa/ecology/esa-color-picker';</script>
+
+<style>
+  h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+</style>

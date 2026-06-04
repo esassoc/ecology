@@ -1,72 +1,118 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'mode', type: "'autocomplete' | 'select'", default: "'select'", description: "'select' = button trigger with in-panel search; 'autocomplete' = input trigger. Reflected." },
+  { name: 'trigger-style', type: "'field' | 'text'", default: "'field'", description: "'field' = bordered control; 'text' = link-like trigger." },
+  { name: 'options', type: '{ value, label, disabled? }[]', default: '[]', description: 'Selectable options. Set as a property.' },
+  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections with removable chips.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
+  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
+  { name: 'placeholder', type: 'string', default: "'Select...'", description: 'Placeholder for the trigger/input.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required.' },
+  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the control.' },
+  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
+  { name: 'loading', type: 'boolean', default: 'false', description: 'Shows a spinner and "Searching..." state.' },
+  { name: 'debounce-ms', type: 'number', default: '300', description: 'Debounce window for the search event.' },
+  { name: 'results-count', type: 'number | null', default: 'null', description: 'When set, renders "Displaying X of Y results".' },
+  { name: 'value', type: 'string | string[]', description: 'Property accessor. Single = string; multiple = string array.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string | string[] }>', description: 'Fired on selection change. Composed and bubbles.' },
+  { name: 'search', type: 'CustomEvent<{ term: string }>', description: 'Debounced search term (300ms default), de-duplicated. Composed and bubbles.' },
+];
 ---
-<BaseLayout title="Combobox — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Combobox <code>[wc]</code></h1>
-      <p>Form-associated combobox with two modes (autocomplete / select), two trigger styles (field / text), multi-select chips, match highlighting, debounced search, and loading/empty/count states. Migrated from Angular <code>esa-combobox</code> to a Lit Web Component.</p>
-    </Stack>
+<ComponentDoc name="Combobox" category="Forms" slug="esa-combobox" type="wc" status="stable"
+  summary="Form-associated combobox with two modes, two trigger styles, multi-select chips, match highlighting, debounced search, and loading/empty/count states. A Lit Web Component migrated from the Angular <code>esa-combobox</code>.">
 
-    <Stack gap="300">
-      <h2>Select mode (button trigger + in-panel search)</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-combobox label="State" mode="select" placeholder="Pick a state"></esa-combobox>`}>
       <esa-combobox label="State" mode="select" placeholder="Pick a state"></esa-combobox>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Autocomplete mode (input trigger)</h2>
-      <esa-combobox label="Search states" mode="autocomplete" placeholder="Type to search"></esa-combobox>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Text trigger style</h2>
+  <Section id="modes" title="Modes">
+    <p><code>select</code> uses a button trigger with in-panel search; <code>autocomplete</code> uses an input trigger. The <code>text</code> trigger style swaps the bordered field for a link-like control.</p>
+    <Preview code={`<esa-combobox label="Select mode" mode="select" placeholder="Pick a state"></esa-combobox>
+<esa-combobox label="Autocomplete mode" mode="autocomplete" placeholder="Type to search"></esa-combobox>
+<esa-combobox mode="select" trigger-style="text" placeholder="Filter by state"></esa-combobox>`}>
+      <esa-combobox label="Select mode" mode="select" placeholder="Pick a state"></esa-combobox>
+      <esa-combobox label="Autocomplete mode" mode="autocomplete" placeholder="Type to search"></esa-combobox>
       <esa-combobox mode="select" trigger-style="text" placeholder="Filter by state"></esa-combobox>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Multi-select with chips</h2>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-combobox label="Extra small" size="xs"></esa-combobox>
+<esa-combobox label="Small" size="sm"></esa-combobox>
+<esa-combobox label="Medium" size="md"></esa-combobox>
+<esa-combobox label="Large" size="lg"></esa-combobox>`}>
+      <esa-combobox label="Extra small" size="xs"></esa-combobox>
+      <esa-combobox label="Small" size="sm"></esa-combobox>
+      <esa-combobox label="Medium" size="md"></esa-combobox>
+      <esa-combobox label="Large" size="lg"></esa-combobox>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="States">
+    <p>Multi-select renders chips. Loading, results-count, error, and disabled states are attribute-driven.</p>
+    <Preview code={`<esa-combobox label="States visited" mode="select" multiple placeholder="Add states"></esa-combobox>
+<esa-combobox label="With results count" mode="select" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
+<esa-combobox label="Loading" mode="select" loading></esa-combobox>
+<esa-combobox label="Error" error-text="Selection required"></esa-combobox>
+<esa-combobox label="Disabled" disabled></esa-combobox>`}>
       <esa-combobox label="States visited" mode="select" multiple placeholder="Add states"></esa-combobox>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Async-style states</h2>
       <esa-combobox label="With results count" mode="select" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
       <esa-combobox label="Loading" mode="select" loading></esa-combobox>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Sizes &amp; states</h2>
-      <esa-combobox label="Small" size="small"></esa-combobox>
-      <esa-combobox label="Large" size="large"></esa-combobox>
       <esa-combobox label="Error" error-text="Selection required"></esa-combobox>
       <esa-combobox label="Disabled" disabled></esa-combobox>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Keyboard:</strong> ArrowUp/Down navigate, Enter selects, Escape/Tab close. Outside click closes.</li>
-        <li><strong>Events:</strong> composed <code>change</code> (value) and debounced <code>search</code> (term, 300ms default).</li>
-        <li><strong>Simplified:</strong> CDK Overlay + virtual scroll replaced by an absolutely-positioned, max-height scroll panel. Filtering, selection, value binding, highlight, loading/count all preserved.</li>
-        <li><strong>Tokens:</strong> primary, surface, surface-sunken, border, text-primary/muted, danger, warning-subtle (highlight), radius, spacing, z-dropdown.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-combobox';
-    const states = [
-      'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
-      'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
-      'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
-      'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada',
-    ].map((s) => ({ label: s, value: s.toLowerCase() }));
-    customElements.whenDefined('esa-combobox').then(() => {
-      document.querySelectorAll('esa-combobox').forEach((el) => {
-        (el as any).options = states;
-      });
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Autocomplete input carries <code>role="combobox"</code> with <code>aria-expanded</code>, <code>aria-haspopup="listbox"</code>, and <code>aria-autocomplete="list"</code>.</li>
+      <li>Panel is <code>role="listbox"</code>; options are <code>role="option"</code> with <code>aria-selected</code>.</li>
+      <li>Keyboard: ArrowUp/Down navigate, Enter selects, Escape/Tab close. Outside-click closes.</li>
+      <li>Matched substrings are wrapped in <code>&lt;mark&gt;</code> for visible highlight.</li>
+      <li>Form-associated via <code>ElementInternals</code> — value submits with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--form-bg</code> · <code>--form-text-color</code> · <code>--form-border-color</code> / <code>--form-border-color-focus</code> / <code>--form-border-color-error</code></li>
+      <li><code>--form-height-*</code> · <code>--form-padding-*</code> · <code>--form-radius-*</code> · <code>--form-font-size-*</code></li>
+      <li><code>--color-surface</code> · <code>--color-surface-sunken</code> · <code>--color-active-overlay</code> · <code>--color-primary</code> / <code>--color-primary-hover</code></li>
+      <li><code>--color-warning-subtle</code> (highlight) · <code>--focus-ring-color</code> · <code>--z-dropdown</code> · <code>--shadow-200</code> · <code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>
+  import '@esa/ecology/esa-combobox';
+  const states = [
+    'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+    'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+    'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+    'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada',
+  ].map((s) => ({ label: s, value: s.toLowerCase() }));
+  customElements.whenDefined('esa-combobox').then(() => {
+    document.querySelectorAll('esa-combobox').forEach((el) => {
+      (el as any).options = states;
     });
-  </script>
-</BaseLayout>
+  });
+</script>
+
+<style>
+  h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+</style>

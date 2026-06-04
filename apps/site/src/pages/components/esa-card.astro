@@ -1,85 +1,113 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
 import Card from '@esa/ecology/esa-card.astro';
+
+const props = [
+  { name: 'title', type: 'string', description: 'Header title. Presence (or a header/actions slot) renders the header band.' },
+  { name: 'subtitle', type: 'string', description: 'Secondary line under the title.' },
+  { name: 'icon', type: 'string', description: 'Lucide icon name shown left of the title.' },
+  { name: 'variant', type: "'default' | 'outlined' | 'elevated' | 'filled'", default: "'default'", description: 'Surface treatment: bordered, shadowed, or sunken.' },
+  { name: 'headerVariant', type: "'default' | 'primary' | 'muted'", default: "'default'", description: 'Header band tint.' },
+  { name: 'padding', type: "'none' | 'compact' | 'default' | 'spacious'", default: "'default'", description: 'Body and header padding scale.' },
+];
+
+const slots = [
+  { name: 'default', type: 'slot', description: 'Card body content.' },
+  { name: 'header', type: 'slot', description: 'Replaces the title block entirely with custom markup.' },
+  { name: 'actions', type: 'slot', description: 'Right-aligned controls in the header band.' },
+  { name: 'footer', type: 'slot', description: 'Bottom band below the body.' },
+];
 ---
-<BaseLayout title="Card — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Card</h1>
-      <p>Surface container with optional header (icon, title, subtitle, actions), body, and footer. Variants, header tints, and padding scales.</p>
-    </Stack>
+<ComponentDoc name="Card" category="Display" slug="esa-card" type=".astro" status="stable"
+  summary="Surface container with an optional header (icon, title, subtitle, actions), body, and footer. Variants, header tints, and padding scales.">
 
-    <Stack gap="300">
-      <h2>Variants</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <div style="width: 260px;">
-          <Card title="Default" subtitle="Bordered surface">
-            <p>Body content for the default card.</p>
-          </Card>
-        </div>
-        <div style="width: 260px;">
-          <Card variant="elevated" title="Elevated" subtitle="Shadow, no border">
-            <p>Body content for the elevated card.</p>
-          </Card>
-        </div>
-        <div style="width: 260px;">
-          <Card variant="filled" title="Filled" subtitle="Sunken background">
-            <p>Body content for the filled card.</p>
-          </Card>
-        </div>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<Card title="Report" subtitle="Q3 summary">
+  <p>Body content for the card.</p>
+</Card>`}>
+      <div style="width: 320px;">
+        <Card title="Report" subtitle="Q3 summary">
+          <p style="margin: 0;">Body content for the card.</p>
+        </Card>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Header variants</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <div style="width: 260px;">
-          <Card headerVariant="primary" title="Primary header" subtitle="Inverted text">
-            <p>Tinted header band.</p>
-          </Card>
-        </div>
-        <div style="width: 260px;">
-          <Card headerVariant="muted" title="Muted header">
-            <p>Subtle sunken header.</p>
-          </Card>
-        </div>
-      </Stack>
-    </Stack>
+  <Section id="variants" title="Variants">
+    <Preview align="start" code={`<Card title="Default" subtitle="Bordered surface">…</Card>
+<Card variant="elevated" title="Elevated" subtitle="Shadow, no border">…</Card>
+<Card variant="filled" title="Filled" subtitle="Sunken background">…</Card>`}>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="width: 240px;"><Card title="Default" subtitle="Bordered surface"><p style="margin: 0;">Default card.</p></Card></div>
+        <div style="width: 240px;"><Card variant="elevated" title="Elevated" subtitle="Shadow, no border"><p style="margin: 0;">Elevated card.</p></Card></div>
+        <div style="width: 240px;"><Card variant="filled" title="Filled" subtitle="Sunken background"><p style="margin: 0;">Filled card.</p></Card></div>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Padding</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <div style="width: 220px;">
-          <Card padding="compact" title="Compact"><p>Tighter body.</p></Card>
-        </div>
-        <div style="width: 220px;">
-          <Card padding="default" title="Default"><p>Standard body.</p></Card>
-        </div>
-        <div style="width: 220px;">
-          <Card padding="spacious" title="Spacious"><p>Roomy body.</p></Card>
-        </div>
-      </Stack>
-    </Stack>
+  <Section id="header-variants" title="Header variants">
+    <Preview align="start" code={`<Card headerVariant="primary" title="Primary header" subtitle="Inverted text">…</Card>
+<Card headerVariant="muted" title="Muted header">…</Card>`}>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="width: 260px;"><Card headerVariant="primary" title="Primary header" subtitle="Inverted text"><p style="margin: 0;">Tinted header band.</p></Card></div>
+        <div style="width: 260px;"><Card headerVariant="muted" title="Muted header"><p style="margin: 0;">Subtle sunken header.</p></Card></div>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With actions &amp; footer slots</h2>
-      <div style="max-width: 420px;">
+  <Section id="padding" title="Padding">
+    <Preview align="start" code={`<Card padding="compact" title="Compact">…</Card>
+<Card padding="default" title="Default">…</Card>
+<Card padding="spacious" title="Spacious">…</Card>`}>
+      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <div style="width: 200px;"><Card padding="compact" title="Compact"><p style="margin: 0;">Tighter body.</p></Card></div>
+        <div style="width: 200px;"><Card padding="default" title="Default"><p style="margin: 0;">Standard body.</p></Card></div>
+        <div style="width: 200px;"><Card padding="spacious" title="Spacious"><p style="margin: 0;">Roomy body.</p></Card></div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="slots" title="Actions & footer">
+    <p>The <code>actions</code> slot sits at the right of the header; the <code>footer</code> slot renders a bottom band.</p>
+    <Preview align="start" code={`<Card title="Report" subtitle="Q3 summary" icon="info">
+  <button slot="actions" type="button">Edit</button>
+  <p>Body content.</p>
+  <span slot="footer">Last updated 2 hours ago</span>
+</Card>`}>
+      <div style="width: 420px; max-width: 100%;">
         <Card title="Report" subtitle="Q3 summary" icon="info">
           <button slot="actions" type="button">Edit</button>
-          <p>The actions slot sits at the right of the header; the footer slot renders a bottom band.</p>
+          <p style="margin: 0;">The actions slot sits at the right of the header; the footer slot renders a bottom band.</p>
           <span slot="footer">Last updated 2 hours ago</span>
         </Card>
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Slots:</strong> default → body, <code>header</code> (replaces title block), <code>actions</code>, <code>footer</code>.</li>
-        <li><strong>Tokens consumed:</strong> surface / surface-sunken / border / border-light / primary / text-inverse, radius-300, shadow-100, spacing scale.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a plain <code>&lt;div&gt;</code> — add <code>role</code>/landmarks at the call site if the card is interactive or a region.</li>
+      <li>The title is an <code>&lt;h3&gt;</code>; keep heading order sensible within the surrounding page.</li>
+      <li>The header icon is <code>aria-hidden</code> — it decorates the title, not replaces it.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface</code> / <code>--color-surface-sunken</code> · <code>--color-border</code> / <code>--color-border-light</code></li>
+      <li><code>--color-primary</code> / <code>--color-text-inverse</code> (primary header)</li>
+      <li><code>--radius-300</code> · <code>--shadow-100</code> (elevated) · <code>--spacing-*</code></li>
+      <li><code>--type-size-250</code> / <code>--type-size-150</code> · <code>--font-sans</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

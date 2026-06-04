@@ -7,10 +7,10 @@
 // lucide.dev). Each Lucide icon is a 24×24, stroke-based outline (stroke-width 2,
 // round caps/joins), matching lucide's defaults.
 //
-// Size mapping mirrors the Angular SIZE_MAP: small=16, medium=20, large=24.
+// Size mapping (shared UiSize scale + xl for icons): xs=14, sm=16, md=20, lg=24, xl=28.
 // host size classes → class list here; private --_icon-size token reads the
 // public --icon-size-* tokens with literal fallbacks (same SCSS convention).
-type EsaSize = 'small' | 'medium' | 'large';
+type EsaSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface Props {
   /** Lucide icon name (kebab-case), e.g. "chevron-down". */
@@ -21,9 +21,9 @@ interface Props {
   label?: string;
 }
 
-const { name, size = 'medium', label } = Astro.props;
+const { name, size = 'md', label } = Astro.props;
 
-const SIZE_MAP: Record<EsaSize, number> = { small: 16, medium: 20, large: 24 };
+const SIZE_MAP: Record<EsaSize, number> = { xs: 14, sm: 16, md: 20, lg: 24, xl: 28 };
 const px = SIZE_MAP[size];
 
 // Lucide path markup, copied from lucide.dev. Add entries here as components need them.

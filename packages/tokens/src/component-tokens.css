@@ -13,24 +13,32 @@
 
 :root {
   /* ===================== FORMS ===================== */
-  /* size — small */
-  --form-padding-y-small: var(--spacing-150);
-  --form-padding-x-small: var(--spacing-250);
-  --form-font-size-small: var(--type-size-100);
-  --form-height-small: 32px;
-  --form-radius-small: var(--radius-100);
-  /* size — medium (default) */
-  --form-padding-y-medium: var(--spacing-200);
-  --form-padding-x-medium: var(--spacing-300);
-  --form-font-size-medium: var(--type-size-200);
-  --form-height-medium: 40px;
-  --form-radius-medium: var(--radius-200);
-  /* size — large */
-  --form-padding-y-large: var(--spacing-300);
-  --form-padding-x-large: var(--spacing-400);
-  --form-font-size-large: var(--type-size-300);
-  --form-height-large: 48px;
-  --form-radius-large: var(--radius-200);
+  /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
+     One scale across button/input/icon-button so they line up on a row. */
+  /* size — xs */
+  --form-padding-y-xs: var(--spacing-100);
+  --form-padding-x-xs: var(--spacing-200);
+  --form-font-size-xs: var(--type-size-050);
+  --form-height-xs: 28px;
+  --form-radius-xs: var(--radius-100);
+  /* size — sm */
+  --form-padding-y-sm: var(--spacing-150);
+  --form-padding-x-sm: var(--spacing-250);
+  --form-font-size-sm: var(--type-size-100);
+  --form-height-sm: 32px;
+  --form-radius-sm: var(--radius-100);
+  /* size — md (default) */
+  --form-padding-y-md: var(--spacing-200);
+  --form-padding-x-md: var(--spacing-300);
+  --form-font-size-md: var(--type-size-200);
+  --form-height-md: 40px;
+  --form-radius-md: var(--radius-200);
+  /* size — lg */
+  --form-padding-y-lg: var(--spacing-300);
+  --form-padding-x-lg: var(--spacing-400);
+  --form-font-size-lg: var(--type-size-300);
+  --form-height-lg: 48px;
+  --form-radius-lg: var(--radius-200);
   /* colors */
   --form-bg: var(--color-surface);
   --form-bg-hover: var(--color-surface);

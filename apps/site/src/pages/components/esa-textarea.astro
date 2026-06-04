@@ -1,60 +1,128 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Visible label rendered above the textarea.' },
+  { name: 'value', type: 'string', default: "''", description: 'Current value; mirrored to the form on every input.' },
+  { name: 'placeholder', type: 'string', default: "''", description: 'Placeholder shown when empty.' },
+  { name: 'rows', type: 'number', default: '3', description: 'Initial visible row count.' },
+  { name: 'auto-resize', type: 'boolean', default: 'false', description: 'Grows the textarea to fit content as the user types.' },
+  { name: 'max-rows', type: 'number', default: '10', description: 'Row cap when auto-resize is on.' },
+  { name: 'help-text', type: 'string', default: "''", description: 'Helper text shown below the textarea.' },
+  { name: 'error-text', type: 'string', default: "''", description: 'Error message; replaces help text and turns the field red when present.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size.' },
+  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required and renders an asterisk on the label.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired on every input. Composed and bubbling; detail.value is the current string.' },
+];
 ---
-<BaseLayout title="Textarea — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Textarea</h1>
-      <p>Form-associated Lit Web Component <code>[wc]</code>. Multiline input with optional auto-resize. Participates in native forms via <code>ElementInternals</code> and emits a composed <code>change</code> event.</p>
-    </Stack>
+<ComponentDoc name="Textarea" category="Forms" slug="esa-textarea" type="wc" status="stable"
+  summary="Multiline input with optional auto-resize, packaged with its label and help/error text. Form-associated via <code>ElementInternals</code>; emits a composed <code>change</code> event.">
 
-    <Stack gap="300">
-      <h2>Default</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-textarea label="Description" placeholder="Describe the project…" help-text="Plain text only."></esa-textarea>`}>
       <esa-textarea label="Description" placeholder="Describe the project…" help-text="Plain text only."></esa-textarea>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Rows + auto-resize</h2>
+  <Section id="rows" title="Rows + auto-resize">
+    <p>Set a fixed <code>rows</code> count, or add <code>auto-resize</code> to grow with content up to <code>max-rows</code>.</p>
+    <Preview code={`<esa-textarea label="Fixed 5 rows" rows="5" placeholder="Five rows tall"></esa-textarea>
+<esa-textarea label="Auto-resize" auto-resize max-rows="8" placeholder="Grows as you type, up to 8 rows"></esa-textarea>`}>
       <esa-textarea label="Fixed 5 rows" rows="5" placeholder="Five rows tall"></esa-textarea>
       <esa-textarea label="Auto-resize" auto-resize max-rows="8" placeholder="Grows as you type, up to 8 rows"></esa-textarea>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>States</h2>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-textarea label="Extra small" size="xs" placeholder="Extra small"></esa-textarea>
+<esa-textarea label="Small" size="sm" placeholder="Small"></esa-textarea>
+<esa-textarea label="Medium" size="md" placeholder="Medium"></esa-textarea>
+<esa-textarea label="Large" size="lg" placeholder="Large"></esa-textarea>`}>
+      <esa-textarea label="Extra small" size="xs" placeholder="Extra small"></esa-textarea>
+      <esa-textarea label="Small" size="sm" placeholder="Small"></esa-textarea>
+      <esa-textarea label="Medium" size="md" placeholder="Medium"></esa-textarea>
+      <esa-textarea label="Large" size="lg" placeholder="Large"></esa-textarea>
+    </Preview>
+  </Section>
+
+  <Section id="states" title="States">
+    <Preview code={`<esa-textarea label="Required" required placeholder="Cannot be empty"></esa-textarea>
+<esa-textarea label="With error" error-text="A description is required." required></esa-textarea>
+<esa-textarea label="Disabled" disabled value="Read only content"></esa-textarea>`}>
       <esa-textarea label="Required" required placeholder="Cannot be empty"></esa-textarea>
       <esa-textarea label="With error" error-text="A description is required." required></esa-textarea>
       <esa-textarea label="Disabled" disabled value="Read only content"></esa-textarea>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-textarea label="Small" size="small" placeholder="Small"></esa-textarea>
-      <esa-textarea label="Medium" size="medium" placeholder="Medium"></esa-textarea>
-      <esa-textarea label="Large" size="large" placeholder="Large"></esa-textarea>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>Form participation</h2>
-      <form id="ta-form">
-        <Stack gap="300">
-          <esa-textarea label="Notes" name="notes" placeholder="Type then submit"></esa-textarea>
-          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
-          <output id="ta-out" style="font-family:var(--font-mono);"></output>
-        </Stack>
+  <Section id="form" title="Form participation">
+    <p>The element is form-associated. Submitting logs the <code>FormData</code> entry for <code>notes</code>.</p>
+    <Preview code={`<form>
+  <esa-textarea label="Notes" name="notes" placeholder="Type then submit"></esa-textarea>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="ta-form" class="form-demo">
+        <esa-textarea label="Notes" name="notes" placeholder="Type then submit"></esa-textarea>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="ta-out" class="demo-out"></output>
       </form>
-    </Stack>
-  </Stack>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-textarea';
-    const form = document.getElementById('ta-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = new FormData(form as HTMLFormElement);
-      document.getElementById('ta-out')!.textContent =
-        'notes = ' + JSON.stringify(data.get('notes'));
-    });
-  </script>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;textarea&gt;</code> associated to its <code>&lt;label&gt;</code> via <code>for</code>/<code>id</code>.</li>
+      <li>Sets <code>aria-invalid="true"</code> while <code>error-text</code> is present.</li>
+      <li>The required asterisk carries an <code>aria-label="required"</code>.</li>
+      <li>Visible focus ring via <code>--focus-ring-*</code> tokens.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form token layer to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--form-bg</code> / <code>--form-text-color</code> / <code>--form-border-color</code></li>
+      <li><code>--form-border-color-focus</code> · <code>--form-border-color-error</code> · <code>--form-bg-disabled</code></li>
+      <li><code>--form-padding-y-*</code> / <code>--form-padding-x-*</code> / <code>--form-radius-*</code> · <code>--form-line-height</code></li>
+      <li><code>--form-label-color</code> · <code>--form-help-color</code> · <code>--form-error-color</code> · <code>--color-danger</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); width: 100%; max-width: 360px; }
+  .demo-submit {
+    align-self: flex-start;
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-textarea';
+  const form = document.getElementById('ta-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('ta-out')!.textContent =
+      'notes = ' + JSON.stringify(data.get('notes'));
+  });
+</script>

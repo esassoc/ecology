@@ -24,7 +24,7 @@ export class EsaColorPicker extends LitElement {
   };
 
   declare label: string;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare swatches: string[];
   declare disabled: boolean;
   declare showInput: boolean;
@@ -35,7 +35,7 @@ export class EsaColorPicker extends LitElement {
   constructor() {
     super();
     this.label = '';
-    this.size = 'medium';
+    this.size = 'md';
     this.swatches = [];
     this.disabled = false;
     this.showInput = true;
@@ -133,26 +133,34 @@ export class EsaColorPicker extends LitElement {
       display: block;
       --_preview-size: 40px;
       --_swatch-size: 28px;
-      --_font-size: var(--form-font-size-medium, 14px);
-      --_height: var(--form-height-medium, 40px);
-      --_radius: var(--form-radius-medium, 8px);
-      --_padding-x: var(--form-padding-x-medium, 12px);
+      --_font-size: var(--form-font-size-md, 14px);
+      --_height: var(--form-height-md, 40px);
+      --_radius: var(--form-radius-md, 8px);
+      --_padding-x: var(--form-padding-x-md, 12px);
     }
-    :host([size='small']) {
+    :host([size='xs']) {
+      --_preview-size: 28px;
+      --_swatch-size: 20px;
+      --_font-size: var(--form-font-size-xs, 11px);
+      --_height: var(--form-height-xs, 28px);
+      --_radius: var(--form-radius-xs, 4px);
+      --_padding-x: var(--form-padding-x-xs, 8px);
+    }
+    :host([size='sm']) {
       --_preview-size: 32px;
       --_swatch-size: 24px;
-      --_font-size: var(--form-font-size-small, 12px);
-      --_height: var(--form-height-small, 32px);
-      --_radius: var(--form-radius-small, 6px);
-      --_padding-x: var(--form-padding-x-small, 8px);
+      --_font-size: var(--form-font-size-sm, 12px);
+      --_height: var(--form-height-sm, 32px);
+      --_radius: var(--form-radius-sm, 6px);
+      --_padding-x: var(--form-padding-x-sm, 8px);
     }
-    :host([size='large']) {
+    :host([size='lg']) {
       --_preview-size: 48px;
       --_swatch-size: 32px;
-      --_font-size: var(--form-font-size-large, 16px);
-      --_height: var(--form-height-large, 48px);
-      --_radius: var(--form-radius-large, 10px);
-      --_padding-x: var(--form-padding-x-large, 16px);
+      --_font-size: var(--form-font-size-lg, 16px);
+      --_height: var(--form-height-lg, 48px);
+      --_radius: var(--form-radius-lg, 10px);
+      --_padding-x: var(--form-padding-x-lg, 16px);
     }
 
     .label {

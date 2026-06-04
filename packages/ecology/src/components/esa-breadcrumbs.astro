@@ -11,9 +11,9 @@ export interface EsaBreadcrumbItem {
 }
 interface Props {
   items: EsaBreadcrumbItem[];
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
-const { items, size = 'medium' } = Astro.props;
+const { items, size = 'md' } = Astro.props;
 const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
 ---
 <nav class={cls} aria-label="Breadcrumb">
@@ -61,8 +61,10 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
     display: block;
   }
 
-  .esa-breadcrumbs--small { --_crumb-font-size: var(--type-size-150, 0.75rem); }
-  .esa-breadcrumbs--large { --_crumb-font-size: var(--type-size-300, 1rem); }
+  /* base .esa-breadcrumbs = md. xs is one step below sm; sm/lg keep the old small/large values. */
+  .esa-breadcrumbs--xs { --_crumb-font-size: var(--type-size-100, 0.6875rem); }
+  .esa-breadcrumbs--sm { --_crumb-font-size: var(--type-size-150, 0.75rem); }
+  .esa-breadcrumbs--lg { --_crumb-font-size: var(--type-size-300, 1rem); }
 
   .esa-breadcrumbs__list {
     display: flex;

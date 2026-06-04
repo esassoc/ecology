@@ -1,52 +1,75 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Toggle by setting the property.' },
+  { name: 'placeholder', type: 'string', default: "'Search...'", description: 'Input placeholder text.' },
+  { name: 'results', type: 'EsaSearchResult[]', default: '[]', description: 'Results to render, set as a property. Each: { id, title, subtitle?, icon?, category? }. Same-category items are grouped.' },
+  { name: 'loading', type: 'boolean', default: 'false', description: 'Reflected; shows a loading message instead of results.' },
+  { name: 'position', type: "'right' | 'left'", default: "'right'", description: 'Side the panel slides in from.' },
+];
+
+const events = [
+  { name: 'search', type: 'CustomEvent<{ value: string }>', description: 'Fired on each input change with the current query.' },
+  { name: 'result-select', type: 'CustomEvent<EsaSearchResult>', description: 'Fired when a result is chosen.' },
+  { name: 'open-change', type: 'CustomEvent<{ open: boolean }>', description: 'Fired when the panel closes (Esc or backdrop).' },
+];
 ---
-<BaseLayout title="Search Panel — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Search Panel <code>[wc]</code></h1>
-      <p>A slide-in search overlay. Open it, type a query, and pick a result. It is form-associated — the current query is mirrored into the owning form — and also dispatches bubbling <code>search</code> and <code>result-select</code> events. Esc or the backdrop closes it.</p>
-    </Stack>
+<ComponentDoc name="Search Panel" category="Overlays" slug="esa-search-panel" type="wc" status="stable"
+  summary="A slide-in search overlay. Open it, type a query, and pick a result. It is form-associated — the live query is mirrored into the owning form — and also dispatches bubbling <code>search</code> and <code>result-select</code> events. Esc or the backdrop closes it.">
 
-    <Stack gap="300">
-      <h2>From the right (default)</h2>
-      <Stack gap="200" direction="row" align="center" wrap={true}>
-        <button class="trigger" id="open-right">Open search</button>
-      </Stack>
+  <Section id="preview" title="Preview">
+    <p>Set <code>el.results</code> in a script, then open with <code>el.open = true</code>.</p>
+    <Preview code={`<button id="open-right">Open search</button>
+
+<esa-search-panel id="sp-right" position="right"></esa-search-panel>`}>
+      <button class="trigger" id="open-right">Open search</button>
+      <esa-search-panel id="sp-right" position="right"></esa-search-panel>
       <p id="status-right" class="result"></p>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>From the left</h2>
-      <Stack gap="200" direction="row" align="center" wrap={true}>
-        <button class="trigger" id="open-left">Open search (left)</button>
-      </Stack>
-    </Stack>
+  <Section id="positions" title="Positions">
+    <p>The panel slides in from the <code>right</code> (default) or the <code>left</code>.</p>
+    <Preview code={`<esa-search-panel position="right"></esa-search-panel>
+<esa-search-panel position="left"></esa-search-panel>`}>
+      <button class="trigger" id="open-left">Open search (left)</button>
+      <esa-search-panel id="sp-left" position="left"></esa-search-panel>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Loading state</h2>
-      <Stack gap="200" direction="row" align="center" wrap={true}>
-        <button class="trigger" id="open-loading">Open (loading)</button>
-      </Stack>
-    </Stack>
+  <Section id="states" title="States">
+    <p>Set <code>loading</code> to show a searching message while results are fetched.</p>
+    <Preview code={`<esa-search-panel position="right" loading></esa-search-panel>`}>
+      <button class="trigger" id="open-loading">Open (loading)</button>
+      <esa-search-panel id="sp-loading" position="right" loading></esa-search-panel>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Usage</h2>
-      <ul>
-        <li><strong>Open/close:</strong> set the <code>open</code> property/attribute (reflected). Closing fires <code>open-change</code>.</li>
-        <li><strong>Results:</strong> set the <code>results</code> property to an array of <code>{'{ id, title, subtitle?, icon?, category? }'}</code>. Items with the same <code>category</code> are grouped.</li>
-        <li><strong>Events:</strong> <code>search</code> &rarr; <code>{'{ value }'}</code>; <code>result-select</code> &rarr; the selected result.</li>
-        <li><strong>Form value:</strong> the live query participates in the enclosing <code>&lt;form&gt;</code>.</li>
-      </ul>
-    </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+    <p>The live query also participates in the enclosing <code>&lt;form&gt;</code> via <code>ElementInternals</code>.</p>
+  </Section>
 
-    <esa-search-panel id="sp-right" position="right"></esa-search-panel>
-    <esa-search-panel id="sp-left" position="left"></esa-search-panel>
-    <esa-search-panel id="sp-loading" position="right" loading></esa-search-panel>
-  </Stack>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The panel is <code>role="search"</code>; the close button carries an <code>aria-label</code>.</li>
+      <li>The input is focused automatically when the panel opens.</li>
+      <li><code>Escape</code> and backdrop click both close the panel and fire <code>open-change</code>.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface-elevated</code> · <code>--color-border-light</code> · <code>--color-text-primary</code> / <code>--color-text-muted</code></li>
+      <li><code>--color-backdrop</code> · <code>--shadow-400</code> · <code>--z-modal</code> / <code>--z-modal-backdrop</code></li>
+      <li><code>--radius-200</code> · <code>--spacing-200</code> – <code>--spacing-700</code> · <code>--color-surface-sunken</code> (result hover)</li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>
   import '@esa/ecology/esa-search-panel';
@@ -92,8 +115,5 @@ import Stack from '@esa/ecology/Stack.astro';
     font-size: var(--type-size-200, 0.9375rem);
     cursor: pointer;
   }
-  .result {
-    color: var(--color-text-muted, #737373);
-    min-height: 1.5em;
-  }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; width: 100%; }
 </style>

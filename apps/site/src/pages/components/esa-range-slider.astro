@@ -1,47 +1,79 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+
+const props = [
+  { name: 'label', type: 'string', default: "''", description: 'Field label above the track.' },
+  { name: 'value', type: 'number', default: '0', description: 'Current value.' },
+  { name: 'min', type: 'number', default: '0', description: 'Minimum value.' },
+  { name: 'max', type: 'number', default: '100', description: 'Maximum value.' },
+  { name: 'step', type: 'number', default: '1', description: 'Step increment.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Track/thumb size (reflected attribute).' },
+  { name: 'show-value', type: 'boolean', default: 'true', description: 'Show the live value readout beside the track.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: number }>', description: 'Fired on input as the thumb moves. Value is a number. Composed and bubbles.' },
+];
 ---
-<BaseLayout title="Range Slider — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Range Slider <code>[wc]</code></h1>
-      <p>Form-associated range slider with a token-driven fill gradient and live value readout. Migrated from Angular <code>esa-range-slider</code> to a Lit Web Component.</p>
-    </Stack>
+<ComponentDoc name="Range Slider" category="Forms" slug="esa-range-slider" type="wc" status="stable"
+  summary="Form-associated range slider with a token-driven fill gradient and live value readout. A Lit Web Component migrated from the Angular <code>esa-range-slider</code>.">
 
-    <Stack gap="300">
-      <h2>Default</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-range-slider label="Volume" value="40"></esa-range-slider>`}>
       <esa-range-slider label="Volume" value="40"></esa-range-slider>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-range-slider label="Small" size="small" value="25"></esa-range-slider>
-      <esa-range-slider label="Medium" size="medium" value="50"></esa-range-slider>
-      <esa-range-slider label="Large" size="large" value="75"></esa-range-slider>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<esa-range-slider label="Extra small" size="xs" value="15"></esa-range-slider>
+<esa-range-slider label="Small" size="sm" value="25"></esa-range-slider>
+<esa-range-slider label="Medium" size="md" value="50"></esa-range-slider>
+<esa-range-slider label="Large" size="lg" value="75"></esa-range-slider>`}>
+      <esa-range-slider label="Extra small" size="xs" value="15"></esa-range-slider>
+      <esa-range-slider label="Small" size="sm" value="25"></esa-range-slider>
+      <esa-range-slider label="Medium" size="md" value="50"></esa-range-slider>
+      <esa-range-slider label="Large" size="lg" value="75"></esa-range-slider>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Custom range &amp; step</h2>
+  <Section id="states" title="States">
+    <p>Set a custom <code>min</code>/<code>max</code>/<code>step</code>, hide the readout with <code>show-value={'{false}'}</code>, or disable the control.</p>
+    <Preview code={`<esa-range-slider label="Temperature (°F)" min="60" max="90" step="5" value="72"></esa-range-slider>
+<esa-range-slider label="Hidden value" value="60" show-value="false"></esa-range-slider>
+<esa-range-slider label="Disabled" value="30" disabled></esa-range-slider>`}>
       <esa-range-slider label="Temperature (°F)" min="60" max="90" step="5" value="72"></esa-range-slider>
-    </Stack>
-
-    <Stack gap="300">
-      <h2>States</h2>
       <esa-range-slider label="Hidden value" value="60" show-value={false}></esa-range-slider>
       <esa-range-slider label="Disabled" value="30" disabled></esa-range-slider>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Keyboard:</strong> native range-input handling — Arrow keys step, Home/End jump to min/max, PageUp/Down for large steps.</li>
-        <li><strong>Form:</strong> form-associated — value is a number string. Emits composed <code>change</code> on input.</li>
-        <li><strong>Tokens:</strong> primary (fill/thumb), border (track), surface (thumb), shadow-50, focus-ring, type-size.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-  <script>import '@esa/ecology/esa-range-slider';</script>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;input type="range"&gt;</code> — Arrow keys step, Home/End jump to min/max, PageUp/Down move in large steps.</li>
+      <li>Carries <code>aria-label</code> (falls back to "Range slider") plus <code>aria-valuemin</code> / <code>aria-valuemax</code> / <code>aria-valuenow</code>.</li>
+      <li>Form-associated via <code>ElementInternals</code> — value submits with the enclosing form.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-primary</code> (fill / thumb) · <code>--color-border</code> (track) · <code>--color-surface</code> (thumb)</li>
+      <li><code>--shadow-50</code> · <code>--focus-ring-color</code></li>
+      <li><code>--form-font-size-*</code> · <code>--spacing-*</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>import '@esa/ecology/esa-range-slider';</script>
+
+<style>
+  h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+</style>

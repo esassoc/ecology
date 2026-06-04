@@ -1,41 +1,63 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import LoadingSpinner from '@esa/ecology/esa-loading-spinner.astro';
+
+const props = [
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Ring diameter (14 / 20 / 32 / 48px).' },
+  { name: 'color', type: 'string', description: 'Any CSS color value for the rotating arc. Defaults to --color-primary.' },
+];
 ---
-<BaseLayout title="Loading Spinner — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Loading Spinner</h1>
-      <p>Rotating ring indicator. Three sizes plus an optional custom color.</p>
-    </Stack>
+<ComponentDoc name="Loading Spinner" category="Display" slug="esa-loading-spinner" type=".astro" status="stable"
+  summary="Rotating ring indicator. Three sizes plus an optional custom color.">
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="500" direction="row" align="center" wrap={true}>
-        <LoadingSpinner size="small" />
-        <LoadingSpinner size="medium" />
-        <LoadingSpinner size="large" />
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<LoadingSpinner />`}>
+      <LoadingSpinner />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Custom color</h2>
-      <Stack gap="500" direction="row" align="center" wrap={true}>
-        <LoadingSpinner color="var(--color-success, #22c55e)" />
-        <LoadingSpinner color="var(--color-warning, #f59e0b)" />
-        <LoadingSpinner color="var(--color-danger, #ef4444)" />
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<LoadingSpinner size="xs" />
+<LoadingSpinner size="sm" />
+<LoadingSpinner size="md" />
+<LoadingSpinner size="lg" />`}>
+      <LoadingSpinner size="xs" />
+      <LoadingSpinner size="sm" />
+      <LoadingSpinner size="md" />
+      <LoadingSpinner size="lg" />
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Ring:</strong> light track with a colored top border rotating at 0.75s linear infinite.</li>
-        <li><strong>A11y:</strong> <code>role="status"</code> with <code>aria-label="Loading"</code>.</li>
-        <li><strong>Tokens consumed:</strong> <code>--color-primary</code> (default), <code>--color-border-light</code>, <code>--radius-full</code>.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="states" title="Custom color">
+    <p>Pass any CSS color (including a token reference) to recolor the rotating arc.</p>
+    <Preview code={`<LoadingSpinner color="var(--color-success, #22c55e)" />
+<LoadingSpinner color="var(--color-warning, #f59e0b)" />
+<LoadingSpinner color="var(--color-danger, #ef4444)" />`}>
+      <LoadingSpinner color="var(--color-success, #22c55e)" />
+      <LoadingSpinner color="var(--color-warning, #f59e0b)" />
+      <LoadingSpinner color="var(--color-danger, #ef4444)" />
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The ring carries <code>role="status"</code> and <code>aria-label="Loading"</code>.</li>
+      <li>Decorative-only when paired with adjacent loading text — keep one accessible name, not two.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-primary</code> — default arc color</li>
+      <li><code>--color-border-light</code> — track ring</li>
+      <li><code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

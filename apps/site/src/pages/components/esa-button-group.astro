@@ -1,47 +1,93 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
-import Button from '@esa/ecology/Button.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+
+const props = [
+  { name: 'selection-mode', type: "'none' | 'single'", default: "'none'", description: "'none' is visual grouping only; 'single' acts as a radio-like segmented control with one active child." },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Reflected sizing hint for the group.' },
+  { name: 'value', type: 'string', default: "''", description: "In 'single' mode, the data-value of the currently selected child." },
+];
+
+const events = [
+  { name: 'change', type: "CustomEvent<{ value: string }>", description: "Fired in 'single' mode when the active child changes. Composed and bubbling; detail.value is the selected child's data-value (falling back to its text content)." },
+];
 ---
-<BaseLayout title="Button Group — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Button Group</h1>
-      <p>Groups buttons with connected borders. <code>selection-mode="none"</code> is visual-only; <code>selection-mode="single"</code> is a radio-like segmented control emitting a composed <code>change</code> event.</p>
-    </Stack>
+<ComponentDoc name="Button Group" category="Core" slug="esa-button-group" type="wc" status="stable"
+  summary="Groups buttons with connected borders. Use it purely for visual grouping, or as a radio-like segmented control that emits a composed <code>change</code> event.">
 
-    <Stack gap="300">
-      <h2>Visual grouping (selection-mode="none")</h2>
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-button-group>
+  <EsaButton color="secondary">Day</EsaButton>
+  <EsaButton color="secondary">Week</EsaButton>
+  <EsaButton color="secondary">Month</EsaButton>
+</esa-button-group>`}>
       <esa-button-group>
-        <Button variant="secondary">Day</Button>
-        <Button variant="secondary">Week</Button>
-        <Button variant="secondary">Month</Button>
+        <EsaButton color="secondary">Day</EsaButton>
+        <EsaButton color="secondary">Week</EsaButton>
+        <EsaButton color="secondary">Month</EsaButton>
       </esa-button-group>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Single selection (segmented control)</h2>
-      <esa-button-group selection-mode="single" value="week" id="seg">
-        <button class="seg-btn" data-value="day">Day</button>
-        <button class="seg-btn" data-value="week">Week</button>
-        <button class="seg-btn" data-value="month">Month</button>
+  <Section id="modes" title="Modes">
+    <p><code>selection-mode="none"</code> is the default — buttons are visually connected but each acts independently.</p>
+    <Preview code={`<esa-button-group selection-mode="none">
+  <EsaButton color="secondary">Day</EsaButton>
+  <EsaButton color="secondary">Week</EsaButton>
+  <EsaButton color="secondary">Month</EsaButton>
+</esa-button-group>`}>
+      <esa-button-group selection-mode="none">
+        <EsaButton color="secondary">Day</EsaButton>
+        <EsaButton color="secondary">Week</EsaButton>
+        <EsaButton color="secondary">Month</EsaButton>
       </esa-button-group>
-      <p>Selected: <code id="seg-out">week</code></p>
-    </Stack>
+    </Preview>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Modes:</strong> <code>none</code> (grouping) / <code>single</code> (one active child, <code>data-value</code> per child).</li>
-        <li><strong>Event:</strong> <code>change</code> with <code>{'{ value }'}</code> in single mode.</li>
-        <li><strong>Styling:</strong> connected corners via <code>::slotted</code>; active child gets <code>data-selected</code> + <code>aria-pressed</code>.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+    <p><code>selection-mode="single"</code> turns the group into a segmented control. One child stays active; give each child a <code>data-value</code> and listen for the <code>change</code> event.</p>
+    <Preview code={`<esa-button-group selection-mode="single" value="week">
+  <button class="seg-btn" data-value="day">Day</button>
+  <button class="seg-btn" data-value="week">Week</button>
+  <button class="seg-btn" data-value="month">Month</button>
+</esa-button-group>`}>
+      <div class="seg-demo">
+        <esa-button-group selection-mode="single" value="week" id="seg">
+          <button class="seg-btn" data-value="day">Day</button>
+          <button class="seg-btn" data-value="week">Week</button>
+          <button class="seg-btn" data-value="month">Month</button>
+        </esa-button-group>
+        <p class="seg-status">Selected: <code id="seg-out">week</code></p>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The host sets <code>role="group"</code> automatically on connect.</li>
+      <li>In <code>single</code> mode the active child receives <code>aria-pressed="true"</code> and a <code>data-selected</code> attribute for styling; the rest get <code>aria-pressed="false"</code>.</li>
+      <li>The <code>change</code> event is <code>composed</code> and <code>bubbles</code>, so it crosses shadow boundaries and can be caught on the host or an ancestor.</li>
+      <li>Slotted children remain real <code>&lt;button&gt;</code> elements — keyboard focus and activation come for free.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Connected borders and corners are derived from these public tokens:</p>
+    <ul class="tokens">
+      <li><code>--radius-200</code> — outer corner radius of the group (private <code>--_group-radius</code>)</li>
+      <li><code>--color-border</code> — divider/border color (private <code>--_group-border</code>)</li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <style>
+  .seg-demo { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-300, 0.75rem); }
+  .seg-status { font-size: 14px; color: var(--color-text-secondary, #525252); }
   .seg-btn {
     font: inherit;
     font-size: var(--type-size-200, 1rem);
@@ -63,6 +109,6 @@ import Button from '@esa/ecology/Button.astro';
   const seg = document.getElementById('seg');
   const out = document.getElementById('seg-out');
   seg?.addEventListener('change', (e) => {
-    out.textContent = (e as CustomEvent).detail.value;
+    if (out) out.textContent = (e as CustomEvent).detail.value;
   });
 </script>

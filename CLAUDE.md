@@ -37,7 +37,7 @@ scope. Primitives never move; component internals are never touched.
   they're the portable interactivity layer.
 
 ## Conventions
-- `esa-` prefix; sizes are full words (`small | medium | large`).
+- `esa-` prefix; sizes use the shared scale `xs | sm | md | lg` (default `md`); icons add `xl`. (Aligned to Beacon's `UiSize` — see docs/beacon-gap-analysis.md. One scale across button/input/icon so they line up on a row.)
 - SCSS-style private tokens: `--_*` reading public tokens, **always with a literal fallback**.
 - Use only token names that exist in `packages/tokens/dist/tokens.css` + `component-tokens.css`.
 - Icons: inline Lucide SVGs (no icon dependency).

@@ -1,77 +1,117 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
+
+const props = [
+  { name: 'color', type: "'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost'", default: "'primary'", description: 'Semantic color. `ai` uses the copper AI-context palette; `ghost` is neutral/transparent.' },
+  { name: 'appearance', type: "'fill' | 'outline' | 'dashed'", default: "'fill'", description: 'How the color renders — solid fill, bordered, or dashed border.' },
+  { name: 'active', type: 'boolean', default: 'false', description: 'Pressed/selected state (sets aria-pressed) — for toggle buttons.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
+  { name: 'icon', type: 'string', description: 'Lucide icon name, rendered left of the label.' },
+  { name: 'iconOnly', type: 'boolean', default: 'false', description: 'Square icon-only button with no text.' },
+  { name: 'loading', type: 'boolean', default: 'false', description: 'Shows a spinner; label is held in place but hidden.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
+  { name: 'type', type: "'button' | 'submit' | 'reset'", default: "'button'", description: 'Native button type.' },
+];
 ---
-<BaseLayout title="esa-button — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-button</h1>
-      <p>
-        Primary action control migrated from <code>@esa/ecology/core</code>. Four variants,
-        three sizes, plus disabled / loading / icon / icon-only states. Themes via
-        <code>--color-primary*</code>, <code>--color-secondary*</code>, and the form size tokens.
-      </p>
-    </Stack>
+<ComponentDoc name="Button" category="Core" slug="esa-button" type=".astro" status="stable"
+  summary="Triggers an action or event. A two-axis model — 8 semantic <strong>colors</strong> × 3 <strong>appearances</strong> (fill/outline/dashed) — plus a toggle, four sizes, and icon/loading affordances.">
 
-    <Stack gap="300">
-      <h2>Variants</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <EsaButton variant="primary">Primary</EsaButton>
-        <EsaButton variant="secondary">Secondary</EsaButton>
-        <EsaButton variant="outline">Outline</EsaButton>
-        <EsaButton variant="ghost">Ghost</EsaButton>
-      </Stack>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaButton>Get started</EsaButton>`}>
+      <EsaButton>Get started</EsaButton>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <EsaButton size="small">Small</EsaButton>
-        <EsaButton size="medium">Medium</EsaButton>
-        <EsaButton size="large">Large</EsaButton>
-      </Stack>
-    </Stack>
+  <Section id="colors" title="Colors">
+    <p>Eight semantic colors. <code>ai</code> maps to the copper AI-context palette; <code>ghost</code> is neutral and transparent.</p>
+    <Preview code={`<EsaButton color="primary">Primary</EsaButton>
+<EsaButton color="secondary">Secondary</EsaButton>
+<EsaButton color="danger">Danger</EsaButton>
+<EsaButton color="success">Success</EsaButton>
+<EsaButton color="warning">Warning</EsaButton>
+<EsaButton color="info">Info</EsaButton>
+<EsaButton color="ai">AI</EsaButton>
+<EsaButton color="ghost">Ghost</EsaButton>`}>
+      <EsaButton color="primary">Primary</EsaButton>
+      <EsaButton color="secondary">Secondary</EsaButton>
+      <EsaButton color="danger">Danger</EsaButton>
+      <EsaButton color="success">Success</EsaButton>
+      <EsaButton color="warning">Warning</EsaButton>
+      <EsaButton color="info">Info</EsaButton>
+      <EsaButton color="ai">AI</EsaButton>
+      <EsaButton color="ghost">Ghost</EsaButton>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With icon</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <EsaButton icon="download">Download</EsaButton>
-        <EsaButton variant="outline" icon="plus">Add item</EsaButton>
-        <EsaButton variant="ghost" icon="trash-2">Delete</EsaButton>
-      </Stack>
-    </Stack>
+  <Section id="appearances" title="Appearances">
+    <p>The appearance axis is independent of color — any color renders as <code>fill</code>, <code>outline</code>, or <code>dashed</code>.</p>
+    <Preview code={`<EsaButton color="danger" appearance="fill">Fill</EsaButton>
+<EsaButton color="danger" appearance="outline">Outline</EsaButton>
+<EsaButton color="danger" appearance="dashed">Dashed</EsaButton>`}>
+      <EsaButton color="danger" appearance="fill">Fill</EsaButton>
+      <EsaButton color="danger" appearance="outline">Outline</EsaButton>
+      <EsaButton color="danger" appearance="dashed">Dashed</EsaButton>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Icon-only</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <EsaButton iconOnly icon="settings" size="small" />
-        <EsaButton iconOnly icon="settings" size="medium" />
-        <EsaButton iconOnly icon="settings" size="large" />
-        <EsaButton variant="outline" iconOnly icon="pencil" />
-        <EsaButton variant="ghost" iconOnly icon="x" />
-      </Stack>
-    </Stack>
+  <Section id="active" title="Active (toggle)">
+    <p>Set <code>active</code> for a pressed/selected look (and <code>aria-pressed</code>) — the basis for toggle buttons.</p>
+    <Preview code={`<EsaButton appearance="outline">Default</EsaButton>
+<EsaButton appearance="outline" active>Active</EsaButton>`}>
+      <EsaButton appearance="outline">Default</EsaButton>
+      <EsaButton appearance="outline" active>Active</EsaButton>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>States</h2>
-      <Stack gap="300" direction="row" align="center" wrap={true}>
-        <EsaButton>Rest</EsaButton>
-        <EsaButton disabled>Disabled</EsaButton>
-        <EsaButton loading>Loading</EsaButton>
-        <EsaButton variant="secondary" loading>Saving</EsaButton>
-      </Stack>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<EsaButton size="xs">Extra small</EsaButton>
+<EsaButton size="sm">Small</EsaButton>
+<EsaButton size="md">Medium</EsaButton>
+<EsaButton size="lg">Large</EsaButton>`}>
+      <EsaButton size="xs">Extra small</EsaButton>
+      <EsaButton size="sm">Small</EsaButton>
+      <EsaButton size="md">Medium</EsaButton>
+      <EsaButton size="lg">Large</EsaButton>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Variants:</strong> primary, secondary (filled teal), outline (bordered), ghost (text-only).</li>
-        <li><strong>States:</strong> rest, hover (<code>--color-primary-hover</code>), active, focus-visible (2px primary outline), disabled (50% opacity, no pointer events), loading (CSS spinner, label held in place).</li>
-        <li><strong>Icon:</strong> composes <code>esa-icon</code> at the matching size; hidden while loading.</li>
-        <li><strong>Tokens consumed:</strong> color-primary / -hover / -active, color-secondary / -hover, surface overlays, border, text-inverse / -primary; form-height / -padding / -font / -radius per size; transition-fast, focus-ring-*.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="states" title="States">
+    <Preview code={`<EsaButton icon="arrow-right">With icon</EsaButton>
+<EsaButton loading>Loading</EsaButton>
+<EsaButton disabled>Disabled</EsaButton>
+<EsaButton iconOnly icon="plus" aria-label="Add" />`}>
+      <EsaButton icon="arrow-right">With icon</EsaButton>
+      <EsaButton loading>Loading</EsaButton>
+      <EsaButton disabled>Disabled</EsaButton>
+      <EsaButton iconOnly icon="plus" />
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a native <code>&lt;button&gt;</code> — keyboard and screen-reader behavior come for free.</li>
+      <li>Visible focus ring via <code>--focus-ring-*</code> tokens (2px, offset).</li>
+      <li><code>active</code> sets <code>aria-pressed</code>; <code>iconOnly</code> buttons require an <code>aria-label</code>.</li>
+      <li><code>loading</code> keeps the label in the DOM (visually hidden) so width doesn't jump and the name persists.</li>
+      <li><code>warning</code> fill uses dark text for contrast on the amber background.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Each color reads its semantic token; appearance derives borders/tints from it. Override to re-skin:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> · <code>--color-secondary</code> · <code>--color-danger</code> / <code>success</code> / <code>warning</code> / <code>info</code></li>
+      <li><code>--color-ai</code> / <code>--color-ai-hover</code> (copper) · <code>--color-text-primary</code> (ghost)</li>
+      <li><code>{'--form-{height,padding-x,font-size,radius}-{xs,sm,md,lg}'}</code> (size scale)</li>
+      <li><code>--focus-ring-*</code> · <code>--color-text-inverse</code> (text on fill)</li>
+    </ul>
+  </Section>
+</ComponentDoc>

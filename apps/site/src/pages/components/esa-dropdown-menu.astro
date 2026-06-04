@@ -1,29 +1,73 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
----
-<BaseLayout title="Dropdown Menu — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Dropdown Menu <code>[wc]</code></h1>
-      <p>Click-toggled menu. Trigger is slotted; items are set via the <code>items</code> property. Selecting emits a <code>menu-action</code> event. Outside-click and Esc close.</p>
-    </Stack>
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
 
-    <Stack gap="300">
-      <h2>Positions</h2>
-      <Stack gap="600" direction="row" wrap={true}>
-        <esa-dropdown-menu id="dd-start" position="below-start">
-          <button class="trigger">below-start ▾</button>
-        </esa-dropdown-menu>
-        <esa-dropdown-menu id="dd-end" position="below-end">
-          <button class="trigger">below-end ▾</button>
-        </esa-dropdown-menu>
-      </Stack>
+const props = [
+  { name: 'items', type: 'EsaMenuItem[]', default: '[]', description: 'Menu items, set as a property. Each: { label, icon?, action?, disabled?, divider?, variant? }.' },
+  { name: 'position', type: "'below-start' | 'below-end' | 'above-start' | 'above-end'", default: "'below-start'", description: 'Corner the panel anchors to.' },
+  { name: 'width', type: "'auto' | 'trigger'", default: "'auto'", description: "'trigger' matches the panel min-width to the trigger." },
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
+];
+
+const methods = [
+  { name: 'close()', type: 'method', description: 'Closes the menu programmatically.' },
+];
+
+const events = [
+  { name: 'menu-action', type: 'CustomEvent<string>', description: "Fired when a non-disabled item with an action is selected; detail is the item's action string." },
+];
+---
+<ComponentDoc name="Dropdown Menu" category="Overlays" slug="esa-dropdown-menu" type="wc" status="stable"
+  summary="Click-toggled menu. The trigger is slotted and items are set via the <code>items</code> property. Selecting emits a <code>menu-action</code> event; outside-click and Esc close it.">
+
+  <Section id="preview" title="Preview">
+    <p>Items are set in a script: <code>el.items = [{'{ label: "Edit", action: "edit" }'}, …]</code>.</p>
+    <Preview code={`<esa-dropdown-menu id="dd-start" position="below-start">
+  <button>Actions ▾</button>
+</esa-dropdown-menu>`}>
+      <esa-dropdown-menu id="dd-start" position="below-start">
+        <button class="trigger">Actions ▾</button>
+      </esa-dropdown-menu>
       <p id="result" class="result"></p>
-    </Stack>
-  </Stack>
-</BaseLayout>
+    </Preview>
+  </Section>
+
+  <Section id="positions" title="Positions">
+    <Preview code={`<esa-dropdown-menu position="below-start">…</esa-dropdown-menu>
+<esa-dropdown-menu position="below-end">…</esa-dropdown-menu>`}>
+      <esa-dropdown-menu id="dd-end" position="below-end">
+        <button class="trigger">below-end ▾</button>
+      </esa-dropdown-menu>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3>Methods</h3>
+    <PropsTable rows={methods} />
+    <Api events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The panel is <code>role="menu"</code> and each item is <code>role="menuitem"</code>; dividers are <code>role="separator"</code>.</li>
+      <li>Disabled items set the native <code>disabled</code> attribute and are skipped on activation.</li>
+      <li><code>Escape</code> and any outside click close the menu.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface-elevated</code> · <code>--color-border</code> / <code>--color-border-light</code></li>
+      <li><code>--color-text-primary</code> · <code>--color-danger</code> / <code>--color-danger-subtle</code> (danger items)</li>
+      <li><code>--shadow-300</code> · <code>--z-dropdown</code></li>
+      <li><code>--radius-200</code> · <code>--spacing-100</code> – <code>--spacing-300</code> · <code>--focus-ring-*</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>
   import '@esa/ecology/esa-dropdown-menu';
@@ -56,5 +100,5 @@ import Stack from '@esa/ecology/Stack.astro';
     font-size: var(--type-size-200, 0.9375rem);
     cursor: pointer;
   }
-  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; width: 100%; }
 </style>

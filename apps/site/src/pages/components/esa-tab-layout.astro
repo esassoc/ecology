@@ -1,85 +1,151 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
+
+const props = [
+  { name: 'tabs', type: 'EsaTab[]', default: '[]', description: 'Tab definitions (property, set via JS). Each is { label; icon?; badge?; disabled? }.' },
+  { name: 'active-index', type: 'number', default: '0', description: 'Index of the selected tab.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Tab height and type scale. Reflected as an attribute.' },
+  { name: 'appearance', type: "'underline' | 'segmented'", default: "'underline'", description: 'Tab style (aligned to Beacon): underlined indicator or a segmented control on a sunken track. Reflected as an attribute.' },
+  { name: 'variant', type: "'underline' | 'pill'", default: "'underline'", description: 'Legacy alias for appearance — pill maps to segmented. Prefer appearance.' },
+];
+
+const events = [
+  { name: 'tabchange', type: 'CustomEvent', description: 'Fired when the active tab changes. detail: { index: number }. Bubbles and composed.' },
+];
+
+const slots = [
+  { name: 'panel-{index}', type: 'slot', description: 'Content for the matching tab; the active panel is shown. Falls back to the default slot.' },
+];
 ---
-<BaseLayout title="esa-tab-layout — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-tab-layout <code>[wc]</code></h1>
-      <p>ARIA tablist with active-tab state, roving keyboard navigation (Arrow / Home / End, skipping disabled tabs), badges, and a swapping panel. Migrated as a Lit web component. The Angular routed-tabs (RouterOutlet) branch is replaced with content panels via named slots.</p>
-    </Stack>
+<ComponentDoc name="Tab Layout" category="Navigation" slug="esa-tab-layout" type="wc" status="stable"
+  summary="An ARIA tablist with active-tab state, roving keyboard navigation (Arrow / Home / End, skipping disabled tabs), badges, and a swapping panel. A Lit web component.">
 
-    <Stack gap="300">
-      <h2>Underline (default)</h2>
-      <esa-tab-layout id="t1">
-        <div slot="panel-0">Overview content — summary metrics and status.</div>
-        <div slot="panel-1">Activity content — recent events log.</div>
-        <div slot="panel-2">Settings content — configuration form.</div>
-      </esa-tab-layout>
-    </Stack>
+  <Section id="preview" title="Preview">
+    <Preview align="start" lang="html" code={`<esa-tab-layout id="tabs">
+  <div slot="panel-0">Overview content — summary metrics and status.</div>
+  <div slot="panel-1">Activity content — recent events log.</div>
+  <div slot="panel-2">Settings content — configuration form.</div>
+</esa-tab-layout>
 
-    <Stack gap="300">
-      <h2>Pill variant</h2>
-      <esa-tab-layout id="t2" variant="pill">
-        <div slot="panel-0">First panel.</div>
-        <div slot="panel-1">Second panel.</div>
-        <div slot="panel-2">Third panel.</div>
-      </esa-tab-layout>
-    </Stack>
+<script>
+  document.getElementById('tabs').tabs = [
+    { label: 'Overview' }, { label: 'Activity' }, { label: 'Settings' },
+  ];
+</script>`}>
+      <div style="width: 100%;">
+        <esa-tab-layout id="t1">
+          <div slot="panel-0">Overview content — summary metrics and status.</div>
+          <div slot="panel-1">Activity content — recent events log.</div>
+          <div slot="panel-2">Settings content — configuration form.</div>
+        </esa-tab-layout>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <Stack gap="400">
-        <esa-tab-layout id="t3" size="small"><div slot="panel-0">Small.</div><div slot="panel-1">Two.</div></esa-tab-layout>
-        <esa-tab-layout id="t4" size="large"><div slot="panel-0">Large.</div><div slot="panel-1">Two.</div></esa-tab-layout>
-      </Stack>
-    </Stack>
+  <Section id="appearance" title="Appearance">
+    <p>Two appearances, aligned to Beacon's <code>UiTabsAppearance</code>. <code>underline</code> (default) shows an underlined indicator on the active tab; <code>segmented</code> renders a segmented control — a sunken, bordered track with a filled selected segment and no indicator. (<code>variant="pill"</code> is the legacy alias for <code>segmented</code>.)</p>
+    <Preview align="start" lang="html" code={`<esa-tab-layout appearance="underline">…</esa-tab-layout>
+<esa-tab-layout appearance="segmented">…</esa-tab-layout>`}>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem);">
+        <esa-tab-layout id="t2a" appearance="underline">
+          <div slot="panel-0">Underline appearance.</div>
+          <div slot="panel-1">Second panel.</div>
+          <div slot="panel-2">Third panel.</div>
+        </esa-tab-layout>
+        <esa-tab-layout id="t2" appearance="segmented">
+          <div slot="panel-0">Segmented appearance.</div>
+          <div slot="panel-1">Second panel.</div>
+          <div slot="panel-2">Third panel.</div>
+        </esa-tab-layout>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>With a disabled tab and badges</h2>
-      <esa-tab-layout id="t5">
-        <div slot="panel-0">Inbox.</div>
-        <div slot="panel-2">Archive (tab 2 is disabled).</div>
-      </esa-tab-layout>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview align="start" lang="html" code={`<esa-tab-layout size="xs">…</esa-tab-layout>
+<esa-tab-layout size="sm">…</esa-tab-layout>
+<esa-tab-layout size="md">…</esa-tab-layout>
+<esa-tab-layout size="lg">…</esa-tab-layout>`}>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: var(--spacing-400, 1rem);">
+        <esa-tab-layout id="t6" size="xs"><div slot="panel-0">Extra small.</div><div slot="panel-1">Two.</div></esa-tab-layout>
+        <esa-tab-layout id="t3" size="sm"><div slot="panel-0">Small.</div><div slot="panel-1">Two.</div></esa-tab-layout>
+        <esa-tab-layout id="t7" size="md"><div slot="panel-0">Medium.</div><div slot="panel-1">Two.</div></esa-tab-layout>
+        <esa-tab-layout id="t4" size="lg"><div slot="panel-0">Large.</div><div slot="panel-1">Two.</div></esa-tab-layout>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Properties:</strong> <code>tabs</code> (label / icon / badge / disabled), <code>activeIndex</code>, <code>size</code>, <code>variant</code> (underline | pill).</li>
-        <li><strong>Events:</strong> <code>tabchange</code> with <code>{'{ index }'}</code>.</li>
-        <li><strong>Slots:</strong> <code>{'panel-{index}'}</code> per tab (falls back to the default slot).</li>
-        <li><strong>Keyboard:</strong> ArrowLeft / ArrowRight / Home / End move focus and selection, skipping disabled tabs; roving <code>tabindex</code>.</li>
-        <li><strong>Tokens:</strong> text-secondary / primary / surface-sunken / border, type-size scale, spacing, radius, shadow-50.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="states" title="States">
+    <p>Tabs accept badges, and any tab can be disabled — keyboard navigation skips disabled tabs.</p>
+    <Preview align="start" lang="html" code={`<script>
+  el.tabs = [
+    { label: 'Inbox', badge: 4 },
+    { label: 'Drafts', disabled: true },
+    { label: 'Archive', badge: 128 },
+  ];
+</script>`}>
+      <div style="width: 100%;">
+        <esa-tab-layout id="t5">
+          <div slot="panel-0">Inbox.</div>
+          <div slot="panel-2">Archive (tab 2 is disabled).</div>
+        </esa-tab-layout>
+      </div>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-tab-layout';
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+    <p><code>tabs</code> is an array property — set it in JS, not as an attribute. Each <code>EsaTab.icon</code> is a raw inline SVG string.</p>
+    <h3>Slots</h3>
+    <PropsTable rows={slots} />
+    <p>The routed-tabs (RouterOutlet) branch of the Angular component is replaced here by content panels via the named slots above.</p>
+  </Section>
 
-    const basic = [
-      { label: 'Overview' },
-      { label: 'Activity' },
-      { label: 'Settings' },
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Follows the ARIA tablist pattern: <code>role="tablist"</code> / <code>role="tab"</code> / <code>role="tabpanel"</code> with <code>aria-selected</code>.</li>
+      <li>Roving <code>tabindex</code> — only the active tab is in the tab order; ArrowLeft / ArrowRight / Home / End move focus and selection, skipping disabled tabs.</li>
+      <li>Disabled tabs are non-interactive and excluded from keyboard traversal.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override these to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--color-text-secondary</code> / <code>--color-text-primary</code> · <code>--color-primary</code> (active + indicator + badge)</li>
+      <li><code>--color-surface-sunken</code> (hover, pill track) · <code>--color-surface</code> (active pill) · <code>--color-border</code> · <code>--shadow-50</code></li>
+      <li><code>--type-size-150</code> / <code>--type-size-200</code> / <code>--type-size-300</code> · <code>--spacing-*</code> · <code>--radius-100</code> / <code>--radius-200</code> / <code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>
+  import '@esa/ecology/esa-tab-layout';
+
+  const basic = [
+    { label: 'Overview' },
+    { label: 'Activity' },
+    { label: 'Settings' },
+  ];
+  (['t1', 't2', 't2a'] as const).forEach((id) => {
+    const el = document.getElementById(id) as any;
+    if (el) el.tabs = basic;
+  });
+
+  (['t6', 't3', 't7', 't4'] as const).forEach((id) => {
+    const el = document.getElementById(id) as any;
+    if (el) el.tabs = [{ label: 'One' }, { label: 'Two' }];
+  });
+
+  const t5 = document.getElementById('t5') as any;
+  if (t5)
+    t5.tabs = [
+      { label: 'Inbox', badge: 4 },
+      { label: 'Drafts', disabled: true },
+      { label: 'Archive', badge: 128 },
     ];
-    (['t1', 't2'] as const).forEach((id) => {
-      const el = document.getElementById(id) as any;
-      if (el) el.tabs = basic;
-    });
-
-    const small = document.getElementById('t3') as any;
-    if (small) small.tabs = [{ label: 'One' }, { label: 'Two' }];
-    const large = document.getElementById('t4') as any;
-    if (large) large.tabs = [{ label: 'One' }, { label: 'Two' }];
-
-    const t5 = document.getElementById('t5') as any;
-    if (t5)
-      t5.tabs = [
-        { label: 'Inbox', badge: 4 },
-        { label: 'Drafts', disabled: true },
-        { label: 'Archive', badge: 128 },
-      ];
-  </script>
-</BaseLayout>
+</script>

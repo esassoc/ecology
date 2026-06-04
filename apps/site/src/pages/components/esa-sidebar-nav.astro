@@ -1,68 +1,113 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
----
-<BaseLayout title="esa-sidebar-nav — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-sidebar-nav <code>[wc]</code></h1>
-      <p>Collapsible side navigation with grouped sections, accordion children, badges, and a collapse toggle. Migrated as a Lit web component because the collapse and accordion-expand states are real runtime behavior.</p>
-    </Stack>
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
 
-    <Stack gap="300">
-      <h2>Grouped, with badges and accordion children</h2>
-      <div style="height: 460px; display: flex; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden;">
+const props = [
+  { name: 'items', type: 'EsaSidebarNavItem[]', default: '[]', description: 'Nav items (property, set via JS). Each is { label; href?; icon?; badge?; children?; disabled?; group?; active? }. Consecutive items sharing a group render under a group heading.' },
+  { name: 'collapsed', type: 'boolean', default: 'false', description: 'Collapses to an icon rail. Reflected as an attribute.' },
+  { name: 'collapsible', type: 'boolean', default: 'true', description: 'Shows the collapse toggle. Set false to lock the sidebar open.' },
+];
+
+const events = [
+  { name: 'collapsedchange', type: 'CustomEvent', description: 'Fired when the collapse toggle is clicked. detail: { collapsed: boolean }. Bubbles and composed.' },
+];
+
+const slots = [
+  { name: 'header', type: 'slot', description: 'Logo / brand area pinned above the nav list.' },
+];
+---
+<ComponentDoc name="Sidebar Nav" category="Navigation" slug="esa-sidebar-nav" type="wc" status="stable"
+  summary="Collapsible side navigation with grouped sections, accordion children, badges, and a collapse-to-rail toggle. A Lit web component, because the collapse and accordion states are real runtime behavior.">
+
+  <Section id="preview" title="Preview">
+    <p>Use the chevrons button at the top to collapse to an icon rail; click <strong>Reports</strong> to expand its children.</p>
+    <Preview align="start" lang="html" code={`<esa-sidebar-nav id="demo"></esa-sidebar-nav>
+
+<script>
+  const el = document.getElementById('demo');
+  el.items = [
+    { label: 'Dashboard', href: '/dashboard', active: true, group: 'Main' },
+    { label: 'Projects', href: '/projects', badge: 12, group: 'Main' },
+    { label: 'Reports', group: 'Main', children: [
+      { label: 'Monthly', href: '/reports/monthly' },
+      { label: 'Quarterly', href: '/reports/quarterly' },
+    ] },
+    { label: 'Team', href: '/team', group: 'Admin' },
+    { label: 'Billing', href: '/billing', group: 'Admin', disabled: true },
+    { label: 'Settings', href: '/settings', group: 'Admin' },
+  ];
+</script>`}>
+      <div style="width: 100%; height: 460px; display: flex; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden;">
         <esa-sidebar-nav id="demo"></esa-sidebar-nav>
       </div>
-      <p>Use the chevrons button at the top to collapse to an icon rail; click <strong>Reports</strong> to expand its children.</p>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Non-collapsible</h2>
-      <div style="height: 320px; display: flex; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden;">
+  <Section id="states" title="States">
+    <p>Non-collapsible — set <code>collapsible="false"</code> to hide the toggle and lock the sidebar at full width.</p>
+    <Preview align="start" lang="html" code={`<esa-sidebar-nav id="demo2" collapsible="false"></esa-sidebar-nav>`}>
+      <div style="width: 100%; height: 320px; display: flex; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden;">
         <esa-sidebar-nav id="demo2" collapsible="false"></esa-sidebar-nav>
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Properties (set via JS):</strong> <code>items</code> (label / href / icon / badge / children / disabled / group / active), <code>collapsed</code>, <code>collapsible</code>.</li>
-        <li><strong>Events:</strong> <code>collapsedchange</code> with <code>{'{ collapsed }'}</code>.</li>
-        <li><strong>Slots:</strong> <code>header</code> (logo area).</li>
-        <li><strong>Tokens:</strong> <code>--sidebar-width</code> / <code>--sidebar-width-collapsed</code>, surface / border-light / text-secondary / primary / teal-50, spacing, radius.</li>
-      </ul>
-    </Stack>
-  </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+    <p><code>items</code> is an array property — set it in JS, not as an attribute. Each <code>EsaSidebarNavItem.icon</code> is a raw inline SVG string.</p>
+    <h3>Slots</h3>
+    <PropsTable rows={slots} />
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-sidebar-nav';
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a <code>&lt;nav aria-label="Sidebar navigation"&gt;</code> over a semantic list.</li>
+      <li>Active leaf links carry <code>aria-current="page"</code>; parent accordions expose <code>aria-expanded</code>.</li>
+      <li>The collapse toggle's <code>aria-label</code> flips between <code>Collapse sidebar</code> / <code>Expand sidebar</code>.</li>
+      <li>Disabled items are removed from the tab order (<code>tabindex="-1"</code>, <code>pointer-events: none</code>).</li>
+    </ul>
+  </Section>
 
-    const dot = (c: string) =>
-      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`;
+  <Section id="tokens" title="Tokens">
+    <p>Override these to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--sidebar-width</code> / <code>--sidebar-width-collapsed</code></li>
+      <li><code>--sidenav-bg</code> / <code>--sidenav-border</code> · <code>--sidenav-link-text</code> / <code>--sidenav-link-text-active</code> · <code>--sidenav-section-text</code></li>
+      <li><code>--color-surface-sunken</code> (hover) · <code>--color-teal-50</code> (active bg) · <code>--color-primary</code> (badge)</li>
+      <li><code>--radius-200</code> / <code>--radius-full</code> · <code>--spacing-*</code> · <code>--type-size-*</code> · <code>--transition-base</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
-    const items = [
-      { label: 'Dashboard', href: '/dashboard', icon: dot('#005862'), active: true, group: 'Main' },
-      { label: 'Projects', href: '/projects', icon: dot('#525252'), badge: 12, group: 'Main' },
-      {
-        label: 'Reports',
-        icon: dot('#525252'),
-        group: 'Main',
-        children: [
-          { label: 'Monthly', href: '/reports/monthly' },
-          { label: 'Quarterly', href: '/reports/quarterly' },
-        ],
-      },
-      { label: 'Team', href: '/team', icon: dot('#525252'), group: 'Admin' },
-      { label: 'Billing', href: '/billing', icon: dot('#525252'), group: 'Admin', disabled: true },
-      { label: 'Settings', href: '/settings', icon: dot('#525252'), group: 'Admin' },
-    ];
+<script>
+  import '@esa/ecology/esa-sidebar-nav';
 
-    const el = document.getElementById('demo') as any;
-    if (el) el.items = items;
+  const dot = (c: string) =>
+    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`;
 
-    const el2 = document.getElementById('demo2') as any;
-    if (el2) el2.items = items.slice(0, 4);
-  </script>
-</BaseLayout>
+  const items = [
+    { label: 'Dashboard', href: '/dashboard', icon: dot('#005862'), active: true, group: 'Main' },
+    { label: 'Projects', href: '/projects', icon: dot('#525252'), badge: 12, group: 'Main' },
+    {
+      label: 'Reports',
+      icon: dot('#525252'),
+      group: 'Main',
+      children: [
+        { label: 'Monthly', href: '/reports/monthly' },
+        { label: 'Quarterly', href: '/reports/quarterly' },
+      ],
+    },
+    { label: 'Team', href: '/team', icon: dot('#525252'), group: 'Admin' },
+    { label: 'Billing', href: '/billing', icon: dot('#525252'), group: 'Admin', disabled: true },
+    { label: 'Settings', href: '/settings', icon: dot('#525252'), group: 'Admin' },
+  ];
+
+  const el = document.getElementById('demo') as any;
+  if (el) el.items = items;
+
+  const el2 = document.getElementById('demo2') as any;
+  if (el2) el2.items = items.slice(0, 4);
+</script>

@@ -1,6 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 
 const options = JSON.stringify([
   { label: 'Low', value: 'low' },
@@ -8,52 +10,114 @@ const options = JSON.stringify([
   { label: 'High', value: 'high' },
   { label: 'Critical (locked)', value: 'critical', disabled: true },
 ]);
+
+const props = [
+  { name: 'options', type: 'EsaOption[] | string', default: '[]', description: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute." },
+  { name: 'value', type: 'string | null', default: 'null', description: 'The single selected option value.' },
+  { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
+  { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Circle and label size.' },
+];
+
+const events = [
+  { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when a new option is selected. Composed and bubbling; detail.value is the chosen string.' },
+];
 ---
-<BaseLayout title="Radio Group — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Radio Group</h1>
-      <p>Form-associated Lit Web Component <code>[wc]</code>. Single-select from an options list; value is the chosen string. Vertical/horizontal orientation, per-option disabled, Space/Enter selection, pure-CSS dot. The <code>options</code> attribute accepts a JSON string. Emits a composed <code>change</code> event.</p>
-    </Stack>
+<ComponentDoc name="Radio Group" category="Forms" slug="esa-radio-group" type="wc" status="stable"
+  summary="Single-select from an options list; the value is the chosen string. Vertical or horizontal orientation, per-option disabled, Space/Enter selection, pure-CSS dot. The <code>options</code> attribute accepts a JSON string. Emits a composed <code>change</code> event.">
 
-    <Stack gap="300">
-      <h2>Vertical (default)</h2>
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<esa-radio-group
+  label="Priority"
+  options='[{"label":"Low","value":"low"}, …]'
+  value="medium"
+></esa-radio-group>`}>
       <esa-radio-group label="Priority" options={options} value="medium"></esa-radio-group>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Horizontal</h2>
+  <Section id="orientation" title="Orientation">
+    <p><code>vertical</code> is the default; switch to <code>horizontal</code> to lay options out in a row.</p>
+    <Preview align="start" code={`<esa-radio-group label="Priority" orientation="horizontal" options="…" value="low"></esa-radio-group>`}>
       <esa-radio-group label="Priority" orientation="horizontal" options={options} value="low"></esa-radio-group>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Sizes</h2>
-      <esa-radio-group label="Small" size="small" orientation="horizontal" options={options} value="low"></esa-radio-group>
-      <esa-radio-group label="Large" size="large" orientation="horizontal" options={options} value="high"></esa-radio-group>
-    </Stack>
+  <Section id="sizes" title="Sizes">
+    <Preview align="start" code={`<esa-radio-group label="Extra small" size="xs" orientation="horizontal" options="…" value="low"></esa-radio-group>
+<esa-radio-group label="Small" size="sm" orientation="horizontal" options="…" value="low"></esa-radio-group>
+<esa-radio-group label="Medium" size="md" orientation="horizontal" options="…" value="medium"></esa-radio-group>
+<esa-radio-group label="Large" size="lg" orientation="horizontal" options="…" value="high"></esa-radio-group>`}>
+      <div class="col">
+        <esa-radio-group label="Extra small" size="xs" orientation="horizontal" options={options} value="low"></esa-radio-group>
+        <esa-radio-group label="Small" size="sm" orientation="horizontal" options={options} value="low"></esa-radio-group>
+        <esa-radio-group label="Medium" size="md" orientation="horizontal" options={options} value="medium"></esa-radio-group>
+        <esa-radio-group label="Large" size="lg" orientation="horizontal" options={options} value="high"></esa-radio-group>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Form participation</h2>
-      <p>The selected value submits under <code>name</code>.</p>
-      <form id="rg-form">
-        <Stack gap="300">
-          <esa-radio-group label="Priority" name="priority" options={options} value="low"></esa-radio-group>
-          <button type="submit" style="align-self:flex-start;padding:.5rem 1rem;border:0;border-radius:var(--radius-200);background:var(--color-primary);color:var(--color-text-inverse);cursor:pointer;">Submit</button>
-          <output id="rg-out" style="font-family:var(--font-mono);"></output>
-        </Stack>
+  <Section id="form" title="Form participation">
+    <p>The selected value is submitted under <code>name</code>. Submitting logs the <code>priority</code> entry.</p>
+    <Preview align="start" code={`<form>
+  <esa-radio-group label="Priority" name="priority" options="…" value="low"></esa-radio-group>
+  <button type="submit">Submit</button>
+</form>`}>
+      <form id="rg-form" class="form-demo">
+        <esa-radio-group label="Priority" name="priority" options={options} value="low"></esa-radio-group>
+        <button type="submit" class="demo-submit">Submit</button>
+        <output id="rg-out" class="demo-out"></output>
       </form>
-    </Stack>
-  </Stack>
+    </Preview>
+  </Section>
 
-  <script>
-    import '@esa/ecology/esa-radio-group';
-    const form = document.getElementById('rg-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = new FormData(form as HTMLFormElement);
-      document.getElementById('rg-out')!.textContent =
-        'priority = ' + JSON.stringify(data.get('priority'));
-    });
-  </script>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The options container has <code>role="radiogroup"</code> labeled by the group label.</li>
+      <li>Each option has <code>role="radio"</code> with <code>aria-checked</code> and selects on Space or Enter.</li>
+      <li>Disabled options carry <code>aria-disabled</code> and a <code>-1</code> tabindex.</li>
+      <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override the form and semantic token layers to re-skin:</p>
+    <ul class="tokens">
+      <li><code>--color-primary</code> — selected circle border and dot</li>
+      <li><code>--form-bg</code> / <code>--form-border-color</code> · <code>--form-border-color-focus</code> · <code>--form-border-width</code></li>
+      <li><code>--form-font-size-*</code> · <code>--color-text-primary</code></li>
+      <li><code>--spacing-200</code> · <code>--spacing-400</code> (horizontal gap)</li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); align-items: flex-start; }
+  .form-demo { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); align-items: flex-start; }
+  .demo-submit {
+    font: inherit;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
+    border: 0;
+    border-radius: var(--radius-200, 0.5rem);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer;
+  }
+  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-radio-group';
+  const form = document.getElementById('rg-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form as HTMLFormElement);
+    document.getElementById('rg-out')!.textContent =
+      'priority = ' + JSON.stringify(data.get('priority'));
+  });
+</script>

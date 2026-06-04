@@ -1,0 +1,84 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '../../components/docs/Section.astro';
+import ColorScale from '../../components/docs/ColorScale.astro';
+
+const ramp = (name: string, family: string, steps: string[]) => ({
+  name,
+  steps: steps.map((step) => ({ step, token: `--color-${family}-${step}` })),
+});
+
+const ramps = [
+  ramp('Gray', 'gray', ['0', '50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950', '1000']),
+  ramp('Teal — brand', 'teal', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900']),
+  ramp('Orange — accent', 'orange', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']),
+  ramp('Copper — AI contexts', 'copper', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']),
+  ramp('Green', 'green', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']),
+  ramp('Red', 'red', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']),
+  ramp('Yellow', 'yellow', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']),
+  ramp('Blue', 'blue', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']),
+];
+
+const semantic = [
+  { token: '--color-primary', role: 'Primary actions, links, focus' },
+  { token: '--color-primary-hover', role: 'Primary hover' },
+  { token: '--color-secondary', role: 'Secondary emphasis' },
+  { token: '--color-accent', role: 'Accent / highlight' },
+  { token: '--color-background', role: 'App background' },
+  { token: '--color-surface', role: 'Cards, panels' },
+  { token: '--color-surface-sunken', role: 'Recessed surfaces' },
+  { token: '--color-border', role: 'Default borders' },
+  { token: '--color-text-primary', role: 'Primary text' },
+  { token: '--color-text-secondary', role: 'Secondary text' },
+  { token: '--color-text-muted', role: 'Muted / meta text' },
+  { token: '--color-success', role: 'Success' },
+  { token: '--color-warning', role: 'Warning' },
+  { token: '--color-danger', role: 'Danger / error' },
+  { token: '--color-info', role: 'Informational' },
+];
+---
+<DocsLayout title="Color — Ecology" activeHref="/foundations/color">
+  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Color</span></nav>
+  <h1>Color</h1>
+  <p class="lede">Two tiers: fixed <strong>primitive ramps</strong> (the raw palette) and intent-based <strong>semantic roles</strong> that components reference. Theme by overriding the semantic layer — primitives never move.</p>
+
+  <Section id="ramps" title="Primitive ramps">
+    <p>Raw values. Never used directly in components — they exist so semantic roles can point at them.</p>
+    {ramps.map((r) => <ColorScale name={r.name} steps={r.steps} />)}
+  </Section>
+
+  <Section id="semantic" title="Semantic roles">
+    <p>What components actually consume. Re-skinning a project = reassigning these.</p>
+    <div class="roles">
+      {semantic.map((s) => (
+        <div class="role">
+          <div class="role__swatch" style={`background: var(${s.token})`}></div>
+          <div class="role__meta">
+            <code>{s.token}</code>
+            <span>{s.role}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="theming" title="Theming">
+    <p>A spoke project overrides semantic roles under a scope; the brand changes everywhere at once, components untouched:</p>
+    <pre class="snippet"><code>{`[data-theme="beacon"] {
+  --color-primary: #1f7a6d;
+  --color-primary-hover: #155a50;
+  --color-surface-sunken: #f0f6f4;
+}`}</code></pre>
+  </Section>
+</DocsLayout>
+
+<style>
+  .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--spacing-300, 0.75rem); }
+  .role { display: flex; gap: var(--spacing-300, 0.75rem); align-items: center; border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-250, 0.625rem); }
+  .role__swatch { width: 40px; height: 40px; border-radius: 8px; flex: none; border: 1px solid color-mix(in srgb, var(--color-text-primary, #000) 8%, transparent); }
+  .role__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .role__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .role__meta span { font-size: 13px; color: var(--color-text-muted, #737373); }
+  .snippet { background: var(--color-surface-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
+  .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-text-primary, #171717); }
+</style>

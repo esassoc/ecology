@@ -1,49 +1,105 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
+
+const props = [
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Open imperatively via show().' },
+  { name: 'heading', type: 'string', default: "''", description: 'Title of the confirmation.' },
+  { name: 'message', type: 'string', default: "''", description: 'Supporting body text.' },
+  { name: 'variant', type: "'default' | 'warning' | 'danger'", default: "'default'", description: 'Icon and confirm-button color theme.' },
+  { name: 'confirm-label', type: 'string', default: "'Confirm'", description: 'Label of the confirm button.' },
+  { name: 'cancel-label', type: 'string', default: "'Cancel'", description: 'Label of the cancel button.' },
+  { name: 'show-icon', type: 'boolean', default: 'true', description: 'Renders the variant icon above the heading.' },
+];
+
+const methods = [
+  { name: 'show()', type: 'method', description: 'Opens the dialog and focuses the confirm button.' },
+  { name: 'confirm()', type: 'method', description: 'Resolves true and closes.' },
+  { name: 'cancel()', type: 'method', description: 'Resolves false and closes.' },
+];
+
+const events = [
+  { name: 'confirm', type: 'CustomEvent', description: 'Fired when the user confirms.' },
+  { name: 'cancel', type: 'CustomEvent', description: 'Fired when the user cancels (button, backdrop, or Esc).' },
+  { name: 'resolved', type: 'CustomEvent<{ confirmed: boolean }>', description: 'Fired on either outcome with the boolean result.' },
+];
 ---
-<BaseLayout title="Confirm Dialog — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Confirm Dialog <code>[wc]</code></h1>
-      <p>Confirmation modal driven by attributes. Resolves a boolean through <code>confirm</code> / <code>cancel</code> / <code>resolved</code> events. Esc cancels.</p>
-    </Stack>
+<ComponentDoc name="Confirm Dialog" category="Overlays" slug="esa-confirm-dialog" type="wc" status="stable"
+  summary="Confirmation modal driven by attributes. Resolves a boolean through <code>confirm</code> / <code>cancel</code> / <code>resolved</code> events. Esc cancels.">
 
-    <Stack gap="300">
-      <h2>Variants</h2>
-      <Stack gap="300" direction="row" wrap={true}>
-        <button class="trigger" data-target="cd-default">Default</button>
-        <button class="trigger" data-target="cd-warning">Warning</button>
-        <button class="trigger" data-target="cd-danger">Danger</button>
-      </Stack>
+  <Section id="preview" title="Preview">
+    <Preview code={`<button data-target="cd-default">Save changes</button>
+
+<esa-confirm-dialog
+  id="cd-default"
+  heading="Save changes?"
+  message="Your changes will be applied immediately."
+  confirm-label="Save"
+></esa-confirm-dialog>`}>
+      <button class="trigger" data-target="cd-default">Save changes</button>
+      <esa-confirm-dialog
+        id="cd-default"
+        heading="Save changes?"
+        message="Your changes will be applied immediately."
+        confirm-label="Save"
+      ></esa-confirm-dialog>
+    </Preview>
+  </Section>
+
+  <Section id="variants" title="Variants">
+    <p>Use <code>warning</code> for reversible-but-risky actions and <code>danger</code> for destructive ones.</p>
+    <Preview code={`<esa-confirm-dialog variant="warning" heading="Unsaved changes"
+  message="You have unsaved changes that will be lost." confirm-label="Discard"></esa-confirm-dialog>
+<esa-confirm-dialog variant="danger" heading="Delete project?"
+  message="This action cannot be undone." confirm-label="Delete"></esa-confirm-dialog>`}>
+      <button class="trigger" data-target="cd-warning">Warning</button>
+      <button class="trigger" data-target="cd-danger">Danger</button>
       <p id="result" class="result"></p>
-    </Stack>
 
-    <esa-confirm-dialog
-      id="cd-default"
-      heading="Save changes?"
-      message="Your changes will be applied immediately."
-      confirm-label="Save"
-    ></esa-confirm-dialog>
+      <esa-confirm-dialog
+        id="cd-warning"
+        variant="warning"
+        heading="Unsaved changes"
+        message="You have unsaved changes that will be lost."
+        confirm-label="Discard"
+      ></esa-confirm-dialog>
+      <esa-confirm-dialog
+        id="cd-danger"
+        variant="danger"
+        heading="Delete project?"
+        message="This action cannot be undone."
+        confirm-label="Delete"
+      ></esa-confirm-dialog>
+    </Preview>
+  </Section>
 
-    <esa-confirm-dialog
-      id="cd-warning"
-      variant="warning"
-      heading="Unsaved changes"
-      message="You have unsaved changes that will be lost."
-      confirm-label="Discard"
-    ></esa-confirm-dialog>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3>Methods</h3>
+    <PropsTable rows={methods} />
+    <Api events={events} />
+  </Section>
 
-    <esa-confirm-dialog
-      id="cd-danger"
-      variant="danger"
-      heading="Delete project?"
-      message="This action cannot be undone."
-      confirm-label="Delete"
-    ></esa-confirm-dialog>
-  </Stack>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The panel is <code>role="alertdialog"</code> with <code>aria-modal="true"</code>; <code>heading</code> is the accessible name.</li>
+      <li>The confirm button receives focus on open; Tab and Shift+Tab cycle between the two buttons.</li>
+      <li><code>Escape</code> and backdrop click both resolve as cancel; focus is restored on close.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface-elevated</code> · <code>--color-text-primary</code> / <code>--color-text-secondary</code></li>
+      <li><code>--color-info</code> · <code>--color-warning</code> · <code>--color-danger</code> (+ their <code>-subtle</code> tints)</li>
+      <li><code>--color-backdrop</code> · <code>--z-modal</code> / <code>--z-modal-backdrop</code></li>
+      <li><code>--radius-400</code> · <code>--spacing-500</code> · <code>--focus-ring-*</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
 
 <script>
   import '@esa/ecology/esa-confirm-dialog';
@@ -73,5 +129,5 @@ import Stack from '@esa/ecology/Stack.astro';
     font-size: var(--type-size-200, 0.9375rem);
     cursor: pointer;
   }
-  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; width: 100%; }
 </style>

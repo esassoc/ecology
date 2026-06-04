@@ -7,6 +7,9 @@
     "secondary-hover": { "$value": "{color.teal.800}", "$type": "color" },
     "accent":          { "$value": "{color.orange.400}", "$type": "color" },
     "accent-hover":    { "$value": "{color.orange.500}", "$type": "color" },
+    "ai":              { "$value": "{color.copper.600}", "$type": "color" },
+    "ai-hover":        { "$value": "{color.copper.700}", "$type": "color" },
+    "ai-subtle":       { "$value": "{color.copper.50}",  "$type": "color" },
 
     "background":       { "$value": "{color.gray.50}",  "$type": "color" },
     "surface":          { "$value": "{color.gray.0}",   "$type": "color" },

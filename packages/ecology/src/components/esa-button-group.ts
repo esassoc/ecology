@@ -17,13 +17,13 @@ export class EsaButtonGroup extends LitElement {
   };
 
   declare selectionMode: 'none' | 'single';
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare value: string;
 
   constructor() {
     super();
     this.selectionMode = 'none';
-    this.size = 'medium';
+    this.size = 'md';
     this.value = '';
   }
 

@@ -1,6 +1,9 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import PropsTable from '../../components/docs/PropsTable.astro';
 import EsaHeaderNav from '@esa/ecology/esa-header-nav.astro';
 
 const items = [
@@ -18,42 +21,69 @@ const items = [
 ];
 
 const user = { name: 'Jordan Rivers', email: 'jordan@esassoc.com' };
----
-<BaseLayout title="esa-header-nav — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>esa-header-nav <code>[.astro]</code></h1>
-      <p>Presentational top app bar: brand slot, primary nav with dropdowns, actions slot, user menu, and a mobile hamburger. Dropdowns / user menu / mobile menu use native <code>&lt;details&gt;</code> disclosures, so no runtime JS is required.</p>
-    </Stack>
 
-    <Stack gap="300">
-      <h2>With nav, dropdown, and user menu</h2>
-      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: visible;">
+const props = [
+  { name: 'items', type: 'EsaHeaderNavItem[]', default: '[]', description: 'Primary nav links. Each is { label; href?; icon?; children? }; an item with children renders a dropdown.' },
+  { name: 'user', type: 'EsaHeaderNavUser', description: 'Optional signed-in user { name; email?; avatarUrl?; initials? }. When present, renders the avatar + user menu.' },
+];
+
+const slots = [
+  { name: 'brand', type: 'slot', description: 'Left-aligned logo / wordmark area.' },
+  { name: 'actions', type: 'slot', description: 'Right-aligned controls placed before the user menu (e.g. search, notifications).' },
+];
+---
+<ComponentDoc name="Header Nav" category="Navigation" slug="esa-header-nav" type=".astro" status="stable"
+  summary="Presentational top app bar: brand slot, primary nav with dropdowns, an actions slot, a user menu, and a mobile hamburger. Disclosures use native <code>&lt;details&gt;</code>, so it needs zero runtime JS.">
+
+  <Section id="preview" title="Preview">
+    <p>Open <strong>Reports</strong> or the avatar to expand the native disclosures.</p>
+    <Preview align="start" code={`<EsaHeaderNav items={items} user={user}>
+  <strong slot="brand">ESA</strong>
+</EsaHeaderNav>`}>
+      <div style="width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: visible;">
         <EsaHeaderNav items={items} user={user}>
           <strong slot="brand" style="color: var(--color-primary, #005862); font-size: var(--type-size-300, 1.125rem);">ESA</strong>
         </EsaHeaderNav>
       </div>
-      <p>Open <strong>Reports</strong> or the avatar to expand the disclosures.</p>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Brand only (no user)</h2>
-      <div style="border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: visible;">
+  <Section id="states" title="States">
+    <p>Brand only, no signed-in user — the avatar / user menu is omitted when <code>user</code> is absent.</p>
+    <Preview align="start" code={`<EsaHeaderNav items={items}>
+  <strong slot="brand">Beacon</strong>
+</EsaHeaderNav>`}>
+      <div style="width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: visible;">
         <EsaHeaderNav items={items}>
           <strong slot="brand" style="color: var(--color-primary, #005862); font-size: var(--type-size-300, 1.125rem);">Beacon</strong>
         </EsaHeaderNav>
       </div>
-    </Stack>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Props:</strong> <code>items</code> (label / href / icon / children), <code>user</code> (name / email / avatarUrl / initials).</li>
-        <li><strong>Slots:</strong> <code>brand</code> (left logo), <code>actions</code> (right, before user menu).</li>
-        <li><strong>Interactivity:</strong> nav dropdowns, user menu, and the &lt;768px hamburger are native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> — zero JS.</li>
-        <li><strong>Tokens:</strong> <code>--header-height</code>, surface / border / text-secondary / primary, spacing, radius, shadow-200, z-dropdown / z-header.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3>Slots</h3>
+    <PropsTable rows={slots} />
+    <p>Nav dropdowns, the user menu, and the &lt;768px hamburger are native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> disclosures — no JavaScript required.</p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Primary nav is a <code>&lt;nav aria-label="Primary navigation"&gt;</code>; the mobile menu is a separate labeled <code>&lt;nav&gt;</code>.</li>
+      <li>Disclosures are native <code>&lt;details&gt;</code> — keyboard toggling and the expanded state come for free.</li>
+      <li>The avatar button carries an <code>aria-label</code> naming the user (<code>User menu for …</code>).</li>
+      <li>Decorative chevrons and glyph SVGs are <code>aria-hidden</code>.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <p>Override these to re-skin without touching the component:</p>
+    <ul class="tokens">
+      <li><code>--header-height</code> · <code>--topbar-bg</code> / <code>--topbar-border</code></li>
+      <li><code>--color-text-primary</code> / <code>--color-text-secondary</code> · <code>--color-primary</code> (active, avatar) · <code>--color-surface-sunken</code> (hover)</li>
+      <li><code>--color-surface</code> (dropdowns) · <code>--shadow-200</code> · <code>--radius-100</code> / <code>--radius-200</code> / <code>--radius-full</code></li>
+      <li><code>--z-dropdown</code> / <code>--z-header</code> · <code>--spacing-*</code> · <code>--type-size-*</code> · <code>--font-weight-medium</code> / <code>--font-weight-semibold</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

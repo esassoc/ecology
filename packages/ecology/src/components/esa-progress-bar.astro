@@ -8,7 +8,7 @@
 interface Props {
   value?: number;
   mode?: 'determinate' | 'indeterminate';
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   variant?: 'primary' | 'success' | 'warning' | 'danger';
   label?: string;
   showValue?: boolean;
@@ -16,7 +16,7 @@ interface Props {
 const {
   value = 0,
   mode = 'determinate',
-  size = 'medium',
+  size = 'md',
   variant = 'primary',
   label = '',
   showValue = false,
@@ -105,8 +105,9 @@ const showHeader = !!label || showValue;
     transition: width 300ms ease;
   }
 
-  .esa-progress-bar--small { --_progress-height: 4px; --_progress-font-size: 11px; }
-  .esa-progress-bar--large { --_progress-height: 12px; --_progress-font-size: 14px; }
+  .esa-progress-bar--xs { --_progress-height: 2px; --_progress-font-size: 10px; }
+  .esa-progress-bar--sm { --_progress-height: 4px; --_progress-font-size: 11px; }
+  .esa-progress-bar--lg { --_progress-height: 12px; --_progress-font-size: 14px; }
 
   .esa-progress-bar--success { --_progress-fill-bg: var(--color-success, #22c55e); }
   .esa-progress-bar--warning { --_progress-fill-bg: var(--color-warning, #f59e0b); }

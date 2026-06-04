@@ -1,0 +1,70 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaFieldError from '@esa/ecology/esa-field-error.astro';
+
+const props = [
+  { name: 'message', type: 'string | null', default: "''", description: 'Resolved error message. Renders nothing when null or empty.' },
+  { name: 'icon', type: 'boolean', default: 'false', description: 'Show a small leading alert icon before the message.' },
+];
+---
+<ComponentDoc name="Field Error" category="Forms" slug="esa-field-error" type=".astro" status="stable"
+  summary="A presentational error line that sits under any input. Pass a resolved <code>message</code> string — it renders a danger-colored line (matching esa-form-field's error styling) or nothing when empty.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaFieldError message="This field is required." />`}>
+      <EsaFieldError message="This field is required." />
+    </Preview>
+  </Section>
+
+  <Section id="empty" title="Empty state">
+    <p>With no <code>message</code> the component renders nothing and collapses out of layout, so it never reserves a gap under the input.</p>
+    <Preview code={`<EsaFieldError message="" />
+<EsaFieldError message={null} />`}>
+      <EsaFieldError message="" />
+      <EsaFieldError message={null} />
+      <span style="color: var(--color-text-secondary);">(nothing rendered above)</span>
+    </Preview>
+  </Section>
+
+  <Section id="icon" title="With icon">
+    <p>Set <code>icon</code> for a small leading alert glyph.</p>
+    <Preview code={`<EsaFieldError message="Enter a valid email address." icon />`}>
+      <EsaFieldError message="Enter a valid email address." icon />
+    </Preview>
+  </Section>
+
+  <Section id="composition" title="Under an input">
+    <p>It is presentational and composable — drop it beneath any control. Your validation layer decides the message.</p>
+    <Preview align="start" code={`<label>Email</label>
+<input type="email" value="not-an-email" />
+<EsaFieldError message="Enter a valid email address." icon />`}>
+      <div style="display: flex; flex-direction: column; gap: 4px; max-width: 320px;">
+        <label style="font-weight: 500;">Email</label>
+        <input type="email" value="not-an-email" style="padding: 8px 12px; border: 1px solid var(--color-danger, #ef4444); border-radius: 6px;" />
+        <EsaFieldError message="Enter a valid email address." icon />
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders with <code>role="alert"</code> and <code>aria-live="polite"</code> so the message is announced when it appears.</li>
+      <li>Purely presentational — it does not own the input's <code>aria-invalid</code> or <code>aria-describedby</code>. Wire those on the control to point at this message when integrating.</li>
+      <li>The leading icon is decorative (<code>aria-hidden</code>); the text carries the meaning.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-danger</code> (text color, shared with esa-form-field's error)</li>
+      <li><code>--type-size-100</code> (font size) · <code>--form-help-gap</code> (top margin) · <code>--spacing-100</code> (icon gap)</li>
+    </ul>
+  </Section>
+</ComponentDoc>

@@ -28,7 +28,7 @@ export class EsaTextField extends LitElement {
   };
 
   declare label: string;
-  declare size: 'small' | 'medium' | 'large';
+  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare placeholder: string;
   declare helpText: string;
   declare errorText: string;
@@ -42,7 +42,7 @@ export class EsaTextField extends LitElement {
   constructor() {
     super();
     this.label = '';
-    this.size = 'medium';
+    this.size = 'md';
     this.placeholder = '';
     this.helpText = '';
     this.errorText = '';
@@ -99,30 +99,38 @@ export class EsaTextField extends LitElement {
 
   static styles = css`
     :host {
-      --_field-padding-y: var(--form-padding-y-medium, 0.5rem);
-      --_field-padding-x: var(--form-padding-x-medium, 0.75rem);
-      --_field-font-size: var(--form-font-size-medium, 0.9375rem);
-      --_field-height: var(--form-height-medium, 40px);
-      --_field-radius: var(--form-radius-medium, 0.5rem);
+      --_field-padding-y: var(--form-padding-y-md, 0.5rem);
+      --_field-padding-x: var(--form-padding-x-md, 0.75rem);
+      --_field-font-size: var(--form-font-size-md, 0.9375rem);
+      --_field-height: var(--form-height-md, 40px);
+      --_field-radius: var(--form-radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #e5e5e5);
       --_label-font-size: var(--type-size-200, 0.9375rem);
       display: block;
       font-family: var(--font-sans, sans-serif);
     }
-    :host([size='small']) {
-      --_field-padding-y: var(--form-padding-y-small, 0.375rem);
-      --_field-padding-x: var(--form-padding-x-small, 0.5rem);
-      --_field-font-size: var(--form-font-size-small, 0.875rem);
-      --_field-height: var(--form-height-small, 32px);
-      --_field-radius: var(--form-radius-small, 0.25rem);
+    :host([size='xs']) {
+      --_field-padding-y: var(--form-padding-y-xs, 0.25rem);
+      --_field-padding-x: var(--form-padding-x-xs, 0.5rem);
+      --_field-font-size: var(--form-font-size-xs, 0.8125rem);
+      --_field-height: var(--form-height-xs, 28px);
+      --_field-radius: var(--form-radius-xs, 0.25rem);
+      --_label-font-size: var(--type-size-050, 0.8125rem);
+    }
+    :host([size='sm']) {
+      --_field-padding-y: var(--form-padding-y-sm, 0.375rem);
+      --_field-padding-x: var(--form-padding-x-sm, 0.5rem);
+      --_field-font-size: var(--form-font-size-sm, 0.875rem);
+      --_field-height: var(--form-height-sm, 32px);
+      --_field-radius: var(--form-radius-sm, 0.25rem);
       --_label-font-size: var(--type-size-150, 0.875rem);
     }
-    :host([size='large']) {
-      --_field-padding-y: var(--form-padding-y-large, 0.75rem);
-      --_field-padding-x: var(--form-padding-x-large, 1rem);
-      --_field-font-size: var(--form-font-size-large, 1.125rem);
-      --_field-height: var(--form-height-large, 48px);
-      --_field-radius: var(--form-radius-large, 0.5rem);
+    :host([size='lg']) {
+      --_field-padding-y: var(--form-padding-y-lg, 0.75rem);
+      --_field-padding-x: var(--form-padding-x-lg, 1rem);
+      --_field-font-size: var(--form-font-size-lg, 1.125rem);
+      --_field-height: var(--form-height-lg, 48px);
+      --_field-radius: var(--form-radius-lg, 0.5rem);
       --_label-font-size: var(--type-size-300, 1.125rem);
     }
 

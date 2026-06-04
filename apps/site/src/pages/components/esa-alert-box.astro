@@ -1,45 +1,76 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Stack from '@esa/ecology/Stack.astro';
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
 import AlertBox from '@esa/ecology/esa-alert-box.astro';
----
-<BaseLayout title="Alert Box — Ecology">
-  <Stack gap="500">
-    <Stack gap="200">
-      <p><a href="/">← Ecology</a></p>
-      <h1>Alert Box</h1>
-      <p>Inline status message with a variant-mapped icon, optional title, and optional dismiss control.</p>
-    </Stack>
 
-    <Stack gap="300">
-      <h2>Variants</h2>
-      <Stack gap="300">
+const props = [
+  { name: 'variant', type: "'info' | 'success' | 'warning' | 'danger'", default: "'info'", description: 'Tone — drives the background, border, and auto-mapped icon.' },
+  { name: 'title', type: 'string', description: 'Optional bold heading above the message.' },
+  { name: 'dismissable', type: 'boolean', default: 'false', description: 'Shows a close button that hides the alert and emits a dismissed event.' },
+];
+
+const events = [
+  { name: 'dismissed', type: 'CustomEvent', description: 'Bubbles when the close button is clicked (dismissable only).' },
+];
+---
+<ComponentDoc name="Alert Box" category="Display" slug="esa-alert-box" type=".astro" status="stable"
+  summary="Inline status message with a variant-mapped icon, optional title, and optional dismiss control.">
+
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<AlertBox variant="info" title="Heads up">
+  This is an informational message.
+</AlertBox>`}>
+      <div style="width: 100%;">
+        <AlertBox variant="info" title="Heads up">This is an informational message.</AlertBox>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="variants" title="Variants">
+    <Preview align="start" code={`<AlertBox variant="info" title="Heads up">This is an informational message.</AlertBox>
+<AlertBox variant="success" title="Saved">Your changes were saved successfully.</AlertBox>
+<AlertBox variant="warning" title="Check this">Some fields need your attention.</AlertBox>
+<AlertBox variant="danger" title="Error">Something went wrong while saving.</AlertBox>`}>
+      <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
         <AlertBox variant="info" title="Heads up">This is an informational message.</AlertBox>
         <AlertBox variant="success" title="Saved">Your changes were saved successfully.</AlertBox>
         <AlertBox variant="warning" title="Check this">Some fields need your attention.</AlertBox>
         <AlertBox variant="danger" title="Error">Something went wrong while saving.</AlertBox>
-      </Stack>
-    </Stack>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Without title</h2>
-      <AlertBox variant="info">A compact, single-line alert with just a message.</AlertBox>
-    </Stack>
+  <Section id="states" title="States">
+    <p>The title is optional — omit it for a compact single-line alert. With <code>dismissable</code>, a close button appears and a <code>dismissed</code> event bubbles on click.</p>
+    <Preview align="start" code={`<AlertBox variant="info">A compact, single-line alert with just a message.</AlertBox>
+<AlertBox variant="warning" title="Dismiss me" dismissable={true}>Click the × to hide this alert.</AlertBox>`}>
+      <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <AlertBox variant="info">A compact, single-line alert with just a message.</AlertBox>
+        <AlertBox variant="warning" title="Dismiss me" dismissable={true}>Click the × to hide this alert.</AlertBox>
+      </div>
+    </Preview>
+  </Section>
 
-    <Stack gap="300">
-      <h2>Dismissable</h2>
-      <AlertBox variant="warning" title="Dismiss me" dismissable={true}>
-        Click the × to hide this alert. A <code>dismissed</code> event bubbles on close.
-      </AlertBox>
-    </Stack>
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
 
-    <Stack gap="300">
-      <h2>Anatomy &amp; behavior</h2>
-      <ul>
-        <li><strong>Icons:</strong> auto-mapped per variant (info / circle-check / triangle-alert / circle-alert), inlined Lucide SVG.</li>
-        <li><strong>Dismiss:</strong> tiny inline script hides the box and dispatches a bubbling <code>dismissed</code> event.</li>
-        <li><strong>Tokens consumed:</strong> <code>--color-info / success / warning / danger</code> + <code>-subtle</code>/<code>-border</code>, radius-200, spacing scale.</li>
-      </ul>
-    </Stack>
-  </Stack>
-</BaseLayout>
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Icons are auto-mapped per variant (info / circle-check / triangle-alert / circle-alert) and marked <code>aria-hidden</code>.</li>
+      <li>The dismiss button has an <code>aria-label="Dismiss"</code>.</li>
+      <li>For time-sensitive alerts, wrap in a live region (<code>role="alert"</code> / <code>aria-live</code>) at the call site so screen readers announce it.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-info</code> / <code>--color-success</code> / <code>--color-warning</code> / <code>--color-danger</code> + their <code>-subtle</code> and <code>-border</code> variants</li>
+      <li><code>--color-text-primary</code> (title) · <code>--color-text-secondary</code> (message) · <code>--color-text-muted</code> (dismiss)</li>
+      <li><code>--radius-200</code> / <code>--radius-100</code> · <code>--spacing-*</code> · <code>--type-size-150</code></li>
+      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>

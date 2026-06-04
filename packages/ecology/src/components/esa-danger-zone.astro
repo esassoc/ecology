@@ -1,0 +1,64 @@
+---
+// esa-danger-zone — presentational (.astro).
+// Faithful translation of Beacon's ui-danger-zone: a bordered section that
+// corrals destructive action(s) behind clear danger-colored chrome so a
+// misclick isn't a zero-effort accident. Angular `heading`/`description`
+// inputs → props; Angular <ng-content> → the default slot (the actions).
+// Per the project rule, no colored LEFT border — danger emphasis comes from
+// a danger-tinted heading, subtle danger background, and a full danger border.
+interface Props {
+  heading?: string;
+  description?: string;
+}
+const { heading = 'Danger Zone', description } = Astro.props;
+
+let nextId = 0;
+const headingId = `esa-danger-zone-heading-${++nextId}`;
+---
+<section class="esa-danger-zone" role="group" aria-labelledby={headingId}>
+  <h3 class="esa-danger-zone__heading" id={headingId}>{heading}</h3>
+  {description && <p class="esa-danger-zone__description">{description}</p>}
+  <div class="esa-danger-zone__actions">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .esa-danger-zone {
+    --_dz-bg: var(--color-danger-subtle, #fef2f2);
+    --_dz-border: var(--color-danger-border, #fecaca);
+    --_dz-heading-color: var(--color-red-800, #991b1b);
+    --_dz-description-color: var(--color-text-secondary, #525252);
+    --_dz-radius: var(--radius-200, 0.5rem);
+    --_dz-padding: var(--spacing-300, 0.75rem);
+    --_dz-gap: var(--spacing-200, 0.5rem);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--_dz-gap);
+    padding: var(--_dz-padding);
+    border: 1px solid var(--_dz-border);
+    border-radius: var(--_dz-radius);
+    background: var(--_dz-bg);
+  }
+
+  .esa-danger-zone__heading {
+    margin: 0;
+    font-family: var(--font-sans, 'DM Sans', sans-serif);
+    font-size: var(--type-size-250, 1.0625rem);
+    font-weight: 600;
+    color: var(--_dz-heading-color);
+  }
+
+  .esa-danger-zone__description {
+    margin: 0;
+    font-size: var(--type-size-200, 0.9375rem);
+    color: var(--_dz-description-color);
+  }
+
+  .esa-danger-zone__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--_dz-gap);
+  }
+</style>
