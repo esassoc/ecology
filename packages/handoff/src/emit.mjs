@@ -2,13 +2,10 @@
 // trimmed stylesheet, a human-readable token contract + component manifest, and
 // the machine-readable manifest.json the live overlay consumes.
 import { mkdir, writeFile, copyFile, rm } from 'node:fs/promises';
-import { join, basename, dirname, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, basename, relative } from 'node:path';
 import prettier from 'prettier';
 
 const TIER_ORDER = ['brand', 'semantic', 'component', 'primitive'];
-const fontsDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'fonts');
-const FONT_FILES = ['AnthropicSans-Variable.woff2', 'AnthropicMono-Variable.woff2'];
 
 const slugify = (s) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'section';
@@ -209,12 +206,6 @@ ${bodyOut}
   const fullSpec = await writeSpec('full-page', {
     label: 'Full page', name, url: capture.url, theme: capture.themeAttr, tag: 'page', html: fullHtml, css: fullCss, tokens: tokens.contract,
   });
-
-  // Vendored Anthropic fonts for the (dev-only) inspector chrome.
-  await mkdir(join(outDir, 'fonts'), { recursive: true });
-  for (const f of FONT_FILES) {
-    await copyFile(join(fontsDir, f), join(outDir, 'fonts', f)).catch(() => {});
-  }
 
   const manifest = {
     name,

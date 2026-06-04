@@ -3,6 +3,10 @@
 // CSS, and resolved tokens, all from the manifest the export engine generated.
 // The engine is the source of truth; this app only reads and renders.
 import { defineToolbarApp } from 'astro/toolbar';
+// Fonts ship with the package and are served by Vite (dev-only toolbar), so
+// bundles don't each carry a copy.
+import sansUrl from './assets/fonts/AnthropicSans-Variable.woff2';
+import monoUrl from './assets/fonts/AnthropicMono-Variable.woff2';
 
 const MANIFEST_URL =
   typeof __HANDOFF_MANIFEST__ !== 'undefined' ? __HANDOFF_MANIFEST__ : '/handoff/home/manifest.json';
@@ -140,8 +144,8 @@ export default defineToolbarApp({
     // The bundle base (…/handoff/home/) hosts the manifest, specs, and fonts.
     const base = MANIFEST_URL.replace(/manifest\.json.*$/, '');
     const fontFace = `
-      @font-face { font-family: "Anthropic Sans"; src: url("${base}fonts/AnthropicSans-Variable.woff2") format("woff2-variations"); font-weight: 300 800; font-display: swap; }
-      @font-face { font-family: "Anthropic Mono"; src: url("${base}fonts/AnthropicMono-Variable.woff2") format("woff2-variations"); font-weight: 300 800; font-display: swap; }`;
+      @font-face { font-family: "Anthropic Sans"; src: url("${sansUrl}") format("woff2-variations"); font-weight: 300 800; font-display: swap; }
+      @font-face { font-family: "Anthropic Mono"; src: url("${monoUrl}") format("woff2-variations"); font-weight: 300 800; font-display: swap; }`;
 
     const wrap = document.createElement('div');
     const style = document.createElement('style');
