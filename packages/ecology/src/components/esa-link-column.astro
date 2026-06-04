@@ -1,0 +1,57 @@
+---
+// esa-link-column — presentational (.astro).
+//
+// A footer/sitemap column: heading + thin rule + a list of links. Inherits
+// currentColor (the rule is derived from it), so it reads on a brand footer or a
+// light surface without carrying brand values.
+interface LinkItem {
+  label: string;
+  href?: string;
+}
+interface Props {
+  heading: string;
+  /** Optional link on the heading itself. */
+  href?: string;
+  links: LinkItem[];
+}
+const { heading, href, links } = Astro.props;
+---
+<div class="esa-link-column">
+  {href
+    ? <a class="esa-link-column__head" href={href}>{heading}</a>
+    : <span class="esa-link-column__head">{heading}</span>}
+  <hr class="esa-link-column__rule" />
+  <ul class="esa-link-column__list">
+    {links.map((l) => (
+      <li>{l.href ? <a href={l.href}>{l.label}</a> : l.label}</li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .esa-link-column { color: inherit; }
+  .esa-link-column__head {
+    display: block;
+    margin: 0 0 var(--spacing-100, 4px);
+    font-size: var(--type-size-200, 1rem);
+    font-weight: var(--font-weight-medium, 500);
+    color: inherit;
+    text-decoration: none;
+  }
+  .esa-link-column__head[href]:hover { text-decoration: underline; }
+  /* rule derived from currentColor → works on any background */
+  .esa-link-column__rule {
+    height: 1px;
+    border: 0;
+    margin: 0 0 var(--spacing-200, 8px);
+    background: color-mix(in srgb, currentColor 40%, transparent);
+  }
+  .esa-link-column__list { list-style: none; margin: 0; padding: 0; }
+  .esa-link-column__list li {
+    font-size: var(--type-size-150, 0.875rem);
+    line-height: 22px;
+    margin-bottom: var(--spacing-100, 4px);
+  }
+  .esa-link-column__list a { color: inherit; text-decoration: none; }
+  .esa-link-column__list a:hover { text-decoration: underline; }
+</style>

@@ -1,0 +1,57 @@
+---
+// esa-nav-dropdown — presentational disclosure (.astro).
+//
+// An icon-link trigger paired with a floating panel, using a native
+// <details>/<summary> disclosure — zero runtime JS, same pattern as
+// esa-header-nav. The trigger reuses esa-icon-link (tag="summary"); the panel
+// content is slotted, so the consumer supplies whatever menu it needs. The
+// trailing chevron rotates when open. The panel resets to surface colors so it
+// reads correctly even when the trigger lives on a dark/brand bar.
+import EsaIconLink from './esa-icon-link.astro';
+
+interface Props {
+  /** Trigger label. */
+  label: string;
+  /** Leading icon on the trigger. */
+  icon?: string;
+  size?: 'sm' | 'md';
+  /** Panel edge alignment under the trigger. */
+  align?: 'start' | 'end';
+}
+
+const { label, icon, size = 'md', align = 'start' } = Astro.props;
+const cls = ['esa-nav-dropdown', `esa-nav-dropdown--${align}`].join(' ');
+---
+<details class={cls}>
+  <EsaIconLink tag="summary" icon={icon} trailing="chevron-down" size={size}>{label}</EsaIconLink>
+  <div class="esa-nav-dropdown__panel">
+    <slot />
+  </div>
+</details>
+
+<style>
+  .esa-nav-dropdown { position: relative; }
+
+  /* chevron (last icon in the trigger) rotates when open */
+  .esa-nav-dropdown :global(.esa-icon-link > .esa-icon:last-child) {
+    transition: transform 150ms ease;
+  }
+  .esa-nav-dropdown[open] :global(.esa-icon-link > .esa-icon:last-child) {
+    transform: rotate(180deg);
+  }
+
+  .esa-nav-dropdown__panel {
+    position: absolute;
+    top: calc(100% + var(--spacing-200, 8px));
+    left: 0;
+    z-index: var(--z-dropdown, 50);
+    min-width: 240px;
+    padding: var(--spacing-300, 12px);
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-200, 8px);
+    box-shadow: var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12));
+  }
+  .esa-nav-dropdown--end .esa-nav-dropdown__panel { left: auto; right: 0; }
+</style>

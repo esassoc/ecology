@@ -57,6 +57,48 @@ npm install @esa/tokens @esa/ecology
 Then compose prototypes from `@esa/ecology` components. Patterns that prove broadly
 useful get **promoted** back up into the hub.
 
+### The spoke theming contract
+
+A spoke re-skins by reassigning tokens under a `[data-theme]` scope. Two rules keep
+that safe and portable (both proven out by `../cb-fish-design`, the first spoke):
+
+1. **Primitives never move.** To change a neutral or ramp value, re-point the
+   *semantic* token that consumes it (`--color-border`, `--color-text-muted`) — do
+   **not** override the primitive (`--color-gray-200`). Primitives are the shared
+   floor; moving them breaks the contract for every component.
+2. **The type contract is a matched set.** A brand swaps two faces — `--font-sans`
+   (body) and `--font-display` (headlines; defaults to sans, read by the display/
+   title type-roles). Font-**weight** values are typeface-bound: the hub's
+   `--font-weight-*` match DM Sans's optical weights, so a spoke that overrides
+   `--font-sans` must also set `--font-weight-*` to its face's matching weights.
+   (cb-fish remaps DM Sans 350/450/550/650 → IBM Plex 400/500/600.)
+
+Brand-tinted surfaces use the `--color-primary-subtle` / `--color-primary-border`
+pair (both promoted up from cb-fish's first build).
+
+### Spoke-specific tokens (keeping the hub clean)
+
+A spoke sometimes needs a value the hub doesn't have. Sort it into one of two cases:
+
+- **A gap in an ecology scale** → *promote it to the hub.* If the value is a missing
+  rung (e.g. a 40px gap between `--spacing-600`/`32px` and `--spacing-700`/`48px`),
+  add it to ecology (`--spacing-650`). This makes the hub *more* complete and
+  durable — it's not pollution. cb-fish's old `--cbf-chrome-gap` became `--spacing-650`.
+- **A genuinely spoke-specific value** (a brand ramp, a one-off project dimension the
+  hub should never carry) → a **namespaced spoke tier**, `--{spoke}-*`, living **only**
+  in the spoke's theme file. e.g. `--cbf-blue-*`.
+
+The rule that keeps ecology pristine:
+
+> **Ecology components read only ecology tokens. Spoke components (`cbf-*`) may read
+> ecology tokens *and* `--{spoke}-*` tokens. A spoke token never appears in a hub
+> component.**
+
+Spoke tokens come in two flavors: **re-point material** (a brand ramp whose only job
+is to reassign ecology semantic tokens — components never read it directly, e.g.
+`--cbf-blue-950` → `--color-surface-inverse`), and **spoke-local values** (read by
+`cbf-*` components but never by `esa-*`). The hub stays unaware that CB Fish exists.
+
 ## Next steps / open seams
 
 - **Token output targets:** `packages/tokens/build.js` is the one seam — add SCSS / TS / Tailwind / Figma platforms there.

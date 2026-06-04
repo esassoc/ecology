@@ -1,0 +1,71 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaIconLink from '@esa/ecology/esa-icon-link.astro';
+
+const props = [
+  { name: 'href', type: 'string', description: 'When present renders an <a>; otherwise a <button> (e.g. a dropdown trigger).' },
+  { name: 'icon', type: 'string', description: 'Leading Lucide icon name.' },
+  { name: 'trailing', type: 'string', description: 'Trailing Lucide icon — the dropdown/disclosure affordance, e.g. "chevron-down".' },
+  { name: 'size', type: "'sm' | 'md'", default: "'md'", description: 'sm = 14px (sub-bars), md = 16px (primary bars).' },
+  { name: 'active', type: 'boolean', default: 'false', description: 'Selected / current state (sets aria-current and semibold).' },
+  { name: 'weight', type: "'regular' | 'medium' | 'semibold'", default: "'medium'", description: 'Label weight.' },
+];
+---
+<ComponentDoc name="Icon Link" category="Core" slug="esa-icon-link" type=".astro" status="stable"
+  summary="The atomic nav/menu link — <strong>[leading icon] label [trailing affordance]</strong>. Inherits <code>currentColor</code>, so it sits on any surface without knowing the brand; the containing bar or menu sets the color context. The single most-composed brick in app chrome.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaIconLink icon="trees" trailing="chevron-down">Mitigation work</EsaIconLink>`}>
+      <EsaIconLink icon="trees" trailing="chevron-down">Mitigation work</EsaIconLink>
+    </Preview>
+  </Section>
+
+  <Section id="oncontext" title="Inherits the surface (currentColor)">
+    <p>The link carries no color of its own — it inherits <code>currentColor</code>. Drop the same markup on a dark bar or a light surface and it just works.</p>
+    <Preview code={`<!-- on a dark bar: color set by the parent -->
+<div style="color:#fff;background:#13273e">
+  <EsaIconLink icon="database" trailing="chevron-down">Data management</EsaIconLink>
+</div>`}>
+      <div style="display:flex;flex-direction:column;gap:12px;width:100%">
+        <div style="display:flex;gap:40px;color:#fff;background:#13273e;padding:16px 24px;border-radius:8px">
+          <EsaIconLink icon="database" trailing="chevron-down">Data management</EsaIconLink>
+          <EsaIconLink icon="activity" trailing="chevron-down">System status</EsaIconLink>
+          <EsaIconLink icon="settings" trailing="chevron-down">System configuration</EsaIconLink>
+        </div>
+        <div style="display:flex;gap:40px;color:#1e5386;background:#f3f7fc;padding:16px 24px;border-radius:8px">
+          <EsaIconLink icon="database" trailing="chevron-down">Data management</EsaIconLink>
+          <EsaIconLink icon="activity" trailing="chevron-down">System status</EsaIconLink>
+        </div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<EsaIconLink icon="credit-card" size="sm">Funding</EsaIconLink>
+<EsaIconLink icon="credit-card" size="md">Funding</EsaIconLink>`}>
+      <div style="display:flex;gap:32px;align-items:center">
+        <EsaIconLink icon="credit-card" size="sm">Funding (sm)</EsaIconLink>
+        <EsaIconLink icon="credit-card" size="md">Funding (md)</EsaIconLink>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="variants" title="Link · trigger · active">
+    <Preview code={`<EsaIconLink href="/dashboard" icon="layout-dashboard">Dashboard</EsaIconLink>
+<EsaIconLink icon="circle-user" trailing="chevron-down">Angela Zhao</EsaIconLink>
+<EsaIconLink icon="trending-up" active>Reporting</EsaIconLink>`}>
+      <div style="display:flex;gap:32px;align-items:center">
+        <EsaIconLink href="/dashboard" icon="layout-dashboard">Dashboard</EsaIconLink>
+        <EsaIconLink icon="circle-user" trailing="chevron-down">Angela Zhao</EsaIconLink>
+        <EsaIconLink icon="trending-up" active>Reporting</EsaIconLink>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+</ComponentDoc>

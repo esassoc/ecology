@@ -1,0 +1,68 @@
+---
+// esa-icon-button — presentational (.astro).
+//
+// Icon-only action for toolbars and chrome (search, close, overflow, etc.).
+// Lightweight + transparent and INHERITS currentColor, so it lives happily on a
+// dark app bar or a light surface. Square footprint on the shared form size
+// scale. This is the chrome-grade counterpart to esa-button's heavier `iconOnly`
+// mode (which carries a solid color + fixed 40px box).
+//
+// `label` is REQUIRED — an icon-only control needs an accessible name.
+import EsaIcon from './esa-icon.astro';
+
+type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
+
+interface Props {
+  /** Lucide icon name. */
+  icon: string;
+  /** Accessible name (aria-label + title). Required. */
+  label: string;
+  /** When present, renders an <a>; otherwise a <button>. */
+  href?: string;
+  size?: EsaSize;
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const { icon, label, href, size = 'md', type = 'button' } = Astro.props;
+const Tag = href ? 'a' : 'button';
+const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
+---
+<Tag
+  class={cls}
+  href={href}
+  type={href ? undefined : type}
+  aria-label={label}
+  title={label}
+>
+  <EsaIcon name={icon} size={size} />
+</Tag>
+
+<style>
+  .esa-icon-button {
+    --_ib-size: var(--form-height-md, 40px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--_ib-size);
+    height: var(--_ib-size);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-200, 8px);
+    background: transparent;
+    color: inherit; /* currentColor — inherits the surrounding context */
+    cursor: pointer;
+    transition: background var(--transition-fast, 150ms ease);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .esa-icon-button--xs { --_ib-size: var(--form-height-xs, 28px); }
+  .esa-icon-button--sm { --_ib-size: var(--form-height-sm, 32px); }
+  .esa-icon-button--lg { --_ib-size: var(--form-height-lg, 48px); }
+
+  /* Hover tint is derived from currentColor, so it reads correctly on any bg. */
+  .esa-icon-button:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+  .esa-icon-button:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid currentColor;
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+</style>

@@ -30,7 +30,7 @@ const c = (label: string, name: string, status?: 'reference'): NavItem => ({
 });
 
 export const componentGroups: NavGroup[] = [
-  { label: 'Core', items: [c('Button', 'esa-button'), c('Button Group', 'esa-button-group'), c('Button Toggle', 'esa-button-toggle'), c('Icon', 'esa-icon')] },
+  { label: 'Core', items: [c('Button', 'esa-button'), c('Button Group', 'esa-button-group'), c('Button Toggle', 'esa-button-toggle'), c('Icon', 'esa-icon'), c('Icon Link', 'esa-icon-link'), c('Icon Button', 'esa-icon-button')] },
   {
     label: 'Forms',
     items: [
@@ -62,6 +62,7 @@ export const componentGroups: NavGroup[] = [
   {
     label: 'Navigation',
     items: [
+      c('App Bar', 'esa-app-bar'), c('Nav Dropdown', 'esa-nav-dropdown'), c('Link Column', 'esa-link-column'),
       c('Header Nav', 'esa-header-nav'), c('Sidebar Nav', 'esa-sidebar-nav'), c('Breadcrumbs', 'esa-breadcrumbs'),
       c('Pagination', 'esa-pagination'), c('Tab Layout', 'esa-tab-layout'),
     ],

@@ -1,0 +1,91 @@
+---
+// esa-app-bar — presentational layout primitive (.astro).
+//
+// The full-bleed horizontal chrome shell shared by top nav bars, sub-bars, and
+// footers. It sets a COLOR CONTEXT (background + currentColor) from ecology
+// semantic tokens via `tone`, then exposes three slots: start / default / end.
+// Children (esa-icon-link, esa-icon-button, a brand lockup) INHERIT the color —
+// so a bar's brand comes entirely from tokens, never from the children.
+//
+//   tone="surface"      → --color-surface bg, primary text
+//   tone="brand"        → --color-primary bg, inverse text          (primary bar)
+//   tone="brand-strong" → --color-surface-inverse bg, inverse text  (dark sub-bar)
+//
+// Tune spacing per instance with the public component tokens --app-bar-gap /
+// --app-bar-pad-x / --app-bar-pad-y (each falls back to an ecology spacing step).
+type AppBarTone = 'surface' | 'brand' | 'brand-strong';
+
+interface Props {
+  tone?: AppBarTone;
+  /** Constrain the inner row to `maxWidth` and center it. */
+  contained?: boolean;
+  maxWidth?: string;
+  /** Semantic host element. */
+  as?: 'header' | 'nav' | 'footer' | 'div';
+  /** Extra class on the root — e.g. to set --app-bar-gap per instance. */
+  class?: string;
+}
+
+const { tone = 'surface', contained = false, maxWidth = '1556px', as = 'div', class: className } = Astro.props;
+const Tag = as;
+const hasStart = Astro.slots.has('start');
+const hasEnd = Astro.slots.has('end');
+const cls = ['esa-app-bar', `esa-app-bar--${tone}`, className].filter(Boolean).join(' ');
+const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].filter(Boolean).join(' ');
+---
+<Tag class={cls}>
+  <div class={rowCls} style={contained ? `--_bar-max:${maxWidth}` : undefined}>
+    {hasStart && (
+      <div class="esa-app-bar__start"><slot name="start" /></div>
+    )}
+    <div class="esa-app-bar__main"><slot /></div>
+    {hasEnd && (
+      <div class="esa-app-bar__end"><slot name="end" /></div>
+    )}
+  </div>
+</Tag>
+
+<style>
+  .esa-app-bar {
+    /* Public component tokens — override per instance; each defaults to a step. */
+    --_bar-gap: var(--app-bar-gap, var(--spacing-600, 32px));
+    --_bar-pad-x: var(--app-bar-pad-x, var(--spacing-600, 32px));
+    --_bar-pad-y: var(--app-bar-pad-y, var(--spacing-400, 16px));
+
+    display: block;
+    width: 100%;
+    background: var(--color-surface, #fff);
+    color: var(--color-text-primary, #171717);
+  }
+  .esa-app-bar--brand {
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+  }
+  .esa-app-bar--brand-strong {
+    background: var(--color-surface-inverse, #171717);
+    color: var(--color-text-inverse, #fff);
+  }
+
+  .esa-app-bar__row {
+    display: flex;
+    align-items: center;
+    gap: var(--_bar-gap);
+    padding: var(--_bar-pad-y) var(--_bar-pad-x);
+  }
+  .esa-app-bar__row--contained {
+    max-width: var(--_bar-max, 1556px);
+    margin-inline: auto;
+  }
+
+  /* start = left group · main = grows · end = pushed right */
+  .esa-app-bar__start,
+  .esa-app-bar__main,
+  .esa-app-bar__end {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_bar-gap);
+  }
+  .esa-app-bar__start { flex: none; }
+  .esa-app-bar__main { flex: 1 1 auto; }
+  .esa-app-bar__end { flex: none; margin-left: auto; }
+</style>

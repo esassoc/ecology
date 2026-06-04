@@ -1,0 +1,60 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaIconButton from '@esa/ecology/esa-icon-button.astro';
+
+const props = [
+  { name: 'icon', type: 'string', description: 'Lucide icon name.' },
+  { name: 'label', type: 'string', description: 'Accessible name (aria-label + title). Required — an icon-only control needs a name.' },
+  { name: 'href', type: 'string', description: 'When present renders an <a>; otherwise a <button>.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Square footprint on the shared form size scale.' },
+];
+---
+<ComponentDoc name="Icon Button" category="Core" slug="esa-icon-button" type=".astro" status="stable"
+  summary="Icon-only action for toolbars and chrome (search, close, overflow). Lightweight, transparent, and inherits <code>currentColor</code> — the chrome-grade counterpart to <code>esa-button</code>'s heavier <code>iconOnly</code> mode. <code>label</code> is required for accessibility.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<EsaIconButton icon="search" label="Search" />`}>
+      <EsaIconButton icon="search" label="Search" />
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<EsaIconButton icon="search" label="Search" size="xs" />
+<EsaIconButton icon="search" label="Search" size="sm" />
+<EsaIconButton icon="search" label="Search" size="md" />
+<EsaIconButton icon="search" label="Search" size="lg" />`}>
+      <div style="display:flex;gap:8px;align-items:center">
+        <EsaIconButton icon="search" label="Search" size="xs" />
+        <EsaIconButton icon="search" label="Search" size="sm" />
+        <EsaIconButton icon="search" label="Search" size="md" />
+        <EsaIconButton icon="search" label="Search" size="lg" />
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="oncontext" title="On any surface (currentColor)">
+    <p>Transparent background and <code>currentColor</code> mean it reads correctly on a dark bar or a light surface; the hover tint is derived from the inherited color.</p>
+    <Preview code={`<div style="color:#fff;background:#1e5386">
+  <EsaIconButton icon="search" label="Search" />
+</div>`}>
+      <div style="display:flex;gap:16px">
+        <div style="color:#fff;background:#1e5386;padding:8px 16px;border-radius:8px;display:flex;gap:4px">
+          <EsaIconButton icon="search" label="Search" />
+          <EsaIconButton icon="bell" label="Notifications" />
+          <EsaIconButton icon="settings" label="Settings" />
+        </div>
+        <div style="background:#f3f7fc;padding:8px 16px;border-radius:8px;display:flex;gap:4px;color:#1e5386">
+          <EsaIconButton icon="search" label="Search" />
+          <EsaIconButton icon="x" label="Close" />
+        </div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+</ComponentDoc>

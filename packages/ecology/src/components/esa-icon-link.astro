@@ -1,0 +1,106 @@
+---
+// esa-icon-link — presentational (.astro).
+//
+// The atomic nav / menu link: [leading icon] label [trailing affordance].
+// INHERITS currentColor, so it sits on any surface (dark chrome or light
+// content) without knowing the brand — the containing esa-app-bar / menu sets
+// the color context. Renders <a> when `href` is given, otherwise a <button>
+// (e.g. a dropdown trigger). Spacing + size come from ecology tokens only; the
+// component carries zero brand values.
+//
+// Golden-pattern siblings: esa-button (color×appearance), esa-icon (glyphs).
+import EsaIcon from './esa-icon.astro';
+
+type EsaIconLinkSize = 'sm' | 'md';
+
+interface Props {
+  /** When present, renders an <a>; otherwise a <button> trigger. */
+  href?: string;
+  /** Leading Lucide icon name. */
+  icon?: string;
+  /** Trailing Lucide icon — the dropdown/disclosure affordance (e.g. "chevron-down"). */
+  trailing?: string;
+  /** sm = 14px (sub-bars), md = 16px (primary bars). */
+  size?: EsaIconLinkSize;
+  /** Selected / current state. */
+  active?: boolean;
+  weight?: 'regular' | 'medium' | 'semibold';
+  /** Native button type when rendered as <button>. */
+  type?: 'button' | 'submit' | 'reset';
+  /** Override the element. 'summary' makes it a disclosure trigger inside <details> (see esa-nav-dropdown). */
+  tag?: 'a' | 'button' | 'summary';
+}
+
+const {
+  href,
+  icon,
+  trailing,
+  size = 'md',
+  active = false,
+  weight = 'medium',
+  type = 'button',
+  tag,
+} = Astro.props;
+
+const Tag = tag ?? (href ? 'a' : 'button');
+// esa-icon scale: xs=14, sm=16 — pair to the link size.
+const iconSize = size === 'sm' ? 'xs' : 'sm';
+const cls = [
+  'esa-icon-link',
+  `esa-icon-link--${size}`,
+  `esa-icon-link--${weight}`,
+  active && 'is-active',
+]
+  .filter(Boolean)
+  .join(' ');
+---
+<Tag
+  class={cls}
+  href={Tag === 'a' ? href : undefined}
+  type={Tag === 'button' ? type : undefined}
+  aria-current={active ? 'true' : undefined}
+>
+  {icon && <EsaIcon name={icon} size={iconSize} />}
+  <span class="esa-icon-link__label"><slot /></span>
+  {trailing && <EsaIcon name={trailing} size={iconSize} />}
+</Tag>
+
+<style>
+  .esa-icon-link {
+    --_il-font: 1rem; /* md = 16px */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-150, 6px);
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    color: inherit; /* currentColor — the bar/menu sets the context */
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: var(--_il-font);
+    font-weight: var(--font-weight-medium, 500);
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .esa-icon-link--sm { --_il-font: 0.875rem; } /* 14px */
+
+  .esa-icon-link--regular  { font-weight: var(--font-weight-regular, 400); }
+  .esa-icon-link--medium   { font-weight: var(--font-weight-medium, 500); }
+  .esa-icon-link--semibold { font-weight: var(--font-weight-semibold, 600); }
+
+  .esa-icon-link:hover { text-decoration: underline; }
+  .esa-icon-link:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid currentColor;
+    outline-offset: var(--focus-ring-offset, 2px);
+    border-radius: var(--radius-100, 4px);
+  }
+  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold, 600); }
+
+  .esa-icon-link__label { display: inline-block; }
+
+  /* When used as a <details> trigger (tag="summary"): drop the disclosure marker. */
+  summary.esa-icon-link { list-style: none; }
+  summary.esa-icon-link::-webkit-details-marker { display: none; }
+</style>

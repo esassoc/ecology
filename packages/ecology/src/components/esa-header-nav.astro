@@ -1,14 +1,27 @@
 ---
 // esa-header-nav — presentational top app bar (.astro).
-// Faithful translation of the Angular esa-header-nav: brand slot, primary nav
-// with dropdowns, optional actions slot, user menu, and a mobile hamburger.
-// The Angular version drove dropdown/user-menu/mobile open state with signals;
-// here those disclosures are native <details>/<summary> so the layout needs zero
-// runtime JS while keeping the same markup, classes, and behavior. Uses the
-// --header-height token. Lucide icons are inlined as SVG.
+//
+// A data-driven convenience SET, now composed from the chrome bricks rather than
+// re-implementing them:
+//   esa-app-bar      → the bar shell + start/main/end slots + tone
+//   esa-icon-link    → plain nav links
+//   esa-nav-dropdown → items with children (native <details>, zero JS)
+// The signed-in user menu stays bespoke here (an avatar-triggered disclosure is
+// set-specific, not a generic brick). `icon` on an item is a Lucide name (passed
+// straight to esa-icon-link), consistent with the rest of the system.
+//
+// For full control, compose esa-app-bar + the bricks directly (see cb-fish-design's
+// cbf-public-nav, or the App Bar specimen). This component is the batteries-included
+// shortcut for the common brand · nav · user shape.
+import EsaAppBar from './esa-app-bar.astro';
+import EsaIconLink from './esa-icon-link.astro';
+import EsaNavDropdown from './esa-nav-dropdown.astro';
+import EsaIcon from './esa-icon.astro';
+
 export interface EsaHeaderNavItem {
   label: string;
   href?: string;
+  /** Lucide icon name (esa-icon). */
   icon?: string;
   children?: EsaHeaderNavItem[];
 }
@@ -34,72 +47,34 @@ function initialsFor(u: EsaHeaderNavUser): string {
     .slice(0, 2);
 }
 ---
-<header class="esa-header-nav">
-  <div class="esa-header-nav__bar">
-    <!-- Logo / brand slot -->
-    <div class="esa-header-nav__brand"><slot name="brand" /></div>
+<EsaAppBar tone="surface" as="header" class="esa-header-nav">
+  <div slot="start" class="esa-header-nav__brand"><slot name="brand" /></div>
 
-    <!-- Primary nav (desktop) -->
-    <nav class="esa-header-nav__primary" aria-label="Primary navigation">
-      <ul class="esa-header-nav__list" role="list">
-        {items.map((item) =>
-          item.children && item.children.length ? (
-            <li class="esa-header-nav__item esa-header-nav__item--has-children">
-              <details class="esa-header-nav__dropdown-wrap">
-                <summary class="esa-header-nav__link esa-header-nav__link--dropdown">
-                  {item.icon && (
-                    <span class="esa-header-nav__link-icon" set:html={item.icon} />
-                  )}
-                  <span>{item.label}</span>
-                  <svg class="esa-header-nav__dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-                </summary>
-                <ul class="esa-header-nav__dropdown" role="list">
-                  {item.children.map((child) => (
-                    <li>
-                      {child.href ? (
-                        <a class="esa-header-nav__dropdown-item" href={child.href}>
-                          {child.icon && <span set:html={child.icon} />}
-                          <span>{child.label}</span>
-                        </a>
-                      ) : (
-                        <span class="esa-header-nav__dropdown-item esa-header-nav__dropdown-item--inert">
-                          {child.icon && <span set:html={child.icon} />}
-                          <span>{child.label}</span>
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </details>
+  {items.map((item) =>
+    item.children && item.children.length ? (
+      <EsaNavDropdown label={item.label} icon={item.icon}>
+        <ul class="esa-header-nav__menu" role="list">
+          {item.children.map((child) => (
+            <li>
+              {child.href ? (
+                <a class="esa-header-nav__menu-item" href={child.href}>{child.label}</a>
+              ) : (
+                <span class="esa-header-nav__menu-item esa-header-nav__menu-item--inert">{child.label}</span>
+              )}
             </li>
-          ) : item.href ? (
-            <li class="esa-header-nav__item">
-              <a class="esa-header-nav__link" href={item.href}>
-                {item.icon && <span class="esa-header-nav__link-icon" set:html={item.icon} />}
-                <span>{item.label}</span>
-              </a>
-            </li>
-          ) : (
-            <li class="esa-header-nav__item">
-              <span class="esa-header-nav__link esa-header-nav__link--inert">
-                {item.icon && <span class="esa-header-nav__link-icon" set:html={item.icon} />}
-                <span>{item.label}</span>
-              </span>
-            </li>
-          )
-        )}
-      </ul>
-    </nav>
+          ))}
+        </ul>
+      </EsaNavDropdown>
+    ) : (
+      <EsaIconLink href={item.href} icon={item.icon}>{item.label}</EsaIconLink>
+    )
+  )}
 
-    <!-- Spacer -->
-    <div class="esa-header-nav__spacer"></div>
-
-    <!-- Right-side actions slot -->
+  <Fragment slot="end">
     {Astro.slots.has('actions') && (
-      <div class="esa-header-nav__actions"><slot name="actions" /></div>
+      <span class="esa-header-nav__actions"><slot name="actions" /></span>
     )}
 
-    <!-- User menu -->
     {user && (
       <details class="esa-header-nav__user">
         <summary class="esa-header-nav__avatar-btn" aria-label={`User menu for ${user.name}`}>
@@ -115,348 +90,87 @@ function initialsFor(u: EsaHeaderNavUser): string {
             {user.email && <span class="esa-header-nav__user-email">{user.email}</span>}
           </div>
           <div class="esa-header-nav__user-actions">
-            <a class="esa-header-nav__user-action" href="#profile">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-              <span>Profile</span>
-            </a>
-            <a class="esa-header-nav__user-action" href="#settings">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-              <span>Settings</span>
-            </a>
+            <a class="esa-header-nav__user-action" href="#profile"><EsaIcon name="user" size="sm" /><span>Profile</span></a>
+            <a class="esa-header-nav__user-action" href="#settings"><EsaIcon name="settings" size="sm" /><span>Settings</span></a>
             <div class="esa-header-nav__user-divider"></div>
-            <a class="esa-header-nav__user-action esa-header-nav__user-action--danger" href="#logout">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
-              <span>Log out</span>
-            </a>
+            <a class="esa-header-nav__user-action esa-header-nav__user-action--danger" href="#logout"><span>Log out</span></a>
           </div>
         </div>
       </details>
     )}
-
-    <!-- Mobile hamburger -->
-    <details class="esa-header-nav__mobile-wrap">
-      <summary class="esa-header-nav__hamburger" aria-label="Toggle menu">
-        <svg class="esa-header-nav__hamburger-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
-        <svg class="esa-header-nav__hamburger-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-      </summary>
-      <nav class="esa-header-nav__mobile" aria-label="Mobile navigation">
-        <ul class="esa-header-nav__mobile-list" role="list">
-          {items.map((item) => (
-            <li>
-              {item.href ? (
-                <a class="esa-header-nav__mobile-link" href={item.href}>
-                  {item.icon && <span set:html={item.icon} />}
-                  <span>{item.label}</span>
-                </a>
-              ) : (
-                <span class="esa-header-nav__mobile-link">
-                  {item.icon && <span set:html={item.icon} />}
-                  <span>{item.label}</span>
-                </span>
-              )}
-              {item.children && item.children.length && (
-                <ul class="esa-header-nav__mobile-children" role="list">
-                  {item.children.map((child) => (
-                    <li>
-                      {child.href ? (
-                        <a class="esa-header-nav__mobile-link esa-header-nav__mobile-link--child" href={child.href}>
-                          {child.icon && <span set:html={child.icon} />}
-                          <span>{child.label}</span>
-                        </a>
-                      ) : (
-                        <span class="esa-header-nav__mobile-link esa-header-nav__mobile-link--child">
-                          {child.icon && <span set:html={child.icon} />}
-                          <span>{child.label}</span>
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </details>
-  </div>
-</header>
+  </Fragment>
+</EsaAppBar>
 
 <style>
-  .esa-header-nav {
-    --_header-height: var(--header-height, 56px);
-    --_header-bg: var(--topbar-bg, #ffffff);
-    --_header-border: var(--topbar-border, #e5e5e5);
-    --_header-text: var(--color-text-primary, #171717);
-    --_header-link-color: var(--color-text-secondary, #525252);
-    --_header-link-active: var(--color-primary, #005862);
-    --_header-link-hover-bg: var(--color-surface-sunken, #efefef);
-    --_header-avatar-size: 32px;
-    --_header-padding-x: var(--spacing-500, 24px);
-    --_header-dropdown-bg: var(--color-surface, #ffffff);
-    --_header-dropdown-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.1));
-    --_header-dropdown-radius: var(--radius-200, 8px);
+  /* The .esa-header-nav class lands on esa-app-bar's root (a child component), so
+     it doesn't carry this file's scope hash — target it with :global. The custom
+     props inherit into the app-bar internals; the border sits on the bar itself. */
+  :global(.esa-header-nav) {
+    --app-bar-gap: var(--spacing-300, 12px);
+    --app-bar-pad-x: var(--spacing-500, 24px);
+    --app-bar-pad-y: var(--spacing-150, 6px);
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+  }
+  .esa-header-nav__brand { display: inline-flex; align-items: center; }
+  .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200, 8px); }
 
+  /* Dropdown menu list (rendered inside esa-nav-dropdown's panel) */
+  .esa-header-nav__menu { list-style: none; margin: 0; padding: 0; min-width: 180px; }
+  .esa-header-nav__menu-item {
     display: block;
-    background: var(--_header-bg);
-    border-bottom: 1px solid var(--_header-border);
-  }
-
-  .esa-header-nav__bar {
-    display: flex;
-    align-items: center;
-    height: var(--_header-height);
-    padding: 0 var(--_header-padding-x);
-    gap: var(--spacing-100, 4px);
-  }
-
-  .esa-header-nav__brand {
-    display: flex;
-    align-items: center;
-    margin-right: var(--spacing-400, 16px);
-    flex-shrink: 0;
-  }
-
-  .esa-header-nav__spacer { flex: 1; }
-
-  .esa-header-nav__primary { display: flex; align-items: center; }
-
-  .esa-header-nav__list {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-100, 4px);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .esa-header-nav__item { position: relative; }
-
-  .esa-header-nav__link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-200, 8px);
-    height: 36px;
-    padding: 0 var(--spacing-300, 12px);
-    border: none;
-    border-radius: var(--radius-200, 8px);
-    background: transparent;
-    color: var(--_header-link-color);
-    font-family: inherit;
-    font-size: var(--type-size-200, 14px);
-    font-weight: var(--font-weight-medium, 500);
-    line-height: 1;
-    text-decoration: none;
-    cursor: pointer;
-    white-space: nowrap;
-    list-style: none;
-    transition: background 150ms ease, color 150ms ease;
-  }
-  .esa-header-nav__link::-webkit-details-marker { display: none; }
-  .esa-header-nav__link:hover { background: var(--_header-link-hover-bg); }
-  .esa-header-nav__link:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
-    outline-offset: var(--focus-ring-offset, 2px);
-  }
-
-  .esa-header-nav__link--inert { cursor: default; }
-  .esa-header-nav__link--inert:hover { background: transparent; }
-
-  .esa-header-nav__link-icon,
-  .esa-header-nav__dropdown-arrow { flex-shrink: 0; display: inline-flex; }
-  .esa-header-nav__dropdown-arrow { margin-left: -2px; transition: transform 150ms ease; }
-  .esa-header-nav__dropdown-wrap[open] .esa-header-nav__dropdown-arrow { transform: rotate(180deg); }
-
-  /* Dropdown */
-  .esa-header-nav__dropdown-wrap { position: relative; }
-  .esa-header-nav__dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: var(--z-dropdown, 50);
-    min-width: 180px;
-    margin-top: var(--spacing-100, 4px);
-    padding: var(--spacing-100, 4px);
-    list-style: none;
-    background: var(--_header-dropdown-bg);
-    border-radius: var(--_header-dropdown-radius);
-    box-shadow: var(--_header-dropdown-shadow);
-    border: 1px solid var(--_header-border);
-  }
-
-  .esa-header-nav__dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-200, 8px);
-    width: 100%;
-    height: 36px;
-    padding: 0 var(--spacing-300, 12px);
-    border: none;
+    padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-100, 4px);
-    background: transparent;
-    color: var(--_header-link-color);
-    font-family: inherit;
-    font-size: var(--type-size-200, 14px);
-    line-height: 1;
+    color: var(--color-text-secondary, #525252);
+    font-size: var(--type-size-200, 1rem);
     text-decoration: none;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 150ms ease;
   }
-  .esa-header-nav__dropdown-item:hover { background: var(--_header-link-hover-bg); }
-  .esa-header-nav__dropdown-item--inert { cursor: default; }
-  .esa-header-nav__dropdown-item--inert:hover { background: transparent; }
+  .esa-header-nav__menu-item:hover { background: var(--color-surface-sunken, #efefef); }
+  .esa-header-nav__menu-item--inert { color: var(--color-text-muted, #737373); }
 
-  /* Actions */
-  .esa-header-nav__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-200, 8px);
-    margin-right: var(--spacing-200, 8px);
-  }
-
-  /* User menu */
+  /* User menu (bespoke — avatar-triggered disclosure) */
   .esa-header-nav__user { position: relative; display: flex; align-items: center; }
   .esa-header-nav__avatar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--_header-avatar-size);
-    height: var(--_header-avatar-size);
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
     border-radius: var(--radius-full, 9999px);
     background: var(--color-primary, #005862);
-    color: var(--color-text-inverse, #ffffff);
-    cursor: pointer;
-    overflow: hidden;
-    list-style: none;
-    transition: box-shadow 150ms ease;
+    color: var(--color-text-inverse, #fff);
+    cursor: pointer; overflow: hidden; list-style: none;
   }
   .esa-header-nav__avatar-btn::-webkit-details-marker { display: none; }
-  .esa-header-nav__avatar-btn:hover { box-shadow: 0 0 0 2px var(--_header-link-hover-bg); }
   .esa-header-nav__avatar-btn:focus-visible {
     outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
     outline-offset: var(--focus-ring-offset, 2px);
   }
-
   .esa-header-nav__avatar-img { width: 100%; height: 100%; object-fit: cover; }
-  .esa-header-nav__avatar-initials {
-    font-size: var(--type-size-100, 12px);
-    font-weight: var(--font-weight-semibold, 600);
-    line-height: 1;
-  }
+  .esa-header-nav__avatar-initials { font-size: var(--type-size-100, 0.75rem); font-weight: var(--font-weight-semibold, 600); }
 
   .esa-header-nav__user-dropdown {
-    position: absolute;
-    top: calc(100% + var(--spacing-100, 4px));
-    right: 0;
+    position: absolute; top: calc(100% + var(--spacing-100, 4px)); right: 0;
     z-index: var(--z-dropdown, 50);
     min-width: 220px;
-    background: var(--_header-dropdown-bg);
-    border-radius: var(--_header-dropdown-radius);
-    box-shadow: var(--_header-dropdown-shadow);
-    border: 1px solid var(--_header-border);
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-200, 8px);
+    box-shadow: var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12));
     overflow: hidden;
   }
-
   .esa-header-nav__user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: flex; flex-direction: column; gap: 2px;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border-bottom: 1px solid var(--_header-border);
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
   }
-  .esa-header-nav__user-name {
-    font-size: var(--type-size-200, 14px);
-    font-weight: var(--font-weight-semibold, 600);
-    color: var(--_header-text);
-  }
-  .esa-header-nav__user-email {
-    font-size: var(--type-size-100, 12px);
-    color: var(--_header-link-color);
-  }
-
+  .esa-header-nav__user-name { font-size: var(--type-size-200, 1rem); font-weight: var(--font-weight-semibold, 600); color: var(--color-text-primary, #171717); }
+  .esa-header-nav__user-email { font-size: var(--type-size-100, 0.75rem); color: var(--color-text-secondary, #525252); }
   .esa-header-nav__user-actions { padding: var(--spacing-100, 4px); }
   .esa-header-nav__user-action {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-200, 8px);
-    width: 100%;
-    height: 36px;
-    padding: 0 var(--spacing-300, 12px);
-    border: none;
+    display: flex; align-items: center; gap: var(--spacing-200, 8px);
+    padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-100, 4px);
-    background: transparent;
-    color: var(--_header-link-color);
-    font-family: inherit;
-    font-size: var(--type-size-200, 14px);
-    line-height: 1;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 150ms ease;
+    color: var(--color-text-secondary, #525252);
+    font-size: var(--type-size-200, 1rem); text-decoration: none;
   }
-  .esa-header-nav__user-action:hover { background: var(--_header-link-hover-bg); }
+  .esa-header-nav__user-action:hover { background: var(--color-surface-sunken, #efefef); }
   .esa-header-nav__user-action--danger { color: var(--color-danger, #dc2626); }
-
-  .esa-header-nav__user-divider {
-    height: 1px;
-    margin: var(--spacing-100, 4px) 0;
-    background: var(--_header-border);
-  }
-
-  /* Mobile hamburger */
-  .esa-header-nav__mobile-wrap { display: none; }
-  .esa-header-nav__hamburger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    margin-left: var(--spacing-200, 8px);
-    border-radius: var(--radius-200, 8px);
-    background: transparent;
-    color: var(--_header-text);
-    cursor: pointer;
-    list-style: none;
-    transition: background 150ms ease;
-  }
-  .esa-header-nav__hamburger::-webkit-details-marker { display: none; }
-  .esa-header-nav__hamburger:hover { background: var(--_header-link-hover-bg); }
-  .esa-header-nav__hamburger-close { display: none; }
-  .esa-header-nav__mobile-wrap[open] .esa-header-nav__hamburger-open { display: none; }
-  .esa-header-nav__mobile-wrap[open] .esa-header-nav__hamburger-close { display: inline-flex; }
-
-  .esa-header-nav__mobile {
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: var(--z-header, 200);
-    background: var(--_header-bg);
-    border-bottom: 1px solid var(--_header-border);
-    padding: var(--spacing-200, 8px) var(--_header-padding-x) var(--spacing-400, 16px);
-  }
-  .esa-header-nav__mobile-list,
-  .esa-header-nav__mobile-children { list-style: none; margin: 0; padding: 0; }
-  .esa-header-nav__mobile-children { padding-left: var(--spacing-400, 16px); }
-
-  .esa-header-nav__mobile-link {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-200, 8px);
-    width: 100%;
-    height: 44px;
-    padding: 0 var(--spacing-300, 12px);
-    border-radius: var(--radius-200, 8px);
-    color: var(--_header-link-color);
-    font-size: var(--type-size-250, 15px);
-    font-weight: var(--font-weight-medium, 500);
-    text-decoration: none;
-    transition: background 150ms ease;
-  }
-  .esa-header-nav__mobile-link:hover { background: var(--_header-link-hover-bg); }
-  .esa-header-nav__mobile-link--child { height: 40px; font-size: var(--type-size-200, 14px); }
-
-  /* Responsive: show hamburger + mobile nav below 768px */
-  @media (max-width: 767px) {
-    .esa-header-nav__primary { display: none; }
-    .esa-header-nav__mobile-wrap { display: block; position: static; }
-  }
+  .esa-header-nav__user-divider { height: 1px; margin: var(--spacing-100, 4px) 0; background: var(--color-border, #e5e5e5); }
 </style>

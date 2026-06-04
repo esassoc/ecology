@@ -2,6 +2,7 @@
   "font": {
     "sans":           { "$value": "'DM Sans', sans-serif",  "$type": "fontFamily" },
     "mono":           { "$value": "'DM Mono', monospace",   "$type": "fontFamily" },
+    "display":        { "$value": "{font.sans}",            "$type": "fontFamily", "$description": "Headline/display face. Defaults to sans (zero visual change) so the slot exists for a spoke to override with a distinct face — e.g. a condensed family for logotypes and big numbers. Wired into the display/title type-roles." },
     "family-primary": { "$value": "{font.sans}",            "$type": "fontFamily" },
     "weight": {
       "light":    { "$value": "300", "$type": "fontWeight" },

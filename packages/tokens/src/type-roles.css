@@ -3,21 +3,35 @@
  * Faithful translation of the Angular lib's SCSS type mixins (which can't be
  * expressed as single-value tokens) into composable utility classes.
  * Ship alongside tokens.css; apply to elements or @extend in component styles.
+ *
+ * THE TYPE CONTRACT (for spokes): a brand may swap two surfaces —
+ *   1. --font-sans      the body face  (default 'DM Sans')
+ *   2. --font-display   the headline face (defaults to --font-sans; the display
+ *                       and title roles below read it, so a spoke that sets it
+ *                       gets distinct headlines for free).
+ * Font-WEIGHT values are typeface-bound: the hub's --font-weight-* numbers match
+ * DM Sans's optical weights (350/450/550/650). The role NAMES (regular/medium/
+ * semibold/bold) are the stable contract; the numbers travel with the family —
+ * so a spoke overriding --font-sans must also set --font-weight-* to that face's
+ * matching weights. (See cb-fish-design for a worked IBM Plex remap: 400/500/600.)
  */
 
 .type-display {
+  font-family: var(--font-display, var(--font-sans));
   font-size: var(--type-size-800);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
 .type-page-title {
+  font-family: var(--font-display, var(--font-sans));
   font-size: var(--type-size-600);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
 .type-section-title {
+  font-family: var(--font-display, var(--font-sans));
   font-size: var(--type-size-500);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);

@@ -1,0 +1,47 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaLinkColumn from '@esa/ecology/esa-link-column.astro';
+
+const props = [
+  { name: 'heading', type: 'string', description: 'Column heading.' },
+  { name: 'href', type: 'string', description: 'Optional link on the heading itself.' },
+  { name: 'links', type: '{ label: string; href?: string }[]', description: 'The list of links.' },
+];
+const mitigation = [
+  { label: 'Projects' }, { label: 'Contracts' }, { label: 'Portfolios' },
+  { label: 'Work elements' }, { label: 'Estuary program' }, { label: 'Tributary habitat' },
+];
+const reporting = [
+  { label: 'Report Center' }, { label: 'Programs' }, { label: 'Maps' }, { label: 'Publications' },
+];
+---
+<ComponentDoc name="Link Column" category="Navigation" slug="esa-link-column" type=".astro" status="stable"
+  summary="A footer / sitemap / mega-menu column: heading + thin rule + a list of links. Inherits <code>currentColor</code> (the rule is derived from it), so it reads on a brand footer or a light surface without carrying brand values.">
+
+  <Section id="preview" title="On a light surface">
+    <Preview align="start" code={`<EsaLinkColumn heading="Mitigation work" links={[{ label: 'Projects' }, …]} />`}>
+      <div style="display:flex;gap:64px">
+        <EsaLinkColumn heading="Mitigation work" links={mitigation} />
+        <EsaLinkColumn heading="Reporting" links={reporting} />
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="oncontext" title="On a brand surface (currentColor)">
+    <Preview align="start" code={`<div style="background:var(--color-primary);color:#fff">
+  <EsaLinkColumn heading="Mitigation work" links={[…]} />
+</div>`}>
+      <div style="display:flex;gap:64px;background:var(--color-primary,#005862);color:#fff;padding:32px;border-radius:8px">
+        <EsaLinkColumn heading="Mitigation work" links={mitigation} />
+        <EsaLinkColumn heading="Reporting" links={reporting} />
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+</ComponentDoc>

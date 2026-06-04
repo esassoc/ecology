@@ -33,7 +33,7 @@ const slots = [
 ];
 ---
 <ComponentDoc name="Header Nav" category="Navigation" slug="esa-header-nav" type=".astro" status="stable"
-  summary="Presentational top app bar: brand slot, primary nav with dropdowns, an actions slot, a user menu, and a mobile hamburger. Disclosures use native <code>&lt;details&gt;</code>, so it needs zero runtime JS.">
+  summary="A batteries-included top app bar composed from the chrome bricks (esa-app-bar + esa-icon-link + esa-nav-dropdown): brand slot, data-driven primary nav with dropdowns, an actions slot, and a user menu. Disclosures are native details/summary, so it needs zero runtime JS. For full control, compose the bricks directly.">
 
   <Section id="preview" title="Preview">
     <p>Open <strong>Reports</strong> or the avatar to expand the native disclosures.</p>
@@ -65,25 +65,24 @@ const slots = [
     <Api props={props} />
     <h3>Slots</h3>
     <PropsTable rows={slots} />
-    <p>Nav dropdowns, the user menu, and the &lt;768px hamburger are native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> disclosures — no JavaScript required.</p>
+    <p>Nav dropdowns and the user menu are native details/summary disclosures (via esa-nav-dropdown) — no JavaScript required.</p>
   </Section>
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>Primary nav is a <code>&lt;nav aria-label="Primary navigation"&gt;</code>; the mobile menu is a separate labeled <code>&lt;nav&gt;</code>.</li>
-      <li>Disclosures are native <code>&lt;details&gt;</code> — keyboard toggling and the expanded state come for free.</li>
+      <li>Each item with children renders an <code>esa-nav-dropdown</code> disclosure; plain items render an <code>esa-icon-link</code>.</li>
+      <li>Disclosures are native details/summary — keyboard toggling and the expanded state come for free.</li>
       <li>The avatar button carries an <code>aria-label</code> naming the user (<code>User menu for …</code>).</li>
       <li>Decorative chevrons and glyph SVGs are <code>aria-hidden</code>.</li>
     </ul>
   </Section>
 
   <Section id="tokens" title="Tokens">
-    <p>Override these to re-skin without touching the component:</p>
+    <p>The bar inherits the esa-app-bar surface tone; re-skin via the underlying tokens:</p>
     <ul class="tokens">
-      <li><code>--header-height</code> · <code>--topbar-bg</code> / <code>--topbar-border</code></li>
-      <li><code>--color-text-primary</code> / <code>--color-text-secondary</code> · <code>--color-primary</code> (active, avatar) · <code>--color-surface-sunken</code> (hover)</li>
-      <li><code>--color-surface</code> (dropdowns) · <code>--shadow-200</code> · <code>--radius-100</code> / <code>--radius-200</code> / <code>--radius-full</code></li>
-      <li><code>--z-dropdown</code> / <code>--z-header</code> · <code>--spacing-*</code> · <code>--type-size-*</code> · <code>--font-weight-medium</code> / <code>--font-weight-semibold</code></li>
+      <li><code>--color-surface</code> / <code>--color-text-primary</code> (bar + dropdowns) · <code>--color-border</code> (bar border, dividers)</li>
+      <li><code>--color-primary</code> (avatar) · <code>--color-surface-sunken</code> (menu hover) · <code>--color-text-secondary</code> (menu items)</li>
+      <li><code>--app-bar-gap</code> / <code>--app-bar-pad-x</code> / <code>--app-bar-pad-y</code> (bar spacing) · <code>--shadow-200</code> · <code>--radius-*</code></li>
     </ul>
   </Section>
 </ComponentDoc>

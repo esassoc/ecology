@@ -1,0 +1,80 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '../../components/docs/Section.astro';
+import Preview from '../../components/docs/Preview.astro';
+import Api from '../../components/docs/Api.astro';
+import EsaAppBar from '@esa/ecology/esa-app-bar.astro';
+import EsaIconLink from '@esa/ecology/esa-icon-link.astro';
+import EsaIconButton from '@esa/ecology/esa-icon-button.astro';
+
+const props = [
+  { name: 'tone', type: "'surface' | 'brand' | 'brand-strong'", default: "'surface'", description: 'Color context. surface → --color-surface/text-primary; brand → --color-primary/text-inverse; brand-strong → --color-surface-inverse/text-inverse. Children inherit the text color.' },
+  { name: 'contained', type: 'boolean', default: 'false', description: 'Constrain the inner row to maxWidth and center it.' },
+  { name: 'maxWidth', type: 'string', default: "'1556px'", description: 'Inner row max-width when contained.' },
+  { name: 'as', type: "'header' | 'nav' | 'footer' | 'div'", default: "'div'", description: 'Semantic host element.' },
+];
+const tokens = [
+  { name: '--app-bar-gap', type: 'length', default: '--spacing-600 (32px)', description: 'Gap between slots and within groups. Override per instance.' },
+  { name: '--app-bar-pad-x', type: 'length', default: '--spacing-600 (32px)', description: 'Inline padding of the bar row.' },
+  { name: '--app-bar-pad-y', type: 'length', default: '--spacing-400 (16px)', description: 'Block padding of the bar row.' },
+];
+---
+<ComponentDoc name="App Bar" category="Navigation" slug="esa-app-bar" type=".astro" status="stable"
+  summary="The full-bleed chrome shell shared by top nav bars, sub-bars, and footers. It sets a <strong>color context</strong> (background + currentColor) from semantic tokens via <code>tone</code>, then exposes <code>start</code> / default / <code>end</code> slots. Children — <a href='/components/esa-icon-link'>Icon Link</a>, <a href='/components/esa-icon-button'>Icon Button</a>, a brand lockup — inherit the color, so a bar's brand comes entirely from tokens.">
+
+  <Section id="tones" title="Tones">
+    <p>Each tone maps to ecology semantic tokens; a spoke re-themes by re-pointing those tokens (e.g. <code>--color-primary</code>, <code>--color-surface-inverse</code>) — never by touching this component.</p>
+    <Preview align="start" code={`<EsaAppBar tone="surface">…</EsaAppBar>
+<EsaAppBar tone="brand">…</EsaAppBar>
+<EsaAppBar tone="brand-strong">…</EsaAppBar>`}>
+      <div style="display:flex;flex-direction:column;gap:12px;width:100%">
+        <EsaAppBar tone="surface">
+          <EsaIconLink icon="trees">Mitigation work</EsaIconLink>
+          <EsaIconLink icon="trending-up">Reporting</EsaIconLink>
+          <EsaIconButton slot="end" icon="search" label="Search" />
+        </EsaAppBar>
+        <EsaAppBar tone="brand">
+          <EsaIconLink icon="trees">Mitigation work</EsaIconLink>
+          <EsaIconLink icon="trending-up">Reporting</EsaIconLink>
+          <EsaIconButton slot="end" icon="search" label="Search" />
+        </EsaAppBar>
+        <EsaAppBar tone="brand-strong">
+          <EsaIconLink icon="trees">Mitigation work</EsaIconLink>
+          <EsaIconLink icon="trending-up">Reporting</EsaIconLink>
+          <EsaIconButton slot="end" icon="search" label="Search" />
+        </EsaAppBar>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="slots" title="Slots: start · main · end">
+    <p>The <code>end</code> slot is pushed right with <code>margin-left:auto</code>. This is the whole anatomy of a top bar.</p>
+    <Preview align="start" code={`<EsaAppBar tone="brand" as="header">
+  <span slot="start"><strong>CB Fish</strong></span>
+  <EsaIconLink icon="trees" trailing="chevron-down">Mitigation work</EsaIconLink>
+  <EsaIconLink icon="trending-up" trailing="chevron-down">Reporting</EsaIconLink>
+  <EsaIconLink icon="credit-card" trailing="chevron-down">Funding</EsaIconLink>
+  <EsaIconButton slot="end" icon="search" label="Search" />
+  <EsaIconLink slot="end" href="/dashboard" icon="layout-dashboard">Dashboard</EsaIconLink>
+  <EsaIconLink slot="end" icon="circle-user" trailing="chevron-down">Angela Zhao</EsaIconLink>
+</EsaAppBar>`}>
+      <EsaAppBar tone="brand" as="header">
+        <span slot="start" style="font-weight:700;font-size:18px">CB&nbsp;Fish</span>
+        <EsaIconLink icon="trees" trailing="chevron-down">Mitigation work</EsaIconLink>
+        <EsaIconLink icon="trending-up" trailing="chevron-down">Reporting</EsaIconLink>
+        <EsaIconLink icon="credit-card" trailing="chevron-down">Funding</EsaIconLink>
+        <EsaIconButton slot="end" icon="search" label="Search" />
+        <EsaIconLink slot="end" href="/dashboard" icon="layout-dashboard">Dashboard</EsaIconLink>
+        <EsaIconLink slot="end" icon="circle-user" trailing="chevron-down">Angela Zhao</EsaIconLink>
+      </EsaAppBar>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="tokens" title="Component tokens">
+    <Api props={tokens} />
+  </Section>
+</ComponentDoc>
