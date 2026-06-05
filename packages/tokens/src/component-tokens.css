@@ -66,8 +66,8 @@
   --filter-dropdown-radius: var(--radius-200);
   --filter-dropdown-shadow: var(--shadow-200);
   --filter-dropdown-min-width: 200px;
-  --filter-pill-bg: rgba(0, 88, 98, 0.08);
-  --filter-pill-bg-hover: rgba(0, 88, 98, 0.12);
+  --filter-pill-bg: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --filter-pill-bg-hover: color-mix(in srgb, var(--color-primary) 12%, transparent);
   --filter-pill-text: var(--color-primary);
   --filter-pill-radius: var(--radius-full);
   --filter-pill-padding: var(--spacing-100) var(--spacing-250);
@@ -85,7 +85,7 @@
   --grid-header-border: 1px solid var(--color-border);
   --grid-row-bg: var(--color-surface);
   --grid-row-bg-hover: var(--color-gray-100);
-  --grid-row-bg-selected: rgba(0, 88, 98, 0.06);
+  --grid-row-bg-selected: color-mix(in srgb, var(--color-primary) 6%, transparent);
   --grid-row-stripe-bg: var(--color-gray-50);
   --grid-row-border: 1px solid var(--color-border-light);
   --grid-row-font-size: var(--type-size-150);
@@ -147,8 +147,8 @@
   --breadcrumbs-link-color: var(--color-text-secondary);
   --breadcrumbs-link-hover: var(--color-text-primary);
   --breadcrumbs-separator-color: var(--color-gray-400);
-  --breadcrumbs-pill-bg: rgba(0, 88, 98, 0.06);
-  --breadcrumbs-pill-bg-hover: rgba(0, 88, 98, 0.1);
+  --breadcrumbs-pill-bg: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  --breadcrumbs-pill-bg-hover: color-mix(in srgb, var(--color-primary) 10%, transparent);
   --breadcrumbs-pill-radius: var(--radius-full);
   --breadcrumbs-pill-padding: var(--spacing-100) var(--spacing-250);
 }
