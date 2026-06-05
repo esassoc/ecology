@@ -25,7 +25,7 @@ const events = [
     <p>Click the trigger to open the panel, type to filter, and use Arrow/Enter/Escape to navigate. Outside-click and Escape close it. Options are set as a property in a small init script.</p>
     <Preview code={`<esa-filter-dropdown name="status" label="Status"></esa-filter-dropdown>
 
-<script>
+${'<script>'}
   import '@esa/ecology/esa-filter-dropdown';
   customElements.whenDefined('esa-filter-dropdown').then(() => {
     document.querySelector('esa-filter-dropdown').options = [
@@ -34,7 +34,7 @@ const events = [
       { label: 'Closed', value: 'closed' },
     ];
   });
-<\/script>`}>
+${'</script>'}`}>
       <esa-filter-dropdown data-opts="status" name="status" label="Status"></esa-filter-dropdown>
     </Preview>
   </Section>
