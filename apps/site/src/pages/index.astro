@@ -1,18 +1,22 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
-import EsaButton from '@esa/ecology/esa-button.astro';
 import { componentGroups } from '../data/nav';
 
 const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
 ---
 <DocsLayout title="Ecology — Design System" activeHref="/">
   <section class="hero">
-    <span class="eyebrow">ESA Data Technology · Design System</span>
-    <h1>Ecology</h1>
-    <p class="tagline">A framework-agnostic design system. Tokens, primitives, and patterns that travel from project to project — and re-skin to any brand without touching a component.</p>
-    <div class="cta">
-      <a href="/components/esa-button"><EsaButton size="lg">Browse components</EsaButton></a>
-      <a href="/foundations/color"><EsaButton appearance="outline" size="lg">Foundations</EsaButton></a>
+    <div class="hero__text">
+      <span class="eyebrow">ESA · Data Technology</span>
+      <h1>Ecology</h1>
+      <p class="tagline">A framework-agnostic design system. Tokens, primitives, and patterns that travel from project to project — and re-skin to any brand without touching a component.</p>
+      <div class="cta">
+        <a class="btn btn--primary" href="/components/esa-button">Browse components</a>
+        <a class="btn btn--ghost" href="/foundations/color">Foundations</a>
+      </div>
+    </div>
+    <div class="hero__art" aria-hidden="true">
+      <img src="/brand/ecology-mark.svg" alt="" width="260" height="260" />
     </div>
   </section>
 
@@ -24,27 +28,36 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
   </section>
 
   <section class="how">
-    <div class="card">
+    <article class="card">
       <h3>Token-driven</h3>
       <p>Primitive → semantic → component. Authored in DTCG, compiled to CSS. Every value is a token; nothing is hard-coded.</p>
       <a href="/foundations/color">Foundations →</a>
-    </div>
-    <div class="card">
+    </article>
+    <article class="card">
       <h3>Two kinds of component</h3>
       <p>Presentational primitives ship as <code>.astro</code>; interactive ones as framework-agnostic Lit Web Components that drop into any stack.</p>
       <a href="/components/esa-combobox">See an example →</a>
-    </div>
-    <div class="card">
+    </article>
+    <article class="card">
       <h3>Theme, don't fork</h3>
       <p>A project re-skins by overriding the semantic layer under a <code>[data-theme]</code> scope. The brand changes everywhere at once.</p>
       <a href="/foundations/color">How theming works →</a>
-    </div>
+    </article>
   </section>
 
-  <section class="start">
-    <h2 class="block-title">Get started</h2>
-    <pre class="snippet"><code>npm install @esa/tokens @esa/ecology</code></pre>
-    <p class="muted">Import the tokens once, then compose with Ecology components — or hand the rendered output to a dev team on any stack.</p>
+  <section class="rail">
+    <a class="rail__card rail__card--live" href="/components/esa-button">
+      <span class="rail__eyebrow">Components</span>
+      <h2>Component library</h2>
+      <p>{totalComponents} documented components across foundations, forms, overlays, and more — each with live specimens and an API.</p>
+      <span class="rail__go">Explore the library →</span>
+    </a>
+    <div class="rail__card rail__card--soon">
+      <span class="rail__eyebrow">Coming soon</span>
+      <h2>Pattern library</h2>
+      <p>Composed, multi-component patterns — page shells, data views, form flows — assembled from the primitives. In the works.</p>
+      <a class="rail__go" href="/patterns">Preview →</a>
+    </div>
   </section>
 
   <section class="explore">
@@ -61,35 +74,98 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
 </DocsLayout>
 
 <style>
-  .hero { padding: var(--spacing-600, 2rem) 0 var(--spacing-700, 3rem); }
-  .eyebrow { font-size: 14px; font-weight: 500; color: var(--color-primary, #005862); }
-  .hero h1 { font-size: 56px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin: var(--spacing-300, 0.75rem) 0 var(--spacing-400, 1rem); }
-  .tagline { font-size: 19px; line-height: 1.55; color: var(--color-text-secondary, #525252); max-width: 60ch; margin: 0 0 var(--spacing-500, 1.5rem); }
+  /* ---- Hero ---- */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: var(--spacing-700, 3rem);
+    padding: var(--spacing-500, 1.5rem) 0 var(--spacing-800, 4rem);
+  }
+  .eyebrow {
+    font-family: var(--meta-mono, monospace);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--meta-clay, #b85c38);
+  }
+  .hero h1 {
+    font-size: clamp(56px, 5vw + 1rem, 88px);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    margin: var(--spacing-300, 0.75rem) 0 var(--spacing-400, 1rem);
+    color: var(--meta-ink, #141413);
+  }
+  .tagline {
+    font-family: var(--meta-serif, Georgia, serif);
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--meta-ink-2, #4d4c49);
+    max-width: 52ch;
+    margin: 0 0 var(--spacing-500, 1.5rem);
+  }
+  .hero__art img { width: 260px; height: 260px; display: block; }
+
   .cta { display: flex; gap: var(--spacing-300, 0.75rem); flex-wrap: wrap; }
-  .cta a { text-decoration: none; }
+  .btn {
+    display: inline-flex; align-items: center;
+    padding: 11px 22px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  }
+  .btn--primary { background: var(--meta-ink, #141413); color: #faf9f6; }
+  .btn--primary:hover { background: var(--meta-clay, #b85c38); }
+  .btn--ghost { border-color: var(--meta-line, #e7e5dc); color: var(--meta-ink, #141413); background: #fff; }
+  .btn--ghost:hover { border-color: var(--meta-ink, #141413); }
 
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-300, 0.75rem); padding: var(--spacing-500, 1.5rem) 0; border-top: 1px solid var(--color-border, #e5e5e5); border-bottom: 1px solid var(--color-border, #e5e5e5); }
-  .stat b { display: block; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
-  .stat span { font-size: 14px; color: var(--color-text-muted, #737373); }
+  /* ---- Stats ---- */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-300, 0.75rem);
+    padding: var(--spacing-500, 1.5rem) 0;
+    border-top: 1px solid var(--meta-line, #e7e5dc);
+    border-bottom: 1px solid var(--meta-line, #e7e5dc);
+  }
+  .stat b { display: block; font-family: var(--meta-serif, serif); font-size: 26px; font-weight: 400; letter-spacing: -0.01em; color: var(--meta-ink, #141413); }
+  .stat span { font-size: 13px; color: var(--meta-ink-3, #8d949b); }
 
-  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-400, 1rem); margin: var(--spacing-700, 3rem) 0; }
-  .card { border: 1px solid var(--color-border, #e5e5e5); border-radius: 14px; padding: var(--spacing-500, 1.5rem); background: var(--color-surface, #fff); }
-  .card h3 { margin: 0 0 var(--spacing-200, 0.5rem); font-size: 17px; font-weight: 600; }
-  .card p { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 15px; line-height: 1.6; color: var(--color-text-secondary, #525252); }
-  .card a { font-size: 14.5px; font-weight: 500; color: var(--color-primary, #005862); }
+  /* ---- How ---- */
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-400, 1rem); margin: var(--spacing-800, 4rem) 0; }
+  .card { border: 1px solid var(--meta-line, #e7e5dc); border-radius: 8px; padding: var(--spacing-500, 1.5rem); background: var(--meta-card, #fff); }
+  .card h3 { font-family: var(--meta-serif, serif); font-weight: 400; margin: 0 0 var(--spacing-200, 0.5rem); font-size: 21px; color: var(--meta-ink, #141413); }
+  .card p { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 15px; line-height: 1.6; color: var(--meta-ink-2, #4d4c49); }
+  .card a { font-size: 14.5px; font-weight: 500; color: var(--meta-clay, #b85c38); }
+  .card code { font-family: var(--meta-mono, monospace); font-size: 0.9em; background: rgba(20,20,19,0.05); padding: 1px 5px; border-radius: 4px; }
 
-  .block-title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 var(--spacing-300, 0.75rem); }
-  .start { margin: var(--spacing-700, 3rem) 0; }
-  .snippet { background: var(--color-surface-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); margin: 0 0 var(--spacing-250, 0.625rem); overflow-x: auto; }
-  .snippet code { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-primary, #171717); }
-  .muted { font-size: 15px; color: var(--color-text-muted, #737373); }
+  /* ---- Rail: library + coming-soon ---- */
+  .rail { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400, 1rem); margin: var(--spacing-800, 4rem) 0; }
+  .rail__card { border: 1px solid var(--meta-line, #e7e5dc); border-radius: 10px; padding: var(--spacing-600, 2rem); background: var(--meta-card, #fff); display: flex; flex-direction: column; gap: var(--spacing-200, 0.5rem); }
+  .rail__card--live { transition: border-color 140ms ease; }
+  .rail__card--live:hover { border-color: var(--meta-clay, #b85c38); }
+  .rail__card--soon { background: #f0f5f9; border-color: #e2ecf3; }
+  .rail__eyebrow { font-family: var(--meta-mono, monospace); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--meta-ink-3, #8d949b); }
+  .rail__card h2 { font-family: var(--meta-serif, serif); font-weight: 400; font-size: 26px; letter-spacing: -0.01em; margin: 0; color: var(--meta-ink, #141413); }
+  .rail__card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--meta-ink-2, #4d4c49); }
+  .rail__go { margin-top: auto; padding-top: var(--spacing-300, 0.75rem); font-size: 14.5px; font-weight: 500; color: var(--meta-clay, #b85c38); }
 
-  .explore { margin: var(--spacing-700, 3rem) 0; }
+  /* ---- Explore ---- */
+  .explore { margin: var(--spacing-800, 4rem) 0 var(--spacing-600, 2rem); }
+  .block-title { font-size: 24px; font-weight: 400; letter-spacing: -0.01em; margin: 0 0 var(--spacing-400, 1rem); color: var(--meta-ink, #141413); }
   .explore-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--spacing-250, 0.625rem); }
-  .group-card { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); border: 1px solid var(--color-border, #e5e5e5); border-radius: 11px; background: var(--color-surface, #fff); transition: border-color 120ms ease, background 120ms ease; }
-  .group-card:hover { border-color: var(--color-primary, #005862); background: var(--color-surface-sunken, #f5f5f5); }
-  .group-card__label { font-weight: 500; font-size: 15px; }
-  .group-card__count { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-muted, #737373); }
+  .group-card { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); border: 1px solid var(--meta-line, #e7e5dc); border-radius: 8px; background: var(--meta-card, #fff); transition: border-color 120ms ease; }
+  .group-card:hover { border-color: var(--meta-clay, #b85c38); }
+  .group-card__label { font-weight: 500; font-size: 15px; color: var(--meta-ink, #141413); }
+  .group-card__count { font-family: var(--meta-mono, monospace); font-size: 13px; color: var(--meta-ink-3, #8d949b); }
 
-  @media (max-width: 720px) { .stats, .how, .explore-grid { grid-template-columns: 1fr 1fr; } .hero h1 { font-size: 40px; } }
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero__art { order: -1; }
+    .hero__art img { width: 180px; height: 180px; }
+    .stats, .how, .rail, .explore-grid { grid-template-columns: 1fr 1fr; }
+    .how { grid-template-columns: 1fr; }
+  }
 </style>

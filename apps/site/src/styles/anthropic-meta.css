@@ -1,0 +1,115 @@
+/*
+ * Anthropic-meta — the editorial "Claude-like" skin for the Ecology docs HARNESS.
+ *
+ * Scope is deliberate: this restyles the docs CHROME (sidebar, topbar, article
+ * typography, hero) — NOT the design-system components or their tokens. Component
+ * preview canvases (.preview__canvas) are reset back to the system font so the
+ * specimens render true. Loaded by apps/site DocsLayout AFTER DocsShell, so its
+ * global rules win on source order. Warm-palette rules are scoped to
+ * [data-scheme="light"] so dark mode (docs-dark.css) is untouched.
+ *
+ * Fonts are Anthropic's proprietary typefaces (Sans / Serif / Mono), variable
+ * woff2. Use plain font-weight (400/500/700) — never font-variation-settings.
+ */
+
+@font-face {
+  font-family: 'Anthropic Sans';
+  src: url('/fonts/AnthropicSans-Variable.woff2') format('woff2-variations');
+  font-weight: 300 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Anthropic Sans';
+  src: url('/fonts/AnthropicSans-Italic-Variable.woff2') format('woff2-variations');
+  font-weight: 300 800; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Anthropic Serif';
+  src: url('/fonts/AnthropicSerif-Variable.woff2') format('woff2-variations');
+  font-weight: 300 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Anthropic Serif';
+  src: url('/fonts/AnthropicSerif-Italic-Variable.woff2') format('woff2-variations');
+  font-weight: 300 800; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Anthropic Mono';
+  src: url('/fonts/AnthropicMono-Variable.woff2') format('woff2-variations');
+  font-weight: 300 800; font-style: normal; font-display: swap;
+}
+
+:root {
+  --meta-serif: 'Anthropic Serif', Georgia, serif;
+  --meta-sans: 'Anthropic Sans', system-ui, -apple-system, sans-serif;
+  --meta-mono: 'Anthropic Mono', ui-monospace, monospace;
+  --meta-paper: #faf9f6;       /* warm cream canvas */
+  --meta-card: #ffffff;
+  --meta-ink: #141413;         /* brown-black */
+  --meta-ink-2: #4d4c49;       /* muted secondary */
+  --meta-ink-3: #8d949b;       /* dim meta */
+  --meta-line: #e7e5dc;        /* warm hairline */
+  --meta-line-2: #ecebe4;
+  --meta-clay: #b85c38;        /* terracotta accent */
+}
+
+/* ---- Chrome typography (light + dark) ---- */
+.app .sidebar,
+.app .topbar,
+.app .article { font-family: var(--meta-sans); }
+
+.app .article h1,
+.app .article h2,
+.app .article h3,
+.app .article .lede,
+.app .brand b,
+.app .hero h1,
+.app .hero .tagline,
+.app .block-title { font-family: var(--meta-serif); font-weight: 400; }
+
+.app .article h1 { letter-spacing: -0.015em; }
+.app .article h2 { letter-spacing: -0.01em; border-bottom-color: var(--meta-line); }
+.app .article .lede { color: var(--meta-ink-2); }
+.app .brand b { font-size: 17px; letter-spacing: -0.01em; }
+
+.app code,
+.app .article code,
+.app .nav-link .tag,
+.app .search kbd { font-family: var(--meta-mono); }
+
+/* ---- Warm palette (light only — dark mode keeps docs-dark.css) ---- */
+html[data-scheme='light'] body { background: var(--meta-paper); color: var(--meta-ink); }
+html[data-scheme='light'] .sidebar,
+html[data-scheme='light'] .brand,
+html[data-scheme='light'] .topbar { background: var(--meta-paper); border-color: var(--meta-line); }
+html[data-scheme='light'] .topbar { background: color-mix(in srgb, var(--meta-paper) 82%, transparent); }
+html[data-scheme='light'] .sidebar { border-right-color: var(--meta-line); }
+
+html[data-scheme='light'] .nav-group > h4 { color: var(--meta-ink-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+html[data-scheme='light'] .nav-link { color: var(--meta-ink-2); border-radius: 4px; }
+html[data-scheme='light'] .nav-link:hover { background: rgba(20, 20, 19, 0.04); color: var(--meta-ink); }
+html[data-scheme='light'] .nav-link[aria-current='page'] { background: rgba(20, 20, 19, 0.06); color: var(--meta-ink); font-weight: 500; }
+html[data-scheme='light'] .nav-link .tag { border-color: var(--meta-line); color: var(--meta-ink-3); }
+
+html[data-scheme='light'] .brand .mark { background: var(--meta-clay); border-radius: 6px; }
+html[data-scheme='light'] .brand .ver { color: var(--meta-ink-3); }
+
+html[data-scheme='light'] .article h1,
+html[data-scheme='light'] .article h2,
+html[data-scheme='light'] .article h3 { color: var(--meta-ink); }
+html[data-scheme='light'] .article p { color: var(--meta-ink-2); }
+html[data-scheme='light'] .article code { background: rgba(20, 20, 19, 0.05); color: var(--meta-ink); }
+
+html[data-scheme='light'] .search { background: var(--meta-card); border-color: var(--meta-line); color: var(--meta-ink-3); }
+html[data-scheme='light'] .topbar-action,
+html[data-scheme='light'] .icon-btn,
+html[data-scheme='light'] .scheme-toggle { background: var(--meta-card); border-color: var(--meta-line); color: var(--meta-ink-2); }
+
+html[data-scheme='light'] .toc a:hover,
+html[data-scheme='light'] .toc a.active { color: var(--meta-ink); border-color: var(--meta-clay); }
+
+/* The "On this page" rail + section h2 accent rule pick up clay, not teal */
+.app .article h2 { color: var(--meta-ink); }
+
+/* ---- Keep component specimens true: previews use the SYSTEM font, not the serif ---- */
+.app .preview__canvas,
+.app .preview__canvas * { font-family: var(--font-sans, system-ui, sans-serif); }

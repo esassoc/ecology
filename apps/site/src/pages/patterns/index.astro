@@ -1,0 +1,65 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+const planned = [
+  { name: 'Page shells', desc: 'App bar + sidebar + content scaffolds, ready to fill.' },
+  { name: 'Data views', desc: 'Filterable tables, grids, and result lists with empty/loading states.' },
+  { name: 'Form flows', desc: 'Multi-section forms, validation, and review-and-submit patterns.' },
+  { name: 'Detail layouts', desc: 'Record headers, tab layouts, and side-panel compositions.' },
+];
+---
+<DocsLayout title="Pattern Library — Ecology" activeHref="/patterns">
+  <section class="ph">
+    <img class="ph__mark" src="/brand/ecology-mark.svg" alt="" width="96" height="96" aria-hidden="true" />
+    <span class="ph__badge">Coming soon</span>
+    <h1>Pattern Library</h1>
+    <p class="ph__lede">
+      The component library gives you the parts. The pattern library will give you the
+      <em>compositions</em> — multi-component layouts assembled from Ecology primitives, documented
+      the same way: live, themeable, and ready to lift into any project.
+    </p>
+    <a class="ph__back" href="/components/esa-button">← Browse the component library</a>
+  </section>
+
+  <section class="ph-planned">
+    <h2 class="ph-planned__title">In the works</h2>
+    <div class="ph-grid">
+      {planned.map((p) => (
+        <div class="ph-tile">
+          <h3>{p.name}</h3>
+          <p>{p.desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+  .ph { padding: var(--spacing-600, 2rem) 0 var(--spacing-700, 3rem); max-width: 60ch; }
+  .ph__mark { width: 88px; height: 88px; display: block; margin-bottom: var(--spacing-400, 1rem); opacity: 0.9; }
+  .ph__badge {
+    display: inline-block;
+    font-family: var(--meta-mono, monospace);
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--meta-clay, #b85c38);
+    background: color-mix(in srgb, var(--meta-clay, #b85c38) 12%, transparent);
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .ph h1 {
+    font-family: var(--meta-serif, serif); font-weight: 400;
+    font-size: clamp(40px, 4vw + 1rem, 60px); letter-spacing: -0.02em; line-height: 1.02;
+    margin: var(--spacing-300, 0.75rem) 0 var(--spacing-400, 1rem); color: var(--meta-ink, #141413);
+  }
+  .ph__lede { font-family: var(--meta-serif, serif); font-size: 20px; line-height: 1.55; color: var(--meta-ink-2, #4d4c49); margin: 0 0 var(--spacing-500, 1.5rem); }
+  .ph__lede em { font-style: italic; }
+  .ph__back { font-size: 15px; font-weight: 500; color: var(--meta-clay, #b85c38); }
+
+  .ph-planned { margin-top: var(--spacing-800, 4rem); }
+  .ph-planned__title { font-family: var(--meta-serif, serif); font-weight: 400; font-size: 22px; margin: 0 0 var(--spacing-400, 1rem); color: var(--meta-ink, #141413); }
+  .ph-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400, 1rem); }
+  .ph-tile { border: 1px solid var(--meta-line, #e7e5dc); border-radius: 8px; padding: var(--spacing-500, 1.5rem); background: var(--meta-card, #fff); }
+  .ph-tile h3 { font-family: var(--meta-serif, serif); font-weight: 400; font-size: 18px; margin: 0 0 6px; color: var(--meta-ink, #141413); }
+  .ph-tile p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--meta-ink-2, #4d4c49); }
+
+  @media (max-width: 640px) { .ph-grid { grid-template-columns: 1fr; } }
+</style>
