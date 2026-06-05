@@ -1,0 +1,17 @@
+{
+  "name": "@esa/docs",
+  "version": "0.0.1",
+  "description": "Shared documentation-site chrome for Ecology and its brand spokes — a themeable DocsShell + doc primitives. Consumers supply theme tokens, nav data, fonts, and brand chrome; the shell stays brand-agnostic.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*.astro": "./src/*.astro",
+    "./*": "./src/*.ts"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0"
+  },
+  "dependencies": {
+    "@esa/tokens": "file:../tokens"
+  }
+}

@@ -1,0 +1,11 @@
+---
+// Plain doc section — an h2 anchor + slot. The heading styling and the
+// auto-built "On this page" rail both come from DocsLayout (which targets
+// .article h2[id]), so this stays deliberately bare.
+interface Props { id: string; title: string }
+const { id, title } = Astro.props;
+---
+<section>
+  <h2 id={id}>{title}</h2>
+  <slot />
+</section>
