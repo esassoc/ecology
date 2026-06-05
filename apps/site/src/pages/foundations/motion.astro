@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
 const transitions = [
@@ -9,7 +10,7 @@ const transitions = [
 ];
 ---
 <DocsLayout title="Motion — Ecology" activeHref="/foundations/motion">
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Motion</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Motion</span></nav>
   <h1>Motion</h1>
   <p class="lede">Three transition tokens cover the whole system. They share an easing curve and differ only in duration — fast for direct feedback, slow for larger spatial moves. <strong>Hover a swatch</strong> to feel its timing.</p>
 

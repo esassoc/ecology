@@ -14,27 +14,27 @@
 
 @font-face {
   font-family: 'Anthropic Sans';
-  src: url('/fonts/AnthropicSans-Variable.woff2') format('woff2-variations');
+  src: url('./fonts/AnthropicSans-Variable.woff2') format('woff2-variations');
   font-weight: 300 800; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Anthropic Sans';
-  src: url('/fonts/AnthropicSans-Italic-Variable.woff2') format('woff2-variations');
+  src: url('./fonts/AnthropicSans-Italic-Variable.woff2') format('woff2-variations');
   font-weight: 300 800; font-style: italic; font-display: swap;
 }
 @font-face {
   font-family: 'Anthropic Serif';
-  src: url('/fonts/AnthropicSerif-Variable.woff2') format('woff2-variations');
+  src: url('./fonts/AnthropicSerif-Variable.woff2') format('woff2-variations');
   font-weight: 300 800; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Anthropic Serif';
-  src: url('/fonts/AnthropicSerif-Italic-Variable.woff2') format('woff2-variations');
+  src: url('./fonts/AnthropicSerif-Italic-Variable.woff2') format('woff2-variations');
   font-weight: 300 800; font-style: italic; font-display: swap;
 }
 @font-face {
   font-family: 'Anthropic Mono';
-  src: url('/fonts/AnthropicMono-Variable.woff2') format('woff2-variations');
+  src: url('./fonts/AnthropicMono-Variable.woff2') format('woff2-variations');
   font-weight: 300 800; font-style: normal; font-display: swap;
 }
 

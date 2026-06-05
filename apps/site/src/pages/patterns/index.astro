@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 
 const planned = [
   { name: 'Page shells', desc: 'App bar + sidebar + content scaffolds, ready to fill.' },
@@ -10,7 +11,7 @@ const planned = [
 ---
 <DocsLayout title="Pattern Library — Ecology" activeHref="/patterns">
   <section class="ph">
-    <img class="ph__mark" src="/brand/ecology-mark.svg" alt="" width="96" height="96" aria-hidden="true" />
+    <img class="ph__mark" src={withBase('/brand/ecology-mark.svg')} alt="" width="96" height="96" aria-hidden="true" />
     <span class="ph__badge">Coming soon</span>
     <h1>Pattern Library</h1>
     <p class="ph__lede">
@@ -18,7 +19,7 @@ const planned = [
       <em>compositions</em> — multi-component layouts assembled from Ecology primitives, documented
       the same way: live, themeable, and ready to lift into any project.
     </p>
-    <a class="ph__back" href="/components/esa-button">← Browse the component library</a>
+    <a class="ph__back" href={withBase('/components/esa-button')}>← Browse the component library</a>
   </section>
 
   <section class="ph-planned">

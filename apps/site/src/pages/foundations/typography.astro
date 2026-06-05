@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
 const families = [
@@ -59,7 +60,7 @@ const roles = [
 ];
 ---
 <DocsLayout title="Typography — Ecology" activeHref="/foundations/typography">
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Typography</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Typography</span></nav>
   <h1>Typography</h1>
   <p class="lede">One <strong>fluid type scale</strong> that interpolates between a small-screen min and a large-screen max, two font families, and a set of <strong>semantic type roles</strong> that compose size, weight, line-height and tracking into one class.</p>
 

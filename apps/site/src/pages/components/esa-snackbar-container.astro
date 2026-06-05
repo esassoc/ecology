@@ -4,6 +4,7 @@ import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
+import { withBase } from '@esa/docs/base';
 
 const methods = [
   { name: 'show(config)', type: 'method', description: 'Shows a toast. config: { message, variant?, duration?, action?, dismissable?, uniqueKey? }. Returns its id.' },
@@ -54,7 +55,7 @@ const events = [
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
       <li>Toasts auto-dismiss after <code>duration</code>; provide enough time to read, or set <code>duration: 0</code> for important messages.</li>
-      <li>Each toast renders an <a href="/components/esa-snackbar-item">esa-snackbar-item</a> with a labelled dismiss button.</li>
+      <li>Each toast renders an <a href={withBase('/components/esa-snackbar-item')}>esa-snackbar-item</a> with a labelled dismiss button.</li>
       <li>The newest toast appears at the bottom of the stack (column-reverse), nearest the user's attention.</li>
     </ul>
   </Section>
@@ -62,7 +63,7 @@ const events = [
   <Section id="tokens" title="Tokens">
     <ul class="tokens">
       <li><code>--z-toast</code> · <code>--spacing-200</code> / <code>--spacing-500</code> (stack gap + offset)</li>
-      <li>Item colors come from <a href="/components/esa-snackbar-item">esa-snackbar-item</a>: <code>--color-green-800</code> / <code>--color-blue-800</code> / <code>--color-orange-800</code> / <code>--color-red-700</code></li>
+      <li>Item colors come from <a href={withBase('/components/esa-snackbar-item')}>esa-snackbar-item</a>: <code>--color-green-800</code> / <code>--color-blue-800</code> / <code>--color-orange-800</code> / <code>--color-red-700</code></li>
     </ul>
   </Section>
 </ComponentDoc>

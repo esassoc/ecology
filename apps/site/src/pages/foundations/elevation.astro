@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
 const shadows = [
@@ -21,7 +22,7 @@ const zIndex = [
 ];
 ---
 <DocsLayout title="Elevation — Ecology" activeHref="/foundations/elevation">
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Elevation</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Elevation</span></nav>
   <h1>Elevation</h1>
   <p class="lede">Two systems work together to build depth: soft <strong>shadows</strong> imply lift off the surface, and a fixed <strong>z-index</strong> ladder keeps overlapping layers in a predictable stacking order.</p>
 

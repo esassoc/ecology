@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 import ColorScale from '@esa/docs/ColorScale.astro';
 
@@ -38,7 +39,7 @@ const semantic = [
 ];
 ---
 <DocsLayout title="Color — Ecology" activeHref="/foundations/color">
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Color</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Color</span></nav>
   <h1>Color</h1>
   <p class="lede">Two tiers: fixed <strong>primitive ramps</strong> (the raw palette) and intent-based <strong>semantic roles</strong> that components reference. Theme by overriding the semantic layer — primitives never move.</p>
 

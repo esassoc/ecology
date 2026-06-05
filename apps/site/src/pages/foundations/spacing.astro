@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
 const scale = [
@@ -20,7 +21,7 @@ const scale = [
 ];
 ---
 <DocsLayout title="Spacing — Ecology" activeHref="/foundations/spacing">
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Spacing</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Spacing</span></nav>
   <h1>Spacing</h1>
   <p class="lede">A single linear-then-modular scale drives every gap, pad and margin in the system. Use tokens — never raw pixels — so density stays consistent across components.</p>
 

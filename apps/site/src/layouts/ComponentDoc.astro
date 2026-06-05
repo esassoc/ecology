@@ -1,5 +1,6 @@
 ---
 import DocsLayout from './DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 
 interface Props {
   name: string;          // display name, e.g. "Button"
@@ -22,7 +23,7 @@ const statusLabel = type === 'reference' ? 'Reference' : 'Stable';
 const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
 ---
 <DocsLayout title={`${name} — Ecology`} activeHref={activeHref}>
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>{category}</span> <span>/</span> <span>{name}</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>{category}</span> <span>/</span> <span>{name}</span></nav>
   <h1>{name}</h1>
   <p class="lede" set:html={summary} />
   <div class="meta-row">

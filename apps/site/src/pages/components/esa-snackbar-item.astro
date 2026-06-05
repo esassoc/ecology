@@ -3,6 +3,7 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import { withBase } from '@esa/docs/base';
 
 const props = [
   { name: 'message', type: 'string', default: "''", description: 'Toast body text.' },
@@ -17,7 +18,7 @@ const events = [
 ];
 ---
 <ComponentDoc name="Snackbar Item" category="Overlays" slug="esa-snackbar-item" type="wc" status="stable"
-  summary={`A single toast: variant color, leading icon, message, and optional action and dismiss buttons. It emits <code>action</code> and <code>dismiss</code>. Usually managed by <a href="/components/esa-snackbar-container">esa-snackbar-container</a>, but it renders standalone too.`}>
+  summary={`A single toast: variant color, leading icon, message, and optional action and dismiss buttons. It emits <code>action</code> and <code>dismiss</code>. Usually managed by <a href="${withBase('/components/esa-snackbar-container')}">esa-snackbar-container</a>, but it renders standalone too.`}>
 
   <Section id="preview" title="Preview">
     <Preview code={`<esa-snackbar-item variant="success" message="Saved successfully."></esa-snackbar-item>`}>

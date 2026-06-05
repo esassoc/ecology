@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import { componentGroups } from '../data/nav';
 
 const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
@@ -11,12 +12,12 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
       <h1>Ecology</h1>
       <p class="tagline">A framework-agnostic design system. Tokens, primitives, and patterns that travel from project to project — and re-skin to any brand without touching a component.</p>
       <div class="cta">
-        <a class="btn btn--primary" href="/components/esa-button">Browse components</a>
-        <a class="btn btn--ghost" href="/foundations/color">Foundations</a>
+        <a class="btn btn--primary" href={withBase('/components/esa-button')}>Browse components</a>
+        <a class="btn btn--ghost" href={withBase('/foundations/color')}>Foundations</a>
       </div>
     </div>
     <div class="hero__art" aria-hidden="true">
-      <img src="/brand/ecology-mark.svg" alt="" width="260" height="260" />
+      <img src={withBase('/brand/ecology-mark.svg')} alt="" width="260" height="260" />
     </div>
   </section>
 
@@ -31,22 +32,22 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
     <article class="card">
       <h3>Token-driven</h3>
       <p>Primitive → semantic → component. Authored in DTCG, compiled to CSS. Every value is a token; nothing is hard-coded.</p>
-      <a href="/foundations/color">Foundations →</a>
+      <a href={withBase('/foundations/color')}>Foundations →</a>
     </article>
     <article class="card">
       <h3>Two kinds of component</h3>
       <p>Presentational primitives ship as <code>.astro</code>; interactive ones as framework-agnostic Lit Web Components that drop into any stack.</p>
-      <a href="/components/esa-combobox">See an example →</a>
+      <a href={withBase('/components/esa-combobox')}>See an example →</a>
     </article>
     <article class="card">
       <h3>Theme, don't fork</h3>
       <p>A project re-skins by overriding the semantic layer under a <code>[data-theme]</code> scope. The brand changes everywhere at once.</p>
-      <a href="/foundations/color">How theming works →</a>
+      <a href={withBase('/foundations/color')}>How theming works →</a>
     </article>
   </section>
 
   <section class="rail">
-    <a class="rail__card rail__card--live" href="/components/esa-button">
+    <a class="rail__card rail__card--live" href={withBase('/components/esa-button')}>
       <span class="rail__eyebrow">Components</span>
       <h2>Component library</h2>
       <p>{totalComponents} documented components across foundations, forms, overlays, and more — each with live specimens and an API.</p>
@@ -56,7 +57,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
       <span class="rail__eyebrow">Coming soon</span>
       <h2>Pattern library</h2>
       <p>Composed, multi-component patterns — page shells, data views, form flows — assembled from the primitives. In the works.</p>
-      <a class="rail__go" href="/patterns">Preview →</a>
+      <a class="rail__go" href={withBase('/patterns')}>Preview →</a>
     </div>
   </section>
 

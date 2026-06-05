@@ -6,12 +6,16 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "deploy": "astro build && gh-pages -d dist --dotfiles"
   },
   "dependencies": {
     "@esa/docs": "*",
     "@esa/ecology": "*",
     "@esa/tokens": "*",
     "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }

@@ -1,5 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
 const scale = [
@@ -13,7 +14,7 @@ const scale = [
 ];
 ---
 <DocsLayout title="Radius — Ecology" activeHref="/foundations/radius">
-  <nav class="crumbs"><a href="/">Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Radius</span></nav>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Radius</span></nav>
   <h1>Radius</h1>
   <p class="lede">Corner rounding tokens, from a barely-there hairline to fully circular. Pick by element scale — small controls round tightly, large surfaces round softly.</p>
 
