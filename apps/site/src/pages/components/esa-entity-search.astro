@@ -1,0 +1,128 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import PropsTable from '@esa/docs/PropsTable.astro';
+
+const props = [
+  { name: 'entities', type: 'EsaSearchEntity[]', default: '[]', description: 'The searchable records, set as a property. Each: { id, title, subtitle?, scope, icon?, url?, meta? }. Filtered client-side.' },
+  { name: 'scopes', type: 'EsaSearchScope[]', default: '[]', description: 'Facets to narrow by. Each: { id, label, icon? }. An implicit "All" facet is prepended.' },
+  { name: 'recent', type: 'EsaSearchEntity[]', default: '[]', description: 'Shown when the query is empty and the "All" facet is active.' },
+  { name: 'rowActions', type: 'EsaSearchRowAction[]', default: '[]', description: 'Per-row secondary actions (e.g. Impersonate). Each: { id, label, icon?, scopes? }. scopes restricts which rows show it.' },
+  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
+  { name: 'placeholder', type: 'string', default: "'Search…'", description: 'Input placeholder.' },
+  { name: 'allLabel', type: 'string', default: "'All'", description: 'Label for the implicit all-scopes facet.' },
+  { name: 'hotkey', type: "'' | 'mod+k' | 'slash'", default: "''", description: "Built-in open shortcut. 'mod+k' = Cmd/Ctrl+K toggle; 'slash' = '/' opens (ignored while typing in a field)." },
+];
+
+const events = [
+  { name: 'select', type: '{ entity }', description: 'A row was chosen (click or Enter). The consumer navigates (e.g. to entity.url).' },
+  { name: 'scope-change', type: '{ scope }', description: "The active facet changed. scope is '' for All." },
+  { name: 'show-all', type: '{ query, scope }', description: 'Cmd/Ctrl+Enter — "see all results". The consumer routes to a full results page.' },
+  { name: 'row-action', type: '{ action, entity }', description: 'A per-row action button was clicked. action is the EsaSearchRowAction id.' },
+];
+
+const methods = [
+  { name: 'show()', type: 'method', description: 'Opens, clears the query + scope, focuses the input.' },
+  { name: 'close()', type: 'method', description: 'Closes the overlay.' },
+  { name: 'toggle()', type: 'method', description: 'Toggles open state.' },
+];
+---
+<ComponentDoc name="Entity Search" category="Overlays" slug="esa-entity-search" type="wc" status="stable"
+  summary="A scoped entity-search overlay — a sibling to the command palette, but for <em>navigating to records</em> rather than firing actions. Set <code>entities</code> + <code>scopes</code>; it filters client-side, shows per-scope counts, highlights matches, groups by scope, and emits events the consumer handles.">
+
+  <Section id="preview" title="Preview">
+    <p>Data is set as properties in a script. Open with the button or <kbd>/</kbd>. Try a query (e.g. “ri”) to see counts + highlighting; <kbd>Tab</kbd> cycles scopes; <kbd>⌘/Ctrl + Enter</kbd> fires <code>show-all</code>.</p>
+    <Preview code={`<button id="open-es">Open entity search</button>
+
+<esa-entity-search id="es" hotkey="slash" placeholder="Search projects, people, documents…"></esa-entity-search>`}>
+      <button class="trigger" id="open-es">Open entity search</button>
+      <esa-entity-search id="es" hotkey="slash" placeholder="Search projects, people, documents…"></esa-entity-search>
+      <p id="es-result" class="result"></p>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+    <h3>Methods</h3>
+    <PropsTable rows={methods} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The overlay is <code>role="dialog"</code>; results are <code>role="listbox"</code> / <code>role="option"</code> with <code>aria-selected</code>; facets are a <code>role="tablist"</code>.</li>
+      <li>ArrowUp / ArrowDown move the active row (wrapping across groups), Enter selects, Esc closes, Tab / Shift+Tab cycle facets.</li>
+      <li>The input is focused automatically on open.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface-elevated</code> · <code>--color-border</code> / <code>--color-border-light</code> · <code>--color-surface-sunken</code> (active row)</li>
+      <li><code>--color-primary</code> (active facet, highlight, active-row icon) · <code>--color-primary-contrast</code> / <code>--color-primary-border</code></li>
+      <li><code>--color-text-primary</code> / <code>--color-text-secondary</code> / <code>--color-text-muted</code></li>
+      <li><code>--color-backdrop</code> · <code>--z-modal</code> / <code>--z-modal-backdrop</code> · <code>--radius-200</code> / <code>--radius-400</code> / <code>--radius-full</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<script>
+  import '@esa/ecology/esa-entity-search';
+
+  const I = {
+    folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+    eye: '<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>',
+  };
+
+  const es = document.getElementById('es') as any;
+  es.scopes = [
+    { id: 'projects', label: 'Projects', icon: I.folder },
+    { id: 'people', label: 'People', icon: I.users },
+    { id: 'documents', label: 'Documents', icon: I.file },
+  ];
+  es.entities = [
+    { id: 'p1', title: 'Riverbank restoration — Phase 2', subtitle: 'Active · 2026', scope: 'projects', url: '#p1', meta: 'PRJ-204' },
+    { id: 'p2', title: 'Riparian buffer planting', subtitle: 'Planning', scope: 'projects', url: '#p2', meta: 'PRJ-211' },
+    { id: 'p3', title: 'Fish passage culvert survey', subtitle: 'Complete', scope: 'projects', url: '#p3', meta: 'PRJ-188' },
+    { id: 'u1', title: 'Rita Alvarez', subtitle: 'Hydrologist', scope: 'people', url: '#u1' },
+    { id: 'u2', title: 'Marcus Webb', subtitle: 'Project sponsor', scope: 'people', url: '#u2' },
+    { id: 'u3', title: 'Priya Nair', subtitle: 'GIS analyst', scope: 'people', url: '#u3' },
+    { id: 'd1', title: 'Riverbank monitoring report (Q1)', subtitle: 'PDF · 2.1 MB', scope: 'documents', url: '#d1', meta: 'Mar 2026' },
+    { id: 'd2', title: 'Permit application — Phase 2', subtitle: 'DOCX', scope: 'documents', url: '#d2', meta: 'Jan 2026' },
+  ];
+  es.recent = [es.entities[0], es.entities[3]];
+  es.rowActions = [{ id: 'impersonate', label: 'View as', icon: I.eye, scopes: ['people'] }];
+
+  const result = document.getElementById('es-result')!;
+  const log = (m: string) => (result.textContent = m);
+  es.addEventListener('select', (e: any) => log(`select → ${e.detail.entity.title}`));
+  es.addEventListener('scope-change', (e: any) => log(`scope-change → ${e.detail.scope || 'all'}`));
+  es.addEventListener('show-all', (e: any) => log(`show-all → query="${e.detail.query}", scope=${e.detail.scope || 'all'}`));
+  es.addEventListener('row-action', (e: any) => log(`row-action → ${e.detail.action} on ${e.detail.entity.title}`));
+
+  document.getElementById('open-es')!.addEventListener('click', () => es.show());
+</script>
+
+<style>
+  .trigger {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-200, 0.5rem);
+    border: 1px solid var(--color-border-strong, #d4d4d4);
+    background: var(--color-primary, #005862);
+    color: var(--color-text-inverse, #fff);
+    font-family: inherit;
+    font-size: var(--type-size-200, 0.9375rem);
+    cursor: pointer;
+  }
+  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; width: 100%; font-variant-numeric: tabular-nums; }
+  kbd {
+    padding: 1px 5px;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-100, 0.25rem);
+    background: var(--color-surface-sunken, #efefef);
+    font-size: 0.85em;
+  }
+</style>

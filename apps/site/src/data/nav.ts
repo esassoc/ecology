@@ -56,6 +56,7 @@ export const componentGroups: NavGroup[] = [
     items: [
       c('Dialog', 'esa-dialog'), c('Confirm Dialog', 'esa-confirm-dialog'), c('Side Dialog', 'esa-side-dialog'), c('Popover', 'esa-popover'),
       c('Tooltip', 'esa-tooltip'), c('Dropdown Menu', 'esa-dropdown-menu'), c('Command Palette', 'esa-command-palette'),
+      c('Entity Search', 'esa-entity-search'),
       c('Snackbar', 'esa-snackbar-container'), c('Snackbar Item', 'esa-snackbar-item'), c('Search Panel', 'esa-search-panel'),
     ],
   },
