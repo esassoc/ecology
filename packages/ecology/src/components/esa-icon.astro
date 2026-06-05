@@ -19,9 +19,15 @@ interface Props {
   size?: EsaSize;
   /** Accessible label. When omitted the icon is aria-hidden (decorative). */
   label?: string;
+  /**
+   * Inner SVG markup (the <path>/<circle>… children, no <svg> wrapper) for a glyph
+   * not in the built-in registry. Lets a consumer supply brand- or feature-specific
+   * icons without forking this component — used as the fallback when `name` is unknown.
+   */
+  paths?: string;
 }
 
-const { name, size = 'md', label } = Astro.props;
+const { name, size = 'md', label, paths } = Astro.props;
 
 const SIZE_MAP: Record<EsaSize, number> = { xs: 14, sm: 16, md: 20, lg: 24, xl: 28 };
 const px = SIZE_MAP[size];
@@ -106,9 +112,17 @@ const ICONS: Record<string, string> = {
     '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
   expand:
     '<path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8"/><path d="M3 16.2V21m0 0h4.8M3 21l6-6"/><path d="M21 7.8V3m0 0h-4.8M21 3l-6 6"/><path d="M3 7.8V3m0 0h4.8M3 3l6 6"/>',
+  folder:
+    '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  history:
+    '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  'rotate-ccw':
+    '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
 };
 
-const inner = ICONS[name] ?? '';
+// Built-in glyph wins; fall back to a consumer-supplied `paths` for icons the
+// registry doesn't ship (keeps the component extensible without forking it).
+const inner = ICONS[name] ?? paths ?? '';
 const cls = ['esa-icon', `esa-icon--${size}`].join(' ');
 const decorative = !label;
 ---

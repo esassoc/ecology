@@ -1,0 +1,27 @@
+---
+// esa-kbd — presentational (.astro). A keycap for rendering keyboard hints
+// (/, Tab, Esc, ↑ ↓ ↵). Slot the key label. Token-driven, so it re-skins with the
+// active theme. (Promoted from cb-fish's cbf-kbd; the same keycap styling was also
+// duplicated inside esa-command-palette — this is the shared primitive both use.)
+---
+<kbd class="esa-kbd"><slot /></kbd>
+
+<style>
+  .esa-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+  }
+</style>

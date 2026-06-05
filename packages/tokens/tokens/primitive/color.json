@@ -104,6 +104,11 @@
       "800": { "$value": "#43608a", "$type": "color" },
       "900": { "$value": "#39506f", "$type": "color" },
       "950": { "$value": "#263245", "$type": "color" }
+    },
+    "gold": {
+      "50":  { "$value": "#f8f8f4", "$type": "color", "$description": "Muted sand/gold accent ramp. Promoted from cb-fish (CBFish breadcrumb strip + sidebar headings). A neutral-leaning accent a spoke can re-point --color-accent off; the hub default accent stays orange." },
+      "500": { "$value": "#a9a379", "$type": "color" },
+      "900": { "$value": "#534c3b", "$type": "color" }
     }
   }
 }

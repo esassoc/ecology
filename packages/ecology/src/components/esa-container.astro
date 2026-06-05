@@ -1,0 +1,23 @@
+---
+// esa-container — presentational (.astro). Centered, max-width layout wrapper with
+// a symmetric side gutter. The single place the kit owns "constrain page content
+// to a readable width." (Promoted from cb-fish's cbf-container; esa-app-bar already
+// hardcodes the same centered-1556px pattern internally.)
+interface Props {
+  /** Max content width. Defaults to the kit's wide page width. */
+  maxWidth?: string;
+}
+const { maxWidth = '1556px' } = Astro.props;
+---
+<div class="esa-container" style={`--_container-max:${maxWidth}`}>
+  <slot />
+</div>
+
+<style>
+  .esa-container {
+    width: 100%;
+    max-width: var(--_container-max, 1556px);
+    margin-inline: auto;
+    padding-inline: var(--spacing-600, 2rem);
+  }
+</style>
