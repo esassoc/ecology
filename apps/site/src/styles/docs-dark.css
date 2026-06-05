@@ -1,0 +1,35 @@
+/*
+ * Hub dark-mode token VALUES. These stay in the HUB (not @esa/docs) because the
+ * dark palette is brand-specific — the shared DocsShell only ships the toggle UI
+ * + the data-scheme wiring, never the colors.
+ *
+ * IMPORTANT (cascade order): this file must be imported AFTER DocsShell in the
+ * wrapper. The shell pulls in @esa/tokens (:root + default teal semantics); a
+ * [data-scheme] block and :root have equal specificity, so source order decides
+ * which wins. Loading this last lets the dark overrides take effect.
+ */
+
+:root { color-scheme: light; }
+
+html[data-scheme='dark'] {
+  color-scheme: dark;
+  --color-background: #09090b;
+  --color-surface: #0c0c0e;
+  --color-surface-elevated: #161618;
+  --color-surface-sunken: #161618;
+  --color-text-primary: #ededef;
+  --color-text-secondary: #a1a1aa;
+  --color-text-tertiary: #b4b4ba;
+  --color-text-muted: #71717a;
+  --color-border: #242428;
+  --color-border-light: #1a1a1d;
+  --color-border-strong: #34343a;
+  --color-primary: #14b8a6;
+  --color-primary-hover: #2dd4bf;
+  --color-text-link: #2dd4bf;
+  --color-surface-sunken-rgb: 22, 22, 24;
+}
+
+html[data-scheme='dark'] .nav-link[aria-current='page'] {
+  color: var(--color-primary-hover, #2dd4bf);
+}

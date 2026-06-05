@@ -1,8 +1,8 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
-import Section from '../../components/docs/Section.astro';
-import Preview from '../../components/docs/Preview.astro';
-import Api from '../../components/docs/Api.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
 
 const props = [
   { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, teal, amber." },

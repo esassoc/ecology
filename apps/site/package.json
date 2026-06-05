@@ -9,6 +9,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@esa/docs": "*",
     "@esa/ecology": "*",
     "@esa/tokens": "*",
     "astro": "^5.0.0"

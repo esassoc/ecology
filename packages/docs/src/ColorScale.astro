@@ -1,17 +1,19 @@
 ---
-// A labeled ramp of color chips. Each step paints from a literal value (so it's
-// accurate whether or not the color is wired as a live token) and shows its step
-// number; the optional token name is the title on hover.
-interface Step { step: string; value: string; token?: string }
+// A labeled ramp of color chips. Each step paints from either a literal `value`
+// (accurate whether or not the color is wired as a token) or a `token` suffix
+// (painted live via var(--token) — nice for a theme-driven ramp). Supply one;
+// `value` wins if both are given. The token, if present, is the hover title.
+interface Step { step: string; value?: string; token?: string }
 interface Props { name: string; steps: Step[] }
 const { name, steps } = Astro.props;
+const paint = (s: Step) => s.value ?? `var(--${s.token})`;
 ---
 <div class="scale">
   <div class="scale__name">{name}</div>
   <div class="scale__row">
     {steps.map((s) => (
       <div class="chip" title={s.token ? `--${s.token}` : s.value}>
-        <div class="chip__swatch" style={`background: ${s.value}`}></div>
+        <div class="chip__swatch" style={`background: ${paint(s)}`}></div>
         <div class="chip__step">{s.step}</div>
       </div>
     ))}

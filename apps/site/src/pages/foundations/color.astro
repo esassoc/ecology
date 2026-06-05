@@ -1,11 +1,11 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import Section from '../../components/docs/Section.astro';
-import ColorScale from '../../components/docs/ColorScale.astro';
+import Section from '@esa/docs/Section.astro';
+import ColorScale from '@esa/docs/ColorScale.astro';
 
 const ramp = (name: string, family: string, steps: string[]) => ({
   name,
-  steps: steps.map((step) => ({ step, token: `--color-${family}-${step}` })),
+  steps: steps.map((step) => ({ step, token: `color-${family}-${step}` })),
 });
 
 const ramps = [
