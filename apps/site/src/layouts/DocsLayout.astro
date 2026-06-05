@@ -36,6 +36,39 @@ const { title = 'Ecology', activeHref = '' } = Astro.props;
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
   </Fragment>
 
+  <!-- Sidebar logo: the network mark inlined (not a bg image) with heavier
+       strokes + larger nodes so it stays legible at ~30px. No wobble filter —
+       crisp reads better small; the landing keeps the hand-drawn version. -->
+  <svg slot="brand-mark" viewBox="-12 -12 144 144" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ecology">
+    <g stroke="#699BCB" stroke-width="3.6" stroke-linecap="round">
+      <line x1="60" y1="60" x2="58" y2="14"/>
+      <line x1="60" y1="60" x2="88" y2="20"/>
+      <line x1="60" y1="60" x2="104" y2="44"/>
+      <line x1="60" y1="60" x2="108" y2="72"/>
+      <line x1="60" y1="60" x2="96" y2="100"/>
+      <line x1="60" y1="60" x2="74" y2="112"/>
+      <line x1="60" y1="60" x2="46" y2="110"/>
+      <line x1="60" y1="60" x2="22" y2="96"/>
+      <line x1="60" y1="60" x2="14" y2="66"/>
+      <line x1="60" y1="60" x2="20" y2="38"/>
+      <line x1="60" y1="60" x2="42" y2="20"/>
+    </g>
+    <g fill="#699BCB">
+      <circle cx="60" cy="60" r="9"/>
+      <circle cx="58" cy="14" r="5.4"/>
+      <circle cx="88" cy="20" r="6.4"/>
+      <circle cx="104" cy="44" r="5.8"/>
+      <circle cx="108" cy="72" r="6.2"/>
+      <circle cx="96" cy="100" r="5.4"/>
+      <circle cx="74" cy="112" r="6.2"/>
+      <circle cx="46" cy="110" r="5.6"/>
+      <circle cx="22" cy="96" r="6.2"/>
+      <circle cx="14" cy="66" r="5.8"/>
+      <circle cx="20" cy="38" r="6.2"/>
+      <circle cx="42" cy="20" r="5.2"/>
+    </g>
+  </svg>
+
   <a class="topbar-action" slot="topbar-actions" href="https://github.com/andrewlovseth-esa/ecology" target="_blank" rel="noreferrer" aria-label="GitHub">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
     GitHub

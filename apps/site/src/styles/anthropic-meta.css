@@ -49,7 +49,7 @@
   --meta-ink-3: #8d949b;       /* dim meta */
   --meta-line: #e7e5dc;        /* warm hairline */
   --meta-line-2: #ecebe4;
-  --meta-clay: #b85c38;        /* terracotta accent */
+  --meta-clay: #699BCB;        /* brand blue accent (was terracotta) */
 }
 
 /* ---- Chrome typography (light + dark) ---- */
@@ -90,7 +90,6 @@ html[data-scheme='light'] .nav-link:hover { background: rgba(20, 20, 19, 0.04); 
 html[data-scheme='light'] .nav-link[aria-current='page'] { background: rgba(20, 20, 19, 0.06); color: var(--meta-ink); font-weight: 500; }
 html[data-scheme='light'] .nav-link .tag { border-color: var(--meta-line); color: var(--meta-ink-3); }
 
-html[data-scheme='light'] .brand .mark { background: var(--meta-clay); border-radius: 6px; }
 html[data-scheme='light'] .brand .ver { color: var(--meta-ink-3); }
 
 html[data-scheme='light'] .article h1,
