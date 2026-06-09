@@ -1,0 +1,39 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
+import { withBase } from '../../lib/base';
+
+// Scaffold "what's coming" cards. Replace with this spoke's planned patterns.
+const planned = [
+  { title: 'Application shell', body: 'The topbar + collapsible sidenav frame, composed from the inherited nav components.' },
+  { title: 'Data tables', body: 'List + detail grids with status pills and a reusable slide-in drawer.' },
+  { title: 'Form flows', body: 'Multi-step entry and edit flows built on the form-field + input component set.' },
+];
+---
+<DocsLayout title="Pattern Library — __SPOKE_NAME__" activeHref="/patterns">
+  <nav class="crumbs"><a href={withBase('/')}>__SPOKE_NAME__</a> <span>/</span> <span>Pattern Library</span></nav>
+  <h1>Pattern Library</h1>
+  <p class="lede">
+    Composed, multi-component patterns assembled from the design system — the layer between
+    single components and full prototypes. Coming soon; the working screens currently live as
+    <a href={withBase('/')}>prototypes</a>.
+  </p>
+
+  <Section id="planned" title="What's coming">
+    <div class="grid">
+      {planned.map((p) => (
+        <div class="card">
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </div>
+      ))}
+    </div>
+  </Section>
+</DocsLayout>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400, 1rem); }
+  .card { padding: var(--spacing-400, 1rem); border: 1px solid var(--color-border, #dcdcdc); border-radius: 10px; background: var(--color-surface, #fff); }
+  .card h3 { margin: 0 0 var(--spacing-200, 0.5rem); font-size: 15px; color: var(--color-text-primary, #3d3d3d); }
+  .card p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary, #525252); }
+</style>

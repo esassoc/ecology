@@ -1,0 +1,52 @@
+---
+// Example component page — the ONE catalog entry the template ships. It shows the
+// ComponentDoc pattern: import an esa-* component from @esa/ecology, document it
+// wearing this spoke's skin. /spoke-init adds a sibling page per catalog entry.
+import ComponentDoc from '../../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+
+const colors = ['primary', 'secondary', 'danger', 'success', 'warning', 'info'] as const;
+
+const props = [
+  { name: 'color', type: "'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost'", default: "'primary'", description: 'Semantic color role. Primary comes from --color-primary, which this spoke re-points in its theme.' },
+  { name: 'appearance', type: "'fill' | 'outline'", default: "'fill'", description: 'Solid or outlined.' },
+  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size.' },
+  { name: 'disabled', type: 'boolean', default: 'false', description: 'Non-interactive state.' },
+  { name: 'loading', type: 'boolean', default: 'false', description: 'Shows a spinner and blocks input.' },
+];
+---
+<ComponentDoc
+  name="Button"
+  category="Actions"
+  slug="esa-button"
+  type=".astro"
+  summary="The inherited Ecology button, wearing the __SPOKE_NAME__ skin. Primary reflects whatever <code>--color-primary</code> this spoke's theme sets; the rest of the palette is inherited."
+>
+  <Section id="colors" title="Colors">
+    <Preview code={`<EsaButton color="primary">Save</EsaButton>`}>
+      {colors.map((c) => <EsaButton color={c}>Save</EsaButton>)}
+    </Preview>
+  </Section>
+
+  <Section id="outline" title="Outline">
+    <Preview code={`<EsaButton color="primary" appearance="outline">Save</EsaButton>`}>
+      {colors.map((c) => <EsaButton color={c} appearance="outline">Save</EsaButton>)}
+    </Preview>
+  </Section>
+
+  <Section id="sizes" title="Sizes">
+    <Preview code={`<EsaButton size="xs">Save</EsaButton>`}>
+      <EsaButton color="primary" size="xs">Save</EsaButton>
+      <EsaButton color="primary" size="sm">Save</EsaButton>
+      <EsaButton color="primary" size="md">Save</EsaButton>
+      <EsaButton color="primary" size="lg">Save</EsaButton>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+</ComponentDoc>

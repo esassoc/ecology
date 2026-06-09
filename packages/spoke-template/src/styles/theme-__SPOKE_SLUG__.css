@@ -1,0 +1,122 @@
+/*
+ * __SPOKE_NAME__ theme — a spoke of the Ecology hub (../ecology).
+ *
+ * THE CONTRACT: a [data-theme] block overrides the SEMANTIC layer (and, where
+ * needed, the component layer) ONLY. @esa/tokens defines the primitives + the
+ * default teal semantics on :root; this file re-skins to __SPOKE_NAME__ WITHOUT
+ * touching primitives. Because every esa-* component reads only the semantic
+ * layer, re-pointing that layer re-skins the whole kit with no forks.
+ *
+ * LOAD ORDER matters: tokens.css (:root) and a [data-theme] block have equal
+ * specificity, so source order decides. DocsLayout/BaseLayout import this file
+ * AFTER @esa/tokens so it wins.
+ *
+ * TOKEN TIERS:
+ *   - ecology tokens (--color-*, --form-*, --font-*): the durable hub vocabulary.
+ *     This file REASSIGNS the few that differ; esa-* components read only these.
+ *   - --__SCOPE__-* tokens: the spoke tier. Live ONLY in this file. Raw
+ *     "re-point material" (the brand color ramp, neutral ramp) feeds the ecology
+ *     tokens above; hub components never read --__SCOPE__-* directly.
+ *
+ * WORKED EXAMPLE: see ../ecology/../beacon-design/src/styles/theme-beacon.css for
+ * a fully-filled version of this same skeleton (true-teal + warm-gray ramps).
+ *
+ * Every section below is a FILL-IN. Replace each `/* __FILL__ *​/` marker and the
+ * placeholder values with this spoke's real values; delete any section the spoke
+ * doesn't diverge on (an un-overridden token keeps the hub default).
+ */
+
+[data-theme="__SPOKE_SLUG__"] {
+  /* ===== (1) BRAND / TEAL — re-point primary + secondary onto the spoke ramp =====
+     The hub ships a generic teal. Point the brand semantics at THIS spoke's own
+     primitive ramp (the --__SCOPE__-* raw ramp in section 7). If you skip this,
+     primary stays hub teal. */
+  --color-primary:         var(--__SCOPE__-brand-900);  /* __FILL__ the brand's strongest tint */
+  --color-primary-hover:   /* __FILL__ */ #00474f;
+  --color-primary-active:  /* __FILL__ */ #003940;
+  --color-primary-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
+  --color-primary-border:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
+  --color-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
+  --color-secondary-hover: var(--__SCOPE__-brand-800);
+
+  /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
+     Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
+     what warms or cools the entire UI vs the hub default. */
+  --color-text-primary:   var(--__SCOPE__-gray-900);
+  --color-text-secondary: var(--__SCOPE__-gray-700);
+  --color-text-tertiary:  var(--__SCOPE__-gray-600);
+  --color-text-muted:     var(--__SCOPE__-gray-500);
+  --color-border:         var(--__SCOPE__-gray-200);
+  --color-border-light:   var(--__SCOPE__-gray-100);
+  --color-border-strong:  var(--__SCOPE__-gray-300);
+  --color-background:     var(--__SCOPE__-gray-50);
+  --color-surface-sunken: var(--__SCOPE__-gray-100);
+
+  /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
+     The <link> tags live in BaseLayout/DocsLayout. Set the families here so
+     components pick them up. Leave a token out to keep the hub default. */
+  --font-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
+  --font-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
+  /* Optional decorative/display voice — components reach for these explicitly. */
+  --font-display:    /* __FILL__ (or remove to inherit --font-sans) */ var(--font-sans);
+  --font-decorative: /* __FILL__ (optional serif) */ 'Besley', serif;
+
+  /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
+     Re-point onto hub primitives where the spoke's ramp matches, or to a literal
+     where it's standalone. */
+  --color-success:  var(--color-green-700);  /* __FILL__ */
+  --color-warning:  var(--color-orange-500); /* __FILL__ */
+  --color-info:     /* __FILL__ */ #228be6;
+  --color-ai:       var(--color-blue-500);   /* __FILL__ */
+  --color-ai-hover: var(--color-blue-700);   /* __FILL__ */
+
+  /* ===== (5) FORM SIZING + RADIUS — match this spoke's control heights =====
+     The hub defaults to xs 28 / sm 32 / md 40 / lg 48 and md/lg radius 8px.
+     Re-point if this spoke runs more compact / flatter. */
+  --form-height-xs: /* __FILL__ */ 24px;
+  --form-height-sm: /* __FILL__ */ 28px;
+  --form-height-md: /* __FILL__ */ 36px;
+  --form-height-lg: /* __FILL__ */ 44px;
+
+  --form-radius-xs: /* __FILL__ */ var(--radius-100);
+  --form-radius-sm: /* __FILL__ */ var(--radius-100);
+  --form-radius-md: /* __FILL__ */ var(--radius-100);
+  --form-radius-lg: /* __FILL__ */ var(--radius-100);
+
+  /* ===== (6) --button-on-warning — text color on a filled warning button =====
+     Set to #fff if this spoke's warning fill is dark enough for white text;
+     leave at the hub default (dark text) for a lighter amber. */
+  --button-on-warning: /* __FILL__ */ #ffffff;
+
+  /* ===== (7) RAW PRIMITIVE RAMPS — the spoke tier (--__SCOPE__-*) =====
+     Raw material only: feeds the semantic re-points above. Hub components never
+     read these directly. Define the brand ramp + the neutral ramp; add others as
+     the spoke needs. Replace EVERY value below with this spoke's real palette. */
+
+  /* Neutral / gray ramp — this spoke's authoritative neutrals. */
+  --__SCOPE__-gray-0:    /* __FILL__ */ #ffffff;
+  --__SCOPE__-gray-50:   /* __FILL__ */ #fafafa;
+  --__SCOPE__-gray-100:  /* __FILL__ */ #efefef;
+  --__SCOPE__-gray-200:  /* __FILL__ */ #dcdcdc;
+  --__SCOPE__-gray-300:  /* __FILL__ */ #bdbdbd;
+  --__SCOPE__-gray-400:  /* __FILL__ */ #989898;
+  --__SCOPE__-gray-500:  /* __FILL__ */ #7c7c7c;
+  --__SCOPE__-gray-600:  /* __FILL__ */ #656565;
+  --__SCOPE__-gray-700:  /* __FILL__ */ #525252;
+  --__SCOPE__-gray-800:  /* __FILL__ */ #464646;
+  --__SCOPE__-gray-900:  /* __FILL__ */ #3d3d3d;
+  --__SCOPE__-gray-950:  /* __FILL__ */ #292929;
+  --__SCOPE__-gray-1000: /* __FILL__ */ #000000;
+
+  /* Brand ramp — this spoke's signature color (feeds --color-primary*/secondary*). */
+  --__SCOPE__-brand-50:  /* __FILL__ */ #effefb;
+  --__SCOPE__-brand-100: /* __FILL__ */ #eef5f4;
+  --__SCOPE__-brand-200: /* __FILL__ */ #b9d6d2;
+  --__SCOPE__-brand-500: /* __FILL__ */ #00918b;
+  --__SCOPE__-brand-600: /* __FILL__ */ #0e807b;
+  --__SCOPE__-brand-800: /* __FILL__ */ #0a6562;
+  --__SCOPE__-brand-900: /* __FILL__ */ #005862;
+
+  /* Add any further spoke-only tokens below (status palettes, progress pairs,
+     citation surfaces, etc.) — see theme-beacon.css for examples. */
+}

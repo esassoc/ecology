@@ -5,7 +5,7 @@ import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 
 const props = [
-  { name: 'options', type: '{ value: string, label: string }[]', default: '[]', description: 'The segments. Set as a property (it is an array, not an attribute).' },
+  { name: 'options', type: '{ value: string, label: string, icon?: string }[]', default: '[]', description: 'The segments. Set as a property (it is an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon); it renders before the label and inherits currentColor.' },
   { name: 'value', type: 'string', default: "''", description: "Selected option's value. Single-select; bound to the form value." },
   { name: 'label', type: 'string', default: "''", description: 'Optional visible label above the group; becomes the radiogroup name.' },
   { name: 'hint', type: 'string', default: "''", description: 'Optional helper text below the group.' },
@@ -48,6 +48,17 @@ const events = [
         <esa-button-toggle size="md" data-demo="sizes"></esa-button-toggle>
         <esa-button-toggle size="lg" data-demo="sizes"></esa-button-toggle>
       </div>
+    </Preview>
+  </Section>
+
+  <Section id="icons" title="Icons">
+    <p>Each option may carry an <code>icon</code> — inner Lucide SVG markup (the same <code>paths</code> convention as <code>esa-icon</code>). It renders before the label and inherits <code>currentColor</code>, so it flips to the inverse color on the selected segment.</p>
+    <Preview align="start" code={`el.options = [
+  { value: 'grid', label: 'Grid', icon: "<rect width='18' height='18' x='3' y='3' rx='2'/>…" },
+  { value: 'kanban', label: 'Kanban', icon: "<path d='M3 3h18v18H3z'/>…" },
+  { value: 'timeline', label: 'Timeline', icon: "<path d='M8 2v4'/>…" },
+];`}>
+      <esa-button-toggle size="lg" data-demo="icons"></esa-button-toggle>
     </Preview>
   </Section>
 
@@ -129,9 +140,19 @@ const events = [
     { value: 'map', label: 'Map' },
   ];
 
+  const iconLayout = [
+    { value: 'grid', label: 'Grid', icon: "<rect width='18' height='18' x='3' y='3' rx='2'/><path d='M3 9h18'/><path d='M3 15h18'/><path d='M9 3v18'/><path d='M15 3v18'/>" },
+    { value: 'kanban', label: 'Kanban', icon: "<path d='M3 3h18v18H3z'/><path d='M9 3v18'/><path d='M15 3v18'/>" },
+    { value: 'timeline', label: 'Timeline', icon: "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/>" },
+  ];
+
   customElements.whenDefined('esa-button-toggle').then(() => {
-    document.querySelectorAll('esa-button-toggle').forEach((el) => {
+    document.querySelectorAll('esa-button-toggle:not([data-demo="icons"])').forEach((el) => {
       (el as any).options = layout;
+    });
+    document.querySelectorAll('esa-button-toggle[data-demo="icons"]').forEach((el) => {
+      (el as any).options = iconLayout;
+      (el as any).value = 'grid';
     });
     document.querySelector('esa-button-toggle[data-demo="preview"]')?.setAttribute('value', 'grid');
     (document.querySelector('esa-button-toggle[data-demo="preview"]') as any).value = 'grid';

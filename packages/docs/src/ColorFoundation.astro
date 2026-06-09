@@ -1,0 +1,75 @@
+---
+// Drop-in Color foundation page body. Renders the theme-invariant semantic role
+// vocabulary (from tokens.ts) — swatches paint live via var(), value labels
+// hydrate from the active theme at runtime. The genuinely per-brand part — a
+// spoke's own primitive ramps — comes in via the optional `ramps` prop.
+import Section from './Section.astro';
+import ColorScale from './ColorScale.astro';
+import { colorGroups } from './tokens';
+import { withBase } from './base';
+
+interface Ramp { name: string; steps: { step: string; value?: string; token?: string }[] }
+interface Props {
+  brand?: string;       // crumb label, e.g. "Beacon"; omit to hide the crumb
+  brandHref?: string;
+  ramps?: Ramp[];       // spoke-specific primitive ramps (--bcn-gray-*, etc.)
+}
+const { brand, brandHref = '/design-system', ramps = [] } = Astro.props;
+---
+{brand && (
+  <nav class="crumbs">
+    <a href={withBase(brandHref)}>{brand}</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Color</span>
+  </nav>
+)}
+<h1>Color</h1>
+<p class="lede">
+  The semantic color roles every <code>esa-*</code> component reads. This theme re-points
+  them at the brand — swatches paint from their token and the values below are read live
+  from the active theme, so this page always reflects the real skin, not hub defaults.
+</p>
+
+{ramps.length > 0 && (
+  <Section id="primitives" title="Primitive ramps">
+    <p>Raw brand material this spoke defines. Semantic roles below re-point onto these.</p>
+    {ramps.map((r) => <ColorScale name={r.name} steps={r.steps} />)}
+  </Section>
+)}
+
+<Section id="roles" title="Semantic roles">
+  <p>What components actually reference. Re-point these in <code>theme-*.css</code> and the whole kit re-skins with no forks.</p>
+  {colorGroups.map((g) => (
+    <div class="grp">
+      <h3>{g.label}</h3>
+      {g.note && <p class="grp__note">{g.note}</p>}
+      <div class="roles">
+        {g.roles.map((r) => (
+          <div class="role">
+            <span class="role__sw" style={`background: var(--${r.token})`}></span>
+            <div class="role__body">
+              <code>--{r.token}</code>
+              <span class="role__val" data-token-value={r.token}>—</span>
+              {r.note && <span class="role__note">{r.note}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+</Section>
+
+<script>import './foundation-hydrate';</script>
+
+<style>
+  .grp { margin-bottom: var(--spacing-600, 2rem); }
+  .grp__note { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 14px; color: var(--color-text-muted, #7c7c7c); }
+  .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-300, 0.75rem); }
+  .role { display: flex; align-items: center; gap: var(--spacing-300, 0.75rem); }
+  .role__sw {
+    width: 44px; height: 44px; flex: none; border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--color-text-primary, #000) 12%, transparent);
+  }
+  .role__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .role__body code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .role__val { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-text-muted, #7c7c7c); }
+  .role__note { font-size: 12px; color: var(--color-text-muted, #7c7c7c); }
+</style>

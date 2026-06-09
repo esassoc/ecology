@@ -12,6 +12,13 @@
  */
 
 :root {
+  /* ===================== BUTTON ===================== */
+  /* Text/icon color painted on a solid `warning` fill. The right choice depends
+     on the themed --color-warning shade: a light amber wants dark text (the hub
+     default), a darker orange wants white. Themeable so a spoke whose warning is
+     dark (e.g. Beacon's #f2770e) can flip it to white without forking the button. */
+  --button-on-warning: var(--color-gray-900);
+
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
      One scale across button/input/icon-button so they line up on a row. */

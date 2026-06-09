@@ -1,0 +1,72 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
+import { withBase } from '../../lib/base';
+import { foundations, componentGroups } from '../../data/ds-nav';
+---
+<DocsLayout title="__SPOKE_NAME__ — Design System" activeHref="/design-system">
+  <nav class="crumbs"><a href={withBase('/')}>__SPOKE_NAME__</a> <span>/</span> <span>Design System</span></nav>
+  <h1>Design System</h1>
+  <p class="lede">
+    __SPOKE_NAME__ is a brand spoke of the ESA Ecology design system. It inherits Ecology's
+    component set and structure, then re-points the handful of semantic tokens that differ
+    (brand color, neutrals, form sizing). This documentation restates that brand layer and
+    shows the inherited components wearing it.
+  </p>
+
+  <Section id="model" title="The spoke model">
+    <p>
+      Three token tiers cascade. <strong>Primitives</strong> (raw color ramps, the spacing and
+      radius scales) never move. <strong>Semantic roles</strong> (<code>--color-primary</code>,
+      <code>--color-border</code>, <code>--font-sans</code>…) are what components actually read —
+      and what the __SPOKE_NAME__ theme re-points. <strong>Component tokens</strong> fine-tune
+      individual parts. Because every <code>esa-*</code> component reads only the semantic layer,
+      overriding that one layer re-skins the entire kit with no forks.
+    </p>
+    <pre class="snippet"><code>{`<html data-theme="__SPOKE_SLUG__">    <!-- DocsLayout / BaseLayout -->
+  @esa/tokens               primitives + default (teal) semantics
+  theme-__SPOKE_SLUG__.css  re-points the deltas → __SPOKE_NAME__'s brand`}</code></pre>
+  </Section>
+
+  <Section id="foundations" title="Foundations">
+    <div class="card-grid">
+      {foundations.items.map((f) => (
+        <a class="ds-card" href={withBase(f.href)}>
+          <span class="ds-card__title">{f.label}</span>
+          <svg class="ds-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      ))}
+    </div>
+  </Section>
+
+  {componentGroups.map((group) => (
+    <Section id={group.label.toLowerCase()} title={group.label}>
+      <div class="card-grid">
+        {group.items.map((item) => (
+          <a class="ds-card" href={withBase(item.href)}>
+            <span class="ds-card__title">{item.label}</span>
+            <svg class="ds-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+          </a>
+        ))}
+      </div>
+    </Section>
+  ))}
+</DocsLayout>
+
+<style>
+  .snippet { background: var(--color-surface-sunken, #efefef); border: 1px solid var(--color-border, #dcdcdc); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
+  .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-text-primary, #3d3d3d); background: none; padding: 0; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--spacing-300, 0.75rem); }
+  .ds-card {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-200, 0.5rem);
+    padding: var(--spacing-400, 1rem);
+    border: 1px solid var(--color-border, #dcdcdc); border-radius: 10px;
+    background: var(--color-surface, #fff);
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .ds-card:hover { background: var(--color-primary-subtle, #f0fdfa); border-color: var(--color-primary-border, #99f6e4); }
+  .ds-card__title { font-weight: 600; font-size: 15px; color: var(--color-text-primary, #3d3d3d); }
+  .ds-card__arrow { color: var(--color-primary, #005862); opacity: 0; transition: opacity 120ms ease; flex: none; }
+  .ds-card:hover .ds-card__arrow { opacity: 0.8; }
+</style>

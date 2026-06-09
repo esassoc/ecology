@@ -1,0 +1,42 @@
+---
+// Thin spoke wrapper around @esa/docs DocsShell. The shell (sidebar, topbar,
+// "On this page" rail, all CSS + scroll-spy) is shared with the hub and every
+// other spoke; this wrapper supplies only __SPOKE_NAME__'s axes: the brand theme
+// CSS, the brand font links, the brand chrome, and the nav data.
+// Import DocsShell FIRST — it pulls in @esa/tokens (:root primitives + default
+// teal semantics). theme-__SPOKE_SLUG__.css must load AFTER so it wins: a
+// [data-theme] block and :root have equal specificity, so source order decides.
+import DocsShell from '@esa/docs/DocsShell.astro';
+import '../styles/theme-__SPOKE_SLUG__.css';
+import { allGroups } from '../data/ds-nav';
+import { withBase } from '../lib/base';
+
+interface Props {
+  title?: string;
+  activeHref?: string; // base-less, e.g. "/design-system/foundations/color"
+}
+const { title = '__SPOKE_NAME__ — Design System', activeHref = '' } = Astro.props;
+---
+<DocsShell
+  title={title}
+  activeHref={activeHref}
+  groups={allGroups}
+  theme="__SPOKE_SLUG__"
+  brandMark="__BRAND_MARK__"
+  brandName="__SPOKE_NAME__"
+  brandTag="Design System"
+  brandHref="/design-system"
+>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    __FONT_LINKS__
+  </Fragment>
+
+  <a class="topbar-action" slot="topbar-actions" href={withBase('/')}>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+    Prototype Library
+  </a>
+
+  <slot />
+</DocsShell>

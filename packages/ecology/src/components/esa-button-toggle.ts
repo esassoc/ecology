@@ -1,8 +1,18 @@
 import { LitElement, html, css } from 'lit';
+// unsafeSVG (not unsafeHTML): parses the markup in the SVG namespace so injected
+// <path>/<rect> children render. unsafeHTML would create them as XHTML elements.
+import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
 
 interface EsaToggleOption {
   label: string;
   value: string;
+  /**
+   * Optional leading icon: the inner Lucide SVG markup (the `<path>`/`<rect>`…
+   * children, no `<svg>` wrapper) — the same `paths` convention as esa-icon.
+   * Inherits `currentColor`, so it flips to the inverse color when the segment
+   * is selected. Renders before the label; either label or icon may be omitted.
+   */
+  icon?: string;
 }
 
 /**
@@ -165,7 +175,21 @@ export class EsaButtonToggle extends LitElement {
             ?disabled=${this.disabled}
             @click=${() => this.select(opt)}
           >
-            ${opt.label}
+            ${opt.icon
+              ? html`<svg
+                  class="option__icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  ${unsafeSVG(opt.icon)}
+                </svg>`
+              : null}
+            ${opt.label ? html`<span class="option__label">${opt.label}</span>` : null}
           </button>`;
         })}
       </div>
@@ -184,24 +208,28 @@ export class EsaButtonToggle extends LitElement {
       --_radius: var(--form-radius-md, 8px);
       --_border-width: var(--form-border-width, 1px);
       --_border-color: var(--form-border-color, #d4d4d4);
+      --_icon-size: 18px;
     }
     :host([size='xs']) {
       --_height: var(--form-height-xs, 28px);
       --_padding-x: var(--form-padding-x-xs, 8px);
       --_font-size: var(--form-font-size-xs, 11px);
       --_radius: var(--form-radius-xs, 4px);
+      --_icon-size: 14px;
     }
     :host([size='sm']) {
       --_height: var(--form-height-sm, 32px);
       --_padding-x: var(--form-padding-x-sm, 8px);
       --_font-size: var(--form-font-size-sm, 12px);
       --_radius: var(--form-radius-sm, 6px);
+      --_icon-size: 16px;
     }
     :host([size='lg']) {
       --_height: var(--form-height-lg, 48px);
       --_padding-x: var(--form-padding-x-lg, 16px);
       --_font-size: var(--form-font-size-lg, 16px);
       --_radius: var(--form-radius-lg, 10px);
+      --_icon-size: 20px;
     }
 
     .label {
@@ -223,6 +251,10 @@ export class EsaButtonToggle extends LitElement {
 
     .option {
       appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-150, 6px);
       height: var(--_height);
       padding: 0 var(--_padding-x);
       font-family: var(--font-sans, sans-serif);
@@ -239,6 +271,12 @@ export class EsaButtonToggle extends LitElement {
         border-color var(--transition-fast, 150ms ease),
         color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
+    }
+
+    .option__icon {
+      width: var(--_icon-size);
+      height: var(--_icon-size);
+      flex-shrink: 0;
     }
 
     /* Connected borders: collapse the shared edge, square the inner corners. */

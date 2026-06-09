@@ -1,0 +1,38 @@
+---
+// Per-component doc page wrapper — breadcrumbs, title, type/import meta, then
+// slotted specimens. Mirrors the Ecology ComponentDoc, scoped to the __SPOKE_NAME__
+// design-system routes. The component itself is inherited from @esa/ecology;
+// this page just documents how it looks wearing the __SPOKE_NAME__ skin.
+import DocsLayout from './DocsLayout.astro';
+import { withBase } from '../lib/base';
+
+interface Props {
+  name: string;          // display name, e.g. "Button"
+  category: string;      // sidebar group, e.g. "Forms"
+  slug: string;          // component basename, e.g. "esa-button"
+  type: '.astro' | 'wc'; // .astro template vs Lit web component
+  summary: string;
+}
+const { name, category, slug, type, summary } = Astro.props;
+
+const activeHref = `/design-system/components/${slug}`;
+const pascal = slug.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+const importLine =
+  type === '.astro'
+    ? `import ${pascal} from '@esa/ecology/${slug}.astro';`
+    : `import '@esa/ecology/${slug}';`;
+---
+<DocsLayout title={`${name} — __SPOKE_NAME__`} activeHref={activeHref}>
+  <nav class="crumbs">
+    <a href={withBase('/design-system')}>__SPOKE_NAME__</a> <span>/</span>
+    <span>{category}</span> <span>/</span> <span>{name}</span>
+  </nav>
+  <h1>{name}</h1>
+  <p class="lede" set:html={summary} />
+  <div class="meta-row">
+    <span class="pill pill--stable">Inherited</span>
+    <span class="pill">{type}</span>
+    <code class="imp">{importLine}</code>
+  </div>
+  <slot />
+</DocsLayout>

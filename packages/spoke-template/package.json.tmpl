@@ -1,0 +1,23 @@
+{
+  "name": "@__SCOPE__/design",
+  "version": "0.0.1",
+  "description": "__SPOKE_NAME__ — an Astro spoke of the ESA Ecology hub (../ecology). Brand theme + prototyping surface built on @esa/ecology.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "astro build && gh-pages -d dist --dotfiles"
+  },
+  "dependencies": {
+    "@esa/docs": "file:../ecology/packages/docs",
+    "@esa/ecology": "file:../ecology/packages/ecology",
+    "@esa/tokens": "file:../ecology/packages/tokens",
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@esa/handoff": "file:../ecology/packages/handoff",
+    "gh-pages": "^6.3.0"
+  }
+}

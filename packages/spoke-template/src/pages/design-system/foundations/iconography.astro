@@ -1,0 +1,72 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
+import { withBase } from '../../../lib/base';
+import EsaIcon from '@esa/ecology/esa-icon.astro';
+
+// The names available in the inlined Lucide lookup (see esa-icon.astro in @esa/ecology).
+const names = [
+  'home', 'settings', 'plus', 'x', 'check',
+  'chevron-down', 'chevron-up', 'chevron-left', 'chevron-right',
+  'chevrons-left', 'chevrons-right', 'search', 'filter',
+  'arrow-left', 'arrow-right', 'arrow-up', 'arrow-down',
+  'circle-alert', 'circle-check', 'circle-x', 'info', 'eye',
+  'pencil', 'trash-2', 'copy', 'download', 'upload', 'external-link',
+  'calendar', 'user', 'users', 'star', 'loader', 'menu', 'bell',
+  'triangle-alert', 'save', 'circle-question-mark',
+];
+---
+<DocsLayout title="Iconography — __SPOKE_NAME__" activeHref="/design-system/foundations/iconography">
+  <nav class="crumbs"><a href={withBase('/design-system')}>__SPOKE_NAME__</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Iconography</span></nav>
+  <h1>Iconography</h1>
+  <p class="lede">
+    Icons are inline <a href="https://lucide.dev" rel="noreferrer">Lucide</a> SVGs — no icon dependency.
+    The <code>esa-icon</code> primitive inherits <code>currentColor</code> and maps to
+    five sizes (xs 14 · sm 16 · md 20 · lg 24 · xl 28).
+  </p>
+
+  <Section id="sizes" title="Sizes">
+    <div class="row">
+      <span class="cell"><EsaIcon name="star" size="xs" /><code>xs · 14</code></span>
+      <span class="cell"><EsaIcon name="star" size="sm" /><code>sm · 16</code></span>
+      <span class="cell"><EsaIcon name="star" size="md" /><code>md · 20</code></span>
+      <span class="cell"><EsaIcon name="star" size="lg" /><code>lg · 24</code></span>
+      <span class="cell"><EsaIcon name="star" size="xl" /><code>xl · 28</code></span>
+    </div>
+  </Section>
+
+  <Section id="color" title="Color">
+    <p>Icons inherit <code>currentColor</code> — set <code>color</code> on a wrapper to tint them. These use this spoke's themed semantic roles.</p>
+    <div class="row">
+      <span style="color: var(--color-primary, #005862)"><EsaIcon name="circle-check" size="lg" /></span>
+      <span style="color: var(--color-warning, #f2770e)"><EsaIcon name="triangle-alert" size="lg" /></span>
+      <span style="color: var(--color-danger, #ef4444)"><EsaIcon name="circle-x" size="lg" /></span>
+      <span style="color: var(--color-info, #228be6)"><EsaIcon name="info" size="lg" /></span>
+    </div>
+  </Section>
+
+  <Section id="gallery" title="Gallery">
+    <p>The icons currently inlined in the lookup. New components add entries to <code>esa-icon.astro</code> as needed.</p>
+    <div class="icon-grid">
+      {names.map((n) => (
+        <div class="icon-cell">
+          <EsaIcon name={n} size="md" />
+          <code>{n}</code>
+        </div>
+      ))}
+    </div>
+  </Section>
+</DocsLayout>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--spacing-500, 1.5rem); color: var(--color-text-primary, #3d3d3d); }
+  .cell { display: inline-flex; flex-direction: column; align-items: center; gap: var(--spacing-200, 0.5rem); }
+  .cell code, .icon-cell code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-muted, #7c7c7c); background: none; }
+  .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--spacing-300, 0.75rem); }
+  .icon-cell {
+    display: flex; flex-direction: column; align-items: center; gap: var(--spacing-200, 0.5rem);
+    padding: var(--spacing-300, 0.75rem);
+    border: 1px solid var(--color-border, #dcdcdc); border-radius: var(--radius-200, 8px);
+    text-align: center; color: var(--color-text-primary, #3d3d3d);
+  }
+</style>

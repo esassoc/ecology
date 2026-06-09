@@ -1,0 +1,41 @@
+---
+// __SPOKE_NAME__ base layout — wires the hub tokens + the __SPOKE_NAME__ theme,
+// loads the brand's fonts, and sets data-theme="__SPOKE_SLUG__" so every
+// inherited esa-* component re-skins to __SPOKE_NAME__.
+import '@esa/tokens/tokens.css';
+import '@esa/tokens/component-tokens.css';
+import '../styles/theme-__SPOKE_SLUG__.css';
+
+interface Props {
+  title?: string;
+}
+const { title = '__SPOKE_NAME__' } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-theme="__SPOKE_SLUG__">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    __FONT_LINKS__
+    <title>{title}</title>
+    <style is:global>
+      *, *::before, *::after { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: var(--font-sans, system-ui, sans-serif);
+        font-weight: var(--font-weight-regular, 350);
+        color: var(--color-text-primary, #3d3d3d);
+        background: var(--color-surface, #fff);
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--color-text-link, #005862); text-decoration: none; }
+      img { display: block; max-width: 100%; }
+      button { font-family: inherit; cursor: pointer; background: none; border: 0; }
+    </style>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
