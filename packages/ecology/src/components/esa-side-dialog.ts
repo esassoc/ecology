@@ -16,6 +16,8 @@ export class EsaSideDialog extends LitElement {
     position: { type: String, reflect: true },
     size: { type: String, reflect: true },
     showCloseButton: { type: Boolean, attribute: 'show-close-button' },
+    // Internal: keeps the panel mounted through the slide-out so close animates.
+    closing: { state: true },
   };
 
   declare open: boolean;
@@ -23,7 +25,9 @@ export class EsaSideDialog extends LitElement {
   declare position: 'left' | 'right';
   declare size: 'sm' | 'md' | 'lg';
   declare showCloseButton: boolean;
+  declare closing: boolean;
   private previousFocus: HTMLElement | null = null;
+  private closeTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
     super();
@@ -32,6 +36,7 @@ export class EsaSideDialog extends LitElement {
     this.position = 'right';
     this.size = 'md';
     this.showCloseButton = true;
+    this.closing = false;
   }
 
   updated(changed: Map<string, unknown>): void {
@@ -46,12 +51,20 @@ export class EsaSideDialog extends LitElement {
   }
 
   show(): void {
+    clearTimeout(this.closeTimer);
+    this.closing = false;
     this.open = true;
   }
 
   close(): void {
     if (!this.open) return;
     this.open = false;
+    // Stay mounted for the slide-out, then unmount.
+    this.closing = true;
+    clearTimeout(this.closeTimer);
+    this.closeTimer = setTimeout(() => {
+      this.closing = false;
+    }, 200);
     this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
   }
 
@@ -93,13 +106,14 @@ export class EsaSideDialog extends LitElement {
   }
 
   render() {
-    if (!this.open) return html``;
+    if (!this.open && !this.closing) return html``;
     const hasHeaderSlot = !!this.querySelector('[slot="header"]');
     const hasHeader = this.heading || this.showCloseButton || hasHeaderSlot;
+    const closing = this.closing && !this.open;
     return html`
-      <div class="backdrop" @click=${this.close}></div>
+      <div class="backdrop ${closing ? 'is-closing' : ''}" @click=${this.close}></div>
       <div
-        class="panel"
+        class="panel ${closing ? 'is-closing' : ''}"
         role="dialog"
         aria-modal="true"
         aria-label=${this.heading || 'Side dialog'}
@@ -131,23 +145,35 @@ export class EsaSideDialog extends LitElement {
       position: fixed;
       inset: 0;
       background: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+      /* Opt-in frosted backdrop — set --backdrop-filter (e.g. blur(4px)) on the host. */
+      backdrop-filter: var(--backdrop-filter, none);
+      -webkit-backdrop-filter: var(--backdrop-filter, none);
       z-index: var(--z-modal-backdrop, 300);
       animation: fade 150ms ease;
     }
+    /* Inset floating panel (matches Beacon prod .ui-side-dialog): 16px gap on the
+       top / bottom / anchored side, rounded corners. --_inset is overridable. */
     .panel {
+      --_inset: var(--side-dialog-inset, 16px);
       position: fixed;
-      top: 0;
-      bottom: 0;
-      width: min(var(--_width), 100vw);
+      top: var(--_inset);
+      bottom: var(--_inset);
+      width: min(var(--_width), calc(100vw - var(--_inset) * 2));
       display: flex;
       flex-direction: column;
       background: var(--color-surface, #fff);
+      border-radius: var(--radius-200, 8px);
       box-shadow: var(--shadow-400, 0 8px 32px -8px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       outline: none;
+      overflow: hidden;
     }
-    :host([position='right']) .panel { right: 0; animation: slide-right 200ms ease; }
-    :host([position='left']) .panel { left: 0; animation: slide-left 200ms ease; }
+    :host([position='right']) .panel { right: var(--_inset); animation: slide-right 220ms ease; }
+    :host([position='left']) .panel { left: var(--_inset); animation: slide-left 220ms ease; }
+    /* Exit: keep the end state so it doesn't flash back before unmounting. */
+    :host([position='right']) .panel.is-closing { animation: slide-out-right 200ms ease forwards; }
+    :host([position='left']) .panel.is-closing { animation: slide-out-left 200ms ease forwards; }
+    .backdrop.is-closing { animation: fade-out 150ms ease forwards; }
 
     .header {
       display: flex;
@@ -170,8 +196,12 @@ export class EsaSideDialog extends LitElement {
     .footer:not(:has(*)) { display: none; }
 
     @keyframes fade { from { opacity: 0; } }
-    @keyframes slide-right { from { transform: translateX(100%); } }
-    @keyframes slide-left { from { transform: translateX(-100%); } }
+    @keyframes fade-out { to { opacity: 0; } }
+    /* Offset by the inset so the panel fully clears the viewport edge. */
+    @keyframes slide-right { from { transform: translateX(calc(100% + var(--_inset))); } }
+    @keyframes slide-left { from { transform: translateX(calc(-100% - var(--_inset))); } }
+    @keyframes slide-out-right { to { transform: translateX(calc(100% + var(--_inset))); } }
+    @keyframes slide-out-left { to { transform: translateX(calc(-100% - var(--_inset))); } }
   `;
 }
 
