@@ -13,6 +13,11 @@ interface EsaToggleOption {
    * is selected. Renders before the label; either label or icon may be omitted.
    */
   icon?: string;
+  /**
+   * Accessible name for the segment. Required for icon-only segments (no
+   * `label`); when omitted the visible `label` is the accessible name.
+   */
+  ariaLabel?: string;
 }
 
 /**
@@ -171,6 +176,7 @@ export class EsaButtonToggle extends LitElement {
             role="radio"
             class="option ${selected ? 'option--selected' : ''}"
             aria-checked=${selected}
+            aria-label=${opt.ariaLabel ?? (opt.label ? null : opt.value)}
             tabindex=${i === this.focusIndex ? 0 : -1}
             ?disabled=${this.disabled}
             @click=${() => this.select(opt)}

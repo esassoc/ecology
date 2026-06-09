@@ -1,0 +1,89 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+
+const props = [
+  { name: 'files', type: '{ name: string, href?: string }[]', default: '[]', description: 'The files to list. Set as a property (an array, not an attribute). A row with an href renders its name as a link.' },
+  { name: 'downloadable', type: 'boolean', default: 'true', description: 'Show a download button on each row (emits download).' },
+  { name: 'removable', type: 'boolean', default: 'false', description: 'Show a remove button on each row; removing drops it from the local files copy and emits remove.' },
+];
+
+const events = [
+  { name: 'download', type: 'CustomEvent<{ file, index }>', description: 'Fired when a row’s download button is clicked. Composed and bubbles.' },
+  { name: 'remove', type: 'CustomEvent<{ file, index }>', description: 'Fired when a row’s remove button is clicked. The row is removed from the local files copy first. Composed and bubbles.' },
+];
+---
+<ComponentDoc name="File List" category="Forms" slug="esa-file-list" type="wc" status="stable"
+  summary="A list of existing files (server records) rendered as bordered icon · name · actions rows — the read/manage counterpart to esa-file-upload. Ported from Beacon's simple-file-display.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<esa-file-list id="files"></esa-file-list>
+
+<script>
+  el.files = [
+    { name: 'nesting-bird-survey-2026.pdf', href: '#' },
+    { name: 'weap-signin-2026-05.pdf', href: '#' },
+  ];
+</script>`}>
+      <esa-file-list data-demo="download"></esa-file-list>
+    </Preview>
+  </Section>
+
+  <Section id="modes" title="Download &amp; remove">
+    <p>Each row can carry a download action, a remove action, or both. The editor case uses <code>removable</code> with <code>downloadable=false</code>; a read-only display uses the default (download only).</p>
+    <Preview align="start" code={`<esa-file-list downloadable removable></esa-file-list>  <!-- both -->
+<esa-file-list removable downloadable="false"></esa-file-list>  <!-- remove only -->`}>
+      <div class="col">
+        <esa-file-list data-demo="both" removable></esa-file-list>
+        <esa-file-list data-demo="remove" removable></esa-file-list>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} events={events} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Each action button carries an explicit <code>aria-label</code> naming the file (e.g. “Download nesting-bird-survey.pdf”).</li>
+      <li>File names truncate with ellipsis; the full name is available via the row <code>title</code>.</li>
+      <li>Removing a row updates the local <code>files</code> array and emits <code>remove</code>; consumers persist the change.</li>
+    </ul>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><code>--color-surface</code> · <code>--color-border</code> — row background and border</li>
+      <li><code>--color-text-primary</code> · <code>--color-text-muted</code> · <code>--color-link</code> — name, icon, link</li>
+      <li><code>--color-surface-sunken</code> (hover) · <code>--color-danger</code> (remove hover)</li>
+      <li><code>--radius-100</code> · <code>--spacing-*</code> · <code>--type-size-150</code></li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .col { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); align-items: stretch; width: min(420px, 100%); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-file-list';
+
+  const files = [
+    { name: 'nesting-bird-survey-2026.pdf', href: '#' },
+    { name: 'weap-signin-2026-05.pdf', href: '#' },
+    { name: 'C57-driller-license-2026.pdf', href: '#' },
+  ];
+
+  customElements.whenDefined('esa-file-list').then(() => {
+    document.querySelectorAll('esa-file-list').forEach((el) => {
+      (el as any).files = files.map((f) => ({ ...f }));
+    });
+    // downloadable defaults to true; turn it off via the property (an absent
+    // boolean attribute can't override a default-true) for the remove-only demo.
+    const removeOnly = document.querySelector('esa-file-list[data-demo="remove"]') as any;
+    if (removeOnly) removeOnly.downloadable = false;
+  });
+</script>

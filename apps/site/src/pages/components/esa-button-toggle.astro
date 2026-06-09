@@ -5,7 +5,7 @@ import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 
 const props = [
-  { name: 'options', type: '{ value: string, label: string, icon?: string }[]', default: '[]', description: 'The segments. Set as a property (it is an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon); it renders before the label and inherits currentColor.' },
+  { name: 'options', type: '{ value, label, icon?, ariaLabel? }[]', default: '[]', description: 'The segments. Set as a property (an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon), rendered before the label and inheriting currentColor. Omit label for an icon-only segment, but then set ariaLabel for its accessible name.' },
   { name: 'value', type: 'string', default: "''", description: "Selected option's value. Single-select; bound to the form value." },
   { name: 'label', type: 'string', default: "''", description: 'Optional visible label above the group; becomes the radiogroup name.' },
   { name: 'hint', type: 'string', default: "''", description: 'Optional helper text below the group.' },
@@ -59,6 +59,14 @@ const events = [
   { value: 'timeline', label: 'Timeline', icon: "<path d='M8 2v4'/>…" },
 ];`}>
       <esa-button-toggle size="lg" data-demo="icons"></esa-button-toggle>
+    </Preview>
+    <p>Omit <code>label</code> for an icon-only segment — set <code>ariaLabel</code> so it still has an accessible name.</p>
+    <Preview align="start" code={`el.options = [
+  { value: 'grid', icon: "<rect …/>", ariaLabel: 'Grid' },
+  { value: 'kanban', icon: "<path …/>", ariaLabel: 'Kanban' },
+  { value: 'timeline', icon: "<path …/>", ariaLabel: 'Timeline' },
+];`}>
+      <esa-button-toggle data-demo="icons-only"></esa-button-toggle>
     </Preview>
   </Section>
 
@@ -152,6 +160,10 @@ const events = [
     });
     document.querySelectorAll('esa-button-toggle[data-demo="icons"]').forEach((el) => {
       (el as any).options = iconLayout;
+      (el as any).value = 'grid';
+    });
+    document.querySelectorAll('esa-button-toggle[data-demo="icons-only"]').forEach((el) => {
+      (el as any).options = iconLayout.map(({ label, ...o }) => ({ ...o, ariaLabel: label }));
       (el as any).value = 'grid';
     });
     document.querySelector('esa-button-toggle[data-demo="preview"]')?.setAttribute('value', 'grid');

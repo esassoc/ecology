@@ -1,0 +1,115 @@
+#!/bin/bash
+# Component-First Guard (PreToolUse: Write|Edit|MultiEdit)
+# BLOCKS bespoke UI primitives in an @esa/ecology spoke. Exit 2 + reason on
+# stderr denies the tool call BEFORE the write lands.
+#
+# Discipline enforced: Ecology (esa-*) -> Beacon (ui-*/scss) -> bcn-.
+# Escape hatch: include a `bcn-lego-checked: <reason>` comment in the content.
+#
+# Portable: gated on (a) target file lives under a repo whose package.json
+# depends on @esa/ecology, AND (b) file is *.astro / *.css / *.scss.
+
+INPUT=$(cat)
+
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty')
+[ -z "$FILE" ] && exit 0
+
+# --- Gate (b): file extension ---
+case "$FILE" in
+  *.astro|*.css|*.scss) ;;
+  *) exit 0 ;;
+esac
+
+# --- Gate (a): is this an @esa/ecology spoke? walk up for package.json ---
+is_spoke() {
+  local dir
+  dir=$(dirname "$1")
+  while [ "$dir" != "/" ] && [ -n "$dir" ]; do
+    if [ -f "$dir/package.json" ]; then
+      if grep -q '"@esa/ecology"' "$dir/package.json" 2>/dev/null; then
+        return 0
+      fi
+      return 1   # found the nearest package.json; it's not a spoke
+    fi
+    dir=$(dirname "$dir")
+  done
+  return 1
+}
+is_spoke "$FILE" || exit 0
+
+# --- Gather proposed content from Write / Edit / MultiEdit ---
+CONTENT=$(printf '%s' "$INPUT" | jq -r '
+  ( .tool_input.content // empty ),
+  ( .tool_input.new_string // empty ),
+  ( ( .tool_input.edits // [] ) | map(.new_string // empty) | join("\n") )
+' 2>/dev/null)
+[ -z "$CONTENT" ] && exit 0
+
+# --- Escape hatch: author asserted they walked the lookup order ---
+# Check both the proposed content AND the existing file (token may already live there).
+if printf '%s' "$CONTENT" | grep -qi 'bcn-lego-checked:'; then exit 0; fi
+if [ -f "$FILE" ] && grep -qi 'bcn-lego-checked:' "$FILE" 2>/dev/null; then exit 0; fi
+
+VIOLATIONS=""
+add() { VIOLATIONS="${VIOLATIONS}  - ${1}\n"; }
+
+# --- Raw styled form controls (not esa-*) ---
+# <input ...> that is not an <esa-... element. (Hidden inputs are still controls;
+# leaning strict per the strictest-setting choice.)
+if printf '%s' "$CONTENT" | grep -qiE '<input(\s|>)'; then
+  add "raw <input> -> use esa-text-field (or esa-checkbox / esa-radio-group / esa-file-upload as appropriate)"
+fi
+if printf '%s' "$CONTENT" | grep -qiE '<select(\s|>)'; then
+  add "raw <select> -> use esa-select"
+fi
+if printf '%s' "$CONTENT" | grep -qiE '<textarea(\s|>)'; then
+  add "raw <textarea> -> use esa-textarea"
+fi
+# <button class="..."> -- a styled button. Plain <button> with no class is allowed.
+if printf '%s' "$CONTENT" | grep -qiE '<button[^>]*\sclass='; then
+  add "styled <button class=...> -> use esa-button (text/CTA) or esa-icon-button (icon-only)"
+fi
+
+# --- Hand-rolled component CSS: selectors/comments implying an esa- primitive ---
+# Match class selectors (.foo) or HTML class= tokens that look like a known primitive.
+PRIMITIVE_RE='(side-?dialog|side-?drawer|sidedrawer|drawer|modal|dialog|dropzone|drop-zone|file-?(row|item|list|upload)|empty-?state|empty|icon-?btn|iconbutton|tooltip|popover|breadcrumb|avatar)'
+# class selector in a stylesheet/style block:  .rd-dropzone {  /  .bcn-modal__head {
+if printf '%s' "$CONTENT" | grep -qiE "\.[a-z0-9_-]*${PRIMITIVE_RE}[a-z0-9_:-]*\s*[,{]"; then
+  HIT=$(printf '%s' "$CONTENT" | grep -ioE "\.[a-z0-9_-]*${PRIMITIVE_RE}[a-z0-9_:-]*" | head -1)
+  add "hand-rolled component CSS '${HIT}' -> compose the matching esa-* lego instead of styling a primitive"
+fi
+# class= attribute on markup using the same vocabulary (covers .astro markup blobs)
+if printf '%s' "$CONTENT" | grep -qiE "class=\"[^\"]*${PRIMITIVE_RE}"; then
+  HIT=$(printf '%s' "$CONTENT" | grep -ioE "class=\"[^\"]*${PRIMITIVE_RE}[^\"]*\"" | head -1)
+  add "bespoke markup ${HIT} -> use the matching esa-* lego (esa-side-dialog/esa-dialog/esa-file-upload/esa-empty-state/esa-icon-button/esa-tooltip/esa-avatar/esa-breadcrumbs)"
+fi
+# card / badge / pill / chip / count-badge primitives (kept separate: broad words, only flag as class tokens)
+CHIP_RE='(eoc|count-?badge|status-?badge|[a-z]+-badge|[a-z]+-pill|[a-z]+-chip|[a-z]+-tag|[a-z]+-card)'
+if printf '%s' "$CONTENT" | grep -qiE "\.[a-z0-9_-]*${CHIP_RE}\s*[,{]" || \
+   printf '%s' "$CONTENT" | grep -qiE "class=\"[^\"]*\b[a-z0-9-]*${CHIP_RE}\b"; then
+  add "bespoke card/badge/pill/chip/tag -> use esa-card / esa-badge / esa-pill / esa-chip-group"
+fi
+
+# --- Verdict ---
+if [ -n "$VIOLATIONS" ]; then
+  {
+    echo "BLOCKED by component-first: this content reinvents a UI primitive that an esa-* lego already provides."
+    echo ""
+    echo "Detected:"
+    printf '%b' "$VIOLATIONS"
+    echo ""
+    echo "Lookup order (do this, in order):"
+    echo "  1. Ecology esa-* legos  -> ls ~/Dev/ecology/packages/ecology/src/components/"
+    echo "  2. Beacon prod patterns -> ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/ + src/scss/"
+    echo "  3. ONLY then a documented bcn- component."
+    echo ""
+    echo "To proceed: use the lego, OR add a justification comment to the content:"
+    echo "  <!-- bcn-lego-checked: no esa- X fits because Y; checked Beacon (Z); bcn-foo is the reusable home -->"
+    echo "  (CSS file: /* bcn-lego-checked: ... */)"
+    echo ""
+    echo "Skill: .claude/skills/component-first/SKILL.md  ->  lego-lookup.md / bcn-authoring.md"
+  } >&2
+  exit 2
+fi
+
+exit 0

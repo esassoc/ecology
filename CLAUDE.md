@@ -40,7 +40,7 @@ scope. Primitives never move; component internals are never touched.
 - `esa-` prefix; sizes use the shared scale `xs | sm | md | lg` (default `md`); icons add `xl`. (Aligned to Beacon's `UiSize` — see docs/beacon-gap-analysis.md. One scale across button/input/icon so they line up on a row.)
 - SCSS-style private tokens: `--_*` reading public tokens, **always with a literal fallback**.
 - Use only token names that exist in `packages/tokens/dist/tokens.css` + `component-tokens.css`.
-- Icons: inline Lucide SVGs (no icon dependency).
+- Icons: inline Lucide SVGs (no icon dependency). When a `.ts` (Lit) component **injects** icon markup from a prop/string, use `unsafeSVG` (`lit/directives/unsafe-svg.js`) — **not** `unsafeHTML`. `unsafeHTML` parses in the XHTML namespace, so the `<path>`/`<rect>` children are created as unknown HTML elements and never paint. `unsafeHTML` is only for injecting real HTML (e.g. highlighted text into a `<span>`). Static SVG written literally in a Lit template is fine as-is.
 - No Tailwind. No dependencies beyond `lit`.
 - In `.astro` prose/`<code>`, never write bare `{ ... }` (Astro evaluates it). Use `{'{ ... }'}`.
 
