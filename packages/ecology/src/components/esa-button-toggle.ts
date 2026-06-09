@@ -249,10 +249,18 @@ export class EsaButtonToggle extends LitElement {
       margin-left: 2px;
     }
 
+    /* Segmented-pill track: a sunken rail with a small inset; the selected
+       segment floats as a raised white chip. (Replaces the older connected-button
+       model — softer, and what the Beacon tracker mockups settled on.) */
     .group {
       display: inline-flex;
       width: fit-content;
       max-width: 100%;
+      gap: 2px;
+      padding: 2px;
+      background: var(--color-surface-sunken, #efefef);
+      border: var(--_border-width) solid var(--_border-color);
+      border-radius: var(--_radius);
     }
 
     .option {
@@ -261,20 +269,20 @@ export class EsaButtonToggle extends LitElement {
       align-items: center;
       justify-content: center;
       gap: var(--spacing-150, 6px);
-      height: var(--_height);
+      height: calc(var(--_height) - 4px);
       padding: 0 var(--_padding-x);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
       font-weight: var(--font-weight-medium, 450);
-      color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
-      border: var(--_border-width) solid var(--_border-color);
+      color: var(--color-text-secondary, #525252);
+      background: transparent;
+      border: 0;
+      border-radius: calc(var(--_radius) - 2px);
       cursor: pointer;
       user-select: none;
       white-space: nowrap;
       transition:
         background-color var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
         color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
@@ -285,24 +293,11 @@ export class EsaButtonToggle extends LitElement {
       flex-shrink: 0;
     }
 
-    /* Connected borders: collapse the shared edge, square the inner corners. */
-    .option:not(:first-child) {
-      margin-left: calc(-1 * var(--_border-width));
-    }
-    .option:first-child {
-      border-top-left-radius: var(--_radius);
-      border-bottom-left-radius: var(--_radius);
-    }
-    .option:last-child {
-      border-top-right-radius: var(--_radius);
-      border-bottom-right-radius: var(--_radius);
-    }
-
     .option:hover:not(:disabled):not(.option--selected) {
-      background: var(--color-surface-sunken, #efefef);
+      color: var(--color-text-primary, #171717);
+      background: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
     }
 
-    /* Raise the focused segment so its ring and border sit above neighbors. */
     .option:focus-visible {
       outline: none;
       box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--focus-ring-color, #005862);
@@ -311,23 +306,20 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option--selected {
-      background: var(--color-primary, #005862);
-      border-color: var(--color-primary, #005862);
-      color: var(--color-text-inverse, #fff);
-      position: relative;
-      z-index: 1;
+      background: var(--form-bg, #fff);
+      color: var(--color-primary, #005862);
+      font-weight: var(--font-weight-semibold, 550);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
 
     .option:disabled {
       cursor: not-allowed;
-      background: var(--form-bg-disabled, #efefef);
       color: var(--color-disabled-text, #a3a3a3);
-      border-color: var(--form-border-color-disabled, #e5e5e5);
+      background: transparent;
     }
     .option--selected:disabled {
-      background: var(--color-disabled-text, #a3a3a3);
-      border-color: var(--color-disabled-text, #a3a3a3);
-      color: var(--color-text-inverse, #fff);
+      background: var(--form-bg, #fff);
+      color: var(--color-disabled-text, #a3a3a3);
     }
 
     .hint {

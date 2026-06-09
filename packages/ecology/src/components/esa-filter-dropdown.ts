@@ -1,4 +1,6 @@
 import { LitElement, html, css } from 'lit';
+// Options render as esa-checkbox rows (the ui-filter pattern) — import to register it.
+import './esa-checkbox';
 
 /**
  * esa-filter-dropdown — INTERACTIVE filter control (Lit Web Component).
@@ -98,11 +100,11 @@ export class EsaFilterDropdown extends LitElement {
   }
 
   private get buttonLabel(): string {
-    if (this._selected.length === 0) return this.label;
+    // Multi-select shows the bare title (the count badge carries the number);
+    // single-select shows "Title: Value".
+    if (this.multiple || this._selected.length === 0) return this.label;
     const first = this.options.find((o) => o.value === this._selected[0]);
-    const firstLabel = first?.label ?? this._selected[0];
-    if (this._selected.length === 1) return `${this.label}: ${firstLabel}`;
-    return `${this.label}: ${firstLabel} +${this._selected.length - 1}`;
+    return `${this.label}: ${first?.label ?? this._selected[0]}`;
   }
 
   private isSelected(value: string): boolean {
@@ -206,23 +208,19 @@ export class EsaFilterDropdown extends LitElement {
     return html`
       <div class="esa-filter-dropdown">
         <button
-          class="esa-filter-dropdown__trigger ${this.hasSelection || this._open ? 'esa-filter-dropdown__trigger--active' : ''}"
+          class="esa-filter-dropdown__trigger ${this.hasSelection ? 'esa-filter-dropdown__trigger--active' : ''}"
           type="button"
           aria-expanded=${this._open}
           aria-haspopup="listbox"
           @click=${this.togglePanel}
         >
           <span class="esa-filter-dropdown__label">${this.buttonLabel}</span>
-          ${this.hasSelection
-            ? html`<span
-                class="esa-filter-dropdown__clear"
-                role="button"
-                aria-label="Clear filter"
-                @click=${this.clear}
-              >${closeIcon}</span>`
-            : html`<span
-                class="esa-filter-dropdown__arrow ${this._open ? 'esa-filter-dropdown__arrow--open' : ''}"
-              >${chevronIcon}</span>`}
+          ${this.multiple && this._selected.length > 0
+            ? html`<span class="esa-filter-dropdown__count">${this._selected.length}</span>`
+            : null}
+          <span
+            class="esa-filter-dropdown__arrow ${this._open ? 'esa-filter-dropdown__arrow--open' : ''}"
+          >${chevronIcon}</span>
         </button>
 
         ${this._open
@@ -238,32 +236,39 @@ export class EsaFilterDropdown extends LitElement {
                   autocomplete="off"
                 />
               </div>
-              <ul class="esa-filter-dropdown__options" role="listbox">
+              <div class="esa-filter-dropdown__options" role="group" aria-label=${this.label}>
                 ${options.length === 0
-                  ? html`<li class="esa-filter-dropdown__option esa-filter-dropdown__option--disabled">
-                      No options available
-                    </li>`
+                  ? html`<div class="esa-filter-dropdown__empty">No options match.</div>`
                   : options.map(
-                      (option, i) => html`<li
+                      (option, i) => html`<div
                         class="esa-filter-dropdown__option
                           ${option.disabled ? 'esa-filter-dropdown__option--disabled' : ''}
-                          ${this.isSelected(option.value) ? 'esa-filter-dropdown__option--selected' : ''}
                           ${this._highlighted === i ? 'esa-filter-dropdown__option--highlighted' : ''}"
                         role="option"
                         aria-selected=${this.isSelected(option.value)}
                         aria-disabled=${option.disabled ?? false}
                         @click=${() => this.selectOption(option)}
                       >
-                        ${this.multiple
-                          ? html`<span
-                              class="esa-filter-dropdown__check ${this.isSelected(option.value) ? 'esa-filter-dropdown__check--selected' : ''}"
-                              >&#10003;</span
-                            >`
-                          : null}
-                        ${option.label}
-                      </li>`
+                        <esa-checkbox
+                          class="esa-filter-dropdown__checkbox"
+                          size="sm"
+                          ?checked=${this.isSelected(option.value)}
+                          ?disabled=${option.disabled}
+                          aria-hidden="true"
+                          tabindex="-1"
+                        ></esa-checkbox>
+                        <span class="esa-filter-dropdown__option-label">${option.label}</span>
+                      </div>`
                     )}
-              </ul>
+              </div>
+              <div class="esa-filter-dropdown__footer">
+                <button
+                  type="button"
+                  class="esa-filter-dropdown__clear-link"
+                  ?disabled=${!this.hasSelection}
+                  @click=${this.clear}
+                >Clear all</button>
+              </div>
             </div>`
           : null}
       </div>
@@ -279,9 +284,9 @@ export class EsaFilterDropdown extends LitElement {
       --_filter-font-size: var(--type-size-200, 0.9375rem);
       --_filter-radius: var(--radius-200, 0.5rem);
       --_filter-bg: var(--color-surface, #fff);
-      --_filter-bg-active: var(--color-primary, #005862);
+      --_filter-bg-active: var(--color-primary-subtle, #f0fdfa);
       --_filter-text: var(--color-text-primary, #171717);
-      --_filter-text-active: var(--color-text-inverse, #fff);
+      --_filter-text-active: var(--color-primary, #005862);
       --_filter-border: var(--color-border, #e5e5e5);
       --_filter-border-active: var(--color-primary, #005862);
     }
@@ -345,12 +350,32 @@ export class EsaFilterDropdown extends LitElement {
       background: var(--_filter-bg-active);
       border-color: var(--_filter-border-active);
       color: var(--_filter-text-active);
+      font-weight: var(--font-weight-semibold, 550);
+    }
+    /* Open (panel showing) but nothing selected yet → just lift the border. */
+    .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
+      border-color: var(--_filter-border-active);
     }
 
     .esa-filter-dropdown__label {
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 200px;
+    }
+
+    .esa-filter-dropdown__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding-inline: 0.3rem;
+      border-radius: var(--radius-full, 9999px);
+      background: var(--color-primary, #005862);
+      color: var(--color-text-inverse, #fff);
+      font-size: var(--type-size-100, 0.75rem);
+      font-weight: var(--font-weight-semibold, 550);
+      line-height: 1;
     }
 
     .esa-filter-dropdown__arrow {
@@ -412,7 +437,6 @@ export class EsaFilterDropdown extends LitElement {
     }
 
     .esa-filter-dropdown__options {
-      list-style: none;
       margin: 0;
       padding: var(--spacing-100, 0.25rem) 0;
       overflow-y: auto;
@@ -421,7 +445,8 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__option {
       display: flex;
       align-items: center;
-      padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
+      gap: var(--spacing-200, 0.5rem);
+      padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
       font-size: var(--_filter-font-size);
       font-family: var(--font-sans, inherit);
       color: var(--color-text-primary, #171717);
@@ -429,35 +454,61 @@ export class EsaFilterDropdown extends LitElement {
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
-    .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-hover-overlay, rgba(0, 0, 0, 0.03));
-    }
+    .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
-    }
-    .esa-filter-dropdown__option--selected {
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-primary, #005862);
+      background: var(--color-surface-sunken, #f4f4f5);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
       cursor: default;
       pointer-events: none;
     }
-
-    .esa-filter-dropdown__check {
-      display: inline-block;
-      width: 1em;
-      margin-inline-end: var(--spacing-100, 0.25rem);
-      opacity: 0;
-      transition: opacity var(--transition-fast, 150ms ease);
+    /* Display-only: the row owns the click so the box never double-toggles. */
+    .esa-filter-dropdown__checkbox {
+      pointer-events: none;
+      flex-shrink: 0;
     }
-    .esa-filter-dropdown__check--selected { opacity: 1; }
+    .esa-filter-dropdown__option-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .esa-filter-dropdown__empty {
+      padding: var(--spacing-300, 0.75rem);
+      color: var(--color-text-muted, #737373);
+      font-style: italic;
+      text-align: center;
+    }
+
+    .esa-filter-dropdown__footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: var(--spacing-200, 0.5rem);
+      border-top: 1px solid var(--color-border, #e5e5e5);
+    }
+    .esa-filter-dropdown__clear-link {
+      background: none;
+      border: none;
+      color: var(--color-primary, #005862);
+      font-family: var(--font-sans, inherit);
+      font-size: var(--type-size-150, 0.875rem);
+      font-weight: var(--font-weight-medium, 450);
+      cursor: pointer;
+      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+      border-radius: var(--radius-100, 0.25rem);
+    }
+    .esa-filter-dropdown__clear-link:hover:not(:disabled) {
+      background: var(--color-surface-sunken, #f4f4f5);
+    }
+    .esa-filter-dropdown__clear-link:disabled {
+      color: var(--color-text-muted, #a3a3a3);
+      cursor: not-allowed;
+    }
   `;
 }
 
 const chevronIcon = html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>`;
-const closeIcon = html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>`;
 
 if (!customElements.get('esa-filter-dropdown')) {
   customElements.define('esa-filter-dropdown', EsaFilterDropdown);
