@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+// unsafeSVG for icon markup (SVG namespace); unsafeHTML stays for text highlight.
+import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
 
 /**
  * A facet/scope the search can be narrowed to (e.g. Projects, People, Funds).
@@ -277,7 +279,7 @@ export class EsaEntitySearch extends LitElement {
 
   private renderIcon(inner?: string) {
     if (!inner) return null;
-    return html`<svg class="esa-entity-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${unsafeHTML(inner)}</svg>`;
+    return html`<svg class="esa-entity-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${unsafeSVG(inner)}</svg>`;
   }
 
   private renderRow(entity: EsaSearchEntity) {
