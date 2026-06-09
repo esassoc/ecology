@@ -1,0 +1,78 @@
+---
+// esa-collapsible — presentational (.astro).
+//
+// A single disclosure section: an icon + title summary over a slotted body, built on
+// the native <details>/<summary> element (free a11y, keyboard, and open/close state —
+// no JS). The standard disclosure triangle is hidden in favor of a right-aligned caret
+// so the icon + title can lead the row.
+//
+// NET-NEW to the hub (the Angular lib had no accordion/expansion-panel). It was promoted
+// up from spoke demand: both the Beacon and CB-Fish spokes hand-rolled the same
+// collapsible-section pattern for sidebar/detail groups, so it belongs here as one lego.
+// This is a SINGLE disclosure, not a single-open accordion group — compose several for a
+// stacked set; each opens independently, matching native <details> semantics.
+import EsaIcon from './esa-icon.astro';
+
+interface Props {
+  /** Summary label (required). */
+  title: string;
+  /** Optional leading Lucide icon name (kebab-case). */
+  icon?: string;
+  /** Inner SVG markup for an icon not in esa-icon's registry (passed through to esa-icon). */
+  iconPaths?: string;
+  /** Render expanded on load. */
+  open?: boolean;
+}
+const { title, icon, iconPaths, open = false } = Astro.props;
+---
+
+<details class="esa-collapsible" open={open}>
+  <summary class="esa-collapsible__summary">
+    {icon && <EsaIcon name={icon} paths={iconPaths} size="sm" />}
+    <span class="esa-collapsible__title">{title}</span>
+  </summary>
+  <div class="esa-collapsible__body"><slot /></div>
+</details>
+
+<style>
+  .esa-collapsible {
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-300, 0.5rem);
+    background: var(--color-surface, #fff);
+  }
+  .esa-collapsible__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-200, 0.5rem);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    font-size: var(--type-size-150, 0.9375rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--color-text-primary, #171717);
+    cursor: pointer;
+    list-style: none;
+  }
+  /* Hide the native disclosure marker (both engines) so the caret can lead from the right. */
+  .esa-collapsible__summary::-webkit-details-marker { display: none; }
+  /* Right-aligned chevron caret; rotates when open. */
+  .esa-collapsible__summary::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--color-text-tertiary, #737373);
+    border-bottom: 2px solid var(--color-text-tertiary, #737373);
+    transform: rotate(-45deg);
+    transition: transform 150ms ease;
+    margin-left: auto;
+  }
+  .esa-collapsible[open] > .esa-collapsible__summary::after { transform: rotate(45deg); }
+
+  /* Leading summary glyph — quiet, secondary. */
+  .esa-collapsible__summary :global(.esa-icon) { flex-shrink: 0; color: var(--color-text-secondary, #404040); }
+
+  .esa-collapsible__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-400, 1rem);
+    padding: 0 var(--spacing-400, 1rem) var(--spacing-400, 1rem);
+  }
+</style>
