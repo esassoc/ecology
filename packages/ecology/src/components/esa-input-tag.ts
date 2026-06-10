@@ -20,6 +20,12 @@ interface EsaInputTagOption {
  * dropdown; suggestions and typed values coexist. The token VALUE is what's submitted;
  * when an option matches, its label is shown on the chip.
  *
+ * Ecology extensions (not in the Angular lib):
+ *   - `strict`     — options-only vocabulary: the free-form "Add" row is suppressed,
+ *                    tokens can only come from `options`.
+ *   - `tags-below` — chips render in a row BELOW the input instead of inline, so a
+ *                    long selection never crowds the field.
+ *
  * Decorator-free on purpose: avoids per-consumer tsconfig decorator flags. Tokens reach
  * inside shadow DOM because CSS custom properties inherit through it.
  *
@@ -38,6 +44,8 @@ export class EsaInputTag extends LitElement {
     size: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
     required: { type: Boolean },
+    strict: { type: Boolean },
+    tagsBelow: { type: Boolean, attribute: 'tags-below' },
     name: { type: String },
     _values: { state: true },
     _search: { state: true },
@@ -52,6 +60,8 @@ export class EsaInputTag extends LitElement {
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
   declare required: boolean;
+  declare strict: boolean;
+  declare tagsBelow: boolean;
   declare name: string;
   private _values: string[];
   private _search: string;
@@ -73,6 +83,8 @@ export class EsaInputTag extends LitElement {
     this.size = 'md';
     this.disabled = false;
     this.required = false;
+    this.strict = false;
+    this.tagsBelow = false;
     this.name = '';
     this._values = [];
     this._search = '';
@@ -124,6 +136,7 @@ export class EsaInputTag extends LitElement {
 
   /** Whether the typed term can be added as a free-form token (not blank, not already present). */
   private get canAddTyped(): boolean {
+    if (this.strict) return false; // options-only vocabulary
     const term = this._search.trim();
     if (!term) return false;
     if (this._values.includes(term)) return false;
@@ -246,6 +259,24 @@ export class EsaInputTag extends LitElement {
     if (this._open) this.focusInput();
   };
 
+  private renderChips() {
+    return this._values.map(
+      (value) => html`<span class="chip">
+        <span class="chip__label">${this.labelFor(value)}</span>
+        ${!this.disabled
+          ? html`<button
+              type="button"
+              class="chip__remove"
+              aria-label=${'Remove ' + this.labelFor(value)}
+              @click=${(e: Event) => this.removeToken(value, e)}
+            >
+              ${this.xIcon()}
+            </button>`
+          : null}
+      </span>`
+    );
+  }
+
   render() {
     return html`
       <div class="field">
@@ -257,21 +288,7 @@ export class EsaInputTag extends LitElement {
 
         <div class="container ${this._open ? 'container--open' : ''} ${this.disabled ? 'container--disabled' : ''}">
           <div class="chips">
-            ${this._values.map(
-              (value) => html`<span class="chip">
-                <span class="chip__label">${this.labelFor(value)}</span>
-                ${!this.disabled
-                  ? html`<button
-                      type="button"
-                      class="chip__remove"
-                      aria-label=${'Remove ' + this.labelFor(value)}
-                      @click=${(e: Event) => this.removeToken(value, e)}
-                    >
-                      ${this.xIcon()}
-                    </button>`
-                  : null}
-              </span>`
-            )}
+            ${this.tagsBelow ? null : this.renderChips()}
             <input
               class="input"
               type="text"
@@ -305,6 +322,9 @@ export class EsaInputTag extends LitElement {
           ${this._open ? this.renderDropdown() : null}
         </div>
 
+        ${this.tagsBelow && this._values.length
+          ? html`<div class="chips chips--below">${this.renderChips()}</div>`
+          : null}
         ${this.hint ? html`<span class="field__hint">${this.hint}</span>` : null}
       </div>
     `;
@@ -463,6 +483,11 @@ export class EsaInputTag extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       min-width: 0;
+    }
+    /* tags-below mode: chips live in their own row under the field */
+    .chips--below {
+      flex: none;
+      padding-top: var(--spacing-100, 4px);
     }
 
     .chip {

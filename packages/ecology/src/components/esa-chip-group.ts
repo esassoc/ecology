@@ -22,6 +22,12 @@ export interface EsaChipOption {
  *     semantic tokens (surface-sunken/border, darker neutral, teal/primary, warning/amber)
  *   - valueChange output                       → composed/bubbling 'change' CustomEvent
  *
+ * MULTI-SELECT (Ecology extension, not in the Angular lib): set `multiple` and the
+ * group becomes a chip checkbox set — chips toggle independently, selection lives in
+ * the `values` array property (form value = comma-joined), `change` detail carries
+ * `{ values }`, and arrows move focus WITHOUT selecting (the WAI-ARIA checkbox-group
+ * pattern), Enter/Space toggles the focused chip.
+ *
  * Form participation: the selected value is mirrored to the host form via
  * ElementInternals.setFormValue. Keyboard: Arrow keys move (with wrap-around),
  * Home/End jump to ends, Enter/Space select. `options` accepts an array directly
@@ -33,6 +39,8 @@ export class EsaChipGroup extends LitElement {
   static properties = {
     options: { type: Array },
     value: { type: String, reflect: true },
+    values: { type: Array },
+    multiple: { type: Boolean, reflect: true },
     size: { type: String, reflect: true },
     name: { type: String },
     label: { type: String },
@@ -40,6 +48,9 @@ export class EsaChipGroup extends LitElement {
 
   declare options: EsaChipOption[];
   declare value: string;
+  /** Selected values when `multiple`. */
+  declare values: string[];
+  declare multiple: boolean;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare name: string;
   declare label: string;
@@ -50,6 +61,8 @@ export class EsaChipGroup extends LitElement {
     super();
     this.options = [];
     this.value = '';
+    this.values = [];
+    this.multiple = false;
     this.size = 'md';
     this.name = '';
     this.label = '';
@@ -65,11 +78,18 @@ export class EsaChipGroup extends LitElement {
         this.options = [];
       }
     }
+    if (changed.has('values') && typeof this.values === 'string') {
+      try {
+        this.values = JSON.parse(this.values as unknown as string);
+      } catch {
+        this.values = [];
+      }
+    }
   }
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.internals.role = 'radiogroup';
+    this.internals.role = this.multiple ? 'group' : 'radiogroup';
     if (this.label) this.internals.ariaLabel = this.label;
     this.syncFormValue();
   }
@@ -79,10 +99,32 @@ export class EsaChipGroup extends LitElement {
   }
 
   private syncFormValue(): void {
-    this.internals.setFormValue(this.value || null);
+    if (this.multiple) {
+      this.internals.setFormValue(this.values.length ? this.values.join(',') : null);
+    } else {
+      this.internals.setFormValue(this.value || null);
+    }
+  }
+
+  private isActive(option: EsaChipOption): boolean {
+    return this.multiple ? this.values.includes(option.value) : option.value === this.value;
   }
 
   private select(option: EsaChipOption): void {
+    if (this.multiple) {
+      this.values = this.values.includes(option.value)
+        ? this.values.filter((v) => v !== option.value)
+        : [...this.values, option.value];
+      this.syncFormValue();
+      this.dispatchEvent(
+        new CustomEvent('change', {
+          detail: { values: [...this.values] },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      return;
+    }
     if (option.value === this.value) return;
     this.value = option.value;
     this.syncFormValue();
@@ -96,18 +138,23 @@ export class EsaChipGroup extends LitElement {
   }
 
   /**
-   * Roving-tabindex keyboard navigation for the radiogroup: arrow keys move selection
-   * (with wrap-around), Home/End jump to the ends, Enter/Space select the focused chip.
-   * Selection follows arrow focus, per the WAI-ARIA radio pattern.
+   * Roving-tabindex keyboard navigation. Single (radio pattern): arrow keys move
+   * selection (with wrap-around), Home/End jump to the ends, Enter/Space select.
+   * Multiple (checkbox-group pattern): arrows move FOCUS only; Enter/Space toggles
+   * the focused chip.
    */
   private onKeydown = (event: KeyboardEvent): void => {
     const options = this.options;
     if (!options || options.length === 0) return;
 
-    const currentIndex = Math.max(
-      0,
-      options.findIndex((option) => option.value === this.value)
-    );
+    const chips = this.renderRoot.querySelectorAll<HTMLButtonElement>('.chip');
+    const focusedIndex = Array.from(chips).indexOf(this.renderRoot.activeElement as HTMLButtonElement);
+    const currentIndex = this.multiple
+      ? Math.max(0, focusedIndex)
+      : Math.max(
+          0,
+          options.findIndex((option) => option.value === this.value)
+        );
     let targetIndex: number;
 
     switch (event.key) {
@@ -135,23 +182,23 @@ export class EsaChipGroup extends LitElement {
     }
 
     event.preventDefault();
-    this.select(options[targetIndex]);
-    const chips = this.renderRoot.querySelectorAll<HTMLButtonElement>('.chip');
+    if (!this.multiple) this.select(options[targetIndex]);
     chips[targetIndex]?.focus();
   };
 
   render() {
     return html`
       <div class="root" @keydown=${this.onKeydown}>
-        ${(this.options ?? []).map((option) => {
-          const active = option.value === this.value;
+        ${(this.options ?? []).map((option, i) => {
+          const active = this.isActive(option);
+          const tabbable = this.multiple ? i === 0 : active;
           return html`
             <button
               type="button"
-              role="radio"
+              role=${this.multiple ? 'checkbox' : 'radio'}
               class="chip chip--${option.tone ?? 'neutral'} ${active ? 'chip--active' : ''}"
               part="chip"
-              tabindex=${active ? 0 : -1}
+              tabindex=${tabbable ? 0 : -1}
               aria-checked=${active}
               @click=${() => this.select(option)}
             >

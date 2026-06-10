@@ -94,6 +94,7 @@ export class EsaRadioGroup extends LitElement {
             <label
               class="item ${disabled ? 'item--disabled' : ''}"
               @keydown=${(e: KeyboardEvent) => this.onKeydown(e, option)}
+              @click=${() => this.selectOption(option)}
             >
               <span
                 class="circle ${selected ? 'circle--selected' : ''}"
@@ -101,7 +102,6 @@ export class EsaRadioGroup extends LitElement {
                 aria-checked=${String(selected)}
                 aria-disabled=${String(disabled)}
                 tabindex=${disabled ? -1 : 0}
-                @click=${() => this.selectOption(option)}
               >
                 <span class="dot"></span>
               </span>

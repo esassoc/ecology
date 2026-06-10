@@ -72,14 +72,13 @@ export class EsaCheckbox extends LitElement {
 
   render() {
     return html`
-      <label class="wrapper" @keydown=${this.onKeydown}>
+      <label class="wrapper" @keydown=${this.onKeydown} @click=${this.toggle}>
         <span
           class="box"
           role="checkbox"
           aria-checked=${this.indeterminate ? 'mixed' : String(this.checked)}
           aria-disabled=${String(this.disabled)}
           tabindex=${this.disabled ? -1 : 0}
-          @click=${this.toggle}
         >
           ${this.indeterminate
             ? html`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"

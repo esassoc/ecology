@@ -100,7 +100,7 @@ export class EsaTabLayout extends LitElement {
   render() {
     return html`
       <div class="layout">
-        <div class="tabs" role="tablist">
+        <div class="tabs" part="tabs" role="tablist">
           ${this.tabs.map((tab, i) => {
             const active = this.activeIndex === i;
             return html`<button

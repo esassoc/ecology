@@ -22,11 +22,14 @@ interface Props {
   iconPaths?: string;
   /** Render expanded on load. */
   open?: boolean;
+  /** No card chrome (border/radius/background, flush horizontal padding) — for
+      stacked drawer/sidebar sections separated by the host's own dividers. */
+  flush?: boolean;
 }
-const { title, icon, iconPaths, open = false } = Astro.props;
+const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
 ---
 
-<details class="esa-collapsible" open={open}>
+<details class:list={['esa-collapsible', { 'esa-collapsible--flush': flush }]} open={open}>
   <summary class="esa-collapsible__summary">
     {icon && <EsaIcon name={icon} paths={iconPaths} size="sm" />}
     <span class="esa-collapsible__title">{title}</span>
@@ -39,6 +42,15 @@ const { title, icon, iconPaths, open = false } = Astro.props;
     border: 1px solid var(--color-border, #e5e5e5);
     border-radius: var(--radius-300, 0.5rem);
     background: var(--color-surface, #fff);
+  }
+  .esa-collapsible--flush {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+  .esa-collapsible--flush > .esa-collapsible__summary,
+  .esa-collapsible--flush > .esa-collapsible__body {
+    padding-inline: 0;
   }
   .esa-collapsible__summary {
     display: flex;
