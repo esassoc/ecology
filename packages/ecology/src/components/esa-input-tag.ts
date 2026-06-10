@@ -373,6 +373,11 @@ export class EsaInputTag extends LitElement {
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
       --_chip-font-size: var(--type-size-150, 12px);
+      /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
+         ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
+      --_chip-bg: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
+      --_chip-color: var(--color-primary, #005862);
+      --_chip-radius: var(--radius-full, 9999px);
     }
     :host([size='xs']) {
       --_field-padding-y: var(--form-padding-y-xs, 2px);
@@ -468,9 +473,9 @@ export class EsaInputTag extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_chip-font-size);
       line-height: 1.4;
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #005862);
-      border-radius: var(--radius-full, 9999px);
+      background: var(--_chip-bg);
+      color: var(--_chip-color);
+      border-radius: var(--_chip-radius);
       flex-shrink: 0;
       user-select: none;
     }
