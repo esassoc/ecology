@@ -213,9 +213,10 @@ export class EsaChipGroup extends LitElement {
   static styles = css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
-      --_pad-y: var(--spacing-100, 0.25rem);
+      --_pad-y: var(--spacing-150, 0.375rem);
       --_pad-x: var(--form-padding-x-md, 0.75rem);
       --_font: var(--form-font-size-md, 0.9375rem);
+      --_radius: var(--radius-100, 0.25rem);
 
       /* Resting (unselected) chrome. */
       --_bg: var(--color-surface, #fff);
@@ -227,8 +228,8 @@ export class EsaChipGroup extends LitElement {
 
       display: inline-flex;
     }
-    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); }
-    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); }
+    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
+    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
     :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_font: var(--form-font-size-lg, 1rem); --_pad-y: var(--spacing-200, 0.5rem); }
 
     .root {
@@ -243,7 +244,7 @@ export class EsaChipGroup extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
       padding: var(--_pad-y) var(--_pad-x);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--_radius, 0.25rem);
       border: 1px solid var(--_border);
       background: var(--_bg);
       color: var(--_color);
@@ -283,9 +284,11 @@ export class EsaChipGroup extends LitElement {
       border-color: var(--color-border-strong, #d4d4d4);
       color: var(--color-text-primary, #171717);
     }
+    /* Reads the SEMANTIC primary chain (not teal primitives) so spoke themes
+       re-skin it — hub default stays teal, a forest-green theme goes forest. */
     .chip--active.chip--teal {
-      background: var(--color-teal-50, #f0fdfa);
-      border-color: var(--color-teal-200, #99f6e4);
+      background: var(--color-primary-subtle, #f0fdfa);
+      border-color: var(--color-primary-border, #99f6e4);
       color: var(--color-primary, #005862);
     }
     .chip--active.chip--amber {
