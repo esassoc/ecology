@@ -5,6 +5,9 @@
 import '@esa/tokens/tokens.css';
 import '@esa/tokens/component-tokens.css';
 import '../styles/theme-__SPOKE_SLUG__.css';
+// Runtime handoff inspector — self-gating: dormant unless the current route
+// has a bundle at public/handoff/<slug>/ (generated via `npx handoff`).
+import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
 
 interface Props {
   title?: string;
@@ -37,5 +40,6 @@ const { title = '__SPOKE_NAME__' } = Astro.props;
   </head>
   <body>
     <slot />
+    <HandoffInspector />
   </body>
 </html>

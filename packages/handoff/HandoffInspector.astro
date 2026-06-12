@@ -1,0 +1,18 @@
+---
+// Ships the runtime Handoff inspector on every page of a spoke. The script
+// self-gates: it fetches <base>/handoff/<route-slug>/manifest.json and stays
+// fully dormant (no UI) when the current route has no bundle — so it is safe
+// to mount globally from a spoke's BaseLayout:
+//
+//   import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
+//   ...
+//   <HandoffInspector />
+//
+// Bundles come from the handoff CLI (`npx handoff <url> --name <slug>`) or a
+// spoke's curated capture pipeline (see cb-fish-design scripts/gen-handoff.mjs,
+// the originating implementation — promoted to the hub 2026-06).
+---
+<script>
+  import { initInspector } from './inspector.client.ts';
+  initInspector();
+</script>
