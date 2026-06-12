@@ -154,6 +154,21 @@ npx astro build                 # must pass
 npx tsc --noEmit                # strict (astro/tsconfigs/strict) — REQUIRED separately
 ```
 
+**Mined-direction greps** (adopted 2026-06-12; rules live in `design-principles`):
+```bash
+# Chips/badges must be 4px radius, never pills — flag pill geometry on chip-ish selectors
+grep -nE '(chip|badge|pill|tag)[^{]*\{[^}]*border-radius:\s*(9999px|999px|50%|1e)' -r src/
+# No monospace for IDs/badges/headings/document text (code blocks excepted)
+grep -nE "font-family:[^;]*(Mono|monospace)" -r src/ | grep -v 'pre\|code\|kbd'
+# Scrims must cover the viewport — backdrop without fixed full-inset is suspect
+grep -nE '(backdrop|scrim|overlay)[^{]*\{' -r src/   # then verify position:fixed + inset:0
+# Internal vocabulary leaking into user-facing copy (ticket keys, tenant names)
+grep -rnE '\b[A-Z]{2,10}-[0-9]{2,5}\b' src/pages/ --include='*.astro' | grep -v 'ticket:'
+```
+Severity note (adopted T2): a **deliberate font-size hard-code** — where the author
+checked that no token applies — is a *Consider/warning*, not Must-fix. Undefined
+custom properties remain Must-fix always.
+
 **Contrast** (when the diff touches `theme-<brand>.css` or color tokens):
 `node ../ecology/scripts/check-contrast.mjs` — resolves the token graph
 (hub defaults + this theme's overrides) and checks the WCAG AA pairs that
