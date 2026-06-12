@@ -131,6 +131,35 @@ if (!existsSync(join(DEST, '.claude', 'settings.json'))) {
 execFileSync('git', ['init', '-b', 'main'], { cwd: DEST, stdio: 'ignore' });
 console.log('git init -b main');
 
+// --- 7. Register in the hub site's spoke directory --------------------------
+// apps/site/src/data/spokes.ts drives the /guide spoke directory; appending
+// here (instead of remembering to) is what keeps that page honest. The hub's
+// CI deploy publishes it on the next hub push.
+const SPOKES_TS = join(HUB_ROOT, 'apps', 'site', 'src', 'data', 'spokes.ts');
+if (!existsSync(SPOKES_TS)) {
+  console.warn('warn    apps/site/src/data/spokes.ts not found — add the spoke to the /guide directory by hand');
+} else if (readFileSync(SPOKES_TS, 'utf8').includes(`slug: '${args.slug}'`)) {
+  console.log(`spokes.ts already lists '${args.slug}' — left as is`);
+} else {
+  const entry = [
+    '  {',
+    `    name: '${args.name.replace(/'/g, "\\'")}',`,
+    `    slug: '${args.slug}',`,
+    `    purpose: '${substitutions.__SPOKE_TAGLINE__.replace(/'/g, "\\'")}',`,
+    `    repo: 'https://github.com/esassoc/${args.dir}',`,
+    `    site: 'https://esassoc.github.io/${args.dir}/',`,
+    '  },',
+  ].join('\n');
+  const src = readFileSync(SPOKES_TS, 'utf8');
+  const updated = src.replace(/\n\];\s*$/, `\n${entry}\n];\n`);
+  if (updated === src) {
+    console.warn('warn    could not find the closing ]; in spokes.ts — add the entry by hand');
+  } else {
+    writeFileSync(SPOKES_TS, updated);
+    console.log(`registered '${args.slug}' in apps/site/src/data/spokes.ts — commit + push the hub to publish the /guide directory`);
+  }
+}
+
 console.log(`
 spoke scaffolded at ${DEST}
 

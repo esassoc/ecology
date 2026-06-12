@@ -9,5 +9,18 @@
   },
   "enabledPlugins": {
     "spoke-kit@ecology": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/onboarding-share-reminder.mjs\""
+          }
+        ]
+      }
+    ]
   }
 }

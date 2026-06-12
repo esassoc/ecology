@@ -68,6 +68,10 @@ half-installed spoke that started this whole effort.
       ```
 - [ ] `CLAUDE.md` exists at the spoke root (project conventions; the
       component-first discipline itself comes from the plugin).
+- [ ] The spoke is listed in the hub's `/guide` spoke directory
+      (`apps/site/src/data/spokes.ts` — `create-spoke.mjs` appends it
+      automatically; verify the entry, then commit + push the HUB so its CI
+      republishes the page).
 
 ## Handoff to the user
 - [ ] Report the DoD pass/fail table.
