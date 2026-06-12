@@ -37,6 +37,9 @@ half-installed spoke that started this whole effort.
       were each addressed (see `brand-extraction.md` (a)/(d)/(e)/(f)).
 - [ ] No leftover `/* __FILL__ */` markers or `__PLACEHOLDER__` tokens remain in
       any file (grep the repo for both).
+- [ ] **Contrast audit**: `node ../ecology/scripts/check-contrast.mjs` — no AA
+      text-pair failures (warnings reviewed and either fixed or accepted with
+      a reason).
 
 ## Build green
 - [ ] `npm run build` succeeds.

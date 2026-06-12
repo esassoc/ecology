@@ -22,6 +22,10 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
 2. **`design-principles`** — check the banned patterns (left-border status
    indicators, ornamental micro-labels, sub-16px body text), token-first
    discipline, and mock-data rules against the same scope.
+3. **Contrast** — if the theme file is in scope (or on first run in a spoke),
+   run `node ../ecology/scripts/check-contrast.mjs`. AA text failures are
+   Must-fix; warnings get listed with the affected pair in plain words
+   ("white text on the warning color is hard to read").
 
 ## Reporting
 

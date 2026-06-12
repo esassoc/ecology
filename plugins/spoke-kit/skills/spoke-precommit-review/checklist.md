@@ -154,6 +154,11 @@ npx astro build                 # must pass
 npx tsc --noEmit                # strict (astro/tsconfigs/strict) — REQUIRED separately
 ```
 
+**Contrast** (when the diff touches `theme-<brand>.css` or color tokens):
+`node ../ecology/scripts/check-contrast.mjs` — resolves the token graph
+(hub defaults + this theme's overrides) and checks the WCAG AA pairs that
+actually sit on each other. Text-pair failures are Must-fix.
+
 **Plugin freshness**: this skill, the component-first skill, and the
 enforcement hook all come from the `spoke-kit` plugin (ecology marketplace).
 If the hub changed recently, refresh before trusting the review:

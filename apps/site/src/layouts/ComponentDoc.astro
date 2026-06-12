@@ -1,6 +1,8 @@
 ---
 import DocsLayout from './DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
 import { withBase } from '@esa/docs/base';
+import { themingSurface } from '../data/theming';
 
 interface Props {
   name: string;          // display name, e.g. "Button"
@@ -21,6 +23,11 @@ const importLine =
   : null;
 const statusLabel = type === 'reference' ? 'Reference' : 'Stable';
 const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
+
+// Build-time-extracted public theming surface (src/data/theming.ts) — every
+// token this component's CSS reads. Rendered on every component page so
+// "what can my spoke re-point?" can never drift from the source.
+const hooks = themingSurface[slug] ?? [];
 ---
 <DocsLayout title={`${name} — Ecology`} activeHref={activeHref}>
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>{category}</span> <span>/</span> <span>{name}</span></nav>
@@ -33,4 +40,40 @@ const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
     {importLine && <code class="imp">{importLine}</code>}
   </div>
   <slot />
+
+  {hooks.length > 0 && (
+    <Section id="theming-surface" title="Theming surface">
+      <p class="ts-note">
+        Every public token this component reads, extracted from its source at build time.
+        A spoke re-skins by re-pointing these in its <code>theme-&lt;slug&gt;.css</code> —
+        component internals are never edited. No hook for what you need? File it
+        with <code>/request-lego</code>.
+      </p>
+      <table class="ts-table">
+        <thead><tr><th>Token</th><th>Tier</th><th>Default</th></tr></thead>
+        <tbody>
+          {hooks.map((h) => (
+            <tr>
+              <td><code>{h.token}</code></td>
+              <td><span class={`ts-tier ts-tier--${h.tier}`}>{h.tier}</span></td>
+              <td>{h.fallback ? <code>{h.fallback}</code> : <span class="ts-none">—</span>}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Section>
+  )}
 </DocsLayout>
+
+<style>
+  .ts-note { color: var(--color-text-secondary, #444); }
+  .ts-table { width: 100%; border-collapse: collapse; }
+  .ts-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
+  .ts-table td { padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); }
+  .ts-tier { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border, #e5e5e5); }
+  .ts-tier--component { background: var(--color-primary-subtle, #eef6f6); border-color: var(--color-primary-border, #cfe5e5); }
+  .ts-tier--ad-hoc { background: var(--color-primary-subtle, #eef6f6); }
+  .ts-tier--semantic { background: var(--color-surface-sunken, #f5f5f5); }
+  .ts-tier--undefined { background: var(--color-danger-subtle, #fdecec); border-color: var(--color-danger-border, #f5c2c2); }
+  .ts-none { color: var(--color-text-muted, #888); }
+</style>
