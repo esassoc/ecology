@@ -27,6 +27,10 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
 
 **Theming = override the semantic and/or component layer** under a `[data-theme="x"]`
 scope. Primitives never move; component internals are never touched.
+The full contract — naming, when a property earns a tier-3 hook, the
+zero-regression splice mechanic — is **`packages/tokens/SPEC.md`**. As of
+2026-06-12 all 61 components expose a tier-3 surface (each component doc page
+renders its generated "Theming surface" table).
 
 ## Component buckets
 - **Presentational → `.astro`.** Golden pattern: `packages/ecology/src/components/esa-badge.astro`.
