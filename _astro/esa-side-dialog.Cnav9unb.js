@@ -1,23 +1,23 @@
-import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{constructor(){super(),this.previousFocus=null,this.onKeydown=e=>{e.key==="Escape"?(e.preventDefault(),this.close()):e.key==="Tab"&&this.trapFocus(e)},this.open=!1,this.heading="",this.position="right",this.size="md",this.showCloseButton=!0,this.closing=!1}static{this.properties={open:{type:Boolean,reflect:!0},heading:{type:String},position:{type:String,reflect:!0},size:{type:String,reflect:!0},showCloseButton:{type:Boolean,attribute:"show-close-button"},closing:{state:!0}}}updated(e){e.has("open")&&(this.open?(this.previousFocus=document.activeElement,requestAnimationFrame(()=>this.focusFirst())):e.get("open")&&this.previousFocus?.focus?.())}show(){clearTimeout(this.closeTimer),this.closing=!1,this.open=!0}close(){this.open&&(this.open=!1,this.closing=!0,clearTimeout(this.closeTimer),this.closeTimer=setTimeout(()=>{this.closing=!1},200),this.dispatchEvent(new CustomEvent("close",{bubbles:!0,composed:!0})))}focusable(){const e='a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])',o=this.renderRoot.querySelectorAll(e),s=Array.from(this.querySelectorAll(e));return[...Array.from(o),...s].filter(i=>i.offsetParent!==null)}focusFirst(){const e=this.focusable();e.length?e[0].focus():this.renderRoot.querySelector(".panel")?.focus()}trapFocus(e){const o=this.focusable();if(!o.length)return;const s=o[0],i=o[o.length-1],a=this.renderRoot.activeElement||document.activeElement;e.shiftKey&&a===s?(e.preventDefault(),i.focus()):!e.shiftKey&&a===i&&(e.preventDefault(),s.focus())}render(){if(!this.open&&!this.closing)return r``;const e=!!this.querySelector('[slot="header"]'),o=this.heading||this.showCloseButton||e,s=this.closing&&!this.open;return r`
-      <div class="backdrop ${s?"is-closing":""}" @click=${this.close}></div>
+import{i as a,b as i,a as n}from"./lit-element.C8p3bJxG.js";class l extends a{constructor(){super(),this.previousFocus=null,this.onKeydown=e=>{e.key==="Escape"?(e.preventDefault(),this.close()):e.key==="Tab"&&this.trapFocus(e)},this.open=!1,this.heading="",this.position="right",this.size="md",this.showCloseButton=!0,this.closing=!1}static{this.properties={open:{type:Boolean,reflect:!0},heading:{type:String},position:{type:String,reflect:!0},size:{type:String,reflect:!0},showCloseButton:{type:Boolean,attribute:"show-close-button"},closing:{state:!0}}}updated(e){e.has("open")&&(this.open?(this.previousFocus=document.activeElement,requestAnimationFrame(()=>this.focusFirst())):e.get("open")&&this.previousFocus?.focus?.())}show(){clearTimeout(this.closeTimer),this.closing=!1,this.open=!0}close(){this.open&&(this.open=!1,this.closing=!0,clearTimeout(this.closeTimer),this.closeTimer=setTimeout(()=>{this.closing=!1},200),this.dispatchEvent(new CustomEvent("close",{bubbles:!0,composed:!0})))}focusable(){const e='a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])',t=this.renderRoot.querySelectorAll(e),o=Array.from(this.querySelectorAll(e));return[...Array.from(t),...o].filter(s=>s.offsetParent!==null)}focusFirst(){const e=this.focusable();e.length?e[0].focus():this.renderRoot.querySelector(".panel")?.focus()}trapFocus(e){const t=this.focusable();if(!t.length)return;const o=t[0],s=t[t.length-1],r=this.renderRoot.activeElement||document.activeElement;e.shiftKey&&r===o?(e.preventDefault(),s.focus()):!e.shiftKey&&r===s&&(e.preventDefault(),o.focus())}render(){if(!this.open&&!this.closing)return i``;const e=!!this.querySelector('[slot="header"]'),t=this.heading||this.showCloseButton||e,o=this.closing&&!this.open;return i`
+      <div class="backdrop ${o?"is-closing":""}" @click=${this.close}></div>
       <div
-        class="panel ${s?"is-closing":""}"
+        class="panel ${o?"is-closing":""}"
         role="dialog"
         aria-modal="true"
         aria-label=${this.heading||"Side dialog"}
         tabindex="-1"
         @keydown=${this.onKeydown}
       >
-        ${o?r`<header class="header">
+        ${t?i`<header class="header">
               <slot name="header"><h2 class="title">${this.heading}</h2></slot>
-              ${this.showCloseButton?r`<button class="close" @click=${this.close} aria-label="Close">
+              ${this.showCloseButton?i`<button class="close" @click=${this.close} aria-label="Close">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                   </button>`:null}
             </header>`:null}
         <div class="body"><slot></slot></div>
         <footer class="footer"><slot name="footer"></slot></footer>
       </div>
-    `}static{this.styles=l`
+    `}static{this.styles=n`
     :host { --_width: 400px; }
     :host([size='sm']) { --_width: 320px; }
     :host([size='lg']) { --_width: 520px; }
@@ -86,4 +86,4 @@ import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{co
     @keyframes slide-left { from { transform: translateX(calc(-100% - var(--_inset))); } }
     @keyframes slide-out-right { to { transform: translateX(calc(100% + var(--_inset))); } }
     @keyframes slide-out-left { to { transform: translateX(calc(-100% - var(--_inset))); } }
-  `}}customElements.get("esa-side-dialog")||customElements.define("esa-side-dialog",d);document.getElementById("open-sd")?.addEventListener("click",()=>document.getElementById("sd")?.show());document.getElementById("open-left")?.addEventListener("click",()=>{let t=document.getElementById("sd-left");t||(t=document.createElement("esa-side-dialog"),t.id="sd-left",t.setAttribute("position","left"),t.setAttribute("size","sm"),t.heading="Left · sm",t.innerHTML="<p>A small drawer from the left edge.</p>",document.body.appendChild(t)),t.show()});
+  `}}customElements.get("esa-side-dialog")||customElements.define("esa-side-dialog",l);

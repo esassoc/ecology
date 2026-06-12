@@ -1,4 +1,4 @@
-import{i as p,b as n,a as h}from"./lit-element.C8p3bJxG.js";const v='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>',g='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>',u='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',b='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';class f extends p{constructor(){super(),this.toggleCollapse=()=>{this.collapsed=!this.collapsed,this.dispatchEvent(new CustomEvent("collapsedchange",{detail:{collapsed:this.collapsed},bubbles:!0,composed:!0}))},this.items=[],this.collapsed=!1,this.collapsible=!0,this._expanded=new Set}static{this.properties={items:{type:Array},collapsed:{type:Boolean,reflect:!0},collapsible:{type:Boolean},_expanded:{state:!0}}}get groupedSections(){const e=[];let a=null,i=[];for(const t of this.items){const l=t.group??null;l!==a?(i.length>0&&e.push({group:a,items:i}),a=l,i=[t]):i.push(t)}return i.length>0&&e.push({group:a,items:i}),e}toggleChildren(e){const a=new Set(this._expanded);a.has(e.label)?a.delete(e.label):a.add(e.label),this._expanded=a}isExpanded(e){return this._expanded.has(e.label)}icon(e){return e?n`<span class="icon" .innerHTML=${e}></span>`:null}badge(e){return e!=null?n`<span class="badge">${e}</span>`:null}renderLeaf(e){return e.href?n`<a
+import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>',d='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>',p='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',c='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';class v extends r{constructor(){super(),this.toggleCollapse=()=>{this.collapsed=!this.collapsed,this.dispatchEvent(new CustomEvent("collapsedchange",{detail:{collapsed:this.collapsed},bubbles:!0,composed:!0}))},this.items=[],this.collapsed=!1,this.collapsible=!0,this._expanded=new Set}static{this.properties={items:{type:Array},collapsed:{type:Boolean,reflect:!0},collapsible:{type:Boolean},_expanded:{state:!0}}}get groupedSections(){const e=[];let a=null,i=[];for(const s of this.items){const t=s.group??null;t!==a?(i.length>0&&e.push({group:a,items:i}),a=t,i=[s]):i.push(s)}return i.length>0&&e.push({group:a,items:i}),e}toggleChildren(e){const a=new Set(this._expanded);a.has(e.label)?a.delete(e.label):a.add(e.label),this._expanded=a}isExpanded(e){return this._expanded.has(e.label)}icon(e){return e?n`<span class="icon" .innerHTML=${e}></span>`:null}badge(e){return e!=null?n`<span class="badge">${e}</span>`:null}renderLeaf(e){return e.href?n`<a
         class="link ${e.active?"link--active":""} ${e.disabled?"link--disabled":""}"
         href=${e.href}
         tabindex=${e.disabled?-1:0}
@@ -22,7 +22,7 @@ import{i as p,b as n,a as h}from"./lit-element.C8p3bJxG.js";const v='<svg width=
           ${this.icon(e.icon)}
           <span class="label">${e.label}</span>
           ${this.badge(e.badge)}
-          <span class="chevron" .innerHTML=${a?u:b}></span>
+          <span class="chevron" .innerHTML=${a?p:c}></span>
         </button>
         ${a?n`<ul class="children" role="list">
               ${e.children.map(i=>n`<li class="child ${i.disabled?"child--disabled":""}">
@@ -52,7 +52,7 @@ import{i as p,b as n,a as h}from"./lit-element.C8p3bJxG.js";const v='<svg width=
               aria-label=${this.collapsed?"Expand sidebar":"Collapse sidebar"}
               @click=${this.toggleCollapse}
             >
-              <span .innerHTML=${this.collapsed?g:v}></span>
+              <span .innerHTML=${this.collapsed?d:o}></span>
             </button>`:null}
         <ul class="list" role="list">
           ${this.groupedSections.map(e=>n`
@@ -63,7 +63,7 @@ import{i as p,b as n,a as h}from"./lit-element.C8p3bJxG.js";const v='<svg width=
             `)}
         </ul>
       </nav>
-    `}static{this.styles=h`
+    `}static{this.styles=l`
     :host {
       --_sidenav-width: var(--sidebar-width, 260px);
       --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
@@ -223,4 +223,4 @@ import{i as p,b as n,a as h}from"./lit-element.C8p3bJxG.js";const v='<svg width=
 
     .item--disabled,
     .child--disabled { opacity: 0.5; pointer-events: none; }
-  `}}customElements.get("esa-sidebar-nav")||customElements.define("esa-sidebar-nav",f);const s=r=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${r}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`,c=[{label:"Dashboard",href:"/dashboard",icon:s("#005862"),active:!0,group:"Main"},{label:"Projects",href:"/projects",icon:s("#525252"),badge:12,group:"Main"},{label:"Reports",icon:s("#525252"),group:"Main",children:[{label:"Monthly",href:"/reports/monthly"},{label:"Quarterly",href:"/reports/quarterly"}]},{label:"Team",href:"/team",icon:s("#525252"),group:"Admin"},{label:"Billing",href:"/billing",icon:s("#525252"),group:"Admin",disabled:!0},{label:"Settings",href:"/settings",icon:s("#525252"),group:"Admin"}],o=document.getElementById("demo");o&&(o.items=c);const d=document.getElementById("demo2");d&&(d.items=c.slice(0,4));
+  `}}customElements.get("esa-sidebar-nav")||customElements.define("esa-sidebar-nav",v);

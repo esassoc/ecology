@@ -1,4 +1,4 @@
-import{i as a,b as r,a as o}from"./lit-element.C8p3bJxG.js";class l extends a{constructor(){super(),this.onInput=e=>{this.value=e.target.value,this.internals.setFormValue(this.value),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0}))},this.label="",this.size="md",this.placeholder="",this.helpText="",this.errorText="",this.required=!1,this.disabled=!1,this.type="text",this.value="",this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},size:{type:String,reflect:!0},placeholder:{type:String},helpText:{type:String,attribute:"help-text"},errorText:{type:String,attribute:"error-text"},required:{type:Boolean,reflect:!0},disabled:{type:Boolean,reflect:!0},type:{type:String},value:{type:String}}}connectedCallback(){super.connectedCallback(),this.internals.setFormValue(this.value)}render(){const e=!!this.errorText;return r`
+import{i,b as r,a as t}from"./lit-element.C8p3bJxG.js";class a extends i{constructor(){super(),this.onInput=e=>{this.value=e.target.value,this.internals.setFormValue(this.value),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0}))},this.label="",this.size="md",this.placeholder="",this.helpText="",this.errorText="",this.required=!1,this.disabled=!1,this.type="text",this.value="",this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},size:{type:String,reflect:!0},placeholder:{type:String},helpText:{type:String,attribute:"help-text"},errorText:{type:String,attribute:"error-text"},required:{type:Boolean,reflect:!0},disabled:{type:Boolean,reflect:!0},type:{type:String},value:{type:String}}}connectedCallback(){super.connectedCallback(),this.internals.setFormValue(this.value)}render(){const e=!!this.errorText;return r`
       <div class="field ${e?"field--error":""}">
         ${this.label?r`<label class="label" for="input"
               >${this.label}${this.required?r`<span class="required" aria-label="required">*</span>`:null}</label
@@ -16,7 +16,7 @@ import{i as a,b as r,a as o}from"./lit-element.C8p3bJxG.js";class l extends a{co
         />
         ${e?r`<p class="error">${this.errorText}</p>`:this.helpText?r`<p class="help">${this.helpText}</p>`:null}
       </div>
-    `}static{this.styles=o`
+    `}static{this.styles=t`
     :host {
       --_field-padding-y: var(--form-padding-y-md, 0.5rem);
       --_field-padding-x: var(--form-padding-x-md, 0.75rem);
@@ -118,4 +118,4 @@ import{i as a,b as r,a as o}from"./lit-element.C8p3bJxG.js";class l extends a{co
     .error {
       color: var(--form-error-color, #ef4444);
     }
-  `}}customElements.get("esa-text-field")||customElements.define("esa-text-field",l);const t=document.getElementById("tf-form");t?.addEventListener("submit",i=>{i.preventDefault();const e=new FormData(t);document.getElementById("tf-out").textContent="contact = "+JSON.stringify(e.get("contact"))});
+  `}}customElements.get("esa-text-field")||customElements.define("esa-text-field",a);

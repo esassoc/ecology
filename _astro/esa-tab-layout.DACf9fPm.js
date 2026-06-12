@@ -1,7 +1,7 @@
-import{i as n,b as i,a as l}from"./lit-element.C8p3bJxG.js";class b extends n{constructor(){super(),this.onKeydown=(a,t)=>{let e=null;switch(a.key){case"ArrowRight":e=this.findNextEnabledTab(t,1);break;case"ArrowLeft":e=this.findNextEnabledTab(t,-1);break;case"Home":e=this.findNextEnabledTab(-1,1);break;case"End":e=this.findNextEnabledTab(this.tabs.length,-1);break;default:return}e!==null&&(a.preventDefault(),this.selectTab(e),a.target.parentElement?.children[e]?.focus())},this.tabs=[],this.activeIndex=0,this.size="md",this.variant="underline",this.appearance="underline"}static{this.properties={tabs:{type:Array},activeIndex:{type:Number,attribute:"active-index"},size:{type:String,reflect:!0},variant:{type:String,reflect:!0},appearance:{type:String,reflect:!0}}}selectTab(a){this.tabs[a]?.disabled||(this.activeIndex=a,this.dispatchEvent(new CustomEvent("tabchange",{detail:{index:a},bubbles:!0,composed:!0})))}findNextEnabledTab(a,t){let e=a+t;for(;e>=0&&e<this.tabs.length;){if(!this.tabs[e].disabled)return e;e+=t}return null}render(){return i`
+import{i as s,b as r,a as o}from"./lit-element.C8p3bJxG.js";class n extends s{constructor(){super(),this.onKeydown=(a,t)=>{let e=null;switch(a.key){case"ArrowRight":e=this.findNextEnabledTab(t,1);break;case"ArrowLeft":e=this.findNextEnabledTab(t,-1);break;case"Home":e=this.findNextEnabledTab(-1,1);break;case"End":e=this.findNextEnabledTab(this.tabs.length,-1);break;default:return}e!==null&&(a.preventDefault(),this.selectTab(e),a.target.parentElement?.children[e]?.focus())},this.tabs=[],this.activeIndex=0,this.size="md",this.variant="underline",this.appearance="underline"}static{this.properties={tabs:{type:Array},activeIndex:{type:Number,attribute:"active-index"},size:{type:String,reflect:!0},variant:{type:String,reflect:!0},appearance:{type:String,reflect:!0}}}selectTab(a){this.tabs[a]?.disabled||(this.activeIndex=a,this.dispatchEvent(new CustomEvent("tabchange",{detail:{index:a},bubbles:!0,composed:!0})))}findNextEnabledTab(a,t){let e=a+t;for(;e>=0&&e<this.tabs.length;){if(!this.tabs[e].disabled)return e;e+=t}return null}render(){return r`
       <div class="layout">
         <div class="tabs" part="tabs" role="tablist">
-          ${this.tabs.map((a,t)=>{const e=this.activeIndex===t;return i`<button
+          ${this.tabs.map((a,t)=>{const e=this.activeIndex===t;return r`<button
               class="tab ${e?"tab--active":""} ${a.disabled?"tab--disabled":""}"
               type="button"
               role="tab"
@@ -9,18 +9,18 @@ import{i as n,b as i,a as l}from"./lit-element.C8p3bJxG.js";class b extends n{co
               tabindex=${e?0:-1}
               ?disabled=${a.disabled}
               @click=${()=>this.selectTab(t)}
-              @keydown=${s=>this.onKeydown(s,t)}
+              @keydown=${i=>this.onKeydown(i,t)}
             >
-              ${a.icon?i`<span class="icon" .innerHTML=${a.icon}></span>`:null}
+              ${a.icon?r`<span class="icon" .innerHTML=${a.icon}></span>`:null}
               <span>${a.label}</span>
-              ${a.badge!=null?i`<span class="badge">${a.badge}</span>`:null}
+              ${a.badge!=null?r`<span class="badge">${a.badge}</span>`:null}
             </button>`})}
         </div>
         <div class="panel" role="tabpanel">
           <slot name="panel-${this.activeIndex}"><slot></slot></slot>
         </div>
       </div>
-    `}static{this.styles=l`
+    `}static{this.styles=o`
     :host {
       --_tab-height: 44px;
       --_tab-font-size: var(--type-size-200, 0.875rem);
@@ -140,4 +140,4 @@ import{i as n,b as i,a as l}from"./lit-element.C8p3bJxG.js";class b extends n{co
     :host([variant='pill']) .tab--active::after { display: none; }
 
     .panel { padding-top: var(--spacing-400, 16px); }
-  `}}customElements.get("esa-tab-layout")||customElements.define("esa-tab-layout",b);const d=[{label:"Overview"},{label:"Activity"},{label:"Settings"}];["t1","t2","t2a"].forEach(r=>{const a=document.getElementById(r);a&&(a.tabs=d)});["t6","t3","t7","t4"].forEach(r=>{const a=document.getElementById(r);a&&(a.tabs=[{label:"One"},{label:"Two"}])});const o=document.getElementById("t5");o&&(o.tabs=[{label:"Inbox",badge:4},{label:"Drafts",disabled:!0},{label:"Archive",badge:128}]);
+  `}}customElements.get("esa-tab-layout")||customElements.define("esa-tab-layout",n);

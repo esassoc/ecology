@@ -1,4 +1,4 @@
-import{i as l,b as r,a as d}from"./lit-element.C8p3bJxG.js";class n extends l{constructor(){super(),this.onInput=e=>{this.value=e.target.value,this.internals.setFormValue(this.value),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0})),this.autoResize&&this.adjustHeight()},this.label="",this.size="md",this.placeholder="",this.helpText="",this.errorText="",this.required=!1,this.disabled=!1,this.rows=3,this.autoResize=!1,this.maxRows=10,this.value="",this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},size:{type:String,reflect:!0},placeholder:{type:String},helpText:{type:String,attribute:"help-text"},errorText:{type:String,attribute:"error-text"},required:{type:Boolean,reflect:!0},disabled:{type:Boolean,reflect:!0},rows:{type:Number},autoResize:{type:Boolean,attribute:"auto-resize",reflect:!0},maxRows:{type:Number,attribute:"max-rows"},value:{type:String}}}connectedCallback(){super.connectedCallback(),this.internals.setFormValue(this.value)}get textareaEl(){return this.renderRoot?.querySelector("textarea")??null}adjustHeight(){const e=this.textareaEl;if(!e)return;e.style.height="auto";const a=parseFloat(getComputedStyle(e).lineHeight)||20,o=this.maxRows*a,s=Math.min(e.scrollHeight,o);e.style.height=`${s}px`}render(){const e=!!this.errorText;return r`
+import{i as o,b as r,a as s}from"./lit-element.C8p3bJxG.js";class l extends o{constructor(){super(),this.onInput=e=>{this.value=e.target.value,this.internals.setFormValue(this.value),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0})),this.autoResize&&this.adjustHeight()},this.label="",this.size="md",this.placeholder="",this.helpText="",this.errorText="",this.required=!1,this.disabled=!1,this.rows=3,this.autoResize=!1,this.maxRows=10,this.value="",this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},size:{type:String,reflect:!0},placeholder:{type:String},helpText:{type:String,attribute:"help-text"},errorText:{type:String,attribute:"error-text"},required:{type:Boolean,reflect:!0},disabled:{type:Boolean,reflect:!0},rows:{type:Number},autoResize:{type:Boolean,attribute:"auto-resize",reflect:!0},maxRows:{type:Number,attribute:"max-rows"},value:{type:String}}}connectedCallback(){super.connectedCallback(),this.internals.setFormValue(this.value)}get textareaEl(){return this.renderRoot?.querySelector("textarea")??null}adjustHeight(){const e=this.textareaEl;if(!e)return;e.style.height="auto";const t=parseFloat(getComputedStyle(e).lineHeight)||20,i=this.maxRows*t,a=Math.min(e.scrollHeight,i);e.style.height=`${a}px`}render(){const e=!!this.errorText;return r`
       <div class="field ${e?"field--error":""} ${this.autoResize?"field--auto":""}">
         ${this.label?r`<label class="label" for="input"
               >${this.label}${this.required?r`<span class="required" aria-label="required">*</span>`:null}</label
@@ -16,7 +16,7 @@ import{i as l,b as r,a as d}from"./lit-element.C8p3bJxG.js";class n extends l{co
         ></textarea>
         ${e?r`<p class="error">${this.errorText}</p>`:this.helpText?r`<p class="help">${this.helpText}</p>`:null}
       </div>
-    `}static{this.styles=d`
+    `}static{this.styles=s`
     :host {
       --_field-padding-y: var(--form-padding-y-md, 0.5rem);
       --_field-padding-x: var(--form-padding-x-md, 0.75rem);
@@ -120,4 +120,4 @@ import{i as l,b as r,a as d}from"./lit-element.C8p3bJxG.js";class n extends l{co
     .error {
       color: var(--form-error-color, #ef4444);
     }
-  `}}customElements.get("esa-textarea")||customElements.define("esa-textarea",n);const i=document.getElementById("ta-form");i?.addEventListener("submit",t=>{t.preventDefault();const e=new FormData(i);document.getElementById("ta-out").textContent="notes = "+JSON.stringify(e.get("notes"))});
+  `}}customElements.get("esa-textarea")||customElements.define("esa-textarea",l);

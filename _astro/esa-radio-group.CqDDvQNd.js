@@ -1,18 +1,18 @@
-import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{constructor(){super(),this.selectOption=e=>{e.disabled||(this.value=e.value,this.internals.setFormValue(this.value),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0})))},this.onKeydown=(e,t)=>{(e.key===" "||e.key==="Enter")&&(e.preventDefault(),this.selectOption(t))},this.options=[],this.label="",this.size="md",this.orientation="vertical",this.value=null,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={options:{type:Array},label:{type:String},size:{type:String,reflect:!0},orientation:{type:String,reflect:!0},value:{type:String}}}willUpdate(e){if(e.has("options")&&typeof this.options=="string")try{this.options=JSON.parse(this.options)}catch{this.options=[]}}connectedCallback(){super.connectedCallback(),this.internals.setFormValue(this.value)}isSelected(e){return this.value===e}render(){return r`
-      ${this.label?r`<span class="group-label">${this.label}</span>`:null}
+import{i as a,b as t,a as o}from"./lit-element.C8p3bJxG.js";class l extends a{constructor(){super(),this.selectOption=e=>{e.disabled||(this.value=e.value,this.internals.setFormValue(this.value),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0})))},this.onKeydown=(e,i)=>{(e.key===" "||e.key==="Enter")&&(e.preventDefault(),this.selectOption(i))},this.options=[],this.label="",this.size="md",this.orientation="vertical",this.value=null,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={options:{type:Array},label:{type:String},size:{type:String,reflect:!0},orientation:{type:String,reflect:!0},value:{type:String}}}willUpdate(e){if(e.has("options")&&typeof this.options=="string")try{this.options=JSON.parse(this.options)}catch{this.options=[]}}connectedCallback(){super.connectedCallback(),this.internals.setFormValue(this.value)}isSelected(e){return this.value===e}render(){return t`
+      ${this.label?t`<span class="group-label">${this.label}</span>`:null}
       <div class="items" role="radiogroup" aria-label=${this.label}>
-        ${this.options.map(e=>{const t=this.isSelected(e.value),i=e.disabled??!1;return r`
+        ${this.options.map(e=>{const i=this.isSelected(e.value),s=e.disabled??!1;return t`
             <label
-              class="item ${i?"item--disabled":""}"
-              @keydown=${o=>this.onKeydown(o,e)}
+              class="item ${s?"item--disabled":""}"
+              @keydown=${r=>this.onKeydown(r,e)}
               @click=${()=>this.selectOption(e)}
             >
               <span
-                class="circle ${t?"circle--selected":""}"
+                class="circle ${i?"circle--selected":""}"
                 role="radio"
-                aria-checked=${String(t)}
-                aria-disabled=${String(i)}
-                tabindex=${i?-1:0}
+                aria-checked=${String(i)}
+                aria-disabled=${String(s)}
+                tabindex=${s?-1:0}
               >
                 <span class="dot"></span>
               </span>
@@ -20,7 +20,7 @@ import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{co
             </label>
           `})}
       </div>
-    `}static{this.styles=l`
+    `}static{this.styles=o`
     :host {
       --_radio-size: 20px;
       --_radio-dot-size: 10px;
@@ -116,4 +116,4 @@ import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{co
       color: var(--color-text-primary, #171717);
       line-height: 1.4;
     }
-  `}}customElements.get("esa-radio-group")||customElements.define("esa-radio-group",d);const a=document.getElementById("rg-form");a?.addEventListener("submit",s=>{s.preventDefault();const e=new FormData(a);document.getElementById("rg-out").textContent="priority = "+JSON.stringify(e.get("priority"))});
+  `}}customElements.get("esa-radio-group")||customElements.define("esa-radio-group",l);
