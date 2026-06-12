@@ -1,0 +1,3 @@
+# Normalize line endings: Windows clones of this repo (it's also a Claude
+# plugin marketplace) must not CRLF the scripts and hooks.
+* text=auto eol=lf

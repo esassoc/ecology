@@ -6,7 +6,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-component-first\""
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/check-component-first.mjs"]
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/guard-hub-writes.mjs"]
           }
         ]
       }

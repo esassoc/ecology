@@ -66,11 +66,17 @@ composed from Ecology. Patterns that prove broadly useful get promoted back up h
 ## Claude plugin (spoke-kit) — the hub-owned intelligence layer
 This repo is also a **Claude Code plugin marketplace** (`.claude-plugin/marketplace.json`).
 The **`spoke-kit`** plugin (`plugins/spoke-kit/`) ships everything Claude needs in a
-spoke: the `component-first` skill + `check-component-first` PreToolUse hook, the
-`/spoke-init` command + skill, and `spoke-precommit-review`. Spokes **never copy**
-these files — their checked-in `.claude/settings.json` declares the marketplace
-(github `esassoc/ecology`) and enables `spoke-kit@ecology`; anyone opening a spoke
-gets the install prompt.
+spoke: skills (`component-first`, `design-principles` — the canonical aesthetic/token
+rules, `spoke-init`, `spoke-precommit-review`), Node PreToolUse hooks
+(`check-component-first` — no bespoke UI primitives; `guard-hub-writes` — spoke
+sessions cannot edit this hub, even via the `node_modules/@esa/ecology` symlink;
+escape token `hub-edit-approved:` requires explicit human approval), and commands:
+`/spoke-init` (scaffold a spoke), plus the non-dev workflow verbs `/new-prototype`,
+`/design-qa`, `/ship`, `/request-lego`. Spokes **never copy** these files — their
+checked-in `.claude/settings.json` declares the marketplace (github `esassoc/ecology`)
+and enables `spoke-kit@ecology`; anyone opening a spoke gets the install prompt.
+Teammate setup: `ONBOARDING.md` (repo root) + `scripts/doctor.mjs` (spokes run it
+as `npm run doctor`).
 
 - **Frozen identifiers**: marketplace `ecology`, plugin `spoke-kit`. The key
   `"spoke-kit@ecology"` is checked into every spoke — renaming either breaks them.

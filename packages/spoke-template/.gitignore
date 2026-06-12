@@ -4,3 +4,7 @@ dist/
 *.log
 .playwright-mcp/
 .astro/
+
+# Client-sensitive material (proposals, pricing, contacts) — NEVER committed;
+# these repos and their deployed sites are public.
+/docs/private/

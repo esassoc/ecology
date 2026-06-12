@@ -49,5 +49,18 @@ hub repo — `esassoc/ecology`). Nothing is copied into this repo:
 SessionStart check warns if it's missing. To update the intelligence layer,
 update the plugin: `claude plugin marketplace update ecology`.
 
-- Skill: `component-first` (→ `lego-lookup.md`, `bcn-authoring.md`)
-- Hook: `check-component-first` (PreToolUse, from the plugin)
+- Skills: `component-first` (→ `lego-lookup.md`, `bcn-authoring.md`),
+  `design-principles` (canonical aesthetic/token/mock-data rules),
+  `spoke-precommit-review`
+- Hooks (PreToolUse, from the plugin): `check-component-first` (no bespoke UI
+  primitives) and `guard-hub-writes` (no hub edits from spoke sessions — use
+  /request-lego; escape only with explicit human approval: `hub-edit-approved:`)
+- Workflow commands: **/new-prototype** (interview → compose from legos),
+  **/design-qa** (on-demand quality pass), **/ship** (sync → build → deploy →
+  public URL), **/request-lego** (file a hub gap)
+
+## Confidentiality
+
+This repo and its deployed site are PUBLIC. Client-sensitive material lives
+ONLY in `docs/private/` (gitignored). Mock data is invented — never copied or
+sanitized from client documents.
