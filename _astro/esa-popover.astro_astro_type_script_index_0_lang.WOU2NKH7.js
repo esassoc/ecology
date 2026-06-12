@@ -20,13 +20,13 @@ import{i as r,b as e,a as t}from"./lit-element.C8p3bJxG.js";class a extends r{co
       </div>
     `}static{this.styles=t`
     :host {
-      --_popover-bg: var(--color-surface, #ffffff);
-      --_popover-border: var(--color-border, #e5e5e5);
+      --_popover-bg: var(--popover-bg, var(--color-surface, #ffffff));
+      --_popover-border: var(--popover-border-color, var(--color-border, #e5e5e5));
       --_popover-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      --_popover-radius: var(--radius-200, 0.5rem);
+      --_popover-radius: var(--popover-radius, var(--radius-200, 0.5rem));
       --_popover-padding: var(--spacing-300, 0.75rem);
       --_popover-arrow-size: 8px;
-      --_popover-color: var(--color-text-primary, #171717);
+      --_popover-color: var(--popover-color, var(--color-text-primary, #171717));
       display: inline-block;
     }
 
@@ -48,6 +48,7 @@ import{i as r,b as e,a as t}from"./lit-element.C8p3bJxG.js";class a extends r{co
       position: absolute;
       z-index: var(--z-dropdown, 50);
       min-width: max-content;
+      max-width: var(--popover-max-width, none);
       background: var(--_popover-bg);
       border: 1px solid var(--_popover-border);
       border-radius: var(--_popover-radius);

@@ -1,4 +1,4 @@
-import{i as n,b as o,a as r}from"./lit-element.C8p3bJxG.js";class a extends n{constructor(){super(),this.toggle=()=>{this.open?this.close():this.openMenu()},this.onDocumentClick=e=>{!this.contains(e.target)&&e.target!==this&&this.close()},this.onKeydown=e=>{e.key==="Escape"&&this.open&&(e.preventDefault(),this.close())},this.items=[],this.position="below-start",this.width="auto",this.open=!1}static{this.properties={items:{type:Array},position:{type:String,reflect:!0},width:{type:String,reflect:!0},open:{type:Boolean,reflect:!0}}}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this.onDocumentClick,!0)}openMenu(){this.open=!0,document.addEventListener("click",this.onDocumentClick,!0)}close(){this.open&&(this.open=!1,document.removeEventListener("click",this.onDocumentClick,!0))}selectItem(e){e.disabled||(e.action&&this.dispatchEvent(new CustomEvent("menu-action",{detail:e.action,bubbles:!0,composed:!0})),this.close())}render(){return o`
+import{i as t,b as o,a as r}from"./lit-element.C8p3bJxG.js";class a extends t{constructor(){super(),this.toggle=()=>{this.open?this.close():this.openMenu()},this.onDocumentClick=e=>{!this.contains(e.target)&&e.target!==this&&this.close()},this.onKeydown=e=>{e.key==="Escape"&&this.open&&(e.preventDefault(),this.close())},this.items=[],this.position="below-start",this.width="auto",this.open=!1}static{this.properties={items:{type:Array},position:{type:String,reflect:!0},width:{type:String,reflect:!0},open:{type:Boolean,reflect:!0}}}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this.onDocumentClick,!0)}openMenu(){this.open=!0,document.addEventListener("click",this.onDocumentClick,!0)}close(){this.open&&(this.open=!1,document.removeEventListener("click",this.onDocumentClick,!0))}selectItem(e){e.disabled||(e.action&&this.dispatchEvent(new CustomEvent("menu-action",{detail:e.action,bubbles:!0,composed:!0})),this.close())}render(){return o`
       <div class="esa-dropdown" @keydown=${this.onKeydown}>
         <div class="esa-dropdown__trigger" @click=${this.toggle}>
           <slot></slot>
@@ -31,12 +31,12 @@ import{i as n,b as o,a as r}from"./lit-element.C8p3bJxG.js";class a extends n{co
     .esa-dropdown-menu__panel {
       position: absolute;
       z-index: var(--z-dropdown, 50);
-      background: var(--color-surface-elevated, #ffffff);
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-200, 0.5rem);
+      background: var(--dropdown-menu-bg, var(--color-surface-elevated, #ffffff));
+      border: 1px solid var(--dropdown-menu-border-color, var(--color-border, #e5e5e5));
+      border-radius: var(--dropdown-menu-radius, var(--radius-200, 0.5rem));
       box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      min-width: 160px;
-      max-width: 280px;
+      min-width: var(--dropdown-menu-min-width, 160px);
+      max-width: var(--dropdown-menu-max-width, 280px);
       padding: var(--spacing-100, 0.25rem);
       overflow-y: auto;
       max-height: 320px;
@@ -64,7 +64,7 @@ import{i as n,b as o,a as r}from"./lit-element.C8p3bJxG.js";class a extends n{co
       border: none;
       border-radius: var(--radius-100, 0.25rem);
       background: transparent;
-      color: var(--color-text-primary, #171717);
+      color: var(--dropdown-menu-item-color, var(--color-text-primary, #171717));
       font-family: inherit;
       font-size: var(--type-size-200, 0.9375rem);
       cursor: pointer;
@@ -101,4 +101,4 @@ import{i as n,b as o,a as r}from"./lit-element.C8p3bJxG.js";class a extends n{co
       background: var(--color-border-light, #efefef);
       margin: var(--spacing-100, 0.25rem) 0;
     }
-  `}}customElements.get("esa-dropdown-menu")||customElements.define("esa-dropdown-menu",a);const i=[{label:"Edit",icon:"pencil",action:"edit"},{label:"Duplicate",icon:"copy",action:"duplicate"},{divider:!0},{label:"Archive",icon:"archive",action:"archive",disabled:!0},{label:"Delete",icon:"trash",action:"delete",variant:"danger"}],s=document.getElementById("result");document.querySelectorAll("esa-dropdown-menu").forEach(t=>{t.items=i,t.addEventListener("menu-action",e=>{s.textContent=`Selected: ${e.detail}`})});
+  `}}customElements.get("esa-dropdown-menu")||customElements.define("esa-dropdown-menu",a);const i=[{label:"Edit",icon:"pencil",action:"edit"},{label:"Duplicate",icon:"copy",action:"duplicate"},{divider:!0},{label:"Archive",icon:"archive",action:"archive",disabled:!0},{label:"Delete",icon:"trash",action:"delete",variant:"danger"}],s=document.getElementById("result");document.querySelectorAll("esa-dropdown-menu").forEach(n=>{n.items=i,n.addEventListener("menu-action",e=>{s.textContent=`Selected: ${e.detail}`})});

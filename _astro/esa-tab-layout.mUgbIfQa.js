@@ -1,15 +1,15 @@
-import{i as s,b as r,a as o}from"./lit-element.C8p3bJxG.js";class n extends s{constructor(){super(),this.onKeydown=(a,t)=>{let e=null;switch(a.key){case"ArrowRight":e=this.findNextEnabledTab(t,1);break;case"ArrowLeft":e=this.findNextEnabledTab(t,-1);break;case"Home":e=this.findNextEnabledTab(-1,1);break;case"End":e=this.findNextEnabledTab(this.tabs.length,-1);break;default:return}e!==null&&(a.preventDefault(),this.selectTab(e),a.target.parentElement?.children[e]?.focus())},this.tabs=[],this.activeIndex=0,this.size="md",this.variant="underline",this.appearance="underline"}static{this.properties={tabs:{type:Array},activeIndex:{type:Number,attribute:"active-index"},size:{type:String,reflect:!0},variant:{type:String,reflect:!0},appearance:{type:String,reflect:!0}}}selectTab(a){this.tabs[a]?.disabled||(this.activeIndex=a,this.dispatchEvent(new CustomEvent("tabchange",{detail:{index:a},bubbles:!0,composed:!0})))}findNextEnabledTab(a,t){let e=a+t;for(;e>=0&&e<this.tabs.length;){if(!this.tabs[e].disabled)return e;e+=t}return null}render(){return r`
+import{i as o,b as r,a as s}from"./lit-element.C8p3bJxG.js";class n extends o{constructor(){super(),this.onKeydown=(a,e)=>{let t=null;switch(a.key){case"ArrowRight":t=this.findNextEnabledTab(e,1);break;case"ArrowLeft":t=this.findNextEnabledTab(e,-1);break;case"Home":t=this.findNextEnabledTab(-1,1);break;case"End":t=this.findNextEnabledTab(this.tabs.length,-1);break;default:return}t!==null&&(a.preventDefault(),this.selectTab(t),a.target.parentElement?.children[t]?.focus())},this.tabs=[],this.activeIndex=0,this.size="md",this.variant="underline",this.appearance="underline"}static{this.properties={tabs:{type:Array},activeIndex:{type:Number,attribute:"active-index"},size:{type:String,reflect:!0},variant:{type:String,reflect:!0},appearance:{type:String,reflect:!0}}}selectTab(a){this.tabs[a]?.disabled||(this.activeIndex=a,this.dispatchEvent(new CustomEvent("tabchange",{detail:{index:a},bubbles:!0,composed:!0})))}findNextEnabledTab(a,e){let t=a+e;for(;t>=0&&t<this.tabs.length;){if(!this.tabs[t].disabled)return t;t+=e}return null}render(){return r`
       <div class="layout">
         <div class="tabs" part="tabs" role="tablist">
-          ${this.tabs.map((a,t)=>{const e=this.activeIndex===t;return r`<button
-              class="tab ${e?"tab--active":""} ${a.disabled?"tab--disabled":""}"
+          ${this.tabs.map((a,e)=>{const t=this.activeIndex===e;return r`<button
+              class="tab ${t?"tab--active":""} ${a.disabled?"tab--disabled":""}"
               type="button"
               role="tab"
-              aria-selected=${e}
-              tabindex=${e?0:-1}
+              aria-selected=${t}
+              tabindex=${t?0:-1}
               ?disabled=${a.disabled}
-              @click=${()=>this.selectTab(t)}
-              @keydown=${i=>this.onKeydown(i,t)}
+              @click=${()=>this.selectTab(e)}
+              @keydown=${i=>this.onKeydown(i,e)}
             >
               ${a.icon?r`<span class="icon" .innerHTML=${a.icon}></span>`:null}
               <span>${a.label}</span>
@@ -20,19 +20,19 @@ import{i as s,b as r,a as o}from"./lit-element.C8p3bJxG.js";class n extends s{co
           <slot name="panel-${this.activeIndex}"><slot></slot></slot>
         </div>
       </div>
-    `}static{this.styles=o`
+    `}static{this.styles=s`
     :host {
-      --_tab-height: 44px;
+      --_tab-height: var(--tab-layout-height-md, 44px);
       --_tab-font-size: var(--type-size-200, 0.875rem);
-      --_tab-color: var(--color-text-secondary, #525252);
-      --_tab-color-active: var(--color-primary, #005862);
+      --_tab-color: var(--tab-layout-color, var(--color-text-secondary, #525252));
+      --_tab-color-active: var(--tab-layout-color-active, var(--color-primary, #005862));
       --_tab-color-hover: var(--color-text-primary, #171717);
-      --_tab-indicator-color: var(--color-primary, #005862);
+      --_tab-indicator-color: var(--tab-layout-indicator-color, var(--color-primary, #005862));
       --_tab-indicator-height: 2px;
       --_tab-bg-hover: var(--color-surface-sunken, #efefef);
       --_tab-gap: var(--spacing-100, 4px);
       --_tab-padding-x: var(--spacing-400, 16px);
-      --_tab-border: var(--color-border, #e5e5e5);
+      --_tab-border: var(--tab-layout-border-color, var(--color-border, #e5e5e5));
       --_tab-badge-bg: var(--color-primary, #005862);
       --_tab-badge-color: var(--color-text-inverse, #ffffff);
 
@@ -41,17 +41,17 @@ import{i as s,b as r,a as o}from"./lit-element.C8p3bJxG.js";class n extends s{co
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
     :host([size='xs']) {
-      --_tab-height: 30px;
+      --_tab-height: var(--tab-layout-height-xs, 30px);
       --_tab-font-size: var(--type-size-100, 0.6875rem);
       --_tab-padding-x: var(--spacing-200, 8px);
     }
     :host([size='sm']) {
-      --_tab-height: 36px;
+      --_tab-height: var(--tab-layout-height-sm, 36px);
       --_tab-font-size: var(--type-size-150, 0.75rem);
       --_tab-padding-x: var(--spacing-300, 12px);
     }
     :host([size='lg']) {
-      --_tab-height: 52px;
+      --_tab-height: var(--tab-layout-height-lg, 52px);
       --_tab-font-size: var(--type-size-300, 1rem);
       --_tab-padding-x: var(--spacing-500, 24px);
     }

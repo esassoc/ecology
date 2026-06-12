@@ -101,10 +101,10 @@ import{i as p,b as s,a as u}from"./lit-element.C8p3bJxG.js";const l=r=>s`
       position: fixed;
       top: 0;
       bottom: 0;
-      width: 400px;
+      width: var(--search-panel-width, 400px);
       max-width: 90vw;
-      background: var(--color-surface-elevated, #ffffff);
-      box-shadow: var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1));
+      background: var(--search-panel-bg, var(--color-surface-elevated, #ffffff));
+      box-shadow: var(--search-panel-shadow, var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1)));
       z-index: var(--z-modal, 9999);
       display: flex;
       flex-direction: column;
@@ -117,7 +117,7 @@ import{i as p,b as s,a as u}from"./lit-element.C8p3bJxG.js";const l=r=>s`
 
     .panel--left {
       left: 0;
-      box-shadow: var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1));
+      box-shadow: var(--search-panel-shadow, var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1)));
       animation: esa-search-slide-in-left 200ms ease-out;
     }
 
@@ -210,7 +210,7 @@ import{i as p,b as s,a as u}from"./lit-element.C8p3bJxG.js";const l=r=>s`
     }
 
     .result:hover {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--search-panel-result-bg-hover, var(--color-surface-sunken, #efefef));
     }
 
     .result-content {
@@ -242,4 +242,4 @@ import{i as p,b as s,a as u}from"./lit-element.C8p3bJxG.js";const l=r=>s`
       text-align: center;
       color: var(--color-text-muted, #737373);
     }
-  `}}customElements.get("esa-search-panel")||customElements.define("esa-search-panel",f);const c=[{id:"r1",title:"Wetland delineation report",subtitle:"Project 2024-118",icon:"file",category:"Documents"},{id:"r2",title:"Air quality monitoring plan",subtitle:"Draft",icon:"file",category:"Documents"},{id:"r3",title:"North watershed",subtitle:"Region",icon:"pin",category:"Places"},{id:"r4",title:"Coastal zone",subtitle:"Region",icon:"pin",category:"Places"},{id:"r5",title:"Jane Doe",subtitle:"Compliance officer",category:"People"}],d=document.getElementById("status-right"),a=document.getElementById("sp-right");a.results=c;a.addEventListener("search",r=>{d.textContent=r.detail.value?`Searching: "${r.detail.value}"`:""});a.addEventListener("result-select",r=>{d.textContent=`Selected: ${r.detail.title}`,a.open=!1});document.getElementById("open-right").addEventListener("click",()=>a.open=!0);const o=document.getElementById("sp-left");o.results=c;o.addEventListener("result-select",()=>o.open=!1);document.getElementById("open-left").addEventListener("click",()=>o.open=!0);const m=document.getElementById("sp-loading");document.getElementById("open-loading").addEventListener("click",()=>m.open=!0);
+  `}}customElements.get("esa-search-panel")||customElements.define("esa-search-panel",f);const c=[{id:"r1",title:"Wetland delineation report",subtitle:"Project 2024-118",icon:"file",category:"Documents"},{id:"r2",title:"Air quality monitoring plan",subtitle:"Draft",icon:"file",category:"Documents"},{id:"r3",title:"North watershed",subtitle:"Region",icon:"pin",category:"Places"},{id:"r4",title:"Coastal zone",subtitle:"Region",icon:"pin",category:"Places"},{id:"r5",title:"Jane Doe",subtitle:"Compliance officer",category:"People"}],d=document.getElementById("status-right"),a=document.getElementById("sp-right");a.results=c;a.addEventListener("search",r=>{d.textContent=r.detail.value?`Searching: "${r.detail.value}"`:""});a.addEventListener("result-select",r=>{d.textContent=`Selected: ${r.detail.title}`,a.open=!1});document.getElementById("open-right").addEventListener("click",()=>a.open=!0);const o=document.getElementById("sp-left");o.results=c;o.addEventListener("result-select",()=>o.open=!1);document.getElementById("open-left").addEventListener("click",()=>o.open=!0);const v=document.getElementById("sp-loading");document.getElementById("open-loading").addEventListener("click",()=>v.open=!0);

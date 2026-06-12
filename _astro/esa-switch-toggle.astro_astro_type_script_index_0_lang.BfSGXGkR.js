@@ -1,4 +1,4 @@
-import{i as r,b as s,a as i}from"./lit-element.C8p3bJxG.js";class o extends r{constructor(){super(),this.toggle=()=>{this.disabled||(this.checked=!this.checked,this.syncFormValue(),this.dispatchEvent(new CustomEvent("change",{detail:{checked:this.checked},bubbles:!0,composed:!0})))},this.onKeydown=t=>{(t.key===" "||t.key==="Enter")&&(t.preventDefault(),this.toggle())},this.label="",this.size="md",this.disabled=!1,this.labelPosition="after",this.checked=!1,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},size:{type:String,reflect:!0},disabled:{type:Boolean,reflect:!0},labelPosition:{type:String,attribute:"label-position",reflect:!0},checked:{type:Boolean,reflect:!0}}}connectedCallback(){super.connectedCallback(),this.syncFormValue()}syncFormValue(){this.internals.setFormValue(this.checked?"on":null),this.internals.ariaChecked=String(this.checked)}render(){const t=this.label?s`<span class="label" part="label">${this.label}</span>`:null;return s`
+import{i as r,b as a,a as o}from"./lit-element.C8p3bJxG.js";class i extends r{constructor(){super(),this.toggle=()=>{this.disabled||(this.checked=!this.checked,this.syncFormValue(),this.dispatchEvent(new CustomEvent("change",{detail:{checked:this.checked},bubbles:!0,composed:!0})))},this.onKeydown=t=>{(t.key===" "||t.key==="Enter")&&(t.preventDefault(),this.toggle())},this.label="",this.size="md",this.disabled=!1,this.labelPosition="after",this.checked=!1,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},size:{type:String,reflect:!0},disabled:{type:Boolean,reflect:!0},labelPosition:{type:String,attribute:"label-position",reflect:!0},checked:{type:Boolean,reflect:!0}}}connectedCallback(){super.connectedCallback(),this.syncFormValue()}syncFormValue(){this.internals.setFormValue(this.checked?"on":null),this.internals.ariaChecked=String(this.checked)}render(){const t=this.label?a`<span class="label" part="label">${this.label}</span>`:null;return a`
       <button
         type="button"
         class="root"
@@ -12,14 +12,14 @@ import{i as r,b as s,a as i}from"./lit-element.C8p3bJxG.js";class o extends r{co
         <span class="track" part="track"><span class="thumb" part="thumb"></span></span>
         ${this.labelPosition==="after"?t:null}
       </button>
-    `}static{this.styles=i`
+    `}static{this.styles=o`
     :host {
       --_track-w: 40px;
       --_track-h: 22px;
       --_thumb: 18px;
-      --_bg-off: var(--color-border-strong, #d4d4d4);
-      --_bg-on: var(--color-primary, #005862);
-      --_thumb-color: var(--color-surface, #fff);
+      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-strong, #d4d4d4));
+      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-primary, #005862));
+      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-surface, #fff));
       display: inline-block;
     }
     :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
@@ -35,7 +35,7 @@ import{i as r,b as s,a as i}from"./lit-element.C8p3bJxG.js";class o extends r{co
       border: 0;
       background: none;
       font: inherit;
-      color: var(--color-text-primary, #171717);
+      color: var(--switch-toggle-label-color, var(--color-text-primary, #171717));
       cursor: pointer;
     }
     .root:disabled { cursor: not-allowed; }
@@ -74,4 +74,4 @@ import{i as r,b as s,a as i}from"./lit-element.C8p3bJxG.js";class o extends r{co
       font-size: var(--type-size-200, 0.9375rem);
       line-height: var(--line-height-normal, 1.6);
     }
-  `}}customElements.get("esa-switch-toggle")||customElements.define("esa-switch-toggle",o);const a=document.getElementById("sw-form");a?.addEventListener("submit",e=>{e.preventDefault();const t=new FormData(a);document.getElementById("sw-out").textContent="alerts = "+JSON.stringify(t.get("alerts"))});
+  `}}customElements.get("esa-switch-toggle")||customElements.define("esa-switch-toggle",i);const s=document.getElementById("sw-form");s?.addEventListener("submit",e=>{e.preventDefault();const t=new FormData(s);document.getElementById("sw-out").textContent="alerts = "+JSON.stringify(t.get("alerts"))});

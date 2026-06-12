@@ -1,6 +1,6 @@
-import{i as s,b as i,a as o}from"./lit-element.C8p3bJxG.js";const n='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 18-6-6 6-6"/><path d="M7 6v12"/></svg>',r='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',l='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',g='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 18 6-6-6-6"/><path d="M17 6v12"/></svg>';class p extends s{constructor(){super(),this.goToFirst=()=>{this.disabled||this.isFirstPage||this.emitPageChange(0)},this.goToPrevious=()=>{this.disabled||this.isFirstPage||this.emitPageChange(this.currentPage-1)},this.goToNext=()=>{this.disabled||this.isLastPage||this.emitPageChange(this.currentPage+1)},this.goToLast=()=>{this.disabled||this.isLastPage||this.emitPageChange(this.totalPages-1)},this.onPageSizeChange=t=>{const e=Number(t.target.value);isNaN(e)||this.disabled||(this.pageSize=e,this.dispatchEvent(new CustomEvent("pagesizechange",{detail:{pageSize:e},bubbles:!0,composed:!0})),this.emitPageChange(0))},this.totalItems=0,this.pageSize=25,this.currentPage=0,this.pageSizeOptions=[10,25,50,100],this.showPageSizeSelector=!0,this.showFirstLastButtons=!0,this.disabled=!1}static{this.properties={totalItems:{type:Number,attribute:"total-items"},pageSize:{type:Number,attribute:"page-size"},currentPage:{type:Number,attribute:"current-page"},pageSizeOptions:{type:Array,attribute:"page-size-options"},showPageSizeSelector:{type:Boolean,attribute:"show-page-size-selector"},showFirstLastButtons:{type:Boolean,attribute:"show-first-last-buttons"},disabled:{type:Boolean,reflect:!0}}}get totalPages(){return Math.max(1,Math.ceil(this.totalItems/this.pageSize))}get rangeLabel(){const t=this.totalItems;if(t===0)return"0 of 0";const e=this.currentPage*this.pageSize+1,a=Math.min((this.currentPage+1)*this.pageSize,t);return`${e} – ${a} of ${t.toLocaleString()}`}get isFirstPage(){return this.currentPage===0}get isLastPage(){return this.currentPage>=this.totalPages-1}emitPageChange(t){this.currentPage=t,this.dispatchEvent(new CustomEvent("pagechange",{detail:{page:t},bubbles:!0,composed:!0}))}render(){return i`
+import{i as s,b as a,a as o}from"./lit-element.C8p3bJxG.js";const n='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 18-6-6 6-6"/><path d="M7 6v12"/></svg>',r='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',l='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',g='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 18 6-6-6-6"/><path d="M17 6v12"/></svg>';class p extends s{constructor(){super(),this.goToFirst=()=>{this.disabled||this.isFirstPage||this.emitPageChange(0)},this.goToPrevious=()=>{this.disabled||this.isFirstPage||this.emitPageChange(this.currentPage-1)},this.goToNext=()=>{this.disabled||this.isLastPage||this.emitPageChange(this.currentPage+1)},this.goToLast=()=>{this.disabled||this.isLastPage||this.emitPageChange(this.totalPages-1)},this.onPageSizeChange=t=>{const e=Number(t.target.value);isNaN(e)||this.disabled||(this.pageSize=e,this.dispatchEvent(new CustomEvent("pagesizechange",{detail:{pageSize:e},bubbles:!0,composed:!0})),this.emitPageChange(0))},this.totalItems=0,this.pageSize=25,this.currentPage=0,this.pageSizeOptions=[10,25,50,100],this.showPageSizeSelector=!0,this.showFirstLastButtons=!0,this.disabled=!1}static{this.properties={totalItems:{type:Number,attribute:"total-items"},pageSize:{type:Number,attribute:"page-size"},currentPage:{type:Number,attribute:"current-page"},pageSizeOptions:{type:Array,attribute:"page-size-options"},showPageSizeSelector:{type:Boolean,attribute:"show-page-size-selector"},showFirstLastButtons:{type:Boolean,attribute:"show-first-last-buttons"},disabled:{type:Boolean,reflect:!0}}}get totalPages(){return Math.max(1,Math.ceil(this.totalItems/this.pageSize))}get rangeLabel(){const t=this.totalItems;if(t===0)return"0 of 0";const e=this.currentPage*this.pageSize+1,i=Math.min((this.currentPage+1)*this.pageSize,t);return`${e} – ${i} of ${t.toLocaleString()}`}get isFirstPage(){return this.currentPage===0}get isLastPage(){return this.currentPage>=this.totalPages-1}emitPageChange(t){this.currentPage=t,this.dispatchEvent(new CustomEvent("pagechange",{detail:{page:t},bubbles:!0,composed:!0}))}render(){return a`
       <div class="container ${this.disabled?"container--disabled":""}" role="navigation" aria-label="Pagination">
-        ${this.showPageSizeSelector&&this.pageSizeOptions.length>0?i`<div class="page-size">
+        ${this.showPageSizeSelector&&this.pageSizeOptions.length>0?a`<div class="page-size">
               <label class="page-size-label" for="esa-page-size">Items per page:</label>
               <select
                 class="page-size-select"
@@ -9,14 +9,14 @@ import{i as s,b as i,a as o}from"./lit-element.C8p3bJxG.js";const n='<svg width=
                 ?disabled=${this.disabled}
                 @change=${this.onPageSizeChange}
               >
-                ${this.pageSizeOptions.map(t=>i`<option value=${t} ?selected=${t===this.pageSize}>${t}</option>`)}
+                ${this.pageSizeOptions.map(t=>a`<option value=${t} ?selected=${t===this.pageSize}>${t}</option>`)}
               </select>
             </div>`:null}
 
         <span class="range">${this.rangeLabel}</span>
 
         <div class="buttons">
-          ${this.showFirstLastButtons?i`<button class="button" type="button" aria-label="First page" ?disabled=${this.disabled||this.isFirstPage} @click=${this.goToFirst}>
+          ${this.showFirstLastButtons?a`<button class="button" type="button" aria-label="First page" ?disabled=${this.disabled||this.isFirstPage} @click=${this.goToFirst}>
                 <span class="ic" .innerHTML=${n}></span>
               </button>`:null}
           <button class="button" type="button" aria-label="Previous page" ?disabled=${this.disabled||this.isFirstPage} @click=${this.goToPrevious}>
@@ -25,22 +25,22 @@ import{i as s,b as i,a as o}from"./lit-element.C8p3bJxG.js";const n='<svg width=
           <button class="button" type="button" aria-label="Next page" ?disabled=${this.disabled||this.isLastPage} @click=${this.goToNext}>
             <span class="ic" .innerHTML=${l}></span>
           </button>
-          ${this.showFirstLastButtons?i`<button class="button" type="button" aria-label="Last page" ?disabled=${this.disabled||this.isLastPage} @click=${this.goToLast}>
+          ${this.showFirstLastButtons?a`<button class="button" type="button" aria-label="Last page" ?disabled=${this.disabled||this.isLastPage} @click=${this.goToLast}>
                 <span class="ic" .innerHTML=${g}></span>
               </button>`:null}
         </div>
       </div>
     `}static{this.styles=o`
     :host {
-      --_pagination-bg: var(--color-surface, #ffffff);
-      --_pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
-      --_pagination-text-color: var(--color-text-secondary, #525252);
-      --_pagination-font-size: var(--type-size-200, 14px);
-      --_pagination-button-color: var(--color-text-primary, #171717);
+      --_pagination-bg: var(--pagination-bg, var(--color-surface, #ffffff));
+      --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
+      --_pagination-text-color: var(--pagination-text-color, var(--color-text-secondary, #525252));
+      --_pagination-font-size: var(--pagination-font-size, var(--type-size-200, 14px));
+      --_pagination-button-color: var(--pagination-button-color, var(--color-text-primary, #171717));
       --_pagination-button-disabled-color: var(--color-disabled-text, #bdbdbd);
       --_pagination-button-hover-bg: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
-      --_pagination-padding-x: var(--spacing-400, 16px);
-      --_pagination-padding-y: var(--spacing-200, 8px);
+      --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
+      --_pagination-padding-y: var(--pagination-padding-y, var(--spacing-200, 8px));
 
       display: block;
     }
