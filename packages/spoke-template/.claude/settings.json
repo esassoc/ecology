@@ -1,12 +1,22 @@
 {
+  "extraKnownMarketplaces": {
+    "ecology": {
+      "source": {
+        "source": "github",
+        "repo": "esassoc/ecology"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "spoke-kit@ecology": true
+  },
   "hooks": {
-    "PreToolUse": [
+    "SessionStart": [
       {
-        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-component-first"
+            "command": "CFG=\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"; grep -sq '\"ecology\"' \"$CFG/settings.json\" \"$CFG/plugins/known_marketplaces.json\" || echo 'WARNING: the ecology plugin marketplace is not installed — component-first enforcement and the spoke skills are OFF. Accept the plugin install prompt, or run: claude plugin marketplace add esassoc/ecology && enable spoke-kit@ecology via /plugin.'"
           }
         ]
       }

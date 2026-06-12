@@ -62,3 +62,26 @@ write files, then one consolidated build verifies.
 A spoke is its own Astro repo: `npm install @esa/tokens @esa/ecology`, a thin
 `<project>-theme.css` of semantic/component overrides, and project-specific prototypes
 composed from Ecology. Patterns that prove broadly useful get promoted back up here.
+
+## Claude plugin (spoke-kit) — the hub-owned intelligence layer
+This repo is also a **Claude Code plugin marketplace** (`.claude-plugin/marketplace.json`).
+The **`spoke-kit`** plugin (`plugins/spoke-kit/`) ships everything Claude needs in a
+spoke: the `component-first` skill + `check-component-first` PreToolUse hook, the
+`/spoke-init` command + skill, and `spoke-precommit-review`. Spokes **never copy**
+these files — their checked-in `.claude/settings.json` declares the marketplace
+(github `esassoc/ecology`) and enables `spoke-kit@ecology`; anyone opening a spoke
+gets the install prompt.
+
+- **Frozen identifiers**: marketplace `ecology`, plugin `spoke-kit`. The key
+  `"spoke-kit@ecology"` is checked into every spoke — renaming either breaks them.
+- **Publishing**: plugin edits go live for spokes only after **push to GitHub**
+  (and `claude plugin marketplace update ecology` on each machine). Local commits
+  aren't enough. Bump `plugins/spoke-kit/.claude-plugin/plugin.json` version on
+  behavior changes.
+- **New spokes**: `/spoke-init` (run from this repo's root) interviews, then runs
+  the deterministic `scripts/create-spoke.mjs`, then does the judgment work. Never
+  hand-copy `packages/spoke-template/`.
+- **The hook is inert in this repo** (it detects the hub via
+  `.claude-plugin/marketplace.json` / the `ecology-hub` package name) — specimen
+  pages here legitimately contain raw `<input>` markup. It enforces only in repos
+  whose `package.json` *depends on* `@esa/ecology`.

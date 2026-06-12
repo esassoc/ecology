@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "ecology": {
+      "source": {
+        "source": "github",
+        "repo": "esassoc/ecology"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "spoke-kit@ecology": true
+  }
+}

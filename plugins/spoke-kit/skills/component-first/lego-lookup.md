@@ -6,19 +6,19 @@ Use this when you know *what you need* but not *which lego provides it*. Walk th
 
 The catalog is the source of truth. Always list it first — it grows:
 ```bash
-ls ~/Dev/ecology/packages/ecology/src/components/
+ls node_modules/@esa/ecology/src/components/
 ```
 
 Find by intent (grep the component dir for behavior/props):
 ```bash
-grep -rln "drag\|drop\|upload"  ~/Dev/ecology/packages/ecology/src/components/   # → esa-file-upload
-grep -rln "empty\|no results"    ~/Dev/ecology/packages/ecology/src/components/   # → esa-empty-state
-grep -rln "slide\|drawer\|side"  ~/Dev/ecology/packages/ecology/src/components/   # → esa-side-dialog
+grep -rln "drag\|drop\|upload"  node_modules/@esa/ecology/src/components/   # → esa-file-upload
+grep -rln "empty\|no results"    node_modules/@esa/ecology/src/components/   # → esa-empty-state
+grep -rln "slide\|drawer\|side"  node_modules/@esa/ecology/src/components/   # → esa-side-dialog
 ```
 
 Read the component to learn its props/slots before using it:
 ```bash
-cat ~/Dev/ecology/packages/ecology/src/components/esa-file-upload.ts
+cat node_modules/@esa/ecology/src/components/esa-file-upload.ts
 ```
 
 ### Import by file type
@@ -30,9 +30,9 @@ cat ~/Dev/ecology/packages/ecology/src/components/esa-file-upload.ts
 `.astro` files are Astro components imported in the frontmatter fence.
 `.ts` files are custom-element web components — register them once in a client `<script>` and use the custom-element tag in your markup.
 
-## Tier 2 — Beacon prod app (`ui-*` + SCSS)
+## Tier 2 — Beacon prod app (`ui-*` + SCSS) — optional, requires the Beacon repo cloned
 
-If no `esa-*` fits, the production Angular app likely has the pattern. Mine it for behavior and tokens, then build with the `esa-*` lego (or as a `bcn-` component).
+If no `esa-*` fits, the production Angular app likely has the pattern. Mine it for behavior and tokens, then build with the `esa-*` lego (or as a `bcn-` component). If `~/Dev/Beacon` isn't on your machine, skip to Tier 3 and say so in your `bcn-lego-checked:` reason.
 
 ```bash
 ls ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/     # ui-button, ui-dialog, ui-chip-group, ...

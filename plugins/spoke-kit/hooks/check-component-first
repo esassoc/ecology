@@ -7,7 +7,16 @@
 # Escape hatch: include a `bcn-lego-checked: <reason>` comment in the content.
 #
 # Portable: gated on (a) target file lives under a repo whose package.json
-# depends on @esa/ecology, AND (b) file is *.astro / *.css / *.scss.
+# DEPENDS ON @esa/ecology (a spoke), AND (b) file is *.astro / *.css / *.scss.
+# The ecology hub itself is excluded: its specimen pages legitimately contain
+# raw <input> markup, and packages/ecology IS @esa/ecology (name, not dep).
+
+# jq is required to parse the hook payload. Fail OPEN but VISIBLY — never
+# block all writes because a tool is missing.
+command -v jq >/dev/null 2>&1 || {
+  echo "check-component-first: jq not found — hook disabled (component-first NOT enforced)" >&2
+  exit 0
+}
 
 INPUT=$(cat)
 
@@ -20,20 +29,40 @@ case "$FILE" in
   *) exit 0 ;;
 esac
 
-# --- Gate (a): is this an @esa/ecology spoke? walk up for package.json ---
+# --- Gate (a): spoke detection — ONE upward walk, two signals ---
+# HUB signal (checked FIRST at every level): a dir containing
+#   .claude-plugin/marketplace.json, or a package.json named "ecology-hub"
+#   -> this is the ecology hub; exit 0 immediately.
+# SPOKE signal: a package.json whose dependencies/devDependencies include
+#   "@esa/ecology" -> RECORD the hit and KEEP WALKING (the hub's apps/site
+#   dep-hits below the hub root; only the full walk can tell hub from spoke).
+# Verdict after the walk: spoke-hit recorded -> enforce; otherwise exit 0.
 is_spoke() {
-  local dir
+  local dir spoke_hit=1
+  # Start from the nearest EXISTING ancestor (Write targets may not exist
+  # yet), resolved once via pwd -P; never mix resolved/unresolved mid-walk.
   dir=$(dirname "$1")
+  while [ ! -d "$dir" ] && [ "$dir" != "/" ] && [ -n "$dir" ]; do
+    dir=$(dirname "$dir")
+  done
+  dir=$(cd "$dir" 2>/dev/null && pwd -P) || dir=$(dirname "$1")
+
   while [ "$dir" != "/" ] && [ -n "$dir" ]; do
+    if [ -f "$dir/.claude-plugin/marketplace.json" ]; then
+      return 1   # the ecology hub itself — never enforce here
+    fi
     if [ -f "$dir/package.json" ]; then
-      if grep -q '"@esa/ecology"' "$dir/package.json" 2>/dev/null; then
-        return 0
+      if jq -e '.name == "ecology-hub"' "$dir/package.json" >/dev/null 2>&1; then
+        return 1   # hub root by name — belt to the marketplace.json braces
       fi
-      return 1   # found the nearest package.json; it's not a spoke
+      if jq -e '(.dependencies["@esa/ecology"] // .devDependencies["@esa/ecology"]) != null' \
+          "$dir/package.json" >/dev/null 2>&1; then
+        spoke_hit=0   # record; do NOT return — an ancestor may be the hub
+      fi
     fi
     dir=$(dirname "$dir")
   done
-  return 1
+  return $spoke_hit
 }
 is_spoke "$FILE" || exit 0
 
@@ -99,15 +128,15 @@ if [ -n "$VIOLATIONS" ]; then
     printf '%b' "$VIOLATIONS"
     echo ""
     echo "Lookup order (do this, in order):"
-    echo "  1. Ecology esa-* legos  -> ls ~/Dev/ecology/packages/ecology/src/components/"
-    echo "  2. Beacon prod patterns -> ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/ + src/scss/"
+    echo "  1. Ecology esa-* legos  -> ls node_modules/@esa/ecology/src/components/"
+    echo "  2. Beacon prod patterns (optional, if cloned) -> ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/ + src/scss/"
     echo "  3. ONLY then a documented bcn- component."
     echo ""
     echo "To proceed: use the lego, OR add a justification comment to the content:"
     echo "  <!-- bcn-lego-checked: no esa- X fits because Y; checked Beacon (Z); bcn-foo is the reusable home -->"
     echo "  (CSS file: /* bcn-lego-checked: ... */)"
     echo ""
-    echo "Skill: .claude/skills/component-first/SKILL.md  ->  lego-lookup.md / bcn-authoring.md"
+    echo "Skill: component-first (from the spoke-kit plugin)  ->  lego-lookup.md / bcn-authoring.md"
   } >&2
   exit 2
 fi

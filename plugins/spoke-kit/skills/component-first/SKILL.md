@@ -15,19 +15,19 @@ A **PreToolUse hook** (`.claude/hooks/check-component-first`) blocks Write/Edit/
 When ANY UI is needed, walk these tiers **in order**. Stop at the first hit.
 
 ### 1. Check Ecology FIRST — the `esa-*` legos
-The components live at `~/Dev/ecology/packages/ecology/src/components/` (symlinked here as `node_modules/@esa/ecology`).
+The components live at `node_modules/@esa/ecology/src/components/` (a `file:` symlink to the sibling `ecology` checkout, so this is always the live source).
 
 **List the current catalog — the source of truth, it grows:**
 ```bash
-ls ~/Dev/ecology/packages/ecology/src/components/
+ls node_modules/@esa/ecology/src/components/
 ```
 
 Import depends on the file extension you saw in the `ls`:
 - **`.astro` component** → import in frontmatter: `import EsaCard from '@esa/ecology/esa-card.astro';`
 - **`.ts` web component** → register it in a client `<script>`: `import '@esa/ecology/esa-dialog';` then use the `<esa-dialog>` custom element in markup.
 
-### 2. Check esassoc/Beacon NEXT — the prod app
-If no `esa-*` fits, the production app may already have the pattern. Port it faithfully (tokens, structure):
+### 2. Check esassoc/Beacon NEXT — the prod app (optional tier — requires the Beacon repo cloned)
+If no `esa-*` fits, the production app may already have the pattern. Port it faithfully (tokens, structure). Skip this tier if `~/Dev/Beacon` isn't on your machine:
 ```bash
 ls ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/   # Angular ui-* components
 grep -rn "PATTERN" ~/Dev/Beacon/Beacon.Web/src/scss/        # SCSS / tokens

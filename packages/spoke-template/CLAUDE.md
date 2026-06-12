@@ -10,11 +10,11 @@ Reinventing a control that an `esa-*` lego already provides is a **bug**: it dri
 
 When ANY UI is needed, walk these tiers **in order**. Stop at the first hit.
 
-1. **Ecology first — the `esa-*` legos.** Live at `~/Dev/ecology/packages/ecology/src/components/` (symlinked here as `node_modules/@esa/ecology`).
-   - List the catalog (source of truth — it grows): `ls ~/Dev/ecology/packages/ecology/src/components/`
+1. **Ecology first — the `esa-*` legos.** Live at `node_modules/@esa/ecology/src/components/` (a `file:` symlink to the sibling `ecology` checkout — always the live source).
+   - List the catalog (source of truth — it grows): `ls node_modules/@esa/ecology/src/components/`
    - `.astro` lego → `import EsaCard from '@esa/ecology/esa-card.astro';` (frontmatter)
    - `.ts` lego → `import '@esa/ecology/esa-dialog';` in a client `<script>`, then use `<esa-dialog>` in markup.
-2. **Beacon next — the prod app.** `~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/` (Angular `ui-*`) and `~/Dev/Beacon/Beacon.Web/src/scss/`. Port the pattern faithfully (tokens, structure).
+2. **Beacon next — the prod app (optional tier, requires the Beacon repo).** `~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/` (Angular `ui-*`) and `~/Dev/Beacon/Beacon.Web/src/scss/`. Port the pattern faithfully (tokens, structure). Skip if not cloned.
 3. **Only then a `bcn-` component.** If nothing exists, build a *real, reusable, documented* component prefixed `bcn-` — never a one-off page blob. Token-driven, reusable in isolation.
 
 ## Reinvented → use the lego (cautionary)
@@ -32,7 +32,7 @@ Illustrative anti-patterns — don't hand-roll the left column; reach for the ri
 
 ## Escape hatch — `bcn-lego-checked:`
 
-A **PreToolUse hook** (`.claude/hooks/check-component-first`) **blocks** Write/Edit/MultiEdit that introduces bespoke UI in `.astro`/`.css`/`.scss`. To legitimately proceed (you walked Ecology → Beacon and nothing fits), assert it in the content:
+A **PreToolUse hook** (`check-component-first`, shipped by the **spoke-kit plugin** from the ecology marketplace) **blocks** Write/Edit/MultiEdit that introduces bespoke UI in `.astro`/`.css`/`.scss`. To legitimately proceed (you walked Ecology → Beacon and nothing fits), assert it in the content:
 
 ```html
 <!-- bcn-lego-checked: no esa- X fits because Y; checked Beacon (Z); bcn-foo is the reusable home -->
@@ -40,7 +40,14 @@ A **PreToolUse hook** (`.claude/hooks/check-component-first`) **blocks** Write/E
 
 CSS file: `/* bcn-lego-checked: ... */`. The token is a *claim that you did the lookup* — write a real reason.
 
-## More
+## Where the intelligence lives
 
-- Skill: `.claude/skills/component-first/SKILL.md` (→ `lego-lookup.md`, `bcn-authoring.md`)
-- Hook: `.claude/hooks/check-component-first`
+The component-first skill, this hook, /spoke-init, and the pre-commit review
+all ship from the **spoke-kit plugin** (`ecology` marketplace, hosted in the
+hub repo — `esassoc/ecology`). Nothing is copied into this repo:
+`.claude/settings.json` declares the marketplace and enables the plugin, and a
+SessionStart check warns if it's missing. To update the intelligence layer,
+update the plugin: `claude plugin marketplace update ecology`.
+
+- Skill: `component-first` (→ `lego-lookup.md`, `bcn-authoring.md`)
+- Hook: `check-component-first` (PreToolUse, from the plugin)

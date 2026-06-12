@@ -4,4 +4,5 @@ dist/
 *.log
 .DS_Store
 .playwright-mcp/
-.claude/
+/.claude/agent-memory/
+**/.claude/settings.local.json

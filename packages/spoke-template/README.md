@@ -6,8 +6,12 @@ hub. This directory is an **inert template**: its manifest is stored as
 glob ignores it and `npm install` never tries to build it. Files contain
 `__PLACEHOLDER__` tokens that get substituted when the template is instantiated.
 
-The `/spoke-init` command clones this template into a new repo and fills the
-placeholders automatically. You can also do it by hand (steps below).
+The `/spoke-init` command (from the **spoke-kit plugin**) orchestrates
+instantiation, and the deterministic copy/rename/substitute work is a script —
+`scripts/create-spoke.mjs` at the hub root. **Always scaffold via the script**;
+hand-copying once silently dropped the `.claude/` dot-directory and the spoke
+ran with no component-first enforcement. The manual steps below document what
+the script does (and remain the fallback of last resort).
 
 ## What a spoke is
 
@@ -79,10 +83,23 @@ For each catalog entry, add a `NavItem` in `ds-nav.ts` **and** a sibling page
 under `src/pages/design-system/components/<slug>.astro` (copy `esa-button.astro`
 as the template).
 
-## Instantiating by hand
+## Instantiating
+
+Preferred (deterministic — run from the hub root):
+
+```bash
+node scripts/create-spoke.mjs --name "Beacon" --slug beacon --dir beacon-design \
+  --scope beacon --mark B --tagline "..."
+```
+
+Then continue with steps 5–9 below (the judgment work `/spoke-init` walks).
+
+By hand (fallback only):
 
 1. Copy this directory to a new sibling of `../ecology`, named `__SPOKE_DIR__`
-   (e.g. `../beacon-design`).
+   (e.g. `../beacon-design`). **Include dotfiles** — `.claude/settings.json`
+   declares the spoke-kit plugin (skills + enforcement hook); without it the
+   spoke runs with no intelligence layer.
 2. Rename `package.json.tmpl` → `package.json`.
 3. Rename `src/styles/theme-__SPOKE_SLUG__.css` → `theme-<slug>.css`.
 4. Find-and-replace every placeholder from the legend above across all files.
@@ -96,8 +113,10 @@ as the template).
 8. Pass the spoke's primitive ramp(s) into `color.astro` via `ramps`.
 9. `npm install && npm run dev` to verify, then build prototypes.
 
-`/spoke-init` automates steps 1–6 (and scaffolds 7–8 from the source app's
-catalog where one exists).
+`create-spoke.mjs` performs steps 1–4 deterministically; `/spoke-init` runs the
+script and then walks 5–9 (drafting 6–8 from the source app's tokens/catalog
+where one exists, with human review). It finishes with the definition-of-done
+checklist — including the intelligence-layer checks.
 
 ## File tree
 
@@ -108,6 +127,10 @@ __SPOKE_DIR__/
 ├─ tsconfig.json
 ├─ .gitignore
 ├─ .nojekyll               so GitHub Pages serves _astro/
+├─ .claude/
+│  └─ settings.json        declares the ecology marketplace + enables spoke-kit
+│                          (skills, /spoke-init, and the component-first hook
+│                          ship from the PLUGIN — nothing is copied here)
 ├─ README.md
 └─ src/
    ├─ lib/base.ts          withBase() — base-aware path helper

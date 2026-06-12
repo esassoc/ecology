@@ -1,0 +1,14 @@
+{
+  "name": "ecology",
+  "description": "Claude plugins for the ESA Ecology design system — the hub-owned intelligence layer that spokes install instead of copying.",
+  "owner": {
+    "name": "ESA Data Technology"
+  },
+  "plugins": [
+    {
+      "name": "spoke-kit",
+      "source": "./plugins/spoke-kit",
+      "description": "Everything Claude needs in an Ecology spoke: the component-first skill + enforcement hook, /spoke-init scaffolding, and the spoke pre-commit review."
+    }
+  ]
+}
