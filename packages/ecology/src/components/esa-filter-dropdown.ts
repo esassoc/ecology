@@ -297,11 +297,11 @@ export class EsaFilterDropdown extends LitElement {
       --_filter-font-size: var(--type-size-200, 0.9375rem);
       --_filter-radius: var(--radius-200, 0.5rem);
       --_filter-bg: var(--color-surface, #fff);
-      --_filter-bg-active: var(--color-primary-subtle, #f0fdfa);
+      --_filter-bg-active: var(--color-primary-subtle, #f3f8fb);
       --_filter-text: var(--color-text-primary, #171717);
-      --_filter-text-active: var(--color-primary, #005862);
+      --_filter-text-active: var(--color-primary, #43608a);
       --_filter-border: var(--color-border, #e5e5e5);
-      --_filter-border-active: var(--color-primary, #005862);
+      --_filter-border-active: var(--color-primary, #43608a);
     }
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
@@ -356,7 +356,7 @@ export class EsaFilterDropdown extends LitElement {
       border-color: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .esa-filter-dropdown__trigger--active {
@@ -384,7 +384,7 @@ export class EsaFilterDropdown extends LitElement {
       height: 1.25rem;
       padding-inline: 0.3rem;
       border-radius: var(--radius-full, 9999px);
-      background: var(--color-primary, #005862);
+      background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #fff);
       font-size: var(--type-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
@@ -445,8 +445,8 @@ export class EsaFilterDropdown extends LitElement {
       outline: none;
     }
     .esa-filter-dropdown__search-input:focus {
-      border-color: var(--color-primary, #005862);
-      box-shadow: 0 0 0 1px var(--color-primary, #005862);
+      border-color: var(--color-primary, #43608a);
+      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
     }
 
     .esa-filter-dropdown__options {
@@ -510,7 +510,7 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__clear-link {
       background: none;
       border: none;
-      color: var(--color-primary, #005862);
+      color: var(--color-primary, #43608a);
       font-family: var(--font-sans, inherit);
       font-size: var(--type-size-150, 0.875rem);
       font-weight: var(--font-weight-medium, 450);

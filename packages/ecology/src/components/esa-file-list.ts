@@ -141,7 +141,7 @@ export class EsaFileList extends LitElement {
       text-decoration: none;
     }
     a.file__name {
-      color: var(--color-link, var(--color-primary, #005862));
+      color: var(--color-link, var(--color-primary, #43608a));
     }
     a.file__name:hover {
       text-decoration: underline;
@@ -180,7 +180,7 @@ export class EsaFileList extends LitElement {
       color: var(--color-danger, #ef4444);
     }
     .file__btn:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: 1px;
     }
   `;

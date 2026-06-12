@@ -183,11 +183,11 @@ export class EsaRadioGroup extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .circle--selected {
-      border-color: var(--color-primary, #005862);
+      border-color: var(--color-primary, #43608a);
     }
     .circle:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #005862);
+      border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--focus-ring-color, rgba(0, 88, 98, 0.25));
     }
@@ -200,7 +200,7 @@ export class EsaRadioGroup extends LitElement {
       transition: background var(--transition-fast, 150ms ease);
     }
     .circle--selected .dot {
-      background: var(--color-primary, #005862);
+      background: var(--color-primary, #43608a);
     }
 
     .item-label {

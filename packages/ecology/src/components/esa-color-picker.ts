@@ -206,10 +206,10 @@ export class EsaColorPicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .preview:hover {
-      border-color: var(--form-border-color-focus, #005862);
+      border-color: var(--form-border-color-focus, #43608a);
     }
     .native:focus-visible + .preview {
-      border-color: var(--form-border-color-focus, #005862);
+      border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
     }
 
@@ -230,7 +230,7 @@ export class EsaColorPicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .hex-input:focus {
-      border-color: var(--form-border-color-focus, #005862);
+      border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
     }
     .hex-input:disabled {
@@ -261,8 +261,8 @@ export class EsaColorPicker extends LitElement {
       transform: scale(1.1);
     }
     .swatch--selected {
-      border-color: var(--color-primary, #005862);
-      box-shadow: 0 0 0 1px var(--color-primary, #005862);
+      border-color: var(--color-primary, #43608a);
+      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
     }
     .swatch:focus-visible {
       outline: none;

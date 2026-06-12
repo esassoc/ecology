@@ -208,12 +208,12 @@ export class EsaCheckboxGroup extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box--checked {
-      background: var(--color-primary, #005862);
-      border-color: var(--color-primary, #005862);
+      background: var(--color-primary, #43608a);
+      border-color: var(--color-primary, #43608a);
     }
     .box:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #005862);
+      border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--focus-ring-color, rgba(0, 88, 98, 0.25));
     }

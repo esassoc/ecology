@@ -107,7 +107,7 @@ export class EsaBackToTop extends LitElement {
   static styles = css`
     :host {
       --_btt-size: var(--back-to-top-size, 44px);
-      --_btt-bg: var(--back-to-top-bg, var(--color-primary, #005862));
+      --_btt-bg: var(--back-to-top-bg, var(--color-primary, #43608a));
       --_btt-text: var(--back-to-top-text, var(--color-text-inverse, #fff));
       --_btt-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       --_btt-radius: var(--back-to-top-radius, var(--radius-full, 9999px));
@@ -149,12 +149,12 @@ export class EsaBackToTop extends LitElement {
     }
 
     .button:hover {
-      background: var(--color-primary-hover, #004752);
+      background: var(--color-primary-hover, #39506f);
       box-shadow: var(--shadow-400, 0 8px 32px -8px rgba(0, 0, 0, 0.08));
     }
 
     .button:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

@@ -4,7 +4,7 @@ import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 
-const brand = JSON.stringify(['#005862', '#0d9488', '#f9a134', '#ef4444', '#3b82f6', '#22c55e']);
+const brand = JSON.stringify(['#43608a', '#5787b9', '#f9a134', '#ef4444', '#3b82f6', '#22c55e']);
 
 const props = [
   { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
@@ -23,25 +23,25 @@ const events = [
   summary="Form-associated color picker — native color input, hex text field, and an optional swatch grid. A Lit Web Component migrated from the Angular <code>esa-color-picker</code>.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<esa-color-picker label="Brand color" value="#005862"></esa-color-picker>`}>
-      <esa-color-picker label="Brand color" value="#005862"></esa-color-picker>
+    <Preview code={`<esa-color-picker label="Brand color" value="#43608a"></esa-color-picker>`}>
+      <esa-color-picker label="Brand color" value="#43608a"></esa-color-picker>
     </Preview>
   </Section>
 
   <Section id="swatches" title="Swatches">
     <p>Pass preset colors as a JSON-encoded <code>swatches</code> attribute (or a <code>string[]</code> property). The selected swatch is highlighted.</p>
-    <Preview code={`<esa-color-picker label="Pick a brand color" value="#005862" swatches='["#005862","#0d9488","#f9a134","#ef4444","#3b82f6","#22c55e"]'></esa-color-picker>`}>
-      <esa-color-picker label="Pick a brand color" value="#005862" swatches={brand}></esa-color-picker>
+    <Preview code={`<esa-color-picker label="Pick a brand color" value="#43608a" swatches='["#43608a","#5787b9","#f9a134","#ef4444","#3b82f6","#22c55e"]'></esa-color-picker>`}>
+      <esa-color-picker label="Pick a brand color" value="#43608a" swatches={brand}></esa-color-picker>
     </Preview>
   </Section>
 
   <Section id="sizes" title="Sizes">
-    <Preview code={`<esa-color-picker label="Extra small" size="xs" value="#005862"></esa-color-picker>
-<esa-color-picker label="Small" size="sm" value="#0d9488"></esa-color-picker>
+    <Preview code={`<esa-color-picker label="Extra small" size="xs" value="#43608a"></esa-color-picker>
+<esa-color-picker label="Small" size="sm" value="#5787b9"></esa-color-picker>
 <esa-color-picker label="Medium" size="md" value="#f9a134"></esa-color-picker>
 <esa-color-picker label="Large" size="lg" value="#ef4444"></esa-color-picker>`}>
-      <esa-color-picker label="Extra small" size="xs" value="#005862"></esa-color-picker>
-      <esa-color-picker label="Small" size="sm" value="#0d9488"></esa-color-picker>
+      <esa-color-picker label="Extra small" size="xs" value="#43608a"></esa-color-picker>
+      <esa-color-picker label="Small" size="sm" value="#5787b9"></esa-color-picker>
       <esa-color-picker label="Medium" size="md" value="#f9a134"></esa-color-picker>
       <esa-color-picker label="Large" size="lg" value="#ef4444"></esa-color-picker>
     </Preview>

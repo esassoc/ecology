@@ -225,9 +225,9 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-padding: var(--spacing-300, 12px);
       --_sidenav-item-radius: var(--radius-200, 8px);
       --_sidenav-item-color: var(--sidenav-link-text, #525252);
-      --_sidenav-item-color-active: var(--sidenav-link-text-active, #005862);
+      --_sidenav-item-color-active: var(--sidenav-link-text-active, #43608a);
       --_sidenav-item-bg-hover: var(--color-surface-sunken, #efefef);
-      --_sidenav-item-bg-active: var(--color-teal-50, #f0fdfa);
+      --_sidenav-item-bg-active: var(--color-teal-50, #f3f8fb);
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
       --_sidenav-transition: var(--transition-base, 200ms ease);
 
@@ -284,7 +284,7 @@ export class EsaSidebarNav extends LitElement {
     }
     .toggle:hover { background: var(--_sidenav-item-bg-hover); }
     .toggle:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -329,7 +329,7 @@ export class EsaSidebarNav extends LitElement {
     }
     .link:hover:not(.link--disabled) { background: var(--_sidenav-item-bg-hover); }
     .link:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -359,7 +359,7 @@ export class EsaSidebarNav extends LitElement {
       height: 20px;
       padding: 0 6px;
       border-radius: var(--radius-full, 9999px);
-      background: var(--color-primary, #005862);
+      background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #ffffff);
       font-size: var(--type-size-100, 11px);
       font-weight: var(--font-weight-semibold, 600);

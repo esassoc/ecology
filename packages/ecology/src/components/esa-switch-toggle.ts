@@ -100,7 +100,7 @@ export class EsaSwitchToggle extends LitElement {
       --_track-h: 22px;
       --_thumb: 18px;
       --_bg-off: var(--switch-toggle-track-bg, var(--color-border-strong, #d4d4d4));
-      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-primary, #005862));
+      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-primary, #43608a));
       --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-surface, #fff));
       display: inline-block;
     }
@@ -148,7 +148,7 @@ export class EsaSwitchToggle extends LitElement {
     :host([checked]) .thumb { left: calc(var(--_track-w) - var(--_thumb) - 2px); }
 
     .root:focus-visible .track {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

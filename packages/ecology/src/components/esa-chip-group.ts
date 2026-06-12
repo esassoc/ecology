@@ -268,7 +268,7 @@ export class EsaChipGroup extends LitElement {
 
     .chip:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--focus-ring-color, #005862);
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--focus-ring-color, #43608a);
     }
 
     .chip__label { line-height: 1; }
@@ -287,9 +287,9 @@ export class EsaChipGroup extends LitElement {
     /* Reads the SEMANTIC primary chain (not teal primitives) so spoke themes
        re-skin it — hub default stays teal, a forest-green theme goes forest. */
     .chip--active.chip--teal {
-      background: var(--color-primary-subtle, #f0fdfa);
-      border-color: var(--color-primary-border, #99f6e4);
-      color: var(--color-primary, #005862);
+      background: var(--color-primary-subtle, #f3f8fb);
+      border-color: var(--color-primary-border, #cfe2ee);
+      color: var(--color-primary, #43608a);
     }
     .chip--active.chip--amber {
       background: var(--color-warning-subtle, #fffbeb);

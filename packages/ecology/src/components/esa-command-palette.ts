@@ -313,7 +313,7 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-surface-sunken, #efefef)); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: -2px;
     }
 

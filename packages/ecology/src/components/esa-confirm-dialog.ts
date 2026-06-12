@@ -238,7 +238,7 @@ export class EsaConfirmDialog extends LitElement {
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-confirm-dialog__btn:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .esa-confirm-dialog__btn--outline {
@@ -248,10 +248,10 @@ export class EsaConfirmDialog extends LitElement {
     }
     .esa-confirm-dialog__btn--outline:hover { background: var(--color-surface-sunken, #efefef); }
     .esa-confirm-dialog__btn--primary {
-      background: var(--color-primary, #005862);
+      background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #ffffff);
     }
-    .esa-confirm-dialog__btn--primary:hover { background: var(--color-primary-hover, #004752); }
+    .esa-confirm-dialog__btn--primary:hover { background: var(--color-primary-hover, #39506f); }
     .esa-confirm-dialog__btn--danger {
       background: var(--color-danger, #ef4444);
       color: var(--color-text-inverse, #ffffff);

@@ -171,7 +171,7 @@ export class EsaDatePicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #005862);
+      --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
     }
     .input:disabled {

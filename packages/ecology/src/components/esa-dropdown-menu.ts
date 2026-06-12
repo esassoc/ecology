@@ -179,7 +179,7 @@ export class EsaDropdownMenu extends LitElement {
       background: var(--color-surface-sunken, #efefef);
     }
     .esa-dropdown-menu__item:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
       outline-offset: -2px;
     }
     .esa-dropdown-menu__item--danger { color: var(--color-danger, #ef4444); }

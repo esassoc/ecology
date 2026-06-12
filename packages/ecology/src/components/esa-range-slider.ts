@@ -150,8 +150,8 @@ export class EsaRangeSlider extends LitElement {
       border-radius: calc(var(--_track-height) / 2);
       background: linear-gradient(
         to right,
-        var(--color-primary, #005862) 0%,
-        var(--color-primary, #005862) var(--fill-percent, 0%),
+        var(--color-primary, #43608a) 0%,
+        var(--color-primary, #43608a) var(--fill-percent, 0%),
         var(--color-border, #e5e5e5) var(--fill-percent, 0%),
         var(--color-border, #e5e5e5) 100%
       );
@@ -161,7 +161,7 @@ export class EsaRangeSlider extends LitElement {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
       margin-top: calc((var(--_track-height) - var(--_thumb-size)) / 2);
-      border: 2px solid var(--color-primary, #005862);
+      border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
       box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
@@ -177,12 +177,12 @@ export class EsaRangeSlider extends LitElement {
     .input::-moz-range-progress {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-primary, #005862);
+      background: var(--color-primary, #43608a);
     }
     .input::-moz-range-thumb {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
-      border: 2px solid var(--color-primary, #005862);
+      border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
       box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
