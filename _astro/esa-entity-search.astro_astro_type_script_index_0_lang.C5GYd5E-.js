@@ -1,12 +1,4 @@
-import{A as h,E as m,i as f,b as i,a as v}from"./lit-element.C8p3bJxG.js";/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */const g={CHILD:2},_=r=>(...e)=>({_$litDirective$:r,values:e});class b{constructor(e){}get _$AU(){return this._$AM._$AU}_$AT(e,t,s){this._$Ct=e,this._$AM=t,this._$Ci=s}_$AS(e,t){return this.update(e,t)}update(e,t){return this.render(...t)}}/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */class d extends b{constructor(e){if(super(e),this.it=h,e.type!==g.CHILD)throw Error(this.constructor.directiveName+"() can only be used in child bindings")}render(e){if(e===h||e==null)return this._t=void 0,this.it=e;if(e===m)return e;if(typeof e!="string")throw Error(this.constructor.directiveName+"() called with a non-string value");if(e===this.it)return this._t;this.it=e;const t=[e];return t.raw=t,this._t={_$litType$:this.constructor.resultType,strings:t,values:[]}}}d.directiveName="unsafeHTML",d.resultType=1;const p=_(d),w=r=>r.replace(/[&<>"']/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[e]),u=(r,e)=>{const t=w(r);if(!e)return t;const s=e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");return t.replace(new RegExp(`(${s})`,"ig"),"<mark>$1</mark>")};class x extends f{constructor(){super(),this.query="",this.activeScope="",this.activeId=null,this.onGlobalKeydown=e=>{this.hotkey==="mod+k"&&(e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"?(e.preventDefault(),this.toggle()):this.hotkey==="slash"&&e.key==="/"&&!this.isEditable(e.target)&&(e.preventDefault(),this.show())},this.onSearch=e=>{this.query=e.target.value,this.activeId=null},this.onKeydown=e=>{if(e.key==="Escape"){e.preventDefault(),this.close();return}if(e.key==="Tab"){e.preventDefault(),this.cycleScope(e.shiftKey?-1:1);return}if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault(),this.emit("show-all",{query:this.query,scope:this.activeScope}),this.close();return}const t=this.flatItems;if(t.length===0)return;const s=t.findIndex(a=>a.id===this.activeId);switch(e.key){case"ArrowDown":{e.preventDefault();const a=s<t.length-1?s+1:0;this.activeId=t[a].id;break}case"ArrowUp":{e.preventDefault();const a=s>0?s-1:t.length-1;this.activeId=t[a].id;break}case"Enter":{e.preventDefault();const a=t.find(o=>o.id===this.activeId)??(t.length===1?t[0]:null);a&&this.selectEntity(a);break}}},this.entities=[],this.scopes=[],this.recent=[],this.rowActions=[],this.open=!1,this.placeholder="Search…",this.allLabel="All",this.hotkey=""}static{this.properties={entities:{type:Array},scopes:{type:Array},recent:{type:Array},rowActions:{type:Array,attribute:"row-actions"},open:{type:Boolean,reflect:!0},placeholder:{type:String},allLabel:{type:String,attribute:"all-label"},hotkey:{type:String},query:{state:!0},activeScope:{state:!0},activeId:{state:!0}}}connectedCallback(){super.connectedCallback(),document.addEventListener("keydown",this.onGlobalKeydown)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("keydown",this.onGlobalKeydown)}isEditable(e){const t=e;if(!t)return!1;const s=t.tagName;return s==="INPUT"||s==="TEXTAREA"||s==="SELECT"||t.isContentEditable}toggle(){this.open?this.close():this.show()}show(){this.open=!0,this.query="",this.activeScope="",this.activeId=null,requestAnimationFrame(()=>{this.renderRoot.querySelector(".esa-entity-search__input")?.focus()})}close(){this.open=!1}emit(e,t){this.dispatchEvent(new CustomEvent(e,{detail:t,bubbles:!0,composed:!0}))}get queryMatches(){const e=this.query.toLowerCase().trim();return e?this.entities.filter(t=>`${t.title} ${t.subtitle??""}`.toLowerCase().includes(e)):this.entities}scopeCount(e){return this.queryMatches.filter(t=>t.scope===e).length}get renderGroups(){const e=t=>this.scopes.find(s=>s.id===t);if(this.activeScope){const t=e(this.activeScope),s=this.queryMatches.filter(a=>a.scope===this.activeScope);return t&&s.length?[{scope:t,items:s}]:[]}return this.scopes.map(t=>({scope:t,items:this.queryMatches.filter(s=>s.scope===t.id)})).filter(t=>t.items.length>0)}get showingRecent(){return!this.query.trim()&&!this.activeScope&&this.recent.length>0}get flatItems(){return this.showingRecent?this.recent:this.renderGroups.flatMap(e=>e.items)}setScope(e){this.activeScope=e,this.activeId=null,this.emit("scope-change",{scope:e})}cycleScope(e){const t=["",...this.scopes.map(o=>o.id)],a=(t.indexOf(this.activeScope)+e+t.length)%t.length;this.setScope(t[a])}selectEntity(e){this.emit("select",{entity:e}),this.close()}onRowAction(e,t,s){e.stopPropagation(),this.emit("row-action",{action:t.id,entity:s})}iconFor(e){return e.icon??this.scopes.find(t=>t.id===e.scope)?.icon}renderIcon(e){return e?i`<svg class="esa-entity-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p(e)}</svg>`:null}renderRow(e){const t=this.rowActions.filter(s=>!s.scopes||s.scopes.includes(e.scope));return i`
+import{i as u,b as r,a as y}from"./lit-element.C8p3bJxG.js";import{o as m,a as p}from"./unsafe-svg.BgYkCkso.js";const f=a=>a.replace(/[&<>"']/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[e]),d=(a,e)=>{const t=f(a);if(!e)return t;const s=e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");return t.replace(new RegExp(`(${s})`,"ig"),"<mark>$1</mark>")};class v extends u{constructor(){super(),this.query="",this.activeScope="",this.activeId=null,this.onGlobalKeydown=e=>{this.hotkey==="mod+k"&&(e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"?(e.preventDefault(),this.toggle()):this.hotkey==="slash"&&e.key==="/"&&!this.isEditable(e.target)&&(e.preventDefault(),this.show())},this.onSearch=e=>{this.query=e.target.value,this.activeId=null},this.onKeydown=e=>{if(e.key==="Escape"){e.preventDefault(),this.close();return}if(e.key==="Tab"){e.preventDefault(),this.cycleScope(e.shiftKey?-1:1);return}if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault(),this.emit("show-all",{query:this.query,scope:this.activeScope}),this.close();return}const t=this.flatItems;if(t.length===0)return;const s=t.findIndex(i=>i.id===this.activeId);switch(e.key){case"ArrowDown":{e.preventDefault();const i=s<t.length-1?s+1:0;this.activeId=t[i].id;break}case"ArrowUp":{e.preventDefault();const i=s>0?s-1:t.length-1;this.activeId=t[i].id;break}case"Enter":{e.preventDefault();const i=t.find(o=>o.id===this.activeId)??(t.length===1?t[0]:null);i&&this.selectEntity(i);break}}},this.entities=[],this.scopes=[],this.recent=[],this.rowActions=[],this.open=!1,this.placeholder="Search…",this.allLabel="All",this.hotkey=""}static{this.properties={entities:{type:Array},scopes:{type:Array},recent:{type:Array},rowActions:{type:Array,attribute:"row-actions"},open:{type:Boolean,reflect:!0},placeholder:{type:String},allLabel:{type:String,attribute:"all-label"},hotkey:{type:String},query:{state:!0},activeScope:{state:!0},activeId:{state:!0}}}connectedCallback(){super.connectedCallback(),document.addEventListener("keydown",this.onGlobalKeydown)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("keydown",this.onGlobalKeydown)}isEditable(e){const t=e;if(!t)return!1;const s=t.tagName;return s==="INPUT"||s==="TEXTAREA"||s==="SELECT"||t.isContentEditable}toggle(){this.open?this.close():this.show()}show(){this.open=!0,this.query="",this.activeScope="",this.activeId=null,requestAnimationFrame(()=>{this.renderRoot.querySelector(".esa-entity-search__input")?.focus()})}close(){this.open=!1}emit(e,t){this.dispatchEvent(new CustomEvent(e,{detail:t,bubbles:!0,composed:!0}))}get queryMatches(){const e=this.query.toLowerCase().trim();return e?this.entities.filter(t=>`${t.title} ${t.subtitle??""}`.toLowerCase().includes(e)):this.entities}scopeCount(e){return this.queryMatches.filter(t=>t.scope===e).length}get renderGroups(){const e=t=>this.scopes.find(s=>s.id===t);if(this.activeScope){const t=e(this.activeScope),s=this.queryMatches.filter(i=>i.scope===this.activeScope);return t&&s.length?[{scope:t,items:s}]:[]}return this.scopes.map(t=>({scope:t,items:this.queryMatches.filter(s=>s.scope===t.id)})).filter(t=>t.items.length>0)}get showingRecent(){return!this.query.trim()&&!this.activeScope&&this.recent.length>0}get flatItems(){return this.showingRecent?this.recent:this.renderGroups.flatMap(e=>e.items)}setScope(e){this.activeScope=e,this.activeId=null,this.emit("scope-change",{scope:e})}cycleScope(e){const t=["",...this.scopes.map(o=>o.id)],i=(t.indexOf(this.activeScope)+e+t.length)%t.length;this.setScope(t[i])}selectEntity(e){this.emit("select",{entity:e}),this.close()}onRowAction(e,t,s){e.stopPropagation(),this.emit("row-action",{action:t.id,entity:s})}iconFor(e){return e.icon??this.scopes.find(t=>t.id===e.scope)?.icon}renderIcon(e){return e?r`<svg class="esa-entity-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${m(e)}</svg>`:null}renderRow(e){const t=this.rowActions.filter(s=>!s.scopes||s.scopes.includes(e.scope));return r`
       <button
         class="esa-entity-search__row ${e.id===this.activeId?"esa-entity-search__row--active":""}"
         role="option"
@@ -16,23 +8,23 @@ import{A as h,E as m,i as f,b as i,a as v}from"./lit-element.C8p3bJxG.js";/**
       >
         <span class="esa-entity-search__row-icon">${this.renderIcon(this.iconFor(e))}</span>
         <span class="esa-entity-search__row-text">
-          <span class="esa-entity-search__row-title">${p(u(e.title,this.query.trim()))}</span>
-          ${e.subtitle?i`<span class="esa-entity-search__row-subtitle">${p(u(e.subtitle,this.query.trim()))}</span>`:null}
+          <span class="esa-entity-search__row-title">${p(d(e.title,this.query.trim()))}</span>
+          ${e.subtitle?r`<span class="esa-entity-search__row-subtitle">${p(d(e.subtitle,this.query.trim()))}</span>`:null}
         </span>
-        ${e.meta?i`<span class="esa-entity-search__row-meta">${e.meta}</span>`:null}
-        ${t.length?i`<span class="esa-entity-search__row-actions">
-              ${t.map(s=>i`<button
+        ${e.meta?r`<span class="esa-entity-search__row-meta">${e.meta}</span>`:null}
+        ${t.length?r`<span class="esa-entity-search__row-actions">
+              ${t.map(s=>r`<button
                   class="esa-entity-search__row-action"
                   type="button"
                   title=${s.label}
                   aria-label=${s.label}
-                  @click=${a=>this.onRowAction(a,s,e)}
+                  @click=${i=>this.onRowAction(i,s,e)}
                 >
-                  ${s.icon?this.renderIcon(s.icon):i`<span>${s.label}</span>`}
+                  ${s.icon?this.renderIcon(s.icon):r`<span>${s.label}</span>`}
                 </button>`)}
             </span>`:null}
       </button>
-    `}render(){if(!this.open)return i``;const e=this.query.trim(),t=this.renderGroups,s=this.showingRecent,a=this.queryMatches.length;return i`
+    `}render(){if(!this.open)return r``;const e=this.query.trim(),t=this.renderGroups,s=this.showingRecent,i=this.queryMatches.length;return r`
       <div class="esa-entity-search__backdrop" @click=${this.close}></div>
       <div class="esa-entity-search" role="dialog" aria-label="Search">
         <div class="esa-entity-search__search">
@@ -49,46 +41,46 @@ import{A as h,E as m,i as f,b as i,a as v}from"./lit-element.C8p3bJxG.js";/**
           <kbd class="esa-entity-search__kbd">ESC</kbd>
         </div>
 
-        ${this.scopes.length?i`<div class="esa-entity-search__scopes" role="tablist">
+        ${this.scopes.length?r`<div class="esa-entity-search__scopes" role="tablist">
               <button
                 class="esa-entity-search__scope ${this.activeScope===""?"esa-entity-search__scope--active":""}"
                 role="tab"
                 aria-selected=${this.activeScope===""}
                 @click=${()=>this.setScope("")}
               >
-                ${this.allLabel}${e?i`<span class="esa-entity-search__scope-count">${a}</span>`:null}
+                ${this.allLabel}${e?r`<span class="esa-entity-search__scope-count">${i}</span>`:null}
               </button>
-              ${this.scopes.map(o=>i`<button
+              ${this.scopes.map(o=>r`<button
                   class="esa-entity-search__scope ${this.activeScope===o.id?"esa-entity-search__scope--active":""}"
                   role="tab"
                   aria-selected=${this.activeScope===o.id}
                   @click=${()=>this.setScope(o.id)}
                 >
-                  ${this.renderIcon(o.icon)}${o.label}${e?i`<span class="esa-entity-search__scope-count">${this.scopeCount(o.id)}</span>`:null}
+                  ${this.renderIcon(o.icon)}${o.label}${e?r`<span class="esa-entity-search__scope-count">${this.scopeCount(o.id)}</span>`:null}
                 </button>`)}
             </div>`:null}
 
         <div class="esa-entity-search__results" role="listbox">
-          ${s?i`<div class="esa-entity-search__group">
+          ${s?r`<div class="esa-entity-search__group">
                 <div class="esa-entity-search__group-head"><span>Recent</span></div>
                 ${this.recent.map(o=>this.renderRow(o))}
-              </div>`:t.length?t.map(o=>i`<div class="esa-entity-search__group">
+              </div>`:t.length?t.map(o=>r`<div class="esa-entity-search__group">
                     <div class="esa-entity-search__group-head">
                       <span>${o.scope.label}</span>
                       <span class="esa-entity-search__group-count">${o.items.length}</span>
                     </div>
-                    ${o.items.map(y=>this.renderRow(y))}
-                  </div>`):i`<div class="esa-entity-search__empty">No results${e?i` for “${this.query}”`:null}.</div>`}
+                    ${o.items.map(h=>this.renderRow(h))}
+                  </div>`):r`<div class="esa-entity-search__empty">No results${e?r` for “${this.query}”`:null}.</div>`}
         </div>
 
         <div class="esa-entity-search__footer">
           <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
           <span><kbd>↵</kbd> Select</span>
-          ${this.scopes.length?i`<span><kbd>Tab</kbd> Scope</span>`:null}
+          ${this.scopes.length?r`<span><kbd>Tab</kbd> Scope</span>`:null}
           <span><kbd>Esc</kbd> Close</span>
         </div>
       </div>
-    `}static{this.styles=v`
+    `}static{this.styles=y`
     :host { display: contents; }
 
     .esa-entity-search__backdrop {
@@ -271,4 +263,4 @@ import{A as h,E as m,i as f,b as i,a as v}from"./lit-element.C8p3bJxG.js";/**
       color: var(--color-text-muted, #7c7c7c);
     }
     .esa-entity-search__footer span { display: inline-flex; align-items: center; gap: 4px; }
-  `}}customElements.get("esa-entity-search")||customElements.define("esa-entity-search",x);const n={folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',eye:'<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>'},c=document.getElementById("es");c.scopes=[{id:"projects",label:"Projects",icon:n.folder},{id:"people",label:"People",icon:n.users},{id:"documents",label:"Documents",icon:n.file}];c.entities=[{id:"p1",title:"Riverbank restoration — Phase 2",subtitle:"Active · 2026",scope:"projects",url:"#p1",meta:"PRJ-204"},{id:"p2",title:"Riparian buffer planting",subtitle:"Planning",scope:"projects",url:"#p2",meta:"PRJ-211"},{id:"p3",title:"Fish passage culvert survey",subtitle:"Complete",scope:"projects",url:"#p3",meta:"PRJ-188"},{id:"u1",title:"Rita Alvarez",subtitle:"Hydrologist",scope:"people",url:"#u1"},{id:"u2",title:"Marcus Webb",subtitle:"Project sponsor",scope:"people",url:"#u2"},{id:"u3",title:"Priya Nair",subtitle:"GIS analyst",scope:"people",url:"#u3"},{id:"d1",title:"Riverbank monitoring report (Q1)",subtitle:"PDF · 2.1 MB",scope:"documents",url:"#d1",meta:"Mar 2026"},{id:"d2",title:"Permit application — Phase 2",subtitle:"DOCX",scope:"documents",url:"#d2",meta:"Jan 2026"}];c.recent=[c.entities[0],c.entities[3]];c.rowActions=[{id:"impersonate",label:"View as",icon:n.eye,scopes:["people"]}];const k=document.getElementById("es-result"),l=r=>k.textContent=r;c.addEventListener("select",r=>l(`select → ${r.detail.entity.title}`));c.addEventListener("scope-change",r=>l(`scope-change → ${r.detail.scope||"all"}`));c.addEventListener("show-all",r=>l(`show-all → query="${r.detail.query}", scope=${r.detail.scope||"all"}`));c.addEventListener("row-action",r=>l(`row-action → ${r.detail.action} on ${r.detail.entity.title}`));document.getElementById("open-es").addEventListener("click",()=>c.show());
+  `}}customElements.get("esa-entity-search")||customElements.define("esa-entity-search",v);const n={folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',eye:'<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>'},c=document.getElementById("es");c.scopes=[{id:"projects",label:"Projects",icon:n.folder},{id:"people",label:"People",icon:n.users},{id:"documents",label:"Documents",icon:n.file}];c.entities=[{id:"p1",title:"Riverbank restoration — Phase 2",subtitle:"Active · 2026",scope:"projects",url:"#p1",meta:"PRJ-204"},{id:"p2",title:"Riparian buffer planting",subtitle:"Planning",scope:"projects",url:"#p2",meta:"PRJ-211"},{id:"p3",title:"Fish passage culvert survey",subtitle:"Complete",scope:"projects",url:"#p3",meta:"PRJ-188"},{id:"u1",title:"Rita Alvarez",subtitle:"Hydrologist",scope:"people",url:"#u1"},{id:"u2",title:"Marcus Webb",subtitle:"Project sponsor",scope:"people",url:"#u2"},{id:"u3",title:"Priya Nair",subtitle:"GIS analyst",scope:"people",url:"#u3"},{id:"d1",title:"Riverbank monitoring report (Q1)",subtitle:"PDF · 2.1 MB",scope:"documents",url:"#d1",meta:"Mar 2026"},{id:"d2",title:"Permit application — Phase 2",subtitle:"DOCX",scope:"documents",url:"#d2",meta:"Jan 2026"}];c.recent=[c.entities[0],c.entities[3]];c.rowActions=[{id:"impersonate",label:"View as",icon:n.eye,scopes:["people"]}];const g=document.getElementById("es-result"),l=a=>g.textContent=a;c.addEventListener("select",a=>l(`select → ${a.detail.entity.title}`));c.addEventListener("scope-change",a=>l(`scope-change → ${a.detail.scope||"all"}`));c.addEventListener("show-all",a=>l(`show-all → query="${a.detail.query}", scope=${a.detail.scope||"all"}`));c.addEventListener("row-action",a=>l(`row-action → ${a.detail.action} on ${a.detail.entity.title}`));document.getElementById("open-es").addEventListener("click",()=>c.show());

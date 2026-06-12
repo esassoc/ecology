@@ -1,6 +1,6 @@
 import{i as n,b as i,a as l}from"./lit-element.C8p3bJxG.js";class b extends n{constructor(){super(),this.onKeydown=(a,t)=>{let e=null;switch(a.key){case"ArrowRight":e=this.findNextEnabledTab(t,1);break;case"ArrowLeft":e=this.findNextEnabledTab(t,-1);break;case"Home":e=this.findNextEnabledTab(-1,1);break;case"End":e=this.findNextEnabledTab(this.tabs.length,-1);break;default:return}e!==null&&(a.preventDefault(),this.selectTab(e),a.target.parentElement?.children[e]?.focus())},this.tabs=[],this.activeIndex=0,this.size="md",this.variant="underline",this.appearance="underline"}static{this.properties={tabs:{type:Array},activeIndex:{type:Number,attribute:"active-index"},size:{type:String,reflect:!0},variant:{type:String,reflect:!0},appearance:{type:String,reflect:!0}}}selectTab(a){this.tabs[a]?.disabled||(this.activeIndex=a,this.dispatchEvent(new CustomEvent("tabchange",{detail:{index:a},bubbles:!0,composed:!0})))}findNextEnabledTab(a,t){let e=a+t;for(;e>=0&&e<this.tabs.length;){if(!this.tabs[e].disabled)return e;e+=t}return null}render(){return i`
       <div class="layout">
-        <div class="tabs" role="tablist">
+        <div class="tabs" part="tabs" role="tablist">
           ${this.tabs.map((a,t)=>{const e=this.activeIndex===t;return i`<button
               class="tab ${e?"tab--active":""} ${a.disabled?"tab--disabled":""}"
               type="button"

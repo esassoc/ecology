@@ -1,1 +1,0 @@
-import"./esa-filter-dropdown.DnvmXaBN.js";import"./lit-element.C8p3bJxG.js";const l=[{label:"Open",value:"open"},{label:"In review",value:"review"},{label:"Closed",value:"closed"}];customElements.whenDefined("esa-filter-dropdown").then(()=>{document.querySelectorAll("esa-filter-dropdown").forEach(e=>{e.options=l})});

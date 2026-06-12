@@ -95,8 +95,8 @@ import{i as a,b as r,a as l}from"./lit-element.C8p3bJxG.js";class n extends a{co
     }
     .field__label {
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-size: var(--form-label-font-size, var(--_field-font-size));
+      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 450));
       color: var(--form-label-color, #171717);
     }
     .field__required {

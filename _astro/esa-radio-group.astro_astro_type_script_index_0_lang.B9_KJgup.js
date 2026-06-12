@@ -5,6 +5,7 @@ import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{co
             <label
               class="item ${i?"item--disabled":""}"
               @keydown=${o=>this.onKeydown(o,e)}
+              @click=${()=>this.selectOption(e)}
             >
               <span
                 class="circle ${t?"circle--selected":""}"
@@ -12,7 +13,6 @@ import{i as n,b as r,a as l}from"./lit-element.C8p3bJxG.js";class d extends n{co
                 aria-checked=${String(t)}
                 aria-disabled=${String(i)}
                 tabindex=${i?-1:0}
-                @click=${()=>this.selectOption(e)}
               >
                 <span class="dot"></span>
               </span>
