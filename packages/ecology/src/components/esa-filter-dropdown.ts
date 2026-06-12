@@ -16,12 +16,19 @@ import './esa-checkbox';
  *   - selectionChange output                                       → bubbling `selection-change` CustomEvent
  *   - EsaFilterService.setFilter                                   → bubbling `esa-filter-change` event (parent container coordinates state)
  *
+ * Additive (beyond the Angular source): options accept an optional `color` —
+ * any CSS color, including `var(--token)` refs resolved against the host page —
+ * that renders a small leading dot before the label (status-colored filters).
+ * Options without `color` render exactly as before.
+ *
  * Decorator-free on purpose (no per-consumer tsconfig decorator flags).
  */
 interface FilterOption {
   label: string;
   value: string;
   disabled?: boolean;
+  /** Optional leading color dot (any CSS color, incl. var() refs). Absent = no dot. */
+  color?: string;
 }
 
 export class EsaFilterDropdown extends LitElement {
@@ -257,6 +264,12 @@ export class EsaFilterDropdown extends LitElement {
                           aria-hidden="true"
                           tabindex="-1"
                         ></esa-checkbox>
+                        ${option.color
+                          ? html`<span
+                              class="esa-filter-dropdown__option-dot"
+                              style="background:${option.color}"
+                            ></span>`
+                          : null}
                         <span class="esa-filter-dropdown__option-label">${option.label}</span>
                       </div>`
                     )}
@@ -466,6 +479,13 @@ export class EsaFilterDropdown extends LitElement {
     /* Display-only: the row owns the click so the box never double-toggles. */
     .esa-filter-dropdown__checkbox {
       pointer-events: none;
+      flex-shrink: 0;
+    }
+    /* Optional per-option color dot (options[].color) */
+    .esa-filter-dropdown__option-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
       flex-shrink: 0;
     }
     .esa-filter-dropdown__option-label {
