@@ -1,0 +1,194 @@
+---
+// List + filters — the workhorse data view, composed entirely from esa-* legos.
+// Two stages: the populated view and the filtered-to-zero view. Filter state is
+// page-owned; the legos render it and emit events.
+import PatternDoc from '../../layouts/PatternDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import { withBase } from '@esa/docs/base';
+import FilterContainer from '@esa/ecology/esa-filter-container.astro';
+import FilterPills from '@esa/ecology/esa-filter-pills.astro';
+import FilterClearButton from '@esa/ecology/esa-filter-clear-button.astro';
+import Card from '@esa/ecology/esa-card.astro';
+import Pill from '@esa/ecology/esa-pill.astro';
+import EmptyState from '@esa/ecology/esa-empty-state.astro';
+
+// The page's single source of truth: applied filters, rendered as pills and
+// reflected in the result set. Statuses below match these filters on purpose.
+const appliedFilters = [
+  { name: 'status', label: 'Status', value: 'review', displayValue: 'In review' },
+  { name: 'status', label: 'Status', value: 'approved', displayValue: 'Approved' },
+];
+
+// A combination that matches nothing — the dead-end the second stage designs for.
+const deadEndFilters = [
+  { name: 'status', label: 'Status', value: 'withdrawn', displayValue: 'Withdrawn' },
+  { name: 'county', label: 'County', value: 'alpine', displayValue: 'Alpine' },
+];
+
+const records = [
+  { name: 'Carquinez Shoreline Restoration', permit: '401 Water Quality Certification', status: 'In review', variant: 'info', county: 'Contra Costa', received: 'Mar 14, 2026', agency: 'SF Bay RWQCB' },
+  { name: 'Alhambra Creek Fish Passage Retrofit', permit: 'Streambed Alteration (1602)', status: 'Approved', variant: 'success', county: 'Contra Costa', received: 'Jan 22, 2026', agency: 'CDFW Bay Delta Region' },
+  { name: 'Tomales Bay Eelgrass Expansion', permit: 'Coastal Development Permit', status: 'Approved', variant: 'success', county: 'Marin', received: 'Feb 9, 2026', agency: 'California Coastal Commission' },
+  { name: 'San Pablo Baylands Levee Setback', permit: 'Section 404 Individual Permit', status: 'In review', variant: 'info', county: 'Sonoma', received: 'Apr 2, 2026', agency: 'USACE San Francisco District' },
+  { name: 'Yolo Bypass Floodplain Reconnection', permit: 'Incidental Take Permit (2081)', status: 'In review', variant: 'info', county: 'Yolo', received: 'Apr 30, 2026', agency: 'CDFW North Central Region' },
+  { name: 'Mokelumne Riparian Buffer Planting', permit: 'NPDES Construction Stormwater', status: 'Approved', variant: 'success', county: 'San Joaquin', received: 'May 6, 2026', agency: 'Central Valley RWQCB' },
+] as const;
+---
+<PatternDoc
+  name="List + filters"
+  slug="list-filters"
+  summary="The workhorse data view: a filter row that narrows a collection, results rendered as <code>esa-card</code> entries, and pagination at the bottom. The filter legos emit events; the page owns the state and re-renders pills, results, and the count from it."
+  whenToUse="Any screen where users narrow a collection to find a record — permit queues, monitoring-site inventories, search results. If the page is a list plus controls that shrink it, it's this pattern."
+  composedOf={['esa-filter-container', 'esa-filter-dropdown', 'esa-filter-pills', 'esa-filter-clear-button', 'esa-card', 'esa-pill', 'esa-pagination', 'esa-empty-state']}
+>
+  <Section id="populated" title="Populated">
+    <p>The three-band frame: filter row on top, results in the middle, pagination at the bottom. Pills restate the applied filters next to the dropdowns, and the count line ties the bands together — the dropdowns here are live.</p>
+    <div class="pattern-stage">
+      <FilterContainer>
+        <esa-filter-dropdown data-opts="status" name="status" label="Status" multiple></esa-filter-dropdown>
+        <esa-filter-dropdown data-opts="county" name="county" label="County" multiple></esa-filter-dropdown>
+        <esa-filter-dropdown data-opts="type" name="type" label="Permit type"></esa-filter-dropdown>
+        <FilterPills filters={appliedFilters} />
+        <FilterClearButton />
+      </FilterContainer>
+
+      <p class="results-count">Showing <strong>6</strong> of <strong>23</strong> applications</p>
+
+      <div class="results-grid">
+        {records.map((r) => (
+          <Card title={r.name} subtitle={r.permit}>
+            <Pill slot="actions" label={r.status} variant={r.variant} removable={false} />
+            <dl class="record-meta">
+              <div><dt>County</dt><dd>{r.county}</dd></div>
+              <div><dt>Received</dt><dd>{r.received}</dd></div>
+              <div><dt>Lead agency</dt><dd>{r.agency}</dd></div>
+            </dl>
+          </Card>
+        ))}
+      </div>
+
+      <esa-pagination total-items="23" page-size="6" show-page-size-selector="false"></esa-pagination>
+    </div>
+  </Section>
+
+  <Section id="empty" title="Empty result state">
+    <p>Filtered-to-zero is a normal outcome, not an error. The filter row stays exactly where it was — users need it to undo the dead end — and the results band swaps to <code>esa-empty-state</code> with a one-click way out.</p>
+    <div class="pattern-stage">
+      <FilterContainer>
+        <esa-filter-dropdown data-opts="status" name="status" label="Status" multiple></esa-filter-dropdown>
+        <esa-filter-dropdown data-opts="county" name="county" label="County" multiple></esa-filter-dropdown>
+        <esa-filter-dropdown data-opts="type" name="type" label="Permit type"></esa-filter-dropdown>
+        <FilterPills filters={deadEndFilters} />
+        <FilterClearButton />
+      </FilterContainer>
+
+      <p class="results-count">Showing <strong>0</strong> of <strong>23</strong> applications</p>
+
+      <div class="results-empty">
+        <EmptyState title="No applications match these filters" description="Status: Withdrawn in Alpine County turns up nothing. Widen a filter, or clear them all to get back to the full list.">
+          <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+            <path d="m13.5 8.5-5 5"></path>
+            <path d="m8.5 8.5 5 5"></path>
+          </svg>
+          <FilterClearButton label="Clear all filters" />
+        </EmptyState>
+      </div>
+    </div>
+  </Section>
+
+  <Section id="notes" title="Composition notes">
+    <ul class="notes">
+      <li><strong>Filter state lives with the page,</strong> not inside any lego. Dropdowns, pills, and the clear button all emit bubbling events (<code>esa-filter-change</code>, <code>esa-filter-remove</code>, <code>esa-filter-clear</code>); one page-level handler updates the single filter list and re-renders pills, count, and results from it.</li>
+      <li><strong>Cards vs table:</strong> cards suit scannable summaries with mixed-importance fields, like this queue. When users compare many rows across uniform columns — sorting, bulk selection — reach for a data table instead; the filter row above it stays identical.</li>
+      <li><strong>Always design the empty state.</strong> Filtered-to-zero will happen on day one. Keep the filter row visible, say which filters caused it, and offer the clear action inside the <a href={withBase('/components/esa-empty-state')}><code>esa-empty-state</code></a> — never a blank region.</li>
+      <li><strong>Status is a pill, not a border.</strong> Each card carries its status as an <code>esa-pill</code> in the header's <code>actions</code> slot, so state reads as content and re-skins with the theme.</li>
+      <li><strong>Pagination follows the filtered set.</strong> Reset to the first page whenever a filter changes, and zero it out (or drop it, as here) when nothing matches.</li>
+    </ul>
+  </Section>
+</PatternDoc>
+
+<style>
+  .results-count {
+    margin: var(--spacing-400, 1rem) 0 var(--spacing-300, 0.75rem);
+    font-size: var(--type-size-200, 1rem);
+    color: var(--color-text-secondary, #525252);
+  }
+  .results-count strong { color: var(--color-text-primary, #171717); }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: var(--spacing-400, 1rem);
+    margin-bottom: var(--spacing-500, 1.25rem);
+  }
+
+  .record-meta {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-200, 0.5rem);
+    font-size: var(--type-size-200, 1rem);
+  }
+  .record-meta div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-300, 0.75rem);
+  }
+  .record-meta dt { color: var(--color-text-secondary, #525252); }
+  .record-meta dd {
+    margin: 0;
+    color: var(--color-text-primary, #171717);
+    text-align: right;
+  }
+
+  esa-pagination { display: block; }
+
+  .results-empty {
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-300, 0.5rem);
+    background: var(--color-surface, #fff);
+  }
+
+  .notes { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); margin: 0; padding-left: var(--spacing-500, 1.25rem); }
+  .notes li { max-width: 75ch; }
+</style>
+
+<script>
+  import '@esa/ecology/esa-filter-dropdown';
+  import '@esa/ecology/esa-pagination';
+
+  // options is an array property, not an attribute — set it once the element is defined.
+  const sets: Record<string, { label: string; value: string }[]> = {
+    status: [
+      { label: 'Draft', value: 'draft' },
+      { label: 'In review', value: 'review' },
+      { label: 'Approved', value: 'approved' },
+      { label: 'Needs info', value: 'needs-info' },
+      { label: 'Withdrawn', value: 'withdrawn' },
+    ],
+    county: [
+      { label: 'Alpine', value: 'alpine' },
+      { label: 'Contra Costa', value: 'contra-costa' },
+      { label: 'Marin', value: 'marin' },
+      { label: 'San Joaquin', value: 'san-joaquin' },
+      { label: 'Sonoma', value: 'sonoma' },
+      { label: 'Yolo', value: 'yolo' },
+    ],
+    type: [
+      { label: '401 Water Quality Certification', value: '401' },
+      { label: 'Streambed Alteration (1602)', value: '1602' },
+      { label: 'Section 404 Individual Permit', value: '404' },
+      { label: 'Coastal Development Permit', value: 'cdp' },
+      { label: 'Incidental Take Permit (2081)', value: '2081' },
+      { label: 'NPDES Construction Stormwater', value: 'npdes' },
+    ],
+  };
+  customElements.whenDefined('esa-filter-dropdown').then(() => {
+    document.querySelectorAll('esa-filter-dropdown').forEach((el) => {
+      const key = el.getAttribute('data-opts');
+      if (key && sets[key]) (el as any).options = sets[key];
+    });
+  });
+</script>

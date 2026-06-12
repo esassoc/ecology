@@ -1,0 +1,276 @@
+---
+// Record detail — pattern page. One record opened to full view: header with
+// identity + status, tabbed sections, a key-value facts grid, related items,
+// and an esa-side-dialog as the editor. Composition mined from the beacon
+// requirement tracker; built here from esa-* legos + page-CSS glue only.
+import PatternDoc from '../../layouts/PatternDoc.astro';
+import { withBase } from '@esa/docs/base';
+import EsaBadge from '@esa/ecology/esa-badge.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import EsaIconButton from '@esa/ecology/esa-icon-button.astro';
+import EsaPill from '@esa/ecology/esa-pill.astro';
+
+const facts = [
+  { term: 'Permit ID', value: 'CA0038776' },
+  { term: 'Program', value: 'NPDES — Industrial Stormwater' },
+  { term: 'Agency', value: 'San Francisco Bay RWQCB' },
+  { term: 'Facility', value: 'Mare Island Shipyard, Vallejo, CA' },
+  { term: 'Responsible party', value: 'Maria Chen — Environmental Lead' },
+  { term: 'Submitted', value: 'May 2, 2026' },
+  { term: 'Review due', value: 'Jul 10, 2026' },
+  { term: 'Expires', value: 'Jun 30, 2031' },
+];
+
+const related = [
+  { name: 'Industrial SWPPP — Dry Dock 2', type: 'Plan', meta: 'Updated Apr 18, 2026' },
+  { name: 'Q1 2026 Stormwater Monitoring Report', type: 'Report', meta: 'Accepted Apr 30, 2026' },
+  { name: 'Notice of Intent — NOI 2025-118', type: 'Filing', meta: 'Filed Nov 3, 2025' },
+];
+---
+<PatternDoc
+  name="Record detail"
+  slug="record-detail"
+  summary="A single record opened to full view: identity and status in the header, facts and relationships up front, history and files behind tabs, and edits in an <code>esa-side-dialog</code> so the reading surface stays read-only."
+  whenToUse="When a user clicks through from a list to one item — a permit, a requirement, a site — and needs its full state on one screen, with editing close at hand but out of the reading flow."
+  composedOf={['esa-badge', 'esa-button', 'esa-icon-button', 'esa-tab-layout', 'esa-pill', 'esa-side-dialog', 'esa-chip-group', 'esa-date-picker', 'esa-textarea']}
+>
+  <p>The specimen is one invented record — a stormwater discharge permit in review. The header answers <em>what is this and where does it stand</em>; the tabs hold everything deeper. <strong>Click Edit</strong> to open the live side-panel editor.</p>
+
+  <div class="pattern-stage">
+    <article class="record">
+      <header class="record__header">
+        <div class="record__heading">
+          <div class="record__title-row">
+            <h3 class="record__title">Stormwater Discharge Permit — Mare Island Shipyard</h3>
+            <EsaBadge value="In review" variant="warning" size="sm" />
+          </div>
+          <p class="record__meta">CA0038776 · San Francisco Bay RWQCB · Next action due Jul 10, 2026</p>
+        </div>
+        <div class="record__actions">
+          <span id="rd-edit"><EsaButton color="primary" icon="pencil" size="sm">Edit</EsaButton></span>
+          <EsaButton color="ghost" appearance="outline" icon="download" size="sm">Export</EsaButton>
+          <EsaIconButton icon="history" label="Change log" size="sm" />
+          <EsaIconButton icon="star" label="Watch this record" size="sm" />
+        </div>
+      </header>
+
+      <div class="record__body">
+        <esa-tab-layout id="rd-tabs">
+          <div slot="panel-0">
+            <dl class="facts">
+              {facts.map((f) => (
+                <div class="facts__item">
+                  <dt>{f.term}</dt>
+                  <dd>{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <section class="related">
+              <h4>Related records</h4>
+              <ul>
+                {related.map((r) => (
+                  <li>
+                    <a href="#">{r.name}</a>
+                    <EsaPill label={r.type} size="xs" removable={false} />
+                    <span class="related__meta">{r.meta}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+          <div slot="panel-1"><p class="record__stub">Status changes and comments land here, newest first.</p></div>
+          <div slot="panel-2"><p class="record__stub">Monitoring reports, the signed NOI, and other attachments land here.</p></div>
+        </esa-tab-layout>
+      </div>
+    </article>
+  </div>
+
+  <!-- Side-panel editor — invisible until the Edit button calls show(). Lives
+       outside the stage so the fixed-position drawer never fights its overflow. -->
+  <esa-side-dialog id="rd-editor" heading="Edit permit record" size="md">
+    <div class="editor__body">
+      <div class="editor__field">
+        <span class="editor__label">Status</span>
+        <esa-chip-group id="rd-status" label="Status" value="in-review" size="sm"></esa-chip-group>
+      </div>
+      <esa-date-picker label="Next action due" value="2026-07-10"></esa-date-picker>
+      <esa-textarea label="Status note" rows="3" value="Awaiting Q2 monitoring results before responding to the Regional Board's comment letter."></esa-textarea>
+    </div>
+    <span slot="footer" class="editor__foot">
+      <span id="rd-editor-cancel"><EsaButton color="ghost" appearance="outline">Cancel</EsaButton></span>
+      <span id="rd-editor-save"><EsaButton color="primary">Save</EsaButton></span>
+    </span>
+  </esa-side-dialog>
+
+  <h2>Composition notes</h2>
+  <ul class="notes">
+    <li><strong>Status is a badge, not a border.</strong> The record's state lives in an <code>esa-badge</code> beside the title — never a colored left edge on the card. The editor renders the same state as the chip group's active value.</li>
+    <li><strong>The facts grid is page CSS.</strong> A <code>{'<dl>'}</code> on an auto-fill grid — key-value layout is composition glue, not a component. Only the values reach for legos when they need color.</li>
+    <li><strong>Tabs hold the long tail.</strong> Overview carries what most visits need; Activity and Documents sit behind <code>esa-tab-layout</code> with count badges, so depth never pushes the header off screen.</li>
+    <li><strong>The side dialog is the editor's home.</strong> The detail surface stays read-only; <a href={withBase('/components/esa-side-dialog')}><code>esa-side-dialog</code></a> brings the form legos plus focus trap, Esc-to-close, and focus restore for free.</li>
+    <li><strong>Related items are rows that link.</strong> The anchor navigates; the <code>esa-pill</code> only labels the row's type — don't make pills the click target.</li>
+  </ul>
+</PatternDoc>
+
+<style>
+  /* ── Record card ── */
+  .record {
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: var(--radius-300, 12px);
+    overflow: hidden;
+  }
+  .record__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-400, 1rem);
+    padding: var(--spacing-500, 1.25rem) var(--spacing-500, 1.25rem) var(--spacing-400, 1rem);
+  }
+  .record__heading { min-width: 0; }
+  .record__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-300, 0.75rem);
+  }
+  .record__title {
+    margin: 0;
+    font-size: var(--type-size-500, 1.375rem);
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: 1.25;
+    color: var(--color-text-primary, #171717);
+  }
+  .record__meta {
+    margin: var(--spacing-100, 0.25rem) 0 0;
+    font-size: var(--type-size-200, 0.9375rem);
+    color: var(--color-text-secondary, #525252);
+  }
+  .record__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-200, 0.5rem);
+    flex-shrink: 0;
+  }
+  .record__body { padding: 0 var(--spacing-500, 1.25rem) var(--spacing-500, 1.25rem); }
+
+  /* ── Overview: key-value facts grid (page glue, not a component) ── */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-400, 1rem) var(--spacing-500, 1.25rem);
+    margin: var(--spacing-400, 1rem) 0 0;
+  }
+  .facts dt {
+    margin: 0 0 var(--spacing-050, 0.125rem);
+    font-size: var(--type-size-200, 0.9375rem);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--color-text-secondary, #525252);
+  }
+  .facts dd {
+    margin: 0;
+    font-size: var(--type-size-300, 1rem);
+    color: var(--color-text-primary, #171717);
+  }
+
+  /* ── Overview: related-items list ── */
+  .related { margin-top: var(--spacing-600, 1.5rem); }
+  .related h4 {
+    margin: 0 0 var(--spacing-200, 0.5rem);
+    font-size: var(--type-size-300, 1rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--color-text-primary, #171717);
+  }
+  .related ul { margin: 0; padding: 0; list-style: none; }
+  .related li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-300, 0.75rem);
+    padding: var(--spacing-200, 0.5rem) 0;
+  }
+  .related li + li { border-top: 1px solid var(--color-border-light, #efefef); }
+  .related a {
+    font-size: var(--type-size-300, 1rem);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--color-text-link, #005862);
+    text-decoration: none;
+  }
+  .related a:hover { text-decoration: underline; }
+  .related__meta {
+    margin-left: auto;
+    font-size: var(--type-size-150, 0.875rem);
+    color: var(--color-text-muted, #737373);
+  }
+
+  /* Stub panels — Overview is the real content; these just hold the seat. */
+  .record__stub {
+    margin: var(--spacing-400, 1rem) 0 0;
+    font-size: var(--type-size-300, 1rem);
+    color: var(--color-text-secondary, #525252);
+  }
+
+  /* ── Side-dialog editor body (slotted light DOM) ── */
+  .editor__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-400, 1rem);
+  }
+  .editor__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-150, 0.375rem);
+  }
+  .editor__label {
+    font-size: var(--type-size-200, 0.9375rem);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--color-text-primary, #171717);
+  }
+  .editor__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-200, 0.5rem);
+    width: 100%;
+  }
+
+  .notes { max-width: 75ch; }
+  .notes li { margin-bottom: var(--spacing-200, 0.5rem); }
+</style>
+
+<script>
+  // Interactive legos — Lit web components, self-registering on import.
+  import '@esa/ecology/esa-tab-layout';
+  import '@esa/ecology/esa-side-dialog';
+  import '@esa/ecology/esa-chip-group';
+  import '@esa/ecology/esa-date-picker';
+  import '@esa/ecology/esa-textarea';
+
+  // Tabs: array property, set in JS (not an attribute). Badges advertise depth.
+  const tabs = document.getElementById('rd-tabs') as (HTMLElement & { tabs: unknown }) | null;
+  if (tabs)
+    tabs.tabs = [
+      { label: 'Overview' },
+      { label: 'Activity', badge: 4 },
+      { label: 'Documents', badge: 3 },
+    ];
+
+  // Editor status control: same state the header badge shows, as a chip group.
+  const status = document.getElementById('rd-status') as (HTMLElement & { options: unknown }) | null;
+  if (status)
+    status.options = [
+      { value: 'draft', label: 'Draft', tone: 'neutral' },
+      { value: 'submitted', label: 'Submitted', tone: 'neutral-strong' },
+      { value: 'in-review', label: 'In review', tone: 'amber' },
+      { value: 'approved', label: 'Approved', tone: 'teal' },
+    ];
+
+  // Edit → show(); Cancel/Save → close(). Clicks bubble from the EsaButton's
+  // native <button> to the wrapper span (the documented trigger pattern).
+  type Drawer = HTMLElement & { show(): void; close(): void };
+  const editor = document.getElementById('rd-editor') as Drawer | null;
+  document.getElementById('rd-edit')?.addEventListener('click', () => editor?.show());
+  document.getElementById('rd-editor-cancel')?.addEventListener('click', () => editor?.close());
+  document.getElementById('rd-editor-save')?.addEventListener('click', () => editor?.close());
+</script>

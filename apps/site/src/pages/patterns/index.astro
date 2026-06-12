@@ -2,65 +2,59 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import { withBase } from '@esa/docs/base';
 
-const planned = [
-  { name: 'Page shells', desc: 'App bar + sidebar + content scaffolds, ready to fill.' },
-  { name: 'Data views', desc: 'Filterable tables, grids, and result lists with empty/loading states.' },
-  { name: 'Form flows', desc: 'Multi-section forms, validation, and review-and-submit patterns.' },
-  { name: 'Detail layouts', desc: 'Record headers, tab layouts, and side-panel compositions.' },
+const patterns = [
+  {
+    slug: 'app-shell',
+    name: 'App shell',
+    desc: 'Top app bar + sidebar navigation + content area — the chrome every prototype app starts from.',
+    from: 'Proven in beacon-design and biochar-design.',
+  },
+  {
+    slug: 'list-filters',
+    name: 'List + filters',
+    desc: 'Filter bar, result cards, pagination, and the empty state — the workhorse data view.',
+    from: 'Proven in cb-fish search and the beacon requirement tracker.',
+  },
+  {
+    slug: 'record-detail',
+    name: 'Record detail',
+    desc: 'Record header with status, tabbed sections, key-value facts, and a side-panel editor.',
+    from: 'Proven in the beacon requirement tracker.',
+  },
+  {
+    slug: 'form-section',
+    name: 'Form section',
+    desc: 'Labeled fields, helper and error states, and the action row — composed, not hand-rolled.',
+    from: 'The form-control idiom every spoke uses.',
+  },
 ];
 ---
 <DocsLayout title="Pattern Library — Ecology" activeHref="/patterns">
-  <section class="ph">
-    <img class="ph__mark" src={withBase('/brand/ecology-mark.svg')} alt="" width="96" height="96" aria-hidden="true" />
-    <span class="ph__badge">Coming soon</span>
-    <h1>Pattern Library</h1>
-    <p class="ph__lede">
-      The component library gives you the parts. The pattern library will give you the
-      <em>compositions</em> — multi-component layouts assembled from Ecology primitives, documented
-      the same way: live, themeable, and ready to lift into any project.
-    </p>
-    <a class="ph__back" href={withBase('/components/esa-button')}>← Browse the component library</a>
-  </section>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Patterns</span></nav>
+  <h1>Pattern Library</h1>
+  <p class="lede">The component library gives you the parts; patterns give you the <em>compositions</em> — page archetypes assembled from <code>esa-*</code> legos, live and themeable. Start a screen from a pattern and fill it with your content: this is the level non-developers compose at, and the level <code>/new-prototype</code> reaches for first.</p>
 
-  <section class="ph-planned">
-    <h2 class="ph-planned__title">In the works</h2>
-    <div class="ph-grid">
-      {planned.map((p) => (
-        <div class="ph-tile">
-          <h3>{p.name}</h3>
-          <p>{p.desc}</p>
-        </div>
-      ))}
-    </div>
-  </section>
+  <div class="pl-grid">
+    {patterns.map((p) => (
+      <a class="pl-card" href={withBase(`/patterns/${p.slug}`)}>
+        <h2>{p.name}</h2>
+        <p>{p.desc}</p>
+        <span class="pl-from">{p.from}</span>
+        <span class="pl-go">View the pattern →</span>
+      </a>
+    ))}
+  </div>
+
+  <p class="pl-note">Each pattern is built only from documented components under the hub's default theme — switch the theme and the whole pattern re-skins, which is the point. Patterns are promoted from spokes once they prove out; if a composition you keep rebuilding isn't here, that's a <code>/request-lego</code>.</p>
 </DocsLayout>
 
 <style>
-  .ph { padding: var(--spacing-600, 2rem) 0 var(--spacing-700, 3rem); max-width: 60ch; }
-  .ph__mark { width: 88px; height: 88px; display: block; margin-bottom: var(--spacing-400, 1rem); opacity: 0.9; }
-  .ph__badge {
-    display: inline-block;
-    font-family: var(--meta-mono, monospace);
-    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
-    color: var(--meta-clay, #699BCB);
-    background: color-mix(in srgb, var(--meta-clay, #699BCB) 12%, transparent);
-    padding: 3px 10px; border-radius: 999px;
-  }
-  .ph h1 {
-    font-family: var(--meta-serif, serif); font-weight: 400;
-    font-size: clamp(40px, 4vw + 1rem, 60px); letter-spacing: -0.02em; line-height: 1.02;
-    margin: var(--spacing-300, 0.75rem) 0 var(--spacing-400, 1rem); color: var(--meta-ink, #141413);
-  }
-  .ph__lede { font-family: var(--meta-serif, serif); font-size: 20px; line-height: 1.55; color: var(--meta-ink-2, #4d4c49); margin: 0 0 var(--spacing-500, 1.5rem); }
-  .ph__lede em { font-style: italic; }
-  .ph__back { font-size: 15px; font-weight: 500; color: var(--meta-clay, #699BCB); }
-
-  .ph-planned { margin-top: var(--spacing-800, 4rem); }
-  .ph-planned__title { font-family: var(--meta-serif, serif); font-weight: 400; font-size: 22px; margin: 0 0 var(--spacing-400, 1rem); color: var(--meta-ink, #141413); }
-  .ph-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400, 1rem); }
-  .ph-tile { border: 1px solid var(--meta-line, #e7e5dc); border-radius: 8px; padding: var(--spacing-500, 1.5rem); background: var(--meta-card, #fff); }
-  .ph-tile h3 { font-family: var(--meta-serif, serif); font-weight: 400; font-size: 18px; margin: 0 0 6px; color: var(--meta-ink, #141413); }
-  .ph-tile p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--meta-ink-2, #4d4c49); }
-
-  @media (max-width: 640px) { .ph-grid { grid-template-columns: 1fr; } }
+  .pl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--spacing-400, 1rem); margin: var(--spacing-500, 1.25rem) 0; }
+  .pl-card { display: flex; flex-direction: column; gap: var(--spacing-200, 0.5rem); border: 1px solid var(--color-border, #e5e5e5); border-radius: 12px; padding: var(--spacing-500, 1.25rem); transition: border-color var(--transition-fast, 150ms ease); }
+  .pl-card:hover { border-color: var(--color-primary, #005862); }
+  .pl-card h2 { margin: 0; font-size: 1.2rem; }
+  .pl-card p { margin: 0; color: var(--color-text-secondary, #444); }
+  .pl-from { color: var(--color-text-muted, #777); font-size: 0.9rem; }
+  .pl-go { color: var(--color-text-link, #005862); font-weight: 500; }
+  .pl-note { color: var(--color-text-secondary, #444); max-width: 70ch; }
 </style>

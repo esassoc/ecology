@@ -1,0 +1,49 @@
+---
+// Layout for pattern pages — multi-component compositions documented like
+// components, but at the page-archetype level. Patterns are the layer
+// non-devs compose at: pick a pattern, fill it with content.
+import DocsLayout from './DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+
+interface Props {
+  name: string;          // display name, e.g. "List + filters"
+  slug: string;          // e.g. "list-filters"
+  summary: string;
+  whenToUse: string;     // one or two sentences
+  composedOf: string[];  // esa-* component slugs, linked to their docs
+}
+const { name, slug, summary, whenToUse, composedOf } = Astro.props;
+---
+<DocsLayout title={`${name} — Patterns — Ecology`} activeHref={`/patterns/${slug}`}>
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <a href={withBase('/patterns')}>Patterns</a> <span>/</span> <span>{name}</span></nav>
+  <h1>{name}</h1>
+  <p class="lede" set:html={summary} />
+  <div class="pd-meta">
+    <p class="pd-when"><strong>When to use:</strong> {whenToUse}</p>
+    <div class="pd-composed">
+      <span>Composed from</span>
+      {composedOf.map((c) => (
+        <a class="pd-chip" href={withBase(`/components/${c}`)}><code>{c}</code></a>
+      ))}
+    </div>
+  </div>
+  <div class="pd-body"><slot /></div>
+</DocsLayout>
+
+<style>
+  .pd-meta { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); margin-bottom: var(--spacing-500, 1.25rem); }
+  .pd-when { margin: 0 0 var(--spacing-200, 0.5rem); color: var(--color-text-secondary, #444); }
+  .pd-composed { display: flex; flex-wrap: wrap; gap: var(--spacing-200, 0.5rem); align-items: center; color: var(--color-text-secondary, #444); }
+  .pd-chip { border: 1px solid var(--color-border, #e5e5e5); border-radius: 999px; padding: 1px 10px; background: var(--color-surface-sunken, #f7f7f5); }
+  .pd-chip:hover { border-color: var(--color-primary-border, #cfe5e5); }
+  /* The live specimen frame every pattern page uses. */
+  .pd-body :global(.pattern-stage) {
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 12px;
+    background: var(--color-background, #fafaf8);
+    padding: var(--spacing-500, 1.25rem);
+    margin: var(--spacing-300, 0.75rem) 0 var(--spacing-500, 1.25rem);
+    overflow: hidden;
+  }
+  .pd-body :global(.pattern-stage--flush) { padding: 0; }
+</style>

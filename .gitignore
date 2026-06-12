@@ -6,3 +6,6 @@ dist/
 .playwright-mcp/
 /.claude/agent-memory/
 **/.claude/settings.local.json
+
+# Client-adjacent material (mining reports quote internal sessions) — never committed
+/docs/private/

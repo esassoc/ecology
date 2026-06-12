@@ -1,0 +1,219 @@
+---
+import PatternDoc from '../../layouts/PatternDoc.astro';
+import EsaAppBar from '@esa/ecology/esa-app-bar.astro';
+import EsaIconLink from '@esa/ecology/esa-icon-link.astro';
+import EsaIconButton from '@esa/ecology/esa-icon-button.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import EsaCard from '@esa/ecology/esa-card.astro';
+import EsaBadge from '@esa/ecology/esa-badge.astro';
+---
+<PatternDoc
+  name="App shell"
+  slug="app-shell"
+  summary="Top app bar, collapsible sidebar navigation, and a scrolling content region — the chrome every prototype app starts from. <code>esa-app-bar</code> sets the brand color context, <code>esa-sidebar-nav</code> carries the navigation as data, and everything below the chrome is just page content."
+  whenToUse="Starting any multi-page prototype app. Stand the shell up first — every other pattern assumes this frame around it."
+  composedOf={['esa-app-bar', 'esa-sidebar-nav', 'esa-icon-link', 'esa-icon-button', 'esa-button', 'esa-card', 'esa-badge']}
+>
+  <h2>Live demo</h2>
+  <p>The miniature below is <strong>Estuary</strong>, an invented site-and-permit monitoring app for an environmental consulting team. It is the real composition, just framed at a fixed height: use the chevrons at the top of the sidebar to collapse it to an icon rail, expand <strong>Reports</strong> to see accordion children, and scroll the content region — the chrome never moves.</p>
+
+  <div class="pattern-stage pattern-stage--flush">
+    <div class="shell">
+      <EsaAppBar tone="brand" as="header">
+        <span slot="start" class="shell-brand">Estuary</span>
+        <EsaIconButton slot="end" icon="search" label="Search" size="sm" />
+        <EsaIconButton slot="end" icon="bell" label="Notifications" size="sm" />
+        <EsaIconLink slot="end" icon="circle-user" trailing="chevron-down">Maya Okafor</EsaIconLink>
+      </EsaAppBar>
+
+      <div class="shell-body">
+        <esa-sidebar-nav id="shell-nav"></esa-sidebar-nav>
+
+        <div class="shell-content">
+          <div class="shell-page-head">
+            <h3 class="shell-page-title">Dashboard</h3>
+            <EsaButton size="sm" icon="plus">New site</EsaButton>
+          </div>
+
+          <div class="shell-cards">
+            <EsaCard title="Active permits" subtitle="Across 14 monitored sites">
+              <ul class="shell-list">
+                <li>
+                  <span class="shell-list__label">Shoreline stabilization — Carquinez Strait</span>
+                  <EsaBadge variant="success" size="lg" value="Active" />
+                </li>
+                <li>
+                  <span class="shell-list__label">Eelgrass restoration — Tomales Bay</span>
+                  <EsaBadge variant="warning" size="lg" value="Renewal due" />
+                </li>
+                <li>
+                  <span class="shell-list__label">Maintenance dredging — Mare Island</span>
+                  <EsaBadge variant="info" size="lg" value="In review" />
+                </li>
+              </ul>
+            </EsaCard>
+
+            <EsaCard title="Upcoming field visits" subtitle="Next two weeks">
+              <ul class="shell-list">
+                <li>
+                  <span class="shell-list__date">Jun 16</span>
+                  <span class="shell-list__label">Sediment sampling — Suisun Marsh</span>
+                </li>
+                <li>
+                  <span class="shell-list__date">Jun 19</span>
+                  <span class="shell-list__label">Avian nesting survey — Hamilton Wetlands</span>
+                </li>
+                <li>
+                  <span class="shell-list__date">Jun 24</span>
+                  <span class="shell-list__label">Water quality — Petaluma River mouth</span>
+                </li>
+              </ul>
+            </EsaCard>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Composition notes</h2>
+  <ul>
+    <li><strong>Two flex passes make the frame.</strong> A column lays the bar over the body; a row lays the nav beside the content. Only <code>.shell-content</code> scrolls (<code>flex: 1</code> + <code>min-height: 0</code> + <code>overflow-y: auto</code>) — in a spoke the shell runs <code>height: 100vh</code>; here it's 440px to frame the miniature.</li>
+    <li><strong>The bar brands itself from tokens.</strong> <code>tone="brand"</code> sets background and currentColor from <code>--color-primary</code> / <code>--color-text-inverse</code>; the wordmark, icon buttons, and user menu trigger all inherit. A spoke re-brands the whole bar by re-pointing <code>--color-primary</code> in its theme file — never by touching the component.</li>
+    <li><strong>The sidebar re-skins through its component tokens.</strong> <code>--sidebar-width</code>, <code>--sidenav-bg</code>, <code>--sidenav-link-text-active</code>, and friends are set on the shell wrapper and inherit through the shadow boundary — that's exactly how this demo narrows the rail to 248px.</li>
+    <li><strong>Navigation is data, not markup.</strong> <code>esa-sidebar-nav</code> takes <code>items</code> as a JS array property (not an attribute): groups, badges, accordion children, and the active flag all live in the array, so a spoke swaps its whole nav by swapping data.</li>
+    <li><strong>Page content owns everything below the chrome.</strong> The scrolling region is plain composition space — here a page head plus <code>esa-card</code> / <code>esa-badge</code> legos. The shell makes no assumptions about what goes inside it.</li>
+  </ul>
+</PatternDoc>
+
+<script>
+  import '@esa/ecology/esa-sidebar-nav';
+
+  // Lucide glyphs as inline SVG strings (stroke: currentColor, so the active
+  // link color flows into the icon). esa-sidebar-nav takes raw SVG on item.icon.
+  const icon = (paths: string) =>
+    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+
+  const GLYPHS = {
+    dashboard:
+      '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+    sites:
+      '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+    permits:
+      '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+    reports:
+      '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    team: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    settings:
+      '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  };
+
+  const nav = document.getElementById('shell-nav') as any;
+  if (nav) {
+    nav.items = [
+      { label: 'Dashboard', href: '#', icon: icon(GLYPHS.dashboard), active: true, group: 'Monitoring' },
+      { label: 'Sites', href: '#', icon: icon(GLYPHS.sites), badge: 14, group: 'Monitoring' },
+      { label: 'Permits', href: '#', icon: icon(GLYPHS.permits), badge: 6, group: 'Monitoring' },
+      {
+        label: 'Reports',
+        icon: icon(GLYPHS.reports),
+        group: 'Monitoring',
+        children: [
+          { label: 'Monthly monitoring', href: '#' },
+          { label: 'Annual compliance', href: '#' },
+        ],
+      },
+      { label: 'Team', href: '#', icon: icon(GLYPHS.team), group: 'Workspace' },
+      { label: 'Settings', href: '#', icon: icon(GLYPHS.settings), group: 'Workspace' },
+    ];
+  }
+</script>
+
+<style>
+  /* ── The framed miniature ──
+     Public component tokens are set on the wrapper and inherit down — into the
+     app bar (light DOM) and through esa-sidebar-nav's shadow boundary. This is
+     per-instance theming with zero component edits. */
+  .shell {
+    --app-bar-pad-y: var(--spacing-300, 0.75rem);
+    --app-bar-pad-x: var(--spacing-500, 1.25rem);
+    --app-bar-gap: var(--spacing-400, 1rem);
+    --sidebar-width: 248px;
+
+    display: flex;
+    flex-direction: column;
+    height: 440px;
+    overflow: hidden;
+    background: var(--color-background, #fafaf8);
+  }
+
+  .shell-brand {
+    font-size: var(--type-size-300, 1.125rem);
+    font-weight: var(--font-weight-bold, 700);
+    white-space: nowrap;
+  }
+
+  .shell-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  esa-sidebar-nav { flex-shrink: 0; }
+
+  /* The only scrolling region — chrome stays put. */
+  .shell-content {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    padding: var(--spacing-500, 1.25rem);
+  }
+
+  .shell-page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-400, 1rem);
+    margin-bottom: var(--spacing-400, 1rem);
+  }
+  .shell-page-title {
+    margin: 0;
+    font-size: var(--type-size-400, 1.375rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--color-text-primary, #171717);
+  }
+
+  .shell-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-400, 1rem);
+  }
+
+  /* Rows inside the placeholder cards — content, not chrome. */
+  .shell-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .shell-list li {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-300, 0.75rem);
+    padding: var(--spacing-250, 0.625rem) 0;
+  }
+  .shell-list li + li {
+    border-top: 1px solid var(--color-border-light, #efefef);
+  }
+  .shell-list__label {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--type-size-250, 1rem);
+    color: var(--color-text-primary, #171717);
+  }
+  .shell-list__date {
+    flex-shrink: 0;
+    min-width: 3.25rem;
+    font-size: var(--type-size-250, 1rem);
+    color: var(--color-text-secondary, #525252);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

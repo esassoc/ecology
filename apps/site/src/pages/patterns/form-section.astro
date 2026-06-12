@@ -1,0 +1,213 @@
+---
+import PatternDoc from '../../layouts/PatternDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import EsaFormField from '@esa/ecology/esa-form-field.astro';
+import EsaFieldError from '@esa/ecology/esa-field-error.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+
+const pathwayOptions = JSON.stringify([
+  { label: 'Categorical exemption', value: 'cat-ex' },
+  { label: 'Initial study / Negative declaration', value: 'is-nd' },
+  { label: 'Initial study / Mitigated negative declaration', value: 'is-mnd' },
+  { label: 'Environmental impact report', value: 'eir' },
+]);
+---
+<PatternDoc
+  name="Form section"
+  slug="form-section"
+  summary="A titled group of <code>esa-form-field</code>-wrapped controls that ends in an action row — the unit intake forms, settings panels, and dialog bodies are assembled from."
+  whenToUse="Any screen that collects more than a couple of values — intake forms, settings panels, dialog bodies. One section per topic; stack sections to build a full form."
+  composedOf={['esa-form-field', 'esa-text-field', 'esa-select', 'esa-textarea', 'esa-radio-group', 'esa-field-error', 'esa-button']}
+>
+  <Section id="default" title="Default">
+    <p>
+      A project-details section from an environmental review intake. Each control sits in an
+      <code>esa-form-field</code> wrapper, which owns the label, required asterisk, and help text —
+      the controls themselves render chrome-free. Short, related fields (lead agency / county) pair
+      on one row; everything else runs single column. The action row closes the section: primary
+      submit first, ghost cancel beside it.
+    </p>
+    <div class="pattern-stage">
+      <section class="form-section" aria-labelledby="fs-default-title">
+        <header class="form-section__header">
+          <h3 id="fs-default-title" class="form-section__title">Project details</h3>
+          <p class="form-section__desc">Tell us about the project under review. Fields marked * are required.</p>
+        </header>
+
+        <EsaFormField label="Project name" required helpText="As it appears on the notice of preparation.">
+          <esa-text-field placeholder="e.g. Cypress Creek Trail Improvements" required></esa-text-field>
+        </EsaFormField>
+
+        <div class="field-pair">
+          <EsaFormField label="Lead agency" required>
+            <esa-text-field placeholder="e.g. City of San Rafael" required></esa-text-field>
+          </EsaFormField>
+          <EsaFormField label="County" required>
+            <esa-select class="fs-county" placeholder="Select a county" required></esa-select>
+          </EsaFormField>
+        </div>
+
+        <EsaFormField label="Project description" required helpText="Summarize the location, scope, and anticipated construction activity.">
+          <esa-textarea rows="4" placeholder="The project would construct…" required></esa-textarea>
+        </EsaFormField>
+
+        <EsaFormField label="Review pathway" required>
+          <esa-radio-group options={pathwayOptions}></esa-radio-group>
+        </EsaFormField>
+
+        <div class="form-section__actions">
+          <EsaButton type="submit">Save and continue</EsaButton>
+          <EsaButton color="ghost">Cancel</EsaButton>
+        </div>
+      </section>
+    </div>
+  </Section>
+
+  <Section id="validation" title="Validation state">
+    <p>
+      The same section after a failed submit: the name is missing and no pathway is selected.
+      Errors attach at the lowest level that can render them. Self-chromed controls
+      (<code>esa-text-field</code>, <code>esa-select</code>, <code>esa-textarea</code>) take
+      <code>error-text</code> — one attribute turns the border red, sets <code>aria-invalid</code>,
+      and renders the message in place of help text. Option groups have no error prop, so an
+      <code>esa-field-error</code> line goes directly after the control, inside the same wrapper.
+    </p>
+    <div class="pattern-stage">
+      <section class="form-section" aria-labelledby="fs-invalid-title">
+        <header class="form-section__header">
+          <h3 id="fs-invalid-title" class="form-section__title">Project details</h3>
+          <p class="form-section__desc">Tell us about the project under review. Fields marked * are required.</p>
+        </header>
+
+        <EsaFormField label="Project name" required>
+          <esa-text-field placeholder="e.g. Cypress Creek Trail Improvements" error-text="Project name is required." required></esa-text-field>
+        </EsaFormField>
+
+        <div class="field-pair">
+          <EsaFormField label="Lead agency" required>
+            <esa-text-field value="City of San Rafael" required></esa-text-field>
+          </EsaFormField>
+          <EsaFormField label="County" required>
+            <esa-select id="fs-county-filled" class="fs-county" placeholder="Select a county" required></esa-select>
+          </EsaFormField>
+        </div>
+
+        <EsaFormField label="Project description" required helpText="Summarize the location, scope, and anticipated construction activity.">
+          <esa-textarea rows="4" value="A 0.8-mile multi-use path along Cypress Creek between Lindaro Street and Andersen Drive, with two prefabricated pedestrian bridges and native riparian planting." required></esa-textarea>
+        </EsaFormField>
+
+        <EsaFormField label="Review pathway" required>
+          <esa-radio-group options={pathwayOptions}></esa-radio-group>
+          <EsaFieldError message="Select a review pathway." icon />
+        </EsaFormField>
+
+        <div class="form-section__actions">
+          <EsaButton type="submit">Save and continue</EsaButton>
+          <EsaButton color="ghost">Cancel</EsaButton>
+        </div>
+      </section>
+    </div>
+  </Section>
+
+  <Section id="composition-notes" title="Composition notes">
+    <ul class="notes">
+      <li>
+        Every control gets an <code>esa-form-field</code> wrapper, and the wrapper owns the field
+        chrome — label, required asterisk, help text. Leave the control's own <code>label</code> /
+        <code>help-text</code> attributes unset so the field isn't labeled twice.
+      </li>
+      <li>
+        Error messages live in components, never ad-hoc styled spans: <code>error-text</code> on
+        controls with built-in chrome, an <code>esa-field-error</code> directly after controls
+        without one (radio and checkbox groups). The error replaces the field's help text — don't
+        stack both.
+      </li>
+      <li>
+        The action row belongs to the section, not to any field: primary action first, ghost cancel
+        second, left-aligned on the same axis as the labels, separated from the fields by a divider.
+      </li>
+      <li>
+        Single column by default. Only pair short, related fields on one row, and collapse the pair
+        on narrow viewports. Controls run full width — the section's <code>max-width</code> sets the
+        measure, not the individual control.
+      </li>
+      <li>
+        One size across the section: everything defaults to <code>md</code> on the shared scale, so
+        inputs, selects, and buttons share heights and line up when they meet on a row.
+      </li>
+    </ul>
+  </Section>
+</PatternDoc>
+
+<style>
+  .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-500, 1.5rem);
+    max-width: 560px;
+  }
+
+  .form-section__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-100, 0.25rem);
+  }
+
+  .form-section__title {
+    margin: 0;
+    font-size: var(--type-size-400, 1.125rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--color-text-primary, #171717);
+  }
+
+  .form-section__desc {
+    margin: 0;
+    font-size: var(--type-size-300, 1rem);
+    color: var(--color-text-secondary, #525252);
+  }
+
+  .field-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-400, 1rem);
+  }
+
+  @media (max-width: 640px) {
+    .field-pair { grid-template-columns: 1fr; }
+  }
+
+  .form-section__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-300, 0.75rem);
+    padding-block-start: var(--spacing-400, 1rem);
+    border-block-start: 1px solid var(--color-border, #e5e5e5);
+  }
+
+  .notes li {
+    margin-block-end: var(--spacing-200, 0.5rem);
+    line-height: var(--line-height-relaxed, 1.6);
+  }
+</style>
+
+<script>
+  import '@esa/ecology/esa-text-field';
+  import '@esa/ecology/esa-textarea';
+  import '@esa/ecology/esa-select';
+  import '@esa/ecology/esa-radio-group';
+
+  const counties = [
+    'Alameda', 'Contra Costa', 'Marin', 'Napa', 'Sacramento',
+    'San Francisco', 'San Mateo', 'Santa Clara', 'Solano', 'Sonoma',
+  ].map((name) => ({ label: name, value: name.toLowerCase().replace(/\s+/g, '-') }));
+
+  customElements.whenDefined('esa-select').then(() => {
+    // Options are a property, not an attribute — assign to every county select.
+    document.querySelectorAll('esa-select.fs-county').forEach((el) => {
+      (el as any).options = counties;
+    });
+    // The validation specimen shows a partially completed section.
+    const filled = document.getElementById('fs-county-filled');
+    if (filled) (filled as any).value = 'marin';
+  });
+</script>
