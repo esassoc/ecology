@@ -75,7 +75,7 @@ import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width=
       --_sidenav-item-color: var(--sidenav-link-text, #525252);
       --_sidenav-item-color-active: var(--sidenav-link-text-active, #43608a);
       --_sidenav-item-bg-hover: var(--color-surface-sunken, #efefef);
-      --_sidenav-item-bg-active: var(--color-teal-50, #f3f8fb);
+      --_sidenav-item-bg-active: var(--color-primary-subtle, #f3f8fb);
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
       --_sidenav-transition: var(--transition-base, 200ms ease);
 
