@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 
 /** Active-state palette for a chip. Maps to Ecology semantic tokens inside the primitive. */
-export type EsaChipTone = 'neutral' | 'neutral-strong' | 'teal' | 'amber';
+export type EsaChipTone = 'neutral' | 'neutral-strong' | 'brand' | 'amber';
 
 /** One selectable chip in an esa-chip-group. */
 export interface EsaChipOption {
@@ -18,8 +18,10 @@ export interface EsaChipOption {
  * is active. Faithful translation of Beacon's Angular ui-chip-group:
  *   - Angular signal inputs (options/value)  → Lit reactive properties
  *   - radiogroup host + roving tabindex       → role="radiogroup" + per-chip tabindex
- *   - UiChipTone (neutral/neutral-strong/teal/amber) → EsaChipTone, mapped to Ecology
- *     semantic tokens (surface-sunken/border, darker neutral, teal/primary, warning/amber)
+ *   - UiChipTone (neutral/neutral-strong/brand/amber) → EsaChipTone, mapped to Ecology
+ *     semantic tokens (surface-sunken/border, darker neutral, primary/brand, warning/amber).
+ *     BREAKING (2026-06-12): the 'teal' tone value was renamed 'brand' — it always
+ *     rendered the semantic primary chain, and the hub default is no longer teal.
  *   - valueChange output                       → composed/bubbling 'change' CustomEvent
  *
  * MULTI-SELECT (Ecology extension, not in the Angular lib): set `multiple` and the
@@ -284,9 +286,9 @@ export class EsaChipGroup extends LitElement {
       border-color: var(--color-border-strong, #d4d4d4);
       color: var(--color-text-primary, #171717);
     }
-    /* Reads the SEMANTIC primary chain (not teal primitives) so spoke themes
-       re-skin it — hub default stays teal, a forest-green theme goes forest. */
-    .chip--active.chip--teal {
+    /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
+       default is brand blue, a forest-green theme goes forest. */
+    .chip--active.chip--brand {
       background: var(--color-primary-subtle, #f3f8fb);
       border-color: var(--color-primary-border, #cfe2ee);
       color: var(--color-primary, #43608a);

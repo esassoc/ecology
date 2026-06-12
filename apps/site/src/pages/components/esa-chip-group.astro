@@ -5,7 +5,7 @@ import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 
 const props = [
-  { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, teal, amber." },
+  { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, brand, amber." },
   { name: 'value', type: 'string', default: "''", description: 'The selected option value. Exactly one chip is active at a time.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Chip size on the shared form scale.' },
   { name: 'name', type: 'string', default: "''", description: 'Field name the selected value is submitted under.' },
@@ -17,7 +17,7 @@ const events = [
 ];
 ---
 <ComponentDoc name="Chip Group" category="Display" slug="esa-chip-group" type="wc" status="stable"
-  summary="Single-select pill toggles — a horizontal row where exactly one chip is active. Each option carries a <code>tone</code> (neutral, neutral-strong, teal, or amber) that colors its active state. Arrow keys move, Enter or Space select. Form-associated; emits a composed <code>change</code> event.">
+  summary="Single-select pill toggles — a horizontal row where exactly one chip is active. Each option carries a <code>tone</code> (neutral, neutral-strong, brand, or amber) that colors its active state. Arrow keys move, Enter or Space select. Form-associated; emits a composed <code>change</code> event.">
 
   <Section id="preview" title="Preview">
     <p>Set the <code>options</code> property to a list of <code>{'{ value, label, tone? }'}</code>. Exactly one chip is active, tracked by <code>value</code>.</p>
@@ -26,7 +26,7 @@ const events = [
 <script>
   document.querySelector('esa-chip-group').options = [
     { value: 'all', label: 'All', tone: 'neutral' },
-    { value: 'open', label: 'Open', tone: 'teal' },
+    { value: 'open', label: 'Open', tone: 'brand' },
     { value: 'flagged', label: 'Flagged', tone: 'amber' },
   ];
 </script>`}>
@@ -38,7 +38,7 @@ const events = [
     <p>Each option's <code>tone</code> sets the palette of its active state, mapped to Ecology semantic tokens. <code>neutral</code> is the default.</p>
     <Preview align="start" code={`{ value: 'n',  label: 'Neutral',        tone: 'neutral' }
 { value: 'ns', label: 'Neutral strong', tone: 'neutral-strong' }
-{ value: 't',  label: 'Teal',           tone: 'teal' }
+{ value: 't',  label: 'Brand',           tone: 'brand' }
 { value: 'a',  label: 'Amber',          tone: 'amber' }`}>
       <esa-chip-group data-demo="tones" label="Tone showcase" value="t"></esa-chip-group>
     </Preview>
@@ -96,13 +96,13 @@ const events = [
 
   const statusSet = [
     { value: 'all', label: 'All', tone: 'neutral' },
-    { value: 'open', label: 'Open', tone: 'teal' },
+    { value: 'open', label: 'Open', tone: 'brand' },
     { value: 'flagged', label: 'Flagged', tone: 'amber' },
   ];
   const toneSet = [
     { value: 'n', label: 'Neutral', tone: 'neutral' },
     { value: 'ns', label: 'Neutral strong', tone: 'neutral-strong' },
-    { value: 't', label: 'Teal', tone: 'teal' },
+    { value: 't', label: 'Brand', tone: 'brand' },
     { value: 'a', label: 'Amber', tone: 'amber' },
   ];
 
