@@ -11,6 +11,15 @@ export interface NavGroup {
   items: NavItem[];
 }
 
+export const guide: NavGroup = {
+  label: 'Guide',
+  items: [
+    { label: 'How it works', href: '/guide' },
+    { label: 'Setup', href: '/guide/setup' },
+    { label: 'Claude toolkit', href: '/guide/toolkit' },
+  ],
+};
+
 export const foundations: NavGroup = {
   label: 'Foundations',
   items: [
@@ -81,4 +90,4 @@ export const componentGroups: NavGroup[] = [
   },
 ];
 
-export const allGroups: NavGroup[] = [foundations, ...componentGroups];
+export const allGroups: NavGroup[] = [guide, foundations, ...componentGroups];

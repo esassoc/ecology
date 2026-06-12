@@ -1,0 +1,92 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+import { pluginVersion, commands, skills, hooks, scripts, legoCount } from '../../data/toolkit';
+---
+<DocsLayout title="Claude toolkit — Ecology" activeHref="/guide/toolkit">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Claude toolkit</span></nav>
+  <h1>The Claude toolkit <span class="version">spoke-kit v{pluginVersion}</span></h1>
+  <p class="lede">Everything Claude knows and enforces when you work in a spoke, in one inventory. It ships as the <strong>spoke-kit plugin</strong> from this repo's marketplace — install once, and updates arrive whenever the hub is pushed.</p>
+
+  <aside class="generated-note">
+    This page is <strong>generated at build time from the plugin source</strong>
+    (<code>plugins/spoke-kit/</code>) — it cannot drift from what's actually installed.
+  </aside>
+
+  <Section id="commands" title="Commands — the verbs you type">
+    <table class="tk">
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        {commands.map((c) => (
+          <tr><td><code>{c.verb}</code></td><td>{c.summary}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+
+  <Section id="skills" title="Skills — the knowledge Claude loads">
+    <table class="tk">
+      <thead><tr><th>Skill</th><th>What it covers</th></tr></thead>
+      <tbody>
+        {skills.map((s) => (
+          <tr><td><code>{s.name}</code></td><td>{s.description}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+
+  <Section id="hooks" title="Hooks — the guardrails that run automatically">
+    <table class="tk">
+      <thead><tr><th>Hook</th><th>Fires on</th><th>What it enforces</th></tr></thead>
+      <tbody>
+        {hooks.map((h) => (
+          <tr><td><code>{h.name}</code></td><td><code>{h.matcher}</code></td><td>{h.summary}</td></tr>
+        ))}
+      </tbody>
+    </table>
+    <p>Both guardrails have escape hatches that assert a human decision in the written content: <code>bcn-lego-checked: &lt;reason&gt;</code> (you walked the component lookup order and nothing fit) and <code>hub-edit-approved: &lt;reason&gt;</code> (a hub edit was explicitly approved in conversation). Use them honestly — they are claims, not magic words.</p>
+  </Section>
+
+  <Section id="scripts" title="Hub scripts">
+    <table class="tk">
+      <thead><tr><th>Script</th><th>What it does</th></tr></thead>
+      <tbody>
+        {scripts.map((s) => (
+          <tr><td><code>{s.name}</code></td><td>{s.summary}</td></tr>
+        ))}
+      </tbody>
+    </table>
+    <p>Spokes expose the doctor as <code>npm run doctor</code> — the first thing to run when anything seems broken.</p>
+  </Section>
+
+  <Section id="parts" title="And the parts themselves">
+    <p>{legoCount} <code>esa-*</code> components, browsable with live specimens in the <a href={withBase('/components/esa-button')}>component library</a>. The catalog on disk is always the source of truth: <code>ls node_modules/@esa/ecology/src/components/</code> from any spoke.</p>
+  </Section>
+</DocsLayout>
+
+<style>
+  .version {
+    font-size: 0.95rem;
+    font-weight: 500;
+    vertical-align: middle;
+    margin-left: var(--spacing-300, 0.75rem);
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--color-primary-subtle, #eef6f6);
+    border: 1px solid var(--color-primary-border, #cfe5e5);
+    color: var(--color-text-secondary, #444);
+  }
+  .generated-note {
+    border: 1px solid var(--color-border, #e5e5e5);
+    background: var(--color-surface-sunken, #f7f7f5);
+    border-radius: 10px;
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    margin-bottom: var(--spacing-500, 1.25rem);
+    color: var(--color-text-secondary, #444);
+  }
+  .tk { width: 100%; border-collapse: collapse; }
+  .tk th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
+  .tk td { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); vertical-align: top; }
+  .tk td:first-child { white-space: nowrap; }
+</style>

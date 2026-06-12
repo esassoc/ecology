@@ -78,6 +78,12 @@ and enables `spoke-kit@ecology`; anyone opening a spoke gets the install prompt.
 Teammate setup: `ONBOARDING.md` (repo root) + `scripts/doctor.mjs` (spokes run it
 as `npm run doctor`).
 
+The site's **Guide** section (`apps/site/src/pages/guide/`) is the human-facing
+knowledge base. `/guide/toolkit` and `/guide/setup` are **generated at build time**
+(from `plugins/spoke-kit/` + `ONBOARDING.md` via `src/data/toolkit.ts`) — never
+hand-edit their content. Only the `/guide` narrative (and `src/data/spokes.ts`,
+the spoke directory) needs a human edit when the architecture or spoke roster changes.
+
 - **Frozen identifiers**: marketplace `ecology`, plugin `spoke-kit`. The key
   `"spoke-kit@ecology"` is checked into every spoke — renaming either breaks them.
 - **Publishing**: plugin edits go live for spokes only after **push to GitHub**

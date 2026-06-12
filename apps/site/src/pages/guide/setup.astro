@@ -1,0 +1,41 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+// Single source of truth: this page renders the repo-root ONBOARDING.md (the
+// same file behind the claude.ai onboarding share link). Edit THAT file — at
+// the next build this page updates itself.
+import { Content as Onboarding } from '../../../../../ONBOARDING.md';
+---
+<DocsLayout title="Setup — Ecology" activeHref="/guide/setup">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Setup</span></nav>
+
+  <aside class="source-note">
+    This page renders <code>ONBOARDING.md</code> from the hub repo root at build
+    time — the same document teammates get as a Claude Code onboarding link.
+    To change it, edit that file (not this page).
+  </aside>
+
+  <div class="onboarding">
+    <Onboarding />
+  </div>
+</DocsLayout>
+
+<style>
+  .source-note {
+    border: 1px solid var(--color-primary-border, #cfe5e5);
+    background: var(--color-primary-subtle, #eef6f6);
+    border-radius: 10px;
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    margin-bottom: var(--spacing-500, 1.25rem);
+    color: var(--color-text-secondary, #444);
+  }
+  .onboarding :global(h1) { margin-top: 0; }
+  .onboarding :global(hr) { border: none; border-top: 1px solid var(--color-border, #e5e5e5); margin: var(--spacing-600, 1.5rem) 0; }
+  .onboarding :global(pre) {
+    background: var(--color-surface-sunken, #f5f5f5);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 8px;
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    overflow-x: auto;
+  }
+</style>

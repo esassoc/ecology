@@ -1,0 +1,95 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+import { spokes } from '../../data/spokes';
+import { legoCount } from '../../data/toolkit';
+---
+<DocsLayout title="How it works — Ecology" activeHref="/guide">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>How it works</span></nav>
+  <h1>How the system works</h1>
+  <p class="lede">Ecology is a hub-and-spoke design system built to be driven with Claude. The <strong>hub</strong> (this site's repo) owns the standard — tokens, components, and the Claude intelligence layer. Each project gets a <strong>spoke</strong>: a small prototype site that re-skins the hub and composes its parts into real screens. Nothing is ever copied; everything is referenced — so improvements land everywhere at once.</p>
+
+  <Section id="model" title="Hub and spokes">
+    <div class="diagram" aria-label="Hub and spoke diagram">
+      <div class="diagram__hub">
+        <b>ecology</b>
+        <span>tokens · {legoCount} esa-* components · docs shell · handoff · spoke-kit plugin</span>
+      </div>
+      <div class="diagram__arrows" aria-hidden="true">↓ ↓ ↓</div>
+      <div class="diagram__spokes">
+        {spokes.map((s) => (
+          <div class="diagram__spoke"><b>{s.name}</b><span>theme-{s.slug}.css + prototypes</span></div>
+        ))}
+      </div>
+    </div>
+    <p>A spoke is its own repo, cloned <em>next to</em> the hub. It consumes the hub's npm packages through <code>file:../ecology</code> links — so a spoke is always on the hub's latest, and a <code>git pull</code> in the hub updates every spoke on the machine. Patterns that prove broadly useful get <strong>promoted up</strong> into the hub; spokes never grow private forks of system pieces.</p>
+  </Section>
+
+  <Section id="tokens" title="Tokens: why styling changes are one-liners">
+    <p>Three tiers. <strong>Primitives</strong> are raw values (<code>--color-teal-900</code>, <code>--spacing-400</code>) — they never move. <strong>Semantic</strong> tokens express intent (<code>--color-primary</code>) and reference primitives. <strong>Component</strong> tokens are each component's public theming surface (<code>--form-border-color</code>, <code>--sidenav-bg</code>).</p>
+    <p>A spoke re-brands by overriding the semantic and component layers inside one <code>[data-theme="slug"]</code> block in its theme file — component internals are never touched. The working rule: <em>a styling change in a spoke is a token re-point until proven otherwise.</em> If no token hook exists for what you need, that's a gap to file (<code>/request-lego</code>), not a license to hand-style.</p>
+  </Section>
+
+  <Section id="components" title="Two kinds of component">
+    <p>Presentational pieces ship as <code>.astro</code> templates (badge, card, empty state). Interactive pieces ship as <strong>Lit Web Components</strong> (<code>.ts</code>) — framework-agnostic custom elements that work in any stack, which is what makes the system's output portable to whatever a dev team builds in. Browse all {legoCount} in the <a href={withBase('/components/esa-button')}>component library</a>.</p>
+  </Section>
+
+  <Section id="channels" title="Two distribution channels — runtime and intelligence">
+    <p>The hub distributes two different things, through two channels:</p>
+    <ul>
+      <li><strong>Runtime (npm packages):</strong> <code>@esa/tokens</code>, <code>@esa/ecology</code> (the components), <code>@esa/docs</code> (this documentation shell), <code>@esa/handoff</code> (the dev-handoff exporter + inspector). Spokes depend on these via <code>file:</code> links.</li>
+      <li><strong>Intelligence (the <code>spoke-kit</code> Claude plugin):</strong> the skills, guardrail hooks, and workflow commands Claude uses when you work in a spoke. Distributed from this repo as a Claude Code plugin marketplace — every spoke's settings enable it, updates flow with a <code>git push</code>. See the <a href={withBase('/guide/toolkit')}>Claude toolkit</a> for the live inventory.</li>
+    </ul>
+    <p>This split is the reason nothing drifts: code travels as packages, knowledge travels as a plugin, and both have exactly one source of truth — this repo.</p>
+  </Section>
+
+  <Section id="workflow" title="The prototyping workflow">
+    <p>Day to day, you drive Claude with four verbs (full descriptions on the <a href={withBase('/guide/toolkit')}>toolkit page</a>):</p>
+    <ol class="verbs">
+      <li><code>/new-prototype</code> — Claude interviews you in plain language, then composes the screen from the component library.</li>
+      <li>Iterate conversationally — "make the filters a sidebar", "this feels cramped".</li>
+      <li><code>/design-qa</code> — an on-demand quality pass: design rules, token discipline, build checks.</li>
+      <li><code>/ship</code> — syncs with teammates, builds, and publishes to the spoke's public site.</li>
+    </ol>
+    <p>Guardrails run automatically: Claude is blocked from hand-rolling UI primitives a component already provides, and blocked from editing the hub out of a spoke session (<code>/request-lego</code> files the gap instead).</p>
+  </Section>
+
+  <Section id="uses" title="What this is for">
+    <p>Three jobs, all served by the same system: <strong>business-development demos</strong> (a credible product vision on a public URL — see Biochar Atlas), <strong>client alignment</strong> (working prototypes to react to, instead of static decks — see CB Fish), and <strong>dev handoff</strong> (every prototype compiles to clean HTML/CSS, and the handoff tooling exports de-scoped bundles with a token contract a dev team — or their AI — can re-implement on any stack).</p>
+  </Section>
+
+  <Section id="spokes" title="The spokes today">
+    <div class="spoke-cards">
+      {spokes.map((s) => (
+        <article class="spoke-card">
+          <h3>{s.name}</h3>
+          <p>{s.purpose}</p>
+          <div class="spoke-card__links">
+            <a href={s.site} target="_blank" rel="noreferrer">Live site →</a>
+            <a href={s.repo} target="_blank" rel="noreferrer">Repo →</a>
+          </div>
+        </article>
+      ))}
+    </div>
+    <p class="spoke-note">Starting a new spoke takes one command — <code>/spoke-init</code> in the hub repo scaffolds it from the template, theme skeleton and guardrails included.</p>
+  </Section>
+</DocsLayout>
+
+<style>
+  .diagram { border: 1px solid var(--color-border, #e5e5e5); border-radius: 12px; padding: var(--spacing-500, 1.25rem); margin-bottom: var(--spacing-400, 1rem); text-align: center; }
+  .diagram__hub { display: inline-flex; flex-direction: column; gap: 2px; padding: var(--spacing-300, 0.75rem) var(--spacing-500, 1.25rem); border-radius: 10px; background: var(--color-primary-subtle, #eef6f6); border: 1px solid var(--color-primary-border, #cfe5e5); }
+  .diagram__hub b { font-size: 1.05rem; }
+  .diagram__hub span { font-size: 0.875rem; color: var(--color-text-muted, #667); }
+  .diagram__arrows { color: var(--color-text-muted, #667); letter-spacing: 2.5em; padding-left: 2.5em; margin: var(--spacing-200, 0.5rem) 0; }
+  .diagram__spokes { display: flex; gap: var(--spacing-300, 0.75rem); justify-content: center; flex-wrap: wrap; }
+  .diagram__spoke { display: flex; flex-direction: column; gap: 2px; padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; background: var(--color-surface, #fff); }
+  .diagram__spoke span { font-size: 0.875rem; color: var(--color-text-muted, #667); }
+  .verbs li { margin-bottom: var(--spacing-100, 0.25rem); }
+  .spoke-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400, 1rem); margin-bottom: var(--spacing-300, 0.75rem); }
+  .spoke-card { border: 1px solid var(--color-border, #e5e5e5); border-radius: 12px; padding: var(--spacing-400, 1rem); }
+  .spoke-card h3 { margin: 0 0 var(--spacing-100, 0.25rem); }
+  .spoke-card p { margin: 0 0 var(--spacing-300, 0.75rem); color: var(--color-text-secondary, #444); }
+  .spoke-card__links { display: flex; gap: var(--spacing-400, 1rem); }
+  .spoke-note { color: var(--color-text-secondary, #444); }
+</style>
