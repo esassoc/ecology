@@ -128,17 +128,17 @@ export class EsaTabLayout extends LitElement {
 
   static styles = css`
     :host {
-      --_tab-height: 44px;
+      --_tab-height: var(--tab-layout-height-md, 44px);
       --_tab-font-size: var(--type-size-200, 0.875rem);
-      --_tab-color: var(--color-text-secondary, #525252);
-      --_tab-color-active: var(--color-primary, #005862);
+      --_tab-color: var(--tab-layout-color, var(--color-text-secondary, #525252));
+      --_tab-color-active: var(--tab-layout-color-active, var(--color-primary, #005862));
       --_tab-color-hover: var(--color-text-primary, #171717);
-      --_tab-indicator-color: var(--color-primary, #005862);
+      --_tab-indicator-color: var(--tab-layout-indicator-color, var(--color-primary, #005862));
       --_tab-indicator-height: 2px;
       --_tab-bg-hover: var(--color-surface-sunken, #efefef);
       --_tab-gap: var(--spacing-100, 4px);
       --_tab-padding-x: var(--spacing-400, 16px);
-      --_tab-border: var(--color-border, #e5e5e5);
+      --_tab-border: var(--tab-layout-border-color, var(--color-border, #e5e5e5));
       --_tab-badge-bg: var(--color-primary, #005862);
       --_tab-badge-color: var(--color-text-inverse, #ffffff);
 
@@ -147,17 +147,17 @@ export class EsaTabLayout extends LitElement {
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
     :host([size='xs']) {
-      --_tab-height: 30px;
+      --_tab-height: var(--tab-layout-height-xs, 30px);
       --_tab-font-size: var(--type-size-100, 0.6875rem);
       --_tab-padding-x: var(--spacing-200, 8px);
     }
     :host([size='sm']) {
-      --_tab-height: 36px;
+      --_tab-height: var(--tab-layout-height-sm, 36px);
       --_tab-font-size: var(--type-size-150, 0.75rem);
       --_tab-padding-x: var(--spacing-300, 12px);
     }
     :host([size='lg']) {
-      --_tab-height: 52px;
+      --_tab-height: var(--tab-layout-height-lg, 52px);
       --_tab-font-size: var(--type-size-300, 1rem);
       --_tab-padding-x: var(--spacing-500, 24px);
     }

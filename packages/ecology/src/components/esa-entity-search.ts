@@ -412,13 +412,13 @@ export class EsaEntitySearch extends LitElement {
       top: 12%;
       left: 50%;
       transform: translateX(-50%);
-      width: 600px;
+      width: var(--entity-search-width, 600px);
       max-width: calc(100vw - 2rem);
-      max-height: 70vh;
-      background: var(--color-surface-elevated, #ffffff);
-      border: 1px solid var(--color-border, #dcdcdc);
-      border-radius: var(--radius-400, 0.75rem);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      max-height: var(--entity-search-max-height, 70vh);
+      background: var(--entity-search-bg, var(--color-surface-elevated, #ffffff));
+      border: 1px solid var(--entity-search-border-color, var(--color-border, #dcdcdc));
+      border-radius: var(--entity-search-radius, var(--radius-400, 0.75rem));
+      box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
@@ -530,7 +530,7 @@ export class EsaEntitySearch extends LitElement {
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-entity-search__row--active { background: var(--color-surface-sunken, #f3f7fc); }
+    .esa-entity-search__row--active { background: var(--entity-search-row-bg-active, var(--color-surface-sunken, #f3f7fc)); }
     .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-text-muted, #7c7c7c); }
     .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-primary, #1e5386); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }

@@ -88,18 +88,18 @@ const iconPath = ICON_PATHS[variant];
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--color-info-subtle, #eff6ff);
-    --_alert-border: var(--color-info-border, #bfdbfe);
+    --_alert-bg: var(--alert-box-bg, var(--color-info-subtle, #eff6ff));
+    --_alert-border: var(--alert-box-border-color, var(--color-info-border, #bfdbfe));
     --_alert-icon-color: var(--color-info, #3b82f6);
-    --_alert-title-color: var(--color-text-primary, #171717);
-    --_alert-text-color: var(--color-text-secondary, #525252);
+    --_alert-title-color: var(--alert-box-title-color, var(--color-text-primary, #171717));
+    --_alert-text-color: var(--alert-box-text-color, var(--color-text-secondary, #525252));
 
     display: flex;
     align-items: flex-start;
     gap: var(--spacing-300, 0.75rem);
-    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    padding: var(--alert-box-padding, var(--spacing-300, 0.75rem) var(--spacing-400, 1rem));
     border: 1px solid var(--_alert-border);
-    border-radius: var(--radius-200, 0.5rem);
+    border-radius: var(--alert-box-radius, var(--radius-200, 0.5rem));
     background: var(--_alert-bg);
     font-size: var(--type-size-150, 0.875rem);
     line-height: 1.5;

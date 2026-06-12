@@ -62,11 +62,11 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
 
 <style>
   .esa-avatar {
-    --_avatar-size: 40px;
+    --_avatar-size: var(--avatar-size-md, 40px);
     --_avatar-font-size: 16px;
-    --_avatar-radius: var(--radius-full, 9999px);
-    --_avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
-    --_avatar-text: var(--color-text-inverse, #fff);
+    --_avatar-radius: var(--avatar-radius, var(--radius-full, 9999px));
+    --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
+    --_avatar-text: var(--avatar-text-color, var(--color-text-inverse, #fff));
 
     display: inline-flex;
     align-items: center;
@@ -84,9 +84,9 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     box-sizing: border-box;
   }
 
-  .esa-avatar--xs { --_avatar-size: 20px; --_avatar-font-size: 9px; }
-  .esa-avatar--sm { --_avatar-size: 28px; --_avatar-font-size: 11px; }
-  .esa-avatar--lg { --_avatar-size: 56px; --_avatar-font-size: 22px; }
+  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: 9px; }
+  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: 11px; }
+  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: 22px; }
 
   .esa-avatar--square { --_avatar-radius: var(--radius-200, 0.5rem); }
 

@@ -156,18 +156,18 @@ export class EsaDialog extends LitElement {
 
   static styles = css`
     :host {
-      --_dialog-bg: var(--color-surface-elevated, #ffffff);
-      --_dialog-border-radius: var(--radius-400, 0.75rem);
+      --_dialog-bg: var(--dialog-bg, var(--color-surface-elevated, #ffffff));
+      --_dialog-border-radius: var(--dialog-radius, var(--radius-400, 0.75rem));
       --_dialog-padding: var(--spacing-500, 1.5rem);
-      --_dialog-header-border: var(--color-border-light, #efefef);
+      --_dialog-header-border: var(--dialog-border-color, var(--color-border-light, #efefef));
       --_dialog-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
-      --_dialog-width: 480px;
+      --_dialog-width: var(--dialog-width, 480px);
       --_dialog-max-height: 85vh;
     }
     /* base :host = md (480px). xs is one step below sm. */
-    :host([size='xs']) { --_dialog-width: 280px; }
-    :host([size='sm']) { --_dialog-width: 360px; }
-    :host([size='lg']) { --_dialog-width: 640px; }
+    :host([size='xs']) { --_dialog-width: var(--dialog-width-xs, 280px); }
+    :host([size='sm']) { --_dialog-width: var(--dialog-width-sm, 360px); }
+    :host([size='lg']) { --_dialog-width: var(--dialog-width-lg, 640px); }
     :host([size='fullscreen']) {
       --_dialog-width: 100vw;
       --_dialog-max-height: 100vh;
@@ -177,7 +177,7 @@ export class EsaDialog extends LitElement {
     .esa-dialog-backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+      background: var(--dialog-backdrop-bg, var(--color-backdrop, rgba(0, 0, 0, 0.5)));
       z-index: var(--z-modal-backdrop, 300);
     }
     .esa-dialog-panel {
@@ -218,7 +218,7 @@ export class EsaDialog extends LitElement {
       font-size: var(--type-size-400, 1.125rem);
       font-weight: var(--font-weight-semibold, 550);
       margin: 0;
-      color: var(--color-text-primary, #171717);
+      color: var(--dialog-color, var(--color-text-primary, #171717));
     }
     .esa-dialog__close {
       display: flex;
@@ -243,7 +243,7 @@ export class EsaDialog extends LitElement {
       padding: var(--_dialog-padding);
       overflow-y: auto;
       flex: 1;
-      color: var(--color-text-primary, #171717);
+      color: var(--dialog-color, var(--color-text-primary, #171717));
     }
     .esa-dialog__footer {
       padding: var(--spacing-300, 0.75rem) var(--_dialog-padding);

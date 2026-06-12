@@ -264,10 +264,10 @@ export class EsaSearchPanel extends LitElement {
       position: fixed;
       top: 0;
       bottom: 0;
-      width: 400px;
+      width: var(--search-panel-width, 400px);
       max-width: 90vw;
-      background: var(--color-surface-elevated, #ffffff);
-      box-shadow: var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1));
+      background: var(--search-panel-bg, var(--color-surface-elevated, #ffffff));
+      box-shadow: var(--search-panel-shadow, var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1)));
       z-index: var(--z-modal, 9999);
       display: flex;
       flex-direction: column;
@@ -280,7 +280,7 @@ export class EsaSearchPanel extends LitElement {
 
     .panel--left {
       left: 0;
-      box-shadow: var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1));
+      box-shadow: var(--search-panel-shadow, var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1)));
       animation: esa-search-slide-in-left 200ms ease-out;
     }
 
@@ -373,7 +373,7 @@ export class EsaSearchPanel extends LitElement {
     }
 
     .result:hover {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--search-panel-result-bg-hover, var(--color-surface-sunken, #efefef));
     }
 
     .result-content {

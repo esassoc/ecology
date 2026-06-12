@@ -135,12 +135,12 @@ export class EsaDropdownMenu extends LitElement {
     .esa-dropdown-menu__panel {
       position: absolute;
       z-index: var(--z-dropdown, 50);
-      background: var(--color-surface-elevated, #ffffff);
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-200, 0.5rem);
+      background: var(--dropdown-menu-bg, var(--color-surface-elevated, #ffffff));
+      border: 1px solid var(--dropdown-menu-border-color, var(--color-border, #e5e5e5));
+      border-radius: var(--dropdown-menu-radius, var(--radius-200, 0.5rem));
       box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      min-width: 160px;
-      max-width: 280px;
+      min-width: var(--dropdown-menu-min-width, 160px);
+      max-width: var(--dropdown-menu-max-width, 280px);
       padding: var(--spacing-100, 0.25rem);
       overflow-y: auto;
       max-height: 320px;
@@ -168,7 +168,7 @@ export class EsaDropdownMenu extends LitElement {
       border: none;
       border-radius: var(--radius-100, 0.25rem);
       background: transparent;
-      color: var(--color-text-primary, #171717);
+      color: var(--dropdown-menu-item-color, var(--color-text-primary, #171717));
       font-family: inherit;
       font-size: var(--type-size-200, 0.9375rem);
       cursor: pointer;

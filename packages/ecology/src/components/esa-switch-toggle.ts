@@ -99,9 +99,9 @@ export class EsaSwitchToggle extends LitElement {
       --_track-w: 40px;
       --_track-h: 22px;
       --_thumb: 18px;
-      --_bg-off: var(--color-border-strong, #d4d4d4);
-      --_bg-on: var(--color-primary, #005862);
-      --_thumb-color: var(--color-surface, #fff);
+      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-strong, #d4d4d4));
+      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-primary, #005862));
+      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-surface, #fff));
       display: inline-block;
     }
     :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
@@ -117,7 +117,7 @@ export class EsaSwitchToggle extends LitElement {
       border: 0;
       background: none;
       font: inherit;
-      color: var(--color-text-primary, #171717);
+      color: var(--switch-toggle-label-color, var(--color-text-primary, #171717));
       cursor: pointer;
     }
     .root:disabled { cursor: not-allowed; }

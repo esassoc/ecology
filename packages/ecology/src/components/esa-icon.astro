@@ -143,7 +143,7 @@ const decorative = !label;
 
 <style>
   .esa-icon {
-    --_icon-size: var(--icon-size-medium, 20px);
+    --_icon-size: var(--icon-size-md, var(--icon-size-medium, 20px));
 
     display: inline-flex;
     align-items: center;
@@ -158,9 +158,9 @@ const decorative = !label;
      above). Match them all — previously only --small/--large existed, so every size
      fell through to the 20px default and the svg width/height attribute was overridden. */
   .esa-icon--xs { --_icon-size: var(--icon-size-xs, 14px); }
-  .esa-icon--sm { --_icon-size: var(--icon-size-small, 16px); }
-  .esa-icon--md { --_icon-size: var(--icon-size-medium, 20px); }
-  .esa-icon--lg { --_icon-size: var(--icon-size-large, 24px); }
+  .esa-icon--sm { --_icon-size: var(--icon-size-sm, var(--icon-size-small, 16px)); }
+  .esa-icon--md { --_icon-size: var(--icon-size-md, var(--icon-size-medium, 20px)); }
+  .esa-icon--lg { --_icon-size: var(--icon-size-lg, var(--icon-size-large, 24px)); }
   .esa-icon--xl { --_icon-size: var(--icon-size-xl, 28px); }
 
   .esa-icon svg {

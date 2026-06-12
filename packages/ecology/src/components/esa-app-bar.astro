@@ -13,6 +13,9 @@
 //
 // Tune spacing per instance with the public component tokens --app-bar-gap /
 // --app-bar-pad-x / --app-bar-pad-y (each falls back to an ecology spacing step).
+// Each tone's surface is also hookable: --app-bar-bg/--app-bar-text (surface),
+// --app-bar-brand-bg/--app-bar-brand-text, --app-bar-brand-strong-bg/
+// --app-bar-brand-strong-text — defaults are the semantic chains above.
 type AppBarTone = 'surface' | 'brand' | 'brand-strong';
 
 interface Props {
@@ -54,16 +57,16 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
 
     display: block;
     width: 100%;
-    background: var(--color-surface, #fff);
-    color: var(--color-text-primary, #171717);
+    background: var(--app-bar-bg, var(--color-surface, #fff));
+    color: var(--app-bar-text, var(--color-text-primary, #171717));
   }
   .esa-app-bar--brand {
-    background: var(--color-primary, #005862);
-    color: var(--color-text-inverse, #fff);
+    background: var(--app-bar-brand-bg, var(--color-primary, #005862));
+    color: var(--app-bar-brand-text, var(--color-text-inverse, #fff));
   }
   .esa-app-bar--brand-strong {
-    background: var(--color-surface-inverse, #171717);
-    color: var(--color-text-inverse, #fff);
+    background: var(--app-bar-brand-strong-bg, var(--color-surface-inverse, #171717));
+    color: var(--app-bar-brand-strong-text, var(--color-text-inverse, #fff));
   }
 
   .esa-app-bar__row {

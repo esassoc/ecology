@@ -67,10 +67,10 @@ const cls = [
 
 <style>
   .esa-icon-link {
-    --_il-font: 1rem; /* md = 16px */
+    --_il-font: var(--icon-link-font-size-md, 1rem); /* md = 16px */
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-150, 6px);
+    gap: var(--icon-link-gap, var(--spacing-150, 6px));
     padding: 0;
     margin: 0;
     border: 0;
@@ -84,7 +84,7 @@ const cls = [
     cursor: pointer;
     white-space: nowrap;
   }
-  .esa-icon-link--sm { --_il-font: 0.875rem; } /* 14px */
+  .esa-icon-link--sm { --_il-font: var(--icon-link-font-size-sm, 0.875rem); } /* 14px */
 
   .esa-icon-link--regular  { font-weight: var(--font-weight-regular, 400); }
   .esa-icon-link--medium   { font-weight: var(--font-weight-medium, 500); }

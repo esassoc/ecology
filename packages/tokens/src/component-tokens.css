@@ -159,3 +159,290 @@
   --breadcrumbs-pill-radius: var(--radius-full);
   --breadcrumbs-pill-padding: var(--spacing-100) var(--spacing-250);
 }
+
+/* ============================================================
+ * HOOKIFY (2026-06-12) — per-component theming surfaces added per
+ * packages/tokens/SPEC.md. Each default = the exact chain the
+ * component read before the hook existed (zero-regression rule).
+ * Umbrella hooks with divergent per-read fallbacks stay ad-hoc
+ * (documented on each component page) and are NOT declared here.
+ * ============================================================ */
+:root {
+
+  /* esa-alert-box */
+  --alert-box-bg: var(--color-info-subtle, #eff6ff);
+  --alert-box-border-color: var(--color-info-border, #bfdbfe);
+  --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+  --alert-box-radius: var(--radius-200, 0.5rem);
+  --alert-box-text-color: var(--color-text-secondary, #525252);
+  --alert-box-title-color: var(--color-text-primary, #171717);
+
+  /* esa-app-bar */
+  --app-bar-bg: var(--color-surface, #fff);
+  --app-bar-brand-bg: var(--color-primary, #005862);
+  --app-bar-brand-strong-bg: var(--color-surface-inverse, #171717);
+  --app-bar-brand-strong-text: var(--color-text-inverse, #fff);
+  --app-bar-brand-text: var(--color-text-inverse, #fff);
+  --app-bar-gap: var(--spacing-600, 32px);
+  --app-bar-pad-x: var(--spacing-600, 32px);
+  --app-bar-pad-y: var(--spacing-400, 16px);
+  --app-bar-text: var(--color-text-primary, #171717);
+
+  /* esa-avatar */
+  --avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
+  --avatar-radius: var(--radius-full, 9999px);
+  --avatar-size-lg: 56px;
+  --avatar-size-md: 40px;
+  --avatar-size-sm: 28px;
+  --avatar-size-xs: 20px;
+  --avatar-text-color: var(--color-text-inverse, #fff);
+
+  /* esa-back-to-top */
+  --back-to-top-bg: var(--color-primary, #005862);
+  --back-to-top-bottom: var(--spacing-500, 1.5rem);
+  --back-to-top-radius: var(--radius-full, 9999px);
+  --back-to-top-right: var(--spacing-500, 1.5rem);
+  --back-to-top-size: 44px;
+  --back-to-top-text: var(--color-text-inverse, #fff);
+
+  /* esa-side-dialog */
+  --backdrop-filter: none;
+
+  /* esa-badge */
+  --badge-bg: var(--color-primary, #005862);
+  --badge-height-lg: 24px;
+  --badge-height-md: 20px;
+  --badge-height-sm: 16px;
+  --badge-height-xs: 14px;
+  --badge-radius: var(--radius-full, 9999px);
+  --badge-text-color: var(--color-text-inverse, #fff);
+
+  /* esa-card */
+  --card-bg: var(--color-surface, #ffffff);
+  --card-border-color: var(--color-border, #e5e5e5);
+  --card-footer-bg: var(--color-surface-sunken, #efefef);
+  --card-header-bg: transparent;
+  --card-header-border-color: var(--color-border-light, #efefef);
+  --card-header-color: var(--color-text-primary, #171717);
+  --card-padding: var(--spacing-500, 1.5rem);
+  --card-radius: var(--radius-300, 0.5rem);
+
+  /* esa-collapsible */
+  --collapsible-bg: var(--color-surface, #fff);
+  --collapsible-border-color: var(--color-border, #e5e5e5);
+  --collapsible-padding-x: var(--spacing-400, 1rem);
+  --collapsible-radius: var(--radius-300, 0.5rem);
+  --collapsible-title-color: var(--color-text-primary, #171717);
+
+  /* esa-file-list */
+  --color-link: var(--color-primary, #005862);
+
+  /* esa-entity-search */
+  --color-primary-contrast: #fff;
+
+  /* esa-command-palette */
+  --command-palette-bg: var(--color-surface-elevated, #ffffff);
+  --command-palette-border-color: var(--color-border, #e5e5e5);
+  --command-palette-item-bg-active: var(--color-surface-sunken, #efefef);
+  --command-palette-max-height: 440px;
+  --command-palette-radius: var(--radius-400, 0.75rem);
+  --command-palette-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --command-palette-width: 560px;
+
+  /* esa-confirm-dialog */
+  --confirm-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+  --confirm-dialog-bg: var(--color-surface-elevated, #ffffff);
+  --confirm-dialog-border-color: var(--color-border-light, #efefef);
+  --confirm-dialog-radius: var(--radius-400, 0.75rem);
+  --confirm-dialog-width: 360px;
+
+  /* esa-container */
+  --container-gutter: var(--spacing-600, 2rem);
+
+  /* esa-danger-zone */
+  --danger-zone-bg: var(--color-danger-subtle, #fef2f2);
+  --danger-zone-border-color: var(--color-danger-border, #fecaca);
+  --danger-zone-description-color: var(--color-text-secondary, #525252);
+  --danger-zone-heading-color: var(--color-red-800, #991b1b);
+  --danger-zone-padding: var(--spacing-300, 0.75rem);
+  --danger-zone-radius: var(--radius-200, 0.5rem);
+
+  /* esa-dialog */
+  --dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+  --dialog-bg: var(--color-surface-elevated, #ffffff);
+  --dialog-border-color: var(--color-border-light, #efefef);
+  --dialog-color: var(--color-text-primary, #171717);
+  --dialog-radius: var(--radius-400, 0.75rem);
+  --dialog-width: 480px;
+  --dialog-width-lg: 640px;
+  --dialog-width-sm: 360px;
+  --dialog-width-xs: 280px;
+
+  /* esa-dropdown-menu */
+  --dropdown-menu-bg: var(--color-surface-elevated, #ffffff);
+  --dropdown-menu-border-color: var(--color-border, #e5e5e5);
+  --dropdown-menu-item-color: var(--color-text-primary, #171717);
+  --dropdown-menu-max-width: 280px;
+  --dropdown-menu-min-width: 160px;
+  --dropdown-menu-radius: var(--radius-200, 0.5rem);
+
+  /* esa-empty-state */
+  --empty-state-description-color: var(--color-text-secondary, #525252);
+  --empty-state-gap: var(--spacing-200, 0.5rem);
+  --empty-state-icon-color: var(--color-text-muted, #737373);
+  --empty-state-icon-size-lg: 64px;
+  --empty-state-icon-size-md: 48px;
+  --empty-state-icon-size-sm: 32px;
+  --empty-state-icon-size-xs: 24px;
+  --empty-state-title-color: var(--color-text-primary, #171717);
+
+  /* esa-entity-search */
+  --entity-search-bg: var(--color-surface-elevated, #ffffff);
+  --entity-search-border-color: var(--color-border, #dcdcdc);
+  --entity-search-max-height: 70vh;
+  --entity-search-radius: var(--radius-400, 0.75rem);
+  --entity-search-row-bg-active: var(--color-surface-sunken, #f3f7fc);
+  --entity-search-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --entity-search-width: 600px;
+
+  /* esa-range-slider */
+  --fill-percent: 0%;
+
+  /* esa-select */
+  --form-label-font-size: var(--_field-font-size);
+  --form-label-font-weight: var(--font-weight-medium, 450);
+
+  /* esa-header-nav */
+  --header-nav-avatar-bg: var(--color-primary, #005862);
+  --header-nav-avatar-size: 32px;
+  --header-nav-avatar-text: var(--color-text-inverse, #fff);
+  --header-nav-border-color: var(--color-border, #e5e5e5);
+  --header-nav-menu-item-color: var(--color-text-secondary, #525252);
+
+  /* esa-icon-link */
+  --icon-link-font-size-md: 1rem;
+  --icon-link-font-size-sm: 0.875rem;
+  --icon-link-gap: var(--spacing-150, 6px);
+
+  /* esa-file-upload */
+  --icon-size-large: 24px;
+  --icon-size-medium: 20px;
+
+  /* esa-combobox */
+  --icon-size-small: 16px;
+
+  /* esa-kbd */
+  --kbd-bg: var(--color-surface);
+  --kbd-border-color: var(--color-border);
+  --kbd-color: var(--color-text-muted);
+  --kbd-radius: 4px;
+
+  /* esa-link-column */
+  --link-column-heading-font-size: var(--type-size-200, 1rem);
+  --link-column-item-font-size: var(--type-size-150, 0.875rem);
+  --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
+
+  /* esa-loading-overlay */
+  --loading-overlay-bg: var(--color-surface, #fff);
+  --loading-overlay-bg-transparent: rgba(255, 255, 255, 0.8);
+  --loading-overlay-message-color: var(--color-text-secondary, #525252);
+  --loading-spinner-color: var(--color-primary, #005862);
+  --loading-spinner-track-color: var(--color-border-light, #efefef);
+
+  /* esa-nav-dropdown */
+  --nav-dropdown-panel-bg: var(--color-surface, #fff);
+  --nav-dropdown-panel-border-color: var(--color-border, #e5e5e5);
+  --nav-dropdown-panel-min-width: 240px;
+  --nav-dropdown-panel-padding: var(--spacing-300, 12px);
+  --nav-dropdown-panel-radius: var(--radius-200, 8px);
+  --nav-dropdown-panel-shadow: var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12));
+  --nav-dropdown-panel-text: var(--color-text-primary, #171717);
+
+  /* esa-pagination */
+  --pagination-bg: var(--color-surface, #ffffff);
+  --pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
+  --pagination-button-color: var(--color-text-primary, #171717);
+  --pagination-font-size: var(--type-size-200, 14px);
+  --pagination-padding-x: var(--spacing-400, 16px);
+  --pagination-padding-y: var(--spacing-200, 8px);
+  --pagination-text-color: var(--color-text-secondary, #525252);
+
+  /* esa-pill */
+  --pill-bg: var(--color-surface-sunken, #efefef);
+  --pill-border-color: var(--color-border-light, #efefef);
+  --pill-height-lg: 34px;
+  --pill-height-md: 28px;
+  --pill-height-sm: 22px;
+  --pill-height-xs: 18px;
+  --pill-radius: var(--radius-full, 9999px);
+  --pill-text-color: var(--color-text-primary, #171717);
+
+  /* esa-pillbox */
+  --pillbox-gap-large: var(--spacing-300, 12px);
+  --pillbox-gap-medium: var(--spacing-200, 8px);
+  --pillbox-gap-small: var(--spacing-100, 4px);
+
+  /* esa-popover */
+  --popover-bg: var(--color-surface, #ffffff);
+  --popover-border-color: var(--color-border, #e5e5e5);
+  --popover-color: var(--color-text-primary, #171717);
+  --popover-max-width: none;
+  --popover-radius: var(--radius-200, 0.5rem);
+
+  /* esa-progress-bar */
+  --progress-bar-fill-bg: var(--color-primary, #005862);
+  --progress-bar-height-lg: 12px;
+  --progress-bar-height-md: 8px;
+  --progress-bar-height-sm: 4px;
+  --progress-bar-height-xs: 2px;
+  --progress-bar-radius: var(--radius-full, 9999px);
+  --progress-bar-track-bg: var(--color-surface-sunken, #efefef);
+
+  /* esa-search-panel */
+  --search-panel-bg: var(--color-surface-elevated, #ffffff);
+  --search-panel-result-bg-hover: var(--color-surface-sunken, #efefef);
+  --search-panel-width: 400px;
+
+  /* esa-side-dialog */
+  --side-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+  --side-dialog-bg: var(--color-surface, #fff);
+  --side-dialog-border-color: var(--color-border, #e5e5e5);
+  --side-dialog-inset: 16px;
+  --side-dialog-radius: var(--radius-200, 8px);
+  --side-dialog-width: 400px;
+  --side-dialog-width-lg: 520px;
+  --side-dialog-width-sm: 320px;
+
+  /* esa-snackbar-container */
+  --snackbar-container-max-width: 420px;
+
+  /* esa-snackbar-item */
+  --snackbar-item-bg-danger: var(--color-red-700, #b91c1c);
+  --snackbar-item-bg-info: var(--color-blue-800, #43608a);
+  --snackbar-item-bg-success: var(--color-green-800, #0a6562);
+  --snackbar-item-bg-warning: var(--color-orange-800, #912a0f);
+  --snackbar-item-color: var(--color-text-inverse, #ffffff);
+  --snackbar-item-radius: var(--radius-200, 0.5rem);
+
+  /* esa-switch-toggle */
+  --switch-toggle-label-color: var(--color-text-primary, #171717);
+  --switch-toggle-thumb-bg: var(--color-surface, #fff);
+  --switch-toggle-track-bg: var(--color-border-strong, #d4d4d4);
+  --switch-toggle-track-bg-checked: var(--color-primary, #005862);
+
+  /* esa-tab-layout */
+  --tab-layout-border-color: var(--color-border, #e5e5e5);
+  --tab-layout-color: var(--color-text-secondary, #525252);
+  --tab-layout-color-active: var(--color-primary, #005862);
+  --tab-layout-height-lg: 52px;
+  --tab-layout-height-md: 44px;
+  --tab-layout-height-sm: 36px;
+  --tab-layout-height-xs: 30px;
+  --tab-layout-indicator-color: var(--color-primary, #005862);
+
+  /* esa-tooltip */
+  --tooltip-bg: var(--color-gray-900, #171717);
+  --tooltip-color: var(--color-text-inverse, #ffffff);
+  --tooltip-max-width: 240px;
+  --tooltip-radius: var(--radius-100, 0.25rem);
+}

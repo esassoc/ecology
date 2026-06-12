@@ -62,10 +62,10 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
 
 <style>
   .esa-pill {
-    --_pill-bg: var(--color-surface-sunken, #efefef);
-    --_pill-text: var(--color-text-primary, #171717);
-    --_pill-border: var(--color-border-light, #efefef);
-    --_pill-height: 28px;
+    --_pill-bg: var(--pill-bg, var(--color-surface-sunken, #efefef));
+    --_pill-text: var(--pill-text-color, var(--color-text-primary, #171717));
+    --_pill-border: var(--pill-border-color, var(--color-border-light, #efefef));
+    --_pill-height: var(--pill-height-md, 28px);
     --_pill-font-size: 13px;
     --_pill-padding-x: var(--spacing-200, 0.5rem);
     --_pill-gap: var(--spacing-100, 0.25rem);
@@ -76,7 +76,7 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     height: var(--_pill-height);
     padding-inline: var(--_pill-padding-x);
     border: 1px solid var(--_pill-border);
-    border-radius: var(--radius-full, 9999px);
+    border-radius: var(--pill-radius, var(--radius-full, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
     font-size: var(--_pill-font-size);
@@ -86,19 +86,19 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
   }
 
   .esa-pill--xs {
-    --_pill-height: 18px;
+    --_pill-height: var(--pill-height-xs, 18px);
     --_pill-font-size: 10px;
     --_pill-padding-x: var(--spacing-100, 0.25rem);
   }
 
   .esa-pill--sm {
-    --_pill-height: 22px;
+    --_pill-height: var(--pill-height-sm, 22px);
     --_pill-font-size: 11px;
     --_pill-padding-x: var(--spacing-150, 0.375rem);
   }
 
   .esa-pill--lg {
-    --_pill-height: 34px;
+    --_pill-height: var(--pill-height-lg, 34px);
     --_pill-font-size: 14px;
     --_pill-padding-x: var(--spacing-300, 0.75rem);
   }

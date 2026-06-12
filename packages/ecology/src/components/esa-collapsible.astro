@@ -39,9 +39,9 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
 
 <style>
   .esa-collapsible {
-    border: 1px solid var(--color-border, #e5e5e5);
-    border-radius: var(--radius-300, 0.5rem);
-    background: var(--color-surface, #fff);
+    border: 1px solid var(--collapsible-border-color, var(--color-border, #e5e5e5));
+    border-radius: var(--collapsible-radius, var(--radius-300, 0.5rem));
+    background: var(--collapsible-bg, var(--color-surface, #fff));
   }
   .esa-collapsible--flush {
     border: none;
@@ -56,10 +56,10 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
     display: flex;
     align-items: center;
     gap: var(--spacing-200, 0.5rem);
-    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    padding: var(--spacing-300, 0.75rem) var(--collapsible-padding-x, var(--spacing-400, 1rem));
     font-size: var(--type-size-150, 0.9375rem);
     font-weight: var(--font-weight-semibold, 600);
-    color: var(--color-text-primary, #171717);
+    color: var(--collapsible-title-color, var(--color-text-primary, #171717));
     cursor: pointer;
     list-style: none;
   }
@@ -85,6 +85,6 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-400, 1rem);
-    padding: 0 var(--spacing-400, 1rem) var(--spacing-400, 1rem);
+    padding: 0 var(--collapsible-padding-x, var(--spacing-400, 1rem)) var(--spacing-400, 1rem);
   }
 </style>

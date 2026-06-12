@@ -106,13 +106,13 @@ export class EsaBackToTop extends LitElement {
 
   static styles = css`
     :host {
-      --_btt-size: 44px;
-      --_btt-bg: var(--color-primary, #005862);
-      --_btt-text: var(--color-text-inverse, #fff);
+      --_btt-size: var(--back-to-top-size, 44px);
+      --_btt-bg: var(--back-to-top-bg, var(--color-primary, #005862));
+      --_btt-text: var(--back-to-top-text, var(--color-text-inverse, #fff));
       --_btt-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      --_btt-radius: var(--radius-full, 9999px);
-      --_btt-bottom: var(--spacing-500, 1.5rem);
-      --_btt-right: var(--spacing-500, 1.5rem);
+      --_btt-radius: var(--back-to-top-radius, var(--radius-full, 9999px));
+      --_btt-bottom: var(--back-to-top-bottom, var(--spacing-500, 1.5rem));
+      --_btt-right: var(--back-to-top-right, var(--spacing-500, 1.5rem));
 
       position: fixed;
       bottom: var(--_btt-bottom);

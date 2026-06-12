@@ -20,7 +20,7 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
   .esa-loading-spinner {
     --_spinner-size: 32px;
     --_spinner-border-width: 3px;
-    --_spinner-color: var(--color-primary, #005862);
+    --_spinner-color: var(--loading-spinner-color, var(--color-primary, #005862));
 
     display: inline-flex;
     align-items: center;
@@ -34,7 +34,7 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
   .esa-loading-spinner__ring {
     width: var(--_spinner-size);
     height: var(--_spinner-size);
-    border: var(--_spinner-border-width) solid var(--color-border-light, #efefef);
+    border: var(--_spinner-border-width) solid var(--loading-spinner-track-color, var(--color-border-light, #efefef));
     border-top-color: var(--_spinner-color);
     border-radius: var(--radius-full, 9999px);
     animation: esa-spinner-rotate 0.75s linear infinite;

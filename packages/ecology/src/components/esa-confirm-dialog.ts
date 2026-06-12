@@ -155,7 +155,7 @@ export class EsaConfirmDialog extends LitElement {
     .esa-confirm-dialog__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+      background: var(--confirm-dialog-backdrop-bg, var(--color-backdrop, rgba(0, 0, 0, 0.5)));
       z-index: var(--z-modal-backdrop, 300);
     }
     .esa-confirm-dialog__panel {
@@ -169,10 +169,10 @@ export class EsaConfirmDialog extends LitElement {
     }
     .esa-confirm-dialog {
       pointer-events: auto;
-      width: 360px;
+      width: var(--confirm-dialog-width, 360px);
       max-width: calc(100vw - 2rem);
-      background: var(--color-surface-elevated, #ffffff);
-      border-radius: var(--radius-400, 0.75rem);
+      background: var(--confirm-dialog-bg, var(--color-surface-elevated, #ffffff));
+      border-radius: var(--confirm-dialog-radius, var(--radius-400, 0.75rem));
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       font-family: var(--font-sans, 'DM Sans', sans-serif);
@@ -210,10 +210,10 @@ export class EsaConfirmDialog extends LitElement {
       font-size: var(--type-size-400, 1.125rem);
       font-weight: var(--font-weight-semibold, 550);
       margin: 0 0 var(--spacing-150, 0.375rem);
-      color: var(--color-text-primary, #171717);
+      color: var(--confirm-dialog-color, var(--color-text-primary, #171717));
     }
     .esa-confirm-dialog__message {
-      color: var(--color-text-secondary, #525252);
+      color: var(--confirm-dialog-color, var(--color-text-secondary, #525252));
       font-size: var(--type-size-200, 0.9375rem);
       line-height: var(--line-height-normal, 1.6);
       margin: 0;
@@ -221,7 +221,7 @@ export class EsaConfirmDialog extends LitElement {
 
     .esa-confirm-dialog__footer {
       padding: var(--spacing-300, 0.75rem) var(--spacing-500, 1.5rem);
-      border-top: 1px solid var(--color-border-light, #efefef);
+      border-top: 1px solid var(--confirm-dialog-border-color, var(--color-border-light, #efefef));
       display: flex;
       justify-content: flex-end;
       gap: var(--spacing-200, 0.5rem);

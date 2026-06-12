@@ -229,13 +229,13 @@ export class EsaCommandPalette extends LitElement {
       top: 20%;
       left: 50%;
       transform: translateX(-50%);
-      width: 560px;
+      width: var(--command-palette-width, 560px);
       max-width: calc(100vw - 2rem);
-      max-height: 440px;
-      background: var(--color-surface-elevated, #ffffff);
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-400, 0.75rem);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      max-height: var(--command-palette-max-height, 440px);
+      background: var(--command-palette-bg, var(--color-surface-elevated, #ffffff));
+      border: 1px solid var(--command-palette-border-color, var(--color-border, #e5e5e5));
+      border-radius: var(--command-palette-radius, var(--radius-400, 0.75rem));
+      box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
@@ -310,7 +310,7 @@ export class EsaCommandPalette extends LitElement {
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-command-palette__item--active { background: var(--color-surface-sunken, #efefef); }
+    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-surface-sunken, #efefef)); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
       outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #005862);

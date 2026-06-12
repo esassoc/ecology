@@ -89,13 +89,13 @@ const cls = [
 
 <style>
   .esa-card {
-    --_card-bg: var(--color-surface, #ffffff);
-    --_card-border: var(--color-border, #e5e5e5);
-    --_card-radius: var(--radius-300, 0.5rem);
-    --_card-padding: var(--spacing-500, 1.5rem);
-    --_card-header-bg: transparent;
-    --_card-header-color: var(--color-text-primary, #171717);
-    --_card-header-border: var(--color-border-light, #efefef);
+    --_card-bg: var(--card-bg, var(--color-surface, #ffffff));
+    --_card-border: var(--card-border-color, var(--color-border, #e5e5e5));
+    --_card-radius: var(--card-radius, var(--radius-300, 0.5rem));
+    --_card-padding: var(--card-padding, var(--spacing-500, 1.5rem));
+    --_card-header-bg: var(--card-header-bg, transparent);
+    --_card-header-color: var(--card-header-color, var(--color-text-primary, #171717));
+    --_card-header-border: var(--card-header-border-color, var(--color-border-light, #efefef));
 
     display: block;
     background: var(--_card-bg);
@@ -191,6 +191,6 @@ const cls = [
   .esa-card__footer {
     padding: var(--spacing-300, 0.75rem) var(--_card-padding);
     border-top: 1px solid var(--_card-header-border);
-    background: var(--color-surface-sunken, #efefef);
+    background: var(--card-footer-bg, var(--color-surface-sunken, #efefef));
   }
 </style>
