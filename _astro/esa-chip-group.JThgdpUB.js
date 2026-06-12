@@ -88,9 +88,9 @@ import{i as n,b as o,a as c}from"./lit-element.C8p3bJxG.js";class h extends n{co
       border-color: var(--color-border-strong, #d4d4d4);
       color: var(--color-text-primary, #171717);
     }
-    /* Reads the SEMANTIC primary chain (not teal primitives) so spoke themes
-       re-skin it — hub default stays teal, a forest-green theme goes forest. */
-    .chip--active.chip--teal {
+    /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
+       default is brand blue, a forest-green theme goes forest. */
+    .chip--active.chip--brand {
       background: var(--color-primary-subtle, #f3f8fb);
       border-color: var(--color-primary-border, #cfe2ee);
       color: var(--color-primary, #43608a);
