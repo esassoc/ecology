@@ -109,6 +109,20 @@
       "50":  { "$value": "#f8f8f4", "$type": "color", "$description": "Muted sand/gold accent ramp. Promoted from cb-fish (CBFish breadcrumb strip + sidebar headings). A neutral-leaning accent a spoke can re-point --color-accent off; the hub default accent stays orange." },
       "500": { "$value": "#a9a379", "$type": "color" },
       "900": { "$value": "#534c3b", "$type": "color" }
+    },
+    "status": {
+      "info":           { "$value": "#3b82f6", "$type": "color", "$description": "Feedback palette — the fixed, brand-INDEPENDENT status hues (info=blue, success=green, warning=amber). Deliberately off the brand ramps: danger must stay red and success green in EVERY spoke, so these never re-skin with --color-primary. The semantic info/success/warning tier references these; danger references the standard color.red ramp, which already matches exactly. Each hue carries base (fill) / -subtle (tint surface) / -border / -strong (readable dark text to sit on the -subtle surface — every spoke was hand-coding this shade)." },
+      "info-subtle":    { "$value": "#eff6ff", "$type": "color" },
+      "info-border":    { "$value": "#bfdbfe", "$type": "color" },
+      "info-strong":    { "$value": "#1d4ed8", "$type": "color" },
+      "success":        { "$value": "#22c55e", "$type": "color" },
+      "success-subtle": { "$value": "#f0fdf4", "$type": "color" },
+      "success-border": { "$value": "#bbf7d0", "$type": "color" },
+      "success-strong": { "$value": "#15803d", "$type": "color" },
+      "warning":        { "$value": "#f59e0b", "$type": "color" },
+      "warning-subtle": { "$value": "#fffbeb", "$type": "color" },
+      "warning-border": { "$value": "#fde68a", "$type": "color" },
+      "warning-strong": { "$value": "#b45309", "$type": "color" }
     }
   }
 }
