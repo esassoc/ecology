@@ -28,6 +28,7 @@ const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
 // token this component's CSS reads. Rendered on every component page so
 // "what can my spoke re-point?" can never drift from the source.
 const hooks = themingSurface[slug] ?? [];
+const isColor = (v: string) => /^#[0-9a-fA-F]{3,8}$|^(rgb|rgba|hsl|hsla|oklch|color)\(/.test(v.trim());
 ---
 <DocsLayout title={`${name} — Ecology`} activeHref={activeHref}>
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>{category}</span> <span>/</span> <span>{name}</span></nav>
@@ -45,20 +46,42 @@ const hooks = themingSurface[slug] ?? [];
     <Section id="theming-surface" title="Theming surface">
       <p class="ts-note">
         Every public token this component reads, extracted from its source at build time.
-        A spoke re-skins by re-pointing these in its <code>theme-&lt;slug&gt;.css</code> —
-        component internals are never edited. No hook for what you need? File it
-        with <code>/request-lego</code>.
+        The <strong>Resolves&nbsp;to</strong> column walks each token's real lineage —
+        component&nbsp;→&nbsp;semantic&nbsp;→&nbsp;primitive&nbsp;→&nbsp;raw value — so you
+        can see exactly where re-pointing it lands. A spoke re-skins by overriding these in
+        its <code>theme-&lt;slug&gt;.css</code>; component internals are never edited. No
+        hook for what you need? File it with <code>/request-lego</code>.
       </p>
       <table class="ts-table">
-        <thead><tr><th>Token</th><th>Tier</th><th>Default</th></tr></thead>
+        <thead><tr><th>Token</th><th>Tier</th><th>Resolves to</th></tr></thead>
         <tbody>
-          {hooks.map((h) => (
-            <tr>
-              <td><code>{h.token}</code></td>
-              <td><span class={`ts-tier ts-tier--${h.tier}`}>{h.tier}</span></td>
-              <td>{h.fallback ? <code>{h.fallback}</code> : <span class="ts-none">—</span>}</td>
-            </tr>
-          ))}
+          {hooks.map((h) => {
+            const terminal = h.lineage[h.lineage.length - 1]; // last link = the raw value it lands on
+            const path = h.lineage.slice(0, -1);              // the tokens it passes through to get there
+            return (
+              <tr>
+                <td><code>{h.token}</code></td>
+                <td><span class={`ts-tier ts-tier--${h.tier}`}>{h.tier}</span></td>
+                <td class="ts-chain">
+                  {h.lineage.length === 0 ? (
+                    <span class="ts-none">—</span>
+                  ) : (
+                    <Fragment>
+                      <span class="ts-resolved">
+                        {isColor(terminal.ref) && <span class="ts-swatch" style={`background:${terminal.ref}`} />}
+                        <code>{terminal.ref}</code>
+                      </span>
+                      {path.length > 0 && (
+                        <span class="ts-via">via {path.map((p, i) => (
+                          <Fragment>{i > 0 && <span class="ts-arrow"> → </span>}<code>{p.ref}</code></Fragment>
+                        ))}</span>
+                      )}
+                    </Fragment>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </Section>
@@ -76,4 +99,11 @@ const hooks = themingSurface[slug] ?? [];
   .ts-tier--semantic { background: var(--color-surface-sunken, #f5f5f5); }
   .ts-tier--undefined { background: var(--color-danger-subtle, #fdecec); border-color: var(--color-danger-border, #f5c2c2); }
   .ts-none { color: var(--color-text-muted, #888); }
+
+  /* Lineage: the resolved value leads; the cascade path is a quiet breadcrumb beneath. */
+  .ts-resolved { display: inline-flex; align-items: center; gap: var(--spacing-150, 0.375rem); }
+  .ts-swatch { width: 0.95em; height: 0.95em; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.15); flex: none; }
+  .ts-via { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-text-muted, #999); }
+  .ts-via code { font-size: inherit; background: none; padding: 0; color: inherit; }
+  .ts-via .ts-arrow { color: var(--color-border-strong, #ccc); }
 </style>

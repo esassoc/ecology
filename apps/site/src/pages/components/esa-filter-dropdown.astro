@@ -25,7 +25,7 @@ const events = [
     <p>Click the trigger to open the panel, type to filter, and use Arrow/Enter/Escape to navigate. Outside-click and Escape close it. Options are set as a property in a small init script.</p>
     <Preview code={`<esa-filter-dropdown name="status" label="Status"></esa-filter-dropdown>
 
-${'<script>'}
+<script>
   import '@esa/ecology/esa-filter-dropdown';
   customElements.whenDefined('esa-filter-dropdown').then(() => {
     document.querySelector('esa-filter-dropdown').options = [
@@ -34,7 +34,7 @@ ${'<script>'}
       { label: 'Closed', value: 'closed' },
     ];
   });
-${'</script>'}`}>
+</script>`}>
       <esa-filter-dropdown data-opts="status" name="status" label="Status"></esa-filter-dropdown>
     </Preview>
   </Section>
@@ -82,17 +82,6 @@ ${'</script>'}`}>
       <li>Panel is a <code>role="listbox"</code>; each option is <code>role="option"</code> with <code>aria-selected</code> and <code>aria-disabled</code>.</li>
       <li>Keyboard: ArrowUp/Down highlight (skipping disabled), Enter selects, Escape closes. Opening focuses the search input.</li>
       <li>Visible focus ring on the trigger via <code>--focus-ring-*</code> tokens.</li>
-    </ul>
-  </Section>
-
-  <Section id="tokens" title="Tokens">
-    <p>Override the component-scoped tokens to re-skin the trigger and panel without forking the element:</p>
-    <ul class="tokens">
-      <li><code>--color-primary</code> — active trigger fill, selected option, search focus</li>
-      <li><code>--color-surface</code> · <code>--color-border</code> · <code>--color-text-primary</code> / <code>--color-text-inverse</code></li>
-      <li><code>--filter-dropdown-bg</code> / <code>--filter-dropdown-border</code> / <code>--filter-dropdown-radius</code> / <code>--filter-dropdown-shadow</code> / <code>--filter-dropdown-min-width</code></li>
-      <li><code>--radius-*</code> · <code>--spacing-*</code> · <code>--type-size-*</code> · <code>--z-dropdown</code></li>
-      <li><code>--focus-ring-width</code> / <code>--focus-ring-color</code> / <code>--focus-ring-offset</code></li>
     </ul>
   </Section>
 
