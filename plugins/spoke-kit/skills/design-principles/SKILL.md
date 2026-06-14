@@ -1,6 +1,6 @@
 ---
 name: design-principles
-description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
+description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), neutral house chrome (value-layered off-white surfaces, never a brand fill), type-roles-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
 ---
 
 # Design Principles (canonical)
@@ -66,7 +66,10 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
 
 - **Chips and badges are compact and quiet**: 4px border-radius, light-gray or
   no background, mid-gray border and text, vertically centered in cells —
-  never bulky rounded pills.
+  never bulky rounded pills. This 4px radius is now the **`esa-badge` default**
+  (`--badge-radius` → `--radius-100` in `component-tokens.css`) — use the lego
+  as-is, don't restyle it. **`esa-pill` stays full** (`--radius-full`); it's a
+  pill on purpose. Badge ≠ pill: reach for the one that matches the shape you want.
 - **Sibling controls match exactly.** Every control sharing a row, bar, or
   group matches its siblings in rendered height, font size, and variant.
   Verify *rendered output* — different components can resolve different tokens
@@ -85,10 +88,29 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   color is reserved for the single primary action. The split: **product UI is
   austere; identity badges, floating map tools, and landing/showcase surfaces
   invite expressiveness.**
+- **House chrome is neutral; brand never floods it.** App chrome (top bar /
+  sidenav / main) uses **neutral off-white surfaces layered by VALUE** —
+  canvas < bar < rail, separated by a hair of lightness, not by hue. Define
+  them as named near-off-white tokens (`--app-bar-bg`, `--sidenav-bg`,
+  `--app-surface-bg`) that may carry a **barely-perceptible brand tint (~2–5%)**
+  — never a saturated brand fill. A magenta/teal topbar is anathema. The
+  **`esa-app-bar` default tone is `surface`, never `brand`** for chrome.
+  - *Beacon reference (pure-neutral):* top `#efefef`, sidenav/main `#fafafa`.
+  - *Touchline reference (a green whisper):* canvas `#fbfdfb`, bar `#f2f6f3`,
+    rail `#eef3ef`.
+  - No component token for the surface you need to step? That's a missing
+    theming hook → **/request-lego**, not a hand-styled chrome block.
 - **Type voices.** Never monospace for IDs, badges, headings, or document
   text. Each brand theme designates its families, including a document/serif
   voice for legal or quoted content (Beacon's is Besley) — use the theme's
   designated faces; don't hardcode a system-wide default.
+- **Type roles, not raw sizes.** Style text with the role classes in
+  `@esa/tokens/type-roles.css` (`.type-page-title`, `.type-section-title`,
+  `.type-card-title`, `.type-body`, `.type-label`, `.type-caption`, …) — they
+  bundle size + weight + line-height + family per role. **Raw `--type-size-*`
+  in page CSS is a smell** (it scatters ad-hoc 200/250/300 sizes and drifts
+  from the scale). Don't default body text oversized — `.type-body` is the
+  baseline.
 - **Compress the content, stabilize the frame.** Data-dense surfaces compress
   *moderately* (the 14px dense floor above — don't overshoot into cramped);
   major work surfaces (large dialogs, drawers, full pages) hold generous
@@ -112,3 +134,16 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   exactly — never silently diverge or "improve" it. Only Andy promotes a
   better variant, at review. The system is actively settling (mid-2026):
   check that the precedent you're copying is the current one.
+- **Brand discovery — research the real identity.** When a themed palette is
+  requested for a real subject (a company, event, agency, product), **research
+  the actual brand identity before inventing a palette** — its real colors,
+  marks, and type voice. Don't fabricate a generic theme when a true one is
+  knowable. (Touchline shipped a made-up palette instead of the real 2026
+  World Cup identity — that's the gap this closes.)
+
+---
+
+> **Publishing note:** edits to this skill only reach spokes after the plugin is
+> republished — bump `plugins/spoke-kit/.claude-plugin/plugin.json` (currently
+> `1.3.1`), push the hub, then `claude plugin marketplace update ecology`. Local
+> hub edits are inert until then (spokes run the cached marketplace copy).

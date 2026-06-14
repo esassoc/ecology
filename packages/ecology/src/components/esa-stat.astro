@@ -1,0 +1,75 @@
+---
+// esa-stat — presentational single-metric block (.astro).
+// A big display value, a readable label, and an optional muted sub/caption.
+// Replaces the bespoke .stat / .stat__value / .stat__label / .stat__sub cluster
+// every prototype re-implements.
+//
+// Value uses --font-display at a large-but-tasteful role (NOT the giant
+// display/900 roles). Label is a readable body role (sentence case, secondary
+// color) — NOT an uppercase, micro, letter-spaced overline. Sub is muted meta.
+// Container stays neutral — no background of its own (transparent); color is
+// the consumer's job. accent=true tints the value with the spoke's secondary
+// emphasis; default false keeps it primary text. Private --_* tokens read
+// public semantic tokens with a literal fallback, mirroring esa-badge.
+interface Props {
+  value: string | number;
+  label: string;
+  sub?: string;
+  accent?: boolean;
+}
+const { value, label, sub, accent = false } = Astro.props;
+const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ');
+---
+<div class={cls}>
+  <div class="esa-stat__value">{value}</div>
+  <div class="esa-stat__label">{label}</div>
+  {sub && <div class="esa-stat__sub">{sub}</div>}
+</div>
+
+<style>
+  .esa-stat {
+    --_stat-value-color: var(--stat-value-color, var(--color-text-primary, #171717));
+    --_stat-value-font: var(--stat-value-font, var(--font-display, var(--font-sans, 'DM Sans', sans-serif)));
+    --_stat-value-size: var(--stat-value-size, var(--type-size-700, 2.25rem));
+    --_stat-value-weight: var(--stat-value-weight, var(--font-weight-bold, 650));
+    --_stat-label-color: var(--stat-label-color, var(--color-text-secondary, #525252));
+    --_stat-label-size: var(--stat-label-size, var(--type-size-200, 0.9375rem));
+    --_stat-label-weight: var(--stat-label-weight, var(--font-weight-medium, 450));
+    --_stat-sub-color: var(--stat-sub-color, var(--color-text-muted, #737373));
+    --_stat-sub-size: var(--stat-sub-size, var(--type-size-150, 0.875rem));
+    --_stat-accent-color: var(--stat-accent-color, var(--color-secondary, #5787b9));
+    --_stat-gap: var(--stat-gap, var(--spacing-050, 0.125rem));
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--_stat-gap);
+    background: transparent;
+  }
+
+  .esa-stat__value {
+    font-family: var(--_stat-value-font);
+    font-size: var(--_stat-value-size);
+    font-weight: var(--_stat-value-weight);
+    line-height: var(--line-height-tight, 1.3);
+    letter-spacing: var(--letter-spacing-tight, -0.01em);
+    color: var(--_stat-value-color);
+  }
+
+  .esa-stat--accent .esa-stat__value {
+    color: var(--_stat-accent-color);
+  }
+
+  .esa-stat__label {
+    font-size: var(--_stat-label-size);
+    font-weight: var(--_stat-label-weight);
+    line-height: var(--line-height-normal, 1.6);
+    color: var(--_stat-label-color);
+  }
+
+  .esa-stat__sub {
+    font-size: var(--_stat-sub-size);
+    font-weight: var(--font-weight-regular, 350);
+    line-height: var(--line-height-normal, 1.6);
+    color: var(--_stat-sub-color);
+  }
+</style>

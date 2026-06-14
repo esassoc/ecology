@@ -1,0 +1,138 @@
+/*
+ * Ecology — Layout primitives (composable utility classes).
+ *
+ * Modern, intrinsic CSS layouts in the "Every Layout" tradition: each class is a
+ * self-contained layout ENGINE you compose by nesting (e.g. .stack > .grid >
+ * .cluster). The opposite of atomic/Tailwind utilities — ONE class does a whole
+ * sophisticated layout, tuned by a few custom properties. Apply to plain <div>s.
+ *
+ * SPACING KNOB: every primitive reads `--gap`, with a sensible per-pattern
+ * default SET ON THE ELEMENT (so nested primitives never inherit an ancestor's
+ * gap). Pick a step declaratively with `data-gap` on the xs|sm|md|lg|xl scale, or
+ * override `--gap` (and per-primitive knobs like --grid-min / --sidebar-width)
+ * directly. The preset blocks are defined AFTER the primitives so an attribute
+ * wins the equal-specificity tie by source order.
+ */
+
+/* --gap is registered as non-inheriting: belt-and-suspenders against gap bleed
+   in nested compositions (stack > cluster), on top of the per-element defaults. */
+@property --gap {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1rem;
+}
+
+/* ---- stack: vertical flow with consistent rhythm ---- */
+.stack {
+  --gap: var(--spacing-400, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+/* push everything after the marked child to the bottom (e.g. a card footer) */
+.stack[data-split] > [data-split] { margin-block-end: auto; }
+
+/* ---- cluster: items that sit in a row and wrap gracefully ---- */
+.cluster {
+  --gap: var(--spacing-300, 0.75rem);
+  --align: center;
+  --justify: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: var(--align);
+  justify-content: var(--justify);
+}
+
+/* ---- repel: pushes two groups apart (title <-> actions); wraps when cramped ---- */
+.repel {
+  --gap: var(--spacing-400, 1rem);
+  --align: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  align-items: var(--align);
+  justify-content: space-between;
+}
+
+/* ---- grid: responsive auto-fit that never overflows a narrow viewport ---- */
+.grid {
+  --gap: var(--spacing-400, 1rem);
+  --grid-min: 16rem;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min), 100%), 1fr));
+}
+
+/* ---- sidebar: a fixed-ish aside + a fluid main; aside drops below when cramped ---- */
+.sidebar {
+  --gap: var(--spacing-500, 1.5rem);
+  --sidebar-width: 18rem;
+  --sidebar-content-min: 60%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap);
+}
+.sidebar > :first-child { flex-basis: var(--sidebar-width); flex-grow: 1; }
+.sidebar > :last-child  { flex-basis: 0; flex-grow: 999; min-inline-size: var(--sidebar-content-min); }
+.sidebar[data-side="end"] > :first-child { order: 2; } /* aside on the right */
+
+/* ---- switcher: a row of equal columns that flips to one column below a threshold ---- */
+.switcher {
+  --gap: var(--spacing-400, 1rem);
+  --switcher-threshold: 32rem;
+  display: flex;
+  flex-wrap: wrap;
+}
+.switcher > * {
+  flex-grow: 1;
+  flex-basis: calc((var(--switcher-threshold) - 100%) * 999);
+}
+.switcher { gap: var(--gap); }
+
+/* ---- frame: a ratio-locked media box (maps, thumbnails, embeds) ---- */
+.frame {
+  --frame-ratio: 16 / 9;
+  aspect-ratio: var(--frame-ratio);
+  overflow: hidden;
+}
+.frame > img, .frame > video, .frame > svg, .frame > canvas {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: var(--frame-fit, cover);
+}
+
+/* ---- reel: a horizontally scrolling strip with snap ---- */
+.reel {
+  --gap: var(--spacing-400, 1rem);
+  display: flex;
+  gap: var(--gap);
+  overflow-x: auto;
+  scroll-snap-type: inline mandatory;
+  overscroll-behavior-inline: contain;
+}
+.reel > * { flex: 0 0 var(--reel-item, auto); scroll-snap-align: start; }
+
+/* ===== presets — defined AFTER the primitives so an attribute wins the
+   equal-specificity tie by source order; each sets the value on the element,
+   so it shadows (never inherits) an ancestor's. ===== */
+[data-gap="3xs"]  { --gap: var(--spacing-050, 0.125rem); }
+[data-gap="2xs"]  { --gap: var(--spacing-100, 0.25rem); }
+[data-gap="xs"]   { --gap: var(--spacing-200, 0.5rem); }
+[data-gap="sm"]   { --gap: var(--spacing-300, 0.75rem); }
+[data-gap="md"]   { --gap: var(--spacing-400, 1rem); }
+[data-gap="lg"]   { --gap: var(--spacing-500, 1.5rem); }
+[data-gap="xl"]   { --gap: var(--spacing-600, 2rem); }
+[data-gap="2xl"]  { --gap: var(--spacing-700, 3rem); }
+[data-gap="none"] { --gap: 0px; }
+
+[data-align="start"]    { --align: flex-start; }
+[data-align="center"]   { --align: center; }
+[data-align="end"]      { --align: flex-end; }
+[data-align="baseline"] { --align: baseline; }
+[data-align="stretch"]  { --align: stretch; }
+
+[data-justify="start"]   { --justify: flex-start; }
+[data-justify="center"]  { --justify: center; }
+[data-justify="end"]     { --justify: flex-end; }
+[data-justify="between"] { --justify: space-between; }

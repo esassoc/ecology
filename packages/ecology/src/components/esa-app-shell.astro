@@ -1,0 +1,272 @@
+---
+// esa-app-shell — CANONICAL application shell (.astro).
+//
+// The house chrome: NEUTRAL off-white surfaces layered by value (canvas < bar <
+// rail), a sidebar toggle in the TOP-LEFT corner, the logo at the TOP OF THE
+// SIDENAV, a compact CENTERED omnibox, and a profile dropdown. A composition of
+// esa-app-bar + esa-sidebar-nav + esa-search-panel + esa-dropdown-menu — it owns
+// no new visual primitives.
+//
+// HOUSE DECISIONS baked in: brand color never fills the chrome (only the active
+// nav item + primary actions); the wordmark lives in the SIDENAV (not the top
+// bar); the top-bar left corner is the collapse toggle. `accent` (off by default)
+// adds a faint brand-TINTED neutral wash to the bar (a color-mix, not a fill).
+//
+// LAYOUT-AGNOSTIC: does not wrap BaseLayout / <html>. Render it inside a parent
+// with a fixed height (e.g. height:100dvh); the frame fills its parent and only
+// the main region scrolls.
+//
+// DATA IN, NOT MARKUP: nav items, the user menu, and the search index are props
+// (server-serialized into a JSON island the client script reads). The logo mark
+// is a raw inline-SVG string passed via `mark` (rendered DIRECTLY into the sidenav
+// header — no nested slot, which is what previously failed to project into the
+// Lit shadow DOM).
+import EsaAppBar from './esa-app-bar.astro';
+import EsaIconLink from './esa-icon-link.astro';
+
+export interface AppShellNavItem {
+  key?: string;
+  label: string;
+  href?: string;
+  icon?: string; // inner Lucide SVG (the <path>/<rect>… children)
+  badge?: string | number;
+  group?: string;
+  children?: AppShellNavItem[];
+}
+export interface AppShellMenuItem {
+  label: string;
+  action?: string;
+  icon?: string;
+  divider?: boolean;
+  variant?: 'default' | 'danger';
+}
+export interface AppShellSearchEntry {
+  id: string; // a real in-app href; result-select navigates here
+  title: string;
+  subtitle?: string;
+  category?: string;
+}
+
+interface Props {
+  title?: string;
+  active?: string;
+  items?: AppShellNavItem[];
+  userMenu?: AppShellMenuItem[];
+  userName?: string;
+  /** Live omnibox index (sections + records). Omit/empty to drop the search control. */
+  searchIndex?: AppShellSearchEntry[];
+  searchPlaceholder?: string;
+  /** Raw inline SVG (full <svg>…</svg>) for the sidenav logo mark. */
+  mark?: string;
+  brandHref?: string;
+  accent?: boolean;
+  collapsed?: boolean;
+  /** Stable id base — required when more than one shell is on a page. */
+  id?: string;
+}
+
+const DEFAULT_USER_MENU: AppShellMenuItem[] = [
+  { label: 'Profile', action: 'profile' },
+  { label: 'Settings', action: 'settings' },
+  { divider: true, label: '' },
+  { label: 'Sign out', action: 'sign-out', variant: 'danger' },
+];
+
+const {
+  title = 'App',
+  active,
+  items = [],
+  userMenu = DEFAULT_USER_MENU,
+  userName = 'Account',
+  searchIndex = [],
+  searchPlaceholder = 'Search…',
+  mark,
+  brandHref = '/',
+  accent = false,
+  collapsed = false,
+} = Astro.props;
+
+const uid = Astro.props.id ?? 'esa-shell';
+const navId = `${uid}-nav`;
+const searchId = `${uid}-search`;
+const menuId = `${uid}-menu`;
+
+const markActive = (list: AppShellNavItem[]): AppShellNavItem[] =>
+  list.map((it) => ({
+    ...it,
+    active: active != null && it.key != null && it.key === active,
+    children: it.children ? markActive(it.children) : undefined,
+  }));
+const navItems = markActive(items);
+const hasSearch = searchIndex.length > 0;
+const hasLogoSlot = Astro.slots.has('logo');
+const shellCls = ['esa-app-shell', accent && 'esa-app-shell--accent'].filter(Boolean).join(' ');
+const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: userMenu, index: searchIndex });
+---
+<div class={shellCls} data-shell={uid}>
+  <EsaAppBar tone="surface" as="header" class="esa-app-shell__bar">
+    <button slot="start" class="esa-app-shell__toggle" data-shell-toggle={uid} type="button" aria-label="Toggle sidebar" aria-controls={navId}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+    </button>
+
+    {hasSearch && (
+      <button class="esa-app-shell__search" data-shell-search={uid} type="button" aria-label="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span class="esa-app-shell__search-label">{searchPlaceholder}</span>
+        <kbd class="esa-app-shell__search-kbd">/</kbd>
+      </button>
+    )}
+
+    <esa-dropdown-menu slot="end" id={menuId} position="below-end">
+      <EsaIconLink icon="circle-user" trailing="chevron-down">{userName}</EsaIconLink>
+    </esa-dropdown-menu>
+  </EsaAppBar>
+
+  <div class="esa-app-shell__body">
+    <esa-sidebar-nav id={navId} class="esa-app-shell__nav">
+      {/* Logo lives at the TOP OF THE SIDENAV. Content is rendered DIRECTLY here
+          (mark via set:html + wordmark, or a `logo` slot) — never a nested <slot>,
+          so it projects cleanly into esa-sidebar-nav's shadow `header` slot. */}
+      <a slot="header" class="esa-app-shell__brand" href={brandHref}>
+        {hasLogoSlot ? <slot name="logo" /> : (
+          <Fragment>
+            {mark && <span class="esa-app-shell__mark" set:html={mark} />}
+            <span class="esa-app-shell__wordmark">{title}</span>
+          </Fragment>
+        )}
+      </a>
+    </esa-sidebar-nav>
+
+    <main class="esa-app-shell__content"><slot /></main>
+  </div>
+
+  {hasSearch && (
+    <esa-search-panel id={searchId} placeholder={searchPlaceholder} data-index={JSON.stringify(searchIndex)}></esa-search-panel>
+  )}
+
+  <script is:inline type="application/json" data-shell-data={uid} set:html={payload}></script>
+</div>
+
+<script>
+  import '@esa/ecology/esa-sidebar-nav';
+  import '@esa/ecology/esa-dropdown-menu';
+  import '@esa/ecology/esa-search-panel';
+
+  type AnyEl = HTMLElement & Record<string, unknown>;
+
+  function wireShell(island: HTMLScriptElement): void {
+    const cfg = JSON.parse(island.textContent || '{}');
+    const uid = island.getAttribute('data-shell-data');
+    const nav = document.getElementById(cfg.navId) as AnyEl | null;
+    const menu = document.getElementById(cfg.menuId) as AnyEl | null;
+    const panel = document.getElementById(cfg.searchId) as AnyEl | null;
+
+    if (nav) { nav.collapsible = false; nav.items = cfg.nav; }
+    if (menu) menu.items = cfg.menu;
+
+    const toggle = document.querySelector(`[data-shell-toggle="${uid}"]`);
+    if (toggle && nav) {
+      toggle.addEventListener('click', () => {
+        (nav as AnyEl).collapsed = !(nav as AnyEl).collapsed;
+        toggle.classList.toggle('is-collapsed', !!(nav as AnyEl).collapsed);
+      });
+    }
+
+    const trigger = document.querySelector(`[data-shell-search="${uid}"]`);
+    if (trigger && panel) {
+      const index: { id: string; title: string; subtitle?: string; category?: string }[] = cfg.index || [];
+      const toResults = (q: string) => {
+        const s = q.trim().toLowerCase();
+        return index
+          .filter((e) => !s || e.title.toLowerCase().includes(s) || (e.subtitle ?? '').toLowerCase().includes(s))
+          .map((e) => ({ id: e.id, title: e.title, category: e.category }));
+      };
+      trigger.addEventListener('click', () => { (panel as AnyEl).results = toResults(''); (panel as AnyEl).open = true; });
+      panel.addEventListener('search', (ev) => { (panel as AnyEl).results = toResults((ev as CustomEvent<{ value: string }>).detail.value); });
+      panel.addEventListener('result-select', (ev) => {
+        const id = (ev as CustomEvent<{ id: string }>).detail?.id;
+        if (id) window.location.href = id;
+      });
+    }
+  }
+
+  document.querySelectorAll<HTMLScriptElement>('script[type="application/json"][data-shell-data]').forEach(wireShell);
+</script>
+
+<style>
+  /* Neutral chrome via SEMANTIC tokens (a spoke re-points these to its off-whites). */
+  .esa-app-shell {
+    --app-bar-bg: var(--color-surface-sunken, #f2f6f3);
+    --app-bar-text: var(--color-text-primary, #171717);
+    --app-bar-pad-y: var(--spacing-200, 8px);
+    --app-bar-pad-x: var(--spacing-400, 16px);
+    --app-bar-gap: var(--spacing-300, 12px);
+    --sidenav-bg: var(--color-background, #fafafa);
+    --sidenav-border: var(--color-border, #e5e5e5);
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--color-background, #fafafa);
+  }
+  .esa-app-shell--accent {
+    --app-bar-bg: color-mix(in srgb, var(--color-primary, #43608a) 5%, var(--color-surface-sunken, #f2f6f3));
+  }
+
+  .esa-app-shell__bar { flex: none; border-bottom: 1px solid var(--color-border, #e5e5e5); }
+
+  .esa-app-shell__toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; padding: 0; border: 0;
+    border-radius: var(--radius-100, 4px);
+    background: transparent; color: var(--color-text-tertiary, #525252);
+    cursor: pointer; transition: background 150ms ease, color 150ms ease;
+  }
+  .esa-app-shell__toggle:hover { background: var(--color-surface-sunken, #f2f6f3); color: var(--color-primary, #43608a); }
+  .esa-app-shell__toggle.is-collapsed svg { transform: scaleX(-1); }
+  .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-primary, #43608a); outline-offset: 2px; }
+
+  /* Compact, CENTERED omnibox trigger. */
+  .esa-app-shell__search {
+    margin-inline: auto;
+    display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
+    width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
+    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
+    background: var(--color-surface, #fff); color: var(--color-text-muted, #737373);
+    font-family: inherit; font-size: var(--type-size-150, 0.875rem);
+    cursor: pointer; transition: border-color 150ms ease;
+  }
+  .esa-app-shell__search:hover { border-color: var(--color-border-strong, #d4d4d4); }
+  .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-primary, #43608a); outline-offset: 2px; }
+  .esa-app-shell__search-label { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .esa-app-shell__search-kbd {
+    flex: none; display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-100, 4px);
+    background: var(--color-surface-sunken, #f2f6f3); font-size: var(--type-size-100, 0.8125rem);
+  }
+
+  /* Logo lockup at the top of the sidenav. */
+  .esa-app-shell__brand {
+    display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
+    padding: var(--spacing-100, 4px); text-decoration: none;
+    color: var(--color-text-primary, #171717);
+  }
+  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-primary, #43608a); }
+  .esa-app-shell__wordmark {
+    font-family: var(--font-display, var(--font-sans, sans-serif));
+    font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-bold, 700);
+    letter-spacing: -0.01em; line-height: 1;
+  }
+
+  .esa-app-shell__body { display: flex; flex: 1; min-height: 0; }
+  .esa-app-shell__nav { flex: none; }
+  .esa-app-shell__content { flex: 1; min-width: 0; overflow-y: auto; padding: var(--spacing-500, 20px); }
+
+  @media (max-width: 720px) {
+    .esa-app-shell__search-label, .esa-app-shell__search-kbd { display: none; }
+    .esa-app-shell__search { width: 34px; padding: 0; justify-content: center; }
+  }
+</style>

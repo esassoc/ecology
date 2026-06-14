@@ -67,10 +67,13 @@ if (primClassAttr.test(content)) {
 }
 
 // --- card / badge / pill / chip / tag primitives (class tokens only) ---
+// The primitive token must be the SUFFIX of a class name (followed by end-of-name,
+// not a hyphen continuation) so legit compound roles like `type-card-title` or a
+// `--card-*` token don't false-positive. `.user-card`/`class="status-badge"` still hit.
 const CHIP = '(eoc|count-?badge|status-?badge|[a-z]+-badge|[a-z]+-pill|[a-z]+-chip|[a-z]+-tag|[a-z]+-card)';
 if (
   new RegExp(`\\.[a-z0-9_-]*${CHIP}\\s*[,{]`, 'i').test(content) ||
-  new RegExp(`class="[^"]*\\b[a-z0-9-]*${CHIP}\\b`, 'i').test(content)
+  new RegExp(`class="[^"]*\\b[a-z0-9-]*${CHIP}(?![\\w-])`, 'i').test(content)
 ) {
   violations.push('bespoke card/badge/pill/chip/tag -> use esa-card / esa-badge / esa-pill / esa-chip-group');
 }

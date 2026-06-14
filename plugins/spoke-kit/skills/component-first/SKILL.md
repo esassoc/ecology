@@ -1,6 +1,6 @@
 ---
 name: component-first
-description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips. Triggers on editing .astro/.css/.scss, and on "make a component", "style this", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order. NEVER hand-roll a UI primitive that an esa-* lego already provides.
+description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, type-roles, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, and on "make a component", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order. NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides.
 ---
 
 # Component-First (Legos, Never Reinvent)
@@ -25,6 +25,20 @@ ls node_modules/@esa/ecology/src/components/
 Import depends on the file extension you saw in the `ls`:
 - **`.astro` component** → import in frontmatter: `import EsaCard from '@esa/ecology/esa-card.astro';`
 - **`.ts` web component** → register it in a client `<script>`: `import '@esa/ecology/esa-dialog';` then use the `<esa-dialog>` custom element in markup.
+
+**Ecology is more than atoms — reach for the COMPOSITION layer before writing CSS:**
+- **Layout primitives** (`@esa/tokens/layouts.css`): `.stack` `.cluster` `.repel` `.grid`
+  `.sidebar` `.switcher` `.frame` `.reel` — composable utility classes, gap via
+  `data-gap="xs|sm|md|lg|xl"`, per-primitive knobs like `--grid-min`. Use these instead of
+  bespoke flex/grid CSS.
+- **Typography roles** (`@esa/tokens/type-roles.css`): `.type-page-title` `.type-card-title`
+  `.type-body` `.type-label` … — style text with role classes, **never** raw `--type-size-*`
+  in pages.
+- **Mid-tier legos**: `esa-page-header` (title/lede/actions), `esa-stat` (value/label/sub/
+  accent), `esa-app-shell` (the canonical neutral chrome).
+- **Pattern catalog** — composed patterns (filter bars, omniboxes) already solved in spoke
+  prototype pages. Find them before rebuilding. See [lego-lookup.md](lego-lookup.md). A page
+  should read like a **manifest of legos + utilities**, not 250+ lines of bespoke `<style>`.
 
 ### 2. Check esassoc/Beacon NEXT — the prod app (optional tier — requires the Beacon repo cloned)
 If no `esa-*` fits, the production app may already have the pattern. Port it faithfully (tokens, structure). Skip this tier if `~/Dev/Beacon` isn't on your machine:
@@ -85,3 +99,8 @@ CSS-only files use the same token as a CSS comment: `/* bcn-lego-checked: ... */
 ## Documentation
 - [Authoring a bcn- component (naming, structure, when justified)](bcn-authoring.md)
 - [Reinvented → lego mapping & per-tier search recipes](lego-lookup.md)
+
+> **Publishing note:** edits to this skill only reach spokes after the plugin is republished —
+> bump `plugins/spoke-kit/.claude-plugin/plugin.json` (currently `1.3.1`), push the hub, then
+> `claude plugin marketplace update ecology`. Local hub edits are inert until then (spokes run
+> the cached marketplace copy).
