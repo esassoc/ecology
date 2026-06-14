@@ -101,7 +101,10 @@ const navItems = markActive(items);
 const hasSearch = searchIndex.length > 0;
 const hasLogoSlot = Astro.slots.has('logo');
 const shellCls = ['esa-app-shell', accent && 'esa-app-shell--accent'].filter(Boolean).join(' ');
-const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: userMenu, index: searchIndex });
+// Adapt the flat searchIndex into esa-entity-search's entities + scopes (the omnibox).
+const searchScopes = [...new Set(searchIndex.map((e) => e.category).filter(Boolean))].map((c) => ({ id: c, label: c }));
+const searchEntities = searchIndex.map((e, i) => ({ id: `e-${i}`, title: e.title, subtitle: e.subtitle, scope: e.category, url: e.id }));
+const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: userMenu, entities: searchEntities, scopes: searchScopes });
 ---
 <div class={shellCls} data-shell={uid}>
   <EsaAppBar tone="surface" as="header" class="esa-app-shell__bar">
@@ -141,7 +144,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   </div>
 
   {hasSearch && (
-    <esa-search-panel id={searchId} placeholder={searchPlaceholder} data-index={JSON.stringify(searchIndex)}></esa-search-panel>
+    <esa-entity-search id={searchId} placeholder={searchPlaceholder} hotkey="slash"></esa-entity-search>
   )}
 
   <script is:inline type="application/json" data-shell-data={uid} set:html={payload}></script>
@@ -150,7 +153,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 <script>
   import '@esa/ecology/esa-sidebar-nav';
   import '@esa/ecology/esa-dropdown-menu';
-  import '@esa/ecology/esa-search-panel';
+  import '@esa/ecology/esa-entity-search';
 
   type AnyEl = HTMLElement & Record<string, unknown>;
 
@@ -172,22 +175,16 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
       });
     }
 
-    const trigger = document.querySelector(`[data-shell-search="${uid}"]`);
-    if (trigger && panel) {
-      const index: { id: string; title: string; subtitle?: string; category?: string }[] = cfg.index || [];
-      const toResults = (q: string) => {
-        const s = q.trim().toLowerCase();
-        return index
-          .filter((e) => !s || e.title.toLowerCase().includes(s) || (e.subtitle ?? '').toLowerCase().includes(s))
-          .map((e) => ({ id: e.id, title: e.title, category: e.category }));
-      };
-      trigger.addEventListener('click', () => { (panel as AnyEl).results = toResults(''); (panel as AnyEl).open = true; });
-      panel.addEventListener('search', (ev) => { (panel as AnyEl).results = toResults((ev as CustomEvent<{ value: string }>).detail.value); });
-      panel.addEventListener('result-select', (ev) => {
-        const id = (ev as CustomEvent<{ id: string }>).detail?.id;
-        if (id) window.location.href = id;
+    if (panel) {
+      panel.entities = cfg.entities || [];
+      panel.scopes = cfg.scopes || [];
+      panel.addEventListener('select', (ev) => {
+        const url = (ev as CustomEvent<{ entity?: { url?: string } }>).detail?.entity?.url;
+        if (url) window.location.href = url;
       });
     }
+    const trigger = document.querySelector(`[data-shell-search="${uid}"]`);
+    trigger?.addEventListener('click', () => (panel as (AnyEl & { show?: () => void }) | null)?.show?.());
   }
 
   document.querySelectorAll<HTMLScriptElement>('script[type="application/json"][data-shell-data]').forEach(wireShell);
