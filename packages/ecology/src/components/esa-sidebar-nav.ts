@@ -250,7 +250,7 @@ export class EsaSidebarNav extends LitElement {
       overflow: hidden;
       white-space: nowrap;
     }
-    :host([collapsed]) .link { justify-content: center; padding-inline: var(--spacing-200, 8px); }
+    :host([collapsed]) .link { justify-content: center; gap: 0; padding-inline: var(--spacing-200, 8px); }
     :host([collapsed]) .children { display: none; }
 
     .nav {
