@@ -98,7 +98,7 @@ import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width=
       overflow: hidden;
       white-space: nowrap;
     }
-    :host([collapsed]) .link { justify-content: center; padding-inline: var(--spacing-200, 8px); }
+    :host([collapsed]) .link { justify-content: center; gap: 0; padding-inline: var(--spacing-200, 8px); }
     :host([collapsed]) .children { display: none; }
 
     .nav {
