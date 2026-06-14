@@ -11,7 +11,7 @@
  * NEXT TO the spoke folder — that's the fix.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -24,6 +24,10 @@ const results = [];
 const check = (name, ok, fix) => {
   results.push({ name, ok, fix });
   console.log(`${ok ? '  ok ' : 'FAIL '} ${name}${ok || !fix ? '' : `\n      fix: ${fix}`}`);
+};
+// Non-fatal: same column style as check(), but never counts toward the exit code.
+const warn = (name, ok, fix) => {
+  console.log(`${ok ? '  ok ' : 'WARN '} ${name}${ok || !fix ? '' : `\n      fix: ${fix}`}`);
 };
 const run = (cmd, args) => {
   try {
@@ -98,6 +102,34 @@ const hasMarketplace = [
 });
 check('Claude ecology plugin marketplace installed', hasMarketplace,
   'claude plugin marketplace add esassoc/ecology && claude plugin install spoke-kit@ecology');
+
+// --- 7. spoke-kit plugin freshness (source vs installed cache) -----------------
+// The cached-plugin republish gotcha: hub edits to hooks/skills stay inert until
+// the plugin is republished. Warn (non-fatal) when SOURCE is ahead of what's
+// actually installed in the Claude plugin cache.
+const semverCmp = (a, b) => {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0);
+    if (diff) return diff;
+  }
+  return 0;
+};
+const srcVersion = readJson(path.join(HUB_ROOT, 'plugins', 'spoke-kit', '.claude-plugin', 'plugin.json'))?.version;
+const cacheDir = path.join(profile, 'plugins', 'cache', 'ecology', 'spoke-kit');
+let cached = [];
+try {
+  cached = readdirSync(cacheDir).filter((v) => /^\d+\.\d+\.\d+$/.test(v));
+} catch {
+  // cache dir absent — likely a fresh machine or plugin not yet installed; skip.
+}
+if (srcVersion && cached.length) {
+  const highest = cached.sort(semverCmp).at(-1);
+  warn(`spoke-kit plugin up to date (source ${srcVersion}, installed ${highest})`,
+    semverCmp(srcVersion, highest) <= 0,
+    `spoke-kit source (${srcVersion}) is ahead of the installed plugin (${highest}) — its hook/skill fixes are inert until you republish: push the hub, then run \`claude plugin marketplace update ecology\`.`);
+}
 
 // --- Verdict -------------------------------------------------------------------
 const failures = results.filter((r) => !r.ok);

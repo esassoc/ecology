@@ -40,6 +40,11 @@ half-installed spoke that started this whole effort.
 - [ ] **Contrast audit**: `node ../ecology/scripts/check-contrast.mjs` — no AA
       text-pair failures (warnings reviewed and either fixed or accepted with
       a reason).
+- [ ] **Adherence audit**: `node ../ecology/scripts/check-adherence.mjs` —
+      **0 errors** (undefined tokens, banned `border-left`, sub-floor type,
+      hand-rolled `<input>/<select>/<textarea>`). Warnings (hardcoded color,
+      missing `--_` fallback, unloaded weight, Tailwind class, page hand-rolling
+      too much CSS) reviewed and either fixed or accepted with a reason.
 
 ## Build green
 - [ ] `npm run build` succeeds.
