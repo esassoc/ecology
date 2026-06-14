@@ -121,7 +121,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     )}
 
     <esa-dropdown-menu slot="end" id={menuId} position="below-end">
-      <EsaIconLink icon="circle-user" trailing="chevron-down">{userName}</EsaIconLink>
+      <EsaIconLink icon="circle-user" trailing="chevron-down" size="sm">{userName}</EsaIconLink>
     </esa-dropdown-menu>
   </EsaAppBar>
 
@@ -212,7 +212,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     --app-bar-bg: color-mix(in srgb, var(--color-primary, #43608a) 5%, var(--color-surface-sunken, #f2f6f3));
   }
 
-  .esa-app-shell__bar { flex: none; border-bottom: 1px solid var(--color-border, #e5e5e5); }
+  .esa-app-shell__bar { flex: none; border-bottom: 1px solid var(--color-border-strong, #d4d4d8); }
 
   .esa-app-shell__toggle {
     display: inline-flex; align-items: center; justify-content: center;
@@ -249,8 +249,14 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   .esa-app-shell__brand {
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
     padding: var(--spacing-100, 4px); text-decoration: none;
+    border-radius: var(--radius-100, 4px);
     color: var(--color-text-primary, #171717);
+    transition: background 150ms ease;
   }
+  .esa-app-shell__brand:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+  /* Collapsed rail: drop the wordmark (it pins the rail open), center the mark. */
+  esa-sidebar-nav[collapsed] .esa-app-shell__brand { justify-content: center; padding-inline: 0; }
+  esa-sidebar-nav[collapsed] .esa-app-shell__wordmark { display: none; }
   .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-primary, #43608a); }
   .esa-app-shell__wordmark {
     font-family: var(--font-display, var(--font-sans, sans-serif));
