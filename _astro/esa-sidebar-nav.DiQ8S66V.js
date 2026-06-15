@@ -1,4 +1,4 @@
-import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>',d='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>',p='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',c='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';class v extends r{constructor(){super(),this.toggleCollapse=()=>{this.collapsed=!this.collapsed,this.dispatchEvent(new CustomEvent("collapsedchange",{detail:{collapsed:this.collapsed},bubbles:!0,composed:!0}))},this.items=[],this.collapsed=!1,this.collapsible=!0,this._expanded=new Set}static{this.properties={items:{type:Array},collapsed:{type:Boolean,reflect:!0},collapsible:{type:Boolean},_expanded:{state:!0}}}get groupedSections(){const e=[];let a=null,i=[];for(const s of this.items){const t=s.group??null;t!==a?(i.length>0&&e.push({group:a,items:i}),a=t,i=[s]):i.push(s)}return i.length>0&&e.push({group:a,items:i}),e}toggleChildren(e){const a=new Set(this._expanded);a.has(e.label)?a.delete(e.label):a.add(e.label),this._expanded=a}isExpanded(e){return this._expanded.has(e.label)}icon(e){return e?n`<span class="icon" .innerHTML=${e}></span>`:null}badge(e){return e!=null?n`<span class="badge">${e}</span>`:null}renderLeaf(e){return e.href?n`<a
+import{i as r,b as n,a as o}from"./lit-element.C8p3bJxG.js";const l='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>',d='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>',p='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',c='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';class h extends r{constructor(){super(),this.toggleCollapse=()=>{this.collapsed=!this.collapsed,this.dispatchEvent(new CustomEvent("collapsedchange",{detail:{collapsed:this.collapsed},bubbles:!0,composed:!0}))},this.items=[],this.collapsed=!1,this.collapsible=!0,this._expanded=new Set}static{this.properties={items:{type:Array},collapsed:{type:Boolean,reflect:!0},collapsible:{type:Boolean},_expanded:{state:!0}}}get groupedSections(){const e=[];let a=null,i=[];for(const s of this.items){const t=s.group??null;t!==a?(i.length>0&&e.push({group:a,items:i}),a=t,i=[s]):i.push(s)}return i.length>0&&e.push({group:a,items:i}),e}toggleChildren(e){const a=new Set(this._expanded);a.has(e.label)?a.delete(e.label):a.add(e.label),this._expanded=a}isExpanded(e){return this._expanded.has(e.label)}icon(e){return e?n`<span class="icon" .innerHTML=${e}></span>`:null}badge(e){return e!=null?n`<span class="badge">${e}</span>`:null}renderLeaf(e){return e.href?n`<a
         class="link ${e.active?"link--active":""} ${e.disabled?"link--disabled":""}"
         href=${e.href}
         tabindex=${e.disabled?-1:0}
@@ -52,7 +52,7 @@ import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width=
               aria-label=${this.collapsed?"Expand sidebar":"Collapse sidebar"}
               @click=${this.toggleCollapse}
             >
-              <span .innerHTML=${this.collapsed?d:o}></span>
+              <span .innerHTML=${this.collapsed?d:l}></span>
             </button>`:null}
         <ul class="list" role="list">
           ${this.groupedSections.map(e=>n`
@@ -63,7 +63,12 @@ import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width=
             `)}
         </ul>
       </nav>
-    `}static{this.styles=l`
+    `}static{this.styles=o`
+    /* The light-DOM box-sizing reset doesn't cross the shadow boundary, so set it
+       here — without it, .link (width:100% + padding) overflows the rail, pushing
+       the right-aligned badge past the border and shifting collapsed icons off-center. */
+    *, *::before, *::after { box-sizing: border-box; }
+
     :host {
       --_sidenav-width: var(--sidebar-width, 260px);
       --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
@@ -95,6 +100,13 @@ import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width=
     :host([collapsed]) .group-label {
       opacity: 0;
       width: 0;
+      /* Collapse to a TRUE zero footprint so justify-content:center can center the
+         icon: flex:none (else .label's flex:1 eats the space), and min-width/padding:0
+         (else the badge's 20px min-width + padding leaves a ghost that shoves the
+         icon off-center). */
+      flex: none;
+      min-width: 0;
+      padding: 0;
       overflow: hidden;
       white-space: nowrap;
     }
@@ -223,4 +235,4 @@ import{i as r,b as n,a as l}from"./lit-element.C8p3bJxG.js";const o='<svg width=
 
     .item--disabled,
     .child--disabled { opacity: 0.5; pointer-events: none; }
-  `}}customElements.get("esa-sidebar-nav")||customElements.define("esa-sidebar-nav",v);
+  `}}customElements.get("esa-sidebar-nav")||customElements.define("esa-sidebar-nav",h);
