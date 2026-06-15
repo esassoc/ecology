@@ -1,5 +1,5 @@
 /*
- * Smoke test for the manifest<->reality cross-check (run: `node --test scripts/lib/`).
+ * Smoke test for the manifest<->reality cross-check (run: `npm test`).
  * Zero deps — node:test + node:assert, same ethos as the rest of spoke-kit.
  *
  * Fixtures mirror the laureate-design reference pages (the canonical zero-CSS
