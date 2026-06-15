@@ -1,4 +1,8 @@
+// hub-edit-approved: Andy approved (2026-06-15) — resolve item.icon by registry
+// NAME (via ./icon-registry) so spokes pass icon: 'chef-hat' instead of pasting
+// raw <svg> blobs into nav data. Raw-SVG strings still work (back-compat).
 import { LitElement, html, css } from 'lit';
+import { iconSvg } from './icon-registry';
 
 /**
  * esa-sidebar-nav — Lit Web Component.
@@ -16,7 +20,8 @@ import { LitElement, html, css } from 'lit';
  *
  * Decorator-free on purpose (avoids per-consumer tsconfig decorator flags).
  * `items` is a property (array) — set it from JS; not an attribute.
- * Icons may be passed as raw inline SVG strings on `item.icon`.
+ * Icons on `item.icon` may be an esa-icon registry NAME ('chef-hat') or a raw
+ * inline SVG string — see the icon() resolver. hub-edit-approved: Andy 2026-06-15.
  */
 export interface EsaSidebarNavItem {
   label: string;
@@ -34,14 +39,12 @@ interface GroupedNavSection {
   items: EsaSidebarNavItem[];
 }
 
-const CHEVRONS_LEFT =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>';
-const CHEVRONS_RIGHT =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>';
-const CHEVRON_UP =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
-const CHEVRON_DOWN =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+// hub-edit-approved: Andy approved (2026-06-15) — collapse/accordion chevrons also
+// come from the shared icon-registry (16px), so this component holds zero inline SVG.
+const CHEVRONS_LEFT = iconSvg('chevrons-left', 16) ?? '';
+const CHEVRONS_RIGHT = iconSvg('chevrons-right', 16) ?? '';
+const CHEVRON_UP = iconSvg('chevron-up', 16) ?? '';
+const CHEVRON_DOWN = iconSvg('chevron-down', 16) ?? '';
 
 export class EsaSidebarNav extends LitElement {
   static properties = {
@@ -109,7 +112,12 @@ export class EsaSidebarNav extends LitElement {
     return this._expanded.has(item.label);
   }
 
-  private icon(svg?: string) {
+  // hub-edit-approved: Andy approved (2026-06-15) — name-or-raw icon resolution.
+  // `icon` may be a registry name ('chef-hat') or a raw inline <svg> string.
+  // Markup (starts with '<') is injected as-is; otherwise it's resolved by name.
+  private icon(icon?: string) {
+    if (!icon) return null;
+    const svg = icon.trimStart().startsWith('<') ? icon : iconSvg(icon);
     return svg ? html`<span class="icon" .innerHTML=${svg}></span>` : null;
   }
 
