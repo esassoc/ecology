@@ -44,15 +44,20 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
 
 The gates above enforce that a page is a well-formed *manifest of components*. They
 do **not** judge whether the decomposition is *good* — right component boundaries,
-right granularity, right reuse. That last pass is **`decomposition-review`** — load it
-and follow it. It is **advisory and never blocks**: the gates decide what ships; this
-decides what's *good*.
+right granularity, right reuse. That last pass is done by a **separate agent**:
+**spawn the `decomposition-reviewer` subagent** and hand it the same scope you reviewed
+above (the changed files / the named page / "the working-tree diff").
 
-- It grounds itself first (`node ../ecology/scripts/decomposition-context.mjs` over the
-  same scope), then judges five dimensions: missed reuse, granularity, seam quality,
-  promotion signal, and manifest fidelity.
-- Translate its findings into plain words for the report (see Reporting below). A
-  `strong` finding is "worth reworking before you ship, but your call"; `consider` /
+It runs on purpose in its **own fresh context** — it did not write this code, and it is
+read-only, so it advises without "fixing." It grounds itself
+(`node ../ecology/scripts/decomposition-context.mjs`), judges five dimensions (missed
+reuse, granularity, seam quality, promotion signal, manifest fidelity), and returns a
+one-line verdict + a findings JSON array. **It never blocks**: the gates decide what
+ships; this decides what's *good*.
+
+- Do not run the rubric inline yourself — delegate it, so the reviewer's judgment stays
+  independent of the work. Relay its findings (see Reporting below).
+- A `strong` finding is "worth reworking before you ship, but your call"; `consider` /
   `suggestion` are lighter. **None is a blocker** — never present one as Must-fix.
 - A clean decomposition gets one line ("Components are well cut — nothing to change").
 
@@ -71,10 +76,10 @@ back up to the hub; surface it to the user so it gets promoted.
   fixed in one line each — plain words ("made the labels readable size", not
   "bumped font-size token").
 - **List** judgment calls as short questions the user can answer.
-- **Decomposition (advisory):** report `decomposition-review`'s findings in their
-  own short block, clearly marked "advisory — not blockers," led by its one-line
-  verdict (clean / minor / needs rework). Don't auto-apply these — they're seam
-  judgments for the user to weigh; offer to act on the ones they pick.
+- **Decomposition (advisory):** report the `decomposition-reviewer` agent's findings
+  in their own short block, clearly marked "advisory — not blockers," led by its
+  one-line verdict (clean / minor / needs rework). Don't auto-apply these — they're
+  seam judgments for the user to weigh; offer to act on the ones they pick.
 - End with a one-line verdict: "Ready to /ship" or "Fix X first."
 - If the build fails, explain what broke in one sentence and fix it if the fix
   is unambiguous; otherwise show the error and ask.

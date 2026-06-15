@@ -21,8 +21,9 @@
  *                    entries it most resembles. A HINT to compare, never itself a finding.
  *
  * This script GATHERS; it does not judge. The rubric + the findings live in the
- * decomposition-review skill, which runs this first. Sibling to check-adherence.mjs /
- * check-contrast.mjs — same hub-resolved layout, same JSON-to-stdout contract.
+ * decomposition-reviewer AGENT (a separate, fresh-context, read-only reviewer spawned by
+ * /design-qa), which runs this first. Sibling to check-adherence.mjs / check-contrast.mjs
+ * — same hub-resolved layout, same JSON-to-stdout contract.
  *
  * Usage (from a spoke repo, sibling of the `ecology` checkout):
  *   node ../ecology/scripts/decomposition-context.mjs            # scope = git working-tree changes
@@ -159,7 +160,7 @@ const diff = diffRaw.length > DIFF_CAP ? diffRaw.slice(0, DIFF_CAP) + '\n…(dif
 
 const bundle = {
   grounding: 'decomposition-context',
-  note: 'GATHERED artifacts for the decomposition-review judge. This script does not judge — it grounds. Findings are emitted by the decomposition-review skill.',
+  note: 'GATHERED artifacts for the decomposition-reviewer agent. This script does not judge — it grounds. Findings are emitted by the decomposition-reviewer agent (read-only, fresh context).',
   scope: { source: scopeSource, files: scopeFiles },
   counts: {
     changedPages: changedPages.length,
