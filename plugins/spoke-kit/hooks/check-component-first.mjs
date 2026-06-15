@@ -78,19 +78,39 @@ if (
   violations.push('bespoke card/badge/pill/chip/tag -> use esa-card / esa-badge / esa-pill / esa-chip-group');
 }
 
+// --- Bespoke page LAYOUT / TYPOGRAPHY (PAGES only) ---
+// A spoke PAGE must read as a MANIFEST of layout primitives + type roles, not
+// hand-rolled flex/grid + raw type. Authoring a reusable component (src/components,
+// bcn-*, a Lit .ts) legitimately writes flex/grid + font rules — the layout
+// primitives THEMSELVES are flex/grid — so this is scoped to src/pages/** only.
+// The component-first skill has advertised this block; this is the teeth.
+if (/[\\/]src[\\/]pages[\\/]/i.test(file)) {
+  if (/display\s*:\s*(flex|grid)\b/i.test(content)) {
+    violations.push('bespoke display:flex/grid in a page -> compose a layout primitive (@esa/tokens/layouts.css): .stack (vertical rhythm) / .cluster (wrapping row) / .repel (split) / .grid (cards, knob --grid-min) / .sidebar (rail+main) / .switcher / .frame');
+  }
+  if (/grid-template(?:-columns|-rows|-areas)?\s*:/i.test(content)) {
+    violations.push('bespoke grid-template in a page -> use .grid (knob --grid-min) or .sidebar / .switcher, not a hand-rolled track list');
+  }
+  if (/var\(\s*--type-size-/i.test(content) || /font-family\s*:/i.test(content)) {
+    violations.push('raw --type-size-*/font-family in a page -> apply a type role (@esa/tokens/type-roles.css): .type-page-title / .type-section-title / .type-card-title / .type-body / .type-label / .type-caption');
+  }
+}
+
 // --- Verdict ---
 if (violations.length) {
   console.error(
     [
-      'BLOCKED by component-first: this content reinvents a UI primitive that an esa-* lego already provides.',
+      'BLOCKED by component-first: this content reinvents a UI primitive, layout, or type style that an esa-* lego, layout primitive, or type role already provides.',
       '',
       'Detected:',
       ...violations.map((v) => `  - ${v}`),
       '',
       'Lookup order (do this, in order):',
       '  1. Ecology esa-* legos  -> ls node_modules/@esa/ecology/src/components/',
-      '  2. Beacon prod patterns (optional, if cloned) -> ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/ + src/scss/',
-      '  3. ONLY then a documented bcn- component.',
+      '  2. Layout: @esa/tokens/layouts.css primitives (.stack/.cluster/.repel/.grid/.sidebar/.switcher/.frame).',
+      '     Type:   @esa/tokens/type-roles.css roles (.type-page-title/.type-section-title/.type-body/.type-label/...).',
+      '  3. Beacon prod patterns (optional, if cloned) -> ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/ + src/scss/',
+      '  4. ONLY then a documented bcn- component.',
       '',
       'To proceed: use the lego, OR add a justification comment to the content:',
       '  <!-- bcn-lego-checked: no esa- X fits because Y; checked Beacon (Z); bcn-foo is the reusable home -->',

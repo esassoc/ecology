@@ -32,11 +32,49 @@ interrogation):
 
 Then play back a 3–5 bullet summary and confirm before building.
 
-## 2. Build
+## 2. Manifest first — outline the page as components (required, BEFORE any code)
 
-- **Load the `component-first` and `design-principles` skills.** Compose from
-  `esa-*` legos; pattern-match the structure of existing pages in
-  `src/pages/prototypes/` (read 1–2 before writing).
+**Load the `component-first` and `design-principles` skills now.** The first
+artifact is NOT code — it's a **manifest** of the page. A page is a manifest of a
+primitive spine carrying **section components**, never a canvas of bespoke markup +
+`<style>`. (A PreToolUse hook, `check-manifest`, enforces this — get ahead of it.)
+
+Produce the manifest and resolve **every** section before writing a line of code:
+
+1. Pick the page **spine** — a layout primitive (`stack`/`grid`/`sidebar`/…).
+2. List the page's **sections** in order (header, stats, list, detail panel, footer…).
+3. **Resolve each section to a COMPONENT**, stopping at the first hit:
+   - **reuse an `esa-*` hub lego** if one fits (`esa-page-header`, `esa-stat`,
+     `esa-app-shell`, …), else
+   - **reuse an existing spoke component** (`<spoke>-*`), else
+   - **build a NEW `<spoke>-*` component** (compose primitives + legos inside it).
+   A primitive (`stack`/`grid`/`center`/…) is the spine or lives *inside* a
+   component — it is never itself a section. Never inline a section as page markup.
+
+Write the manifest as the page's opening comment and confirm it with the user:
+
+```
+<!-- manifest:
+  layout: stack(2xl)                         # the page SPINE — a primitive is fine here
+  sections:
+    - page header -> laureate-page-header    # every SECTION is a component
+    - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
+    - winners     -> laureate-winners-grid
+    - footer      -> laureate-footer
+-->
+```
+
+**Worked reference**: Laureate's `src/pages/app/index.astro` is the canonical
+zero-`<style>` manifest; its `src/components/laureate-*.astro` are the sections.
+
+## 3. Build from the manifest
+
+- Build any NEW `<spoke>-*` section components first (each owns its own markup +
+  CSS), then assemble the page by referencing them on the spine. Pattern-match the
+  structure of existing pages in `src/pages/prototypes/` (read 1–2 before writing).
+- **Target ZERO page `<style>`** — every section's CSS lives in its component.
+  Page CSS is a smell that a section escaped into the page; pull it back into a
+  `<spoke>-*` component.
 - Mock data follows design-principles: **invented, deterministic,
   domain-credible** — never copied from client documents or `docs/private/`.
   Put it in `src/data/` modules, not inline.
@@ -44,7 +82,7 @@ Then play back a 3–5 bullet summary and confirm before building.
   `src/data/prototypes.ts` (slug, title, one-line description, route,
   createdAt = today, status `in-progress`).
 
-## 3. Show it
+## 4. Show it
 
 - Start the dev server if not running (`npm run dev`) and give the local URL
   to the exact page.

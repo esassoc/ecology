@@ -41,6 +41,10 @@ const EXCLUDE = [
   'src/layouts/ComponentDoc.astro',
   'src/layouts/AppShell.astro',
   'src/pages/design-system',
+  // Landing + patterns are /spoke-init scaffold chrome, identical across spokes —
+  // same rationale as design-system above (not workflow-authored, out of the gate).
+  'src/pages/index.astro',
+  'src/pages/patterns',
 ];
 
 // ---- 1. Collect the valid token vocabulary -------------------------------
@@ -105,6 +109,9 @@ for (const file of targets) {
   const local = new Set([...src.matchAll(/(--[a-z0-9-]+)\s*:/gi)].map((m) => m[1]));
   const isAstro = extname(file) === '.astro';
   const lines = src.split('\n');
+  const rel = relative(ROOT, file);
+  const isPage = rel.startsWith('src/pages/');
+  const escaped = /bcn-lego-checked:/i.test(src);
 
   lines.forEach((text, i) => {
     const ln = i + 1;
@@ -155,6 +162,18 @@ for (const file of targets) {
     //     or "icon-grid" don't false-positive.
     if (/class\s*=\s*"[^"]*\b(?:gap-\d|p[xytblr]?-\d|m[xytblr]?-\d|text-(?:xs|sm|base|lg|xl|\dxl)|bg-[a-z]+-\d|rounded-(?:sm|md|lg|xl|full)|flex-(?:row|col)|grid-cols-\d)\b/i.test(text))
       add('warning', 'tailwind-utility', file, ln, 'looks like a Tailwind utility class — this project uses token-driven CSS');
+
+    // (i) Bespoke page layout/type — a PAGE composes layout primitives + type roles;
+    //     it does NOT hand-roll flex/grid or raw type. Scoped to src/pages/** (components
+    //     and layouts legitimately author flex/grid); bcn-lego-checked: exempts a page.
+    if (isPage && !escaped) {
+      if (/display\s*:\s*(flex|grid)\b/i.test(text))
+        add('error', 'bespoke-page-layout', file, ln, 'display:flex/grid in a page — compose a layout primitive (.stack/.cluster/.repel/.grid/.sidebar/.switcher/.frame) from @esa/tokens/layouts.css');
+      else if (/grid-template(?:-columns|-rows|-areas)?\s*:/i.test(text))
+        add('error', 'bespoke-page-layout', file, ln, 'grid-template in a page — use .grid (--grid-min) or .sidebar/.switcher');
+      if (/var\(\s*--type-size-/i.test(text) || /font-family\s*:/i.test(text))
+        add('error', 'bespoke-page-type', file, ln, 'raw --type-size-*/font-family in a page — apply a type role (.type-page-title/.type-section-title/.type-card-title/.type-body/.type-label/.type-caption)');
+    }
   });
 
   // (i) Composition heft: a page carrying a heavy bespoke <style> block or a large

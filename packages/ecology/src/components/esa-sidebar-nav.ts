@@ -216,6 +216,11 @@ export class EsaSidebarNav extends LitElement {
   }
 
   static styles = css`
+    /* The light-DOM box-sizing reset doesn't cross the shadow boundary, so set it
+       here — without it, .link (width:100% + padding) overflows the rail, pushing
+       the right-aligned badge past the border and shifting collapsed icons off-center. */
+    *, *::before, *::after { box-sizing: border-box; }
+
     :host {
       --_sidenav-width: var(--sidebar-width, 260px);
       --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
@@ -247,6 +252,13 @@ export class EsaSidebarNav extends LitElement {
     :host([collapsed]) .group-label {
       opacity: 0;
       width: 0;
+      /* Collapse to a TRUE zero footprint so justify-content:center can center the
+         icon: flex:none (else .label's flex:1 eats the space), and min-width/padding:0
+         (else the badge's 20px min-width + padding leaves a ghost that shoves the
+         icon off-center). */
+      flex: none;
+      min-width: 0;
+      padding: 0;
       overflow: hidden;
       white-space: nowrap;
     }

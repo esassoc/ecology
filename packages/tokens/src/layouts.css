@@ -22,6 +22,19 @@
   initial-value: 1rem;
 }
 
+/* ---- flow margin reset (the Every-Layout prerequisite) ----
+   The primitives own spacing via `gap`. Browser default margins on flow elements
+   would COMPOUND with that gap (a .stack of <h1>/<p> spaces wider than its gap).
+   Zero them at :where() (0 specificity) so any explicit margin still wins. */
+:where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ul, ol, pre) { margin: 0; }
+
+/* ---- center: a horizontally-centered, max-width content column ---- */
+.center {
+  --center-max: 72rem;
+  max-inline-size: var(--center-max);
+  margin-inline: auto;
+}
+
 /* ---- stack: vertical flow with consistent rhythm ---- */
 .stack {
   --gap: var(--spacing-400, 1rem);

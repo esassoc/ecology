@@ -40,6 +40,7 @@ plain `<div>`s. Use these instead of bespoke flex/grid CSS.
 | Switch row→column under a threshold | `.switcher` (knob `--switcher-threshold`) |
 | Aspect-ratio media box | `.frame` (knobs `--frame-ratio`, `--frame-fit`) |
 | Horizontal scroller | `.reel` (knob `--reel-item`) |
+| Center a column with a max width | `.center` (knob `--center-max`) |
 
 Gap is declarative: `data-gap="none|xs|sm|md|lg|xl"` on the element (or override `--gap`).
 ```bash
@@ -80,6 +81,48 @@ already exists here — or should become a lego (`/request-lego`).
 # Always look across spoke prototypes for an existing solve before building a new one:
 grep -rln "PATTERN" ~/Dev/*-design/src/pages ~/Dev/*-design/src/components 2>/dev/null
 ```
+
+## Section lookup — resolving a whole page SECTION (manifest-first)
+
+The lookups above resolve a single *control*. A composed page is built one **section** at
+a time, and **every section is a component** — never inlined page markup + page `<style>`.
+A PreToolUse hook (`check-manifest`) enforces this on `src/pages/**` (excluding
+`design-system/`, the landing `index.astro`, and `patterns/`): a manifest header must be
+present and every section must resolve to an `esa-*` lego or a `<spoke>-*` component. Bare
+primitives / words are rejected.
+
+**Resolve each section in this order — stop at the first hit:**
+
+1. **Reuse an `esa-*` hub lego** if one covers the whole section (`esa-page-header`,
+   `esa-stat`, `esa-app-shell`, …).
+2. **Reuse an existing `<spoke>-*` component** the spoke already ships.
+3. **BUILD a new `<spoke>-*` component** — compose primitives + legos *inside* it. Then
+   the page just references it.
+
+A primitive (`.stack`/`.grid`/`.repel`/`.center`/…) and a type role are the page **spine**
+and live **inside** components — they are *never themselves* a section resolver.
+
+**Write the manifest FIRST**, before any code — outline the sections, resolve each, decide
+reuse vs. build. The page then reads like its manifest: `AppLayout > primitive spine >
+section components`.
+
+```
+<!-- manifest:
+  layout: stack(2xl)                         # the page SPINE — a primitive is fine here
+  sections:
+    - page header -> laureate-page-header    # every SECTION is a component
+    - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
+    - winners     -> laureate-winners-grid
+    - footer      -> laureate-footer
+-->
+```
+
+A section resolver must be **hyphenated** (`esa-card`, `laureate-foo`). Bare words /
+`inline` / a bare primitive are rejected. "Page CSS" is a smell — the target is **ZERO page
+`<style>`**; every section owns its markup + CSS in its component.
+
+**Worked reference**: Laureate's `src/pages/app/index.astro` is the canonical zero-CSS
+manifest; its `src/components/laureate-*.astro` are the section components.
 
 ### Import by file type
 | You saw in `ls`... | Import like... | Use in markup |

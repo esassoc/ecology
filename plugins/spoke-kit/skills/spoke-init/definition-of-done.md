@@ -30,6 +30,21 @@ half-installed spoke that started this whole effort.
 - [ ] `ds-nav.ts` `componentGroups` reflects the real catalog (not the scaffold
       single-Button entry) and every item has a matching component page.
 
+## Composed pages are manifests (sections-are-components)
+Applies to composed pages under `src/pages/**` (the app/prototype pages — NOT
+`design-system/`, the landing `index.astro`, or `patterns/`). Enforced by the
+`check-manifest` PreToolUse hook.
+- [ ] Each composed page carries a **manifest header** (`<!-- manifest: layout / sections -->`)
+      and **every section resolves to a COMPONENT** — an `esa-*` hub lego or a
+      `<spoke>-*` component. No bare-word / `inline` / primitive section resolvers.
+- [ ] Composed pages are **zero-`<style>`**: every section owns its markup + CSS in
+      its own component. Page CSS is a smell — a section escaped into the page.
+- [ ] **Primitives only on the spine or inside components.** Layout primitives
+      (`stack`/`grid`/`repel`/`center`/…) and type roles are the page spine and live
+      *inside* section components — never used as a section themselves.
+- [ ] Pattern-match Laureate's `src/pages/app/index.astro` (canonical zero-CSS
+      manifest) + its `src/components/laureate-*.astro` section components.
+
 ## Theme reviewed
 - [ ] `theme-<slug>.css` re-points were **reviewed by a human**.
 - [ ] If a source repo was given: the primitive-ramp divergence, the

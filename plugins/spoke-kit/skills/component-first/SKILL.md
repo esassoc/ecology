@@ -1,6 +1,6 @@
 ---
 name: component-first
-description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, type-roles, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, and on "make a component", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order. NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides.
+description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, type-roles, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, and on "make a component", "build a page/screen", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order AND the manifest-first / sections-are-components discipline (every page section resolves to an esa-* lego or a <spoke>-* component; zero page <style>). NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides, and NEVER inline a page section as bare markup + page <style>.
 ---
 
 # Component-First (Legos, Never Reinvent)
@@ -50,6 +50,66 @@ Beacon's `ui-*` components map closely to `esa-*` — find the one you need ther
 
 ### 3. ONLY THEN build a `bcn-` component
 If — and only if — nothing exists in either tier, create a **real, reusable, documented** component with a `bcn-` class prefix. Not a one-off page blob. See [bcn-authoring.md](bcn-authoring.md).
+
+## Manifest-First — Sections Are Components
+
+The lookup order above is how you resolve a single control. **Pages have a second
+discipline layered on top of it: every SECTION of a composed page is itself a
+component.** A page is not a canvas you fill with bespoke markup + `<style>` — it is a
+**manifest** of a primitive spine carrying section components.
+
+A **PreToolUse hook** (`check-manifest`) now enforces this on every composed page under
+`src/pages/**` (it excludes `design-system/`, the landing `index.astro`, and
+`patterns/`). It requires the manifest header AND that **every section resolves to a
+COMPONENT** — an `esa-*` hub lego or a `<spoke>-*` component. A primitive
+(`stack`/`grid`/`repel`/`center`/…) is **not** a valid section resolver; it is either the
+page SPINE (the `layout:` line) or it lives INSIDE a component. Bare words / `inline` are
+rejected.
+
+### Plan the manifest BEFORE writing code
+
+Before you write a page, produce the manifest **first**. Outline the sections, resolve
+each one via the section lookup, decide what to reuse vs. build. The page then reads like
+its manifest: `AppLayout > a primitive spine > section components`.
+
+```
+<!-- manifest:
+  layout: stack(2xl)                         # the page SPINE — a primitive is fine here
+  sections:
+    - page header -> laureate-page-header    # every SECTION is a component
+    - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
+    - winners     -> laureate-winners-grid
+    - footer      -> laureate-footer
+-->
+```
+
+A section resolver must be a **component** (hyphenated: `esa-card`, `laureate-foo`). Bare
+primitives or words are rejected by the hook.
+
+### The section lookup order (parallels the esa-* lego lookup, but for SECTIONS)
+
+When a page needs a section, walk these in order — stop at the first hit:
+
+1. **Reuse an `esa-*` hub lego** if one fits the whole section (`esa-page-header`,
+   `esa-stat`, `esa-app-shell`, …).
+2. **Reuse an existing `<spoke>-*` component** if the spoke already has one.
+3. **BUILD a new `<spoke>-*` component** — compose primitives + legos *inside* it.
+
+**NEVER inline a section as page markup + page `<style>`.** Primitives
+(`@esa/tokens/layouts.css`: stack/cluster/repel/grid/sidebar/switcher/frame/reel/`center`)
+and type roles (`@esa/tokens/type-roles.css`) are the page SPINE and live *inside*
+components — they are never themselves a section.
+
+### "Page CSS" is a smell — target ZERO page `<style>`
+
+Every section owns its own markup + CSS inside its component, so a finished composed page
+should have **no page `<style>` block at all**. If you're writing page CSS, a section has
+escaped into the page — pull it into a `<spoke>-*` component. See the section lookup detail
+and manifest schema in [lego-lookup.md](lego-lookup.md).
+
+**Worked reference** — the Laureate spoke's `src/pages/app/index.astro` is the canonical
+zero-CSS manifest (`AppLayout > stack spine > five laureate-* sections`); its
+`src/components/laureate-*.astro` are the section components. Pattern-match it.
 
 ## The esa-* Catalog (run the `ls` for the live list)
 
