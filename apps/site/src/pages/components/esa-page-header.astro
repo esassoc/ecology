@@ -1,0 +1,89 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import PropsTable from '@esa/docs/PropsTable.astro';
+import PageHeader from '@esa/ecology/esa-page-header.astro';
+import Button from '@esa/ecology/esa-button.astro';
+
+const props = [
+  { name: 'title', type: 'string', description: 'The page title (required). Rendered as the <h1>.' },
+  { name: 'lede', type: 'string', description: 'Optional supporting sentence below the title, at the body-large role in secondary text.' },
+  { name: 'eyebrow', type: 'string', description: 'Small kicker above the title — e.g. a section or award name.' },
+  { name: 'icon', type: 'string', description: 'esa-icon registry name for the eyebrow’s leading glyph, e.g. "award" (eyebrow only).' },
+  { name: 'prominence', type: "'page-title' | 'display'", default: "'page-title'", description: 'Title scale: the page-title role (default) or the oversized display role for a hero.' },
+  { name: 'as', type: "'header' | 'div' | 'section'", default: "'header'", description: 'The host element tag.' },
+];
+
+const slots = [
+  { name: 'breadcrumbs', type: 'slot', description: 'Above the title — host an esa-breadcrumbs here. Mutually exclusive in spirit with eyebrow.' },
+  { name: 'actions', type: 'slot', description: 'Right-aligned, top-aligned with the title block — buttons or links.' },
+];
+---
+<ComponentDoc name="Page Header" category="Layout & Sections" slug="esa-page-header" type=".astro" status="stable"
+  summary="The standard prototype page top: optional breadcrumbs OR an eyebrow (with a leading icon), a title (page-title role, or the oversized display role for a hero), an optional lede, and a right-aligned actions slot.">
+
+  <Section id="preview" title="Preview">
+    <p>The default form: a page-title-scale heading with a lede and an actions slot. The container is neutral and transparent — color is the consumer’s job.</p>
+    <Preview align="start" code={`<PageHeader title="Requirements" lede="Track and triage every requirement across the program.">
+  <Button slot="actions" color="primary" icon="plus">New requirement</Button>
+</PageHeader>`}>
+      <div style="width: 100%;">
+        <PageHeader title="Requirements" lede="Track and triage every requirement across the program.">
+          <Button slot="actions" color="primary" icon="plus">New requirement</Button>
+        </PageHeader>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="hero" title="Eyebrow + display prominence (hero)">
+    <p>For a landing or hero, add an <code>eyebrow</code> (with an optional leading <code>icon</code>) and bump the title to the display role with <code>prominence="display"</code>. The actions here are link-buttons — <code>esa-button</code> with an <code>href</code>.</p>
+    <Preview align="start" code={`<PageHeader
+  eyebrow="2024 Awards"
+  icon="award"
+  prominence="display"
+  title="The Laureates"
+  lede="Forty chefs, twelve cities, one extraordinary year of cooking.">
+  <Button slot="actions" color="primary" href="/winners">Browse winners</Button>
+  <Button slot="actions" color="ghost" appearance="outline" href="/data">View the data</Button>
+</PageHeader>`}>
+      <div style="width: 100%;">
+        <PageHeader eyebrow="2024 Awards" icon="award" prominence="display" title="The Laureates" lede="Forty chefs, twelve cities, one extraordinary year of cooking.">
+          <Button slot="actions" color="primary" href="#">Browse winners</Button>
+          <Button slot="actions" color="ghost" appearance="outline" href="#">View the data</Button>
+        </PageHeader>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="breadcrumbs" title="With breadcrumbs">
+    <p>Host an <code>esa-breadcrumbs</code> in the <code>breadcrumbs</code> slot for a record or nested page.</p>
+    <Preview align="start" code={`<PageHeader title="Permit #4471" lede="Filed 12 days ago · awaiting review.">
+  <nav slot="breadcrumbs">Permits / Active / #4471</nav>
+  <Button slot="actions" color="ghost" appearance="outline" icon="pencil">Edit</Button>
+</PageHeader>`}>
+      <div style="width: 100%;">
+        <PageHeader title="Permit #4471" lede="Filed 12 days ago · awaiting review.">
+          <nav slot="breadcrumbs" style="font-size: 0.875rem; color: var(--color-text-secondary, #555);">Permits / Active / #4471</nav>
+          <Button slot="actions" color="ghost" appearance="outline" icon="pencil">Edit</Button>
+        </PageHeader>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The title is the page <code>&lt;h1&gt;</code> — there should be exactly one per page; keep heading order sensible below it.</li>
+      <li>The host defaults to a <code>&lt;header&gt;</code> landmark; use <code>as="div"</code> when the header is nested inside another landmark.</li>
+      <li>The eyebrow icon is decorative (rendered via <code>esa-icon</code>, <code>aria-hidden</code>) — the eyebrow text carries the meaning.</li>
+    </ul>
+  </Section>
+
+</ComponentDoc>

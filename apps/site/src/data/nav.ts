@@ -1,5 +1,9 @@
 // Single source of truth for the docs sidebar + breadcrumbs.
-// Components grouped by their original entry-point category.
+// The component groups are DERIVED from the build-time catalog (catalog.ts),
+// which reads the package source directly — so the sidebar can never again drop
+// a component the package actually ships (it previously omitted 6).
+
+import { catalog } from './catalog';
 
 export interface NavItem {
   label: string;
@@ -43,62 +47,21 @@ export const foundations: NavGroup = {
   ],
 };
 
-const c = (label: string, name: string, status?: 'reference'): NavItem => ({
-  label,
-  href: `/components/${name}`,
-  status,
-});
+// Component groups are derived from the catalog — never hand-listed here. A
+// doc-less component links to its anchor on the catalog index, so the sidebar
+// lists every component the package ships with a valid destination.
+export const componentGroups: NavGroup[] = catalog.map((group) => ({
+  label: group.label,
+  items: group.entries.map((e) => ({
+    label: e.name,
+    href: e.href,
+    status: e.status === 'reference' ? 'reference' : undefined,
+  })),
+}));
 
-export const componentGroups: NavGroup[] = [
-  { label: 'Core', items: [c('Button', 'esa-button'), c('Button Group', 'esa-button-group'), c('Button Toggle', 'esa-button-toggle'), c('Icon', 'esa-icon'), c('Icon Link', 'esa-icon-link'), c('Icon Button', 'esa-icon-button')] },
-  {
-    label: 'Forms',
-    items: [
-      c('Text Field', 'esa-text-field'), c('Textarea', 'esa-textarea'), c('Select', 'esa-select'),
-      c('Combobox', 'esa-combobox'), c('Input Tag', 'esa-input-tag'), c('Checkbox', 'esa-checkbox'), c('Checkbox Group', 'esa-checkbox-group'),
-      c('Radio Group', 'esa-radio-group'), c('Switch Toggle', 'esa-switch-toggle'), c('Form Field', 'esa-form-field'), c('Field Error', 'esa-field-error'),
-      c('Date Picker', 'esa-date-picker'), c('Color Picker', 'esa-color-picker'), c('Range Slider', 'esa-range-slider'),
-      c('File Upload', 'esa-file-upload'),
-    ],
-  },
-  {
-    label: 'Display',
-    items: [
-      c('Avatar', 'esa-avatar'), c('Badge', 'esa-badge'), c('Card', 'esa-card'), c('Chip Group', 'esa-chip-group'), c('Alert Box', 'esa-alert-box'),
-      c('Danger Zone', 'esa-danger-zone'),
-      c('Pill', 'esa-pill'), c('Pillbox', 'esa-pillbox'), c('Progress Bar', 'esa-progress-bar'),
-      c('Loading Spinner', 'esa-loading-spinner'), c('Loading Overlay', 'esa-loading-overlay'),
-      c('Empty State', 'esa-empty-state'), c('Back To Top', 'esa-back-to-top'),
-    ],
-  },
-  {
-    label: 'Overlays',
-    items: [
-      c('Dialog', 'esa-dialog'), c('Confirm Dialog', 'esa-confirm-dialog'), c('Side Dialog', 'esa-side-dialog'), c('Popover', 'esa-popover'),
-      c('Tooltip', 'esa-tooltip'), c('Dropdown Menu', 'esa-dropdown-menu'), c('Command Palette', 'esa-command-palette'),
-      c('Entity Search', 'esa-entity-search'),
-      c('Snackbar', 'esa-snackbar-container'), c('Snackbar Item', 'esa-snackbar-item'), c('Search Panel', 'esa-search-panel'),
-    ],
-  },
-  {
-    label: 'Navigation',
-    items: [
-      c('App Bar', 'esa-app-bar'), c('Nav Dropdown', 'esa-nav-dropdown'), c('Link Column', 'esa-link-column'),
-      c('Header Nav', 'esa-header-nav'), c('Sidebar Nav', 'esa-sidebar-nav'), c('Breadcrumbs', 'esa-breadcrumbs'),
-      c('Pagination', 'esa-pagination'), c('Tab Layout', 'esa-tab-layout'),
-    ],
-  },
-  {
-    label: 'Filters',
-    items: [
-      c('Filter Container', 'esa-filter-container'), c('Filter Dropdown', 'esa-filter-dropdown'),
-      c('Filter Pills', 'esa-filter-pills'), c('Filter Clear Button', 'esa-filter-clear-button'),
-    ],
-  },
-  {
-    label: 'Data & Editors',
-    items: [c('Data Grid', 'esa-grid', 'reference'), c('Map', 'esa-map', 'reference'), c('Rich Text Editor', 'esa-rich-text-editor', 'reference')],
-  },
-];
+export const components: NavGroup = {
+  label: 'Components',
+  items: [{ label: 'Catalog', href: '/components' }],
+};
 
-export const allGroups: NavGroup[] = [guide, patterns, foundations, ...componentGroups];
+export const allGroups: NavGroup[] = [guide, patterns, foundations, components, ...componentGroups];

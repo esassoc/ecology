@@ -28,6 +28,12 @@ interface Props {
   /** Icon-only mode (no text). */
   iconOnly?: boolean;
   type?: 'button' | 'submit' | 'reset';
+  /** When set, the button renders as an <a> styled identically — a link that looks like a button. */
+  href?: string;
+  /** Link target (href only), e.g. "_blank". */
+  target?: string;
+  /** Link rel (href only). Defaults to "noreferrer" when target="_blank". */
+  rel?: string;
 }
 
 const {
@@ -40,6 +46,9 @@ const {
   icon = '',
   iconOnly = false,
   type = 'button',
+  href,
+  target,
+  rel,
 } = Astro.props;
 
 const cls = [
@@ -54,15 +63,32 @@ const cls = [
 ]
   .filter(Boolean)
   .join(' ');
+
+// href ⇒ render an <a> styled identically (a link that looks like a button).
+// Anchors can't be natively disabled, so a disabled/loading link drops its href
+// and is marked aria-disabled (the --disabled wrapper kills pointer events).
+const isLink = href != null && href !== '';
+const isDisabled = disabled || loading;
+const Tag = isLink ? 'a' : 'button';
+const nativeAttrs = isLink
+  ? {
+      href: isDisabled ? undefined : href,
+      target: target || undefined,
+      rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
+      role: 'button',
+      'aria-disabled': isDisabled ? 'true' : undefined,
+      'aria-busy': loading ? 'true' : undefined,
+      'aria-pressed': active ? 'true' : undefined,
+    }
+  : {
+      type,
+      disabled: isDisabled,
+      'aria-busy': loading ? 'true' : undefined,
+      'aria-pressed': active ? 'true' : undefined,
+    };
 ---
 <span class={cls}>
-  <button
-    class="esa-button__native"
-    type={type}
-    disabled={disabled || loading}
-    aria-busy={loading ? 'true' : undefined}
-    aria-pressed={active ? 'true' : undefined}
-  >
+  <Tag class="esa-button__native" {...nativeAttrs}>
     {loading && <span class="esa-button__spinner" aria-hidden="true" />}
     {icon && !loading && <EsaIcon name={icon} size={size} />}
     {!iconOnly && (
@@ -70,7 +96,7 @@ const cls = [
         <slot />
       </span>
     )}
-  </button>
+  </Tag>
 </span>
 
 <style>
@@ -147,6 +173,7 @@ const cls = [
     font-family: var(--font-sans, system-ui, sans-serif);
     font-weight: var(--font-weight-medium, 500);
     line-height: 1;
+    text-decoration: none;
     cursor: pointer;
     transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
     -webkit-appearance: none;

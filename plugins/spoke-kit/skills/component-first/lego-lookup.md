@@ -66,6 +66,13 @@ cat node_modules/@esa/tokens/type-roles.css
 
 ## Pattern catalog — find the established pattern before rebuilding it
 
+**Two generated indexes on the hub site are the fastest place to look first:**
+the **component catalog** (`/components`) lists every `esa-*` lego — atoms through
+section-level (`esa-app-shell`, `esa-page-header`, `esa-stat`) — with its summary
+and props; the **Pattern Library** (`/patterns`) lists the composed page
+archetypes. Both are generated from source, so they never drift. Skim them before
+you build a section.
+
 Some patterns are too composed for a single lego but are already solved in a spoke
 **prototype page**. These pages are canonical references — read them before reinventing.
 A finished page should read like a **MANIFEST of legos + layout/type utilities**, NOT

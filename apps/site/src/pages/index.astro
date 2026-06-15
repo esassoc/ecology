@@ -48,18 +48,18 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
   </section>
 
   <section class="rail">
-    <a class="rail__card rail__card--live" href={withBase('/components/esa-button')}>
+    <a class="rail__card rail__card--live" href={withBase('/components')}>
       <span class="rail__eyebrow">Components</span>
-      <h2>Component library</h2>
-      <p>{totalComponents} documented components across foundations, forms, overlays, and more — each with live specimens and an API.</p>
-      <span class="rail__go">Explore the library →</span>
+      <h2>Component catalog</h2>
+      <p>{totalComponents} documented components — atoms through section-level legos — in one scannable index, each with live specimens and an API. Generated from source, so it never drifts.</p>
+      <span class="rail__go">Browse the catalog →</span>
     </a>
-    <div class="rail__card rail__card--soon">
-      <span class="rail__eyebrow">Coming soon</span>
+    <a class="rail__card rail__card--live" href={withBase('/patterns')}>
+      <span class="rail__eyebrow">Patterns</span>
       <h2>Pattern library</h2>
-      <p>Composed, multi-component patterns — page shells, data views, form flows — assembled from the primitives. In the works.</p>
-      <a class="rail__go" href={withBase('/patterns')}>Preview →</a>
-    </div>
+      <p>Composed, multi-component page archetypes — app shells, data views, form flows — assembled from the legos and themeable end to end.</p>
+      <span class="rail__go">Explore the patterns →</span>
+    </a>
   </section>
 
   <section class="explore">

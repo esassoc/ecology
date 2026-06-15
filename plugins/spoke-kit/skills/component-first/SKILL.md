@@ -36,9 +36,13 @@ Import depends on the file extension you saw in the `ls`:
   in pages.
 - **Mid-tier legos**: `esa-page-header` (title/lede/actions), `esa-stat` (value/label/sub/
   accent), `esa-app-shell` (the canonical neutral chrome).
-- **Pattern catalog** — composed patterns (filter bars, omniboxes) already solved in spoke
-  prototype pages. Find them before rebuilding. See [lego-lookup.md](lego-lookup.md). A page
-  should read like a **manifest of legos + utilities**, not 250+ lines of bespoke `<style>`.
+- **Browse before building** — the hub site has two generated indexes: the
+  **component catalog** (`/components` — every `esa-*` lego, including the
+  section-level ones, with summaries + props) and the **Pattern Library**
+  (`/patterns` — composed page archetypes). Skim them, and `ls
+  node_modules/@esa/ecology/src/components/`, before you build a new section.
+  See [lego-lookup.md](lego-lookup.md). A page should read like a **manifest of
+  legos + utilities**, not 250+ lines of bespoke `<style>`.
 
 ### 2. Check esassoc/Beacon NEXT — the prod app (optional tier — requires the Beacon repo cloned)
 If no `esa-*` fits, the production app may already have the pattern. Port it faithfully (tokens, structure). Skip this tier if `~/Dev/Beacon` isn't on your machine:
@@ -88,7 +92,9 @@ primitives or words are rejected by the hook.
 
 ### The section lookup order (parallels the esa-* lego lookup, but for SECTIONS)
 
-When a page needs a section, walk these in order — stop at the first hit:
+When a page needs a section, walk these in order — stop at the first hit. **Browse
+the hub's component catalog (`/components`) and Pattern Library (`/patterns`), and
+`ls node_modules/@esa/ecology/src/components/`, before deciding to build:**
 
 1. **Reuse an `esa-*` hub lego** if one fits the whole section (`esa-page-header`,
    `esa-stat`, `esa-app-shell`, …).

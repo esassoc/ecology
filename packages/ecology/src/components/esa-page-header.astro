@@ -1,10 +1,11 @@
 ---
 // esa-page-header — presentational page top (.astro).
-// The standard prototype page header: optional breadcrumbs, a title (display
-// face at the page-title role, NOT the oversized display role), an optional
-// lede at body-large in secondary text, and a right-aligned actions slot.
-// Replaces the bespoke .x__head / .x__title / .x__lede / .x__cta cluster every
-// prototype re-implements.
+// The standard prototype page header: optional breadcrumbs OR an eyebrow (with
+// an optional leading icon), a title (at the page-title role by default, or the
+// oversized display role via prominence="display"), an optional lede at
+// body-large in secondary text, and a right-aligned actions slot. Replaces both
+// the bespoke .x__head / .x__title / .x__lede / .x__cta cluster every prototype
+// re-implements AND the per-spoke "hero header" (eyebrow + icon + big title).
 //
 // Container stays neutral — no background of its own (transparent); color is
 // the consumer's job. Private --_* tokens read public semantic tokens with a
@@ -12,18 +13,26 @@
 //
 // Slots: "breadcrumbs" (above the title — host an esa-breadcrumbs here),
 // "actions" (right-aligned, top-aligned with the title block).
+import EsaIcon from './esa-icon.astro';
+
 interface Props {
   title: string;
   lede?: string;
+  /** Small kicker above the title (e.g. a section or award name). */
+  eyebrow?: string;
+  /** esa-icon registry name for the eyebrow's leading glyph, e.g. 'award' (eyebrow only). */
+  icon?: string;
+  /** Title scale: the page-title role (default) or the oversized display role. */
+  prominence?: 'page-title' | 'display';
   as?: 'header' | 'div' | 'section';
 }
-const { title, lede, as = 'header' } = Astro.props;
+const { title, lede, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
 const Tag = as;
 
 const hasBreadcrumbs = Astro.slots.has('breadcrumbs');
 const hasActions = Astro.slots.has('actions');
 ---
-<Tag class="esa-page-header">
+<Tag class:list={['esa-page-header', prominence === 'display' && 'esa-page-header--display']}>
   {hasBreadcrumbs && (
     <div class="esa-page-header__breadcrumbs">
       <slot name="breadcrumbs" />
@@ -31,6 +40,12 @@ const hasActions = Astro.slots.has('actions');
   )}
   <div class="esa-page-header__bar">
     <div class="esa-page-header__titles">
+      {eyebrow && (
+        <p class="esa-page-header__eyebrow">
+          {icon && <EsaIcon name={icon} size="sm" />}
+          <span>{eyebrow}</span>
+        </p>
+      )}
       <h1 class="esa-page-header__title">{title}</h1>
       {lede && <p class="esa-page-header__lede">{lede}</p>}
     </div>
@@ -50,6 +65,8 @@ const hasActions = Astro.slots.has('actions');
     --_ph-title-weight: var(--page-header-title-weight, var(--font-weight-semibold, 550));
     --_ph-lede-color: var(--page-header-lede-color, var(--color-text-secondary, #525252));
     --_ph-lede-size: var(--page-header-lede-size, var(--type-size-300, 1.125rem));
+    --_ph-eyebrow-color: var(--page-header-eyebrow-color, var(--color-text-secondary, #525252));
+    --_ph-eyebrow-size: var(--page-header-eyebrow-size, var(--type-size-200, 0.9375rem));
     --_ph-gap: var(--page-header-gap, var(--spacing-200, 0.5rem));
     --_ph-bar-gap: var(--page-header-bar-gap, var(--spacing-500, 1.5rem));
     --_ph-crumb-gap: var(--page-header-breadcrumbs-gap, var(--spacing-300, 0.75rem));
@@ -58,8 +75,25 @@ const hasActions = Astro.slots.has('actions');
     background: transparent;
   }
 
+  /* prominence="display" — the oversized hero title (display role + bold). */
+  .esa-page-header--display {
+    --_ph-title-size: var(--page-header-title-size-display, var(--type-size-800, 3rem));
+    --_ph-title-weight: var(--page-header-title-weight-display, var(--font-weight-bold, 700));
+  }
+
   .esa-page-header__breadcrumbs {
     margin-bottom: var(--_ph-crumb-gap);
+  }
+
+  .esa-page-header__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-100, 0.25rem);
+    margin: 0;
+    font-size: var(--_ph-eyebrow-size);
+    font-weight: var(--font-weight-medium, 500);
+    line-height: var(--line-height-normal, 1.5);
+    color: var(--_ph-eyebrow-color);
   }
 
   .esa-page-header__bar {

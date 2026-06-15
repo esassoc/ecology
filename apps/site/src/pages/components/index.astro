@@ -1,0 +1,78 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
+import { withBase } from '@esa/docs/base';
+import { catalog, componentCount, referenceCount } from '../../data/catalog';
+
+const slugifyLabel = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const kindLabel = (kind: string) => (kind === '.astro' ? '.astro' : kind === 'wc' ? 'web component' : 'reference');
+---
+<DocsLayout title="Component catalog — Ecology" activeHref="/components">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Components</span></nav>
+  <h1>Component catalog</h1>
+  <p class="lede">Every <code>esa-*</code> lego the package ships, in one scannable index — the fastest way to answer <em>"does a component for this already exist?"</em> before you build one. Each row links to its full doc page; the <strong>Layout&nbsp;&amp;&nbsp;Sections</strong> group is where the section-level legos (<code>esa-app-shell</code>, <code>esa-page-header</code>, <code>esa-stat</code>) live.</p>
+
+  <aside class="generated-note">
+    Generated at build time straight from the component sources
+    (<code>packages/ecology/src/components/</code>) — names, summaries, and props
+    come from the code, so this catalog <strong>cannot drift</strong> from what's installed.
+    {componentCount} components{referenceCount > 0 && <> + {referenceCount} reference wrappers</>}.
+  </aside>
+
+  {catalog.map((group) => (
+    <Section id={slugifyLabel(group.label)} title={group.label}>
+      <table class="cat">
+        <thead><tr><th>Component</th><th>Kind</th><th>What it is</th><th>Props</th></tr></thead>
+        <tbody>
+          {group.entries.map((e) => (
+            <tr id={e.slug}>
+              <td class="cat__name">
+                {e.hasDocPage
+                  ? <a href={withBase(`/components/${e.slug}`)}>{e.name}</a>
+                  : <span>{e.name}</span>}
+                <code>{e.slug}</code>
+              </td>
+              <td><span class={`kind kind--${e.kind === '.astro' ? 'astro' : e.kind}`}>{kindLabel(e.kind)}</span></td>
+              <td>{e.summary}{e.wraps && <span class="cat__wraps"> wraps {e.wraps}</span>}</td>
+              <td class="cat__props">
+                {e.props.length > 0
+                  ? e.props.map((p, i) => (
+                      <Fragment><code class="prop">{p.name}{p.optional ? '?' : ''}</code>{i < e.props.length - 1 ? ' ' : ''}</Fragment>
+                    ))
+                  : <span class="cat__none">{e.kind === 'wc' ? 'interactive (Lit)' : '—'}</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Section>
+  ))}
+
+  <p class="cat__foot">A composition you keep rebuilding that isn't a single lego? It may belong in the <a href={withBase('/patterns')}>Pattern Library</a> — or be a <code>/request-lego</code>. The on-disk catalog is always the source of truth: <code>ls node_modules/@esa/ecology/src/components/</code> from any spoke.</p>
+</DocsLayout>
+
+<style>
+  .generated-note {
+    border: 1px solid var(--color-border, #e5e5e5);
+    background: var(--color-surface-sunken, #f7f7f5);
+    border-radius: 10px;
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    margin-bottom: var(--spacing-500, 1.25rem);
+    color: var(--color-text-secondary, #444);
+  }
+  .cat { width: 100%; border-collapse: collapse; }
+  .cat th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
+  .cat td { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); vertical-align: top; }
+  .cat__name { white-space: nowrap; }
+  .cat__name a, .cat__name span:first-child { font-weight: var(--font-weight-medium, 500); }
+  .cat__name code { display: block; font-size: 0.8125rem; color: var(--color-text-muted, #888); margin-top: 2px; }
+  .kind { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border, #e5e5e5); white-space: nowrap; }
+  .kind--astro { background: var(--color-primary-subtle, #eef6f6); border-color: var(--color-primary-border, #cfe5e5); }
+  .kind--wc { background: var(--color-surface-sunken, #f5f5f5); }
+  .kind--reference { background: var(--color-warning-subtle, #fdf6ec); }
+  .cat__props { font-size: 0.875rem; }
+  .cat__props .prop { background: none; padding: 0; color: var(--color-text-secondary, #555); }
+  .cat__wraps { color: var(--color-text-muted, #888); }
+  .cat__none { color: var(--color-text-muted, #aaa); }
+  .cat__foot { color: var(--color-text-secondary, #444); max-width: 72ch; margin-top: var(--spacing-600, 1.5rem); }
+</style>
