@@ -64,6 +64,10 @@ const cls = [
   .filter(Boolean)
   .join(' ');
 
+// hub-edit-approved: Andy approved (2026-06-15) — a disabled/loading link also
+// drops out of the tab order (tabindex=-1); the --disabled wrapper only kills
+// pointer events, so without this a keyboard user could still focus + activate it.
+//
 // href ⇒ render an <a> styled identically (a link that looks like a button).
 // Anchors can't be natively disabled, so a disabled/loading link drops its href
 // and is marked aria-disabled (the --disabled wrapper kills pointer events).
@@ -76,6 +80,7 @@ const nativeAttrs = isLink
       target: target || undefined,
       rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
       role: 'button',
+      tabindex: isDisabled ? -1 : undefined,
       'aria-disabled': isDisabled ? 'true' : undefined,
       'aria-busy': loading ? 'true' : undefined,
       'aria-pressed': active ? 'true' : undefined,
