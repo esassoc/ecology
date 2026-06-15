@@ -9,6 +9,7 @@
     "apps/*"
   ],
   "scripts": {
+    "test": "node --test 'scripts/**/*.test.mjs'",
     "build:tokens": "npm run build --workspace=@esa/tokens",
     "dev": "npm run build:tokens && npm run dev --workspace=@esa/site",
     "build": "npm run build:tokens && npm run build --workspace=@esa/site",

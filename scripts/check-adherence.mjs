@@ -19,14 +19,19 @@
  * Output: a JSON report to stdout. Exit 1 if any ERROR, else 0.
  *
  * Severity is load-bearing: hard rules (undefined token w/o fallback, banned
- * border-left, sub-floor type, hand-rolled primitive) are ERRORS; fuzzy rules
- * (hardcoded color, private --_ fallback, unloaded weight, tailwind suffix,
- * composition heft) are WARNINGS and NEVER block. Warnings inform the human;
- * they don't gate the spoke.
+ * border-left, sub-floor type, hand-rolled primitive, manifest<->reality drift)
+ * are ERRORS; fuzzy rules (hardcoded color, private --_ fallback, unloaded weight,
+ * tailwind suffix, composition heft) are WARNINGS and NEVER block. Warnings inform
+ * the human; they don't gate the spoke.
+ *
+ * The manifest<->reality cross-check (manifest-declared-absent / -undeclared-section)
+ * lives in ./lib/manifest-crosscheck.mjs — it reconciles a composed page's manifest
+ * against its actual imports + body composition. See that file's header for the why.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, extname, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { crossCheckManifest } from './lib/manifest-crosscheck.mjs';
 
 const ROOT = process.cwd();
 // Resolve the hub from THIS script's location (it lives in <hub>/scripts/), so the
@@ -175,6 +180,14 @@ for (const file of targets) {
         add('error', 'bespoke-page-type', file, ln, 'raw --type-size-*/font-family in a page — apply a type role (.type-page-title/.type-section-title/.type-card-title/.type-body/.type-label/.type-caption)');
     }
   });
+
+  // (i0) Manifest <-> reality cross-check: the manifest gate proves a manifest
+  //      EXISTS; this proves the page COMPOSES what it declares (no lying / no
+  //      undeclared top-level sections). Pages only — skipped when no manifest.
+  if (isPage && isAstro) {
+    for (const x of crossCheckManifest(src).errors)
+      add('error', x.rule, file, x.line, x.detail);
+  }
 
   // (i) Composition heft: a page carrying a heavy bespoke <style> block or a large
   //     set of unique local class selectors is re-implementing UI instead of
