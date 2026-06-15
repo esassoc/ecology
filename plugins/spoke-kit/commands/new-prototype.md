@@ -69,9 +69,26 @@ zero-`<style>` manifest; its `src/components/laureate-*.astro` are the sections.
 
 ## 3. Build from the manifest
 
-- Build any NEW `<spoke>-*` section components first (each owns its own markup +
-  CSS), then assemble the page by referencing them on the spine. Pattern-match the
-  structure of existing pages in `src/pages/prototypes/` (read 1–2 before writing).
+Build the NEW `<spoke>-*` section components **first**, then assemble the page that
+references them on the spine. You (the planner) stay the orchestrator and own the page —
+the builders own the components.
+
+- **Fan out the component work.** If the manifest has **two or more NEW** `<spoke>-*`
+  components, **spawn one `component-builder` agent per component, in parallel** (one
+  message, multiple agents) — each owns a separate file, so they don't conflict and they
+  build concurrently. Give each builder its spec: the component name, purpose, the
+  props/slots to expose, which legos/primitives to compose, and a reference component to
+  pattern-match (a `laureate-*` or an existing one in this spoke). For a single new
+  component, just build it inline — fan-out overhead isn't worth it.
+- **Collect their wiring summaries** (each returns its `Props` interface, slots, and what
+  it composed) and use them to assemble the page. If a builder reports `reuseInstead`
+  (an existing lego/component already covers that section), skip building and compose that
+  instead. Note any `legoGap` for a later `/request-lego`.
+- **Then ONE consolidated build.** Builders never run `npm run build` themselves (they'd
+  race the shared `.astro`/dist cache). After they all return and the page is assembled,
+  YOU run a single `npm run build` (or rely on the dev server) to verify.
+- Pattern-match the structure of existing pages in `src/pages/prototypes/` (read 1–2
+  before writing the page).
 - **Target ZERO page `<style>`** — every section's CSS lives in its component.
   Page CSS is a smell that a section escaped into the page; pull it back into a
   `<spoke>-*` component.
