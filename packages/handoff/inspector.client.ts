@@ -20,7 +20,7 @@ interface ApplyOp {
 }
 interface Section {
   index?: number; label: string; tag?: string; selector?: string; apply?: ApplyOp[];
-  html: string; css: string; tokens: Token[]; js?: string; guide?: Guide;
+  html: string; css: string; tokens: Token[]; guide?: Guide;
   claudePath?: string; repoPath?: string;
 }
 
@@ -103,13 +103,6 @@ function renderTokens(tokens: Token[]) {
       </div>`
     )
     .join('');
-}
-
-// Light JS/TS highlight — comments + strings only; enough to read, not a full lexer.
-function hlJs(src: string) {
-  return esc(src)
-    .replace(/(\/\/[^\n]*)/g, '<span class="c">$1</span>')
-    .replace(/(`[^`]*`|"[^"]*"|'[^']*')/g, '<span class="s">$1</span>');
 }
 
 function renderGuide(g?: Guide) {
@@ -283,7 +276,6 @@ function mount(manifest: Manifest, manifestUrl: string): void {
         <button data-tab="guide" class="on">Guide</button>
         <button data-tab="html">HTML</button>
         <button data-tab="css">CSS</button>
-        <button data-tab="js">JS</button>
         <button data-tab="tokens">Tokens</button>
       </div>
       <div class="body"></div>
@@ -322,7 +314,7 @@ function mount(manifest: Manifest, manifestUrl: string): void {
   };
 
   let current: (Section & { tag?: string }) | null = null;
-  let tab: 'html' | 'css' | 'js' | 'tokens' | 'guide' = 'guide';
+  let tab: 'html' | 'css' | 'tokens' | 'guide' = 'guide';
   let open = false;
   let applying = false; // true while a recipe drives the page (its clicks aren't "outside")
 
@@ -330,7 +322,7 @@ function mount(manifest: Manifest, manifestUrl: string): void {
     copyBtn.textContent = `Copy ${tab}`; // Copy button names what it'll copy
     if (!current) {
       sub.textContent = `${manifest.name} · ${manifest.sections.length} sections`;
-      body.innerHTML = `<p class="hint">Pick a section above to inspect its markup, styles, behavior, tokens, and design intent.</p>`;
+      body.innerHTML = `<p class="hint">Pick a section above to inspect its markup, styles, tokens, and design intent.</p>`;
       return;
     }
     sub.textContent =
@@ -340,10 +332,6 @@ function mount(manifest: Manifest, manifestUrl: string): void {
       body.innerHTML = current.css
         ? `<pre class="code">${hlCss(current.css)}</pre>`
         : `<p class="hint">No section-local CSS (inherited utilities only).</p>`;
-    else if (tab === 'js')
-      body.innerHTML = current.js
-        ? `<pre class="code">${hlJs(current.js)}</pre>`
-        : `<p class="hint">No interactivity — this section is static markup.</p>`;
     else if (tab === 'tokens') body.innerHTML = renderTokens(current.tokens);
     else body.innerHTML = renderGuide(current.guide);
   }
@@ -415,7 +403,6 @@ function mount(manifest: Manifest, manifestUrl: string): void {
     if (!current) return '';
     if (tab === 'html') return current.html || '';
     if (tab === 'css') return current.css || '';
-    if (tab === 'js') return current.js || '';
     if (tab === 'tokens') return (current.tokens || []).map((t) => `${t.name}: ${t.value};`).join('\n');
     const g = current.guide || {};
     return [
@@ -447,7 +434,7 @@ function mount(manifest: Manifest, manifestUrl: string): void {
   };
 
   // The exact prompt handed to Claude: an instruction + a fetchable link to this
-  // section's self-contained spec (markup + styles + behavior + tokens + guidance).
+  // section's self-contained spec (markup + styles + tokens + guidance).
   function claudePayload(): string {
     if (!current?.claudePath) return '';
     const url = new URL(base + current.claudePath, location.origin).href;
@@ -455,7 +442,7 @@ function mount(manifest: Manifest, manifestUrl: string): void {
       `Here's a new UI section to build — "${current.label}".`,
       '',
       'The linked spec has the design guidance (intent, key decisions, gotchas) plus sample',
-      'HTML, CSS, and JS. The finished UI should look and behave exactly like this — match it',
+      'HTML and CSS. The finished UI should look and behave exactly like this — match it',
       "faithfully. The sample code shows how it's built; you don't need to mirror it",
       'line-for-line — translate it to your own stack and design system, mapping the',
       "sample's values onto your established tokens.",
