@@ -66,10 +66,11 @@ export class EsaCombobox extends LitElement {
   declare loading: boolean;
   declare debounceMs: number;
   declare resultsCount: number | null;
-  private _search: string;
-  private _selected: string[];
-  private _open: boolean;
-  private _active: number;
+  private declare _search: string;
+  private declare _selected: string[];
+  private declare _open: boolean;
+  private declare _active: number;
+  private _suppressNextOpen = false;
 
   private internals: ElementInternals;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -230,6 +231,7 @@ export class EsaCombobox extends LitElement {
       this.emitValue();
       this.closeDropdown();
       if (this.mode === 'autocomplete') {
+        this._suppressNextOpen = true; // hub-edit-approved: user approved fix for mouse-select dropdown reopen bug
         requestAnimationFrame(() => (this.renderRoot.querySelector('.input') as HTMLInputElement | null)?.focus());
       }
     }
@@ -252,6 +254,14 @@ export class EsaCombobox extends LitElement {
   };
 
   private onInputFocus = (): void => {
+    if (this._suppressNextOpen) { this._suppressNextOpen = false; return; }
+    if (!this._open) this.openDropdown();
+  };
+
+  // clicking an already-focused autocomplete input must reopen the dropdown —
+  // focus doesn't re-fire when the element already has focus, so @focus alone
+  // misses the "click after select" case.
+  private onInputClick = (): void => {
     if (!this._open) this.openDropdown();
   };
 
@@ -347,6 +357,7 @@ export class EsaCombobox extends LitElement {
           @input=${this.onSearchInput}
           @keydown=${this.onKeydown}
           @focus=${this.onInputFocus}
+          @click=${this.onInputClick}
         />
         ${this.loading ? html`<span class="spinner spinner--inline">${this.spinnerIcon()}</span>` : null}
       </div>
