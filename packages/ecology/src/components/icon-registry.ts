@@ -1,7 +1,7 @@
 // hub-edit-approved: Andy approved (2026-06-15) — centralize the Lucide glyph
 // registry so icons are referenced by NAME everywhere (server esa-icon + the
 // client-side esa-sidebar-nav island), instead of spokes pasting raw SVG into
-// nav data. Requested from the laureate-design spoke.
+// nav data. Requested from a spoke prototype.
 //
 // Shared Lucide glyph registry — the single source of truth for the icons the
 // design system ships. Each value is the INNER SVG markup only (the <path>/
@@ -101,7 +101,7 @@ export const ICON_PATHS: Record<string, string> = {
   'rotate-ccw':
     '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
 
-  // Food / hospitality / awards — domain glyphs (added for the laureate-design spoke).
+  // Food / hospitality / awards — domain glyphs (added for a spoke prototype).
   'chef-hat':
     '<path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z"/><path d="M6 17h12"/>',
   utensils:

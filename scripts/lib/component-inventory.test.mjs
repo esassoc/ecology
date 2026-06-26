@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import { extractPurpose, extractProps, inventoryEntry, propOverlap } from './component-inventory.mjs';
 
 const ASTRO = `---
-// laureate-stat-group — a bordered surface panel wrapping a responsive grid of
+// demo-stat-group — a bordered surface panel wrapping a responsive grid of
 // esa-stat. Composes esa-stat + the grid primitive. Data-in via \`stats\`.
 import EsaStat from '@esa/ecology/esa-stat.astro';
 interface Stat {
@@ -41,7 +41,7 @@ export class EsaSwitchToggle extends LitElement {
 
 test('astro: purpose is the frontmatter doc comment, not the Stat interface', () => {
   const p = extractPurpose(ASTRO, '.astro');
-  assert.match(p, /^laureate-stat-group —/);
+  assert.match(p, /^demo-stat-group —/);
   assert.match(p, /grid of esa-stat/);
 });
 

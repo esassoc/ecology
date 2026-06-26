@@ -11,8 +11,8 @@ component), `hub-fix`, `skill`, `workflow` (planner/gate defaults), `process`.
 
 ---
 
-## Source: Touchline experiment (2026-06-13)
-A World Cup 2026 spoke built end-to-end by a planner→implementer→evaluator Workflow.
+## Source: an end-to-end spoke build (2026-06-13)
+A spoke built end-to-end by a planner→implementer→evaluator Workflow.
 Result: 6/6 pages passed both gates, 0 adherence errors, AA contrast — but Andy's review
 surfaced the gaps below. Cost: 22 agents · 1.3M tokens · ~79 min.
 
@@ -25,7 +25,7 @@ surfaced the gaps below. Cost: 22 agents · 1.3M tokens · ~79 min.
   BaseLayout — fixes the #4b root cause (roles existed but were imported nowhere).
 - ✅ **New legos:** `esa-page-header`, `esa-stat` (mid-tier), `esa-app-shell` (canonical
   neutral-chrome shell with topbar toggle / sidenav logo / omnibox / user menu — BUILT,
-  not yet adopted by Touchline).
+  not yet adopted by the spoke).
 - ✅ **esa-badge → 4px** fixed at the true source (`component-tokens.css` `--badge-radius`,
   not just the component fallback).
 - ✅ **check-adherence.mjs** false positives fixed (var() fallbacks, hyphenated names).
@@ -39,11 +39,11 @@ surfaced the gaps below. Cost: 22 agents · 1.3M tokens · ~79 min.
 
 ### Still open
 - Propagate the lego+utility pattern to the other 5 pages (teams/players/stats/map/history).
-- Adopt `esa-app-shell` in Touchline (delivers 2a toggle / 2b logo / 2c omnibox / 2d user menu).
+- Adopt `esa-app-shell` in the spoke (delivers 2a toggle / 2b logo / 2c omnibox / 2d user menu).
 - Fold house rules into skills via learning-engine (component-first → primitives + the
   Beacon/cb-fish pattern catalog; design-principles → neutral chrome + type-roles-first).
 - Republish spoke-kit (version bump + push + marketplace update) so the hook fix goes live.
-- WC polish: flag SVGs, real 2026 brand research, Leaflet map, volleyball mark.
+- Prototype polish: research the real brand identity, source real visual assets (not placeholder avatars), wire a real map lib (Leaflet).
 
 ### Root cause (the through-line)
 **The hub has objective rails (tokens, components) but no _composition_ rails.** Only
@@ -120,9 +120,9 @@ browser-stacking OOM, (d) high token cost. Fix the composition layer and all fou
   hyphenated class names; fixed. *Lesson:* fuzzy rules stay **warnings, not errors**, so an
   imperfect gate never blocks good code · `workflow` · ✅ done
 
-## E. Prototype-polish (Touchline-specific, lower priority)
-- Country flag SVGs (Wikimedia/flag-icons) instead of initials avatars.
-- Palette researched against the real 2026 identity; volleyball Lucide glyph for the mark.
+## E. Prototype-polish (spoke-specific, lower priority)
+- Source real visual assets (e.g. logos/marks) instead of placeholder initials avatars.
+- Research the real brand identity for the palette and the mark, rather than inventing one.
 
 ---
 

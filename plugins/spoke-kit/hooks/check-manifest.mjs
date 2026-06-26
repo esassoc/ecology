@@ -22,11 +22,11 @@
 //   <!-- manifest:
 //     layout: stack(2xl)                         # the page SPINE — a primitive, fine here
 //     sections:
-//       - page header -> laureate-page-header    # every section is a COMPONENT
-//       - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
-//       - winners     -> laureate-winners-grid
+//       - page header -> demo-page-header    # every section is a COMPONENT
+//       - stats       -> demo-stat-group     #   (esa-* lego or <spoke>-* component)
+//       - cards       -> demo-card-grid
 //   -->
-//   A section resolver must contain a hyphen (esa-card, laureate-foo). A bare word —
+//   A section resolver must contain a hyphen (esa-card, demo-foo). A bare word —
 //   a primitive (stack/grid) or `inline`/`div`/`none` — is REJECTED: a section is a
 //   component, not page-level bespoke markup.
 import { existsSync, readFileSync } from 'node:fs';
@@ -78,7 +78,7 @@ function lint(text) {
       continue;
     }
     const resolver = arrow[1].toLowerCase().replace(/[(),.[\]]/g, '');
-    // A section is a COMPONENT (hyphenated: esa-card / laureate-foo). A bare word —
+    // A section is a COMPONENT (hyphenated: esa-card / demo-foo). A bare word —
     // a primitive (stack/grid) or inline/div/none — means the section is page-level
     // bespoke markup, which is exactly what the manifest exists to stamp out.
     if (!resolver.includes('-')) {
@@ -103,9 +103,9 @@ if (problems.length) {
       '  <!-- manifest:',
       '    layout: stack(2xl)                        # page spine — a primitive is fine here',
       '    sections:',
-      '      - page header -> laureate-page-header   # build/compose a component, do not inline',
-      '      - stats       -> laureate-stat-group',
-      '      - winners     -> laureate-winners-grid',
+      '      - page header -> demo-page-header   # build/compose a component, do not inline',
+      '      - stats       -> demo-stat-group',
+      '      - cards       -> demo-card-grid',
       '  -->',
       '',
       'Per-section lookup: esa-* hub lego -> existing spoke component -> build a new <spoke>-* component',

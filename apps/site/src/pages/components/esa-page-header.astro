@@ -40,17 +40,17 @@ const slots = [
   <Section id="hero" title="Eyebrow + display prominence (hero)">
     <p>For a landing or hero, add an <code>eyebrow</code> (with an optional leading <code>icon</code>) and bump the title to the display role with <code>prominence="display"</code>. The actions here are link-buttons — <code>esa-button</code> with an <code>href</code>.</p>
     <Preview align="start" code={`<PageHeader
-  eyebrow="2024 Awards"
+  eyebrow="Annual Report"
   icon="award"
   prominence="display"
-  title="The Laureates"
-  lede="Forty chefs, twelve cities, one extraordinary year of cooking.">
-  <Button slot="actions" color="primary" href="/winners">Browse winners</Button>
+  title="2026 in Review"
+  lede="A year of monitoring, mitigation, and measurable outcomes across the program.">
+  <Button slot="actions" color="primary" href="/report">Read the report</Button>
   <Button slot="actions" color="ghost" appearance="outline" href="/data">View the data</Button>
 </PageHeader>`}>
       <div style="width: 100%;">
-        <PageHeader eyebrow="2024 Awards" icon="award" prominence="display" title="The Laureates" lede="Forty chefs, twelve cities, one extraordinary year of cooking.">
-          <Button slot="actions" color="primary" href="#">Browse winners</Button>
+        <PageHeader eyebrow="Annual Report" icon="award" prominence="display" title="2026 in Review" lede="A year of monitoring, mitigation, and measurable outcomes across the program.">
+          <Button slot="actions" color="primary" href="#">Read the report</Button>
           <Button slot="actions" color="ghost" appearance="outline" href="#">View the data</Button>
         </PageHeader>
       </div>

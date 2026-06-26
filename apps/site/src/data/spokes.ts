@@ -31,18 +31,4 @@ export const spokes: Spoke[] = [
     repo: 'https://github.com/esassoc/biochar-design',
     site: 'https://esassoc.github.io/biochar-design/',
   },
-  {
-    name: 'Touchline',
-    slug: 'touchline',
-    purpose: 'World Cup 2026 — teams, players, stats, and the road to the final',
-    repo: 'https://github.com/esassoc/touchline-design',
-    site: 'https://esassoc.github.io/touchline-design/',
-  },
-  {
-    name: 'Laureate',
-    slug: 'laureate',
-    purpose: 'America\'s most celebrated kitchens, mapped.',
-    repo: 'https://github.com/esassoc/laureate-design',
-    site: 'https://esassoc.github.io/laureate-design/',
-  },
 ];

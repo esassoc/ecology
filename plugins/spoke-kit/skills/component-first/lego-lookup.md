@@ -117,19 +117,19 @@ section components`.
 <!-- manifest:
   layout: stack(2xl)                         # the page SPINE — a primitive is fine here
   sections:
-    - page header -> laureate-page-header    # every SECTION is a component
-    - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
-    - winners     -> laureate-winners-grid
-    - footer      -> laureate-footer
+    - page header -> demo-page-header    # every SECTION is a component
+    - stats       -> demo-stat-group     #   (esa-* lego or <spoke>-* component)
+    - cards       -> demo-card-grid
+    - footer      -> demo-footer
 -->
 ```
 
-A section resolver must be **hyphenated** (`esa-card`, `laureate-foo`). Bare words /
+A section resolver must be **hyphenated** (`esa-card`, `demo-foo`). Bare words /
 `inline` / a bare primitive are rejected. "Page CSS" is a smell — the target is **ZERO page
 `<style>`**; every section owns its markup + CSS in its component.
 
-**Worked reference**: Laureate's `src/pages/app/index.astro` is the canonical zero-CSS
-manifest; its `src/components/laureate-*.astro` are the section components.
+**Worked reference**: a spoke's `src/pages/app/index.astro` is the canonical zero-CSS
+manifest; its `src/components/demo-*.astro` are the section components.
 
 ### Import by file type
 | You saw in `ls`... | Import like... | Use in markup |

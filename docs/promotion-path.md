@@ -53,15 +53,15 @@ misses #2, wait — file or note the second need first.
 
 These two opened the loop (2026-06-15):
 
-- **`esa-button` gains `href`.** `laureate-button-link` existed *only* because
-  `esa-button` rendered a `<button>`, never an `<a>`. Rather than promote the
-  wrapper, the capability was folded into `esa-button`: an optional `href` makes
-  it render an identical-looking `<a>` (disabled links drop `href` + set
-  `aria-disabled`). Then `laureate-button-link` was deleted and its uses
-  re-pointed. *Lesson: sometimes the right promotion is a prop on an existing
-  lego, not a new component — exactly what `/request-lego` should weigh first.*
-- **`laureate-page-header` → `esa-page-header`.** The hub already had an
-  `esa-page-header` (breadcrumbs + page-title-role title). Laureate's was a
+- **`esa-button` gains `href`.** A spoke's button-link wrapper existed *only*
+  because `esa-button` rendered a `<button>`, never an `<a>`. Rather than promote
+  the wrapper, the capability was folded into `esa-button`: an optional `href`
+  makes it render an identical-looking `<a>` (disabled links drop `href` + set
+  `aria-disabled`). Then that wrapper was deleted and its uses re-pointed.
+  *Lesson: sometimes the right promotion is a prop on an existing lego, not a new
+  component — exactly what `/request-lego` should weigh first.*
+- **A spoke's `page-header` → `esa-page-header`.** The hub already had an
+  `esa-page-header` (breadcrumbs + page-title-role title). The spoke's was a
   different shape (eyebrow + leading icon + oversized display title). Promotion
   here was *reconciliation*: the existing lego grew `eyebrow`, `icon`, and a
   `prominence="display"` option so one component serves both forms, plus the

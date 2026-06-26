@@ -3,14 +3,14 @@
  *
  * check-manifest.mjs (the PreToolUse gate) proves a manifest EXISTS and that every
  * section resolves to a component (the FORM). It cannot prove the page lives up to it:
- * a page can declare `- hero -> laureate-page-header`, never import or render it, and
+ * a page can declare `- hero -> demo-page-header`, never import or render it, and
  * ship; or it can grow undeclared top-level section markup. The manifest can lie or
  * drift. This module reconciles three views of the same page — deterministically, from
  * the whole file on disk (which the hook never has) — and is consumed by
  * check-adherence.mjs (the /design-qa + /ship backstop).
  *
  * Three views, per composed page:
- *   1. DECLARED  — the manifest `sections:` resolver set (kebab: laureate-page-header).
+ *   1. DECLARED  — the manifest `sections:` resolver set (kebab: demo-page-header).
  *   2. IMPORTED  — frontmatter component imports, mapped to kebab by file BASENAME
  *                  (basename-matching sidesteps import-alias drift). Only component
  *                  sources count: `@esa/ecology/<name>.astro` and any
@@ -19,8 +19,8 @@
  *   3. USED      — component tags in the page BODY, by nesting depth. A SECTION-level
  *                  usage is a trackable component at component-depth 0 (direct child of
  *                  the spine). A component nested inside another component (depth >= 1)
- *                  is SLOTTED content / a sub-component (e.g. a <LaureateButtonLink>
- *                  passed as children of <LaureatePageHeader>) — legitimate, NOT drift.
+ *                  is SLOTTED content / a sub-component (e.g. a <DemoButtonLink>
+ *                  passed as children of <DemoPageHeader>) — legitimate, NOT drift.
  *
  * Findings (both ERRORS):
  *   - declared-but-absent: a declared resolver with no matching import OR no body usage.
@@ -36,7 +36,7 @@
 const blankNonNewline = (s) => s.replace(/[^\n]/g, ' ');
 const lineAt = (text, index) => text.slice(0, index).split('\n').length;
 
-/** PascalCase tag name -> kebab. LaureatePageHeader -> laureate-page-header; EsaBreadcrumbs -> esa-breadcrumbs. */
+/** PascalCase tag name -> kebab. DemoPageHeader -> demo-page-header; EsaBreadcrumbs -> esa-breadcrumbs. */
 function pascalToKebab(name) {
   return name
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2') // acronym boundary: ESALink -> ESA-Link

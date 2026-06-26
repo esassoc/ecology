@@ -106,10 +106,10 @@ Verdict: minor — one missed-reuse and one over-split worth a look; everything 
 [
   {
     "severity": "strong",
-    "file": "src/components/laureate-info-card.astro",
-    "target": "laureate-info-card",
+    "file": "src/components/demo-info-card.astro",
+    "target": "demo-info-card",
     "issue": "Re-implements esa-card: same purpose (titled content surface) and props {title, subtitle, icon, variant} — reuseHints shows 0.67 prop overlap with esa-card.",
-    "suggestion": "Delete laureate-info-card and compose <EsaCard> directly; if it needs a tweak esa-card lacks, /request-lego that prop instead of forking."
+    "suggestion": "Delete demo-info-card and compose <EsaCard> directly; if it needs a tweak esa-card lacks, /request-lego that prop instead of forking."
   }
 ]
 ```

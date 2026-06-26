@@ -80,14 +80,14 @@ its manifest: `AppLayout > a primitive spine > section components`.
 <!-- manifest:
   layout: stack(2xl)                         # the page SPINE — a primitive is fine here
   sections:
-    - page header -> laureate-page-header    # every SECTION is a component
-    - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
-    - winners     -> laureate-winners-grid
-    - footer      -> laureate-footer
+    - page header -> demo-page-header    # every SECTION is a component
+    - stats       -> demo-stat-group     #   (esa-* lego or <spoke>-* component)
+    - cards       -> demo-card-grid
+    - footer      -> demo-footer
 -->
 ```
 
-A section resolver must be a **component** (hyphenated: `esa-card`, `laureate-foo`). Bare
+A section resolver must be a **component** (hyphenated: `esa-card`, `demo-foo`). Bare
 primitives or words are rejected by the hook.
 
 ### The section lookup order (parallels the esa-* lego lookup, but for SECTIONS)
@@ -113,9 +113,9 @@ should have **no page `<style>` block at all**. If you're writing page CSS, a se
 escaped into the page — pull it into a `<spoke>-*` component. See the section lookup detail
 and manifest schema in [lego-lookup.md](lego-lookup.md).
 
-**Worked reference** — the Laureate spoke's `src/pages/app/index.astro` is the canonical
-zero-CSS manifest (`AppLayout > stack spine > five laureate-* sections`); its
-`src/components/laureate-*.astro` are the section components. Pattern-match it.
+**Worked reference** — a spoke's `src/pages/app/index.astro` is the canonical
+zero-CSS manifest (`AppLayout > stack spine > demo-* sections`); its
+`src/components/demo-*.astro` are the section components. Pattern-match it.
 
 ## The esa-* Catalog (run the `ls` for the live list)
 

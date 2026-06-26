@@ -57,15 +57,15 @@ Write the manifest as the page's opening comment and confirm it with the user:
 <!-- manifest:
   layout: stack(2xl)                         # the page SPINE — a primitive is fine here
   sections:
-    - page header -> laureate-page-header    # every SECTION is a component
-    - stats       -> laureate-stat-group     #   (esa-* lego or <spoke>-* component)
-    - winners     -> laureate-winners-grid
-    - footer      -> laureate-footer
+    - page header -> demo-page-header    # every SECTION is a component
+    - stats       -> demo-stat-group     #   (esa-* lego or <spoke>-* component)
+    - cards       -> demo-card-grid
+    - footer      -> demo-footer
 -->
 ```
 
-**Worked reference**: Laureate's `src/pages/app/index.astro` is the canonical
-zero-`<style>` manifest; its `src/components/laureate-*.astro` are the sections.
+**Worked reference**: a spoke's `src/pages/app/index.astro` is the canonical
+zero-`<style>` manifest; its `src/components/demo-*.astro` are the sections.
 
 ## 3. Build from the manifest
 
@@ -78,7 +78,7 @@ the builders own the components.
   message, multiple agents) — each owns a separate file, so they don't conflict and they
   build concurrently. Give each builder its spec: the component name, purpose, the
   props/slots to expose, which legos/primitives to compose, and a reference component to
-  pattern-match (a `laureate-*` or an existing one in this spoke). For a single new
+  pattern-match (a `demo-*` or an existing one in this spoke). For a single new
   component, just build it inline — fan-out overhead isn't worth it.
 - **Collect their wiring summaries** (each returns its `Props` interface, slots, and what
   it composed) and use them to assemble the page. If a builder reports `reuseInstead`

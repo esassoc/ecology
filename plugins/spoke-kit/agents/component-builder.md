@@ -59,7 +59,7 @@ dropzone CSS) — get ahead of it by composing the lego. **Load the `component-f
   `declare` + constructor defaults + self-register guard). When a Lit component injects icon
   SVG from a prop, use `unsafeSVG`, not `unsafeHTML`.
 - **Read your reference component first** (the planner names one — else read a
-  `laureate-*.astro` or an existing component in this spoke) and match its structure.
+  `demo-*.astro` or an existing component in this spoke) and match its structure.
 - **Tokens:** use ONLY names that exist in ecology — `grep` `node_modules/@esa/tokens/dist/
   tokens.css` + `@esa/tokens/src/component-tokens.css` + the spoke's `src/styles/theme-*.css`.
   SCSS-style private `--_*` tokens read public tokens **with a literal fallback**. Raw hex/px

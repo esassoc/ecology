@@ -96,7 +96,7 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   — never a saturated brand fill. A magenta/teal topbar is anathema. The
   **`esa-app-bar` default tone is `surface`, never `brand`** for chrome.
   - *Beacon reference (pure-neutral):* top `#efefef`, sidenav/main `#fafafa`.
-  - *Touchline reference (a green whisper):* canvas `#fbfdfb`, bar `#f2f6f3`,
+  - *A brand-tinted example (a green whisper):* canvas `#fbfdfb`, bar `#f2f6f3`,
     rail `#eef3ef`.
   - No component token for the surface you need to step? That's a missing
     theming hook → **/request-lego**, not a hand-styled chrome block.
@@ -138,8 +138,8 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   requested for a real subject (a company, event, agency, product), **research
   the actual brand identity before inventing a palette** — its real colors,
   marks, and type voice. Don't fabricate a generic theme when a true one is
-  knowable. (Touchline shipped a made-up palette instead of the real 2026
-  World Cup identity — that's the gap this closes.)
+  knowable. (An early spoke shipped a made-up palette instead of researching
+  the real identity — that's the gap this closes.)
 
 ---
 

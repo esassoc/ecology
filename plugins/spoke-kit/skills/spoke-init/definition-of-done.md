@@ -42,8 +42,8 @@ Applies to composed pages under `src/pages/**` (the app/prototype pages — NOT
 - [ ] **Primitives only on the spine or inside components.** Layout primitives
       (`stack`/`grid`/`repel`/`center`/…) and type roles are the page spine and live
       *inside* section components — never used as a section themselves.
-- [ ] Pattern-match Laureate's `src/pages/app/index.astro` (canonical zero-CSS
-      manifest) + its `src/components/laureate-*.astro` section components.
+- [ ] Pattern-match a spoke's `src/pages/app/index.astro` (canonical zero-CSS
+      manifest) + its `src/components/demo-*.astro` section components.
 
 ## Theme reviewed
 - [ ] `theme-<slug>.css` re-points were **reviewed by a human**.
