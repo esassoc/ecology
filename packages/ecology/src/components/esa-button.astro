@@ -73,35 +73,45 @@ const cls = [
 // and is marked aria-disabled (the --disabled wrapper kills pointer events).
 const isLink = href != null && href !== '';
 const isDisabled = disabled || loading;
-const Tag = isLink ? 'a' : 'button';
-const nativeAttrs = isLink
-  ? {
-      href: isDisabled ? undefined : href,
-      target: target || undefined,
-      rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
-      role: 'button',
-      tabindex: isDisabled ? -1 : undefined,
-      'aria-disabled': isDisabled ? 'true' : undefined,
-      'aria-busy': loading ? 'true' : undefined,
-      'aria-pressed': active ? 'true' : undefined,
-    }
-  : {
-      type,
-      disabled: isDisabled,
-      'aria-busy': loading ? 'true' : undefined,
-      'aria-pressed': active ? 'true' : undefined,
-    };
+const linkAttrs = {
+  href: isDisabled ? undefined : href,
+  target: target || undefined,
+  rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
+  role: 'button' as const,
+  tabindex: isDisabled ? -1 : undefined,
+  'aria-disabled': isDisabled ? ('true' as const) : undefined,
+  'aria-busy': loading ? ('true' as const) : undefined,
+  'aria-pressed': active ? ('true' as const) : undefined,
+};
+const buttonAttrs = {
+  type,
+  disabled: isDisabled,
+  'aria-busy': loading ? ('true' as const) : undefined,
+  'aria-pressed': active ? ('true' as const) : undefined,
+};
 ---
 <span class={cls}>
-  <Tag class="esa-button__native" {...nativeAttrs}>
-    {loading && <span class="esa-button__spinner" aria-hidden="true" />}
-    {icon && !loading && <EsaIcon name={icon} size={size} />}
-    {!iconOnly && (
-      <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
-        <slot />
-      </span>
-    )}
-  </Tag>
+  {isLink ? (
+    <a class="esa-button__native" {...linkAttrs}>
+      {loading && <span class="esa-button__spinner" aria-hidden="true" />}
+      {icon && !loading && <EsaIcon name={icon} size={size} />}
+      {!iconOnly && (
+        <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
+          <slot />
+        </span>
+      )}
+    </a>
+  ) : (
+    <button class="esa-button__native" {...buttonAttrs}>
+      {loading && <span class="esa-button__spinner" aria-hidden="true" />}
+      {icon && !loading && <EsaIcon name={icon} size={size} />}
+      {!iconOnly && (
+        <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
+          <slot />
+        </span>
+      )}
+    </button>
+  )}
 </span>
 
 <style>
@@ -143,7 +153,7 @@ const nativeAttrs = isLink
   .esa-button--color-secondary {
     --_accent: var(--color-secondary);
     --_accent-hover: var(--color-secondary-hover);
-    --_accent-text: var(--color-primary-strong);
+    --_accent-text: var(--color-secondary-strong);
   }
   .esa-button--color-danger {
     --_accent: var(--color-danger);

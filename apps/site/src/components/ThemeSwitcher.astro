@@ -11,15 +11,17 @@
   if (!el) throw new Error('ThemeSwitcher: #theme-switcher not found');
 
   const themes = ['default', 'beacon', 'qanat'];
-  el.options = themes.map((t) => ({ label: t, value: t }));
-
   const saved = localStorage.getItem(KEY) || 'default';
   root.setAttribute('data-theme', saved);
-  el.value = saved;
 
   el.addEventListener('change', (e: CustomEvent) => {
     const t = e.detail.value;
     root.setAttribute('data-theme', t);
     localStorage.setItem(KEY, t);
+  });
+
+  customElements.whenDefined('esa-button-toggle').then(() => {
+    el.options = themes.map((t) => ({ label: t, value: t }));
+    el.value = saved;
   });
 </script>
