@@ -1,0 +1,22 @@
+/* @esa/tokens — component-level CSS custom properties */
+:root {
+  --form-padding-y-small: var(--spacing-150); --form-padding-x-small: var(--spacing-250);
+  --form-height-small: 32px; --form-radius-small: var(--radius-100);
+  --form-padding-y-medium: var(--spacing-200); --form-padding-x-medium: var(--spacing-300);
+  --form-height-medium: 40px; --form-radius-medium: var(--radius-200);
+  --form-padding-y-large: var(--spacing-300); --form-padding-x-large: var(--spacing-400);
+  --form-height-large: 48px; --form-radius-large: var(--radius-200);
+  --form-bg: var(--color-surface); --form-bg-disabled: var(--color-gray-100);
+  --form-border-color: var(--color-border); --form-border-color-hover: var(--color-border-strong);
+  --form-border-color-focus: var(--color-primary); --form-border-color-error: var(--color-danger);
+  --form-text-color: var(--color-text-primary); --form-placeholder-color: var(--color-text-muted);
+  --form-label-color: var(--color-text-secondary); --form-error-color: var(--color-danger);
+  --form-border-width: 1px; --form-label-gap: var(--spacing-100);
+
+  --breadcrumbs-link-color: var(--color-text-secondary);
+  --breadcrumbs-link-hover: var(--color-text-primary);
+  --breadcrumbs-separator-color: var(--color-gray-400);
+
+  --app-bar-height: 52px; --app-bar-pad-y: var(--spacing-400); --app-bar-pad-x: var(--spacing-600);
+  --app-bar-gap: var(--spacing-500);
+}

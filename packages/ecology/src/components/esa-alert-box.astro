@@ -164,11 +164,11 @@ const iconPath = ICON_PATHS[variant];
 
   .esa-alert-box__dismiss:hover {
     color: var(--color-text-primary, #171717);
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--alert-box-dismiss-bg-hover, rgba(0, 0, 0, 0.06));
   }
 
   .esa-alert-box__dismiss:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 </style>

@@ -270,7 +270,7 @@ export class EsaChipGroup extends LitElement {
 
     .chip:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--focus-ring-color, #43608a);
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     .chip__label { line-height: 1; }

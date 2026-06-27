@@ -253,7 +253,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     color: var(--color-text-primary, #171717);
     transition: background 150ms ease;
   }
-  .esa-app-shell__brand:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+  .esa-app-shell__brand:hover { background: var(--app-shell-brand-bg-hover, color-mix(in srgb, currentColor 8%, transparent)); }
   /* Collapsed rail: drop the wordmark (it pins the rail open), center the mark. */
   esa-sidebar-nav[collapsed] .esa-app-shell__brand { justify-content: center; padding-inline: 0; }
   esa-sidebar-nav[collapsed] .esa-app-shell__wordmark { display: none; }

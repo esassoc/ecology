@@ -180,7 +180,7 @@ export class EsaFileList extends LitElement {
       color: var(--color-danger, #ef4444);
     }
     .file__btn:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
   `;

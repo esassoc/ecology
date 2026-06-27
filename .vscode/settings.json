@@ -1,0 +1,11 @@
+{
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  },
+  "emmet.includeLanguages": {
+    "astro": "html"
+  },
+  "files.associations": {
+    "*.astro": "astro"
+  }
+}

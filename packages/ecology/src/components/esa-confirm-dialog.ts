@@ -238,7 +238,7 @@ export class EsaConfirmDialog extends LitElement {
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-confirm-dialog__btn:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .esa-confirm-dialog__btn--outline {

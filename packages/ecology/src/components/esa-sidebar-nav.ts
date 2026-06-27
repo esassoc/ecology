@@ -304,7 +304,7 @@ export class EsaSidebarNav extends LitElement {
     }
     .toggle:hover { background: var(--_sidenav-item-bg-hover); }
     .toggle:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -349,7 +349,7 @@ export class EsaSidebarNav extends LitElement {
     }
     .link:hover:not(.link--disabled) { background: var(--_sidenav-item-bg-hover); }
     .link:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

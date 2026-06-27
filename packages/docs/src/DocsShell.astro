@@ -138,7 +138,9 @@ const showToggle = colorScheme === 'toggle';
         border: 1px solid var(--color-border, #dcdcdc); border-radius: 9px;
         color: var(--color-text-muted, #7c7c7c); font-size: 14px; cursor: text;
         background: var(--color-surface, #fff);
+        font-family: inherit; text-align: left;
       }
+      .search:hover { border-color: var(--color-primary-border, #c6dcf1); }
       .search kbd {
         margin-left: auto; font-family: var(--font-mono, monospace); font-size: 11px;
         border: 1px solid var(--color-border, #dcdcdc); border-radius: 5px;
@@ -229,7 +231,7 @@ const showToggle = colorScheme === 'toggle';
 
       <div class="main">
         <header class="topbar">
-          <div class="search" role="search"><span>Search…</span><kbd>⌘K</kbd></div>
+          <button class="search" id="search-trigger" type="button" aria-label="Search documentation"><span>Search…</span><kbd>⌘K</kbd></button>
           <div class="spacer"></div>
           {showToggle && (
             <button class="scheme-toggle" id="scheme-toggle" type="button" aria-label="Toggle color scheme" title="Toggle light / dark">
@@ -251,6 +253,8 @@ const showToggle = colorScheme === 'toggle';
         </div>
       </div>
     </div>
+
+    <slot name="cmd-overlay" />
 
     {showToggle && (
       <script>

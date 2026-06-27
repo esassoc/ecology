@@ -89,7 +89,7 @@ export class EsaSnackbarItem extends LitElement {
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-radius: var(--snackbar-item-radius, var(--radius-200, 0.5rem));
       box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      background: var(--color-gray-900, #171717);
+      background: var(--color-gray-12);
       color: var(--snackbar-item-color, var(--color-text-inverse, #ffffff));
       font-family: var(--font-sans, 'DM Sans', sans-serif);
       font-size: var(--type-size-200, 0.9375rem);
@@ -100,10 +100,10 @@ export class EsaSnackbarItem extends LitElement {
       to { transform: translateX(0); opacity: 1; }
     }
 
-    .esa-snackbar--success { background: var(--snackbar-item-bg-success, var(--color-green-800, #0a6562)); }
-    .esa-snackbar--warning { background: var(--snackbar-item-bg-warning, var(--color-orange-800, #912a0f)); }
-    .esa-snackbar--danger { background: var(--snackbar-item-bg-danger, var(--color-red-700, #b91c1c)); }
-    .esa-snackbar--info { background: var(--snackbar-item-bg-info, var(--color-blue-800, #43608a)); }
+    .esa-snackbar--success { background: var(--snackbar-item-bg-success, var(--color-green-11)); }
+    .esa-snackbar--warning { background: var(--snackbar-item-bg-warning, var(--color-orange-11)); }
+    .esa-snackbar--danger { background: var(--snackbar-item-bg-danger, var(--color-red-10)); }
+    .esa-snackbar--info { background: var(--snackbar-item-bg-info, var(--color-blue-11)); }
 
     .esa-snackbar__icon {
       flex-shrink: 0;

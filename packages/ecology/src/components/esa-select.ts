@@ -418,7 +418,7 @@ export class EsaSelect extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -562,7 +562,7 @@ export class EsaSelect extends LitElement {
       background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: 2px solid var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
 
