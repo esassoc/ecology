@@ -21,8 +21,8 @@ A `<spoke>-*` component is ready to come up **only when all three hold**:
    speculative component is a liability; two real uses is a pattern.
 3. **Earns its theming surface.** If the component can visually diverge between
    brands, it must expose a **tier-3 component-token surface** (`--<name>-*`
-   private `--_*` tokens reading public tokens with literal fallbacks — see
-   `packages/tokens/SPEC.md`). If it never diverges, it doesn't need one.
+   private `--_*` tokens reading public tokens bare — defaults ship in
+   `@layer esa.defaults`, see `packages/tokens/SPEC.md`). If it never diverges, it doesn't need one.
 
 If a candidate misses #1, the work is *generalization*, not promotion. If it
 misses #2, wait — file or note the second need first.

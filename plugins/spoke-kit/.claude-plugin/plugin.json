@@ -1,6 +1,6 @@
 {
   "name": "spoke-kit",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Claude intelligence layer for ESA Ecology design-system spokes. Ships the component-first discipline (skill + PreToolUse hook enforcing the Ecology esa-* -> Beacon -> bcn- lookup order), the /spoke-init scaffolding command, and the spoke pre-commit review skill. Single source of truth lives in the ecology hub repo; do not copy these files into spokes.",
   "author": {
     "name": "ESA Data Technology"

@@ -3,9 +3,9 @@
 // "On this page" rail, all CSS + scroll-spy) is shared with the hub and every
 // other spoke; this wrapper supplies only __SPOKE_NAME__'s axes: the brand theme
 // CSS, the brand font links, the brand chrome, and the nav data.
-// Import DocsShell FIRST — it pulls in @esa/tokens (:root primitives + default
-// teal semantics). theme-__SPOKE_SLUG__.css must load AFTER so it wins: a
-// [data-theme] block and :root have equal specificity, so source order decides.
+// Import DocsShell FIRST — it pulls in @esa/tokens (primitives + default teal
+// semantics, in @layer esa.defaults). theme-__SPOKE_SLUG__.css is UNLAYERED, so it
+// wins over the layer regardless of import order — order here is not load-bearing.
 import DocsShell from '@esa/docs/DocsShell.astro';
 import '../styles/theme-__SPOKE_SLUG__.css';
 import { allGroups } from '../data/ds-nav';

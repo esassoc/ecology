@@ -10,7 +10,7 @@
 // Container stays neutral — no background of its own (transparent); color is
 // the consumer's job. accent=true tints the value with the spoke's secondary
 // emphasis; default false keeps it primary text. Private --_* tokens read
-// public semantic tokens with a literal fallback, mirroring esa-badge.
+// public semantic tokens bare (defaults ship in @layer esa.defaults), mirroring esa-badge.
 interface Props {
   value: string | number;
   label: string;

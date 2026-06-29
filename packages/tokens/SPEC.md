@@ -18,9 +18,43 @@ all new components follow.
    `--card-bg: var(--color-surface)`. A spoke uses this tier to diverge ONE
    component from the semantic default without forking it.
 
-Inside components, **private `--_*` tokens** consume the public tiers, always
-with a literal fallback: `--_btn-height: var(--form-height-md, 40px)`.
-Privates are internals — never themed, never documented as surface.
+Inside components, **private `--_*` tokens** consume the public tiers by bare
+reference: `--_btn-height: var(--form-height-md)`. **No literal fallback** — the
+whole default theme ships in `@layer esa.defaults` (see below), so every public
+token is always defined upstream. An inline literal would be dead code that
+silently drifts out of sync with the real value (and can't carry a P3 color).
+Privates are internals — never themed, never documented as surface. The only
+fallbacks that stay are for values set at RUNTIME, not by the theme — instance
+variables like `hsl(var(--_avatar-hue, 200) …)` or `var(--_offset, 8px)`.
+
+## The cascade layer (why there are no literal fallbacks)
+
+The entire default theme — primitives + semantic (`tokens.css`) and the tier-3
+component tokens (`component-tokens.css`) — ships wrapped in one low-priority
+layer:
+
+```css
+@layer esa.defaults { :root { /* … all tokens … */ } }
+```
+
+This is the single source of truth for every default, and two of its properties
+are load-bearing for the rest of this spec:
+
+- **Defaults live once, at the definition site.** A token's value is its `:root`
+  declaration, which resolves down to a primitive — the only place a literal
+  color lives. Components reference tokens BARE and never re-state a default
+  inline. The P3/sRGB fallback is handled here too, via the
+  `@media (color-gamut: p3)` block — not via `var()` syntax.
+- **Any consumer override wins for free.** An UNLAYERED rule always beats a
+  layered one, regardless of specificity or source order. So a spoke's
+  `[data-theme]` block, a plain `:root` override, or even an inline style
+  supersedes the default with no load-order juggling — adopters whose color
+  setup you don't control get working defaults AND can retheme without
+  coordination.
+
+Ship the baseline with one import — `@esa/ecology/styles.css` (or the two token
+files directly). Shadow-DOM web components inherit these custom properties from
+the page `:root`, so they resolve the same tokens with no per-component setup.
 
 ## Tier-3 naming
 
@@ -59,15 +93,24 @@ rows are candidates to either promote into `component-tokens.css` or fold away.
 Adding a hook NEVER changes rendered output:
 
 ```css
-/* component-tokens.css (authored default = the old semantic chain) */
+/* component-tokens.css (authored default = the semantic chain, in @layer) */
 --card-bg: var(--color-surface);
 
-/* inside the component: hook spliced ABOVE the old chain, old fallback kept */
---_card-bg: var(--card-bg, var(--color-surface, #fff));
+/* inside the component: read the declared hook bare */
+--_card-bg: var(--card-bg);
 ```
 
-Spokes already shipping are untouched by construction: every new token's
-default resolves to exactly what the component read before.
+Because `--card-bg` is declared in the layer it is always defined, so the
+component reads it bare. An **ad-hoc** hook that is intentionally NOT declared in
+`component-tokens.css` carries its semantic default in the `var()` fallback slot
+instead — still no literal:
+
+```css
+--_stat-accent: var(--stat-accent-color, var(--color-secondary-strong));
+```
+
+Spokes already shipping are untouched by construction: every hook's default
+resolves to exactly what the component read before.
 
 ## Themes consume the tiers like this
 
@@ -80,4 +123,5 @@ default resolves to exactly what the component read before.
 }
 ```
 
-Never re-point a primitive; never style `.esa-*` internals from a theme.
+Theme blocks are UNLAYERED, so they win over `@layer esa.defaults` regardless of
+load order. Never re-point a primitive; never style `.esa-*` internals from a theme.

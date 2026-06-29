@@ -14,7 +14,7 @@
 //
 // Size mapping (shared UiSize scale + xl for icons): xs=14, sm=16, md=20, lg=24, xl=28.
 // host size classes → class list here; private --_icon-size token reads the
-// public --icon-size-* tokens with literal fallbacks (same SCSS convention).
+// public --icon-size-* tokens bare (defaults ship in @layer esa.defaults).
 import { ICON_PATHS } from './icon-registry';
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';

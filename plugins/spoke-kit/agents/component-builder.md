@@ -62,9 +62,12 @@ dropzone CSS) — get ahead of it by composing the lego. **Load the `component-f
   `demo-*.astro` or an existing component in this spoke) and match its structure.
 - **Tokens:** use ONLY names that exist in ecology — `grep` `node_modules/@esa/tokens/dist/
   tokens.css` + `@esa/tokens/src/component-tokens.css` + the spoke's `src/styles/theme-*.css`.
-  SCSS-style private `--_*` tokens read public tokens **with a literal fallback**. Raw hex/px
-  belong only in the theme's primitive ramp; everywhere else reads a token (a sanctioned
-  font-size hard-code is OK after you've checked no token applies). **No Tailwind.**
+  SCSS-style private `--_*` tokens read public tokens **by bare reference — no literal
+  fallback** (the default theme ships in `@layer esa.defaults`, so tokens are always defined;
+  an inline literal drifts stale and can't carry P3). Keep a fallback only for RUNTIME/instance
+  values (`var(--_offset, 8px)`). Raw hex/px belong only in the theme's primitive ramp;
+  everywhere else reads a token (a sanctioned font-size hard-code is OK after you've checked
+  no token applies). **No Tailwind.**
 - Every section owns its **own markup + CSS** — the page should need zero `<style>`.
 
 ## Hard boundaries

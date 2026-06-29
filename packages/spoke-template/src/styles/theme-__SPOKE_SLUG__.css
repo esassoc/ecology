@@ -7,9 +7,10 @@
  * touching primitives. Because every esa-* component reads only the semantic
  * layer, re-pointing that layer re-skins the whole kit with no forks.
  *
- * LOAD ORDER matters: tokens.css (:root) and a [data-theme] block have equal
- * specificity, so source order decides. DocsLayout/BaseLayout import this file
- * AFTER @esa/tokens so it wins.
+ * NO LOAD-ORDER JUGGLING: @esa/tokens ships its defaults in @layer esa.defaults,
+ * and this [data-theme] block is UNLAYERED — an unlayered rule always beats a
+ * layered one regardless of specificity or source order, so this file wins no
+ * matter when it's imported. (Keep it unlayered; don't wrap it in a layer.)
  *
  * TOKEN TIERS:
  *   - ecology tokens (--color-*, --form-*, --font-*): the durable hub vocabulary.
