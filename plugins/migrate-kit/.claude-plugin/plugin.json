@@ -1,0 +1,8 @@
+{
+  "name": "migrate-kit",
+  "version": "0.1.0",
+  "description": "Claude intelligence layer for migrating an existing Angular app onto its ESA Ecology design spoke. Ships the spoke-driven migration suite: ecology-migrate (the human-gated conductor) over ecology-audit (assess + two-track plan), ecology-migrate-shell / -component / -page (the execute axes), and ecology-verify (the shared isolated/live-render gate). Reads the app's spoke (theme values, catalog, prototypes, handoff) + Beacon (the Angular reference) + the hub (the token contract) as targets; the suite owns structure, sequencing, and execution while the spoke owns the look. Single source of truth lives in the ecology hub repo; do not copy these files into apps.",
+  "author": {
+    "name": "ESA Data Technology"
+  }
+}

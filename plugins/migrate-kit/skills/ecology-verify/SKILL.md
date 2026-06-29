@@ -1,0 +1,81 @@
+---
+name: ecology-verify
+description: Visual-fidelity gate for an Ecology migration. Renders before/after using the real theme tokens — reusable primitives in an isolated harness (no app/auth), pages & shells in the live authenticated app (reusing the project's e2e auth harness, else a saved storageState) — emits a self-contained side-by-side comparison HTML + a navigable index, screenshots with Playwright, and adjudicates deltas (and a handoff section's acceptance checks when present). The verify stage of the Ecology migration pattern; migrate-component/page/shell hand off here.
+allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_resize, mcp__playwright__browser_snapshot]
+---
+
+Confirm a component swap (from `ecology-migrate-component`) preserves the **intended** appearance: render the **before** and **after** side by side, let a human eyeball it, and emit a PASS/FLAG verdict that separates *intentional* reference-faithful changes from *regressions*.
+
+## Two render modes — pick by what's being verified
+
+**A) Isolated harness — reusable primitives (the default).** A primitive is **just HTML + CSS**, so render it **standalone**: a static harness loading the app's **theme tokens** + the component's **own styles** + **representative markup**. No app server, auth, or DB → fast, reproducible, deterministic. The comparison HTML is the deliverable (before/after in any browser).
+- Presentational primitives (badge, pill, card, breadcrumb, stat, …): isolation renders them faithfully.
+- Interactive primitives (selects, dialogs, toggles): isolation covers their *static* appearance.
+
+**B) Live full-page render — pages & shells (`ecology-migrate-page` / `ecology-migrate-shell`).** A screen or app frame can't be faithfully isolated (routing, data, the whole layout), so render the **real app, authenticated**, navigate to the screen, and screenshot it against the spoke prototype. **Precondition — target the project's RUNNING dev server (don't start a fresh one).** Discover its URL from project config — the Playwright config `baseURL` / `webServer`, or the Angular `serve` host+port (often a custom host/port, not `localhost:4200`) — and point Playwright at **that**, not a guessed port. **Prefer an already-running server:** dev servers hot-reload, so the migration's file edits are already live in it — there's no need to rebuild or restart. Do **not** blindly `npm start` a fresh instance: its `prestart` may hang on interactive prompts (nvm, cert-trust), and a second instance just fights the port. (The backend — API/DB — must be reachable for the e2e auth to bootstrap the user; if truly nothing is serving and you can't start cleanly, fall back to #3.) Then, to get past the login wall, obtain an authenticated Playwright session **in priority order — don't assume any one mechanism exists:**
+  1. **Reuse the app's own e2e auth harness if it has one** (discover it under `e2e-tests/`/`e2e/`/`tests/`). *Common pattern:* a fixture sets a `localStorage` token/flag the app reads on bootstrap to bypass the real IdP and attach a test-user header — reuse that fixture + a test user, then `goto('/<route>')`.
+  2. **Else authenticate generically** — a saved Playwright `storageState`, or scripting the app's UI login once. Whatever the app documents for test auth.
+  3. **Else** (no auth path) fall back to build-pass + comparing the rendered markup against the prototype, and **say so**.
+
+## Arguments
+
+`$ARGUMENTS`:
+- **`--component <path|name>`** — the swapped primitive (required).
+- **`--before <ref>`** — git ref/state for the pre-swap version (default: `HEAD`, i.e. the committed component before the working-tree swap).
+- **`--after <ref|worktree>`** — post-swap version (default: the working tree).
+- **`--app`/`--ecology`/`--beacon`** — repo roots (defaults: current; `../ecology`; `../Beacon`).
+- **`--out-root <dir>`** — root output dir (default: `.playwright-mcp/ecology-verify/`, gitignored). Each component's artifacts go in `<out-root>/<component>/`; the navigable index lives at `<out-root>/index.html`.
+- **`--handoff <spec#section>`** — *(page/screen migrations)* the spoke handoff section whose **`acceptance`** checks gate this verify (auto-resolved from the prototype + section when invoked by `ecology-migrate-page`). Verify is granularity-agnostic: it checks a reusable-component swap *or* a page/screen section.
+
+## Workflow
+
+### Phase 0 — Resolve before/after
+Identify the swapped component and obtain **both** versions of its template + styles:
+- **AFTER** = the working tree (post-swap).
+- **BEFORE** = the component at `--before` — read it with `git show <ref>:<path>` (don't rely on a dirty tree). If the swap was reimplemented in place, BEFORE and AFTER share a path; `git show HEAD:` gives the original.
+
+Pick **representative instances** to render — cover every variant/state the audit + the component's inputs imply (e.g. each `variant`, `dot` on/off, with/without link). Use the same instance set for both sides so the comparison is apples-to-apples.
+
+### Phase 1 — Gather render inputs
+- **Theme tokens:** the app's `:root` custom-property block (the Ecology alias bridge, e.g. `src/scss/base/_theme.scss`). Its `:root` is plain CSS — include it verbatim (drop any `@import`/`@use` lines).
+- **Component CSS (each side):** compile the component's SCSS to CSS. If it only uses `var(--…)` + literals (typical for token-driven primitives), strip the `@use`/`@import` lines and inline it. If it uses Sass nesting/mixins, compile with `npx sass --style=expanded --load-path=<app>/src <file>`. Scope BEFORE styles under `.ev-before` and AFTER under `.ev-after` so both can coexist on one page without collisions. **Drop the `:host` rule** when scoping — in isolation there's no Angular host element, and mapping `:host` onto the column wrapper breaks layout (it sets `display` on the column, laying instances out in a row); wrap each instance directly instead.
+- **BEFORE must be the true legacy rendering.** Reproduce the old component's markup faithfully — including any inline `style` bindings it used (e.g. arbitrary `color`/`textColor` applied inline) — so the left column shows what shipped, not an idealization.
+
+### Phase 2 — Build the side-by-side comparison HTML (the deliverable)
+Write a **self-contained** `<out-root>/<component>/index.html`:
+- `<style>` = theme `:root` tokens + scoped before/after component CSS.
+- A header: component, `esa-*` target, before/after refs, generation note, and a **`← Verify index`** link (to `../index.html`).
+- **Two-column side-by-side layout** — `BEFORE` (old) on the left, `AFTER` (esa-*) on the right — each rendering the representative instances with labels, aligned row-for-row so a reviewer can scan across. (Plain static columns — no overlay/wipe slider.)
+- A **deltas panel** listing each expected/intentional change.
+Keep markup/IDs stable so re-runs diff cleanly.
+
+### Phase 3 — Screenshot with Playwright
+**(Mode A — primitives):** Open `file://<out-root>/<component>/index.html`, set a fixed viewport (e.g. 1280×800), and capture: the full page, the `BEFORE` column, and the `AFTER` column → `<out-root>/<component>/{page,before,after}.png`. Prefer the app's installed Playwright (a tiny generated script) for reproducibility; the Playwright MCP browser is an acceptable alternative.
+
+**(Mode B — pages/shells):** skip the `file://` harness. Start the app's dev server, get an **authenticated** session (per *Two render modes* B), `goto` the screen's route, wait for it to settle, and screenshot the **live render** (`after.png`) at the same viewport. Capture `before.png` from the pre-migration screen (`git stash` the swap, or the route at `--before`) and put the **spoke prototype** alongside as the design target. Same `<out-root>/<screen>/` layout + index. **Windows/ESM gotcha:** load Playwright via CommonJS `require('playwright')` (use `createRequire(import.meta.url)` if the script is `.mjs`, or just name it `.cjs`) — importing `chromium` from an absolute `node_modules` path in an ESM module fails on Windows with `ERR_UNSUPPORTED_ESM_URL_SCHEME`. Running through `npx playwright test` also avoids this. If you instead use the Playwright **MCP** browser, two more gotchas: it **blocks the `file:` protocol** (serve `<out-root>` over `http://localhost` first), and it writes screenshots relative to the **repo root** (prefix filenames with `.playwright-mcp/`). The scripted CLI Playwright avoids both.
+
+### Phase 4 — Adjudicate
+Compare before vs after and classify each visible delta:
+- **INTENTIONAL** — matches the esa-* reference (e.g. casing change, radius, palette shifting to tokens, spacing to the scale). Seed this list from the `ecology-migrate-component` report's stated deltas.
+- **REGRESSION** — unintended (clipped/overflowing text, wrong color, broken alignment, lost state).
+
+**When a handoff section drives this (a page/screen migration via `ecology-migrate-page`), its `acceptance` checks are the authoritative gate.** Check each "done when…" against the AFTER render and record pass/fail per check, citing the handoff section — these are the designer's criteria, so they outrank inferred deltas for the PASS decision.
+
+Verdict = **PASS** if only intentional deltas **and** (when a handoff applies) every `acceptance` check holds; **FLAG** otherwise (list the regressions and/or failed acceptance checks).
+
+### Phase 5 — Persist the result, (re)generate the navigable index, and report
+1. **Write `<out-root>/<component>/result.json`** — `{ component, target, slice, verdict, deltas: [{ kind: "intentional"|"regression", note }] }` — so the index can aggregate without re-running each component. Use the **full plan heading** for `slice` (e.g. `"Slice 1 — Leaf DIRECT primitives"`) so the index can both **group** and **order** by the leading number.
+2. **(Re)generate `<out-root>/index.html`** — a navigable gallery built by scanning **every** `<out-root>/*/result.json` (not just this run's), so it always reflects all components verified so far:
+   - a **left sidebar** listing each component, **grouped by migration-plan slice ordered by the slice's leading number** (ascending; components alphabetical within a slice), each entry showing its `esa-*` target and a **PASS / FLAG** badge;
+   - a **main pane** that loads the selected component's `<component>/index.html` in an `<iframe>` — clicking a sidebar entry swaps it; deep-linkable via `#<component>`; on first load with no hash, default to the **first component in slice order**;
+   - a header with overall counts (verified / passing / flagged).
+   Self-contained, vanilla JS, stable markup so re-runs diff cleanly.
+3. **Report:** the verdict, the **index path** and this component's side-by-side path (tell the user to open the index), the screenshot paths, and the deltas table (intentional vs regression). Reminder: skill-produced — to change it, reset → refine the skill → re-run.
+
+## Notes
+- **Isolation-first, auth-free.** Don't stand up the full app for a presentational check; render against the real tokens standalone.
+- **`git show` for BEFORE.** Read the pre-swap version from git, not a stashed tree, so the comparison is reproducible.
+- **Output is a gitignored review artifact** (`.playwright-mcp/…`) — not committed source.
+- **Skill-only / idempotent.** Re-running regenerates the HTML + screenshots in place.
+- **Keep the generator scripts** (harness builder, screenshot runner) in `<out-root>/<component>/` for reproducibility — the whole `<out-root>` is gitignored, so they cost nothing and document how the artifacts were produced.
+- **Doesn't revert anything.** Verify only *reports* fidelity; intentional legacy-appearance changes (flagged by migrate) are expected, not bugs to undo.
