@@ -21,12 +21,12 @@ const paint = (s: Step) => s.value ?? `var(--${s.token})`;
 </div>
 
 <style>
-  .scale { margin-bottom: var(--spacing-500, 1.5rem); }
-  .scale__name { font-size: 14px; font-weight: 600; color: var(--color-text-primary, #171717); margin-bottom: var(--spacing-200, 0.5rem); }
-  .scale__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: var(--spacing-150, 0.375rem); }
+  .scale { margin-bottom: var(--spacing-500); }
+  .scale__name { font-size: 14px; font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--spacing-200); }
+  .scale__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); gap: var(--spacing-150); }
   .chip__swatch {
     height: 52px; border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--color-text-primary, #000) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
   }
-  .chip__step { font-size: 12px; font-family: var(--font-mono, monospace); color: var(--color-text-muted, #7c7c7c); margin-top: 5px; text-align: center; }
+  .chip__step { font-size: 12px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 5px; text-align: center; }
 </style>

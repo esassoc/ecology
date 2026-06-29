@@ -24,29 +24,29 @@ const { title = 'Ecology' } = Astro.props;
       *, *::before, *::after { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: var(--font-sans, system-ui, sans-serif);
-        font-size: var(--type-size-200, 1rem);
-        font-weight: var(--font-weight-regular, 350);
-        line-height: var(--line-height-normal, 1.6);
-        background: var(--color-surface, #fff);
-        color: var(--color-text-primary, #171717);
+        font-family: var(--font-sans);
+        font-size: var(--type-size-200);
+        font-weight: var(--font-weight-regular);
+        line-height: var(--line-height-normal);
+        background: var(--color-surface);
+        color: var(--color-text-primary);
       }
-      h1, h2, h3 { line-height: var(--line-height-tight, 1.3); font-weight: var(--font-weight-semibold, 550); }
-      h1 { font-size: var(--type-size-700, 2.25rem); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-      h2 { font-size: var(--type-size-500, 1.5rem); margin-top: var(--spacing-600, 2rem); }
-      a { color: var(--color-text-link, #43608a); }
+      h1, h2, h3 { line-height: var(--line-height-tight); font-weight: var(--font-weight-semibold); }
+      h1 { font-size: var(--type-size-700); letter-spacing: var(--letter-spacing-tight); }
+      h2 { font-size: var(--type-size-500); margin-top: var(--spacing-600); }
+      a { color: var(--color-text-link); }
       code {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 0.9em;
-        background: var(--color-surface-sunken, #efefef);
+        background: var(--color-surface-sunken);
         padding: 0.1em 0.35em;
-        border-radius: var(--radius-100, 4px);
+        border-radius: var(--radius-100);
       }
-      .page { max-width: 880px; margin: 0 auto; padding: var(--spacing-700, 3rem) var(--spacing-500, 1.5rem); }
-      .swatches { display: flex; flex-wrap: wrap; gap: var(--spacing-300, 0.75rem); }
+      .page { max-width: 880px; margin: 0 auto; padding: var(--spacing-700) var(--spacing-500); }
+      .swatches { display: flex; flex-wrap: wrap; gap: var(--spacing-300); }
       .swatch { width: 110px; }
-      .swatch .chip { height: 48px; border-radius: var(--radius-200, 8px); border: 1px solid var(--color-border, #e5e5e5); }
-      .swatch .label { font-size: var(--type-size-100, 0.75rem); color: var(--color-text-muted, #737373); margin-top: 0.35rem; }
+      .swatch .chip { height: 48px; border-radius: var(--radius-200); border: 1px solid var(--color-border); }
+      .swatch .label { font-size: var(--type-size-100); color: var(--color-text-muted); margin-top: 0.35rem; }
     </style>
   </head>
   <body>

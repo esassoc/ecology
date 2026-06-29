@@ -77,19 +77,19 @@ import { legoCount } from '../../data/toolkit';
 </DocsLayout>
 
 <style>
-  .diagram { border: 1px solid var(--color-border, #e5e5e5); border-radius: 12px; padding: var(--spacing-500, 1.25rem); margin-bottom: var(--spacing-400, 1rem); text-align: center; }
-  .diagram__hub { display: inline-flex; flex-direction: column; gap: 2px; padding: var(--spacing-300, 0.75rem) var(--spacing-500, 1.25rem); border-radius: 10px; background: var(--color-primary-subtle, #eef6f6); border: 1px solid var(--color-primary-border, #cfe5e5); }
+  .diagram { border: 1px solid var(--color-border); border-radius: 12px; padding: var(--spacing-500); margin-bottom: var(--spacing-400); text-align: center; }
+  .diagram__hub { display: inline-flex; flex-direction: column; gap: 2px; padding: var(--spacing-300) var(--spacing-500); border-radius: 10px; background: var(--color-primary-subtle); border: 1px solid var(--color-primary-border); }
   .diagram__hub b { font-size: 1.05rem; }
-  .diagram__hub span { font-size: 0.875rem; color: var(--color-text-muted, #667); }
-  .diagram__arrows { color: var(--color-text-muted, #667); letter-spacing: 2.5em; padding-left: 2.5em; margin: var(--spacing-200, 0.5rem) 0; }
-  .diagram__spokes { display: flex; gap: var(--spacing-300, 0.75rem); justify-content: center; flex-wrap: wrap; }
-  .diagram__spoke { display: flex; flex-direction: column; gap: 2px; padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; background: var(--color-surface, #fff); }
-  .diagram__spoke span { font-size: 0.875rem; color: var(--color-text-muted, #667); }
-  .verbs li { margin-bottom: var(--spacing-100, 0.25rem); }
-  .spoke-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400, 1rem); margin-bottom: var(--spacing-300, 0.75rem); }
-  .spoke-card { border: 1px solid var(--color-border, #e5e5e5); border-radius: 12px; padding: var(--spacing-400, 1rem); }
-  .spoke-card h3 { margin: 0 0 var(--spacing-100, 0.25rem); }
-  .spoke-card p { margin: 0 0 var(--spacing-300, 0.75rem); color: var(--color-text-secondary, #444); }
-  .spoke-card__links { display: flex; gap: var(--spacing-400, 1rem); }
-  .spoke-note { color: var(--color-text-secondary, #444); }
+  .diagram__hub span { font-size: 0.875rem; color: var(--color-text-muted); }
+  .diagram__arrows { color: var(--color-text-muted); letter-spacing: 2.5em; padding-left: 2.5em; margin: var(--spacing-200) 0; }
+  .diagram__spokes { display: flex; gap: var(--spacing-300); justify-content: center; flex-wrap: wrap; }
+  .diagram__spoke { display: flex; flex-direction: column; gap: 2px; padding: var(--spacing-200) var(--spacing-400); border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); }
+  .diagram__spoke span { font-size: 0.875rem; color: var(--color-text-muted); }
+  .verbs li { margin-bottom: var(--spacing-100); }
+  .spoke-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400); margin-bottom: var(--spacing-300); }
+  .spoke-card { border: 1px solid var(--color-border); border-radius: 12px; padding: var(--spacing-400); }
+  .spoke-card h3 { margin: 0 0 var(--spacing-100); }
+  .spoke-card p { margin: 0 0 var(--spacing-300); color: var(--color-text-secondary); }
+  .spoke-card__links { display: flex; gap: var(--spacing-400); }
+  .spoke-note { color: var(--color-text-secondary); }
 </style>

@@ -49,12 +49,12 @@ const patterns = [
 </DocsLayout>
 
 <style>
-  .pl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--spacing-400, 1rem); margin: var(--spacing-500, 1.25rem) 0; }
-  .pl-card { display: flex; flex-direction: column; gap: var(--spacing-200, 0.5rem); border: 1px solid var(--color-border, #e5e5e5); border-radius: 12px; padding: var(--spacing-500, 1.25rem); transition: border-color var(--transition-fast, 150ms ease); }
-  .pl-card:hover { border-color: var(--color-primary, #43608a); }
+  .pl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--spacing-400); margin: var(--spacing-500) 0; }
+  .pl-card { display: flex; flex-direction: column; gap: var(--spacing-200); border: 1px solid var(--color-border); border-radius: 12px; padding: var(--spacing-500); transition: border-color var(--transition-fast); }
+  .pl-card:hover { border-color: var(--color-primary); }
   .pl-card h2 { margin: 0; font-size: 1.2rem; }
-  .pl-card p { margin: 0; color: var(--color-text-secondary, #444); }
-  .pl-from { color: var(--color-text-muted, #777); font-size: 0.9rem; }
-  .pl-go { color: var(--color-text-link, #43608a); font-weight: 500; }
-  .pl-note { color: var(--color-text-secondary, #444); max-width: 70ch; }
+  .pl-card p { margin: 0; color: var(--color-text-secondary); }
+  .pl-from { color: var(--color-text-muted); font-size: 0.9rem; }
+  .pl-go { color: var(--color-text-link); font-weight: 500; }
+  .pl-note { color: var(--color-text-secondary); max-width: 70ch; }
 </style>

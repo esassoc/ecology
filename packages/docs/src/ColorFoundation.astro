@@ -60,16 +60,16 @@ const { brand, brandHref = '/design-system', ramps = [] } = Astro.props;
 <script>import './foundation-hydrate';</script>
 
 <style>
-  .grp { margin-bottom: var(--spacing-600, 2rem); }
-  .grp__note { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 14px; color: var(--color-text-muted, #7c7c7c); }
-  .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-300, 0.75rem); }
-  .role { display: flex; align-items: center; gap: var(--spacing-300, 0.75rem); }
+  .grp { margin-bottom: var(--spacing-600); }
+  .grp__note { margin: 0 0 var(--spacing-300); font-size: 14px; color: var(--color-text-muted); }
+  .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-300); }
+  .role { display: flex; align-items: center; gap: var(--spacing-300); }
   .role__sw {
     width: 44px; height: 44px; flex: none; border-radius: 9px;
-    border: 1px solid color-mix(in srgb, var(--color-text-primary, #000) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
   }
   .role__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .role__body code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
-  .role__val { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-text-muted, #7c7c7c); }
-  .role__note { font-size: 12px; color: var(--color-text-muted, #7c7c7c); }
+  .role__body code { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-primary); }
+  .role__val { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-muted); }
+  .role__note { font-size: 12px; color: var(--color-text-muted); }
 </style>

@@ -82,10 +82,10 @@ import Section from '@esa/docs/Section.astro';
       <div class="map-attribution">© OpenStreetMap contributors</div>
       <div class="map-zoom"><button>+</button><button>−</button></div>
       <span class="pin" style="left: 38%; top: 44%;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-primary, #43608a)" stroke="var(--color-text-inverse, #fff)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-text-inverse, #fff)" stroke="none"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-primary)" stroke="var(--color-text-inverse)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-text-inverse)" stroke="none"/></svg>
       </span>
       <span class="pin" style="left: 60%; top: 56%;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-accent, #f9a134)" stroke="var(--color-text-inverse, #fff)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-text-inverse, #fff)" stroke="none"/></svg>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-accent)" stroke="var(--color-text-inverse)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-text-inverse)" stroke="none"/></svg>
         <span class="popup">Cedar Creek Outfall</span>
       </span>
     </div>
@@ -113,31 +113,31 @@ import Section from '@esa/docs/Section.astro';
 </ComponentDoc>
 
 <style>
-  .sub { font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-semibold, 550); margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+  .sub { font-size: var(--type-size-300); font-weight: var(--font-weight-semibold); margin: var(--spacing-500) 0 var(--spacing-200); }
   .lede { max-width: 70ch; }
   .ref-banner {
-    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    background: var(--color-warning-subtle, #fffbeb);
-    border: 1px solid var(--color-warning-border, #fde68a);
-    border-radius: var(--radius-200, 8px);
-    color: var(--color-text-secondary, #525252);
-    font-size: var(--type-size-150, 0.875rem);
-    margin-bottom: var(--spacing-400, 1rem);
+    padding: var(--spacing-300) var(--spacing-400);
+    background: var(--color-warning-subtle);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-200);
+    color: var(--color-text-secondary);
+    font-size: var(--type-size-150);
+    margin-bottom: var(--spacing-400);
   }
-  .meta { color: var(--color-text-muted, #737373); font-size: var(--type-size-150, 0.875rem); max-width: 72ch; }
-  .mock-label { font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-semibold, 550); margin: var(--spacing-400, 1rem) 0 var(--spacing-200, 0.5rem); }
+  .meta { color: var(--color-text-muted); font-size: var(--type-size-150); max-width: 72ch; }
+  .mock-label { font-size: var(--type-size-300); font-weight: var(--font-weight-semibold); margin: var(--spacing-400) 0 var(--spacing-200); }
 
-  .api-table { overflow-x: auto; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); margin-bottom: var(--spacing-300, 0.75rem); }
-  .api-table table { border-collapse: collapse; width: 100%; font-size: var(--type-size-150, 0.875rem); }
-  .api-table th, .api-table td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-light, #efefef); vertical-align: top; }
-  .api-table th { background: var(--color-surface-sunken, #efefef); font-weight: var(--font-weight-semibold, 550); }
+  .api-table { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-200); margin-bottom: var(--spacing-300); }
+  .api-table table { border-collapse: collapse; width: 100%; font-size: var(--type-size-150); }
+  .api-table th, .api-table td { text-align: left; padding: var(--spacing-200) var(--spacing-300); border-bottom: 1px solid var(--color-border-light); vertical-align: top; }
+  .api-table th { background: var(--color-surface-sunken); font-weight: var(--font-weight-semibold); }
   .api-table tr:last-child td { border-bottom: 0; }
 
   .map-mock {
     position: relative;
     height: var(--_h, 320px);
-    border: 1px solid var(--color-border, #e5e5e5);
-    border-radius: var(--radius-200, 8px);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-200);
     overflow: hidden;
   }
   .map-tiles {
@@ -153,27 +153,27 @@ import Section from '@esa/docs/Section.astro';
   .map-attribution {
     position: absolute; right: 0; bottom: 0;
     background: rgba(255,255,255,0.8);
-    color: var(--color-text-muted, #737373);
-    font-size: var(--type-size-100, 0.75rem);
+    color: var(--color-text-muted);
+    font-size: var(--type-size-100);
     padding: 2px 6px;
-    border-top-left-radius: var(--radius-100, 4px);
+    border-top-left-radius: var(--radius-100);
   }
-  .map-zoom { position: absolute; left: var(--spacing-300, 0.75rem); top: var(--spacing-300, 0.75rem); display: flex; flex-direction: column; box-shadow: var(--shadow-200, 0 4px 20px -4px rgba(0,0,0,0.06)); border-radius: var(--radius-100, 4px); overflow: hidden; }
-  .map-zoom button { width: 30px; height: 30px; border: 0; border-bottom: 1px solid var(--color-border, #e5e5e5); background: var(--color-surface, #fff); color: var(--color-text-primary, #171717); font-size: 1.1rem; cursor: default; }
+  .map-zoom { position: absolute; left: var(--spacing-300); top: var(--spacing-300); display: flex; flex-direction: column; box-shadow: var(--shadow-200); border-radius: var(--radius-100); overflow: hidden; }
+  .map-zoom button { width: 30px; height: 30px; border: 0; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-primary); font-size: 1.1rem; cursor: default; }
   .map-zoom button:last-child { border-bottom: 0; }
   .pin { position: absolute; transform: translate(-50%, -100%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
   .pin .popup {
     position: absolute; left: 50%; bottom: calc(100% + 4px); transform: translateX(-50%);
-    background: var(--color-surface, #fff); color: var(--color-text-primary, #171717);
-    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
-    box-shadow: var(--shadow-200, 0 4px 20px -4px rgba(0,0,0,0.06));
-    padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
-    font-size: var(--type-size-150, 0.875rem); white-space: nowrap;
+    background: var(--color-surface); color: var(--color-text-primary);
+    border: 1px solid var(--color-border); border-radius: var(--radius-200);
+    box-shadow: var(--shadow-200);
+    padding: var(--spacing-150) var(--spacing-300);
+    font-size: var(--type-size-150); white-space: nowrap;
   }
 
-  .map-mock--placeholder { background: var(--color-surface-sunken, #efefef); }
-  .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-200, 0.5rem); color: var(--color-text-muted, #737373); text-align: center; padding: var(--spacing-500, 1.5rem); }
-  .ph-title { font-size: 1rem; font-weight: var(--font-weight-semibold, 550); color: var(--color-text-secondary, #525252); margin: 0; }
-  .ph-text { font-size: var(--type-size-150, 0.875rem); max-width: 320px; margin: 0; }
-  .ph-markers { font-size: var(--type-size-100, 0.75rem); background: var(--color-surface, #fff); padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem); border-radius: var(--radius-full, 9999px); margin: 0; }
+  .map-mock--placeholder { background: var(--color-surface-sunken); }
+  .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-200); color: var(--color-text-muted); text-align: center; padding: var(--spacing-500); }
+  .ph-title { font-size: 1rem; font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); margin: 0; }
+  .ph-text { font-size: var(--type-size-150); max-width: 320px; margin: 0; }
+  .ph-markers { font-size: var(--type-size-100); background: var(--color-surface); padding: var(--spacing-100) var(--spacing-200); border-radius: var(--radius-full); margin: 0; }
 </style>

@@ -20,7 +20,7 @@ const props = [
   <p>Underlying content being covered.</p>
   <LoadingOverlay active={true} message="Loading data…" />
 </div>`}>
-      <div style="position: relative; min-height: 180px; width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+      <div style="position: relative; min-height: 180px; width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-300); padding: var(--spacing-400);">
         <p style="margin: 0;">Underlying content that is being covered while loading.</p>
         <LoadingOverlay active={true} message="Loading data…" />
       </div>
@@ -32,11 +32,11 @@ const props = [
     <Preview align="start" code={`<LoadingOverlay active={true} transparent={true} message="Saving…" />
 <LoadingOverlay active={false} />`}>
       <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
-        <div style="position: relative; min-height: 160px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+        <div style="position: relative; min-height: 160px; border: 1px solid var(--color-border); border-radius: var(--radius-300); padding: var(--spacing-400);">
           <p style="margin: 0;">You can still see this content faintly through the overlay.</p>
           <LoadingOverlay active={true} transparent={true} message="Saving…" />
         </div>
-        <div style="position: relative; min-height: 100px; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-400, 1rem);">
+        <div style="position: relative; min-height: 100px; border: 1px solid var(--color-border); border-radius: var(--radius-300); padding: var(--spacing-400);">
           <p style="margin: 0;">Inactive — the overlay renders nothing.</p>
           <LoadingOverlay active={false} />
         </div>

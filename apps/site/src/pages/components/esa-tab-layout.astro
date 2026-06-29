@@ -50,7 +50,7 @@ const slots = [
     <p>Two appearances, aligned to Beacon's <code>UiTabsAppearance</code>. <code>underline</code> (default) shows an underlined indicator on the active tab; <code>segmented</code> renders a segmented control — a sunken, bordered track with a filled selected segment and no indicator. (<code>variant="pill"</code> is the legacy alias for <code>segmented</code>.)</p>
     <Preview align="start" lang="html" code={`<esa-tab-layout appearance="underline">…</esa-tab-layout>
 <esa-tab-layout appearance="segmented">…</esa-tab-layout>`}>
-      <div style="width: 100%; display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem);">
+      <div style="width: 100%; display: flex; flex-direction: column; gap: var(--spacing-500);">
         <esa-tab-layout id="t2a" appearance="underline">
           <div slot="panel-0">Underline appearance.</div>
           <div slot="panel-1">Second panel.</div>
@@ -70,7 +70,7 @@ const slots = [
 <esa-tab-layout size="sm">…</esa-tab-layout>
 <esa-tab-layout size="md">…</esa-tab-layout>
 <esa-tab-layout size="lg">…</esa-tab-layout>`}>
-      <div style="width: 100%; display: flex; flex-direction: column; gap: var(--spacing-400, 1rem);">
+      <div style="width: 100%; display: flex; flex-direction: column; gap: var(--spacing-400);">
         <esa-tab-layout id="t6" size="xs"><div slot="panel-0">Extra small.</div><div slot="panel-1">Two.</div></esa-tab-layout>
         <esa-tab-layout id="t3" size="sm"><div slot="panel-0">Small.</div><div slot="panel-1">Two.</div></esa-tab-layout>
         <esa-tab-layout id="t7" size="md"><div slot="panel-0">Medium.</div><div slot="panel-1">Two.</div></esa-tab-layout>

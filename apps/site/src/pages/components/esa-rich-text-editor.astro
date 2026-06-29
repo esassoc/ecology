@@ -110,43 +110,43 @@ import Section from '@esa/docs/Section.astro';
 </ComponentDoc>
 
 <style>
-  .sub { font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-semibold, 550); margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+  .sub { font-size: var(--type-size-300); font-weight: var(--font-weight-semibold); margin: var(--spacing-500) 0 var(--spacing-200); }
   .lede { max-width: 70ch; }
   .ref-banner {
-    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    background: var(--color-warning-subtle, #fffbeb);
-    border: 1px solid var(--color-warning-border, #fde68a);
-    border-radius: var(--radius-200, 8px);
-    color: var(--color-text-secondary, #525252);
-    font-size: var(--type-size-150, 0.875rem);
-    margin-bottom: var(--spacing-400, 1rem);
+    padding: var(--spacing-300) var(--spacing-400);
+    background: var(--color-warning-subtle);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-200);
+    color: var(--color-text-secondary);
+    font-size: var(--type-size-150);
+    margin-bottom: var(--spacing-400);
   }
-  .meta { color: var(--color-text-muted, #737373); font-size: var(--type-size-150, 0.875rem); max-width: 72ch; }
-  .mock-label { font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-semibold, 550); margin: var(--spacing-400, 1rem) 0 var(--spacing-200, 0.5rem); }
+  .meta { color: var(--color-text-muted); font-size: var(--type-size-150); max-width: 72ch; }
+  .mock-label { font-size: var(--type-size-300); font-weight: var(--font-weight-semibold); margin: var(--spacing-400) 0 var(--spacing-200); }
 
-  .api-table { overflow-x: auto; border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); }
-  .api-table table { border-collapse: collapse; width: 100%; font-size: var(--type-size-150, 0.875rem); }
-  .api-table th, .api-table td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-light, #efefef); vertical-align: top; }
-  .api-table th { background: var(--color-surface-sunken, #efefef); font-weight: var(--font-weight-semibold, 550); }
+  .api-table { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-200); }
+  .api-table table { border-collapse: collapse; width: 100%; font-size: var(--type-size-150); }
+  .api-table th, .api-table td { text-align: left; padding: var(--spacing-200) var(--spacing-300); border-bottom: 1px solid var(--color-border-light); vertical-align: top; }
+  .api-table th { background: var(--color-surface-sunken); font-weight: var(--font-weight-semibold); }
   .api-table tr:last-child td { border-bottom: 0; }
 
   .editor-mock { display: block; }
-  .ed-label { display: block; margin-bottom: var(--spacing-100, 0.25rem); font-size: var(--type-size-150, 0.875rem); font-weight: var(--font-weight-medium, 450); color: var(--color-text-primary, #171717); }
-  .ed-required { color: var(--color-danger, #ef4444); }
-  .ed-shell { border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden; }
+  .ed-label { display: block; margin-bottom: var(--spacing-100); font-size: var(--type-size-150); font-weight: var(--font-weight-medium); color: var(--color-text-primary); }
+  .ed-required { color: var(--color-danger); }
+  .ed-shell { border: 1px solid var(--color-border); border-radius: var(--radius-200); overflow: hidden; }
   .ed-shell--disabled { opacity: 0.5; }
-  .ed-toolbar { display: flex; align-items: center; gap: 2px; padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem); background: var(--color-surface-sunken, #efefef); border-bottom: 1px solid var(--color-border, #e5e5e5); }
-  .ed-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-100, 4px); background: transparent; color: var(--color-text-secondary, #525252); cursor: pointer; font-weight: var(--font-weight-bold, 650); }
-  .ed-btn:hover { background: var(--color-surface, #fff); }
+  .ed-toolbar { display: flex; align-items: center; gap: 2px; padding: var(--spacing-100) var(--spacing-200); background: var(--color-surface-sunken); border-bottom: 1px solid var(--color-border); }
+  .ed-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-100); background: transparent; color: var(--color-text-secondary); cursor: pointer; font-weight: var(--font-weight-bold); }
+  .ed-btn:hover { background: var(--color-surface); }
   .ed-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .ed-divider { width: 1px; height: 20px; background: var(--color-border, #e5e5e5); margin: 0 var(--spacing-100, 0.25rem); }
-  .ed-content { min-height: 200px; padding: var(--spacing-300, 0.75rem); background: var(--color-surface, #fff); font-size: var(--type-size-150, 0.875rem); line-height: var(--line-height-normal, 1.6); color: var(--color-text-primary, #171717); }
+  .ed-divider { width: 1px; height: 20px; background: var(--color-border); margin: 0 var(--spacing-100); }
+  .ed-content { min-height: 200px; padding: var(--spacing-300); background: var(--color-surface); font-size: var(--type-size-150); line-height: var(--line-height-normal); color: var(--color-text-primary); }
   .ed-content--sm { min-height: 120px; }
-  .ed-empty { color: var(--color-text-muted, #737373); }
-  .ed-content p { margin: 0 0 var(--spacing-300, 0.75rem); }
-  .ed-content ul { margin: 0 0 var(--spacing-300, 0.75rem); padding-left: 1.4rem; }
-  .ed-content a { color: var(--color-text-link, #43608a); }
+  .ed-empty { color: var(--color-text-muted); }
+  .ed-content p { margin: 0 0 var(--spacing-300); }
+  .ed-content ul { margin: 0 0 var(--spacing-300); padding-left: 1.4rem; }
+  .ed-content a { color: var(--color-text-link); }
 
-  .size-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400, 1rem); }
+  .size-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400); }
   @media (max-width: 640px) { .size-row { grid-template-columns: 1fr; } }
 </style>

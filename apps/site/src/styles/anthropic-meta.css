@@ -102,4 +102,4 @@ html[data-scheme='light'] .toc a.active { color: var(--color-text-primary); bord
 
 /* ---- Keep component specimens true: previews use the SYSTEM font, not the serif ---- */
 .app .preview__canvas,
-.app .preview__canvas * { font-family: var(--font-sans, system-ui, sans-serif); }
+.app .preview__canvas * { font-family: var(--font-sans); }

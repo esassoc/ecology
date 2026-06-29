@@ -53,26 +53,26 @@ const kindLabel = (kind: string) => (kind === '.astro' ? '.astro' : kind === 'wc
 
 <style>
   .generated-note {
-    border: 1px solid var(--color-border, #e5e5e5);
-    background: var(--color-surface-sunken, #f7f7f5);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-sunken);
     border-radius: 10px;
-    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    margin-bottom: var(--spacing-500, 1.25rem);
-    color: var(--color-text-secondary, #444);
+    padding: var(--spacing-300) var(--spacing-400);
+    margin-bottom: var(--spacing-500);
+    color: var(--color-text-secondary);
   }
   .cat { width: 100%; border-collapse: collapse; }
-  .cat th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
-  .cat td { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); vertical-align: top; }
+  .cat th { text-align: left; padding: var(--spacing-200) var(--spacing-300); border-bottom: 2px solid var(--color-border); }
+  .cat td { padding: var(--spacing-200) var(--spacing-300); border-bottom: 1px solid var(--color-border); vertical-align: top; }
   .cat__name { white-space: nowrap; }
-  .cat__name a, .cat__name span:first-child { font-weight: var(--font-weight-medium, 500); }
-  .cat__name code { display: block; font-size: 0.8125rem; color: var(--color-text-muted, #888); margin-top: 2px; }
-  .kind { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border, #e5e5e5); white-space: nowrap; }
-  .kind--astro { background: var(--color-primary-subtle, #eef6f6); border-color: var(--color-primary-border, #cfe5e5); }
-  .kind--wc { background: var(--color-surface-sunken, #f5f5f5); }
-  .kind--reference { background: var(--color-warning-subtle, #fdf6ec); }
+  .cat__name a, .cat__name span:first-child { font-weight: var(--font-weight-medium); }
+  .cat__name code { display: block; font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 2px; }
+  .kind { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border); white-space: nowrap; }
+  .kind--astro { background: var(--color-primary-subtle); border-color: var(--color-primary-border); }
+  .kind--wc { background: var(--color-surface-sunken); }
+  .kind--reference { background: var(--color-warning-subtle); }
   .cat__props { font-size: 0.875rem; }
-  .cat__props .prop { background: none; padding: 0; color: var(--color-text-secondary, #555); }
-  .cat__wraps { color: var(--color-text-muted, #888); }
-  .cat__none { color: var(--color-text-muted, #aaa); }
-  .cat__foot { color: var(--color-text-secondary, #444); max-width: 72ch; margin-top: var(--spacing-600, 1.5rem); }
+  .cat__props .prop { background: none; padding: 0; color: var(--color-text-secondary); }
+  .cat__wraps { color: var(--color-text-muted); }
+  .cat__none { color: var(--color-text-muted); }
+  .cat__foot { color: var(--color-text-secondary); max-width: 72ch; margin-top: var(--spacing-600); }
 </style>

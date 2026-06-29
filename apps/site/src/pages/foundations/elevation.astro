@@ -71,17 +71,17 @@ const zIndex = [
 </DocsLayout>
 
 <style>
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--spacing-500, 1.5rem); padding: var(--spacing-300, 0.75rem) var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem); }
-  .card { display: flex; flex-direction: column; gap: 3px; background: var(--color-surface, #fff); border: 1px solid var(--color-border-light, #efefef); border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-400, 1rem); min-height: 96px; }
-  .card code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
-  .card__primitive { font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--color-text-muted, #737373); }
-.card__role { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--spacing-500); padding: var(--spacing-300) var(--spacing-100) var(--spacing-500); }
+  .card { display: flex; flex-direction: column; gap: 3px; background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: var(--radius-400); padding: var(--spacing-400); min-height: 96px; }
+  .card code { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-primary); }
+  .card__primitive { font-family: var(--font-mono); font-size: 11.5px; color: var(--color-text-muted); }
+.card__role { font-size: 12.5px; color: var(--color-text-muted); }
 
-  .z-table { width: 100%; border-collapse: collapse; border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; overflow: hidden; }
-  .z-table th { text-align: left; font-size: 13px; font-weight: 600; color: var(--color-text-secondary, #525252); padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem); background: var(--color-surface-sunken, #f5f5f5); border-bottom: 1px solid var(--color-border, #e5e5e5); }
-  .z-table td { padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem); border-bottom: 1px solid var(--color-border-light, #efefef); font-size: 14px; }
+  .z-table { width: 100%; border-collapse: collapse; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+  .z-table th { text-align: left; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); padding: var(--spacing-250) var(--spacing-400); background: var(--color-surface-sunken); border-bottom: 1px solid var(--color-border); }
+  .z-table td { padding: var(--spacing-250) var(--spacing-400); border-bottom: 1px solid var(--color-border-light); font-size: 14px; }
   .z-table tr:last-child td { border-bottom: none; }
-  .z-table td code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
-  .z-table__val { font-family: var(--font-mono, monospace); color: var(--color-text-secondary, #525252); }
-  .z-table__role { color: var(--color-text-muted, #737373); }
+  .z-table td code { font-family: var(--font-mono); font-size: 12.5px; color: var(--color-text-primary); }
+  .z-table__val { font-family: var(--font-mono); color: var(--color-text-secondary); }
+  .z-table__role { color: var(--color-text-muted); }
 </style>

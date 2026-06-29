@@ -21,43 +21,43 @@ const { code, lang = 'astro', align = 'center' } = Astro.props;
 
 <style>
   .preview {
-    margin: 0 0 var(--spacing-300, 0.75rem);
-    border: 1px solid var(--color-border, #dcdcdc);
+    margin: 0 0 var(--spacing-300);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     overflow: hidden;
-    background: var(--color-surface, #fff);
+    background: var(--color-surface);
   }
   .preview__canvas {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-300, 0.75rem);
+    gap: var(--spacing-300);
     align-items: center;
-    padding: var(--spacing-600, 2rem);
+    padding: var(--spacing-600);
     min-height: 96px;
   }
   .preview__canvas--center { justify-content: center; }
   .preview__canvas--start { justify-content: flex-start; }
   .preview__bar {
     display: flex;
-    gap: var(--spacing-100, 0.25rem);
-    padding: 6px var(--spacing-300, 0.75rem);
-    border-top: 1px solid var(--color-border, #dcdcdc);
-    background: var(--color-surface, #fff);
+    gap: var(--spacing-100);
+    padding: 6px var(--spacing-300);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
   }
   .preview__bar button {
     font: inherit;
     font-size: 13px;
-    color: var(--color-text-muted, #7c7c7c);
+    color: var(--color-text-muted);
     background: none;
     border: 0;
     padding: 4px 8px;
     border-radius: 6px;
     cursor: pointer;
   }
-  .preview__bar button:hover { background: var(--color-surface-sunken, #f3f7fc); color: var(--color-text-primary, #171717); }
-  .preview__code { display: none; border-top: 1px solid var(--color-border, #dcdcdc); }
+  .preview__bar button:hover { background: var(--color-surface-sunken); color: var(--color-text-primary); }
+  .preview__code { display: none; border-top: 1px solid var(--color-border); }
   .preview[data-open='true'] .preview__code { display: block; }
-  .preview__code :global(pre) { margin: 0; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
+  .preview__code :global(pre) { margin: 0; padding: var(--spacing-400) var(--spacing-500); font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
 </style>
 
 <script>

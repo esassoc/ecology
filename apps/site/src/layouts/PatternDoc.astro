@@ -31,18 +31,18 @@ const { name, slug, summary, whenToUse, composedOf } = Astro.props;
 </DocsLayout>
 
 <style>
-  .pd-meta { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); margin-bottom: var(--spacing-500, 1.25rem); }
-  .pd-when { margin: 0 0 var(--spacing-200, 0.5rem); color: var(--color-text-secondary, #444); }
-  .pd-composed { display: flex; flex-wrap: wrap; gap: var(--spacing-200, 0.5rem); align-items: center; color: var(--color-text-secondary, #444); }
-  .pd-chip { border: 1px solid var(--color-border, #e5e5e5); border-radius: 999px; padding: 1px 10px; background: var(--color-surface-sunken, #f7f7f5); }
-  .pd-chip:hover { border-color: var(--color-primary-border, #cfe5e5); }
+  .pd-meta { border: 1px solid var(--color-border); border-radius: 10px; padding: var(--spacing-300) var(--spacing-400); margin-bottom: var(--spacing-500); }
+  .pd-when { margin: 0 0 var(--spacing-200); color: var(--color-text-secondary); }
+  .pd-composed { display: flex; flex-wrap: wrap; gap: var(--spacing-200); align-items: center; color: var(--color-text-secondary); }
+  .pd-chip { border: 1px solid var(--color-border); border-radius: 999px; padding: 1px 10px; background: var(--color-surface-sunken); }
+  .pd-chip:hover { border-color: var(--color-primary-border); }
   /* The live specimen frame every pattern page uses. */
   .pd-body :global(.pattern-stage) {
-    border: 1px solid var(--color-border, #e5e5e5);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
-    background: var(--color-background, #fafaf8);
-    padding: var(--spacing-500, 1.25rem);
-    margin: var(--spacing-300, 0.75rem) 0 var(--spacing-500, 1.25rem);
+    background: var(--color-background);
+    padding: var(--spacing-500);
+    margin: var(--spacing-300) 0 var(--spacing-500);
     overflow: hidden;
   }
   .pd-body :global(.pattern-stage--flush) { padding: 0; }

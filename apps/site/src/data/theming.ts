@@ -53,7 +53,7 @@ const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
 
 // --- Lineage resolution ----------------------------------------------------
 // Map every declared token → its right-hand value, across the component partial
-// (--dialog-bg: var(--color-surface-elevated, #fff)) and the compiled base
+// (--dialog-bg: var(--color-surface-elevated)) and the compiled base
 // (--color-surface-elevated: var(--color-gray-0); --color-gray-0: #ffffff).
 // With outputReferences on, the base CSS preserves the var() chain, so we can
 // walk it to the raw value.

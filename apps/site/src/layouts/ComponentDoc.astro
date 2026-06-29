@@ -89,21 +89,21 @@ const isColor = (v: string) => /^#[0-9a-fA-F]{3,8}$|^(rgb|rgba|hsl|hsla|oklch|co
 </DocsLayout>
 
 <style>
-  .ts-note { color: var(--color-text-secondary, #444); }
+  .ts-note { color: var(--color-text-secondary); }
   .ts-table { width: 100%; border-collapse: collapse; }
-  .ts-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
-  .ts-table td { padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); }
-  .ts-tier { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border, #e5e5e5); }
-  .ts-tier--component { background: var(--color-primary-subtle, #eef6f6); border-color: var(--color-primary-border, #cfe5e5); }
-  .ts-tier--ad-hoc { background: var(--color-primary-subtle, #eef6f6); }
-  .ts-tier--semantic { background: var(--color-surface-sunken, #f5f5f5); }
-  .ts-tier--undefined { background: var(--color-danger-subtle, #fdecec); border-color: var(--color-danger-border, #f5c2c2); }
-  .ts-none { color: var(--color-text-muted, #888); }
+  .ts-table th { text-align: left; padding: var(--spacing-200) var(--spacing-300); border-bottom: 2px solid var(--color-border); }
+  .ts-table td { padding: var(--spacing-150) var(--spacing-300); border-bottom: 1px solid var(--color-border); }
+  .ts-tier { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border); }
+  .ts-tier--component { background: var(--color-primary-subtle); border-color: var(--color-primary-border); }
+  .ts-tier--ad-hoc { background: var(--color-primary-subtle); }
+  .ts-tier--semantic { background: var(--color-surface-sunken); }
+  .ts-tier--undefined { background: var(--color-danger-subtle); border-color: var(--color-danger-border); }
+  .ts-none { color: var(--color-text-muted); }
 
   /* Lineage: the resolved value leads; the cascade path is a quiet breadcrumb beneath. */
-  .ts-resolved { display: inline-flex; align-items: center; gap: var(--spacing-150, 0.375rem); }
+  .ts-resolved { display: inline-flex; align-items: center; gap: var(--spacing-150); }
   .ts-swatch { width: 0.95em; height: 0.95em; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.15); flex: none; }
-  .ts-via { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-text-muted, #999); }
+  .ts-via { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-text-muted); }
   .ts-via code { font-size: inherit; background: none; padding: 0; color: inherit; }
-  .ts-via .ts-arrow { color: var(--color-border-strong, #ccc); }
+  .ts-via .ts-arrow { color: var(--color-border-strong); }
 </style>
