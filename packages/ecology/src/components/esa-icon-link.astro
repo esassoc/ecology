@@ -67,36 +67,36 @@ const cls = [
 
 <style>
   .esa-icon-link {
-    --_il-font: var(--icon-link-font-size-md, 1rem); /* md = 16px */
+    --_il-font: var(--icon-link-font-size-md); /* md = 16px */
     display: inline-flex;
     align-items: center;
-    gap: var(--icon-link-gap, var(--spacing-150, 6px));
+    gap: var(--icon-link-gap);
     padding: 0;
     margin: 0;
     border: 0;
     background: none;
     color: inherit; /* currentColor — the bar/menu sets the context */
-    font-family: var(--font-sans, system-ui, sans-serif);
+    font-family: var(--font-sans);
     font-size: var(--_il-font);
-    font-weight: var(--font-weight-medium, 500);
+    font-weight: var(--font-weight-medium);
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
   }
-  .esa-icon-link--sm { --_il-font: var(--icon-link-font-size-sm, 0.875rem); } /* 14px */
+  .esa-icon-link--sm { --_il-font: var(--icon-link-font-size-sm); } /* 14px */
 
-  .esa-icon-link--regular  { font-weight: var(--font-weight-regular, 400); }
-  .esa-icon-link--medium   { font-weight: var(--font-weight-medium, 500); }
-  .esa-icon-link--semibold { font-weight: var(--font-weight-semibold, 600); }
+  .esa-icon-link--regular  { font-weight: var(--font-weight-regular); }
+  .esa-icon-link--medium   { font-weight: var(--font-weight-medium); }
+  .esa-icon-link--semibold { font-weight: var(--font-weight-semibold); }
 
   .esa-icon-link:hover { text-decoration: underline; }
   .esa-icon-link:focus-visible {
     outline: var(--focus-ring-width) solid currentColor;
-    outline-offset: var(--focus-ring-offset, 2px);
-    border-radius: var(--radius-100, 4px);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: var(--radius-100);
   }
-  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold, 600); }
+  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold); }
 
   .esa-icon-link__label { display: inline-block; }
 

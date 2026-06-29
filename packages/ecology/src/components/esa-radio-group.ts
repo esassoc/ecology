@@ -117,49 +117,49 @@ export class EsaRadioGroup extends LitElement {
     :host {
       --_radio-size: 20px;
       --_radio-dot-size: 10px;
-      --_radio-font-size: var(--form-font-size-md, 0.9375rem);
+      --_radio-font-size: var(--form-font-size-md);
       display: block;
     }
     :host([size='xs']) {
       --_radio-size: 14px;
       --_radio-dot-size: 7px;
-      --_radio-font-size: var(--form-font-size-xs, 0.8125rem);
+      --_radio-font-size: var(--form-font-size-xs);
     }
     :host([size='sm']) {
       --_radio-size: 16px;
       --_radio-dot-size: 8px;
-      --_radio-font-size: var(--form-font-size-sm, 0.875rem);
+      --_radio-font-size: var(--form-font-size-sm);
     }
     :host([size='lg']) {
       --_radio-size: 24px;
       --_radio-dot-size: 12px;
-      --_radio-font-size: var(--form-font-size-lg, 1.125rem);
+      --_radio-font-size: var(--form-font-size-lg);
     }
 
     .group-label {
       display: block;
-      margin-bottom: var(--spacing-200, 8px);
-      font-family: var(--font-sans, sans-serif);
+      margin-bottom: var(--spacing-200);
+      font-family: var(--font-sans);
       font-size: var(--_radio-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
     }
 
     .items {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
     }
     :host([orientation='horizontal']) .items {
       flex-direction: row;
       flex-wrap: wrap;
-      gap: var(--spacing-400, 16px);
+      gap: var(--spacing-400);
     }
 
     .item {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
       cursor: pointer;
       user-select: none;
     }
@@ -175,19 +175,19 @@ export class EsaRadioGroup extends LitElement {
       width: var(--_radio-size);
       height: var(--_radio-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width) solid var(--form-border-color);
       border-radius: 50%;
-      background: var(--form-bg, #fff);
+      background: var(--form-bg);
       transition:
-        border-color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .circle--selected {
-      border-color: var(--color-primary, #43608a);
+      border-color: var(--color-primary);
     }
     .circle:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus);
       box-shadow: 0 0 0 var(--focus-ring-width)
         var(--focus-ring-color);
     }
@@ -197,16 +197,16 @@ export class EsaRadioGroup extends LitElement {
       height: var(--_radio-dot-size);
       border-radius: 50%;
       background: transparent;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     .circle--selected .dot {
-      background: var(--color-primary, #43608a);
+      background: var(--color-primary);
     }
 
     .item-label {
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_radio-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       line-height: 1.4;
     }
   `;

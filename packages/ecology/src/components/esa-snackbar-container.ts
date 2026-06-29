@@ -126,13 +126,13 @@ export class EsaSnackbarContainer extends LitElement {
 
     .esa-snackbar-container {
       position: fixed;
-      bottom: var(--spacing-500, 1.5rem);
-      right: var(--spacing-500, 1.5rem);
-      z-index: var(--z-toast, 500);
+      bottom: var(--spacing-500);
+      right: var(--spacing-500);
+      z-index: var(--z-toast);
       display: flex;
       flex-direction: column-reverse;
-      gap: var(--spacing-200, 0.5rem);
-      max-width: var(--snackbar-container-max-width, 420px);
+      gap: var(--spacing-200);
+      max-width: var(--snackbar-container-max-width);
     }
   `;
 }

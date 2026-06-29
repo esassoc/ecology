@@ -28,17 +28,17 @@ const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ')
 
 <style>
   .esa-stat {
-    --_stat-value-color: var(--stat-value-color, var(--color-text-primary, #171717));
-    --_stat-value-font: var(--stat-value-font, var(--font-display, var(--font-sans, 'DM Sans', sans-serif)));
-    --_stat-value-size: var(--stat-value-size, var(--type-size-700, 2.25rem));
-    --_stat-value-weight: var(--stat-value-weight, var(--font-weight-bold, 650));
-    --_stat-label-color: var(--stat-label-color, var(--color-text-secondary, #525252));
-    --_stat-label-size: var(--stat-label-size, var(--type-size-200, 0.9375rem));
-    --_stat-label-weight: var(--stat-label-weight, var(--font-weight-medium, 450));
-    --_stat-sub-color: var(--stat-sub-color, var(--color-text-muted, #737373));
-    --_stat-sub-size: var(--stat-sub-size, var(--type-size-150, 0.875rem));
-    --_stat-accent-color: var(--stat-accent-color, var(--color-secondary-strong, #3a7c59));
-    --_stat-gap: var(--stat-gap, var(--spacing-050, 0.125rem));
+    --_stat-value-color: var(--stat-value-color, var(--color-text-primary));
+    --_stat-value-font: var(--stat-value-font, var(--font-display));
+    --_stat-value-size: var(--stat-value-size, var(--type-size-700));
+    --_stat-value-weight: var(--stat-value-weight, var(--font-weight-bold));
+    --_stat-label-color: var(--stat-label-color, var(--color-text-secondary));
+    --_stat-label-size: var(--stat-label-size, var(--type-size-200));
+    --_stat-label-weight: var(--stat-label-weight, var(--font-weight-medium));
+    --_stat-sub-color: var(--stat-sub-color, var(--color-text-muted));
+    --_stat-sub-size: var(--stat-sub-size, var(--type-size-150));
+    --_stat-accent-color: var(--stat-accent-color, var(--color-secondary-strong));
+    --_stat-gap: var(--stat-gap, var(--spacing-050));
 
     display: flex;
     flex-direction: column;
@@ -50,8 +50,8 @@ const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ')
     font-family: var(--_stat-value-font);
     font-size: var(--_stat-value-size);
     font-weight: var(--_stat-value-weight);
-    line-height: var(--line-height-tight, 1.3);
-    letter-spacing: var(--letter-spacing-tight, -0.01em);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
     color: var(--_stat-value-color);
   }
 
@@ -62,14 +62,14 @@ const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ')
   .esa-stat__label {
     font-size: var(--_stat-label-size);
     font-weight: var(--_stat-label-weight);
-    line-height: var(--line-height-normal, 1.6);
+    line-height: var(--line-height-normal);
     color: var(--_stat-label-color);
   }
 
   .esa-stat__sub {
     font-size: var(--_stat-sub-size);
-    font-weight: var(--font-weight-regular, 350);
-    line-height: var(--line-height-normal, 1.6);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-normal);
     color: var(--_stat-sub-color);
   }
 </style>

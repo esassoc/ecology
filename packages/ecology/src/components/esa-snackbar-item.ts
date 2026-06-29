@@ -85,14 +85,14 @@ export class EsaSnackbarItem extends LitElement {
     .esa-snackbar {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 0.75rem);
-      padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-radius: var(--snackbar-item-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
+      gap: var(--spacing-300);
+      padding: var(--spacing-300) var(--spacing-400);
+      border-radius: var(--snackbar-item-radius);
+      box-shadow: var(--shadow-300);
       background: var(--color-gray-12);
-      color: var(--snackbar-item-color, var(--color-text-inverse, #ffffff));
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--type-size-200, 0.9375rem);
+      color: var(--snackbar-item-color);
+      font-family: var(--font-sans);
+      font-size: var(--type-size-200);
       animation: esa-snackbar-enter 200ms ease-out;
     }
     @keyframes esa-snackbar-enter {
@@ -100,10 +100,10 @@ export class EsaSnackbarItem extends LitElement {
       to { transform: translateX(0); opacity: 1; }
     }
 
-    .esa-snackbar--success { background: var(--snackbar-item-bg-success, var(--color-green-11)); }
-    .esa-snackbar--warning { background: var(--snackbar-item-bg-warning, var(--color-orange-11)); }
-    .esa-snackbar--danger { background: var(--snackbar-item-bg-danger, var(--color-red-10)); }
-    .esa-snackbar--info { background: var(--snackbar-item-bg-info, var(--color-blue-11)); }
+    .esa-snackbar--success { background: var(--snackbar-item-bg-success); }
+    .esa-snackbar--warning { background: var(--snackbar-item-bg-warning); }
+    .esa-snackbar--danger { background: var(--snackbar-item-bg-danger); }
+    .esa-snackbar--info { background: var(--snackbar-item-bg-info); }
 
     .esa-snackbar__icon {
       flex-shrink: 0;
@@ -113,14 +113,14 @@ export class EsaSnackbarItem extends LitElement {
 
     .esa-snackbar__action {
       flex-shrink: 0;
-      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+      padding: var(--spacing-100) var(--spacing-200);
       border: none;
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-100);
       background: rgba(255, 255, 255, 0.2);
       color: inherit;
       font-family: inherit;
-      font-size: var(--type-size-150, 0.875rem);
-      font-weight: var(--font-weight-semibold, 550);
+      font-size: var(--type-size-150);
+      font-weight: var(--font-weight-semibold);
       cursor: pointer;
     }
     .esa-snackbar__action:hover { background: rgba(255, 255, 255, 0.3); }
@@ -133,7 +133,7 @@ export class EsaSnackbarItem extends LitElement {
       width: 24px;
       height: 24px;
       border: none;
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-100);
       background: transparent;
       color: inherit;
       cursor: pointer;

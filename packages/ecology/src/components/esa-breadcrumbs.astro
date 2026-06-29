@@ -51,20 +51,20 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
 
 <style>
   .esa-breadcrumbs {
-    --_crumb-font-size: var(--type-size-200, 0.875rem);
-    --_crumb-link-color: var(--breadcrumbs-link-color, #43608a);
-    --_crumb-link-hover: var(--breadcrumbs-link-hover, #39506f);
-    --_crumb-current-color: var(--color-text-primary, #171717);
-    --_crumb-separator-color: var(--breadcrumbs-separator-color, #737373);
-    --_crumb-gap: var(--spacing-200, 8px);
+    --_crumb-font-size: var(--type-size-200);
+    --_crumb-link-color: var(--breadcrumbs-link-color);
+    --_crumb-link-hover: var(--breadcrumbs-link-hover);
+    --_crumb-current-color: var(--color-text-primary);
+    --_crumb-separator-color: var(--breadcrumbs-separator-color);
+    --_crumb-gap: var(--spacing-200);
 
     display: block;
   }
 
   /* base .esa-breadcrumbs = md. xs is one step below sm; sm/lg keep the old small/large values. */
-  .esa-breadcrumbs--xs { --_crumb-font-size: var(--type-size-100, 0.6875rem); }
-  .esa-breadcrumbs--sm { --_crumb-font-size: var(--type-size-150, 0.75rem); }
-  .esa-breadcrumbs--lg { --_crumb-font-size: var(--type-size-300, 1rem); }
+  .esa-breadcrumbs--xs { --_crumb-font-size: var(--type-size-100); }
+  .esa-breadcrumbs--sm { --_crumb-font-size: var(--type-size-150); }
+  .esa-breadcrumbs--lg { --_crumb-font-size: var(--type-size-300); }
 
   .esa-breadcrumbs__list {
     display: flex;
@@ -86,7 +86,7 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
   .esa-breadcrumbs__link {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-100, 4px);
+    gap: var(--spacing-100);
     color: var(--_crumb-link-color);
     text-decoration: none;
   }
@@ -98,9 +98,9 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
   .esa-breadcrumbs__current {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-100, 4px);
+    gap: var(--spacing-100);
     color: var(--_crumb-current-color);
-    font-weight: var(--font-weight-medium, 500);
+    font-weight: var(--font-weight-medium);
   }
 
   .esa-breadcrumbs__icon {

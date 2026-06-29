@@ -222,17 +222,17 @@ export class EsaFileUpload extends LitElement {
       display: block;
     }
     .icon {
-      width: var(--icon-size-medium, 20px);
-      height: var(--icon-size-medium, 20px);
+      width: var(--icon-size-medium);
+      height: var(--icon-size-medium);
       flex-shrink: 0;
     }
     .icon--sm {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-small);
+      height: var(--icon-size-small);
     }
     .icon--lg {
-      width: var(--icon-size-large, 24px);
-      height: var(--icon-size-large, 24px);
+      width: var(--icon-size-large);
+      height: var(--icon-size-large);
     }
 
     .native {
@@ -244,101 +244,101 @@ export class EsaFileUpload extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: var(--spacing-100, 4px);
-      padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
-      border: 2px dashed var(--form-border-color, #d4d4d4);
-      border-radius: var(--form-radius-md, 8px);
-      background: var(--form-bg, #fff);
+      gap: var(--spacing-100);
+      padding: var(--spacing-600) var(--spacing-400);
+      border: 2px dashed var(--form-border-color);
+      border-radius: var(--form-radius-md);
+      background: var(--form-bg);
       cursor: pointer;
       text-align: center;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
       transition:
-        border-color var(--transition-fast, 150ms ease),
-        background var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        border-color var(--transition-fast),
+        background var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .zone:hover {
-      border-color: var(--form-border-color-focus, #43608a);
-      background: var(--color-surface-sunken, #efefef);
+      border-color: var(--form-border-color-focus);
+      background: var(--color-surface-sunken);
     }
     .zone:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     :host([dragging]) .zone {
-      border-color: var(--color-primary, #43608a);
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #43608a);
+      border-color: var(--color-primary);
+      background: var(--color-active-overlay);
+      color: var(--color-primary);
     }
     :host([disabled]) .zone {
       opacity: 0.6;
       cursor: not-allowed;
     }
     :host([disabled]) .zone:hover {
-      border-color: var(--form-border-color, #d4d4d4);
-      background: var(--form-bg, #fff);
+      border-color: var(--form-border-color);
+      background: var(--form-bg);
     }
 
     .zone__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-md, 14px);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+      font-family: var(--font-sans);
+      font-size: var(--form-font-size-md);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
     }
     .zone__hint {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-text-muted, #737373);
+      font-family: var(--font-sans);
+      font-size: var(--form-font-size-sm);
+      color: var(--color-text-muted);
     }
     .browse {
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary);
       text-decoration: underline;
     }
     .zone__limit {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-100, 11px);
-      color: var(--color-text-muted, #737373);
+      font-family: var(--font-sans);
+      font-size: var(--type-size-100);
+      color: var(--color-text-muted);
     }
 
     .error {
-      margin-top: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-danger, #ef4444);
+      margin-top: var(--spacing-100);
+      font-family: var(--font-sans);
+      font-size: var(--form-font-size-sm);
+      color: var(--color-danger);
     }
 
     .files {
       list-style: none;
-      margin: var(--spacing-200, 8px) 0 0;
+      margin: var(--spacing-200) 0 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-100, 4px);
+      gap: var(--spacing-100);
     }
     .file {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
-      padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      background: var(--color-surface-sunken, #efefef);
-      border-radius: var(--form-radius-sm, 6px);
-      color: var(--color-text-muted, #737373);
+      gap: var(--spacing-200);
+      padding: var(--spacing-200) var(--spacing-300);
+      background: var(--color-surface-sunken);
+      border-radius: var(--form-radius-sm);
+      color: var(--color-text-muted);
     }
     .file__name {
       flex: 1;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-text-primary, #171717);
+      font-family: var(--font-sans);
+      font-size: var(--form-font-size-sm);
+      color: var(--color-text-primary);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .file__size {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-100, 11px);
-      color: var(--color-text-muted, #737373);
+      font-family: var(--font-sans);
+      font-size: var(--type-size-100);
+      color: var(--color-text-muted);
       white-space: nowrap;
     }
     .file__remove {
@@ -350,15 +350,15 @@ export class EsaFileUpload extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
       border-radius: 50%;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     .file__remove:hover {
-      background: var(--color-border, #e5e5e5);
-      color: var(--color-danger, #ef4444);
+      background: var(--color-border);
+      color: var(--color-danger);
     }
     .file__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

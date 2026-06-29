@@ -42,16 +42,16 @@ const cls = ['esa-nav-dropdown', `esa-nav-dropdown--${align}`].join(' ');
 
   .esa-nav-dropdown__panel {
     position: absolute;
-    top: calc(100% + var(--spacing-200, 8px));
+    top: calc(100% + var(--spacing-200));
     left: 0;
-    z-index: var(--z-dropdown, 50);
-    min-width: var(--nav-dropdown-panel-min-width, 240px);
-    padding: var(--nav-dropdown-panel-padding, var(--spacing-300, 12px));
-    background: var(--nav-dropdown-panel-bg, var(--color-surface, #fff));
-    color: var(--nav-dropdown-panel-text, var(--color-text-primary, #171717));
-    border: 1px solid var(--nav-dropdown-panel-border-color, var(--color-border, #e5e5e5));
-    border-radius: var(--nav-dropdown-panel-radius, var(--radius-200, 8px));
-    box-shadow: var(--nav-dropdown-panel-shadow, var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12)));
+    z-index: var(--z-dropdown);
+    min-width: var(--nav-dropdown-panel-min-width);
+    padding: var(--nav-dropdown-panel-padding);
+    background: var(--nav-dropdown-panel-bg);
+    color: var(--nav-dropdown-panel-text);
+    border: 1px solid var(--nav-dropdown-panel-border-color);
+    border-radius: var(--nav-dropdown-panel-radius);
+    box-shadow: var(--nav-dropdown-panel-shadow);
   }
   .esa-nav-dropdown--end .esa-nav-dropdown__panel { left: auto; right: 0; }
 </style>

@@ -207,45 +207,45 @@ export class EsaButtonToggle extends LitElement {
     :host {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-100, 4px);
-      --_height: var(--form-height-md, 40px);
-      --_padding-x: var(--form-padding-x-md, 12px);
-      --_font-size: var(--form-font-size-md, 14px);
-      --_radius: var(--form-radius-md, 8px);
-      --_border-width: var(--form-border-width, 1px);
-      --_border-color: var(--form-border-color, #d4d4d4);
+      gap: var(--spacing-100);
+      --_height: var(--form-height-md);
+      --_padding-x: var(--form-padding-x-md);
+      --_font-size: var(--form-font-size-md);
+      --_radius: var(--form-radius-md);
+      --_border-width: var(--form-border-width);
+      --_border-color: var(--form-border-color);
       --_icon-size: 18px;
     }
     :host([size='xs']) {
-      --_height: var(--form-height-xs, 28px);
-      --_padding-x: var(--form-padding-x-xs, 8px);
-      --_font-size: var(--form-font-size-xs, 11px);
-      --_radius: var(--form-radius-xs, 4px);
+      --_height: var(--form-height-xs);
+      --_padding-x: var(--form-padding-x-xs);
+      --_font-size: var(--form-font-size-xs);
+      --_radius: var(--form-radius-xs);
       --_icon-size: 14px;
     }
     :host([size='sm']) {
-      --_height: var(--form-height-sm, 32px);
-      --_padding-x: var(--form-padding-x-sm, 8px);
-      --_font-size: var(--form-font-size-sm, 12px);
-      --_radius: var(--form-radius-sm, 6px);
+      --_height: var(--form-height-sm);
+      --_padding-x: var(--form-padding-x-sm);
+      --_font-size: var(--form-font-size-sm);
+      --_radius: var(--form-radius-sm);
       --_icon-size: 16px;
     }
     :host([size='lg']) {
-      --_height: var(--form-height-lg, 48px);
-      --_padding-x: var(--form-padding-x-lg, 16px);
-      --_font-size: var(--form-font-size-lg, 16px);
-      --_radius: var(--form-radius-lg, 10px);
+      --_height: var(--form-height-lg);
+      --_padding-x: var(--form-padding-x-lg);
+      --_font-size: var(--form-font-size-lg);
+      --_radius: var(--form-radius-lg);
       --_icon-size: 20px;
     }
 
     .label {
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--form-label-color, #171717);
+      font-weight: var(--font-weight-medium);
+      color: var(--form-label-color);
     }
     .required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger);
       margin-left: 2px;
     }
 
@@ -258,7 +258,7 @@ export class EsaButtonToggle extends LitElement {
       max-width: 100%;
       gap: 2px;
       padding: 2px;
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-surface-sunken);
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
     }
@@ -268,13 +268,13 @@ export class EsaButtonToggle extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: var(--spacing-150, 6px);
+      gap: var(--spacing-150);
       height: calc(var(--_height) - 4px);
       padding: 0 var(--_padding-x);
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-secondary, #525252);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-secondary);
       background: transparent;
       border: 0;
       border-radius: calc(var(--_radius) - 2px);
@@ -282,9 +282,9 @@ export class EsaButtonToggle extends LitElement {
       user-select: none;
       white-space: nowrap;
       transition:
-        background-color var(--transition-fast, 150ms ease),
-        color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
 
     .option__icon {
@@ -294,8 +294,8 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:hover:not(:disabled):not(.option--selected) {
-      color: var(--color-text-primary, #171717);
-      background: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
+      color: var(--color-text-primary);
+      background: var(--color-hover-overlay);
     }
 
     .option:focus-visible {
@@ -306,25 +306,25 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option--selected {
-      background: var(--form-bg, #fff);
-      color: var(--color-primary, #43608a);
-      font-weight: var(--font-weight-semibold, 550);
+      background: var(--form-bg);
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
 
     .option:disabled {
       cursor: not-allowed;
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-disabled-text);
       background: transparent;
     }
     .option--selected:disabled {
-      background: var(--form-bg, #fff);
-      color: var(--color-disabled-text, #a3a3a3);
+      background: var(--form-bg);
+      color: var(--color-disabled-text);
     }
 
     .hint {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-help-color, #737373);
+      font-size: var(--type-size-150);
+      color: var(--form-help-color);
     }
   `;
 }

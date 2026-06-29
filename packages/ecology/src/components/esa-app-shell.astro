@@ -193,80 +193,80 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 <style>
   /* Neutral chrome via SEMANTIC tokens (a spoke re-points these to its off-whites). */
   .esa-app-shell {
-    --app-bar-bg: var(--color-surface-sunken, #f2f6f3);
-    --app-bar-text: var(--color-text-primary, #171717);
-    --app-bar-pad-y: var(--spacing-200, 8px);
-    --app-bar-pad-x: var(--spacing-400, 16px);
-    --app-bar-gap: var(--spacing-300, 12px);
-    --sidenav-bg: var(--color-background, #fafafa);
-    --sidenav-border: var(--color-border, #e5e5e5);
+    --app-bar-bg: var(--color-surface-sunken);
+    --app-bar-text: var(--color-text-primary);
+    --app-bar-pad-y: var(--spacing-200);
+    --app-bar-pad-x: var(--spacing-400);
+    --app-bar-gap: var(--spacing-300);
+    --sidenav-bg: var(--color-background);
+    --sidenav-border: var(--color-border);
 
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background: var(--color-background, #fafafa);
+    background: var(--color-background);
   }
   .esa-app-shell--accent {
-    --app-bar-bg: color-mix(in srgb, var(--color-primary, #43608a) 5%, var(--color-surface-sunken, #f2f6f3));
+    --app-bar-bg: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface-sunken));
   }
 
-  .esa-app-shell__bar { flex: none; border-bottom: 1px solid var(--color-border-strong, #d4d4d8); }
+  .esa-app-shell__bar { flex: none; border-bottom: 1px solid var(--color-border-strong); }
 
   .esa-app-shell__toggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 32px; height: 32px; padding: 0; border: 0;
-    border-radius: var(--radius-100, 4px);
-    background: transparent; color: var(--color-text-tertiary, #525252);
+    border-radius: var(--radius-100);
+    background: transparent; color: var(--color-text-tertiary);
     cursor: pointer; transition: background 150ms ease, color 150ms ease;
   }
-  .esa-app-shell__toggle:hover { background: var(--color-surface-sunken, #f2f6f3); color: var(--color-primary-strong, #3a7c59); }
+  .esa-app-shell__toggle:hover { background: var(--color-surface-sunken); color: var(--color-primary-strong); }
   .esa-app-shell__toggle.is-collapsed svg { transform: scaleX(-1); }
-  .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-primary, #43608a); outline-offset: 2px; }
+  .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
   /* Compact, CENTERED omnibox trigger. */
   .esa-app-shell__search {
     margin-inline: auto;
-    display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
-    width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
-    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
-    background: var(--color-surface, #fff); color: var(--color-text-muted, #737373);
-    font-family: inherit; font-size: var(--type-size-150, 0.875rem);
+    display: inline-flex; align-items: center; gap: var(--spacing-200);
+    width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300);
+    border: 1px solid var(--color-border); border-radius: var(--radius-200);
+    background: var(--color-surface); color: var(--color-text-muted);
+    font-family: inherit; font-size: var(--type-size-150);
     cursor: pointer; transition: border-color 150ms ease;
   }
-  .esa-app-shell__search:hover { border-color: var(--color-border-strong, #d4d4d4); }
-  .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-primary, #43608a); outline-offset: 2px; }
+  .esa-app-shell__search:hover { border-color: var(--color-border-strong); }
+  .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
   .esa-app-shell__search-label { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .esa-app-shell__search-kbd {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     min-width: 18px; height: 18px; padding: 0 5px;
-    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-100, 4px);
-    background: var(--color-surface-sunken, #f2f6f3); font-size: var(--type-size-100, 0.8125rem);
+    border: 1px solid var(--color-border); border-radius: var(--radius-100);
+    background: var(--color-surface-sunken); font-size: var(--type-size-100);
   }
 
   /* Logo lockup at the top of the sidenav. */
   .esa-app-shell__brand {
-    display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
-    padding: var(--spacing-100, 4px); text-decoration: none;
-    border-radius: var(--radius-100, 4px);
-    color: var(--color-text-primary, #171717);
+    display: inline-flex; align-items: center; gap: var(--spacing-200);
+    padding: var(--spacing-100); text-decoration: none;
+    border-radius: var(--radius-100);
+    color: var(--color-text-primary);
     transition: background 150ms ease;
   }
-  .esa-app-shell__brand:hover { background: var(--app-shell-brand-bg-hover, color-mix(in srgb, currentColor 8%, transparent)); }
+  .esa-app-shell__brand:hover { background: var(--app-shell-brand-bg-hover); }
   /* Collapsed rail: drop the wordmark (it pins the rail open), center the mark. */
   esa-sidebar-nav[collapsed] .esa-app-shell__brand { justify-content: center; padding-inline: 0; }
   esa-sidebar-nav[collapsed] .esa-app-shell__wordmark { display: none; }
-  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-primary-strong, #3a7c59); }
+  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-primary-strong); }
   .esa-app-shell__wordmark {
-    font-family: var(--font-display, var(--font-sans, sans-serif));
-    font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-bold, 700);
+    font-family: var(--font-display);
+    font-size: var(--type-size-300); font-weight: var(--font-weight-bold);
     letter-spacing: -0.01em; line-height: 1;
   }
 
   .esa-app-shell__body { display: flex; flex: 1; min-height: 0; }
   .esa-app-shell__nav { flex: none; }
-  .esa-app-shell__content { flex: 1; min-width: 0; overflow-y: auto; padding: var(--spacing-500, 20px); }
+  .esa-app-shell__content { flex: 1; min-width: 0; overflow-y: auto; padding: var(--spacing-500); }
 
   @media (max-width: 720px) {
     .esa-app-shell__search-label, .esa-app-shell__search-kbd { display: none; }

@@ -128,38 +128,38 @@ export class EsaTabLayout extends LitElement {
 
   static styles = css`
     :host {
-      --_tab-height: var(--tab-layout-height-md, 44px);
-      --_tab-font-size: var(--type-size-200, 0.875rem);
-      --_tab-color: var(--tab-layout-color, var(--color-text-secondary, #525252));
-      --_tab-color-active: var(--tab-layout-color-active, var(--color-primary, #43608a));
-      --_tab-color-hover: var(--color-text-primary, #171717);
-      --_tab-indicator-color: var(--tab-layout-indicator-color, var(--color-primary, #43608a));
+      --_tab-height: var(--tab-layout-height-md);
+      --_tab-font-size: var(--type-size-200);
+      --_tab-color: var(--tab-layout-color);
+      --_tab-color-active: var(--tab-layout-color-active);
+      --_tab-color-hover: var(--color-text-primary);
+      --_tab-indicator-color: var(--tab-layout-indicator-color);
       --_tab-indicator-height: 2px;
-      --_tab-bg-hover: var(--color-surface-sunken, #efefef);
-      --_tab-gap: var(--spacing-100, 4px);
-      --_tab-padding-x: var(--spacing-400, 16px);
-      --_tab-border: var(--tab-layout-border-color, var(--color-border, #e5e5e5));
-      --_tab-badge-bg: var(--color-primary, #43608a);
-      --_tab-badge-color: var(--color-text-inverse, #ffffff);
+      --_tab-bg-hover: var(--color-surface-sunken);
+      --_tab-gap: var(--spacing-100);
+      --_tab-padding-x: var(--spacing-400);
+      --_tab-border: var(--tab-layout-border-color);
+      --_tab-badge-bg: var(--color-primary);
+      --_tab-badge-color: var(--color-text-inverse);
 
       display: block;
     }
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
     :host([size='xs']) {
-      --_tab-height: var(--tab-layout-height-xs, 30px);
-      --_tab-font-size: var(--type-size-100, 0.6875rem);
-      --_tab-padding-x: var(--spacing-200, 8px);
+      --_tab-height: var(--tab-layout-height-xs);
+      --_tab-font-size: var(--type-size-100);
+      --_tab-padding-x: var(--spacing-200);
     }
     :host([size='sm']) {
-      --_tab-height: var(--tab-layout-height-sm, 36px);
-      --_tab-font-size: var(--type-size-150, 0.75rem);
-      --_tab-padding-x: var(--spacing-300, 12px);
+      --_tab-height: var(--tab-layout-height-sm);
+      --_tab-font-size: var(--type-size-150);
+      --_tab-padding-x: var(--spacing-300);
     }
     :host([size='lg']) {
-      --_tab-height: var(--tab-layout-height-lg, 52px);
-      --_tab-font-size: var(--type-size-300, 1rem);
-      --_tab-padding-x: var(--spacing-500, 24px);
+      --_tab-height: var(--tab-layout-height-lg);
+      --_tab-font-size: var(--type-size-300);
+      --_tab-padding-x: var(--spacing-500);
     }
 
     .tabs {
@@ -171,7 +171,7 @@ export class EsaTabLayout extends LitElement {
     .tab {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
       height: var(--_tab-height);
       padding-inline: var(--_tab-padding-x);
       font-family: inherit;
@@ -189,7 +189,7 @@ export class EsaTabLayout extends LitElement {
       color: var(--_tab-color-hover);
       background: var(--_tab-bg-hover);
     }
-    .tab--active { color: var(--_tab-color-active); font-weight: var(--font-weight-medium, 500); }
+    .tab--active { color: var(--_tab-color-active); font-weight: var(--font-weight-medium); }
     .tab--active::after {
       content: '';
       position: absolute;
@@ -204,7 +204,7 @@ export class EsaTabLayout extends LitElement {
     .tab:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
-      border-radius: var(--radius-100, 4px);
+      border-radius: var(--radius-100);
     }
 
     .icon { display: inline-flex; }
@@ -215,12 +215,12 @@ export class EsaTabLayout extends LitElement {
       justify-content: center;
       min-width: 20px;
       height: 20px;
-      padding-inline: var(--spacing-150, 6px);
-      font-size: var(--type-size-100, 0.6875rem);
-      font-weight: var(--font-weight-semibold, 600);
+      padding-inline: var(--spacing-150);
+      font-size: var(--type-size-100);
+      font-weight: var(--font-weight-semibold);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-full);
     }
 
     /* Segmented appearance (Beacon UiTabsAppearance='segmented').
@@ -229,23 +229,23 @@ export class EsaTabLayout extends LitElement {
     :host([variant='pill']) .tabs {
       align-self: flex-start;
       border-bottom: none;
-      background: var(--color-surface-sunken, #efefef);
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-200, 8px);
-      padding: var(--spacing-050, 2px);
-      gap: var(--spacing-050, 2px);
+      background: var(--color-surface-sunken);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-200);
+      padding: var(--spacing-050);
+      gap: var(--spacing-050);
     }
     :host([appearance='segmented']) .tab,
-    :host([variant='pill']) .tab { border-radius: var(--radius-100, 4px); }
+    :host([variant='pill']) .tab { border-radius: var(--radius-100); }
     :host([appearance='segmented']) .tab--active,
     :host([variant='pill']) .tab--active {
-      background: var(--color-surface, #ffffff);
-      box-shadow: var(--shadow-50, 0 1px 2px rgba(0, 0, 0, 0.06));
+      background: var(--color-surface);
+      box-shadow: var(--shadow-50);
     }
     :host([appearance='segmented']) .tab--active::after,
     :host([variant='pill']) .tab--active::after { display: none; }
 
-    .panel { padding-top: var(--spacing-400, 16px); }
+    .panel { padding-top: var(--spacing-400); }
   `;
 }
 

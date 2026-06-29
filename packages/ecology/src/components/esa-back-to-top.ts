@@ -106,23 +106,23 @@ export class EsaBackToTop extends LitElement {
 
   static styles = css`
     :host {
-      --_btt-size: var(--back-to-top-size, 44px);
-      --_btt-bg: var(--back-to-top-bg, var(--color-primary, #43608a));
-      --_btt-text: var(--back-to-top-text, var(--color-text-inverse, #fff));
-      --_btt-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      --_btt-radius: var(--back-to-top-radius, var(--radius-full, 9999px));
-      --_btt-bottom: var(--back-to-top-bottom, var(--spacing-500, 1.5rem));
-      --_btt-right: var(--back-to-top-right, var(--spacing-500, 1.5rem));
+      --_btt-size: var(--back-to-top-size);
+      --_btt-bg: var(--back-to-top-bg);
+      --_btt-text: var(--back-to-top-text);
+      --_btt-shadow: var(--shadow-300);
+      --_btt-radius: var(--back-to-top-radius);
+      --_btt-bottom: var(--back-to-top-bottom);
+      --_btt-right: var(--back-to-top-right);
 
       position: fixed;
       bottom: var(--_btt-bottom);
       right: var(--_btt-right);
-      z-index: var(--z-sidebar, 100);
+      z-index: var(--z-sidebar);
       pointer-events: none;
       opacity: 0;
       transform: translateY(16px);
-      transition: opacity var(--transition-base, 200ms ease),
-                  transform var(--transition-base, 200ms ease);
+      transition: opacity var(--transition-base),
+                  transform var(--transition-base);
     }
 
     :host([visible]) {
@@ -143,19 +143,19 @@ export class EsaBackToTop extends LitElement {
       color: var(--_btt-text);
       box-shadow: var(--_btt-shadow);
       cursor: pointer;
-      transition: background var(--transition-fast, 150ms ease),
-                  box-shadow var(--transition-fast, 150ms ease),
-                  transform var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast),
+                  box-shadow var(--transition-fast),
+                  transform var(--transition-fast);
     }
 
     .button:hover {
-      background: var(--color-primary-hover, #39506f);
-      box-shadow: var(--shadow-400, 0 8px 32px -8px rgba(0, 0, 0, 0.08));
+      background: var(--color-primary-hover);
+      box-shadow: var(--shadow-400);
     }
 
     .button:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .button:active {

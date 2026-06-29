@@ -135,54 +135,54 @@ export class EsaCheckboxGroup extends LitElement {
   static styles = css`
     :host {
       --_checkbox-size: 20px;
-      --_checkbox-radius: var(--form-radius-md, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
+      --_checkbox-radius: var(--form-radius-md);
+      --_checkbox-font-size: var(--form-font-size-md);
       --_checkbox-icon-size: 16px;
       display: block;
     }
     :host([size='xs']) {
       --_checkbox-size: 14px;
-      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
+      --_checkbox-radius: var(--form-radius-xs);
+      --_checkbox-font-size: var(--form-font-size-xs);
       --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
-      --_checkbox-radius: var(--form-radius-sm, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-sm, 0.875rem);
+      --_checkbox-radius: var(--form-radius-sm);
+      --_checkbox-font-size: var(--form-font-size-sm);
       --_checkbox-icon-size: 12px;
     }
     :host([size='lg']) {
       --_checkbox-size: 24px;
-      --_checkbox-radius: var(--form-radius-lg, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-lg, 1.125rem);
+      --_checkbox-radius: var(--form-radius-lg);
+      --_checkbox-font-size: var(--form-font-size-lg);
       --_checkbox-icon-size: 20px;
     }
 
     .group-label {
       display: block;
-      margin-bottom: var(--spacing-200, 8px);
-      font-family: var(--font-sans, sans-serif);
+      margin-bottom: var(--spacing-200);
+      font-family: var(--font-sans);
       font-size: var(--_checkbox-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
     }
 
     .items {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
     }
     :host([orientation='horizontal']) .items {
       flex-direction: row;
       flex-wrap: wrap;
-      gap: var(--spacing-400, 16px);
+      gap: var(--spacing-400);
     }
 
     .item {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
       cursor: pointer;
       user-select: none;
     }
@@ -198,22 +198,22 @@ export class EsaCheckboxGroup extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width) solid var(--form-border-color);
       border-radius: var(--_checkbox-radius);
-      background: var(--form-bg, #fff);
-      color: var(--color-text-inverse, #fff);
+      background: var(--form-bg);
+      color: var(--color-text-inverse);
       transition:
-        background var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .box--checked {
-      background: var(--color-primary, #43608a);
-      border-color: var(--color-primary, #43608a);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
     }
     .box:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus);
       box-shadow: 0 0 0 var(--focus-ring-width)
         var(--focus-ring-color);
     }
@@ -224,9 +224,9 @@ export class EsaCheckboxGroup extends LitElement {
     }
 
     .item-label {
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_checkbox-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       line-height: 1.4;
     }
   `;

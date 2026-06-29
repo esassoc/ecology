@@ -156,18 +156,18 @@ export class EsaDialog extends LitElement {
 
   static styles = css`
     :host {
-      --_dialog-bg: var(--dialog-bg, var(--color-surface-elevated, #ffffff));
-      --_dialog-border-radius: var(--dialog-radius, var(--radius-400, 0.75rem));
-      --_dialog-padding: var(--spacing-500, 1.5rem);
-      --_dialog-header-border: var(--dialog-border-color, var(--color-border-light, #efefef));
+      --_dialog-bg: var(--dialog-bg);
+      --_dialog-border-radius: var(--dialog-radius);
+      --_dialog-padding: var(--spacing-500);
+      --_dialog-header-border: var(--dialog-border-color);
       --_dialog-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
-      --_dialog-width: var(--dialog-width, 480px);
+      --_dialog-width: var(--dialog-width);
       --_dialog-max-height: 85vh;
     }
     /* base :host = md (480px). xs is one step below sm. */
-    :host([size='xs']) { --_dialog-width: var(--dialog-width-xs, 280px); }
-    :host([size='sm']) { --_dialog-width: var(--dialog-width-sm, 360px); }
-    :host([size='lg']) { --_dialog-width: var(--dialog-width-lg, 640px); }
+    :host([size='xs']) { --_dialog-width: var(--dialog-width-xs); }
+    :host([size='sm']) { --_dialog-width: var(--dialog-width-sm); }
+    :host([size='lg']) { --_dialog-width: var(--dialog-width-lg); }
     :host([size='fullscreen']) {
       --_dialog-width: 100vw;
       --_dialog-max-height: 100vh;
@@ -177,8 +177,8 @@ export class EsaDialog extends LitElement {
     .esa-dialog-backdrop {
       position: fixed;
       inset: 0;
-      background: var(--dialog-backdrop-bg, var(--color-backdrop, rgba(0, 0, 0, 0.5)));
-      z-index: var(--z-modal-backdrop, 300);
+      background: var(--dialog-backdrop-bg);
+      z-index: var(--z-modal-backdrop);
     }
     .esa-dialog-panel {
       position: fixed;
@@ -186,7 +186,7 @@ export class EsaDialog extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: var(--z-modal, 400);
+      z-index: var(--z-modal);
       pointer-events: none;
     }
 
@@ -201,7 +201,7 @@ export class EsaDialog extends LitElement {
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--font-sans);
     }
     .esa-dialog:focus { outline: none; }
 
@@ -209,16 +209,16 @@ export class EsaDialog extends LitElement {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--spacing-300, 0.75rem);
+      gap: var(--spacing-300);
       padding: var(--_dialog-padding);
       border-bottom: 1px solid var(--_dialog-header-border);
       flex-shrink: 0;
     }
     .esa-dialog__title {
-      font-size: var(--type-size-400, 1.125rem);
-      font-weight: var(--font-weight-semibold, 550);
+      font-size: var(--type-size-400);
+      font-weight: var(--font-weight-semibold);
       margin: 0;
-      color: var(--dialog-color, var(--color-text-primary, #171717));
+      color: var(--dialog-color);
     }
     .esa-dialog__close {
       display: flex;
@@ -227,30 +227,30 @@ export class EsaDialog extends LitElement {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-200);
       background: transparent;
-      color: var(--color-text-secondary, #525252);
+      color: var(--color-text-secondary);
       cursor: pointer;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
-    .esa-dialog__close:hover { background: var(--color-surface-sunken, #efefef); }
+    .esa-dialog__close:hover { background: var(--color-surface-sunken); }
     .esa-dialog__close:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .esa-dialog__body {
       padding: var(--_dialog-padding);
       overflow-y: auto;
       flex: 1;
-      color: var(--dialog-color, var(--color-text-primary, #171717));
+      color: var(--dialog-color);
     }
     .esa-dialog__footer {
-      padding: var(--spacing-300, 0.75rem) var(--_dialog-padding);
+      padding: var(--spacing-300) var(--_dialog-padding);
       border-top: 1px solid var(--_dialog-header-border);
       display: flex;
       justify-content: flex-end;
-      gap: var(--spacing-200, 0.5rem);
+      gap: var(--spacing-200);
       flex-shrink: 0;
     }
     .esa-dialog__footer:not(:has(*)) { display: none; }

@@ -386,94 +386,94 @@ export class EsaInputTag extends LitElement {
   static styles = css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
-      --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-min-height: var(--form-height-md, 40px);
-      --_field-radius: var(--form-radius-md, 8px);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
-      --_chip-font-size: var(--type-size-150, 12px);
+      --_field-padding-y: var(--form-padding-y-md);
+      --_field-padding-x: var(--form-padding-x-md);
+      --_field-font-size: var(--form-font-size-md);
+      --_field-min-height: var(--form-height-md);
+      --_field-radius: var(--form-radius-md);
+      --_field-border-color: var(--form-border-color);
+      --_chip-font-size: var(--type-size-150);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
-      --_chip-bg: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      --_chip-color: var(--color-primary-strong, #3a7c59);
-      --_chip-radius: var(--radius-full, 9999px);
+      --_chip-bg: var(--color-active-overlay);
+      --_chip-color: var(--color-primary-strong);
+      --_chip-radius: var(--radius-full);
     }
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
-      --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-min-height: var(--form-height-xs, 28px);
-      --_field-radius: var(--form-radius-xs, 4px);
-      --_chip-font-size: var(--type-size-100, 11px);
+      --_field-padding-y: var(--form-padding-y-xs);
+      --_field-padding-x: var(--form-padding-x-xs);
+      --_field-font-size: var(--form-font-size-xs);
+      --_field-min-height: var(--form-height-xs);
+      --_field-radius: var(--form-radius-xs);
+      --_chip-font-size: var(--type-size-100);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
-      --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-min-height: var(--form-height-sm, 32px);
-      --_field-radius: var(--form-radius-sm, 6px);
-      --_chip-font-size: var(--type-size-100, 11px);
+      --_field-padding-y: var(--form-padding-y-sm);
+      --_field-padding-x: var(--form-padding-x-sm);
+      --_field-font-size: var(--form-font-size-sm);
+      --_field-min-height: var(--form-height-sm);
+      --_field-radius: var(--form-radius-sm);
+      --_chip-font-size: var(--type-size-100);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
-      --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-min-height: var(--form-height-lg, 48px);
-      --_field-radius: var(--form-radius-lg, 10px);
-      --_chip-font-size: var(--type-size-200, 14px);
+      --_field-padding-y: var(--form-padding-y-lg);
+      --_field-padding-x: var(--form-padding-x-lg);
+      --_field-font-size: var(--form-font-size-lg);
+      --_field-min-height: var(--form-height-lg);
+      --_field-radius: var(--form-radius-lg);
+      --_chip-font-size: var(--type-size-200);
     }
 
     .field {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-100, 4px);
+      gap: var(--spacing-100);
     }
     .field__label {
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--form-label-color, #525252);
+      font-weight: var(--font-weight-medium);
+      color: var(--form-label-color);
     }
     .field__required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-danger-strong);
       margin-left: 2px;
     }
     .field__hint {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-help-color, #737373);
+      font-size: var(--type-size-150);
+      color: var(--form-help-color);
     }
 
     .container {
       position: relative;
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
       min-height: var(--_field-min-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
+      background: var(--form-bg);
+      border: var(--form-border-width) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
       transition:
-        border-color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .container:hover:not(.container--disabled) {
-      --_field-border-color: var(--form-border-color-hover, #a3a3a3);
+      --_field-border-color: var(--form-border-color-hover);
     }
     .container:focus-within,
     .container--open {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
+      --_field-border-color: var(--form-border-color-focus);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .container--disabled {
-      background: var(--form-bg-disabled, #efefef);
+      background: var(--form-bg-disabled);
       cursor: not-allowed;
     }
     .container--disabled:focus-within {
       box-shadow: none;
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-border-color: var(--form-border-color);
     }
 
     .chips {
@@ -481,21 +481,21 @@ export class EsaInputTag extends LitElement {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: var(--spacing-100, 4px);
+      gap: var(--spacing-100);
       min-width: 0;
     }
     /* tags-below mode: chips live in their own row under the field */
     .chips--below {
       flex: none;
-      padding-top: var(--spacing-100, 4px);
+      padding-top: var(--spacing-100);
     }
 
     .chip {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-050, 2px);
-      padding: 2px var(--spacing-100, 4px) 2px var(--spacing-200, 8px);
-      font-family: var(--font-sans, sans-serif);
+      gap: var(--spacing-050);
+      padding: 2px var(--spacing-100) 2px var(--spacing-200);
+      font-family: var(--font-sans);
       font-size: var(--_chip-font-size);
       line-height: 1.4;
       background: var(--_chip-bg);
@@ -516,17 +516,17 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-primary-strong);
       border-radius: 50%;
       cursor: pointer;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     .chip__remove svg {
       width: 14px;
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.06));
+      background: var(--color-hover-overlay-strong);
     }
     .chip__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -540,16 +540,16 @@ export class EsaInputTag extends LitElement {
       background: transparent;
       border: none;
       outline: none;
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_field-font-size);
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color);
     }
     .input:disabled {
       cursor: not-allowed;
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-disabled-text);
     }
 
     .toggle {
@@ -560,22 +560,22 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       background: transparent;
       border: none;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
       cursor: pointer;
     }
     .toggle:hover:not(:disabled) {
-      color: var(--color-text-secondary, #525252);
+      color: var(--color-text-secondary);
     }
     .toggle:disabled {
       cursor: not-allowed;
     }
     .arrow {
       display: inline-flex;
-      transition: transform var(--transition-fast, 150ms ease);
+      transition: transform var(--transition-fast);
     }
     .arrow svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-small);
+      height: var(--icon-size-small);
     }
     .arrow--open {
       transform: rotate(180deg);
@@ -583,38 +583,38 @@ export class EsaInputTag extends LitElement {
 
     .dropdown {
       position: absolute;
-      top: calc(100% + var(--spacing-100, 4px));
+      top: calc(100% + var(--spacing-100));
       left: 0;
       right: 0;
-      z-index: var(--z-dropdown, 50);
+      z-index: var(--z-dropdown);
       max-height: 252px;
       overflow-y: auto;
       overscroll-behavior: contain;
-      background: var(--color-surface, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
-      border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      background: var(--color-surface);
+      border: var(--form-border-width) solid var(--form-border-color);
+      border-radius: var(--form-radius-md);
+      box-shadow: var(--shadow-200);
     }
 
     .option {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
       width: 100%;
-      padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
+      padding: var(--spacing-200) var(--spacing-300);
       background: transparent;
       border: none;
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_field-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       text-align: left;
       cursor: pointer;
       box-sizing: border-box;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     .option:hover,
     .option--active {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-surface-sunken);
     }
     .option__label {
       flex: 1;
@@ -624,19 +624,19 @@ export class EsaInputTag extends LitElement {
       white-space: nowrap;
     }
     .option--add {
-      color: var(--color-primary-strong, #3a7c59);
-      font-weight: var(--font-weight-medium, 450);
-      border-top: var(--form-border-width, 1px) solid var(--color-border-light, #efefef);
+      color: var(--color-primary-strong);
+      font-weight: var(--font-weight-medium);
+      border-top: var(--form-border-width) solid var(--color-border-light);
     }
     .option__icon {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-small);
+      height: var(--icon-size-small);
       flex-shrink: 0;
     }
 
     .empty {
-      padding: var(--spacing-300, 12px);
-      color: var(--color-text-muted, #737373);
+      padding: var(--spacing-300);
+      color: var(--color-text-muted);
       font-size: var(--_field-font-size);
       font-style: italic;
       text-align: center;

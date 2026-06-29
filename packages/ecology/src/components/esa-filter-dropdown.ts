@@ -293,35 +293,35 @@ export class EsaFilterDropdown extends LitElement {
       display: inline-block;
 
       --_filter-height: 40px;
-      --_filter-padding-x: var(--spacing-400, 1rem);
-      --_filter-font-size: var(--type-size-200, 0.9375rem);
-      --_filter-radius: var(--radius-200, 0.5rem);
-      --_filter-bg: var(--color-surface, #fff);
-      --_filter-bg-active: var(--color-primary-subtle, #f3f8fb);
-      --_filter-text: var(--color-text-primary, #171717);
-      --_filter-text-active: var(--color-primary, #43608a);
-      --_filter-border: var(--color-border, #e5e5e5);
-      --_filter-border-active: var(--color-primary, #43608a);
+      --_filter-padding-x: var(--spacing-400);
+      --_filter-font-size: var(--type-size-200);
+      --_filter-radius: var(--radius-200);
+      --_filter-bg: var(--color-surface);
+      --_filter-bg-active: var(--color-primary-subtle);
+      --_filter-text: var(--color-text-primary);
+      --_filter-text-active: var(--color-primary);
+      --_filter-border: var(--color-border);
+      --_filter-border-active: var(--color-primary);
     }
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
     :host([size='xs']) {
       --_filter-height: 28px;
-      --_filter-padding-x: var(--spacing-200, 0.5rem);
-      --_filter-font-size: var(--type-size-100, 0.75rem);
-      --_filter-radius: var(--radius-100, 0.25rem);
+      --_filter-padding-x: var(--spacing-200);
+      --_filter-font-size: var(--type-size-100);
+      --_filter-radius: var(--radius-100);
     }
     :host([size='sm']) {
       --_filter-height: 32px;
-      --_filter-padding-x: var(--spacing-300, 0.75rem);
-      --_filter-font-size: var(--type-size-150, 0.875rem);
-      --_filter-radius: var(--radius-100, 0.25rem);
+      --_filter-padding-x: var(--spacing-300);
+      --_filter-font-size: var(--type-size-150);
+      --_filter-radius: var(--radius-100);
     }
     :host([size='lg']) {
       --_filter-height: 48px;
-      --_filter-padding-x: var(--spacing-500, 1.5rem);
-      --_filter-font-size: var(--type-size-300, 1.125rem);
-      --_filter-radius: var(--radius-300, 0.5rem);
+      --_filter-padding-x: var(--spacing-500);
+      --_filter-font-size: var(--type-size-300);
+      --_filter-radius: var(--radius-300);
     }
 
     .esa-filter-dropdown {
@@ -332,23 +332,23 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__trigger {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-100, 0.25rem);
+      gap: var(--spacing-100);
       height: var(--_filter-height);
       padding-inline: var(--_filter-padding-x);
       border: 1px solid var(--_filter-border);
       border-radius: var(--_filter-radius);
       background: var(--_filter-bg);
       color: var(--_filter-text);
-      font-family: var(--font-sans, inherit);
+      font-family: var(--font-sans);
       font-size: var(--_filter-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium);
       line-height: 1;
       cursor: pointer;
       white-space: nowrap;
       transition:
-        background var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
-        color var(--transition-fast, 150ms ease);
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast);
       -webkit-appearance: none;
       appearance: none;
     }
@@ -357,13 +357,13 @@ export class EsaFilterDropdown extends LitElement {
     }
     .esa-filter-dropdown__trigger:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
     .esa-filter-dropdown__trigger--active {
       background: var(--_filter-bg-active);
       border-color: var(--_filter-border-active);
       color: var(--_filter-text-active);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--font-weight-semibold);
     }
     /* Open (panel showing) but nothing selected yet → just lift the border. */
     .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
@@ -383,11 +383,11 @@ export class EsaFilterDropdown extends LitElement {
       min-width: 1.25rem;
       height: 1.25rem;
       padding-inline: 0.3rem;
-      border-radius: var(--radius-full, 9999px);
-      background: var(--color-primary, #43608a);
-      color: var(--color-text-inverse, #fff);
-      font-size: var(--type-size-100, 0.75rem);
-      font-weight: var(--font-weight-semibold, 550);
+      border-radius: var(--radius-full);
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      font-size: var(--type-size-100);
+      font-weight: var(--font-weight-semibold);
       line-height: 1;
     }
 
@@ -395,7 +395,7 @@ export class EsaFilterDropdown extends LitElement {
       display: inline-flex;
       width: 20px;
       height: 20px;
-      transition: transform var(--transition-fast, 150ms ease);
+      transition: transform var(--transition-fast);
     }
     .esa-filter-dropdown__arrow svg { width: 20px; height: 20px; }
     .esa-filter-dropdown__arrow--open {
@@ -407,7 +407,7 @@ export class EsaFilterDropdown extends LitElement {
       align-items: center;
       cursor: pointer;
       opacity: 0.8;
-      transition: opacity var(--transition-fast, 150ms ease);
+      transition: opacity var(--transition-fast);
     }
     .esa-filter-dropdown__clear:hover { opacity: 1; }
     .esa-filter-dropdown__clear svg { width: 16px; height: 16px; }
@@ -416,60 +416,60 @@ export class EsaFilterDropdown extends LitElement {
       position: absolute;
       top: calc(100% + 4px);
       left: 0;
-      z-index: var(--z-dropdown, 50);
-      min-width: var(--filter-dropdown-min-width, 200px);
+      z-index: var(--z-dropdown);
+      min-width: var(--filter-dropdown-min-width);
       max-height: 300px;
-      background: var(--filter-dropdown-bg, var(--color-surface, #fff));
-      border: var(--filter-dropdown-border, 1px solid var(--color-border, #e5e5e5));
-      border-radius: var(--filter-dropdown-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--filter-dropdown-shadow, var(--shadow-200, 0 4px 20px -4px rgba(0, 0, 0, 0.06)));
+      background: var(--filter-dropdown-bg);
+      border: var(--filter-dropdown-border);
+      border-radius: var(--filter-dropdown-radius);
+      box-shadow: var(--filter-dropdown-shadow);
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
     .esa-filter-dropdown__search {
-      padding: var(--spacing-200, 0.5rem);
-      border-bottom: 1px solid var(--color-border, #e5e5e5);
+      padding: var(--spacing-200);
+      border-bottom: 1px solid var(--color-border);
     }
     .esa-filter-dropdown__search-input {
       width: 100%;
       box-sizing: border-box;
-      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-100, 0.25rem);
-      font-family: var(--font-sans, inherit);
+      padding: var(--spacing-100) var(--spacing-200);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-100);
+      font-family: var(--font-sans);
       font-size: var(--_filter-font-size);
-      background: var(--color-surface, #fff);
-      color: var(--color-text-primary, #171717);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
       outline: none;
     }
     .esa-filter-dropdown__search-input:focus {
-      border-color: var(--color-primary, #43608a);
-      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
     }
 
     .esa-filter-dropdown__options {
       margin: 0;
-      padding: var(--spacing-100, 0.25rem) 0;
+      padding: var(--spacing-100) 0;
       overflow-y: auto;
       max-height: 240px;
     }
     .esa-filter-dropdown__option {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 0.5rem);
-      padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
+      gap: var(--spacing-200);
+      padding: var(--spacing-150) var(--spacing-300);
       font-size: var(--_filter-font-size);
-      font-family: var(--font-sans, inherit);
-      color: var(--color-text-primary, #171717);
+      font-family: var(--font-sans);
+      color: var(--color-text-primary);
       cursor: pointer;
       user-select: none;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-surface-sunken, #f4f4f5);
+      background: var(--color-surface-sunken);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
@@ -495,8 +495,8 @@ export class EsaFilterDropdown extends LitElement {
     }
 
     .esa-filter-dropdown__empty {
-      padding: var(--spacing-300, 0.75rem);
-      color: var(--color-text-muted, #737373);
+      padding: var(--spacing-300);
+      color: var(--color-text-muted);
       font-style: italic;
       text-align: center;
     }
@@ -504,25 +504,25 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__footer {
       display: flex;
       justify-content: flex-end;
-      padding: var(--spacing-200, 0.5rem);
-      border-top: 1px solid var(--color-border, #e5e5e5);
+      padding: var(--spacing-200);
+      border-top: 1px solid var(--color-border);
     }
     .esa-filter-dropdown__clear-link {
       background: none;
       border: none;
-      color: var(--color-primary, #43608a);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--type-size-150, 0.875rem);
-      font-weight: var(--font-weight-medium, 450);
+      color: var(--color-primary);
+      font-family: var(--font-sans);
+      font-size: var(--type-size-150);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
-      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--radius-100, 0.25rem);
+      padding: var(--spacing-100) var(--spacing-200);
+      border-radius: var(--radius-100);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
-      background: var(--color-surface-sunken, #f4f4f5);
+      background: var(--color-surface-sunken);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-text-muted, #a3a3a3);
+      color: var(--color-text-muted);
       cursor: not-allowed;
     }
   `;

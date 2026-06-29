@@ -220,8 +220,8 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-      z-index: var(--z-modal-backdrop, 300);
+      background: var(--color-backdrop);
+      z-index: var(--z-modal-backdrop);
     }
 
     .esa-command-palette {
@@ -229,18 +229,18 @@ export class EsaCommandPalette extends LitElement {
       top: 20%;
       left: 50%;
       transform: translateX(-50%);
-      width: var(--command-palette-width, 560px);
+      width: var(--command-palette-width);
       max-width: calc(100vw - 2rem);
-      max-height: var(--command-palette-max-height, 440px);
-      background: var(--command-palette-bg, var(--color-surface-elevated, #ffffff));
-      border: 1px solid var(--command-palette-border-color, var(--color-border, #e5e5e5));
-      border-radius: var(--command-palette-radius, var(--radius-400, 0.75rem));
-      box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
-      z-index: var(--z-modal, 400);
+      max-height: var(--command-palette-max-height);
+      background: var(--command-palette-bg);
+      border: 1px solid var(--command-palette-border-color);
+      border-radius: var(--command-palette-radius);
+      box-shadow: var(--command-palette-shadow);
+      z-index: var(--z-modal);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--font-sans);
       animation: esa-cmdk-enter 150ms ease-out;
     }
     @keyframes esa-cmdk-enter {
@@ -251,66 +251,66 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__search {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 0.75rem);
-      padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      gap: var(--spacing-300);
+      padding: var(--spacing-300) var(--spacing-400);
+      border-bottom: 1px solid var(--color-border-light);
     }
     .esa-command-palette__search-icon {
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
       flex-shrink: 0;
     }
     .esa-command-palette__input {
       flex: 1;
       border: none;
       outline: none;
-      font-size: var(--type-size-300, 1rem);
-      color: var(--color-text-primary, #171717);
+      font-size: var(--type-size-300);
+      color: var(--color-text-primary);
       background: transparent;
       font-family: inherit;
     }
-    .esa-command-palette__input::placeholder { color: var(--color-text-muted, #737373); }
+    .esa-command-palette__input::placeholder { color: var(--color-text-muted); }
 
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
       padding: 2px 6px;
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-100, 0.25rem);
-      font-size: var(--type-size-100, 0.75rem);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-100);
+      font-size: var(--type-size-100);
       font-family: inherit;
-      color: var(--color-text-muted, #737373);
-      background: var(--color-surface-sunken, #efefef);
+      color: var(--color-text-muted);
+      background: var(--color-surface-sunken);
     }
 
     .esa-command-palette__results {
       overflow-y: auto;
-      padding: var(--spacing-200, 0.5rem);
+      padding: var(--spacing-200);
     }
     .esa-command-palette__group-label {
-      padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      font-size: var(--type-size-100, 0.75rem);
-      font-weight: var(--font-weight-semibold, 550);
+      padding: var(--spacing-200) var(--spacing-200) var(--spacing-100);
+      font-size: var(--type-size-100);
+      font-weight: var(--font-weight-semibold);
       text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-wide, 0.03em);
-      color: var(--color-text-muted, #737373);
+      letter-spacing: var(--letter-spacing-wide);
+      color: var(--color-text-muted);
     }
 
     .esa-command-palette__item {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 0.75rem);
+      gap: var(--spacing-300);
       width: 100%;
-      padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
+      padding: var(--spacing-200) var(--spacing-300);
       border: none;
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-200);
       background: transparent;
-      color: var(--color-text-primary, #171717);
-      font-size: var(--type-size-200, 0.9375rem);
+      color: var(--color-text-primary);
+      font-size: var(--type-size-200);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-surface-sunken, #efefef)); }
+    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -322,17 +322,17 @@ export class EsaCommandPalette extends LitElement {
       display: flex;
       flex-direction: column;
     }
-    .esa-command-palette__item-label { font-weight: var(--font-weight-medium, 450); }
+    .esa-command-palette__item-label { font-weight: var(--font-weight-medium); }
     .esa-command-palette__item-desc {
-      font-size: var(--type-size-150, 0.875rem);
-      color: var(--color-text-muted, #737373);
+      font-size: var(--type-size-150);
+      color: var(--color-text-muted);
     }
 
     .esa-command-palette__empty {
-      padding: var(--spacing-600, 2rem);
+      padding: var(--spacing-600);
       text-align: center;
-      color: var(--color-text-muted, #737373);
-      font-size: var(--type-size-200, 0.9375rem);
+      color: var(--color-text-muted);
+      font-size: var(--type-size-200);
     }
   `;
 }

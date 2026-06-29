@@ -39,19 +39,19 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--loading-overlay-bg, var(--color-surface, #fff));
+    background: var(--loading-overlay-bg);
     z-index: 10;
   }
 
   .esa-loading-overlay--transparent .esa-loading-overlay__backdrop {
-    background: var(--loading-overlay-bg-transparent, rgba(255, 255, 255, 0.8));
+    background: var(--loading-overlay-bg-transparent);
   }
 
   .esa-loading-overlay__content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-300, 0.75rem);
+    gap: var(--spacing-300);
   }
 
   /* Inlined large spinner (mirrors esa-loading-spinner size="lg") — shares the
@@ -59,9 +59,9 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
   .esa-loading-overlay__spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid var(--loading-spinner-track-color, var(--color-border-light, #efefef));
-    border-top-color: var(--loading-spinner-color, var(--color-primary, #43608a));
-    border-radius: var(--radius-full, 9999px);
+    border: 4px solid var(--loading-spinner-track-color);
+    border-top-color: var(--loading-spinner-color);
+    border-radius: var(--radius-full);
     animation: esa-overlay-spinner-rotate 0.75s linear infinite;
     box-sizing: border-box;
   }
@@ -72,8 +72,8 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
 
   .esa-loading-overlay__message {
     margin: 0;
-    font-size: var(--type-size-150, 0.875rem);
-    color: var(--loading-overlay-message-color, var(--color-text-secondary, #525252));
+    font-size: var(--type-size-150);
+    color: var(--loading-overlay-message-color);
     text-align: center;
   }
 </style>

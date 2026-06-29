@@ -160,15 +160,15 @@ export class EsaPagination extends LitElement {
 
   static styles = css`
     :host {
-      --_pagination-bg: var(--pagination-bg, var(--color-surface, #ffffff));
-      --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
-      --_pagination-text-color: var(--pagination-text-color, var(--color-text-secondary, #525252));
-      --_pagination-font-size: var(--pagination-font-size, var(--type-size-200, 14px));
-      --_pagination-button-color: var(--pagination-button-color, var(--color-text-primary, #171717));
-      --_pagination-button-disabled-color: var(--color-disabled-text, #bdbdbd);
-      --_pagination-button-hover-bg: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
-      --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
-      --_pagination-padding-y: var(--pagination-padding-y, var(--spacing-200, 8px));
+      --_pagination-bg: var(--pagination-bg);
+      --_pagination-border-color: var(--pagination-border-color);
+      --_pagination-text-color: var(--pagination-text-color);
+      --_pagination-font-size: var(--pagination-font-size);
+      --_pagination-button-color: var(--pagination-button-color);
+      --_pagination-button-disabled-color: var(--color-disabled-text);
+      --_pagination-button-hover-bg: var(--color-hover-overlay);
+      --_pagination-padding-x: var(--pagination-padding-x);
+      --_pagination-padding-y: var(--pagination-padding-y);
 
       display: block;
     }
@@ -177,37 +177,37 @@ export class EsaPagination extends LitElement {
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: var(--spacing-400, 16px);
+      gap: var(--spacing-400);
       min-height: 40px;
       padding: var(--_pagination-padding-y) var(--_pagination-padding-x);
       background: var(--_pagination-bg);
       border-top: 1px solid var(--_pagination-border-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_pagination-font-size);
       color: var(--_pagination-text-color);
     }
     .container--disabled { opacity: 0.6; pointer-events: none; }
 
-    .page-size { display: flex; align-items: center; gap: var(--spacing-200, 8px); }
+    .page-size { display: flex; align-items: center; gap: var(--spacing-200); }
     .page-size-label {
       white-space: nowrap;
       color: var(--_pagination-text-color);
       font-size: var(--_pagination-font-size);
     }
     .page-size-select {
-      padding: var(--spacing-100, 4px) var(--spacing-200, 8px);
+      padding: var(--spacing-100) var(--spacing-200);
       border: 1px solid var(--_pagination-border-color);
-      border-radius: var(--radius-100, 4px);
+      border-radius: var(--radius-100);
       background: var(--_pagination-bg);
       color: var(--_pagination-text-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_pagination-font-size);
       cursor: pointer;
       appearance: auto;
     }
     .page-size-select:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
     .page-size-select:disabled { cursor: default; opacity: 0.5; }
 
@@ -217,7 +217,7 @@ export class EsaPagination extends LitElement {
       font-size: var(--_pagination-font-size);
     }
 
-    .buttons { display: flex; align-items: center; gap: var(--spacing-100, 4px); }
+    .buttons { display: flex; align-items: center; gap: var(--spacing-100); }
 
     .button {
       display: inline-flex;
@@ -228,17 +228,17 @@ export class EsaPagination extends LitElement {
       padding: 0;
       margin: 0;
       border: none;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-full);
       background: transparent;
       color: var(--_pagination-button-color);
       cursor: pointer;
-      transition: background var(--transition-fast, 150ms ease), color var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast), color var(--transition-fast);
     }
     .ic { display: flex; }
     .button:hover:not(:disabled) { background: var(--_pagination-button-hover-bg); }
     .button:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
     .button:disabled { color: var(--_pagination-button-disabled-color); cursor: default; }
   `;

@@ -25,13 +25,13 @@ const headingId = `esa-danger-zone-heading-${++nextId}`;
 
 <style>
   .esa-danger-zone {
-    --_dz-bg: var(--danger-zone-bg, var(--color-danger-subtle, #fef2f2));
-    --_dz-border: var(--danger-zone-border-color, var(--color-danger-border, #fecaca));
-    --_dz-heading-color: var(--danger-zone-heading-color, var(--color-red-11));
-    --_dz-description-color: var(--danger-zone-description-color, var(--color-text-secondary, #525252));
-    --_dz-radius: var(--danger-zone-radius, var(--radius-200, 0.5rem));
-    --_dz-padding: var(--danger-zone-padding, var(--spacing-300, 0.75rem));
-    --_dz-gap: var(--spacing-200, 0.5rem);
+    --_dz-bg: var(--danger-zone-bg);
+    --_dz-border: var(--danger-zone-border-color);
+    --_dz-heading-color: var(--danger-zone-heading-color);
+    --_dz-description-color: var(--danger-zone-description-color);
+    --_dz-radius: var(--danger-zone-radius);
+    --_dz-padding: var(--danger-zone-padding);
+    --_dz-gap: var(--spacing-200);
 
     display: flex;
     flex-direction: column;
@@ -44,15 +44,15 @@ const headingId = `esa-danger-zone-heading-${++nextId}`;
 
   .esa-danger-zone__heading {
     margin: 0;
-    font-family: var(--font-sans, 'DM Sans', sans-serif);
-    font-size: var(--type-size-250, 1.0625rem);
+    font-family: var(--font-sans);
+    font-size: var(--type-size-250);
     font-weight: 600;
     color: var(--_dz-heading-color);
   }
 
   .esa-danger-zone__description {
     margin: 0;
-    font-size: var(--type-size-200, 0.9375rem);
+    font-size: var(--type-size-200);
     color: var(--_dz-description-color);
   }
 

@@ -45,38 +45,38 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
 
 <style>
   .esa-filter-clear-button {
-    --_clear-text: var(--filter-clear-color, var(--color-primary-strong, #3a7c59));
-    --_clear-text-hover: var(--filter-clear-color-hover, var(--color-primary-strong, #3a7c59));
-    --_clear-font-size: var(--type-size-150, 0.875rem);
+    --_clear-text: var(--filter-clear-color);
+    --_clear-text-hover: var(--filter-clear-color-hover);
+    --_clear-font-size: var(--type-size-150);
     --_clear-icon-size: 18px;
 
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-100, 0.25rem);
-    padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+    gap: var(--spacing-100);
+    padding: var(--spacing-100) var(--spacing-200);
     border: none;
-    border-radius: var(--radius-100, 0.25rem);
+    border-radius: var(--radius-100);
     background: transparent;
     color: var(--_clear-text);
-    font-family: var(--font-sans, inherit);
+    font-family: var(--font-sans);
     font-size: var(--_clear-font-size);
-    font-weight: var(--font-weight-medium, 450);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;
     transition:
-      color var(--transition-fast, 150ms ease),
-      background var(--transition-fast, 150ms ease);
+      color var(--transition-fast),
+      background var(--transition-fast);
   }
 
   .esa-filter-clear-button:hover {
     color: var(--_clear-text-hover);
-    background: var(--color-hover-overlay, rgba(0, 0, 0, 0.03));
+    background: var(--color-hover-overlay);
   }
 
   .esa-filter-clear-button:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
-    outline-offset: var(--focus-ring-offset, 2px);
+    outline-offset: var(--focus-ring-offset);
   }
 
   .esa-filter-clear-button__icon {

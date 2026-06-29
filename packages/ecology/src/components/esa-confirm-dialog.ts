@@ -155,8 +155,8 @@ export class EsaConfirmDialog extends LitElement {
     .esa-confirm-dialog__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--confirm-dialog-backdrop-bg, var(--color-backdrop, rgba(0, 0, 0, 0.5)));
-      z-index: var(--z-modal-backdrop, 300);
+      background: var(--confirm-dialog-backdrop-bg);
+      z-index: var(--z-modal-backdrop);
     }
     .esa-confirm-dialog__panel {
       position: fixed;
@@ -164,22 +164,22 @@ export class EsaConfirmDialog extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: var(--z-modal, 400);
+      z-index: var(--z-modal);
       pointer-events: none;
     }
     .esa-confirm-dialog {
       pointer-events: auto;
-      width: var(--confirm-dialog-width, 360px);
+      width: var(--confirm-dialog-width);
       max-width: calc(100vw - 2rem);
-      background: var(--confirm-dialog-bg, var(--color-surface-elevated, #ffffff));
-      border-radius: var(--confirm-dialog-radius, var(--radius-400, 0.75rem));
+      background: var(--confirm-dialog-bg);
+      border-radius: var(--confirm-dialog-radius);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--font-sans);
     }
 
     .esa-confirm-dialog__content {
-      padding: var(--spacing-500, 1.5rem);
+      padding: var(--spacing-500);
       text-align: center;
       display: flex;
       flex-direction: column;
@@ -191,75 +191,75 @@ export class EsaConfirmDialog extends LitElement {
       justify-content: center;
       width: 48px;
       height: 48px;
-      border-radius: var(--radius-full, 9999px);
-      margin-bottom: var(--spacing-300, 0.75rem);
+      border-radius: var(--radius-full);
+      margin-bottom: var(--spacing-300);
     }
     .esa-confirm-dialog__icon--default {
-      background: var(--color-info-subtle, #eff6ff);
-      color: var(--color-info, #3b82f6);
+      background: var(--color-info-subtle);
+      color: var(--color-info);
     }
     .esa-confirm-dialog__icon--danger {
-      background: var(--color-danger-subtle, #fef2f2);
-      color: var(--color-danger, #ef4444);
+      background: var(--color-danger-subtle);
+      color: var(--color-danger);
     }
     .esa-confirm-dialog__icon--warning {
-      background: var(--color-warning-subtle, #fffbeb);
-      color: var(--color-warning, #f59e0b);
+      background: var(--color-warning-subtle);
+      color: var(--color-warning);
     }
     .esa-confirm-dialog__title {
-      font-size: var(--type-size-400, 1.125rem);
-      font-weight: var(--font-weight-semibold, 550);
-      margin: 0 0 var(--spacing-150, 0.375rem);
-      color: var(--confirm-dialog-color, var(--color-text-primary, #171717));
+      font-size: var(--type-size-400);
+      font-weight: var(--font-weight-semibold);
+      margin: 0 0 var(--spacing-150);
+      color: var(--confirm-dialog-color, var(--color-text-primary));
     }
     .esa-confirm-dialog__message {
-      color: var(--confirm-dialog-color, var(--color-text-secondary, #525252));
-      font-size: var(--type-size-200, 0.9375rem);
-      line-height: var(--line-height-normal, 1.6);
+      color: var(--confirm-dialog-color, var(--color-text-secondary));
+      font-size: var(--type-size-200);
+      line-height: var(--line-height-normal);
       margin: 0;
     }
 
     .esa-confirm-dialog__footer {
-      padding: var(--spacing-300, 0.75rem) var(--spacing-500, 1.5rem);
-      border-top: 1px solid var(--confirm-dialog-border-color, var(--color-border-light, #efefef));
+      padding: var(--spacing-300) var(--spacing-500);
+      border-top: 1px solid var(--confirm-dialog-border-color);
       display: flex;
       justify-content: flex-end;
-      gap: var(--spacing-200, 0.5rem);
+      gap: var(--spacing-200);
     }
 
     .esa-confirm-dialog__btn {
-      padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-radius: var(--radius-200, 0.5rem);
+      padding: var(--spacing-200) var(--spacing-400);
+      border-radius: var(--radius-200);
       font-family: inherit;
-      font-size: var(--type-size-200, 0.9375rem);
-      font-weight: var(--font-weight-medium, 450);
+      font-size: var(--type-size-200);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
       border: 1px solid transparent;
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     .esa-confirm-dialog__btn:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
     .esa-confirm-dialog__btn--outline {
       background: transparent;
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-primary, #171717);
+      border-color: var(--color-border-strong);
+      color: var(--color-text-primary);
     }
-    .esa-confirm-dialog__btn--outline:hover { background: var(--color-surface-sunken, #efefef); }
+    .esa-confirm-dialog__btn--outline:hover { background: var(--color-surface-sunken); }
     .esa-confirm-dialog__btn--primary {
-      background: var(--color-primary, #43608a);
-      color: var(--color-text-inverse, #ffffff);
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
     }
-    .esa-confirm-dialog__btn--primary:hover { background: var(--color-primary-hover, #39506f); }
+    .esa-confirm-dialog__btn--primary:hover { background: var(--color-primary-hover); }
     .esa-confirm-dialog__btn--danger {
-      background: var(--color-danger, #ef4444);
-      color: var(--color-text-inverse, #ffffff);
+      background: var(--color-danger);
+      color: var(--color-text-inverse);
     }
     .esa-confirm-dialog__btn--danger:hover { background: #dc2626; }
     .esa-confirm-dialog__btn--warning {
-      background: var(--color-warning, #f59e0b);
-      color: var(--color-text-inverse, #ffffff);
+      background: var(--color-warning);
+      color: var(--color-text-inverse);
     }
     .esa-confirm-dialog__btn--warning:hover { background: #d97706; }
   `;

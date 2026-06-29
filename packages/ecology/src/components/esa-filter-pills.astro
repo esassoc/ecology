@@ -57,12 +57,12 @@ const { filters = [] } = Astro.props;
 
 <style>
   .esa-filter-pills {
-    --_pill-gap: var(--spacing-200, 0.5rem);
-    --_pill-bg: var(--filter-pill-bg, var(--color-primary-bg, #d5edda));
-    --_pill-text: var(--filter-pill-text, var(--color-primary-strong, #3a7c59));
-    --_pill-font-size: var(--filter-pill-font-size, var(--type-size-100, 0.75rem));
-    --_pill-radius: var(--filter-pill-radius, var(--radius-full, 9999px));
-    --_pill-padding-x: var(--spacing-300, 0.75rem);
+    --_pill-gap: var(--spacing-200);
+    --_pill-bg: var(--filter-pill-bg);
+    --_pill-text: var(--filter-pill-text);
+    --_pill-font-size: var(--filter-pill-font-size);
+    --_pill-radius: var(--filter-pill-radius);
+    --_pill-padding-x: var(--spacing-300);
     --_pill-height: 28px;
 
     display: flex;
@@ -74,26 +74,26 @@ const { filters = [] } = Astro.props;
   .esa-filter-pills__chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-100, 0.25rem);
+    gap: var(--spacing-100);
     height: var(--_pill-height);
     padding-inline: var(--_pill-padding-x);
     background: var(--_pill-bg);
     border-radius: var(--_pill-radius);
     font-size: var(--_pill-font-size);
-    font-family: var(--font-sans, inherit);
+    font-family: var(--font-sans);
     line-height: 1;
     white-space: nowrap;
-    transition: background var(--transition-fast, 150ms ease);
+    transition: background var(--transition-fast);
   }
 
   .esa-filter-pills__chip:hover {
-    background: var(--filter-pill-bg-hover, var(--color-primary-bg-hover, #c6e5cc));
+    background: var(--filter-pill-bg-hover);
   }
 
   .esa-filter-pills__label {
-    font-weight: var(--font-weight-medium, 450);
-    margin-inline-end: var(--spacing-100, 0.25rem);
-    color: var(--filter-pill-label-color, var(--color-text-secondary, #646464));
+    font-weight: var(--font-weight-medium);
+    margin-inline-end: var(--spacing-100);
+    color: var(--filter-pill-label-color);
   }
 
   .esa-filter-pills__value {
@@ -106,19 +106,19 @@ const { filters = [] } = Astro.props;
     justify-content: center;
     padding: 0;
     margin: 0;
-    margin-inline-start: var(--spacing-050, 0.125rem);
+    margin-inline-start: var(--spacing-050);
     border: none;
     background: transparent;
     cursor: pointer;
-    color: var(--filter-pill-remove-color, var(--color-text-secondary, #646464));
-    border-radius: var(--radius-full, 9999px);
+    color: var(--filter-pill-remove-color);
+    border-radius: var(--radius-full);
     transition:
-      color var(--transition-fast, 150ms ease),
-      background var(--transition-fast, 150ms ease);
+      color var(--transition-fast),
+      background var(--transition-fast);
   }
 
   .esa-filter-pills__remove:hover {
-    color: var(--filter-pill-remove-color-hover, var(--color-danger-strong, #ce2c31));
+    color: var(--filter-pill-remove-color-hover);
   }
 
   .esa-filter-pills__remove:focus-visible {

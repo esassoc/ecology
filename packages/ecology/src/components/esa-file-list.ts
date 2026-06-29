@@ -110,23 +110,23 @@ export class EsaFileList extends LitElement {
       padding: 0;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-150, 6px);
+      gap: var(--spacing-150);
     }
     .file {
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: var(--spacing-200, 8px);
-      padding: 2px var(--spacing-300, 12px);
-      border: var(--form-border-width, 1px) solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-100, 4px);
-      background: var(--color-surface, #fff);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
+      gap: var(--spacing-200);
+      padding: 2px var(--spacing-300);
+      border: var(--form-border-width) solid var(--color-border);
+      border-radius: var(--radius-100);
+      background: var(--color-surface);
+      font-family: var(--font-sans);
+      font-size: var(--type-size-150);
     }
     .file__icon {
       display: inline-flex;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
     }
     .file__icon svg {
       width: 16px;
@@ -137,11 +137,11 @@ export class EsaFileList extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       text-decoration: none;
     }
     a.file__name {
-      color: var(--color-link, var(--color-primary, #43608a));
+      color: var(--color-link);
     }
     a.file__name:hover {
       text-decoration: underline;
@@ -149,7 +149,7 @@ export class EsaFileList extends LitElement {
     .file__actions {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-050, 2px);
+      gap: var(--spacing-050);
     }
     .file__btn {
       display: inline-flex;
@@ -160,24 +160,24 @@ export class EsaFileList extends LitElement {
       padding: 0;
       border: 0;
       background: transparent;
-      color: var(--color-text-muted, #737373);
-      border-radius: var(--radius-100, 4px);
+      color: var(--color-text-muted);
+      border-radius: var(--radius-100);
       cursor: pointer;
       flex-shrink: 0;
       transition:
-        background var(--transition-fast, 150ms ease),
-        color var(--transition-fast, 150ms ease);
+        background var(--transition-fast),
+        color var(--transition-fast);
     }
     .file__btn svg {
       width: 15px;
       height: 15px;
     }
     .file__btn:hover {
-      background: var(--color-surface-sunken, #efefef);
-      color: var(--color-text-primary, #171717);
+      background: var(--color-surface-sunken);
+      color: var(--color-text-primary);
     }
     .file__btn--remove:hover {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger);
     }
     .file__btn:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

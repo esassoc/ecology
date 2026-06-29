@@ -39,9 +39,9 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
 
 <style>
   .esa-collapsible {
-    border: 1px solid var(--collapsible-border-color, var(--color-border, #e5e5e5));
-    border-radius: var(--collapsible-radius, var(--radius-300, 0.5rem));
-    background: var(--collapsible-bg, var(--color-surface, #fff));
+    border: 1px solid var(--collapsible-border-color);
+    border-radius: var(--collapsible-radius);
+    background: var(--collapsible-bg);
   }
   .esa-collapsible--flush {
     border: none;
@@ -55,11 +55,11 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
   .esa-collapsible__summary {
     display: flex;
     align-items: center;
-    gap: var(--spacing-200, 0.5rem);
-    padding: var(--spacing-300, 0.75rem) var(--collapsible-padding-x, var(--spacing-400, 1rem));
-    font-size: var(--type-size-150, 0.9375rem);
-    font-weight: var(--font-weight-semibold, 600);
-    color: var(--collapsible-title-color, var(--color-text-primary, #171717));
+    gap: var(--spacing-200);
+    padding: var(--spacing-300) var(--collapsible-padding-x);
+    font-size: var(--type-size-150);
+    font-weight: var(--font-weight-semibold);
+    color: var(--collapsible-title-color);
     cursor: pointer;
     list-style: none;
   }
@@ -70,8 +70,8 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
     content: '';
     width: 8px;
     height: 8px;
-    border-right: 2px solid var(--color-text-tertiary, #737373);
-    border-bottom: 2px solid var(--color-text-tertiary, #737373);
+    border-right: 2px solid var(--color-text-tertiary);
+    border-bottom: 2px solid var(--color-text-tertiary);
     transform: rotate(-45deg);
     transition: transform 150ms ease;
     margin-left: auto;
@@ -79,12 +79,12 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
   .esa-collapsible[open] > .esa-collapsible__summary::after { transform: rotate(45deg); }
 
   /* Leading summary glyph — quiet, secondary. */
-  .esa-collapsible__summary :global(.esa-icon) { flex-shrink: 0; color: var(--color-text-secondary, #404040); }
+  .esa-collapsible__summary :global(.esa-icon) { flex-shrink: 0; color: var(--color-text-secondary); }
 
   .esa-collapsible__body {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-400, 1rem);
-    padding: 0 var(--collapsible-padding-x, var(--spacing-400, 1rem)) var(--spacing-400, 1rem);
+    gap: var(--spacing-400);
+    padding: 0 var(--collapsible-padding-x) var(--spacing-400);
   }
 </style>

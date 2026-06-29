@@ -99,36 +99,36 @@ export class EsaRangeSlider extends LitElement {
       display: block;
       --_track-height: 6px;
       --_thumb-size: 20px;
-      --_font-size: var(--form-font-size-md, 14px);
+      --_font-size: var(--form-font-size-md);
     }
     :host([size='xs']) {
       --_track-height: 3px;
       --_thumb-size: 14px;
-      --_font-size: var(--form-font-size-xs, 11px);
+      --_font-size: var(--form-font-size-xs);
     }
     :host([size='sm']) {
       --_track-height: 4px;
       --_thumb-size: 16px;
-      --_font-size: var(--form-font-size-sm, 12px);
+      --_font-size: var(--form-font-size-sm);
     }
     :host([size='lg']) {
       --_track-height: 8px;
       --_thumb-size: 24px;
-      --_font-size: var(--form-font-size-lg, 16px);
+      --_font-size: var(--form-font-size-lg);
     }
 
     .label {
       display: block;
-      margin-bottom: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
+      margin-bottom: var(--spacing-100);
+      font-family: var(--font-sans);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
     }
     .row {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 12px);
+      gap: var(--spacing-300);
     }
     .track-wrapper {
       flex: 1;
@@ -150,10 +150,10 @@ export class EsaRangeSlider extends LitElement {
       border-radius: calc(var(--_track-height) / 2);
       background: linear-gradient(
         to right,
-        var(--color-primary, #43608a) 0%,
-        var(--color-primary, #43608a) var(--fill-percent, 0%),
-        var(--color-border, #e5e5e5) var(--fill-percent, 0%),
-        var(--color-border, #e5e5e5) 100%
+        var(--color-primary) 0%,
+        var(--color-primary) var(--fill-percent),
+        var(--color-border) var(--fill-percent),
+        var(--color-border) 100%
       );
     }
     .input::-webkit-slider-thumb {
@@ -161,31 +161,31 @@ export class EsaRangeSlider extends LitElement {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
       margin-top: calc((var(--_track-height) - var(--_thumb-size)) / 2);
-      border: 2px solid var(--color-primary, #43608a);
+      border: 2px solid var(--color-primary);
       border-radius: 50%;
-      background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      background: var(--color-surface);
+      box-shadow: var(--shadow-50);
       transition:
-        box-shadow var(--transition-fast, 150ms ease),
-        transform var(--transition-fast, 150ms ease);
+        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
     }
     .input::-moz-range-track {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-border, #e5e5e5);
+      background: var(--color-border);
     }
     .input::-moz-range-progress {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-primary, #43608a);
+      background: var(--color-primary);
     }
     .input::-moz-range-thumb {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
-      border: 2px solid var(--color-primary, #43608a);
+      border: 2px solid var(--color-primary);
       border-radius: 50%;
-      background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      background: var(--color-surface);
+      box-shadow: var(--shadow-50);
     }
     .input:focus-visible {
       outline: none;
@@ -207,10 +207,10 @@ export class EsaRangeSlider extends LitElement {
     .value {
       min-width: 3ch;
       text-align: right;
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
       font-variant-numeric: tabular-nums;
     }
   `;

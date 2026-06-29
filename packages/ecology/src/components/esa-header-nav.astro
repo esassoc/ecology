@@ -106,71 +106,71 @@ function initialsFor(u: EsaHeaderNavUser): string {
      it doesn't carry this file's scope hash — target it with :global. The custom
      props inherit into the app-bar internals; the border sits on the bar itself. */
   :global(.esa-header-nav) {
-    --app-bar-gap: var(--spacing-300, 12px);
-    --app-bar-pad-x: var(--spacing-500, 24px);
-    --app-bar-pad-y: var(--spacing-150, 6px);
-    border-bottom: 1px solid var(--header-nav-border-color, var(--color-border, #e5e5e5));
+    --app-bar-gap: var(--spacing-300);
+    --app-bar-pad-x: var(--spacing-500);
+    --app-bar-pad-y: var(--spacing-150);
+    border-bottom: 1px solid var(--header-nav-border-color);
   }
   .esa-header-nav__brand { display: inline-flex; align-items: center; }
-  .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200, 8px); }
+  .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200); }
 
   /* Dropdown menu list (rendered inside esa-nav-dropdown's panel) */
   .esa-header-nav__menu { list-style: none; margin: 0; padding: 0; min-width: 180px; }
   .esa-header-nav__menu-item {
     display: block;
-    padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
-    border-radius: var(--radius-100, 4px);
-    color: var(--header-nav-menu-item-color, var(--color-text-secondary, #525252));
-    font-size: var(--type-size-200, 1rem);
+    padding: var(--spacing-150) var(--spacing-300);
+    border-radius: var(--radius-100);
+    color: var(--header-nav-menu-item-color);
+    font-size: var(--type-size-200);
     text-decoration: none;
   }
-  .esa-header-nav__menu-item:hover { background: var(--color-surface-sunken, #efefef); }
-  .esa-header-nav__menu-item--inert { color: var(--color-text-muted, #737373); }
+  .esa-header-nav__menu-item:hover { background: var(--color-surface-sunken); }
+  .esa-header-nav__menu-item--inert { color: var(--color-text-muted); }
 
   /* User menu (bespoke — avatar-triggered disclosure) */
   .esa-header-nav__user { position: relative; display: flex; align-items: center; }
   .esa-header-nav__avatar-btn {
     display: flex; align-items: center; justify-content: center;
-    width: var(--header-nav-avatar-size, 32px); height: var(--header-nav-avatar-size, 32px);
-    border-radius: var(--radius-full, 9999px);
-    background: var(--header-nav-avatar-bg, var(--color-primary, #43608a));
-    color: var(--header-nav-avatar-text, var(--color-text-inverse, #fff));
+    width: var(--header-nav-avatar-size); height: var(--header-nav-avatar-size);
+    border-radius: var(--radius-full);
+    background: var(--header-nav-avatar-bg);
+    color: var(--header-nav-avatar-text);
     cursor: pointer; overflow: hidden; list-style: none;
   }
   .esa-header-nav__avatar-btn::-webkit-details-marker { display: none; }
   .esa-header-nav__avatar-btn:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
-    outline-offset: var(--focus-ring-offset, 2px);
+    outline-offset: var(--focus-ring-offset);
   }
   .esa-header-nav__avatar-img { width: 100%; height: 100%; object-fit: cover; }
-  .esa-header-nav__avatar-initials { font-size: var(--type-size-100, 0.75rem); font-weight: var(--font-weight-semibold, 600); }
+  .esa-header-nav__avatar-initials { font-size: var(--type-size-100); font-weight: var(--font-weight-semibold); }
 
   .esa-header-nav__user-dropdown {
-    position: absolute; top: calc(100% + var(--spacing-100, 4px)); right: 0;
-    z-index: var(--z-dropdown, 50);
+    position: absolute; top: calc(100% + var(--spacing-100)); right: 0;
+    z-index: var(--z-dropdown);
     min-width: 220px;
-    background: var(--color-surface, #fff);
-    border: 1px solid var(--color-border, #e5e5e5);
-    border-radius: var(--radius-200, 8px);
-    box-shadow: var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12));
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-200);
+    box-shadow: var(--shadow-200);
     overflow: hidden;
   }
   .esa-header-nav__user-info {
     display: flex; flex-direction: column; gap: 2px;
-    padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border-bottom: 1px solid var(--color-border, #e5e5e5);
+    padding: var(--spacing-300) var(--spacing-400);
+    border-bottom: 1px solid var(--color-border);
   }
-  .esa-header-nav__user-name { font-size: var(--type-size-200, 1rem); font-weight: var(--font-weight-semibold, 600); color: var(--color-text-primary, #171717); }
-  .esa-header-nav__user-email { font-size: var(--type-size-100, 0.75rem); color: var(--color-text-secondary, #525252); }
-  .esa-header-nav__user-actions { padding: var(--spacing-100, 4px); }
+  .esa-header-nav__user-name { font-size: var(--type-size-200); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); }
+  .esa-header-nav__user-email { font-size: var(--type-size-100); color: var(--color-text-secondary); }
+  .esa-header-nav__user-actions { padding: var(--spacing-100); }
   .esa-header-nav__user-action {
-    display: flex; align-items: center; gap: var(--spacing-200, 8px);
-    padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
-    border-radius: var(--radius-100, 4px);
-    color: var(--header-nav-menu-item-color, var(--color-text-secondary, #525252));
-    font-size: var(--type-size-200, 1rem); text-decoration: none;
+    display: flex; align-items: center; gap: var(--spacing-200);
+    padding: var(--spacing-150) var(--spacing-300);
+    border-radius: var(--radius-100);
+    color: var(--header-nav-menu-item-color);
+    font-size: var(--type-size-200); text-decoration: none;
   }
-  .esa-header-nav__user-action:hover { background: var(--color-surface-sunken, #efefef); }
-  .esa-header-nav__user-action--danger { color: var(--color-danger-strong, #ce2c31); }
-  .esa-header-nav__user-divider { height: 1px; margin: var(--spacing-100, 4px) 0; background: var(--color-border, #e5e5e5); }
+  .esa-header-nav__user-action:hover { background: var(--color-surface-sunken); }
+  .esa-header-nav__user-action--danger { color: var(--color-danger-strong); }
+  .esa-header-nav__user-divider { height: 1px; margin: var(--spacing-100) 0; background: var(--color-border); }
 </style>

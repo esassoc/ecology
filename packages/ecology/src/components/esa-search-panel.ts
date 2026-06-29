@@ -256,19 +256,19 @@ export class EsaSearchPanel extends LitElement {
     .backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.3));
-      z-index: var(--z-modal-backdrop, 9998);
+      background: var(--color-backdrop);
+      z-index: var(--z-modal-backdrop);
     }
 
     .panel {
       position: fixed;
       top: 0;
       bottom: 0;
-      width: var(--search-panel-width, 400px);
+      width: var(--search-panel-width);
       max-width: 90vw;
-      background: var(--search-panel-bg, var(--color-surface-elevated, #ffffff));
-      box-shadow: var(--search-panel-shadow, var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1)));
-      z-index: var(--z-modal, 9999);
+      background: var(--search-panel-bg);
+      box-shadow: var(--search-panel-shadow, var(--shadow-400));
+      z-index: var(--z-modal);
       display: flex;
       flex-direction: column;
     }
@@ -280,7 +280,7 @@ export class EsaSearchPanel extends LitElement {
 
     .panel--left {
       left: 0;
-      box-shadow: var(--search-panel-shadow, var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1)));
+      box-shadow: var(--search-panel-shadow, var(--shadow-400));
       animation: esa-search-slide-in-left 200ms ease-out;
     }
 
@@ -297,17 +297,17 @@ export class EsaSearchPanel extends LitElement {
     .header {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
-      padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      gap: var(--spacing-200);
+      padding: var(--spacing-300) var(--spacing-400);
+      border-bottom: 1px solid var(--color-border-light);
     }
 
     .search-box {
       flex: 1;
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
-      color: var(--color-text-muted, #737373);
+      gap: var(--spacing-200);
+      color: var(--color-text-muted);
     }
 
     .input {
@@ -316,12 +316,12 @@ export class EsaSearchPanel extends LitElement {
       outline: none;
       font-family: inherit;
       font-size: 1rem;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       background: transparent;
     }
 
     .input::placeholder {
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
     }
 
     .close {
@@ -331,41 +331,41 @@ export class EsaSearchPanel extends LitElement {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-200);
       background: transparent;
-      color: var(--color-text-secondary, #525252);
+      color: var(--color-text-secondary);
       cursor: pointer;
     }
 
     .close:hover {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-surface-sunken);
     }
 
     .body {
       flex: 1;
       overflow-y: auto;
-      padding: var(--spacing-200, 8px);
+      padding: var(--spacing-200);
     }
 
     .category {
-      padding: var(--spacing-300, 12px) var(--spacing-200, 8px) var(--spacing-100, 4px);
+      padding: var(--spacing-300) var(--spacing-200) var(--spacing-100);
       font-size: 0.6875rem;
-      font-weight: var(--font-weight-semibold, 600);
+      font-weight: var(--font-weight-semibold);
       text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-wide, 0.05em);
-      color: var(--color-text-muted, #737373);
+      letter-spacing: var(--letter-spacing-wide);
+      color: var(--color-text-muted);
     }
 
     .result {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 12px);
+      gap: var(--spacing-300);
       width: 100%;
-      padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
+      padding: var(--spacing-200) var(--spacing-300);
       border: none;
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-200);
       background: transparent;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       font-family: inherit;
       font-size: 0.875rem;
       cursor: pointer;
@@ -373,7 +373,7 @@ export class EsaSearchPanel extends LitElement {
     }
 
     .result:hover {
-      background: var(--search-panel-result-bg-hover, var(--color-surface-sunken, #efefef));
+      background: var(--search-panel-result-bg-hover);
     }
 
     .result-content {
@@ -382,28 +382,28 @@ export class EsaSearchPanel extends LitElement {
     }
 
     .result-title {
-      font-weight: var(--font-weight-medium, 500);
+      font-weight: var(--font-weight-medium);
     }
 
     .result-subtitle {
       font-size: 0.75rem;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
     }
 
     .empty {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: var(--spacing-200, 8px);
-      padding: var(--spacing-700, 48px) var(--spacing-400, 16px);
-      color: var(--color-text-muted, #737373);
+      gap: var(--spacing-200);
+      padding: var(--spacing-700) var(--spacing-400);
+      color: var(--color-text-muted);
       text-align: center;
     }
 
     .loading {
-      padding: var(--spacing-500, 24px);
+      padding: var(--spacing-500);
       text-align: center;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-text-muted);
     }
   `;
 }

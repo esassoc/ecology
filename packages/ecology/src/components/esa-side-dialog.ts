@@ -137,34 +137,34 @@ export class EsaSideDialog extends LitElement {
   }
 
   static styles = css`
-    :host { --_width: var(--side-dialog-width, 400px); }
-    :host([size='sm']) { --_width: var(--side-dialog-width-sm, 320px); }
-    :host([size='lg']) { --_width: var(--side-dialog-width-lg, 520px); }
+    :host { --_width: var(--side-dialog-width); }
+    :host([size='sm']) { --_width: var(--side-dialog-width-sm); }
+    :host([size='lg']) { --_width: var(--side-dialog-width-lg); }
 
     .backdrop {
       position: fixed;
       inset: 0;
-      background: var(--side-dialog-backdrop-bg, var(--color-backdrop, rgba(0, 0, 0, 0.5)));
+      background: var(--side-dialog-backdrop-bg);
       /* Opt-in frosted backdrop — set --backdrop-filter (e.g. blur(4px)) on the host. */
-      backdrop-filter: var(--backdrop-filter, none);
-      -webkit-backdrop-filter: var(--backdrop-filter, none);
-      z-index: var(--z-modal-backdrop, 300);
+      backdrop-filter: var(--backdrop-filter);
+      -webkit-backdrop-filter: var(--backdrop-filter);
+      z-index: var(--z-modal-backdrop);
       animation: fade 150ms ease;
     }
     /* Inset floating panel (matches Beacon prod .ui-side-dialog): 16px gap on the
        top / bottom / anchored side, rounded corners. --_inset is overridable. */
     .panel {
-      --_inset: var(--side-dialog-inset, 16px);
+      --_inset: var(--side-dialog-inset);
       position: fixed;
       top: var(--_inset);
       bottom: var(--_inset);
       width: min(var(--_width), calc(100vw - var(--_inset) * 2));
       display: flex;
       flex-direction: column;
-      background: var(--side-dialog-bg, var(--color-surface, #fff));
-      border-radius: var(--side-dialog-radius, var(--radius-200, 8px));
-      box-shadow: var(--shadow-400, 0 8px 32px -8px rgba(0, 0, 0, 0.2));
-      z-index: var(--z-modal, 400);
+      background: var(--side-dialog-bg);
+      border-radius: var(--side-dialog-radius);
+      box-shadow: var(--shadow-400);
+      z-index: var(--z-modal);
       outline: none;
       overflow: hidden;
       /* Hosts may re-point --side-dialog-inset while open (e.g. card-stacking a
@@ -182,20 +182,20 @@ export class EsaSideDialog extends LitElement {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--spacing-300, 0.75rem);
-      padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem);
-      border-bottom: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5));
+      gap: var(--spacing-300);
+      padding: var(--spacing-400) var(--spacing-500);
+      border-bottom: 1px solid var(--side-dialog-border-color);
       flex: none;
     }
-    .title { margin: 0; font-size: var(--type-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 600); color: var(--side-dialog-color, var(--color-text-primary, #171717)); }
+    .title { margin: 0; font-size: var(--type-size-400); font-weight: var(--font-weight-semibold); color: var(--side-dialog-color, var(--color-text-primary)); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
-      border: 0; border-radius: var(--radius-100, 4px); background: none;
-      color: var(--color-text-muted, #737373); cursor: pointer;
+      border: 0; border-radius: var(--radius-100); background: none;
+      color: var(--color-text-muted); cursor: pointer;
     }
-    .close:hover { background: var(--color-surface-sunken, #efefef); color: var(--color-text-primary, #171717); }
-    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-text-secondary, #525252)); }
-    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5)); }
+    .close:hover { background: var(--color-surface-sunken); color: var(--color-text-primary); }
+    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500); color: var(--side-dialog-color, var(--color-text-secondary)); }
+    .footer { flex: none; padding: var(--spacing-400) var(--spacing-500); border-top: 1px solid var(--side-dialog-border-color); }
     .footer:not(:has(*)) { display: none; }
 
     @keyframes fade { from { opacity: 0; } }

@@ -133,53 +133,53 @@ export class EsaColorPicker extends LitElement {
       display: block;
       --_preview-size: 40px;
       --_swatch-size: 28px;
-      --_font-size: var(--form-font-size-md, 14px);
-      --_height: var(--form-height-md, 40px);
-      --_radius: var(--form-radius-md, 8px);
-      --_padding-x: var(--form-padding-x-md, 12px);
+      --_font-size: var(--form-font-size-md);
+      --_height: var(--form-height-md);
+      --_radius: var(--form-radius-md);
+      --_padding-x: var(--form-padding-x-md);
     }
     :host([size='xs']) {
       --_preview-size: 28px;
       --_swatch-size: 20px;
-      --_font-size: var(--form-font-size-xs, 11px);
-      --_height: var(--form-height-xs, 28px);
-      --_radius: var(--form-radius-xs, 4px);
-      --_padding-x: var(--form-padding-x-xs, 8px);
+      --_font-size: var(--form-font-size-xs);
+      --_height: var(--form-height-xs);
+      --_radius: var(--form-radius-xs);
+      --_padding-x: var(--form-padding-x-xs);
     }
     :host([size='sm']) {
       --_preview-size: 32px;
       --_swatch-size: 24px;
-      --_font-size: var(--form-font-size-sm, 12px);
-      --_height: var(--form-height-sm, 32px);
-      --_radius: var(--form-radius-sm, 6px);
-      --_padding-x: var(--form-padding-x-sm, 8px);
+      --_font-size: var(--form-font-size-sm);
+      --_height: var(--form-height-sm);
+      --_radius: var(--form-radius-sm);
+      --_padding-x: var(--form-padding-x-sm);
     }
     :host([size='lg']) {
       --_preview-size: 48px;
       --_swatch-size: 32px;
-      --_font-size: var(--form-font-size-lg, 16px);
-      --_height: var(--form-height-lg, 48px);
-      --_radius: var(--form-radius-lg, 10px);
-      --_padding-x: var(--form-padding-x-lg, 16px);
+      --_font-size: var(--form-font-size-lg);
+      --_height: var(--form-height-lg);
+      --_radius: var(--form-radius-lg);
+      --_padding-x: var(--form-padding-x-lg);
     }
 
     .label {
       display: block;
-      margin-bottom: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
+      margin-bottom: var(--spacing-100);
+      font-family: var(--font-sans);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-300, 12px);
+      gap: var(--spacing-300);
     }
     .input-row {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
     }
     .swatch-input {
       position: relative;
@@ -199,17 +199,17 @@ export class EsaColorPicker extends LitElement {
       width: var(--_preview-size);
       height: var(--_preview-size);
       border-radius: var(--_radius);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width) solid var(--form-border-color);
       cursor: pointer;
       transition:
-        border-color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .preview:hover {
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus);
     }
     .native:focus-visible + .preview {
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
@@ -217,24 +217,24 @@ export class EsaColorPicker extends LitElement {
       width: 100px;
       height: var(--_height);
       padding: 0 var(--_padding-x);
-      font-family: var(--font-mono, monospace);
+      font-family: var(--font-mono);
       font-size: var(--_font-size);
-      color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      color: var(--form-text-color);
+      background: var(--form-bg);
+      border: var(--form-border-width) solid var(--form-border-color);
       border-radius: var(--_radius);
       outline: none;
       box-sizing: border-box;
       transition:
-        border-color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .hex-input:focus {
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .hex-input:disabled {
-      background: var(--form-bg-disabled, #efefef);
+      background: var(--form-bg-disabled);
       opacity: 0.6;
       cursor: not-allowed;
     }
@@ -242,27 +242,27 @@ export class EsaColorPicker extends LitElement {
     .swatches {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--spacing-100, 4px);
+      gap: var(--spacing-100);
     }
     .swatch {
       width: var(--_swatch-size);
       height: var(--_swatch-size);
       flex-shrink: 0;
       border: 2px solid transparent;
-      border-radius: var(--radius-050, 4px);
+      border-radius: var(--radius-050);
       padding: 0;
       cursor: pointer;
       transition:
-        border-color var(--transition-fast, 150ms ease),
-        transform var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+        border-color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
     .swatch:hover:not(:disabled) {
       transform: scale(1.1);
     }
     .swatch--selected {
-      border-color: var(--color-primary, #43608a);
-      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
     }
     .swatch:focus-visible {
       outline: none;

@@ -214,25 +214,25 @@ export class EsaChipGroup extends LitElement {
 
   static styles = css`
     :host {
-      --_gap: var(--spacing-150, 0.375rem);
-      --_pad-y: var(--spacing-150, 0.375rem);
-      --_pad-x: var(--form-padding-x-md, 0.75rem);
-      --_font: var(--form-font-size-md, 0.9375rem);
-      --_radius: var(--radius-100, 0.25rem);
+      --_gap: var(--spacing-150);
+      --_pad-y: var(--spacing-150);
+      --_pad-x: var(--form-padding-x-md);
+      --_font: var(--form-font-size-md);
+      --_radius: var(--radius-100);
 
       /* Resting (unselected) chrome. */
-      --_bg: var(--color-surface, #fff);
-      --_border: var(--color-border, #e5e5e5);
-      --_color: var(--color-text-secondary, #525252);
-      --_bg-hover: var(--color-surface-sunken, #f5f5f5);
-      --_border-hover: var(--color-border-strong, #d4d4d4);
-      --_color-hover: var(--color-text-primary, #171717);
+      --_bg: var(--color-surface);
+      --_border: var(--color-border);
+      --_color: var(--color-text-secondary);
+      --_bg-hover: var(--color-surface-sunken);
+      --_border-hover: var(--color-border-strong);
+      --_color-hover: var(--color-text-primary);
 
       display: inline-flex;
     }
-    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
-    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
-    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_font: var(--form-font-size-lg, 1rem); --_pad-y: var(--spacing-200, 0.5rem); }
+    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs); --_font: var(--form-font-size-xs); --_pad-y: var(--spacing-100); }
+    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm); --_font: var(--form-font-size-sm); --_pad-y: var(--spacing-100); }
+    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg); --_font: var(--form-font-size-lg); --_pad-y: var(--spacing-200); }
 
     .root {
       display: inline-flex;
@@ -244,7 +244,7 @@ export class EsaChipGroup extends LitElement {
     .chip {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-100, 0.25rem);
+      gap: var(--spacing-100);
       padding: var(--_pad-y) var(--_pad-x);
       border-radius: var(--_radius, 0.25rem);
       border: 1px solid var(--_border);
@@ -257,9 +257,9 @@ export class EsaChipGroup extends LitElement {
       white-space: nowrap;
       cursor: pointer;
       transition:
-        background-color var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
-        color var(--transition-fast, 150ms ease);
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast);
     }
 
     .chip:hover:not(.chip--active) {
@@ -277,26 +277,26 @@ export class EsaChipGroup extends LitElement {
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {
-      background: var(--color-surface-sunken, #efefef);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-tertiary, #404040);
+      background: var(--color-surface-sunken);
+      border-color: var(--color-border-strong);
+      color: var(--color-text-tertiary);
     }
     .chip--active.chip--neutral-strong {
-      background: var(--color-border, #e5e5e5);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-primary, #171717);
+      background: var(--color-border);
+      border-color: var(--color-border-strong);
+      color: var(--color-text-primary);
     }
     /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
        default is brand blue, a forest-green theme goes forest. */
     .chip--active.chip--brand {
-      background: var(--color-primary-subtle, #f3f8fb);
-      border-color: var(--color-primary-border, #cfe2ee);
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-primary-subtle);
+      border-color: var(--color-primary-border);
+      color: var(--color-primary-strong);
     }
     .chip--active.chip--amber {
-      background: var(--color-warning-subtle, #fffbeb);
-      border-color: var(--color-warning-border, #fde68a);
-      color: var(--color-warning-strong, #915930);
+      background: var(--color-warning-subtle);
+      border-color: var(--color-warning-border);
+      color: var(--color-warning-strong);
     }
   `;
 }

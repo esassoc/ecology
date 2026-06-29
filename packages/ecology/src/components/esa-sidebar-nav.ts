@@ -230,19 +230,19 @@ export class EsaSidebarNav extends LitElement {
     *, *::before, *::after { box-sizing: border-box; }
 
     :host {
-      --_sidenav-width: var(--sidebar-width, 260px);
-      --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
-      --_sidenav-bg: var(--sidenav-bg, #ffffff);
-      --_sidenav-border: var(--sidenav-border, #efefef);
+      --_sidenav-width: var(--sidebar-width);
+      --_sidenav-collapsed-width: var(--sidebar-width-collapsed);
+      --_sidenav-bg: var(--sidenav-bg);
+      --_sidenav-border: var(--sidenav-border);
       --_sidenav-item-height: 40px;
-      --_sidenav-item-padding: var(--spacing-300, 12px);
-      --_sidenav-item-radius: var(--radius-200, 8px);
-      --_sidenav-item-color: var(--sidenav-link-text, #525252);
-      --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-primary-strong, #3a7c59));
-      --_sidenav-item-bg-hover: var(--color-surface-sunken, #efefef);
-      --_sidenav-item-bg-active: var(--color-primary-subtle, #f3f8fb);
-      --_sidenav-group-color: var(--sidenav-section-text, #737373);
-      --_sidenav-transition: var(--transition-base, 200ms ease);
+      --_sidenav-item-padding: var(--spacing-300);
+      --_sidenav-item-radius: var(--radius-200);
+      --_sidenav-item-color: var(--sidenav-link-text);
+      --_sidenav-item-color-active: var(--sidenav-link-text-active);
+      --_sidenav-item-bg-hover: var(--color-surface-sunken);
+      --_sidenav-item-bg-active: var(--color-primary-subtle);
+      --_sidenav-group-color: var(--sidenav-section-text);
+      --_sidenav-transition: var(--transition-base);
 
       display: block;
       width: var(--_sidenav-width);
@@ -270,20 +270,20 @@ export class EsaSidebarNav extends LitElement {
       overflow: hidden;
       white-space: nowrap;
     }
-    :host([collapsed]) .link { justify-content: center; gap: 0; padding-inline: var(--spacing-200, 8px); }
+    :host([collapsed]) .link { justify-content: center; gap: 0; padding-inline: var(--spacing-200); }
     :host([collapsed]) .children { display: none; }
 
     .nav {
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding: var(--spacing-200, 8px);
+      padding: var(--spacing-200);
     }
 
     ::slotted([slot='header']) {
       display: block;
-      padding: var(--spacing-300, 12px) var(--_sidenav-item-padding);
-      margin-bottom: var(--spacing-200, 8px);
+      padding: var(--spacing-300) var(--_sidenav-item-padding);
+      margin-bottom: var(--spacing-200);
       overflow: hidden;
       white-space: nowrap;
     }
@@ -294,7 +294,7 @@ export class EsaSidebarNav extends LitElement {
       justify-content: center;
       width: 100%;
       height: 32px;
-      margin-bottom: var(--spacing-200, 8px);
+      margin-bottom: var(--spacing-200);
       border: none;
       border-radius: var(--_sidenav-item-radius);
       background: transparent;
@@ -305,22 +305,22 @@ export class EsaSidebarNav extends LitElement {
     .toggle:hover { background: var(--_sidenav-item-bg-hover); }
     .toggle:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .list,
     .children { list-style: none; margin: 0; padding: 0; }
-    .children { padding-left: var(--spacing-400, 16px); }
+    .children { padding-left: var(--spacing-400); }
 
     .group-heading {
-      padding: var(--spacing-300, 12px) var(--_sidenav-item-padding) var(--spacing-100, 4px);
+      padding: var(--spacing-300) var(--_sidenav-item-padding) var(--spacing-100);
     }
     .group-label {
       display: block;
-      font-size: var(--type-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 600);
+      font-size: var(--type-size-100);
+      font-weight: var(--font-weight-semibold);
       text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-wide, 0.05em);
+      letter-spacing: var(--letter-spacing-wide);
       color: var(--_sidenav-group-color);
       white-space: nowrap;
       overflow: hidden;
@@ -330,7 +330,7 @@ export class EsaSidebarNav extends LitElement {
     .link {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--spacing-200);
       width: 100%;
       height: var(--_sidenav-item-height);
       padding: 0 var(--_sidenav-item-padding);
@@ -339,8 +339,8 @@ export class EsaSidebarNav extends LitElement {
       background: transparent;
       color: var(--_sidenav-item-color);
       font-family: inherit;
-      font-size: var(--type-size-200, 14px);
-      font-weight: var(--font-weight-medium, 500);
+      font-size: var(--type-size-200);
+      font-weight: var(--font-weight-medium);
       line-height: 1;
       text-decoration: none;
       cursor: pointer;
@@ -350,17 +350,17 @@ export class EsaSidebarNav extends LitElement {
     .link:hover:not(.link--disabled) { background: var(--_sidenav-item-bg-hover); }
     .link:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .link--active {
       color: var(--_sidenav-item-color-active);
       background: var(--_sidenav-item-bg-active);
-      font-weight: var(--font-weight-semibold, 600);
+      font-weight: var(--font-weight-semibold);
     }
     .link--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     .link--inert { cursor: default; }
-    .link--child { height: 36px; font-size: var(--type-size-150, 13px); }
+    .link--child { height: 36px; font-size: var(--type-size-150); }
 
     .icon { flex-shrink: 0; display: inline-flex; }
     .label {
@@ -378,11 +378,11 @@ export class EsaSidebarNav extends LitElement {
       min-width: 20px;
       height: 20px;
       padding: 0 6px;
-      border-radius: var(--radius-full, 9999px);
-      background: var(--color-primary, #43608a);
-      color: var(--color-text-inverse, #ffffff);
-      font-size: var(--type-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 600);
+      border-radius: var(--radius-full);
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      font-size: var(--type-size-100);
+      font-weight: var(--font-weight-semibold);
       line-height: 1;
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }

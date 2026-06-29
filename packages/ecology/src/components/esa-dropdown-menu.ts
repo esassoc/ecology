@@ -134,17 +134,17 @@ export class EsaDropdownMenu extends LitElement {
 
     .esa-dropdown-menu__panel {
       position: absolute;
-      z-index: var(--z-dropdown, 50);
-      background: var(--dropdown-menu-bg, var(--color-surface-elevated, #ffffff));
-      border: 1px solid var(--dropdown-menu-border-color, var(--color-border, #e5e5e5));
-      border-radius: var(--dropdown-menu-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      min-width: var(--dropdown-menu-min-width, 160px);
-      max-width: var(--dropdown-menu-max-width, 280px);
-      padding: var(--spacing-100, 0.25rem);
+      z-index: var(--z-dropdown);
+      background: var(--dropdown-menu-bg);
+      border: 1px solid var(--dropdown-menu-border-color);
+      border-radius: var(--dropdown-menu-radius);
+      box-shadow: var(--shadow-300);
+      min-width: var(--dropdown-menu-min-width);
+      max-width: var(--dropdown-menu-max-width);
+      padding: var(--spacing-100);
       overflow-y: auto;
       max-height: 320px;
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--font-sans);
       animation: esa-dropdown-fade 120ms ease-out;
     }
     @keyframes esa-dropdown-fade {
@@ -162,29 +162,29 @@ export class EsaDropdownMenu extends LitElement {
     .esa-dropdown-menu__item {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 0.5rem);
+      gap: var(--spacing-200);
       width: 100%;
-      padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
+      padding: var(--spacing-200) var(--spacing-300);
       border: none;
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-100);
       background: transparent;
-      color: var(--dropdown-menu-item-color, var(--color-text-primary, #171717));
+      color: var(--dropdown-menu-item-color);
       font-family: inherit;
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--type-size-200);
       cursor: pointer;
       text-align: left;
       transition: background 100ms ease;
     }
     .esa-dropdown-menu__item:hover:not(:disabled) {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-surface-sunken);
     }
     .esa-dropdown-menu__item:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
     }
-    .esa-dropdown-menu__item--danger { color: var(--color-danger, #ef4444); }
+    .esa-dropdown-menu__item--danger { color: var(--color-danger); }
     .esa-dropdown-menu__item--danger:hover:not(:disabled) {
-      background: var(--color-danger-subtle, #fef2f2);
+      background: var(--color-danger-subtle);
     }
     .esa-dropdown-menu__item--disabled {
       opacity: 0.5;
@@ -194,7 +194,7 @@ export class EsaDropdownMenu extends LitElement {
     .esa-dropdown-menu__bullet {
       width: 6px;
       height: 6px;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-full);
       background: currentColor;
       flex-shrink: 0;
       opacity: 0.6;
@@ -202,8 +202,8 @@ export class EsaDropdownMenu extends LitElement {
 
     .esa-dropdown-menu__divider {
       height: 1px;
-      background: var(--color-border-light, #efefef);
-      margin: var(--spacing-100, 0.25rem) 0;
+      background: var(--color-border-light);
+      margin: var(--spacing-100) 0;
     }
   `;
 }

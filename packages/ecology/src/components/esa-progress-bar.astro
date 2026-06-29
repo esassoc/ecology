@@ -62,10 +62,10 @@ const showHeader = !!label || showValue;
 
 <style>
   .esa-progress-bar {
-    --_progress-height: var(--progress-bar-height-md, 8px);
-    --_progress-radius: var(--progress-bar-radius, var(--radius-full, 9999px));
-    --_progress-track-bg: var(--progress-bar-track-bg, var(--color-surface-sunken, #efefef));
-    --_progress-fill-bg: var(--progress-bar-fill-bg, var(--color-primary, #43608a));
+    --_progress-height: var(--progress-bar-height-md);
+    --_progress-radius: var(--progress-bar-radius);
+    --_progress-track-bg: var(--progress-bar-track-bg);
+    --_progress-fill-bg: var(--progress-bar-fill-bg);
     --_progress-font-size: 13px;
 
     display: block;
@@ -76,17 +76,17 @@ const showHeader = !!label || showValue;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: var(--spacing-100, 0.25rem);
+    margin-bottom: var(--spacing-100);
     font-size: var(--_progress-font-size);
   }
 
   .esa-progress-bar__label {
-    color: var(--color-text-primary, #171717);
+    color: var(--color-text-primary);
     font-weight: 500;
   }
 
   .esa-progress-bar__value {
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-text-secondary);
     font-variant-numeric: tabular-nums;
   }
 
@@ -105,13 +105,13 @@ const showHeader = !!label || showValue;
     transition: width 300ms ease;
   }
 
-  .esa-progress-bar--xs { --_progress-height: var(--progress-bar-height-xs, 2px); --_progress-font-size: 10px; }
-  .esa-progress-bar--sm { --_progress-height: var(--progress-bar-height-sm, 4px); --_progress-font-size: 11px; }
-  .esa-progress-bar--lg { --_progress-height: var(--progress-bar-height-lg, 12px); --_progress-font-size: 14px; }
+  .esa-progress-bar--xs { --_progress-height: var(--progress-bar-height-xs); --_progress-font-size: 10px; }
+  .esa-progress-bar--sm { --_progress-height: var(--progress-bar-height-sm); --_progress-font-size: 11px; }
+  .esa-progress-bar--lg { --_progress-height: var(--progress-bar-height-lg); --_progress-font-size: 14px; }
 
-  .esa-progress-bar--success { --_progress-fill-bg: var(--color-success, #22c55e); }
-  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-warning, #f59e0b); }
-  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-danger, #ef4444); }
+  .esa-progress-bar--success { --_progress-fill-bg: var(--color-success); }
+  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-warning); }
+  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-danger); }
 
   .esa-progress-bar--indeterminate .esa-progress-bar__fill {
     width: 40% !important;

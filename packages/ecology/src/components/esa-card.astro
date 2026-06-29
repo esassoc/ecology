@@ -89,13 +89,13 @@ const cls = [
 
 <style>
   .esa-card {
-    --_card-bg: var(--card-bg, var(--color-surface, #ffffff));
-    --_card-border: var(--card-border-color, var(--color-border, #e5e5e5));
-    --_card-radius: var(--card-radius, var(--radius-300, 0.5rem));
-    --_card-padding: var(--card-padding, var(--spacing-500, 1.5rem));
-    --_card-header-bg: var(--card-header-bg, transparent);
-    --_card-header-color: var(--card-header-color, var(--color-text-primary, #171717));
-    --_card-header-border: var(--card-header-border-color, var(--color-border-light, #efefef));
+    --_card-bg: var(--card-bg);
+    --_card-border: var(--card-border-color);
+    --_card-radius: var(--card-radius);
+    --_card-padding: var(--card-padding);
+    --_card-header-bg: var(--card-header-bg);
+    --_card-header-color: var(--card-header-color);
+    --_card-header-border: var(--card-header-border-color);
 
     display: block;
     background: var(--_card-bg);
@@ -105,38 +105,38 @@ const cls = [
   }
 
   /* outlined: explicit (same as default) */
-  .esa-card--outlined { --_card-border: var(--color-border, #e5e5e5); }
+  .esa-card--outlined { --_card-border: var(--color-border); }
 
   /* elevated: shadow, no border */
   .esa-card--elevated {
     --_card-border: transparent;
-    box-shadow: var(--shadow-100, 0 2px 12px 0 rgba(0, 0, 0, 0.04));
+    box-shadow: var(--shadow-100);
   }
 
   /* filled: sunken background, no border */
   .esa-card--filled {
-    --_card-bg: var(--color-surface-sunken, #efefef);
+    --_card-bg: var(--color-surface-sunken);
     --_card-border: transparent;
   }
 
   .esa-card--header-primary .esa-card__header {
-    --_card-header-bg: var(--color-primary, #43608a);
-    --_card-header-color: var(--color-text-inverse, #ffffff);
+    --_card-header-bg: var(--color-primary);
+    --_card-header-color: var(--color-text-inverse);
   }
 
   .esa-card--header-muted .esa-card__header {
-    --_card-header-bg: var(--color-surface-sunken, #efefef);
+    --_card-header-bg: var(--color-surface-sunken);
   }
 
   .esa-card--padding-none { --_card-padding: 0; }
-  .esa-card--padding-compact { --_card-padding: var(--spacing-300, 0.75rem); }
-  .esa-card--padding-spacious { --_card-padding: var(--spacing-700, 3rem); }
+  .esa-card--padding-compact { --_card-padding: var(--spacing-300); }
+  .esa-card--padding-spacious { --_card-padding: var(--spacing-700); }
 
   .esa-card__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-400, 1rem) var(--_card-padding);
+    padding: var(--spacing-400) var(--_card-padding);
     background: var(--_card-header-bg);
     color: var(--_card-header-color);
     border-bottom: 1px solid var(--_card-header-border);
@@ -146,26 +146,26 @@ const cls = [
   .esa-card__header-content {
     display: flex;
     align-items: center;
-    gap: var(--spacing-300, 0.75rem);
+    gap: var(--spacing-300);
   }
 
   .esa-card__titles {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-050, 0.125rem);
+    gap: var(--spacing-050);
   }
 
   .esa-card__title {
-    font-size: var(--type-size-250, 1.0625rem);
+    font-size: var(--type-size-250);
     font-weight: 600;
     margin: 0;
     color: inherit;
-    font-family: var(--font-sans, 'DM Sans', sans-serif);
+    font-family: var(--font-sans);
   }
 
   .esa-card__subtitle {
-    font-size: var(--type-size-150, 0.8125rem);
-    color: var(--color-text-secondary, #525252);
+    font-size: var(--type-size-150);
+    color: var(--color-text-secondary);
     margin: 0;
   }
 
@@ -181,7 +181,7 @@ const cls = [
   .esa-card__actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-200, 0.5rem);
+    gap: var(--spacing-200);
   }
 
   .esa-card__body {
@@ -189,8 +189,8 @@ const cls = [
   }
 
   .esa-card__footer {
-    padding: var(--spacing-300, 0.75rem) var(--_card-padding);
+    padding: var(--spacing-300) var(--_card-padding);
     border-top: 1px solid var(--_card-header-border);
-    background: var(--card-footer-bg, var(--color-surface-sunken, #efefef));
+    background: var(--card-footer-bg);
   }
 </style>

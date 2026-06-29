@@ -39,8 +39,8 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
 
 <style>
   .esa-icon-button {
-    --_ib-size: var(--form-height-md, 40px);
-    --_ib-bg-hover: var(--icon-button-bg-hover, color-mix(in srgb, currentColor 14%, transparent));
+    --_ib-size: var(--form-height-md);
+    --_ib-bg-hover: var(--icon-button-bg-hover);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -48,21 +48,21 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
     height: var(--_ib-size);
     padding: 0;
     border: 0;
-    border-radius: var(--radius-200, 8px);
+    border-radius: var(--radius-200);
     background: transparent;
     color: inherit;
     cursor: pointer;
-    transition: background var(--transition-fast, 150ms ease);
+    transition: background var(--transition-fast);
     -webkit-appearance: none;
     appearance: none;
   }
-  .esa-icon-button--xs { --_ib-size: var(--form-height-xs, 28px); }
-  .esa-icon-button--sm { --_ib-size: var(--form-height-sm, 32px); }
-  .esa-icon-button--lg { --_ib-size: var(--form-height-lg, 48px); }
+  .esa-icon-button--xs { --_ib-size: var(--form-height-xs); }
+  .esa-icon-button--sm { --_ib-size: var(--form-height-sm); }
+  .esa-icon-button--lg { --_ib-size: var(--form-height-lg); }
 
   .esa-icon-button:hover { background: var(--_ib-bg-hover); }
   .esa-icon-button:focus-visible {
     outline: var(--focus-ring-width) solid currentColor;
-    outline-offset: var(--focus-ring-offset, 2px);
+    outline-offset: var(--focus-ring-offset);
   }
 </style>

@@ -403,8 +403,8 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-      z-index: var(--z-modal-backdrop, 300);
+      background: var(--color-backdrop);
+      z-index: var(--z-modal-backdrop);
     }
 
     .esa-entity-search {
@@ -412,18 +412,18 @@ export class EsaEntitySearch extends LitElement {
       top: 12%;
       left: 50%;
       transform: translateX(-50%);
-      width: var(--entity-search-width, 600px);
+      width: var(--entity-search-width);
       max-width: calc(100vw - 2rem);
-      max-height: var(--entity-search-max-height, 70vh);
-      background: var(--entity-search-bg, var(--color-surface-elevated, #ffffff));
-      border: 1px solid var(--entity-search-border-color, var(--color-border, #dcdcdc));
-      border-radius: var(--entity-search-radius, var(--radius-400, 0.75rem));
-      box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
-      z-index: var(--z-modal, 400);
+      max-height: var(--entity-search-max-height);
+      background: var(--entity-search-bg);
+      border: 1px solid var(--entity-search-border-color);
+      border-radius: var(--entity-search-radius);
+      box-shadow: var(--entity-search-shadow);
+      z-index: var(--z-modal);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--font-sans);
       animation: esa-entity-enter 150ms ease-out;
     }
     @keyframes esa-entity-enter {
@@ -434,21 +434,21 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__search {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 0.75rem);
-      padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      gap: var(--spacing-300);
+      padding: var(--spacing-300) var(--spacing-400);
+      border-bottom: 1px solid var(--color-border-light);
     }
-    .esa-entity-search__search-icon { color: var(--color-text-muted, #7c7c7c); flex-shrink: 0; }
+    .esa-entity-search__search-icon { color: var(--color-text-muted); flex-shrink: 0; }
     .esa-entity-search__input {
       flex: 1;
       border: none;
       outline: none;
-      font-size: var(--type-size-300, 1.0625rem);
-      color: var(--color-text-primary, #171717);
+      font-size: var(--type-size-300);
+      color: var(--color-text-primary);
       background: transparent;
       font-family: inherit;
     }
-    .esa-entity-search__input::placeholder { color: var(--color-text-muted, #7c7c7c); }
+    .esa-entity-search__input::placeholder { color: var(--color-text-muted); }
     .esa-entity-search__kbd, .esa-entity-search__footer kbd {
       display: inline-flex;
       align-items: center;
@@ -458,10 +458,10 @@ export class EsaEntitySearch extends LitElement {
       padding: 0 5px;
       font-family: inherit;
       font-size: 11px;
-      font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-muted, #7c7c7c);
-      background: var(--color-surface, #fff);
-      border: 1px solid var(--color-border, #dcdcdc);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-muted);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
       border-bottom-width: 2px;
       border-radius: 4px;
     }
@@ -469,29 +469,29 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__scopes {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--spacing-150, 0.375rem);
-      padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      gap: var(--spacing-150);
+      padding: var(--spacing-200) var(--spacing-400);
+      border-bottom: 1px solid var(--color-border-light);
     }
     .esa-entity-search__scope {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-100, 0.25rem);
-      padding: 4px var(--spacing-250, 0.625rem);
-      border: 1px solid var(--color-border, #dcdcdc);
-      border-radius: var(--radius-full, 9999px);
-      background: var(--color-surface, #fff);
-      color: var(--color-text-secondary, #525252);
+      gap: var(--spacing-100);
+      padding: 4px var(--spacing-250);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
       font: inherit;
-      font-size: var(--type-size-100, 0.875rem);
+      font-size: var(--type-size-100);
       cursor: pointer;
       transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
     }
-    .esa-entity-search__scope:hover { border-color: var(--color-primary-border, #c6dcf1); color: var(--color-text-primary, #171717); }
+    .esa-entity-search__scope:hover { border-color: var(--color-primary-border); color: var(--color-text-primary); }
     .esa-entity-search__scope--active {
-      background: var(--color-primary, #1e5386);
-      border-color: var(--color-primary, #1e5386);
-      color: var(--color-primary-contrast, #fff);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-primary-contrast);
     }
     .esa-entity-search__scope-count {
       font-size: 11px;
@@ -500,84 +500,84 @@ export class EsaEntitySearch extends LitElement {
     }
     .esa-entity-search__scope .esa-entity-search__icon { width: 15px; height: 15px; }
 
-    .esa-entity-search__results { overflow-y: auto; padding: var(--spacing-200, 0.5rem); flex: 1; }
-    .esa-entity-search__group + .esa-entity-search__group { margin-top: var(--spacing-200, 0.5rem); }
+    .esa-entity-search__results { overflow-y: auto; padding: var(--spacing-200); flex: 1; }
+    .esa-entity-search__group + .esa-entity-search__group { margin-top: var(--spacing-200); }
     .esa-entity-search__group-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      font-size: var(--type-size-100, 0.8125rem);
-      font-weight: var(--font-weight-semibold, 600);
+      padding: var(--spacing-200) var(--spacing-200) var(--spacing-100);
+      font-size: var(--type-size-100);
+      font-weight: var(--font-weight-semibold);
       text-transform: uppercase;
       letter-spacing: 0.03em;
-      color: var(--color-text-muted, #7c7c7c);
+      color: var(--color-text-muted);
     }
     .esa-entity-search__group-count { font-variant-numeric: tabular-nums; }
 
     .esa-entity-search__row {
       display: flex;
       align-items: center;
-      gap: var(--spacing-300, 0.75rem);
+      gap: var(--spacing-300);
       width: 100%;
-      padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
+      padding: var(--spacing-200) var(--spacing-300);
       border: none;
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-200);
       background: transparent;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-text-primary);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-entity-search__row--active { background: var(--entity-search-row-bg-active, var(--color-surface-sunken, #f3f7fc)); }
-    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-text-muted, #7c7c7c); }
-    .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-primary, #1e5386); }
+    .esa-entity-search__row--active { background: var(--entity-search-row-bg-active); }
+    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-text-muted); }
+    .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-primary); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .esa-entity-search__row-title {
-      font-size: var(--type-size-200, 0.9375rem);
-      font-weight: var(--font-weight-medium, 500);
+      font-size: var(--type-size-200);
+      font-weight: var(--font-weight-medium);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-subtitle {
-      font-size: var(--type-size-100, 0.8125rem);
-      color: var(--color-text-muted, #7c7c7c);
+      font-size: var(--type-size-100);
+      color: var(--color-text-muted);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-title mark, .esa-entity-search__row-subtitle mark {
-      background: color-mix(in srgb, var(--color-primary, #1e5386) 18%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 18%, transparent);
       color: inherit;
       border-radius: 2px;
     }
-    .esa-entity-search__row-meta { flex-shrink: 0; font-size: var(--type-size-100, 0.8125rem); color: var(--color-text-muted, #7c7c7c); font-variant-numeric: tabular-nums; }
-    .esa-entity-search__row-actions { flex-shrink: 0; display: inline-flex; gap: var(--spacing-100, 0.25rem); opacity: 0; }
+    .esa-entity-search__row-meta { flex-shrink: 0; font-size: var(--type-size-100); color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+    .esa-entity-search__row-actions { flex-shrink: 0; display: inline-flex; gap: var(--spacing-100); opacity: 0; }
     .esa-entity-search__row:hover .esa-entity-search__row-actions,
     .esa-entity-search__row--active .esa-entity-search__row-actions { opacity: 1; }
     .esa-entity-search__row-action {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 8px;
-      border: 1px solid var(--color-border, #dcdcdc);
-      border-radius: var(--radius-full, 9999px);
-      background: var(--color-surface, #fff);
-      color: var(--color-text-secondary, #525252);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
       font: inherit; font-size: 12px; cursor: pointer;
     }
-    .esa-entity-search__row-action:hover { border-color: var(--color-primary, #1e5386); color: var(--color-primary, #1e5386); }
+    .esa-entity-search__row-action:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
     .esa-entity-search__empty {
-      padding: var(--spacing-700, 3rem) var(--spacing-600, 2rem);
+      padding: var(--spacing-700) var(--spacing-600);
       text-align: center;
-      color: var(--color-text-muted, #7c7c7c);
-      font-size: var(--type-size-200, 0.9375rem);
+      color: var(--color-text-muted);
+      font-size: var(--type-size-200);
     }
 
     .esa-entity-search__footer {
       display: flex;
-      gap: var(--spacing-400, 1rem);
-      padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
-      border-top: 1px solid var(--color-border-light, #efefef);
-      font-size: var(--type-size-100, 0.8125rem);
-      color: var(--color-text-muted, #7c7c7c);
+      gap: var(--spacing-400);
+      padding: var(--spacing-250) var(--spacing-400);
+      border-top: 1px solid var(--color-border-light);
+      font-size: var(--type-size-100);
+      color: var(--color-text-muted);
     }
     .esa-entity-search__footer span { display: inline-flex; align-items: center; gap: 4px; }
   `;

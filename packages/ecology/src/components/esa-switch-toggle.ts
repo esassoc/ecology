@@ -99,9 +99,9 @@ export class EsaSwitchToggle extends LitElement {
       --_track-w: 40px;
       --_track-h: 22px;
       --_thumb: 18px;
-      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-strong, #d4d4d4));
-      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-primary, #43608a));
-      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-surface, #fff));
+      --_bg-off: var(--switch-toggle-track-bg);
+      --_bg-on: var(--switch-toggle-track-bg-checked);
+      --_thumb-color: var(--switch-toggle-thumb-bg);
       display: inline-block;
     }
     :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
@@ -112,12 +112,12 @@ export class EsaSwitchToggle extends LitElement {
     .root {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-200, 0.5rem);
+      gap: var(--spacing-200);
       padding: 0;
       border: 0;
       background: none;
       font: inherit;
-      color: var(--switch-toggle-label-color, var(--color-text-primary, #171717));
+      color: var(--switch-toggle-label-color);
       cursor: pointer;
     }
     .root:disabled { cursor: not-allowed; }
@@ -127,9 +127,9 @@ export class EsaSwitchToggle extends LitElement {
       flex: none;
       width: var(--_track-w);
       height: var(--_track-h);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-full);
       background: var(--_bg-off);
-      transition: background var(--transition-fast, 150ms ease);
+      transition: background var(--transition-fast);
     }
     :host([checked]) .track { background: var(--_bg-on); }
 
@@ -140,21 +140,21 @@ export class EsaSwitchToggle extends LitElement {
       width: var(--_thumb);
       height: var(--_thumb);
       transform: translateY(-50%);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-full);
       background: var(--_thumb-color);
-      box-shadow: var(--shadow-50, 0 1px 4px rgba(0, 0, 0, 0.2));
-      transition: left var(--transition-fast, 150ms ease);
+      box-shadow: var(--shadow-50);
+      transition: left var(--transition-fast);
     }
     :host([checked]) .thumb { left: calc(var(--_track-w) - var(--_thumb) - 2px); }
 
     .root:focus-visible .track {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset, 2px);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .label {
-      font-size: var(--type-size-200, 0.9375rem);
-      line-height: var(--line-height-normal, 1.6);
+      font-size: var(--type-size-200);
+      line-height: var(--line-height-normal);
     }
   `;
 }
