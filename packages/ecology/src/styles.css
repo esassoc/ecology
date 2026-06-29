@@ -1,0 +1,21 @@
+/*
+ * @esa/ecology — convenience baseline stylesheet.
+ *
+ * One import that pulls in the full layered default theme so adopters don't have
+ * to remember the individual token files:
+ *
+ *   import '@esa/ecology/styles.css';   // or, in HTML: <link rel="stylesheet" ...>
+ *
+ * Both files below live in @layer esa.defaults, so ANY unlayered consumer
+ * override — a spoke [data-theme] block, a plain :root, even inline — wins
+ * regardless of specificity or source order. Components (incl. shadow-DOM web
+ * components, which inherit custom properties from the page :root) resolve
+ * their tokens through this baseline; no per-component literal fallbacks needed.
+ *
+ * Scope: the design-token theme only (primitives + semantic + component tokens).
+ * The typography utility classes (@esa/tokens/type-roles.css) and layout
+ * primitives (@esa/tokens/layouts.css) are orthogonal utilities — import those
+ * separately if you use them.
+ */
+@import '@esa/tokens/tokens.css';
+@import '@esa/tokens/component-tokens.css';
