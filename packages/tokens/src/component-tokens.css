@@ -60,7 +60,7 @@
   --form-placeholder-color: var(--color-text-muted);
   --form-label-color: var(--color-text-secondary);
   --form-help-color: var(--color-text-muted);
-  --form-error-color: var(--color-danger);
+  --form-error-color: var(--color-danger-strong);
   /* structure */
   --form-border-width: 1px;
   --form-line-height: var(--line-height-normal);
@@ -78,16 +78,16 @@
   --filter-dropdown-radius: var(--radius-200);
   --filter-dropdown-shadow: var(--shadow-200);
   --filter-dropdown-min-width: 200px;
-  --filter-pill-bg: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  --filter-pill-bg-hover: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  --filter-pill-text: var(--color-primary);
+  --filter-pill-bg: var(--color-primary-bg);
+  --filter-pill-bg-hover: var(--color-primary-bg-hover);
+  --filter-pill-label-color: var(--color-text-secondary);
+  --filter-pill-text: var(--color-primary-strong);
   --filter-pill-radius: var(--radius-full);
-  --filter-pill-padding: var(--spacing-100) var(--spacing-250);
   --filter-pill-font-size: var(--type-size-100);
-  --filter-pill-remove-color: var(--color-text-muted);
-  --filter-pill-remove-color-hover: var(--color-danger);
+  --filter-pill-remove-color: var(--color-text-secondary);
+  --filter-pill-remove-color-hover: var(--color-danger-strong);
   --filter-clear-color: var(--color-text-muted);
-  --filter-clear-color-hover: var(--color-danger);
+  --filter-clear-color-hover: var(--color-danger-strong);
 
   /* ===================== DATA GRID ===================== */
   --grid-header-bg: var(--color-gray-2);
@@ -127,7 +127,7 @@
   --sidenav-link-bg: transparent;
   --sidenav-link-text-hover: var(--color-text-primary);
   --sidenav-link-bg-hover: transparent;
-  --sidenav-link-text-active: var(--color-primary);
+  --sidenav-link-text-active: var(--color-primary-strong);
   --sidenav-link-bg-active: transparent;
   --sidenav-link-weight-active: var(--font-weight-medium);
   --sidenav-active-border-width: 2px;
@@ -219,10 +219,10 @@
 
   /* esa-badge */
   --badge-bg: var(--color-primary, #43608a);
-  --badge-height-lg: 24px;
-  --badge-height-md: 20px;
-  --badge-height-sm: 16px;
-  --badge-height-xs: 14px;
+  --badge-height-lg: 34px;
+  --badge-height-md: 28px;
+  --badge-height-sm: 22px;
+  --badge-height-xs: 18px;
   --badge-radius: var(--radius-100, 4px); /* quiet 4px chip, not a pill (design-principles) — esa-pill stays full */
   --badge-text-color: var(--color-text-inverse, #fff);
 
@@ -244,7 +244,7 @@
   --collapsible-title-color: var(--color-text-primary, #171717);
 
   /* esa-file-list */
-  --color-link: var(--color-primary, #43608a);
+  --color-link: var(--color-primary-strong, #3a7c59);
 
   /* esa-entity-search */
   --color-primary-contrast: #fff;

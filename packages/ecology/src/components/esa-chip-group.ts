@@ -291,12 +291,12 @@ export class EsaChipGroup extends LitElement {
     .chip--active.chip--brand {
       background: var(--color-primary-subtle, #f3f8fb);
       border-color: var(--color-primary-border, #cfe2ee);
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
     }
     .chip--active.chip--amber {
       background: var(--color-warning-subtle, #fffbeb);
       border-color: var(--color-warning-border, #fde68a);
-      color: var(--color-warning, #b45309);
+      color: var(--color-warning-strong, #915930);
     }
   `;
 }
