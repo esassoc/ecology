@@ -9,8 +9,15 @@
  * composite/shorthand (e.g. `var(--spacing-200) 0`) that don't fit single-value
  * DTCG — and keeping them as live var() chains preserves themeability.
  * Load AFTER tokens.css.
+ *
+ * Wrapped in @layer esa.defaults (same layer as tokens.css) so the whole default
+ * theme is the lowest-priority cascade layer: any UNLAYERED consumer override —
+ * a spoke [data-theme] block, a plain :root, even inline — beats it regardless
+ * of specificity or source order. (This is why these tier-3 hooks no longer need
+ * inline literal fallbacks — the referenced tokens are always defined upstream.)
  */
 
+@layer esa.defaults {
 :root {
   /* ===================== BUTTON ===================== */
   /* Text/icon color painted on a solid `warning` fill. The right choice depends
@@ -455,4 +462,5 @@
   --tooltip-color: var(--color-text-inverse, #ffffff);
   --tooltip-max-width: 240px;
   --tooltip-radius: var(--radius-100, 0.25rem);
+}
 }

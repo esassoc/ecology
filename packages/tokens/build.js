@@ -72,7 +72,20 @@ for (const { jsonKey, radixKey } of P3_SCALES) {
 }
 
 const p3Block = `\n@media (color-gamut: p3) {\n  :root {\n${lines.join('\n')}\n  }\n}\n`;
-fs.appendFileSync('dist/tokens.css', p3Block);
+
+// Wrap the whole default theme (base :root + P3 overrides) in a low-priority
+// cascade layer. Any UNLAYERED consumer style — a spoke's [data-theme] block,
+// a plain :root override, even inline — beats a layered rule regardless of
+// specificity or source order, so adopters retheme without load-order juggling
+// and components stay free of inline literal fallbacks. The leading auto-gen
+// comment is kept outside the layer (cosmetic; CSS allows it anywhere).
+const generated = fs.readFileSync('dist/tokens.css', 'utf8');
+const headerEnd = generated.indexOf('*/');
+const header = headerEnd !== -1 ? generated.slice(0, headerEnd + 2) : '';
+const body = headerEnd !== -1 ? generated.slice(headerEnd + 2) : generated;
+const layered = `${header}\n\n@layer esa.defaults {\n${body.trim()}\n${p3Block}}\n`;
+fs.writeFileSync('dist/tokens.css', layered);
 
 console.log('✓ tokens built → dist/tokens.css, dist/tokens.js');
+console.log(`✓ default theme wrapped in @layer esa.defaults`);
 console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length} scales)`);
