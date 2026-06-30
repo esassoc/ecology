@@ -8,7 +8,7 @@ The **shell axis** — the one-time, app-wide frame restructure. Where `ecology-
 
 ## Consumption model
 
-`@esa/ecology` is unpublished, and a real app's chrome usually outgrows `esa-app-shell` (which hardcodes its app-bar end slot to a single user menu — no room for an admin/utility cluster or env badge). So the spoke ports a **bespoke** shell, and so do we: **reimplement the root shell in Angular following the spoke's `AppShell` (the target) + Beacon's Angular `modern-layout` (the reference — `<beacon>/Beacon.Web/src/app/app.component.{html,scss}`), composing `esa-*` legos** (`esa-icon`, `esa-icon-button`, `esa-badge`, the `esa-sidebar-nav` Lit WC) and reading tokens.
+A real app's chrome usually outgrows `esa-app-shell` (which hardcodes its app-bar end slot to a single user menu — no room for an admin/utility cluster or env badge). So the spoke ports a **bespoke** shell, and so do we: **reimplement the root shell in Angular following the spoke's `AppShell` (the target) + Beacon's Angular `modern-layout` (the reference — `<beacon>/Beacon.Web/src/app/app.component.{html,scss}`), composing the Angular `esa-*` legos** (`esa-icon`, `esa-icon-button`, `esa-badge`, `esa-sidebar-nav` — reimplemented Angular components, not the hub's Lit WCs) and reading tokens.
 
 ## Arguments
 

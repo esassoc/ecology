@@ -8,11 +8,13 @@ Execute the migration of **one** reusable primitive from an `ecology-audit` plan
 
 ## Consumption model (read first — it determines HOW you swap)
 
-`@esa/ecology` is currently **unpublished** (v0.1.0, workspace-linked, exports raw `.astro`/`.ts`). An external Angular app therefore **cannot `npm install` it**, so:
+The hub's interactive components are **Lit web components** — a different technology from Angular, and **not published for Angular consumption**. An Angular app **never imports them** (there is no future "install the package" step); it **reimplements the esa-* contract as its own permanent Angular component library**, with **Beacon's `ui-*` as the Angular reference implementation** and the hub's `.astro` + tokens as the structure/token contract. So:
 
-- **Presentational target (`.astro` in the hub)** → **reimplement in Angular.** The hub `.astro` is the **token + structure contract**; **Beacon's `ui-*` component is the Angular reference implementation** (the `.astro` is literally a "faithful translation" of it). Build a token-driven Angular component; import nothing from Ecology.
-- **Interactive target (Lit `.ts` in the hub)** → until `@esa/ecology` is published, **reimplement following Beacon's `ui-*`** (proven Angular impl) reading tokens. (Vendoring the Lit web component + adding `lit` is a future option; note it, don't do it silently.)
+- **Presentational target (`.astro` in the hub)** → **reimplement as an Angular lego.** The hub `.astro` is the **token + structure contract**; **Beacon's `ui-*` is the Angular reference** (the `.astro` is literally a "faithful translation" of it). Build a token-driven Angular component; import nothing from Ecology.
+- **Interactive target (Lit `.ts` in the hub)** → **reimplement as an Angular lego following Beacon's `ui-*`** (the proven Angular implementation), reading tokens. The Lit WC is a *reference for structure + variants*, never an Angular import or a vendored dependency.
 - **COEXIST (ag-Grid surface)** → no swap; theme via `--grid-*` tokens only.
+
+These Angular legos are **permanent** — the reimplementation *is* the deliverable, not a placeholder for a later import.
 
 In every case the esa-* lives as a **reusable lego the app's components compose** — a standalone Angular component, not styling pasted into each consumer (see Phase 2). The component axis *builds the lego library* and migrates consumers onto it.
 
@@ -71,4 +73,4 @@ State: the component, target, consumption mode (reimplement/vendor/coexist), the
 - **Mirror the reference faithfully.** Beacon `ui-*` + the hub `.astro` define the API, variants, and structure — don't diverge silently; divergence is a bug.
 - **Preserve public API by default.** Consumers shouldn't break unless API migration is the point of the swap.
 - **Skill-only production / idempotent.** The swap is produced by this skill; iterate by resetting the working tree, refining the skill, and re-running. Re-running on an already-migrated component is a no-op.
-- **Defer the risky forks.** Final brand/theme values (design spoke), and consuming published Lit web components (pending `@esa/ecology` publishing), are out of scope.
+- **Defer the risky forks.** Final brand/theme values are the design spoke's. The hub's Lit web components are a non-Angular *reference*, not an Angular dependency — the app's legos are the permanent Angular implementation, so there's no "consume the published package" step to wait for.
