@@ -30,7 +30,7 @@ Drop the `.btn`/`.btn-*` tokens in the same edit (preserve other utility classes
 - `[buttonLoading]="x"` (a directive injecting a spinner) → the lego's `[loading]="x"` (remove the directive import).
 
 ## Icons inside buttons
-A glyph may be FontAwesome (`<i class="fa fa-download">`) **or** the app's own icon component (`<icon icon="CircleX">`). Both → a Lucide name in `esa/icon/lucide-icons.ts` (add if missing). Leading → esa-button `icon=`; trailing → project `<esa-icon>` into content. **Keep the app's icon component in imports** if a non-button `<icon>` (header/title glyph) remains in the template.
+A glyph may be FontAwesome (`<i class="fa fa-download">`) **or** the app's own icon component (`<icon icon="CircleX">`). Both → a Lucide name in `esa/icon/lucide-icons.ts` (add if missing). Leading → esa-button `icon=`; trailing → project `<esa-icon>` into content. A glyph may also be a **literal text character** in the label (`+ Create`, `Save →`, `×`) — treat it as a glyph: leading char → `icon=`, trailing char → projected `<esa-icon>`, dropping the literal. A projected (trailing) `<esa-icon>` has no auto-sizing → set `size="sm"` (matches an md button's leading glyph). An existing native `[disabled]`/`[type]` binding is kept as-is. **Keep the app's icon component in imports** if a non-button `<icon>` (header/title glyph) remains in the template.
 Dogfood glyph map: `CircleX`→`circle-x`, `NavArrowLeft`→`arrow-left`, `NavArrowRight`→`arrow-right`, `CircleCheckmark`→`circle-check`, `fa-download`→`download`, `fa-folder-open`→`folder-open`, `fa-file-pdf`→`file-text`.
 
 ## Leave alone (not standard buttons)
