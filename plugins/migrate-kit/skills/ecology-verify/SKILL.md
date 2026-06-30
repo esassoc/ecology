@@ -8,7 +8,9 @@ Confirm a component swap (from `ecology-migrate-component`) preserves the **inte
 
 ## Two render modes — pick by what's being verified
 
-**A) Isolated harness — reusable primitives (the default).** A primitive is **just HTML + CSS**, so render it **standalone**: a static harness loading the app's **theme tokens** + the component's **own styles** + **representative markup**. No app server, auth, or DB → fast, reproducible, deterministic. The comparison HTML is the deliverable (before/after in any browser).
+**A) Isolated harness — reusable primitives (the default).** A primitive is **just HTML + CSS**, so render it **standalone**: a static harness loading the app's **theme tokens** + the component's **own styles** + **representative markup**. No app server, auth, or DB → fast, reproducible, deterministic. The comparison HTML is the deliverable.
+
+Render **three** columns, not two: **BEFORE** (legacy), **AFTER** (the new lego), and a **DESIGN REFERENCE** rendered from the **hub component itself** — its `.astro` markup/styles, or for an interactive (Lit) target the component's `static styles` + template — compiled against the **app's theme tokens** so it shows the **spoke's** resolution (not the hub's generic defaults). This third column is the **design truth**: the gate must catch *divergence from the spoke's intended look*, not only *regression from the legacy component*. A before/after-only check **passes a lego that faithfully replaces the old component yet looks nothing like the design** — which is exactly the miss this column exists to prevent.
 - Presentational primitives (badge, pill, card, breadcrumb, stat, …): isolation renders them faithfully.
 - Interactive primitives (selects, dialogs, toggles): isolation covers their *static* appearance.
 
@@ -40,17 +42,18 @@ Pick **representative instances** to render — cover every variant/state the au
 - **Theme tokens:** the app's `:root` custom-property block (the Ecology alias bridge, e.g. `src/scss/base/_theme.scss`). Its `:root` is plain CSS — include it verbatim (drop any `@import`/`@use` lines).
 - **Component CSS (each side):** compile the component's SCSS to CSS. If it only uses `var(--…)` + literals (typical for token-driven primitives), strip the `@use`/`@import` lines and inline it. If it uses Sass nesting/mixins, compile with `npx sass --style=expanded --load-path=<app>/src <file>`. Scope BEFORE styles under `.ev-before` and AFTER under `.ev-after` so both can coexist on one page without collisions. **Drop the `:host` rule** when scoping — in isolation there's no Angular host element, and mapping `:host` onto the column wrapper breaks layout (it sets `display` on the column, laying instances out in a row); wrap each instance directly instead.
 - **BEFORE must be the true legacy rendering.** Reproduce the old component's markup faithfully — including any inline `style` bindings it used (e.g. arbitrary `color`/`textColor` applied inline) — so the left column shows what shipped, not an idealization.
+- **DESIGN REFERENCE (the hub component):** read the hub component's source — the `.astro` `<style>`, or for a Lit target the component's `static styles` + render template — and reproduce it scoped under `.ev-design`, compiled against the **same app theme tokens** as the other columns. Keep its `var(--…)` reads (so the spoke's theme resolves them) and its literal fallbacks. This column is what the **spoke** renders — the design truth AFTER must match.
 
 ### Phase 2 — Build the side-by-side comparison HTML (the deliverable)
 Write a **self-contained** `<out-root>/<component>/index.html`:
 - `<style>` = theme `:root` tokens + scoped before/after component CSS.
 - A header: component, `esa-*` target, before/after refs, generation note, and a **`← Verify index`** link (to `../index.html`).
-- **Two-column side-by-side layout** — `BEFORE` (old) on the left, `AFTER` (esa-*) on the right — each rendering the representative instances with labels, aligned row-for-row so a reviewer can scan across. (Plain static columns — no overlay/wipe slider.)
+- **Three-column side-by-side layout** — `BEFORE` (legacy) · `AFTER` (the esa-* lego) · `DESIGN` (the hub component on the app's theme) — each rendering the representative instances with labels, aligned row-for-row so a reviewer can scan AFTER against **both** the legacy and the design truth. (Plain static columns — no overlay/wipe slider.)
 - A **deltas panel** listing each expected/intentional change.
 Keep markup/IDs stable so re-runs diff cleanly.
 
 ### Phase 3 — Screenshot with Playwright
-**(Mode A — primitives):** Open `file://<out-root>/<component>/index.html`, set a fixed viewport (e.g. 1280×800), and capture: the full page, the `BEFORE` column, and the `AFTER` column → `<out-root>/<component>/{page,before,after}.png`. Prefer the app's installed Playwright (a tiny generated script) for reproducibility; the Playwright MCP browser is an acceptable alternative.
+**(Mode A — primitives):** Open `file://<out-root>/<component>/index.html`, set a fixed viewport (e.g. 1280×800), and capture: the full page, the `BEFORE` column, the `AFTER` column, and the `DESIGN` column → `<out-root>/<component>/{page,before,after,design}.png`. Prefer the app's installed Playwright (a tiny generated script) for reproducibility; the Playwright MCP browser is an acceptable alternative.
 
 **(Mode B — pages/shells):** skip the `file://` harness. Start the app's dev server, get an **authenticated** session (per *Two render modes* B), `goto` the screen's route, wait for it to settle, and screenshot the **live render** (`after.png`) at the same viewport. Capture `before.png` from the pre-migration screen (`git stash` the swap, or the route at `--before`) and put the **spoke prototype** alongside as the design target. Same `<out-root>/<screen>/` layout + index. **Windows/ESM gotcha:** load Playwright via CommonJS `require('playwright')` (use `createRequire(import.meta.url)` if the script is `.mjs`, or just name it `.cjs`) — importing `chromium` from an absolute `node_modules` path in an ESM module fails on Windows with `ERR_UNSUPPORTED_ESM_URL_SCHEME`. Running through `npx playwright test` also avoids this. If you instead use the Playwright **MCP** browser, two more gotchas: it **blocks the `file:` protocol** (serve `<out-root>` over `http://localhost` first), and it writes screenshots relative to the **repo root** (prefix filenames with `.playwright-mcp/`). The scripted CLI Playwright avoids both.
 
@@ -61,7 +64,9 @@ Compare before vs after and classify each visible delta:
 
 **When a handoff section drives this (a page/screen migration via `ecology-migrate-page`), its `acceptance` checks are the authoritative gate.** Check each "done when…" against the AFTER render and record pass/fail per check, citing the handoff section — these are the designer's criteria, so they outrank inferred deltas for the PASS decision.
 
-Verdict = **PASS** if only intentional deltas **and** (when a handoff applies) every `acceptance` check holds; **FLAG** otherwise (list the regressions and/or failed acceptance checks).
+**Also compare AFTER against the DESIGN-REFERENCE column.** Any delta there is a **divergence from the spoke** (the lego doesn't match the hub component resolved on the app's theme) — **FLAG it**, even when AFTER doesn't "regress" from the legacy BEFORE. Allow only documented token-resolution differences (a token the app's theme doesn't ship yet, falling back). This is the check that would have caught a lego built to the wrong reference's *look*.
+
+Verdict = **PASS** only if AFTER **matches the design reference** (modulo documented token gaps) **and** shows only intentional deltas from BEFORE **and** (when a handoff applies) every `acceptance` check holds; **FLAG** otherwise (list the design divergences, regressions, and/or failed acceptance checks).
 
 ### Phase 5 — Persist the result, (re)generate the navigable index, and report
 1. **Write `<out-root>/<component>/result.json`** — `{ component, target, slice, verdict, deltas: [{ kind: "intentional"|"regression", note }] }` — so the index can aggregate without re-running each component. Use the **full plan heading** for `slice` (e.g. `"Slice 1 — Leaf DIRECT primitives"`) so the index can both **group** and **order** by the leading number.
