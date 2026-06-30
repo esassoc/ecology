@@ -34,10 +34,10 @@ A glyph may be FontAwesome (`<i class="fa fa-download">`) **or** the app's own i
 Dogfood glyph map: `CircleX`→`circle-x`, `NavArrowLeft`→`arrow-left`, `NavArrowRight`→`arrow-right`, `CircleCheckmark`→`circle-check`, `fa-download`→`download`, `fa-folder-open`→`folder-open`, `fa-file-pdf`→`file-text`.
 
 ## Leave alone (not standard buttons)
-Bespoke chrome triggers (`[dropdownToggle]` menu/account triggers), anchors without a button role, dropdown menu items, and config *strings* that merely name a class (a confirm-service `buttonClassYes: "btn-danger"`, a grid `ActionIcon: "fas fa-…"`).
+Bespoke chrome triggers (`[dropdownToggle]` menu/account triggers), anchors without a button role, dropdown menu items, and config *strings* that merely name a class (a confirm-service `buttonClassYes: "btn-danger"`, a grid action-def `CssClasses: "btn btn-primary btn-sm"` or `ActionIcon: "fas fa-…"`). Those grid-config `.btn` strings are **grid-rendered buttons** — migrated with the grid surface (the ag-grid batch), not as template `<button>`s.
 
 ## Retire the legacy stylesheet (final batch)
-Once nothing references `.btn`, delete the legacy `_btn.scss` (+ its `.btn .fa`/`.btn-icon` helpers). A **mixed look** (legacy gradient buttons next to flat esa-buttons) is expected mid-migration.
+Once nothing references `.btn`, delete the legacy `_btn.scss` (+ its `.btn .fa`/`.btn-icon` helpers). **Grep for `.btn` everywhere first** — beyond template `<button>`s it also hides in **grid action-config strings** (`CssClasses: "btn …"`) and other class-name config; the grid-rendered ones are handled in the ag-grid batch, so the retirement waits until they're migrated too. A **mixed look** (legacy gradient buttons next to flat esa-buttons) is expected mid-migration.
 
 ## Batch areas + progress (first dogfood: 171 native `<button>` / 81 files)
 ✅ parcel · ✅ scenario-transactions · ✅ scenario-offers/overview/report · ☐ scenario-users/index · ☐ support-ticket · ☐ faqs/resources · ☐ files/user/content-editor · ☐ supply-and-usage · ☐ configure/openet/library · ☐ shared (confirm-modal, noria-grid-header, alert-display, search-parcels, custom-rich-text, field-definition, faq-display, dashboard-menu, btn-group-radio-input) · ☐ ag-grid renderers · ☐ **retire `_btn.scss`**
