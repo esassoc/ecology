@@ -48,6 +48,7 @@ Pick **representative instances** to render — cover every variant/state the au
 Write a **self-contained** `<out-root>/<component>/index.html`:
 - `<style>` = theme `:root` tokens + scoped before/after component CSS.
 - A header: component, `esa-*` target, before/after refs, generation note, and a **`← Verify index`** link (to `../index.html`).
+- **Escape HTML in the ref/note strings.** They're inserted into the head as text, so a raw `<style>`/`<script>` (or any raw-text tag) in a ref/note **opens a real element and swallows the rest of the page** — the columns silently render blank. Write `&lt;style&gt;`, `&lt;esa-foo&gt;`, etc. (Harden the harness too: have `page3`/`page` defensively neutralize a stray raw `<style>`/`<script>` in those fields — but escape at the source.)
 - **Three-column side-by-side layout** — `BEFORE` (legacy) · `AFTER` (the esa-* lego) · `DESIGN` (the hub component on the app's theme) — each rendering the representative instances with labels, aligned row-for-row so a reviewer can scan AFTER against **both** the legacy and the design truth. (Plain static columns — no overlay/wipe slider.)
 - A **deltas panel** listing each expected/intentional change.
 Keep markup/IDs stable so re-runs diff cleanly.
