@@ -160,6 +160,10 @@ export class EsaDialog extends LitElement {
       --_dialog-border-radius: var(--dialog-radius, var(--radius-400, 0.75rem));
       --_dialog-padding: var(--spacing-500, 1.5rem);
       --_dialog-header-border: var(--dialog-border-color, var(--color-border-light, #efefef));
+      /* Optional header/footer surface tints — a spoke fills these to frame the
+         body; default transparent leaves existing consumers unchanged. */
+      --_dialog-header-bg: var(--dialog-header-bg, transparent);
+      --_dialog-footer-bg: var(--dialog-footer-bg, transparent);
       --_dialog-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       --_dialog-width: var(--dialog-width, 480px);
       --_dialog-max-height: 85vh;
@@ -211,6 +215,7 @@ export class EsaDialog extends LitElement {
       justify-content: space-between;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--_dialog-padding);
+      background: var(--_dialog-header-bg);
       border-bottom: 1px solid var(--_dialog-header-border);
       flex-shrink: 0;
     }
@@ -247,6 +252,7 @@ export class EsaDialog extends LitElement {
     }
     .esa-dialog__footer {
       padding: var(--spacing-300, 0.75rem) var(--_dialog-padding);
+      background: var(--_dialog-footer-bg);
       border-top: 1px solid var(--_dialog-header-border);
       display: flex;
       justify-content: flex-end;
