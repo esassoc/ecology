@@ -186,6 +186,45 @@ export class EsaSelect extends LitElement {
     this.emit();
   }
 
+  private clearSelection(event?: Event): void {
+    event?.stopPropagation();
+    this._selected = [];
+    this.emit();
+  }
+
+  // Tag-mode content: never render more than ONE token, so the field stays a single
+  // line at its height. One selection shows its own chip; 2+ collapse into a single
+  // "N Options" count whose x clears the whole selection.
+  private renderTags() {
+    const selected = this.selectedOptions;
+    if (selected.length === 0) return null;
+    if (selected.length > 1) {
+      return html`<span class="chip chip--count">
+        <span class="chip__label">${selected.length} Options</span>
+        <button
+          type="button"
+          class="chip__remove"
+          aria-label="Clear selection"
+          @click=${(e: Event) => this.clearSelection(e)}
+        >
+          ${this.xIcon()}
+        </button>
+      </span>`;
+    }
+    const opt = selected[0];
+    return html`<span class="chip">
+      <span class="chip__label">${opt.label}</span>
+      <button
+        type="button"
+        class="chip__remove"
+        aria-label=${'Remove ' + opt.label}
+        @click=${(e: Event) => this.removeValue(opt.value, e)}
+      >
+        ${this.xIcon()}
+      </button>
+    </span>`;
+  }
+
   private onSearchInput = (event: Event): void => {
     this._search = (event.target as HTMLInputElement).value;
     this._active = -1;
@@ -243,32 +282,22 @@ export class EsaSelect extends LitElement {
           : null}
 
         <div class="container">
-          ${this.multiple && this.chipMode
-            ? html`<div class="chips">
-                ${this.selectedOptions.map(
-                  (opt) => html`<span class="chip">
-                    <span class="chip__label">${opt.label}</span>
-                    <button
-                      type="button"
-                      class="chip__remove"
-                      aria-label=${'Remove ' + opt.label}
-                      @click=${(e: Event) => this.removeValue(opt.value, e)}
-                    >
-                      ${this.xIcon()}
-                    </button>
-                  </span>`
-                )}
-              </div>`
-            : null}
-
-          <div class="input-wrapper" @click=${() => this.toggleDropdown()}>
+          <!-- Multi-select chip mode renders the selected tokens INSIDE the field
+               box (tag input), not floating above it. -->
+          <div
+            class="input-wrapper ${this.multiple && this.chipMode ? 'input-wrapper--tags' : ''}"
+            @click=${() => this.toggleDropdown()}
+          >
+            ${this.multiple && this.chipMode ? this.renderTags() : null}
             <input
               class="input"
               role="combobox"
               aria-expanded=${this._open}
               aria-haspopup="listbox"
               aria-autocomplete="list"
-              placeholder=${this.placeholder}
+              placeholder=${this.multiple && this.chipMode && this.selectedOptions.length
+                ? ''
+                : this.placeholder}
               .value=${this.inputValue}
               ?disabled=${this.disabled}
               ?readonly=${!this.searchable}
@@ -394,6 +423,45 @@ export class EsaSelect extends LitElement {
       display: flex;
       align-items: center;
       cursor: pointer;
+    }
+    /* Tag mode: chips render inside the field box, so the wrapper carries the
+       border/height/focus and the input becomes a borderless filler beside them. */
+    .input-wrapper--tags {
+      flex-wrap: nowrap;
+      gap: var(--spacing-100, 4px);
+      min-height: var(--_field-height);
+      padding: var(--_field-padding-y) calc(var(--_field-padding-x) + 24px)
+        var(--_field-padding-y) var(--_field-padding-x);
+      background: var(--form-bg, #fff);
+      border: var(--form-border-width, 1px) solid var(--_field-border-color);
+      border-radius: var(--_field-radius);
+      box-sizing: border-box;
+      transition:
+        border-color var(--transition-fast, 150ms ease),
+        box-shadow var(--transition-fast, 150ms ease);
+    }
+    .input-wrapper--tags:focus-within {
+      --_field-border-color: var(--form-border-color-focus, #43608a);
+      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+    }
+    .input-wrapper--tags .input {
+      /* Compact tag filter: at most ONE token renders (a single chip, or an
+         "N Options" count for 2+), so the input rides beside it on one line and the
+         box stays at field height — it never wraps to a second row. */
+      flex: 1 1 2rem;
+      width: auto;
+      min-width: 2rem;
+      height: auto;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+    }
+    .input-wrapper--tags .input:focus {
+      box-shadow: none;
+    }
+    .field--error .input-wrapper--tags {
+      --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .input {
       width: 100%;
@@ -528,13 +596,13 @@ export class EsaSelect extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-050, 2px);
-      padding: var(--spacing-050, 2px) var(--spacing-100, 4px) var(--spacing-050, 2px) var(--spacing-200, 8px);
+      padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
       color: var(--color-primary, #43608a);
       border-radius: var(--radius-full, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--type-size-150, 12px);
-      line-height: 1.4;
+      line-height: 1.2;
       user-select: none;
     }
     .chip__label {
@@ -544,8 +612,8 @@ export class EsaSelect extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       padding: 0;
       border: none;
       background: transparent;
