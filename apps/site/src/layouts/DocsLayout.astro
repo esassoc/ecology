@@ -12,6 +12,8 @@ import '../styles/docs-dark.css';
 // Anthropic-meta restyles the docs CHROME (cream paper, ink, serif display) — loaded
 // LAST so its global rules win on source order. Scoped to the harness, not components.
 import '../styles/anthropic-meta.css';
+import '../styles/themes.css';
+import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 import { allGroups } from '../data/nav';
 
 interface Props {
@@ -69,10 +71,33 @@ const { title = 'Ecology', activeHref = '' } = Astro.props;
     </g>
   </svg>
 
+  <ThemeSwitcher slot="topbar-actions" />
   <a class="topbar-action" slot="topbar-actions" href="https://github.com/andrewlovseth-esa/ecology" target="_blank" rel="noreferrer" aria-label="GitHub">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.58.67.48A10 10 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
     GitHub
   </a>
+
+  <Fragment slot="cmd-overlay">
+    <esa-command-palette id="cmd-palette"></esa-command-palette>
+    <script>
+      import '@esa/ecology/esa-command-palette';
+      const palette = document.getElementById('cmd-palette') as any;
+      const trigger = document.getElementById('search-trigger');
+      trigger?.addEventListener('click', () => palette?.show());
+      // Build nav commands from the rendered sidebar links
+      function buildCommands() {
+        return Array.from(document.querySelectorAll<HTMLAnchorElement>('.nav-link')).map((a, i) => ({
+          id: `nav-${i}`,
+          label: a.querySelector('span')?.textContent?.trim() ?? a.textContent?.trim() ?? '',
+          action: () => { window.location.href = a.href; },
+        }));
+      }
+      // Wait for custom element to upgrade before setting property
+      customElements.whenDefined('esa-command-palette').then(() => {
+        palette.commands = buildCommands();
+      });
+    </script>
+  </Fragment>
 
   <slot />
 </DocsShell>

@@ -66,10 +66,11 @@ export class EsaCombobox extends LitElement {
   declare loading: boolean;
   declare debounceMs: number;
   declare resultsCount: number | null;
-  private _search: string;
-  private _selected: string[];
-  private _open: boolean;
-  private _active: number;
+  private declare _search: string;
+  private declare _selected: string[];
+  private declare _open: boolean;
+  private declare _active: number;
+  private _suppressNextOpen = false;
 
   private internals: ElementInternals;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -230,6 +231,7 @@ export class EsaCombobox extends LitElement {
       this.emitValue();
       this.closeDropdown();
       if (this.mode === 'autocomplete') {
+        this._suppressNextOpen = true; // hub-edit-approved: user approved fix for mouse-select dropdown reopen bug
         requestAnimationFrame(() => (this.renderRoot.querySelector('.input') as HTMLInputElement | null)?.focus());
       }
     }
@@ -252,6 +254,14 @@ export class EsaCombobox extends LitElement {
   };
 
   private onInputFocus = (): void => {
+    if (this._suppressNextOpen) { this._suppressNextOpen = false; return; }
+    if (!this._open) this.openDropdown();
+  };
+
+  // clicking an already-focused autocomplete input must reopen the dropdown —
+  // focus doesn't re-fire when the element already has focus, so @focus alone
+  // misses the "click after select" case.
+  private onInputClick = (): void => {
     if (!this._open) this.openDropdown();
   };
 
@@ -347,6 +357,7 @@ export class EsaCombobox extends LitElement {
           @input=${this.onSearchInput}
           @keydown=${this.onKeydown}
           @focus=${this.onInputFocus}
+          @click=${this.onInputClick}
         />
         ${this.loading ? html`<span class="spinner spinner--inline">${this.spinnerIcon()}</span>` : null}
       </div>
@@ -505,7 +516,7 @@ export class EsaCombobox extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
@@ -514,7 +525,7 @@ export class EsaCombobox extends LitElement {
     }
     .field__error {
       font-size: var(--type-size-150, 12px);
-      color: var(--form-error-color, #ef4444);
+      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
     }
 
     .container {
@@ -551,7 +562,7 @@ export class EsaCombobox extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -602,7 +613,7 @@ export class EsaCombobox extends LitElement {
       padding: 0;
       border: none;
       background: none;
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
       font-weight: var(--font-weight-medium, 450);
@@ -610,11 +621,11 @@ export class EsaCombobox extends LitElement {
       max-width: 100%;
     }
     .trigger--text:hover {
-      color: var(--color-primary-hover, #39506f);
+      color: var(--color-primary-strong, #3a7c59);
       text-decoration: underline;
     }
     .trigger--text:focus-visible {
-      outline: 2px solid var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 2px;
       border-radius: var(--_field-radius);
     }
@@ -650,7 +661,7 @@ export class EsaCombobox extends LitElement {
     }
     .trigger--field:focus-visible {
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
       outline: none;
     }
     .trigger--field:disabled {
@@ -752,7 +763,7 @@ export class EsaCombobox extends LitElement {
     }
     .option--selected {
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
     }
     .option--disabled {
       color: var(--color-disabled-text, #a3a3a3);
@@ -780,7 +791,7 @@ export class EsaCombobox extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -802,7 +813,7 @@ export class EsaCombobox extends LitElement {
       gap: var(--spacing-050, 2px);
       padding: var(--spacing-050, 2px) var(--spacing-100, 4px) var(--spacing-050, 2px) var(--spacing-200, 8px);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       border-radius: var(--radius-full, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--type-size-150, 12px);
@@ -821,7 +832,7 @@ export class EsaCombobox extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -834,7 +845,7 @@ export class EsaCombobox extends LitElement {
       background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: 2px solid var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
 

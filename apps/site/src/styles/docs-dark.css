@@ -4,32 +4,68 @@
  * + the data-scheme wiring, never the colors.
  *
  * IMPORTANT (cascade order): this file must be imported AFTER DocsShell in the
- * wrapper. The shell pulls in @esa/tokens (:root + default teal semantics); a
+ * wrapper. The shell pulls in @esa/tokens (:root + default semantics); a
  * [data-scheme] block and :root have equal specificity, so source order decides
  * which wins. Loading this last lets the dark overrides take effect.
+ *
+ * All values reference compiled primitive tokens from @esa/tokens dist/tokens.css.
+ * The *-dark ramps are Radix dark scales — 1 = near-black, 12 = near-white,
+ * the inverse of the light ramps.
  */
 
 :root { color-scheme: light; }
 
 html[data-scheme='dark'] {
   color-scheme: dark;
-  --color-background: #09090b;
-  --color-surface: #0c0c0e;
-  --color-surface-elevated: #161618;
-  --color-surface-sunken: #161618;
-  --color-text-primary: #ededef;
-  --color-text-secondary: #a1a1aa;
-  --color-text-tertiary: #b4b4ba;
-  --color-text-muted: #71717a;
-  --color-border: #242428;
-  --color-border-light: #1a1a1d;
-  --color-border-strong: #34343a;
-  --color-primary: #699cc6;
-  --color-primary-hover: #2dd4bf;
-  --color-text-link: #2dd4bf;
-  --color-surface-sunken-rgb: 22, 22, 24;
+
+  /* Surfaces — gray-dark-1 is the app background (#111111), gray-dark-2 the base
+     surface (#191919). Elevated sits one step lighter; sunken one step darker. */
+  --color-background:            var(--color-gray-dark-1);
+  --color-surface:               var(--color-gray-dark-2);
+  --color-surface-elevated:      var(--color-gray-dark-3);
+  --color-surface-sunken:        #0d0d0f;
+  --color-surface-inverse:       var(--color-gray-dark-12);
+  --color-surface-inverse-hover: var(--color-gray-dark-11);
+
+  /* Text — dark-12 is near-white (#ededef) for primary; dark-11 (#b4b4b4) for
+     secondary/tertiary; dark-10 (#7b7b7b) for muted. Inverse = dark-2 (dark text
+     on a rare light surface inside dark mode). */
+  --color-text-primary:   var(--color-gray-dark-12);
+  --color-text-secondary: var(--color-gray-dark-11);
+  --color-text-tertiary:  var(--color-gray-dark-11);
+  --color-text-muted:     var(--color-gray-dark-10);
+  --color-text-inverse:   var(--color-gray-dark-2);
+
+  /* Borders — dark-6 (#3a3a3a) default; dark-5 light; dark-7 strong. */
+  --color-border:        var(--color-gray-dark-6);
+  --color-border-light:  var(--color-gray-dark-5);
+  --color-border-strong: var(--color-gray-dark-7);
+  --color-border-focus:  var(--color-grass-9);
+
+  /* Primary (grass) — grass-9 is the solid fill; subtle/border use dark ramp
+     steps 2 and 6 so they're visible on near-black surfaces. */
+  --color-primary-subtle: var(--color-grass-dark-2);
+  --color-primary-border: var(--color-grass-dark-6);
+
+  /* Status subtles & borders — light ramp steps 1-6 are near-white; replace
+     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged. */
+  --color-info-subtle:    var(--color-blue-dark-2);
+  --color-info-border:    var(--color-blue-dark-6);
+  --color-success-subtle: var(--color-lime-dark-2);
+  --color-success-border: var(--color-lime-dark-6);
+  --color-warning-subtle: var(--color-yellow-dark-2);
+  --color-warning-border: var(--color-yellow-dark-6);
+  --color-danger-subtle:  var(--color-red-dark-2);
+  --color-danger-border:  var(--color-red-dark-6);
+
+  /* Status strong — light step-11 values are dark and unreadable on dark surfaces.
+     Dark step-11 is a lighter, accessible tone on dark bg. */
+  --color-info-strong:    var(--color-blue-dark-11);
+  --color-success-strong: var(--color-lime-dark-11);
+  --color-warning-strong: var(--color-yellow-dark-11);
+  --color-danger-strong:  var(--color-red-dark-11);
 }
 
 html[data-scheme='dark'] .nav-link[aria-current='page'] {
-  color: var(--color-primary-hover, #2dd4bf);
+  color: var(--color-primary);
 }

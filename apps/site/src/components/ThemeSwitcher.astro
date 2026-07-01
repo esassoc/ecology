@@ -1,67 +1,27 @@
 ---
-// Live theme switcher. Toggles [data-theme] on <html> and persists to
-// localStorage. Pure HTML/CSS/JS — no framework, no island runtime. Flipping
-// it re-skins every specimen on the page, which is the fastest way to show a
-// skeptical architect that one component set serves many project brands.
-const themes = ['default', 'beacon', 'qanat'];
 ---
-<div class="theme-switcher" role="group" aria-label="Preview theme">
-  {themes.map((t) => (
-    <button type="button" data-theme-btn={t}>{t}</button>
-  ))}
-</div>
-
-<style>
-  .theme-switcher {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 10;
-    display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    background: var(--color-surface, #fff);
-    border: 1px solid var(--color-border, #d9dde1);
-    border-radius: var(--radius-full, 999px);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  }
-  .theme-switcher button {
-    border: 0;
-    background: transparent;
-    border-radius: var(--radius-full, 999px);
-    padding: 0.35rem 0.8rem;
-    font: inherit;
-    font-size: 0.9rem;
-    text-transform: capitalize;
-    color: var(--color-text-muted, #6b7682);
-    cursor: pointer;
-  }
-  .theme-switcher button[aria-pressed="true"] {
-    background: var(--color-primary, #2b56b0);
-    color: var(--color-primary-contrast, #fff);
-  }
-</style>
+<esa-button-toggle id="theme-switcher" size="sm" aria-label="Preview theme"></esa-button-toggle>
 
 <script>
+  import '@esa/ecology/esa-button-toggle';
+
   const KEY = 'esa-theme';
   const root = document.documentElement;
-  const buttons = document.querySelectorAll('[data-theme-btn]');
+  const el = document.querySelector('#theme-switcher') as any;
+  if (!el) throw new Error('ThemeSwitcher: #theme-switcher not found');
 
-  const sync = (active) =>
-    buttons.forEach((b) =>
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-btn') === active))
-    );
-
+  const themes = ['default', 'beacon', 'qanat'];
   const saved = localStorage.getItem(KEY) || 'default';
   root.setAttribute('data-theme', saved);
-  sync(saved);
 
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const t = btn.getAttribute('data-theme-btn');
-      root.setAttribute('data-theme', t);
-      localStorage.setItem(KEY, t);
-      sync(t);
-    });
+  el.addEventListener('change', (e: CustomEvent) => {
+    const t = e.detail.value;
+    root.setAttribute('data-theme', t);
+    localStorage.setItem(KEY, t);
+  });
+
+  customElements.whenDefined('esa-button-toggle').then(() => {
+    el.options = themes.map((t) => ({ label: t, value: t }));
+    el.value = saved;
   });
 </script>

@@ -103,29 +103,34 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     --_pill-padding-x: var(--spacing-300, 0.75rem);
   }
 
-  .esa-pill--primary,
+  .esa-pill--primary {
+    --_pill-bg: var(--color-primary-subtle, var(--color-grass-2));
+    --_pill-text: var(--color-primary-strong, var(--color-grass-11));
+    --_pill-border: var(--color-primary-border, var(--color-grass-6));
+  }
+
   .esa-pill--info {
-    --_pill-bg: var(--color-info-subtle, #eff6ff);
-    --_pill-text: var(--color-info, #3b82f6);
-    --_pill-border: var(--color-info-border, #bfdbfe);
+    --_pill-bg: var(--color-info-subtle, var(--color-blue-2));
+    --_pill-text: var(--color-info-strong, #0d74ce);
+    --_pill-border: var(--color-info-border, var(--color-blue-6));
   }
 
   .esa-pill--success {
-    --_pill-bg: var(--color-success-subtle, #f0fdf4);
-    --_pill-text: var(--color-success, #22c55e);
-    --_pill-border: var(--color-success-border, #bbf7d0);
+    --_pill-bg: var(--color-success-subtle, var(--color-lime-2));
+    --_pill-text: var(--color-success-strong, #5c7c2f);
+    --_pill-border: var(--color-success-border, var(--color-lime-6));
   }
 
   .esa-pill--warning {
-    --_pill-bg: var(--color-warning-subtle, #fffbeb);
-    --_pill-text: var(--color-warning, #f59e0b);
-    --_pill-border: var(--color-warning-border, #fde68a);
+    --_pill-bg: var(--color-warning-subtle, var(--color-yellow-2));
+    --_pill-text: var(--color-warning-strong, #ab6400);
+    --_pill-border: var(--color-warning-border, var(--color-yellow-6));
   }
 
   .esa-pill--danger {
-    --_pill-bg: var(--color-danger-subtle, #fef2f2);
-    --_pill-text: var(--color-danger, #ef4444);
-    --_pill-border: var(--color-danger-border, #fecaca);
+    --_pill-bg: var(--color-danger-subtle, var(--color-red-2));
+    --_pill-text: var(--color-danger-strong, #ce2c31);
+    --_pill-border: var(--color-danger-border, var(--color-red-6));
   }
 
   .esa-pill__icon {
@@ -156,11 +161,11 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
 
   .esa-pill__remove:hover {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--pill-remove-bg-hover, rgba(0, 0, 0, 0.1));
   }
 
   .esa-pill__remove:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 </style>

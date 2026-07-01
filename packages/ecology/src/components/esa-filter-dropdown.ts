@@ -356,7 +356,7 @@ export class EsaFilterDropdown extends LitElement {
       border-color: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .esa-filter-dropdown__trigger--active {

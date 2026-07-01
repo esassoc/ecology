@@ -58,9 +58,9 @@ const { filters = [] } = Astro.props;
 <style>
   .esa-filter-pills {
     --_pill-gap: var(--spacing-200, 0.5rem);
-    --_pill-bg: var(--filter-pill-bg, var(--color-surface-sunken, #efefef));
-    --_pill-text: var(--filter-pill-text, var(--color-text-primary, #171717));
-    --_pill-font-size: var(--filter-pill-font-size, var(--type-size-150, 0.875rem));
+    --_pill-bg: var(--filter-pill-bg, var(--color-primary-bg, #d5edda));
+    --_pill-text: var(--filter-pill-text, var(--color-primary-strong, #3a7c59));
+    --_pill-font-size: var(--filter-pill-font-size, var(--type-size-100, 0.75rem));
     --_pill-radius: var(--filter-pill-radius, var(--radius-full, 9999px));
     --_pill-padding-x: var(--spacing-300, 0.75rem);
     --_pill-height: 28px;
@@ -87,13 +87,13 @@ const { filters = [] } = Astro.props;
   }
 
   .esa-filter-pills__chip:hover {
-    background: var(--filter-pill-bg-hover, var(--color-border, #e5e5e5));
+    background: var(--filter-pill-bg-hover, var(--color-primary-bg-hover, #c6e5cc));
   }
 
   .esa-filter-pills__label {
     font-weight: var(--font-weight-medium, 450);
     margin-inline-end: var(--spacing-100, 0.25rem);
-    color: var(--color-text-muted, #737373);
+    color: var(--filter-pill-label-color, var(--color-text-secondary, #646464));
   }
 
   .esa-filter-pills__value {
@@ -110,7 +110,7 @@ const { filters = [] } = Astro.props;
     border: none;
     background: transparent;
     cursor: pointer;
-    color: var(--color-text-muted, #737373);
+    color: var(--filter-pill-remove-color, var(--color-text-secondary, #646464));
     border-radius: var(--radius-full, 9999px);
     transition:
       color var(--transition-fast, 150ms ease),
@@ -118,11 +118,11 @@ const { filters = [] } = Astro.props;
   }
 
   .esa-filter-pills__remove:hover {
-    color: var(--color-text-primary, #171717);
+    color: var(--filter-pill-remove-color-hover, var(--color-danger-strong, #ce2c31));
   }
 
   .esa-filter-pills__remove:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: 1px;
   }
 
