@@ -38,7 +38,7 @@
     "hover-overlay":        { "$value": "rgba(0, 0, 0, 0.03)",   "$type": "color" },
     "hover-overlay-strong": { "$value": "rgba(0, 0, 0, 0.05)",   "$type": "color" },
     "active-overlay":       { "$value": "rgba(0, 88, 98, 0.08)", "$type": "color" },
-    "backdrop":             { "$value": "rgba(0, 0, 0, 0.5)",    "$type": "color" }
+    "backdrop":             { "$value": "{color.black-a.7}",     "$type": "color" }
   },
   "touch-target": {
     "min": { "$value": "44px", "$type": "dimension" }

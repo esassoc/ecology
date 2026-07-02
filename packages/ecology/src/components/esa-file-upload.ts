@@ -264,7 +264,7 @@ export class EsaFileUpload extends LitElement {
     .zone:focus-visible {
       outline: none;
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     :host([dragging]) .zone {
@@ -361,7 +361,7 @@ export class EsaFileUpload extends LitElement {
       color: var(--color-danger, #ef4444);
     }
     .file__remove:focus-visible {
-      outline: 2px solid var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
   `;

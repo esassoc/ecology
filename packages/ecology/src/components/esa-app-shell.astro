@@ -221,7 +221,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     background: transparent; color: var(--color-text-tertiary, #525252);
     cursor: pointer; transition: background 150ms ease, color 150ms ease;
   }
-  .esa-app-shell__toggle:hover { background: var(--color-surface-sunken, #f2f6f3); color: var(--color-primary, #43608a); }
+  .esa-app-shell__toggle:hover { background: var(--color-surface-sunken, #f2f6f3); color: var(--color-primary-strong, #3a7c59); }
   .esa-app-shell__toggle.is-collapsed svg { transform: scaleX(-1); }
   .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-primary, #43608a); outline-offset: 2px; }
 
@@ -253,11 +253,11 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     color: var(--color-text-primary, #171717);
     transition: background 150ms ease;
   }
-  .esa-app-shell__brand:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+  .esa-app-shell__brand:hover { background: var(--app-shell-brand-bg-hover, color-mix(in srgb, currentColor 8%, transparent)); }
   /* Collapsed rail: drop the wordmark (it pins the rail open), center the mark. */
   esa-sidebar-nav[collapsed] .esa-app-shell__brand { justify-content: center; padding-inline: 0; }
   esa-sidebar-nav[collapsed] .esa-app-shell__wordmark { display: none; }
-  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-primary, #43608a); }
+  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-primary-strong, #3a7c59); }
   .esa-app-shell__wordmark {
     font-family: var(--font-display, var(--font-sans, sans-serif));
     font-size: var(--type-size-300, 1.125rem); font-weight: var(--font-weight-bold, 700);

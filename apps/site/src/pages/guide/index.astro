@@ -27,7 +27,7 @@ import { legoCount } from '../../data/toolkit';
   </Section>
 
   <Section id="tokens" title="Tokens: why styling changes are one-liners">
-    <p>Three tiers. <strong>Primitives</strong> are raw values (<code>--color-teal-900</code>, <code>--spacing-400</code>) — they never move. <strong>Semantic</strong> tokens express intent (<code>--color-primary</code>) and reference primitives. <strong>Component</strong> tokens are each component's public theming surface (<code>--form-border-color</code>, <code>--sidenav-bg</code>).</p>
+    <p>Three tiers. <strong>Primitives</strong> are raw values (<code>--color-teal-9</code>, <code>--spacing-400</code>) — they never move. <strong>Semantic</strong> tokens express intent (<code>--color-primary</code>) and reference primitives. <strong>Component</strong> tokens are each component's public theming surface (<code>--form-border-color</code>, <code>--sidenav-bg</code>).</p>
     <p>A spoke re-brands by overriding the semantic and component layers inside one <code>[data-theme="slug"]</code> block in its theme file — component internals are never touched. The working rule: <em>a styling change in a spoke is a token re-point until proven otherwise.</em> If no token hook exists for what you need, that's a gap to file (<code>/request-lego</code>), not a license to hand-style.</p>
   </Section>
 

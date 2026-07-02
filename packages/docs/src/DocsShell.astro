@@ -138,7 +138,9 @@ const showToggle = colorScheme === 'toggle';
         border: 1px solid var(--color-border, #dcdcdc); border-radius: 9px;
         color: var(--color-text-muted, #7c7c7c); font-size: 14px; cursor: text;
         background: var(--color-surface, #fff);
+        font-family: inherit; text-align: left;
       }
+      .search:hover { border-color: var(--color-primary-border, #c6dcf1); }
       .search kbd {
         margin-left: auto; font-family: var(--font-mono, monospace); font-size: 11px;
         border: 1px solid var(--color-border, #dcdcdc); border-radius: 5px;
@@ -171,7 +173,7 @@ const showToggle = colorScheme === 'toggle';
       .toc { position: sticky; top: 80px; align-self: start; height: fit-content; }
       .toc h5 { margin: 0 0 var(--spacing-250, 0.625rem); font-size: 14px; font-weight: 600; color: var(--color-text-secondary, #525252); }
       .toc ul { list-style: none; margin: 0; padding: 0; }
-      .toc a { display: block; padding: 4px 0 4px 12px; margin-left: -2px; font-size: 14px; color: var(--color-text-muted, #7c7c7c); border-left: 2px solid transparent; transition: color 120ms ease, border-color 120ms ease; }
+      .toc a { display: block; padding: 4px 0 4px 12px; margin-left: -2px; font-size: 14px; color: var(--color-text-secondary, #525252); border-left: 2px solid transparent; transition: color 120ms ease, border-color 120ms ease; }
       .toc a:hover, .toc a.active { color: var(--color-text-primary, #171717); border-color: var(--color-primary, #1e5386); }
 
       @media (max-width: 1080px) { .content-wrap { grid-template-columns: minmax(0, 1fr); } .toc { display: none; } }
@@ -190,7 +192,7 @@ const showToggle = colorScheme === 'toggle';
       .crumbs a:hover { color: var(--color-text-primary, #171717); }
       .meta-row { display: flex; align-items: center; gap: var(--spacing-250, 0.625rem); flex-wrap: wrap; margin-bottom: var(--spacing-600, 2rem); }
       .pill { font-size: 12.5px; font-weight: 500; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--color-border, #dcdcdc); color: var(--color-text-secondary, #525252); }
-      .pill--stable { color: var(--color-success, #1a9b54); border-color: color-mix(in srgb, var(--color-success, #1a9b54) 40%, transparent); }
+      .pill--stable { color: var(--color-success-strong, #1a9b54); border-color: var(--color-success-border); background: var(--color-success-subtle); }
       .imp { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-muted, #7c7c7c); background: var(--color-surface-sunken, #f3f7fc); padding: 4px 10px; border-radius: 7px; }
     </style>
   </head>
@@ -229,7 +231,7 @@ const showToggle = colorScheme === 'toggle';
 
       <div class="main">
         <header class="topbar">
-          <div class="search" role="search"><span>Search…</span><kbd>⌘K</kbd></div>
+          <button class="search" id="search-trigger" type="button" aria-label="Search documentation"><span>Search…</span><kbd>⌘K</kbd></button>
           <div class="spacer"></div>
           {showToggle && (
             <button class="scheme-toggle" id="scheme-toggle" type="button" aria-label="Toggle color scheme" title="Toggle light / dark">
@@ -251,6 +253,8 @@ const showToggle = colorScheme === 'toggle';
         </div>
       </div>
     </div>
+
+    <slot name="cmd-overlay" />
 
     {showToggle && (
       <script>

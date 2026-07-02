@@ -42,7 +42,7 @@ const componentCss = readFileSync(path.join(ROOT, 'packages', 'tokens', 'src', '
 const defined = (css: string) => new Set([...css.matchAll(/(--[a-zA-Z0-9-]+)\s*:/g)].map((m) => m[1]));
 const componentTier = defined(componentCss);
 const baseTier = defined(tokensCss);
-// Primitives follow the ramp naming (e.g. --color-teal-900, --spacing-400, --radius-200).
+// Primitives follow the ramp naming (e.g. --color-teal-9, --spacing-400, --radius-200).
 const isPrimitive = (t: string) =>
   /^--(color-(gray|teal|blue|green|red|yellow|orange|copper|gold|status)-|spacing-\d|radius-|font-size-|font-weight-|shadow-|z-)/.test(t);
 

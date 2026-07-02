@@ -24,6 +24,8 @@ export class EsaConfirmDialog extends LitElement {
     confirmLabel: { type: String, attribute: 'confirm-label' },
     cancelLabel: { type: String, attribute: 'cancel-label' },
     showIcon: { type: Boolean, attribute: 'show-icon' },
+    // hub-edit-approved: user approved (2026-06-29) — confirm dialogs need an X close.
+    showCloseButton: { type: Boolean, attribute: 'show-close-button' },
   };
 
   declare open: boolean;
@@ -33,6 +35,7 @@ export class EsaConfirmDialog extends LitElement {
   declare confirmLabel: string;
   declare cancelLabel: string;
   declare showIcon: boolean;
+  declare showCloseButton: boolean;
 
   private previousFocus: HTMLElement | null = null;
 
@@ -45,6 +48,8 @@ export class EsaConfirmDialog extends LitElement {
     this.confirmLabel = 'Confirm';
     this.cancelLabel = 'Cancel';
     this.showIcon = true;
+    // hub-edit-approved: user approved (2026-06-29) — X close visible by default.
+    this.showCloseButton = true;
   }
 
   connectedCallback(): void {
@@ -76,24 +81,37 @@ export class EsaConfirmDialog extends LitElement {
     this.open = true;
   }
 
-  private resolve(confirmed: boolean): void {
+  // hub-edit-approved: user approved in conversation (2026-06-29) — confirm dialog
+  // must distinguish a backdrop/Esc dismiss from an explicit cancel choice.
+  private resolve(confirmed: boolean, dismissed = false): void {
     this.open = false;
+    if (dismissed) {
+      this.dispatchEvent(new CustomEvent('dismiss', { bubbles: true, composed: true }));
+    }
     this.dispatchEvent(
       new CustomEvent(confirmed ? 'confirm' : 'cancel', { bubbles: true, composed: true }),
     );
     this.dispatchEvent(
-      new CustomEvent('resolved', { detail: { confirmed }, bubbles: true, composed: true }),
+      new CustomEvent('resolved', {
+        detail: { confirmed, dismissed },
+        bubbles: true,
+        composed: true,
+      }),
     );
   }
 
   confirm = (): void => this.resolve(true);
   cancel = (): void => this.resolve(false);
+  // Backdrop click / Esc — the user dismissed the dialog without answering.
+  // Resolved as not-confirmed AND dismissed, so consumers can tell an abort
+  // apart from an explicit "cancel" choice (the cancel button stays dismissed:false).
+  dismiss = (): void => this.resolve(false, true);
 
   private onKeydown = (event: KeyboardEvent): void => {
     if (!this.open) return;
     if (event.key === 'Escape') {
       event.preventDefault();
-      this.cancel();
+      this.dismiss();
     } else if (event.key === 'Tab') {
       const root = this.renderRoot as ShadowRoot;
       const items = Array.from(
@@ -126,10 +144,20 @@ export class EsaConfirmDialog extends LitElement {
 
   render() {
     if (!this.open) return html``;
+    // hub-edit-approved: user approved (2026-06-29) — backdrop click is a dismiss, not a cancel choice.
     return html`
-      <div class="esa-confirm-dialog__backdrop" @click=${this.cancel}></div>
+      <div class="esa-confirm-dialog__backdrop" @click=${this.dismiss}></div>
       <div class="esa-confirm-dialog__panel">
         <div class="esa-confirm-dialog" role="alertdialog" aria-modal="true" aria-label=${this.heading}>
+          ${/* hub-edit-approved: user approved (2026-06-29) — X close button dismisses (abort, not submit). */ ''}
+          ${this.showCloseButton
+            ? html`<button
+                class="esa-confirm-dialog__close"
+                type="button"
+                aria-label="Close"
+                @click=${this.dismiss}
+              ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+            : null}
           <div class="esa-confirm-dialog__content">
             ${this.showIcon
               ? html`<div class="esa-confirm-dialog__icon esa-confirm-dialog__icon--${this.variant}">${this.icon()}</div>`
@@ -167,7 +195,9 @@ export class EsaConfirmDialog extends LitElement {
       z-index: var(--z-modal, 400);
       pointer-events: none;
     }
+    /* hub-edit-approved: user approved (2026-06-29) — relative + close button styles. */
     .esa-confirm-dialog {
+      position: relative;
       pointer-events: auto;
       width: var(--confirm-dialog-width, 360px);
       max-width: calc(100vw - 2rem);
@@ -176,6 +206,49 @@ export class EsaConfirmDialog extends LitElement {
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       font-family: var(--font-sans, 'DM Sans', sans-serif);
+    }
+
+    /* hub-edit-approved: user approved hub edits this session (2026-06-30) — on mobile
+       the confirm dialog docks to the bottom as a full-width sheet, matching esa-dialog. */
+    @media (max-width: 600px) {
+      .esa-confirm-dialog__panel { align-items: flex-end; }
+      .esa-confirm-dialog {
+        width: 100%;
+        max-width: 100%;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        animation: esa-confirm-sheet-in 0.24s ease;
+      }
+    }
+    @keyframes esa-confirm-sheet-in {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .esa-confirm-dialog__close {
+      position: absolute;
+      top: var(--spacing-300, 0.75rem);
+      right: var(--spacing-300, 0.75rem);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      border-radius: var(--radius-200, 0.5rem);
+      background: transparent;
+      color: var(--color-text-muted, #737373);
+      cursor: pointer;
+      transition: background var(--transition-fast, 150ms ease), color var(--transition-fast, 150ms ease);
+    }
+    .esa-confirm-dialog__close:hover {
+      background: var(--color-surface-sunken, #efefef);
+      color: var(--color-text-primary, #171717);
+    }
+    .esa-confirm-dialog__close:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .esa-confirm-dialog__content {
@@ -238,7 +311,7 @@ export class EsaConfirmDialog extends LitElement {
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-confirm-dialog__btn:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .esa-confirm-dialog__btn--outline {

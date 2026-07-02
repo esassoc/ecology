@@ -202,7 +202,7 @@ export class EsaTabLayout extends LitElement {
     }
     .tab--disabled { opacity: 0.5; cursor: not-allowed; }
     .tab:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
       border-radius: var(--radius-100, 4px);
     }

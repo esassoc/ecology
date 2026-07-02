@@ -1,0 +1,9 @@
+{
+  "elevation": {
+    "1": { "$value": "{shadow.50}",  "$type": "other", "$description": "Resting lift — subtle depth for always-visible surfaces." },
+    "2": { "$value": "{shadow.100}", "$type": "other", "$description": "Cards and list items." },
+    "3": { "$value": "{shadow.200}", "$type": "other", "$description": "Raised cards, hover state." },
+    "4": { "$value": "{shadow.300}", "$type": "other", "$description": "Dropdowns, popovers, menus." },
+    "5": { "$value": "{shadow.400}", "$type": "other", "$description": "Modals and dialogs." }
+  }
+}

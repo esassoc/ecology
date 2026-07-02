@@ -144,7 +144,7 @@ const events = [
   ];
 
   customElements.whenDefined('esa-button-toggle').then(() => {
-    document.querySelectorAll('esa-button-toggle:not([data-demo="icons"])').forEach((el) => {
+    document.querySelectorAll('esa-button-toggle[data-demo]:not([data-demo="icons"])').forEach((el) => {
       (el as any).options = layout;
     });
     document.querySelectorAll('esa-button-toggle[data-demo="icons"]').forEach((el) => {

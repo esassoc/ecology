@@ -209,6 +209,26 @@ export class EsaDialog extends LitElement {
     }
     .esa-dialog:focus { outline: none; }
 
+    /* hub-edit-approved: user approved hub edits this session (2026-06-30) — on
+       narrow (mobile) viewports a centered dialog reads better as a bottom sheet:
+       docked to the bottom edge, full width, only the top corners rounded, and
+       sliding up on open. */
+    @media (max-width: 600px) {
+      .esa-dialog-panel { align-items: flex-end; }
+      .esa-dialog {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92vh;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        animation: esa-dialog-sheet-in 0.24s ease;
+      }
+    }
+    @keyframes esa-dialog-sheet-in {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
     .esa-dialog__header {
       display: flex;
       align-items: center;
@@ -240,7 +260,7 @@ export class EsaDialog extends LitElement {
     }
     .esa-dialog__close:hover { background: var(--color-surface-sunken, #efefef); }
     .esa-dialog__close:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

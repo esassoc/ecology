@@ -191,10 +191,10 @@ export class EsaRangeSlider extends LitElement {
       outline: none;
     }
     .input:focus-visible::-webkit-slider-thumb {
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:focus-visible::-moz-range-thumb {
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:hover:not(:disabled)::-webkit-slider-thumb {
       transform: scale(1.1);

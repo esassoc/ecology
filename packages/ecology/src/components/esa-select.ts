@@ -399,7 +399,7 @@ export class EsaSelect extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
@@ -408,7 +408,7 @@ export class EsaSelect extends LitElement {
     }
     .field__error {
       font-size: var(--type-size-150, 12px);
-      color: var(--form-error-color, #ef4444);
+      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
     }
 
     .container {
@@ -486,7 +486,7 @@ export class EsaSelect extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -546,7 +546,7 @@ export class EsaSelect extends LitElement {
     }
     .option--selected {
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
     }
     .option--disabled {
       color: var(--color-disabled-text, #a3a3a3);
@@ -576,7 +576,7 @@ export class EsaSelect extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -598,7 +598,7 @@ export class EsaSelect extends LitElement {
       gap: var(--spacing-050, 2px);
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       border-radius: var(--radius-full, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--type-size-150, 12px);
@@ -617,7 +617,7 @@ export class EsaSelect extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #3a7c59);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -630,7 +630,7 @@ export class EsaSelect extends LitElement {
       background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: 2px solid var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
 

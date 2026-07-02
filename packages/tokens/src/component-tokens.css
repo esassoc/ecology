@@ -17,7 +17,7 @@
      on the themed --color-warning shade: a light amber wants dark text (the hub
      default), a darker orange wants white. Themeable so a spoke whose warning is
      dark (e.g. Beacon's #f2770e) can flip it to white without forking the button. */
-  --button-on-warning: var(--color-gray-900);
+  --button-on-warning: var(--color-gray-12);
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
@@ -53,17 +53,22 @@
   --form-border-color: var(--color-border);
   --form-border-color-hover: var(--color-border-strong);
   --form-border-color-focus: var(--color-border-focus);
+  --focus-ring-color: var(--color-border-focus);
+  --focus-ring-width: 2px;
   --form-border-color-error: var(--color-danger);
   --form-text-color: var(--color-text-primary);
   --form-placeholder-color: var(--color-text-muted);
   --form-label-color: var(--color-text-secondary);
   --form-help-color: var(--color-text-muted);
-  --form-error-color: var(--color-danger);
+  --form-error-color: var(--color-danger-strong);
   /* structure */
   --form-border-width: 1px;
   --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
+
+  /* ===================== ICON BUTTON ===================== */
+  --icon-button-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
 
   /* ===================== FILTERS ===================== */
   --filter-container-gap: var(--spacing-200);
@@ -73,27 +78,27 @@
   --filter-dropdown-radius: var(--radius-200);
   --filter-dropdown-shadow: var(--shadow-200);
   --filter-dropdown-min-width: 200px;
-  --filter-pill-bg: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  --filter-pill-bg-hover: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  --filter-pill-text: var(--color-primary);
+  --filter-pill-bg: var(--color-primary-bg);
+  --filter-pill-bg-hover: var(--color-primary-bg-hover);
+  --filter-pill-label-color: var(--color-text-secondary);
+  --filter-pill-text: var(--color-primary-strong);
   --filter-pill-radius: var(--radius-full);
-  --filter-pill-padding: var(--spacing-100) var(--spacing-250);
   --filter-pill-font-size: var(--type-size-100);
-  --filter-pill-remove-color: var(--color-text-muted);
-  --filter-pill-remove-color-hover: var(--color-danger);
+  --filter-pill-remove-color: var(--color-text-secondary);
+  --filter-pill-remove-color-hover: var(--color-danger-strong);
   --filter-clear-color: var(--color-text-muted);
-  --filter-clear-color-hover: var(--color-danger);
+  --filter-clear-color-hover: var(--color-danger-strong);
 
   /* ===================== DATA GRID ===================== */
-  --grid-header-bg: var(--color-gray-50);
+  --grid-header-bg: var(--color-gray-2);
   --grid-header-color: var(--color-text-primary);
   --grid-header-weight: var(--font-weight-semibold);
   --grid-header-font-size: var(--type-size-100);
   --grid-header-border: 1px solid var(--color-border);
   --grid-row-bg: var(--color-surface);
-  --grid-row-bg-hover: var(--color-gray-100);
+  --grid-row-bg-hover: var(--color-gray-3);
   --grid-row-bg-selected: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --grid-row-stripe-bg: var(--color-gray-50);
+  --grid-row-stripe-bg: var(--color-gray-2);
   --grid-row-border: 1px solid var(--color-border-light);
   --grid-row-font-size: var(--type-size-150);
   --grid-cell-padding: var(--spacing-200) var(--spacing-300);
@@ -122,7 +127,7 @@
   --sidenav-link-bg: transparent;
   --sidenav-link-text-hover: var(--color-text-primary);
   --sidenav-link-bg-hover: transparent;
-  --sidenav-link-text-active: var(--color-primary);
+  --sidenav-link-text-active: var(--color-primary-strong);
   --sidenav-link-bg-active: transparent;
   --sidenav-link-weight-active: var(--font-weight-medium);
   --sidenav-active-border-width: 2px;
@@ -130,22 +135,22 @@
   --sidenav-user-border: var(--color-border-light);
   --sidenav-user-text: var(--color-text-secondary);
   --sidenav-user-text-hover: var(--color-text-primary);
-  --sidenav-user-avatar-bg: var(--color-gray-200);
+  --sidenav-user-avatar-bg: var(--color-gray-4);
   --sidenav-user-avatar-text: var(--color-text-secondary);
   --sidenav-divider: var(--color-border-light);
 
   /* ===================== NAVIGATION — HEADER / TOPBAR ===================== */
-  --topbar-bg: var(--color-gray-100);
-  --topbar-border: var(--color-gray-300);
+  --topbar-bg: var(--color-gray-3);
+  --topbar-border: var(--color-gray-6);
   --topbar-shadow: none;
-  --topbar-icon-color: var(--color-gray-600);
+  --topbar-icon-color: var(--color-gray-11);
   --topbar-icon-color-hover: var(--color-primary);
   --topbar-icon-bg: transparent;
-  --topbar-icon-bg-hover: var(--color-gray-200);
+  --topbar-icon-bg-hover: var(--color-gray-4);
   --topbar-icon-radius: 6px;
-  --topbar-search-bg: var(--color-gray-0);
-  --topbar-search-bg-hover: var(--color-gray-50);
-  --topbar-search-text: var(--color-gray-500);
+  --topbar-search-bg: var(--color-gray-1);
+  --topbar-search-bg-hover: var(--color-gray-2);
+  --topbar-search-text: var(--color-gray-10);
   --topbar-search-radius: 8px;
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
@@ -153,7 +158,7 @@
   --breadcrumbs-text-color: var(--color-text-secondary);
   --breadcrumbs-link-color: var(--color-text-secondary);
   --breadcrumbs-link-hover: var(--color-text-primary);
-  --breadcrumbs-separator-color: var(--color-gray-400);
+  --breadcrumbs-separator-color: var(--color-gray-8);
   --breadcrumbs-pill-bg: color-mix(in srgb, var(--color-primary) 6%, transparent);
   --breadcrumbs-pill-bg-hover: color-mix(in srgb, var(--color-primary) 10%, transparent);
   --breadcrumbs-pill-radius: var(--radius-full);
@@ -172,10 +177,14 @@
   /* esa-alert-box */
   --alert-box-bg: var(--color-info-subtle, #eff6ff);
   --alert-box-border-color: var(--color-info-border, #bfdbfe);
+  --alert-box-dismiss-bg-hover: rgba(0, 0, 0, 0.06);
   --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
   --alert-box-radius: var(--radius-200, 0.5rem);
   --alert-box-text-color: var(--color-text-secondary, #525252);
   --alert-box-title-color: var(--color-text-primary, #171717);
+
+  /* esa-app-shell */
+  --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
 
   /* esa-app-bar */
   --app-bar-bg: var(--color-surface, #fff);
@@ -210,11 +219,11 @@
 
   /* esa-badge */
   --badge-bg: var(--color-primary, #43608a);
-  --badge-height-lg: 24px;
-  --badge-height-md: 20px;
-  --badge-height-sm: 16px;
-  --badge-height-xs: 14px;
-  --badge-radius: var(--radius-100, 4px); /* quiet 4px chip, not a pill (design-principles) — esa-pill stays full */
+  --badge-height-lg: 34px;
+  --badge-height-md: 28px;
+  --badge-height-sm: 22px;
+  --badge-height-xs: 18px;
+  --badge-radius: var(--radius-100, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-text-inverse, #fff);
 
   /* esa-card */
@@ -235,7 +244,7 @@
   --collapsible-title-color: var(--color-text-primary, #171717);
 
   /* esa-file-list */
-  --color-link: var(--color-primary, #43608a);
+  --color-link: var(--color-primary-strong, #3a7c59);
 
   /* esa-entity-search */
   --color-primary-contrast: #fff;
@@ -263,7 +272,7 @@
   --danger-zone-bg: var(--color-danger-subtle, #fef2f2);
   --danger-zone-border-color: var(--color-danger-border, #fecaca);
   --danger-zone-description-color: var(--color-text-secondary, #525252);
-  --danger-zone-heading-color: var(--color-red-800, #991b1b);
+  --danger-zone-heading-color: var(--color-red-11);
   --danger-zone-padding: var(--spacing-300, 0.75rem);
   --danger-zone-radius: var(--radius-200, 0.5rem);
 
@@ -370,11 +379,12 @@
   /* esa-pill */
   --pill-bg: var(--color-surface-sunken, #efefef);
   --pill-border-color: var(--color-border-light, #efefef);
+  --pill-remove-bg-hover: rgba(0, 0, 0, 0.1);
   --pill-height-lg: 34px;
   --pill-height-md: 28px;
   --pill-height-sm: 22px;
   --pill-height-xs: 18px;
-  --pill-radius: var(--radius-full, 9999px);
+  --pill-radius: var(--radius-100, 4px);
   --pill-text-color: var(--color-text-primary, #171717);
 
   /* esa-pillbox */
@@ -417,10 +427,10 @@
   --snackbar-container-max-width: 420px;
 
   /* esa-snackbar-item */
-  --snackbar-item-bg-danger: var(--color-red-700, #b91c1c);
-  --snackbar-item-bg-info: var(--color-blue-800, #43608a);
-  --snackbar-item-bg-success: var(--color-green-800, #0a6562);
-  --snackbar-item-bg-warning: var(--color-orange-800, #912a0f);
+  --snackbar-item-bg-danger: var(--color-red-10);
+  --snackbar-item-bg-info: var(--color-blue-11);
+  --snackbar-item-bg-success: var(--color-green-11);
+  --snackbar-item-bg-warning: var(--color-orange-11);
   --snackbar-item-color: var(--color-text-inverse, #ffffff);
   --snackbar-item-radius: var(--radius-200, 0.5rem);
 
@@ -441,7 +451,7 @@
   --tab-layout-indicator-color: var(--color-primary, #43608a);
 
   /* esa-tooltip */
-  --tooltip-bg: var(--color-gray-900, #171717);
+  --tooltip-bg: var(--color-gray-12);
   --tooltip-color: var(--color-text-inverse, #ffffff);
   --tooltip-max-width: 240px;
   --tooltip-radius: var(--radius-100, 0.25rem);

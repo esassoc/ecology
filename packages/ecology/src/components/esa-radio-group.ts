@@ -188,8 +188,8 @@ export class EsaRadioGroup extends LitElement {
     .circle:focus-visible {
       outline: none;
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
-        var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width)
+        var(--focus-ring-color);
     }
 
     .dot {
