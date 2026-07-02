@@ -1,0 +1,1 @@
+import"./esa-filter-dropdown.BSNfEt5T.js";import"./lit-element.C8p3bJxG.js";import"./esa-checkbox.CAN_sttU.js";const o=[{label:"Open",value:"open"},{label:"In review",value:"review"},{label:"Closed",value:"closed"}];customElements.whenDefined("esa-filter-dropdown").then(()=>{document.querySelectorAll("esa-filter-dropdown").forEach(e=>{e.options=o})});
