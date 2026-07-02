@@ -48,7 +48,11 @@ import{i as n,b as i,a as s}from"./lit-element.C8p3bJxG.js";class l extends n{st
       grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: var(--spacing-200, 8px);
-      padding: 2px var(--spacing-300, 12px);
+      /* hub-edit-approved: Andrew (front-end architect) approved in-session — add a
+         backward-compatible density knob so consumers can give file rows more breathing
+         room without restyling the shadow DOM. Defaults reproduce the original tight row. */
+      padding: var(--file-list-row-padding-y, 2px)
+        var(--file-list-row-padding-x, var(--spacing-300, 12px));
       border: var(--form-border-width, 1px) solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-100, 4px);
       background: var(--color-surface, #fff);

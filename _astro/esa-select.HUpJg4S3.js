@@ -1,32 +1,44 @@
-import{i as s,b as r,a}from"./lit-element.C8p3bJxG.js";class l extends s{constructor(){super(),this.onDocClick=e=>{this._open&&(e.composedPath().includes(this)||(this._open=!1))},this.onSearchInput=e=>{this._search=e.target.value,this._active=-1,this._open||(this._open=!0)},this.onKeydown=e=>{const i=this.filteredOptions;switch(e.key){case"ArrowDown":if(e.preventDefault(),!this._open)return this.openDropdown();{let t=this._active+1;for(;t<i.length&&i[t].disabled;)t++;t<i.length&&(this._active=t)}break;case"ArrowUp":if(e.preventDefault(),!this._open)return this.openDropdown();{let t=this._active-1;for(;t>=0&&i[t].disabled;)t--;t>=0&&(this._active=t)}break;case"Enter":if(e.preventDefault(),this._open&&this._active>=0){const t=i[this._active];t&&!t.disabled&&this.selectOption(t)}else this._open||this.openDropdown();break;case"Escape":e.preventDefault(),this._open=!1;break;case"Tab":this._open=!1;break}},this.label="",this.options=[],this.size="md",this.placeholder="Select...",this.helpText="",this.errorText="",this.required=!1,this.disabled=!1,this.multiple=!1,this.searchable=!0,this.chipMode=!1,this._search="",this._selected=[],this._open=!1,this._active=-1,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},options:{type:Array},size:{type:String,reflect:!0},placeholder:{type:String},helpText:{type:String,attribute:"help-text"},errorText:{type:String,attribute:"error-text"},required:{type:Boolean},disabled:{type:Boolean,reflect:!0},multiple:{type:Boolean},searchable:{type:Boolean},chipMode:{type:Boolean,attribute:"chip-mode"},_search:{state:!0},_selected:{state:!0},_open:{state:!0},_active:{state:!0}}}connectedCallback(){super.connectedCallback(),document.addEventListener("click",this.onDocClick),this.syncFormValue()}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this.onDocClick)}set value(e){e==null?this._selected=[]:Array.isArray(e)?this._selected=e:this._selected=[e],this.syncFormValue()}get value(){return this.multiple?this._selected:this._selected[0]??""}get filteredOptions(){const e=this._search.toLowerCase();return e?this.options.filter(i=>i.label.toLowerCase().includes(e)):this.options}get displayValue(){return this._selected.length===0?"":this.options.find(i=>i.value===this._selected[0])?.label??""}get selectedOptions(){return this.options.filter(e=>this._selected.includes(e.value))}get inputValue(){return this.multiple?this._search:this._search||this.displayValue}isSelected(e){return this._selected.includes(e)}syncFormValue(){this.internals.setFormValue(this.multiple?this._selected.join(","):this._selected[0]??null)}emit(){this.syncFormValue(),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0}))}toggleDropdown(){this.disabled||(this._open?this._open=!1:this.openDropdown())}openDropdown(){this.disabled||(this._open=!0,this._active=-1,requestAnimationFrame(()=>{this.renderRoot.querySelector(".input")?.focus()}))}selectOption(e){if(e.disabled)return;const i=e.value;if(this.multiple){const t=this._selected.indexOf(i);this._selected=t>=0?this._selected.filter(o=>o!==i):[...this._selected,i],this._search="",this.emit(),requestAnimationFrame(()=>{this.renderRoot.querySelector(".input")?.focus()})}else this._selected=[i],this._search="",this._open=!1,this.emit()}removeValue(e,i){i?.stopPropagation(),this._selected=this._selected.filter(t=>t!==e),this.emit()}render(){const e=!!this.errorText;return r`
+import{i as s,b as i,a}from"./lit-element.C8p3bJxG.js";class n extends s{constructor(){super(),this.onDocClick=e=>{this._open&&(e.composedPath().includes(this)||(this._open=!1))},this.onSearchInput=e=>{this._search=e.target.value,this._active=-1,this._open||(this._open=!0)},this.onKeydown=e=>{const r=this.filteredOptions;switch(e.key){case"ArrowDown":if(e.preventDefault(),!this._open)return this.openDropdown();{let t=this._active+1;for(;t<r.length&&r[t].disabled;)t++;t<r.length&&(this._active=t)}break;case"ArrowUp":if(e.preventDefault(),!this._open)return this.openDropdown();{let t=this._active-1;for(;t>=0&&r[t].disabled;)t--;t>=0&&(this._active=t)}break;case"Enter":if(e.preventDefault(),this._open&&this._active>=0){const t=r[this._active];t&&!t.disabled&&this.selectOption(t)}else this._open||this.openDropdown();break;case"Escape":e.preventDefault(),this._open=!1;break;case"Tab":this._open=!1;break}},this.label="",this.options=[],this.size="md",this.placeholder="Select...",this.helpText="",this.errorText="",this.required=!1,this.disabled=!1,this.multiple=!1,this.searchable=!0,this.chipMode=!1,this._search="",this._selected=[],this._open=!1,this._active=-1,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},options:{type:Array},size:{type:String,reflect:!0},placeholder:{type:String},helpText:{type:String,attribute:"help-text"},errorText:{type:String,attribute:"error-text"},required:{type:Boolean},disabled:{type:Boolean,reflect:!0},multiple:{type:Boolean},searchable:{type:Boolean},chipMode:{type:Boolean,attribute:"chip-mode"},_search:{state:!0},_selected:{state:!0},_open:{state:!0},_active:{state:!0}}}connectedCallback(){super.connectedCallback(),document.addEventListener("click",this.onDocClick),this.syncFormValue()}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this.onDocClick)}set value(e){e==null?this._selected=[]:Array.isArray(e)?this._selected=e:this._selected=[e],this.syncFormValue()}get value(){return this.multiple?this._selected:this._selected[0]??""}get filteredOptions(){const e=this._search.toLowerCase();return e?this.options.filter(r=>r.label.toLowerCase().includes(e)):this.options}get displayValue(){return this._selected.length===0?"":this.options.find(r=>r.value===this._selected[0])?.label??""}get selectedOptions(){return this.options.filter(e=>this._selected.includes(e.value))}get inputValue(){return this.multiple?this._search:this._search||this.displayValue}isSelected(e){return this._selected.includes(e)}syncFormValue(){this.internals.setFormValue(this.multiple?this._selected.join(","):this._selected[0]??null)}emit(){this.syncFormValue(),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0}))}toggleDropdown(){this.disabled||(this._open?this._open=!1:this.openDropdown())}openDropdown(){this.disabled||(this._open=!0,this._active=-1,requestAnimationFrame(()=>{this.renderRoot.querySelector(".input")?.focus()}))}selectOption(e){if(e.disabled)return;const r=e.value;if(this.multiple){const t=this._selected.indexOf(r);this._selected=t>=0?this._selected.filter(o=>o!==r):[...this._selected,r],this._search="",this.emit(),requestAnimationFrame(()=>{this.renderRoot.querySelector(".input")?.focus()})}else this._selected=[r],this._search="",this._open=!1,this.emit()}removeValue(e,r){r?.stopPropagation(),this._selected=this._selected.filter(t=>t!==e),this.emit()}clearSelection(e){e?.stopPropagation(),this._selected=[],this.emit()}renderTags(){const e=this.selectedOptions;if(e.length===0)return null;if(e.length>1)return i`<span class="chip chip--count">
+        <span class="chip__label">${e.length} Options</span>
+        <button
+          type="button"
+          class="chip__remove"
+          aria-label="Clear selection"
+          @click=${t=>this.clearSelection(t)}
+        >
+          ${this.xIcon()}
+        </button>
+      </span>`;const r=e[0];return i`<span class="chip">
+      <span class="chip__label">${r.label}</span>
+      <button
+        type="button"
+        class="chip__remove"
+        aria-label=${"Remove "+r.label}
+        @click=${t=>this.removeValue(r.value,t)}
+      >
+        ${this.xIcon()}
+      </button>
+    </span>`}render(){const e=!!this.errorText;return i`
       <div class="field ${e?"field--error":""}">
-        ${this.label?r`<label class="field__label">
-              ${this.label}${this.required?r`<span class="field__required">*</span>`:null}
+        ${this.label?i`<label class="field__label">
+              ${this.label}${this.required?i`<span class="field__required">*</span>`:null}
             </label>`:null}
 
         <div class="container">
-          ${this.multiple&&this.chipMode?r`<div class="chips">
-                ${this.selectedOptions.map(i=>r`<span class="chip">
-                    <span class="chip__label">${i.label}</span>
-                    <button
-                      type="button"
-                      class="chip__remove"
-                      aria-label=${"Remove "+i.label}
-                      @click=${t=>this.removeValue(i.value,t)}
-                    >
-                      ${this.xIcon()}
-                    </button>
-                  </span>`)}
-              </div>`:null}
-
-          <div class="input-wrapper" @click=${()=>this.toggleDropdown()}>
+          <!-- Multi-select chip mode renders the selected tokens INSIDE the field
+               box (tag input), not floating above it. -->
+          <div
+            class="input-wrapper ${this.multiple&&this.chipMode?"input-wrapper--tags":""}"
+            @click=${()=>this.toggleDropdown()}
+          >
+            ${this.multiple&&this.chipMode?this.renderTags():null}
             <input
               class="input"
               role="combobox"
               aria-expanded=${this._open}
               aria-haspopup="listbox"
               aria-autocomplete="list"
-              placeholder=${this.placeholder}
+              placeholder=${this.multiple&&this.chipMode&&this.selectedOptions.length?"":this.placeholder}
               .value=${this.inputValue}
               ?disabled=${this.disabled}
               ?readonly=${!this.searchable}
@@ -36,26 +48,26 @@ import{i as s,b as r,a}from"./lit-element.C8p3bJxG.js";class l extends s{constru
             <span class="arrow ${this._open?"arrow--open":""}">${this.chevronIcon()}</span>
           </div>
 
-          ${this._open?r`<div class="dropdown" role="listbox">
-                ${this.filteredOptions.length===0?r`<div class="option option--empty">No results found</div>`:this.filteredOptions.map((i,t)=>{const o=this.isSelected(i.value);return r`<div
-                        class="option ${t===this._active?"option--active":""} ${o?"option--selected":""} ${i.disabled?"option--disabled":""}"
+          ${this._open?i`<div class="dropdown" role="listbox">
+                ${this.filteredOptions.length===0?i`<div class="option option--empty">No results found</div>`:this.filteredOptions.map((r,t)=>{const o=this.isSelected(r.value);return i`<div
+                        class="option ${t===this._active?"option--active":""} ${o?"option--selected":""} ${r.disabled?"option--disabled":""}"
                         role="option"
                         aria-selected=${o}
-                        aria-disabled=${i.disabled??!1}
-                        @click=${()=>this.selectOption(i)}
+                        aria-disabled=${r.disabled??!1}
+                        @click=${()=>this.selectOption(r)}
                         @mouseenter=${()=>this._active=t}
                       >
-                        ${this.multiple?r`<span class="check ${o?"check--selected":""}">${this.checkIcon()}</span>`:null}
-                        <span class="option__label">${i.label}</span>
+                        ${this.multiple?i`<span class="check ${o?"check--selected":""}">${this.checkIcon()}</span>`:null}
+                        <span class="option__label">${r.label}</span>
                       </div>`})}
               </div>`:null}
         </div>
 
-        ${e?r`<span class="field__error">${this.errorText}</span>`:this.helpText?r`<span class="field__help">${this.helpText}</span>`:null}
+        ${e?i`<span class="field__error">${this.errorText}</span>`:this.helpText?i`<span class="field__help">${this.helpText}</span>`:null}
       </div>
-    `}chevronIcon(){return r`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>`}checkIcon(){return r`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>`}xIcon(){return r`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    `}chevronIcon(){return i`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>`}checkIcon(){return i`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>`}xIcon(){return i`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>`}static{this.styles=a`
     :host {
       display: block;
@@ -124,6 +136,45 @@ import{i as s,b as r,a}from"./lit-element.C8p3bJxG.js";class l extends s{constru
       display: flex;
       align-items: center;
       cursor: pointer;
+    }
+    /* Tag mode: chips render inside the field box, so the wrapper carries the
+       border/height/focus and the input becomes a borderless filler beside them. */
+    .input-wrapper--tags {
+      flex-wrap: nowrap;
+      gap: var(--spacing-100, 4px);
+      min-height: var(--_field-height);
+      padding: var(--_field-padding-y) calc(var(--_field-padding-x) + 24px)
+        var(--_field-padding-y) var(--_field-padding-x);
+      background: var(--form-bg, #fff);
+      border: var(--form-border-width, 1px) solid var(--_field-border-color);
+      border-radius: var(--_field-radius);
+      box-sizing: border-box;
+      transition:
+        border-color var(--transition-fast, 150ms ease),
+        box-shadow var(--transition-fast, 150ms ease);
+    }
+    .input-wrapper--tags:focus-within {
+      --_field-border-color: var(--form-border-color-focus, #43608a);
+      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+    }
+    .input-wrapper--tags .input {
+      /* Compact tag filter: at most ONE token renders (a single chip, or an
+         "N Options" count for 2+), so the input rides beside it on one line and the
+         box stays at field height — it never wraps to a second row. */
+      flex: 1 1 2rem;
+      width: auto;
+      min-width: 2rem;
+      height: auto;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+    }
+    .input-wrapper--tags .input:focus {
+      box-shadow: none;
+    }
+    .field--error .input-wrapper--tags {
+      --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .input {
       width: 100%;
@@ -258,13 +309,13 @@ import{i as s,b as r,a}from"./lit-element.C8p3bJxG.js";class l extends s{constru
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-050, 2px);
-      padding: var(--spacing-050, 2px) var(--spacing-100, 4px) var(--spacing-050, 2px) var(--spacing-200, 8px);
+      padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
       color: var(--color-primary-strong, #3a7c59);
       border-radius: var(--radius-full, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--type-size-150, 12px);
-      line-height: 1.4;
+      line-height: 1.2;
       user-select: none;
     }
     .chip__label {
@@ -274,8 +325,8 @@ import{i as s,b as r,a}from"./lit-element.C8p3bJxG.js";class l extends s{constru
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       padding: 0;
       border: none;
       background: transparent;
@@ -302,4 +353,4 @@ import{i as s,b as r,a}from"./lit-element.C8p3bJxG.js";class l extends s{constru
     .field--error .input:focus {
       box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
     }
-  `}}customElements.get("esa-select")||customElements.define("esa-select",l);
+  `}}customElements.get("esa-select")||customElements.define("esa-select",n);
