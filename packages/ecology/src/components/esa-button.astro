@@ -3,8 +3,15 @@
 //
 // Variant model aligned to Beacon's UiButton (two independent axes + toggle):
 //   - color:      primary | secondary | danger | success | warning | info | ai | ghost
-//   - appearance: fill | outline | dashed
+//   - appearance: fill | outline | dashed | soft
 //   - active:     aria-pressed toggle (selected look)
+//
+// hub-edit-approved: Andy approved in-session (2026-06-22) — (1) add a `soft`
+// appearance (neutral surface bg + darker-gray border + accent-colored text; accent
+// fill on hover) so `color="danger" appearance="soft"` gives GitHub's secondary-danger
+// button; (2) redefine `sm` to be content-height with a 6px block padding instead of
+// height-locking to the form scale, since standalone small buttons (not beside inputs)
+// looked squished. Icon-only sm keeps a fixed square.
 //   - size:       xs | sm | md | lg   (shared form size scale)
 //   - icon / iconOnly / loading / disabled / type
 //
@@ -14,7 +21,7 @@ import EsaIcon from './esa-icon.astro';
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
 type EsaButtonColor = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost';
-type EsaButtonAppearance = 'fill' | 'outline' | 'dashed';
+type EsaButtonAppearance = 'fill' | 'outline' | 'dashed' | 'soft'; // hub-edit-approved: Andy (see header note)
 
 interface Props {
   color?: EsaButtonColor;
@@ -123,6 +130,12 @@ const nativeAttrs = isLink
   .esa-button--sm { --_btn-height: var(--form-height-sm, 32px); --_btn-padding-x: var(--form-padding-x-sm, 12px); --_btn-font-size: var(--form-font-size-sm, 12px); --_btn-radius: var(--form-radius-sm, 4px); }
   .esa-button--lg { --_btn-height: var(--form-height-lg, 48px); --_btn-padding-x: var(--form-padding-x-lg, 20px); --_btn-font-size: var(--form-font-size-lg, 16px); --_btn-radius: var(--form-radius-lg, 8px); }
 
+  /* sm is NOT height-locked to the form scale — standalone small buttons get relaxed
+     vertical padding (6px block) instead of matching input height. Icon-only keeps a
+     fixed square so it can't collapse. hub-edit-approved: Andy (see header note). */
+  .esa-button--sm .esa-button__native { height: auto; padding-block: var(--spacing-150, 6px); }
+  .esa-button--sm.esa-button--icon-only .esa-button__native { height: var(--form-height-sm, 32px); padding-block: 0; }
+
   /* ---------- Colors (set the accent) ---------- */
   .esa-button--color-secondary { --_accent: var(--color-secondary, #5787b9); --_accent-hover: var(--color-secondary-hover, #43608a); }
   .esa-button--color-danger    { --_accent: var(--color-danger, #ef4444);  --_accent-hover: color-mix(in srgb, var(--color-danger, #ef4444) 85%, #000); }
@@ -151,6 +164,22 @@ const nativeAttrs = isLink
   .esa-button--appearance-dashed .esa-button__native:hover:not(:disabled) { background: color-mix(in srgb, var(--_accent) 8%, transparent); }
   .esa-button--appearance-outline.esa-button--active .esa-button__native,
   .esa-button--appearance-dashed.esa-button--active .esa-button__native { background: color-mix(in srgb, var(--_accent) 14%, transparent); }
+
+  /* ---------- Soft (neutral chrome + accent text; accent fill on hover) ----------
+     With color="danger" this is GitHub's secondary-danger button: gray surface,
+     darker-gray border, red text; hover fills red. hub-edit-approved: Andy (header). */
+  /* hub-edit-approved: Andy (see header) — soft bg is a light tint (mix of sunken + surface). */
+  .esa-button--appearance-soft .esa-button__native {
+    background: color-mix(in srgb, var(--color-surface-sunken, #efefef) 45%, var(--color-surface, #fff));
+    color: var(--_accent);
+    border-color: var(--color-border-strong, #d4d4d4);
+  }
+  .esa-button--appearance-soft .esa-button__native:hover:not(:disabled),
+  .esa-button--appearance-soft.esa-button--active .esa-button__native {
+    background: var(--_accent);
+    color: var(--_on);
+    border-color: var(--_accent);
+  }
 
   /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
   .esa-button--color-ghost .esa-button__native {
