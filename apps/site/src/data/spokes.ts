@@ -31,4 +31,11 @@ export const spokes: Spoke[] = [
     repo: 'https://github.com/esassoc/biochar-design',
     site: 'https://esassoc.github.io/biochar-design/',
   },
+  {
+    name: 'Noria',
+    slug: 'noria',
+    purpose: 'Design system and prototypes for Noria — the Deschutes basin water-banking platform',
+    repo: 'https://github.com/esassoc/noria-design',
+    site: 'https://esassoc.github.io/noria-design/',
+  },
 ];
