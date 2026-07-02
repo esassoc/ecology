@@ -223,7 +223,7 @@
   --badge-height-md: 28px;
   --badge-height-sm: 22px;
   --badge-height-xs: 18px;
-  --badge-radius: var(--radius-100, 4px); /* quiet 4px chip, not a pill (design-principles) — esa-pill stays full */
+  --badge-radius: var(--radius-100, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-text-inverse, #fff);
 
   /* esa-card */
