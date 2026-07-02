@@ -11,6 +11,7 @@
     "secondary":        { "$value": "{color.grass.8}",  "$type": "color" },
     "secondary-hover":  { "$value": "{color.grass.9}",  "$type": "color" },
     "secondary-strong": { "$value": "{color.grass.11}", "$type": "color", "$description": "Step 11 = colored text on surfaces for secondary contexts (outline buttons). Override in your theme when changing the secondary ramp." },
+    "secondary-on-fill": { "$value": "{color.grass.12}", "$type": "color", "$description": "Foreground text on a secondary (grass) solid fill. Step 8 is a bright fill — white text fails contrast, needs dark text. Override when your secondary color is a dark scale." },
     "accent":          { "$value": "{color.orange.9}",  "$type": "color" },
     "accent-hover":    { "$value": "{color.orange.10}", "$type": "color" },
     "ai":              { "$value": "{color.copper.9}",  "$type": "color" },
