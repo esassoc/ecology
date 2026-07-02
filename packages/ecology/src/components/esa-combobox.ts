@@ -231,8 +231,15 @@ export class EsaCombobox extends LitElement {
       this.emitValue();
       this.closeDropdown();
       if (this.mode === 'autocomplete') {
-        this._suppressNextOpen = true; // hub-edit-approved: user approved fix for mouse-select dropdown reopen bug
-        requestAnimationFrame(() => (this.renderRoot.querySelector('.input') as HTMLInputElement | null)?.focus());
+        const input = this.renderRoot.querySelector('.input') as HTMLInputElement | null;
+        // Refocus (and suppress the resulting focus-open) only when selection moved
+        // focus off the input, i.e. a mouse pick. Keyboard selection keeps the input
+        // focused — no focus event will fire, so setting the flag would leave it
+        // stale and swallow the next legitimate focus-open (e.g. Tab back in).
+        if (input && (this.renderRoot as unknown as ShadowRoot).activeElement !== input) {
+          this._suppressNextOpen = true;
+          requestAnimationFrame(() => input.focus());
+        }
       }
     }
   }
