@@ -164,7 +164,7 @@ export class EsaTextarea extends LitElement {
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
       margin-inline-start: 2px;
     }
 
@@ -190,8 +190,8 @@ export class EsaTextarea extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
-        var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width)
+        var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -208,7 +208,7 @@ export class EsaTextarea extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-border-color-error, #ef4444);
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-border-color-error, #ef4444);
     }
 
     .help,
@@ -221,7 +221,7 @@ export class EsaTextarea extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, #ef4444);
+      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
     }
   `;
 }

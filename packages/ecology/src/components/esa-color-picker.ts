@@ -210,7 +210,7 @@ export class EsaColorPicker extends LitElement {
     }
     .native:focus-visible + .preview {
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     .hex-input {
@@ -231,7 +231,7 @@ export class EsaColorPicker extends LitElement {
     }
     .hex-input:focus {
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .hex-input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -266,7 +266,7 @@ export class EsaColorPicker extends LitElement {
     }
     .swatch:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .swatch:disabled {
       opacity: 0.6;

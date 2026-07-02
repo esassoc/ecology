@@ -38,8 +38,18 @@ export class EsaSnackbarContainer extends LitElement {
     snackbars: { state: true },
   };
 
-  private snackbars: SnackbarEntry[] = [];
+  // hub-edit-approved: user approved hub edits this session (2026-06-29) and needs a
+  // working toast. Reactive state must be `declare` + constructor-init (the pattern
+  // every other esa-* component uses) — a class-field initializer shadows Lit's
+  // generated accessor, so assigning this.snackbars never triggered a re-render and
+  // toasts never appeared. See lit.dev/msg/class-field-shadowing.
+  declare private snackbars: SnackbarEntry[];
   private nextId = 0;
+
+  constructor() {
+    super();
+    this.snackbars = [];
+  }
 
   /** Show a snackbar. Returns its id. Mirrors EsaSnackbarService.show(). */
   show(config: EsaSnackbarConfig): string {

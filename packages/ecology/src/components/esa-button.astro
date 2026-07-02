@@ -73,35 +73,45 @@ const cls = [
 // and is marked aria-disabled (the --disabled wrapper kills pointer events).
 const isLink = href != null && href !== '';
 const isDisabled = disabled || loading;
-const Tag = isLink ? 'a' : 'button';
-const nativeAttrs = isLink
-  ? {
-      href: isDisabled ? undefined : href,
-      target: target || undefined,
-      rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
-      role: 'button',
-      tabindex: isDisabled ? -1 : undefined,
-      'aria-disabled': isDisabled ? 'true' : undefined,
-      'aria-busy': loading ? 'true' : undefined,
-      'aria-pressed': active ? 'true' : undefined,
-    }
-  : {
-      type,
-      disabled: isDisabled,
-      'aria-busy': loading ? 'true' : undefined,
-      'aria-pressed': active ? 'true' : undefined,
-    };
+const linkAttrs = {
+  href: isDisabled ? undefined : href,
+  target: target || undefined,
+  rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
+  role: 'button' as const,
+  tabindex: isDisabled ? -1 : undefined,
+  'aria-disabled': isDisabled ? ('true' as const) : undefined,
+  'aria-busy': loading ? ('true' as const) : undefined,
+  'aria-pressed': active ? ('true' as const) : undefined,
+};
+const buttonAttrs = {
+  type,
+  disabled: isDisabled,
+  'aria-busy': loading ? ('true' as const) : undefined,
+  'aria-pressed': active ? ('true' as const) : undefined,
+};
 ---
 <span class={cls}>
-  <Tag class="esa-button__native" {...nativeAttrs}>
-    {loading && <span class="esa-button__spinner" aria-hidden="true" />}
-    {icon && !loading && <EsaIcon name={icon} size={size} />}
-    {!iconOnly && (
-      <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
-        <slot />
-      </span>
-    )}
-  </Tag>
+  {isLink ? (
+    <a class="esa-button__native" {...linkAttrs}>
+      {loading && <span class="esa-button__spinner" aria-hidden="true" />}
+      {icon && !loading && <EsaIcon name={icon} size={size} />}
+      {!iconOnly && (
+        <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
+          <slot />
+        </span>
+      )}
+    </a>
+  ) : (
+    <button class="esa-button__native" {...buttonAttrs}>
+      {loading && <span class="esa-button__spinner" aria-hidden="true" />}
+      {icon && !loading && <EsaIcon name={icon} size={size} />}
+      {!iconOnly && (
+        <span class={`esa-button__label${loading ? ' esa-button__label--hidden' : ''}`}>
+          <slot />
+        </span>
+      )}
+    </button>
+  )}
 </span>
 
 <style>
@@ -111,10 +121,17 @@ const nativeAttrs = isLink
     --_btn-padding-x: var(--form-padding-x-md, 16px);
     --_btn-font-size: var(--form-font-size-md, 14px);
     --_btn-radius: var(--form-radius-md, 6px);
-    /* Color tokens — primary default. --_accent = the color; --_on = text on a solid fill. */
-    --_accent: var(--color-primary, #43608a);
-    --_accent-hover: var(--color-primary-hover, #39506f);
+    /* Color tokens — primary default.
+       --_accent      = fill / border color (step 9)
+       --_accent-text = text color for outline/dashed (step 11 of the ramp)
+       --_on          = text color on a solid fill (step 12 for bright/mid fills) */
+    --_accent: var(--color-primary, #46a758);
+    --_accent-hover: var(--color-primary-hover, #3e9b4f);
     --_on: var(--color-text-inverse, #ffffff);
+    --_accent-text: var(--_accent);
+    /* Tint overlays for outline/dashed appearances — track --_accent so they update per color variant. */
+    --_btn-tint-hover: color-mix(in srgb, var(--_accent) 8%, transparent);
+    --_btn-tint-active: color-mix(in srgb, var(--_accent) 14%, transparent);
     display: inline-block;
   }
 
@@ -123,13 +140,49 @@ const nativeAttrs = isLink
   .esa-button--sm { --_btn-height: var(--form-height-sm, 32px); --_btn-padding-x: var(--form-padding-x-sm, 12px); --_btn-font-size: var(--form-font-size-sm, 12px); --_btn-radius: var(--form-radius-sm, 4px); }
   .esa-button--lg { --_btn-height: var(--form-height-lg, 48px); --_btn-padding-x: var(--form-padding-x-lg, 20px); --_btn-font-size: var(--form-font-size-lg, 16px); --_btn-radius: var(--form-radius-lg, 8px); }
 
-  /* ---------- Colors (set the accent) ---------- */
-  .esa-button--color-secondary { --_accent: var(--color-secondary, #5787b9); --_accent-hover: var(--color-secondary-hover, #43608a); }
-  .esa-button--color-danger    { --_accent: var(--color-danger, #ef4444);  --_accent-hover: color-mix(in srgb, var(--color-danger, #ef4444) 85%, #000); }
-  .esa-button--color-success   { --_accent: var(--color-success, #22c55e); --_accent-hover: color-mix(in srgb, var(--color-success, #22c55e) 85%, #000); }
-  .esa-button--color-warning   { --_accent: var(--color-warning, #f59e0b); --_accent-hover: color-mix(in srgb, var(--color-warning, #f59e0b) 85%, #000); --_on: var(--button-on-warning, var(--color-gray-900, #171717)); }
-  .esa-button--color-info      { --_accent: var(--color-info, #3b82f6);    --_accent-hover: color-mix(in srgb, var(--color-info, #3b82f6) 85%, #000); }
-  .esa-button--color-ai        { --_accent: var(--color-ai, #a45f3d);      --_accent-hover: var(--color-ai-hover, #8a4d31); }
+  /* ---------- Colors (set the accent, on-fill text, and outline text) ----------
+     --_on          = foreground text on a solid fill. Defaults to white (correct for
+                      most step-9 fills). Override for bright scales (Lime, Yellow,
+                      Amber, Sky, Mint) whose step-9 is too light for white text.
+     --_accent-text = foreground text in outline/dashed contexts. Uses the semantic
+                      *-strong token (step 11) — designed for colored text on surfaces.
+                      Spokes override via their theme's *-strong tokens, not primitives. */
+  .esa-button--color-primary {
+    --_accent-text: var(--color-primary-strong);
+  }
+  .esa-button--color-secondary {
+    --_accent: var(--color-secondary);
+    --_accent-hover: var(--color-secondary-hover);
+    --_on: var(--color-secondary-on-fill, var(--color-gray-12));
+    --_accent-text: var(--color-secondary-strong);
+  }
+  .esa-button--color-danger {
+    --_accent: var(--color-danger);
+    --_accent-hover: var(--color-danger-hover);
+    --_accent-text: var(--color-danger-strong);
+  }
+  .esa-button--color-success {
+    --_accent: var(--color-success);
+    --_accent-hover: var(--color-success-hover);
+    --_on: var(--color-success-on-fill);
+    --_accent-text: var(--color-success-strong);
+  }
+  .esa-button--color-warning {
+    --_accent: var(--color-warning);
+    --_accent-hover: var(--color-warning-hover);
+    --_on: var(--button-on-warning, var(--color-gray-12));
+    --_accent-text: var(--color-warning-strong);
+  }
+  .esa-button--color-info {
+    --_accent: var(--color-info);
+    --_accent-hover: var(--color-info-hover);
+    --_accent-text: var(--color-info-strong);
+  }
+  .esa-button--color-ai {
+    --_accent: var(--color-ai);
+    --_accent-hover: var(--color-ai-hover);
+    --_accent-text: var(--color-ai-strong);
+  }
 
   /* ---------- Appearances ---------- */
   .esa-button--appearance-fill .esa-button__native {
@@ -143,14 +196,14 @@ const nativeAttrs = isLink
   .esa-button--appearance-outline .esa-button__native,
   .esa-button--appearance-dashed .esa-button__native {
     background: transparent;
-    color: var(--_accent);
+    color: var(--_accent-text);
     border-color: var(--_accent);
   }
   .esa-button--appearance-dashed .esa-button__native { border-style: dashed; }
   .esa-button--appearance-outline .esa-button__native:hover:not(:disabled),
-  .esa-button--appearance-dashed .esa-button__native:hover:not(:disabled) { background: color-mix(in srgb, var(--_accent) 8%, transparent); }
+  .esa-button--appearance-dashed .esa-button__native:hover:not(:disabled) { background: var(--_btn-tint-hover); }
   .esa-button--appearance-outline.esa-button--active .esa-button__native,
-  .esa-button--appearance-dashed.esa-button--active .esa-button__native { background: color-mix(in srgb, var(--_accent) 14%, transparent); }
+  .esa-button--appearance-dashed.esa-button--active .esa-button__native { background: var(--_btn-tint-active); }
 
   /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
   .esa-button--color-ghost .esa-button__native {
@@ -185,7 +238,7 @@ const nativeAttrs = isLink
     appearance: none;
   }
   .esa-button__native:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 

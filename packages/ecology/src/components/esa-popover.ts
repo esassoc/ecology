@@ -141,8 +141,8 @@ export class EsaPopover extends LitElement {
        text — for documentation/help content. Overriding the private bg/border
        tokens re-skins both the panel and the arrow. */
     :host([appearance='inverse']) {
-      --_popover-bg: var(--color-gray-900, #171717);
-      --_popover-border: var(--color-gray-900, #171717);
+      --_popover-bg: var(--color-gray-12);
+      --_popover-border: var(--color-gray-12);
       --_popover-color: var(--color-text-inverse, #ffffff);
     }
 

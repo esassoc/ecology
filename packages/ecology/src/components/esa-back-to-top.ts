@@ -154,7 +154,7 @@ export class EsaBackToTop extends LitElement {
     }
 
     .button:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
