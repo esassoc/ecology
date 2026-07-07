@@ -1,7 +1,7 @@
 ---
 name: ecology-verify
 description: Visual-fidelity gate for an Ecology migration. Renders before/after using the real theme tokens — reusable primitives in an isolated harness (no app/auth), pages & shells in the live authenticated app (reusing the project's e2e auth harness, else a saved storageState) — emits a self-contained side-by-side comparison HTML + a navigable index, screenshots with Playwright, and adjudicates deltas (and a handoff section's acceptance checks when present). The verify stage of the Ecology migration pattern; migrate-component/page/shell hand off here.
-allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_resize, mcp__playwright__browser_snapshot]
+allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_evaluate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_resize, mcp__playwright__browser_snapshot]
 ---
 
 Confirm a component swap (from `ecology-migrate-component`) preserves the **intended** appearance: render the **before** and **after** side by side, let a human eyeball it, and emit a PASS/FLAG verdict that separates *intentional* reference-faithful changes from *regressions*.
@@ -109,5 +109,5 @@ Verdict = **PASS** only if AFTER **matches the design reference** (modulo docume
 - **`git show` for BEFORE.** Read the pre-swap version from git, not a stashed tree, so the comparison is reproducible.
 - **Output is a gitignored review artifact** (`.playwright-mcp/…`) — not committed source.
 - **Skill-only / idempotent.** Re-running regenerates the HTML + screenshots in place.
-- **Keep the generator scripts** (harness builder, screenshot runner) in `<out-root>/<component>/` for reproducibility — the whole `<out-root>` is gitignored, so they cost nothing and document how the artifacts were produced.
+- **Keep the generator scripts** (harness builder, screenshot runner) in `<out-root>/<component>/` for reproducibility, and write a tiny **`serve.cjs`** static file server at `<out-root>/` so the index opens over http (`node .playwright-mcp/ecology-verify/serve.cjs`) — needed because the Playwright MCP browser blocks the `file:` protocol. The whole `<out-root>` is gitignored, so these cost nothing and document how the artifacts were produced.
 - **Doesn't revert anything.** Verify only *reports* fidelity; intentional legacy-appearance changes (flagged by migrate) are expected, not bugs to undo.

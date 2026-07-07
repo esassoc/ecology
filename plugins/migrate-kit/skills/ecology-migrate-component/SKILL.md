@@ -1,7 +1,7 @@
 ---
 name: ecology-migrate-component
 description: Execute the Ecology migration of ONE primitive — build its esa-* target as a standalone reusable Angular lego (reimplemented against the Beacon ui-* reference + Ecology token contract), migrate consumers to compose it, retire the bespoke original, and verify. The per-component execute stage of the Ecology migration pattern. Use after ecology-audit has produced the plan.
-allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, AskUserQuestion]
+allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, AskUserQuestion, Skill]
 ---
 
 Execute the migration of **one** reusable primitive from an `ecology-audit` plan to its Ecology target. The audit said *what* and *in what order*; this skill does the *swap* for a single component: reimplement it in Angular faithful to the Ecology spec, reconcile its public API, update its consumers, and verify. Operate on one component (or one slice) per run.

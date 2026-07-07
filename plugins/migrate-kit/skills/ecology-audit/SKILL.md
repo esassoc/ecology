@@ -1,6 +1,6 @@
 ---
 name: ecology-audit
-description: Audit an existing Angular app's reusable UI components and map them onto ESA's Ecology design system (DIRECT/PARTIAL/GAP/APP-SPECIFIC), analyze the token and library gaps, and apply safe design-independent token-alias scaffolding. Reusable across any Angular app. Use when planning an Ecology design-system transition.
+description: Audit an existing Angular app's reusable UI components and map them onto ESA's Ecology design system (DIRECT / PARTIAL / COEXIST / GAP, + an APP-SPECIFIC appendix), analyze the token and library gaps, and apply safe design-independent token-alias scaffolding. Reusable across any Angular app. Use when planning an Ecology design-system transition.
 allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, AskUserQuestion]
 ---
 
