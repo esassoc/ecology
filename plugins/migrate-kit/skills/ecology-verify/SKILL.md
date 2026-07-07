@@ -19,6 +19,27 @@ Render **three** columns, not two: **BEFORE** (legacy), **AFTER** (the new lego)
   2. **Else authenticate generically** — a saved Playwright `storageState`, or scripting the app's UI login once. Whatever the app documents for test auth.
   3. **Else** (no auth path) fall back to build-pass + comparing the rendered markup against the prototype, and **say so**.
 
+## Theme-inversion — the sharpest token-cleanliness check
+
+A brand-hue swap is a *weak* test of "does the app read only semantic tokens?" — a new brand keeps light
+surfaces, so anything that hardcodes `#fff`/`#000`/a raw ramp step or assumes a light background still
+*looks* right and sails past a before/after (and past a `var(--raw)` grep, which can't see hardcoded
+literals at all). To actually prove token-cleanliness, **invert the theme**: add a throwaway
+`:root[data-theme="dark"]` override of the *semantic layer only* (dark surfaces, light text, dark borders,
+`--color-primary` lifted for contrast), inject it in-browser (devtools `<style>` + set the attr on
+`<html>` — zero disk changes, reverts on reload), and screenshot the running app. **Every spot that
+doesn't flip is a stray literal or a non-semantic read** — the exact tail the other checks miss. Adjudicate:
+- **brand-swap-safe ≠ theme-safe.** A token derived from the brand ramp (e.g. a nav-active bg reading
+  `--<brand>-blue-100`) re-skins for a new *brand* but NOT for an inverted theme — only `--color-*`
+  semantic reads are truly theme-following. A brand-ramp read used for a *role* (surface/border/text) is a
+  FLAG; a chosen brand *shade* (a chart series) is fine.
+- Two classes stay light **correctly** and are NOT failures: **genuinely-fixed literals** (white text on a
+  brand fill, black shadows, an icon on a photo, data-viz series) and the **JS-painted surfaces** (grid/map
+  resolve tokens at load — they re-theme on *reload*, not on a live toggle, and only if their theme builder
+  resolves the full surface/text/border set, not just the brand accent — see `ecology-migrate-component`).
+- This doubles as the completeness gate + punch-list generator for the consumption-discipline sweep that
+  `ecology-audit` scopes: the inversion *is* what surfaces the remaining hardcodes to fix.
+
 ## Arguments
 
 `$ARGUMENTS`:
