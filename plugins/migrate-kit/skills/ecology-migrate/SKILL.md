@@ -9,7 +9,7 @@ The single entry point to the Ecology migration suite. It **sequences** the stag
 **The suite it conducts** (a two-axis + shell model — the plan carries two tracks + a shell slice):
 - **`ecology-audit`** — assess + plan: inventory → map to the live Ecology catalog → token/library gaps → an ordered, **two-track** plan (component slices + a screens track) plus a **shell slice (0b)** when the spoke restructures the frame. Run once per app; re-run for a burndown.
 - **`ecology-migrate-shell`** — the one-time **shell** restructure (Slice 0b: e.g. header nav → the spoke's sidebar `modern-layout`), run **once, first**, before the per-unit slices. Skipped when the spoke keeps the app's frame.
-- **`ecology-migrate-component`** — execute one **component** swap (reimplement against the Beacon `ui-*` reference + token contract, reconcile API, update consumers). *(Component axis — library-wide, bottom-up.)*
+- **`ecology-migrate-component`** — execute one **component** swap (reimplement against the Angular reference — a prior migration's `esa-*` legos, else Beacon `ui-*` — plus the token contract, reconcile API, update consumers). *(Component axis — library-wide, bottom-up.)*
 - **`ecology-migrate-page`** — rebuild one **screen** section-by-section against its spoke prototype + handoff (`decisions`/`gotchas` = build spec, `acceptance` = gate). *(Page axis — per-screen, top-down.)*
 - **`ecology-verify`** — the shared visual-fidelity gate: before/after render (isolated harness for primitives; live-authenticated app for shell/pages) → side-by-side page + navigable index → PASS/FLAG verdict.
 - **`ecology-migrate`** (this) — the conductor.

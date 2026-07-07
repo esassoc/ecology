@@ -2,7 +2,7 @@
 
 **Target:** `esa-field-error`. Classification: DIRECT. Lego dir: `<app>/src/app/shared/components/esa/field-error/`.
 
-**Net-new hub component — no spoke design-system page.** The spoke ships `esa-form-field`/`esa-text-field`/`esa-select`/… but **not** `esa-field-error` (it's promoted from other spokes' demand). Expected, not a blocker: build from the hub `.astro` + Beacon `ui-field-error`, and **flag the absent spoke page** in the report. There is also no handoff section for it (the parcel-discovery handoff is a map/grid screen). The spoke's theme values still flow through `--color-*`.
+**Net-new hub component — no spoke design-system page.** The spoke ships `esa-form-field`/`esa-text-field`/`esa-select`/… but **not** `esa-field-error` (it's promoted from other spokes' demand). Expected, not a blocker: build from **Noria's `esa-field-error` lego** (`shared/components/esa/field-error/`) as the primary Angular reference — already the hub's presentational `message`+`icon` contract on Ecology tokens — (else the hub `.astro` + Beacon `ui-field-error`), and **flag the absent spoke page** in the report. There is also no handoff section for it (the parcel-discovery handoff is a map/grid screen). The spoke's theme values still flow through `--color-*`.
 
 **The key decision — presentational (`message`) vs control-bound (`AbstractControl`) API.** The hub `esa-field-error.astro` is explicitly the **presentational half**: `message?: string` + `icon?: boolean`, renders `<p role="alert" aria-live="polite">` (leading `circle-alert` optional) or nothing. Beacon's `ui-field-error` instead binds an `AbstractControl` and resolves it through a `FieldErrorPipe`. **They diverge on API on purpose** (the `.astro` says the control plumbing is framework-specific).
 

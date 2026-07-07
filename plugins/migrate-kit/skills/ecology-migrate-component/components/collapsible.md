@@ -8,6 +8,7 @@ Loaded by `ecology-migrate-component` when the target is **collapsible** (and th
 - A **single** disclosure, not a single-open accordion — stack several; each opens independently (native `<details>` semantics).
 
 ## References
+- **Noria `esa-collapsible` lego** (`shared/components/esa/collapsible/`) — the **primary Angular reference**: the native `<details>`/`<summary>` build with the `expanded` model, header slot, `count`, `[data-size]`, and `flush`, already on Ecology tokens. Mirror it.
 - **Beacon `ui-collapsible`** — the Angular reference: native `<details>`, an `expanded` `model()`, an `onToggle` that mirrors the native open state back into the model, the header slot, count, and `[data-size]` sizing.
 - **Hub `esa-collapsible.astro`** — the token contract (`--collapsible-*` hooks → `--color-*`) + the `flush` variant.
 - **The spoke may not catalog it.** `esa-collapsible` is NET-NEW to the hub (promoted from Beacon/CB-Fish demand), so a given project's design-system often has **no** page for it — build from Beacon + hub and flag the absent spoke page; the spoke theme still flows through `--color-*`.

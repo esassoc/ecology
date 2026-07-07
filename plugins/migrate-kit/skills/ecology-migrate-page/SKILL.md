@@ -23,7 +23,7 @@ A spoke prototype ships a handoff spec — `<spoke>/src/data/handoff/<slug>.mjs`
 `$ARGUMENTS`:
 - **`--screen <app page/route|component>`** — the app screen to rebuild (e.g. a data-tool or list screen). Required.
 - **`--prototype <slug>`** — the spoke prototype to match (default: resolve by name from the spoke's `prototypes.ts`).
-- **`--spoke`/`--app`/`--ecology`/`--beacon`** — repo roots (defaults: `../<app>-design`; current; `../ecology`; `../Beacon`).
+- **`--spoke`/`--app`/`--ecology`/`--reference-app`/`--beacon`** — repo roots (defaults: `../<app>-design`; current; `../ecology`; `../noria`; `../Beacon`). Page composition defers primitive builds to the component axis; `--reference-app`/`--beacon` pass through to any `ecology-migrate-component` it triggers.
 - **`--dry-run`** — produce the section-by-section assembly plan, change nothing.
 
 ## Workflow

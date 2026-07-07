@@ -3,7 +3,7 @@
 Loaded by `ecology-migrate-component` when the target is **button**. `SKILL.md` holds the general workflow + generalizable rules; this file holds the button-specific playbook. (First per-component reference; siblings — `form-field.md`, `select.md`, `dialog.md`, … — follow the same shape.)
 
 ## Target
-- Lego: **`esa-button`** — an Angular attribute directive `button[esa-button], a[esa-button]` (the native element stays the host → `type`/form/focus/a11y come free). Reference: **Beacon `ui-button`**; token contract: hub `esa-button.astro`.
+- Lego: **`esa-button`** — an Angular attribute directive `button[esa-button], a[esa-button]` (the native element stays the host → `type`/form/focus/a11y come free). Primary Angular reference: **Noria `esa-button`** (`shared/components/esa/button/`) — already this exact directive shape (signal inputs, computed host-class, composes `esa-icon`); **Beacon `ui-button`** = fallback + variant-superset signal; token contract: hub `esa-button.astro`.
 - Variants: `color` (primary/secondary/danger/success/warning/info/ai/ghost) × `appearance` (fill/outline/dashed) × `size` (xs/sm/md/lg), + `active`/`loading`/`icon` (leading Lucide glyph).
 - **Icon-only buttons are NOT esa-button** → use **`esa-icon-button`** (composing `esa-icon`).
 

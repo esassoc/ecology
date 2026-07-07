@@ -1,6 +1,6 @@
 ---
 name: ecology-migrate-shell
-description: Execute the one-time app-shell / IA restructure of an Angular app to match the design spoke's frame — e.g. a top header nav → the spoke's collapsible sidebar "modern-layout" (fixed topbar + sidenav + content). Reimplements the root shell against the spoke's AppShell + Beacon's Angular modern-layout reference, re-houses the app's navigation (routes, auth/role gating, user menu) and owns the handoff's chrome sections. Slice 0b — runs once, before component/page migration. Verified against the full-page prototype, not in isolation.
+description: Execute the one-time app-shell / IA restructure of an Angular app to match the design spoke's frame — e.g. a top header nav → the spoke's collapsible sidebar "modern-layout" (fixed topbar + sidenav + content). Reimplements the root shell against the spoke's AppShell + an Angular reference (a prior migrated app's shell if present — default Noria — else Beacon's modern-layout), re-houses the app's navigation (routes, auth/role gating, user menu) and owns the handoff's chrome sections. Slice 0b — runs once, before component/page migration. Verified against the full-page prototype, not in isolation.
 allowed-tools: [Agent, Read, Glob, Grep, Write, Edit, Bash, AskUserQuestion, Skill]
 ---
 
@@ -8,18 +8,18 @@ The **shell axis** — the one-time, app-wide frame restructure. Where `ecology-
 
 ## Consumption model
 
-A real app's chrome usually outgrows `esa-app-shell` (which hardcodes its app-bar end slot to a single user menu — no room for an admin/utility cluster or env badge). So the spoke ports a **bespoke** shell, and so do we: **reimplement the root shell in Angular following the spoke's `AppShell` (the target) + Beacon's Angular `modern-layout` (the reference — `<beacon>/Beacon.Web/src/app/app.component.{html,scss}`), composing the Angular `esa-*` legos** (`esa-icon`, `esa-icon-button`, `esa-badge`, `esa-sidebar-nav` — reimplemented Angular components, not the hub's Lit WCs) and reading tokens.
+A real app's chrome usually outgrows `esa-app-shell` (which hardcodes its app-bar end slot to a single user menu — no room for an admin/utility cluster or env badge). So the spoke ports a **bespoke** shell, and so do we: **reimplement the root shell in Angular following the spoke's `AppShell` (the target)**, against the **Angular reference — a prior migrated app's root shell if it already did this restructure (`--reference-app`, default Noria's `app.component`/layout), else Beacon's Angular `modern-layout`** (`<beacon>/Beacon.Web/src/app/app.component.{html,scss}`) — **composing the Angular `esa-*` legos** (`esa-icon`, `esa-icon-button`, `esa-badge`, `esa-sidebar-nav` — the reference app's reimplemented Angular components, not the hub's Lit WCs) and reading tokens.
 
 ## Arguments
 
-`$ARGUMENTS`: `--app` (current repo), `--spoke` (`../<app>-design`), `--beacon` (`../Beacon`), `--ecology` (`../ecology`), `--dry-run` (plan only).
+`$ARGUMENTS`: `--app` (current repo), `--spoke` (`../<app>-design`), `--reference-app` (a prior migrated app whose shell + `esa-*` legos are the primary reference; default `../noria`), `--beacon` (`../Beacon`, fallback reference), `--ecology` (`../ecology`), `--dry-run` (plan only).
 
 ## Workflow
 
 ### Phase 0 — Resolve the shells
 - **App's current shell:** the **root layout** that mounts the global nav + `<router-outlet>` (commonly `app.component.html` — e.g. a header/nav bar + `<main><router-outlet></main>` + a footer), plus the **nav source**: the routes, the nav components' links, and any **auth/role/flag gating** + the **user menu**.
 - **Spoke target shell:** `<spoke>/src/layouts/AppShell.astro` + the handoff's **chrome sections** (top bar, side nav) with their `decisions`/`gotchas`/`acceptance`.
-- **Beacon reference:** `<beacon>/Beacon.Web/src/app/app.component.{html,scss}` — the `.modern-layout` root shell the spoke ported.
+- **Angular reference:** the reference app's migrated root shell if present (`<reference-app>/src/app/app.component.{html,scss}` or its layout — default Noria) is the **primary** reference; else **Beacon** — `<beacon>/Beacon.Web/src/app/app.component.{html,scss}` — the `.modern-layout` root shell the spoke ported.
 
 ### Phase 1 — Capture the current shell contract (preserve, don't lose)
 Enumerate **every** nav destination and its **gating** (role / permission / feature-flag), the **user-menu** items, the **admin/utility** links, the brand/home link, and any env badge. The shell change is **layout only** — all of this must survive, re-housed. (This is the high-risk part: a restructure that silently drops a role-gated link or a menu item is a regression.)
@@ -43,7 +43,7 @@ The new shell structure, **every re-housed destination + its preserved gating** 
 ## Notes
 - **One-time, app-wide — after the theme + its chrome leaf-legos.** Slice 0b — runs before the *remaining* component/page slices (everything renders inside it), but after Slice 0a's chrome leaf-legos (`esa-icon`/`-icon-button`/`-badge`) so it composes rather than inlines.
 - **Preserve nav logic + gating exactly.** A layout change, not an access change — re-house every link and keep its guard.
-- **Mirror the spoke `AppShell` + Beacon `modern-layout`.** Don't diverge; the spoke is a faithful port of Beacon's root shell, so the Angular reference is close to 1:1.
+- **Mirror the spoke `AppShell` + the Angular reference (the reference app's migrated shell if present, else Beacon `modern-layout`).** Don't diverge; the spoke is a faithful port of Beacon's root shell, so the Angular reference is close to 1:1.
 - **Verified full-page**, against the prototype + handoff `acceptance` — not the isolated harness `ecology-verify` uses for primitives.
 - **App-specific logic stays app-owned** — auth, role resolution, the user menu's actions — just re-housed into the new chrome.
 - **The root-shell edit may trip repo guardrails.** Restructuring touches the root component (e.g. `app.component.ts`), which often holds pre-existing imperative code (subscriptions, body-class side-effects); an rxjs/lint PreToolUse hook may block the edit on that *pre-existing* code. The restructure is legitimate — expect the guardrail and resolve it (fix forward / coordinate), don't silently bypass. A conductor running unattended should surface this as a checkpoint, not stall.

@@ -14,6 +14,7 @@ So the migration = build `esa-snackbar` + refactor the host to render `<esa-snac
 - **The hub ships snackbar as a Lit WC** (`esa-snackbar-container`/`-item`) — **no `.astro`** — so build from Beacon `ui-toast` + the spoke's theme. The spoke usually catalogs the *container* (`esa-snackbar-container`, the imperative stack); the single-item view is the lego here.
 
 ## References + visual
+- **Noria `esa-snackbar` lego** (`shared/components/esa/snackbar/`) — the **primary Angular reference**: the single-toast view (context/message/dismissable/actions, the context→Lucide map, composing `esa-icon`/`-icon-button`/`-button`) already built on Ecology tokens with the tinted-surface recipe. Mirror it; the host/view split above still applies.
 - **Beacon `ui-toast`** — the Angular reference: per-context **tinted surface + left accent border + colored icon**, the status hues matching `ui-button`'s palette (a success toast reads like a success button); `primary` is the **neutral** context (gray), not branded.
 - Derive the tint from the semantic token with `color-mix(in srgb, var(--color-success) 8%, var(--color-surface))` — no `-50` ramp dependency.
 
