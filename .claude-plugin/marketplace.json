@@ -9,6 +9,11 @@
       "name": "spoke-kit",
       "source": "./plugins/spoke-kit",
       "description": "Everything Claude needs in an Ecology spoke: the component-first skill + enforcement hook, /spoke-init scaffolding, and the spoke pre-commit review."
+    },
+    {
+      "name": "migrate-kit",
+      "source": "./plugins/migrate-kit",
+      "description": "The spoke-driven Ecology migration suite for existing Angular apps: a human-gated conductor over audit/plan, shell (header→sidebar), component, page, and verify stages — driven by the app's design spoke, a prior migration's esa-* legos (else Beacon), and the hub token contract."
     }
   ]
 }
