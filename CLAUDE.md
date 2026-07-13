@@ -90,10 +90,26 @@ the spoke directory) needs a human edit when the architecture or spoke roster ch
 
 - **Frozen identifiers**: marketplace `ecology`, plugin `spoke-kit`. The key
   `"spoke-kit@ecology"` is checked into every spoke — renaming either breaks them.
-- **Publishing**: plugin edits go live for spokes only after **push to GitHub**
-  (and `claude plugin marketplace update ecology` on each machine). Local commits
-  aren't enough. Bump `plugins/spoke-kit/.claude-plugin/plugin.json` version on
-  behavior changes.
+- **Publishing**: plugin edits go live for spokes only after **push to GitHub**.
+  Local commits aren't enough. Bump `plugins/spoke-kit/.claude-plugin/plugin.json`
+  version on behavior changes, push, then **on each machine run BOTH commands**:
+
+  ```bash
+  claude plugin marketplace update ecology   # refreshes the LISTING only
+  claude plugin update spoke-kit@ecology     # actually installs the new version
+  ```
+
+  The first command is **not sufficient and is actively misleading** — it prints
+  "Successfully updated marketplace" while leaving the installed plugin pinned at the
+  old version (the cache lives at `~/.claude/plugins/cache/ecology/spoke-kit/<version>/`;
+  check which version dirs exist). Only `plugin update` moves it. Then **restart Claude
+  Code** — the CLI says "Restart to apply changes" and means it; hooks and skills are
+  loaded at session start.
+
+  Verify, don't trust the success message:
+  ```bash
+  claude plugin list | grep -A1 spoke-kit@ecology   # must show the version you pushed
+  ```
 - **New spokes**: `/spoke-init` (run from this repo's root) interviews, then runs
   the deterministic `scripts/create-spoke.mjs`, then does the judgment work. Never
   hand-copy `packages/spoke-template/`.

@@ -208,6 +208,8 @@ CSS-only files use the same token as a CSS comment: `/* bcn-lego-checked: ... */
 - [Reinvented → lego mapping & per-tier search recipes](lego-lookup.md)
 
 > **Publishing note:** edits to this skill only reach spokes after the plugin is republished —
-> bump `plugins/spoke-kit/.claude-plugin/plugin.json` (currently `1.3.1`), push the hub, then
-> `claude plugin marketplace update ecology`. Local hub edits are inert until then (spokes run
-> the cached marketplace copy).
+> bump `plugins/spoke-kit/.claude-plugin/plugin.json`, push the hub, then on each machine run
+> **both** `claude plugin marketplace update ecology` (refreshes the listing only — it reports
+> success without installing anything) **and** `claude plugin update spoke-kit@ecology` (the one
+> that actually upgrades), then restart Claude Code. Verify with `claude plugin list`. Local hub
+> edits are inert until then (spokes run the cached marketplace copy).
