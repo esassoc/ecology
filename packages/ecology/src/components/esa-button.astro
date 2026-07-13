@@ -17,6 +17,14 @@
 //
 // `ai` maps to the copper "AI context" tokens. Color sets a private --_accent;
 // appearance decides how that accent renders (solid fill vs bordered).
+//
+// hub-edit-approved: Andy approved in-session (2026-07-13) — forward unknown props
+// (`onclick`, `id`, `name`, `data-*`, `aria-*`) to the NATIVE <button>/<a> instead of
+// dropping them. Previously the props were a closed whitelist, so a handler or an id
+// passed to <EsaButton> silently went nowhere; cb-fish's map-sow prototype worked
+// around it by wrapping ~15 buttons in <span onclick> so the click would bubble out of
+// the inner native button. `class` is deliberately NOT forwarded — it stays on the
+// styled wrapper so a caller can add a class without clobbering .esa-button__native.
 import EsaIcon from './esa-icon.astro';
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
@@ -41,6 +49,14 @@ interface Props {
   target?: string;
   /** Link rel (href only). Defaults to "noreferrer" when target="_blank". */
   rel?: string;
+  /** Extra class(es) — applied to the styled wrapper, not the native control. */
+  class?: string;
+  /**
+   * Any other attribute (onclick, id, name, value, form, data-*, aria-*) is forwarded
+   * verbatim to the native <button>/<a>. This is what lets plain-JS callers wire a
+   * handler or grab the element by id.
+   */
+  [attr: string]: unknown;
 }
 
 const {
@@ -56,6 +72,8 @@ const {
   href,
   target,
   rel,
+  class: className = '',
+  ...rest
 } = Astro.props;
 
 const cls = [
@@ -67,6 +85,7 @@ const cls = [
   disabled && 'esa-button--disabled',
   loading && 'esa-button--loading',
   iconOnly && 'esa-button--icon-only',
+  className,
 ]
   .filter(Boolean)
   .join(' ');
@@ -99,7 +118,7 @@ const buttonAttrs = {
 ---
 <span class={cls}>
   {isLink ? (
-    <a class="esa-button__native" {...linkAttrs}>
+    <a class="esa-button__native" {...linkAttrs} {...rest}>
       {loading && <span class="esa-button__spinner" aria-hidden="true" />}
       {icon && !loading && <EsaIcon name={icon} size={size} />}
       {!iconOnly && (
@@ -109,7 +128,7 @@ const buttonAttrs = {
       )}
     </a>
   ) : (
-    <button class="esa-button__native" {...buttonAttrs}>
+    <button class="esa-button__native" {...buttonAttrs} {...rest}>
       {loading && <span class="esa-button__spinner" aria-hidden="true" />}
       {icon && !loading && <EsaIcon name={icon} size={size} />}
       {!iconOnly && (

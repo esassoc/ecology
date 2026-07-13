@@ -1,6 +1,6 @@
 ---
 name: component-first
-description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, type-roles, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, and on "make a component", "build a page/screen", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order AND the manifest-first / sections-are-components discipline (every page section resolves to an esa-* lego or a <spoke>-* component; zero page <style>). NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides, and NEVER inline a page section as bare markup + page <style>.
+description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, type-roles, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, on writing UI-generating JavaScript (innerHTML, template-literal markup, DOM-built controls, public/scripts/*.js, or any non-Astro/runtime-rendered app), and on "make a component", "build a page/screen", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order AND the manifest-first / sections-are-components discipline (every page section resolves to an esa-* lego or a <spoke>-* component; zero page <style>). NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides, and NEVER inline a page section as bare markup + page <style>. Runtime/JS-built UI does NOT exempt you: the .astro legos are compile-time, but the Lit web components (esa-dialog, esa-select, esa-text-field, esa-tab-layout, …) are real custom elements usable from any JS string — and the PreToolUse hooks CANNOT see string-built markup, so a green hook run is not evidence of compliance.
 ---
 
 # Component-First (Legos, Never Reinvent)
@@ -25,6 +25,47 @@ ls node_modules/@esa/ecology/src/components/
 Import depends on the file extension you saw in the `ls`:
 - **`.astro` component** → import in frontmatter: `import EsaCard from '@esa/ecology/esa-card.astro';`
 - **`.ts` web component** → register it in a client `<script>`: `import '@esa/ecology/esa-dialog';` then use the `<esa-dialog>` custom element in markup.
+
+#### The extension decides what you can do at RUNTIME — this is the tier people miss
+
+- **`.astro` legos are COMPILE-TIME.** Astro renders them during the build and emits plain
+  HTML. They **do not exist in the browser**. You cannot create one from JavaScript.
+- **`.ts` legos are Lit WEB COMPONENTS** — they compile to real custom elements the browser
+  registers. Once the script is imported, `<esa-dialog>` is a tag the browser understands,
+  exactly like `<div>`. **They work in ANY stack, and from any string of HTML.**
+
+So if your UI is produced at **runtime** — a vanilla-JS app, `innerHTML`, template strings,
+a `public/scripts/*.js` file, or any non-Astro framework — **you have NOT run out of legos.**
+The `.astro` tier is genuinely unavailable to you; the **Lit tier is not**, and it is over
+half the interactive catalog. Use it:
+
+```js
+// ✅ Works — esa-dialog is a real custom element. Just import the module once.
+panel.innerHTML = `
+  <esa-dialog heading="Export Metrics" open>
+    <esa-select label="Format"></esa-select>
+    <esa-text-field label="Filename"></esa-text-field>
+  </esa-dialog>`;
+```
+
+**The Lit (runtime-usable) legos** — reach for these before hand-rolling anything in JS:
+
+```
+esa-back-to-top    esa-button-group   esa-button-toggle  esa-checkbox
+esa-checkbox-group esa-chip-group     esa-color-picker   esa-combobox
+esa-command-palette esa-confirm-dialog esa-date-picker   esa-dialog
+esa-dropdown-menu  esa-entity-search  esa-file-list      esa-file-upload
+esa-filter-dropdown esa-input-tag     esa-pagination     esa-popover
+esa-radio-group    esa-range-slider   esa-search-panel   esa-select
+esa-side-dialog    esa-sidebar-nav    esa-snackbar-container esa-snackbar-item
+esa-switch-toggle  esa-tab-layout     esa-text-field     esa-textarea
+esa-tooltip
+```
+
+> **The gates cannot see string-built markup.** `check-component-first` and `check-manifest`
+> inspect `.astro`/`.css` writes. A `<button>` assembled inside a JS template literal in
+> `public/` passes every hook and still bypasses the entire design system. **A green hook run
+> is not evidence you used the legos** — in runtime-JS code the discipline is on you.
 
 **Ecology is more than atoms — reach for the COMPOSITION layer before writing CSS:**
 - **Layout primitives** (`@esa/tokens/layouts.css`): `.stack` `.cluster` `.repel` `.grid`
