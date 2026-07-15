@@ -91,3 +91,43 @@ test('a section declared but never rendered fires declared-but-absent', () => {
     JSON.stringify(errs, null, 2),
   );
 });
+
+test('PascalCase component filenames reconcile with kebab manifest declarations', () => {
+  // Spokes name component files PascalCase (BcnWorkBreakdown.astro) while the
+  // manifest declares kebab (bcn-work-breakdown) — the basename must be kebab'd.
+  const pascalSpoke = `---
+import BcnWorkBreakdown from '../../components/bcn/BcnWorkBreakdown.astro';
+---
+<!-- manifest:
+  layout: stack
+  sections:
+    - gantt -> bcn-work-breakdown
+-->
+<BcnWorkBreakdown programs={p} />
+`;
+  const { manifest, errors } = crossCheckManifest(pascalSpoke);
+  assert.equal(manifest, true);
+  assert.deepEqual(errors, [], JSON.stringify(errors, null, 2));
+});
+
+test('web-component side-effect import in a body <script> counts as composition', () => {
+  // Client scripts register esa-* elements (`import '@esa/ecology/esa-side-dialog'`);
+  // a frontmatter import would execute the element definition during SSR, so the
+  // body-script import must satisfy the declared section.
+  const wcSpoke = `---
+const x = 1;
+---
+<!-- manifest:
+  layout: stack
+  sections:
+    - drawer -> esa-side-dialog
+-->
+<esa-side-dialog id="d"></esa-side-dialog>
+<script>
+  import '@esa/ecology/esa-side-dialog';
+</script>
+`;
+  const { manifest, errors } = crossCheckManifest(wcSpoke);
+  assert.equal(manifest, true);
+  assert.deepEqual(errors, [], JSON.stringify(errors, null, 2));
+});

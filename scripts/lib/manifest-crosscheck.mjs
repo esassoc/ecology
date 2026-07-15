@@ -49,7 +49,9 @@ function importToKebab(src) {
   const isComponent = /(?:^|\/)@esa\/ecology\//.test(src) || /\/components\//.test(src);
   if (!isComponent) return null;
   const base = src.split('/').pop().replace(/\.(astro|ts|js|mjs)$/i, '');
-  return base.toLowerCase();
+  // Spokes name component files PascalCase (BcnWorkBreakdown.astro); the manifest
+  // declares kebab (bcn-work-breakdown). Kebab the basename so both conventions match.
+  return pascalToKebab(base);
 }
 
 /** Parse the `manifest: … sections:` block -> { found, declared:Set<kebab>, line }. */
@@ -85,13 +87,23 @@ export function crossCheckManifest(src) {
   if (!manifest.found) return { manifest: false, errors: [] };
 
   // --- IMPORTED: component imports, kebab'd by basename. -------------------
-  // Frontmatter only (the first --- … --- fence). Side-effect imports counted too.
+  // Frontmatter (the first --- … --- fence), plus body <script> blocks: web
+  // components register client-side via side-effect imports there (a frontmatter
+  // import would execute the element definition during SSR), so those count as
+  // composition imports too.
   const fm = src.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   const frontmatter = fm ? fm[1] : '';
   const imported = new Set();
-  for (const m of frontmatter.matchAll(/import\s+(?:[^'"]*?\sfrom\s+)?['"]([^'"]+)['"]/g)) {
+  const importRe = /import\s+(?:[^'"]*?\sfrom\s+)?['"]([^'"]+)['"]/g;
+  for (const m of frontmatter.matchAll(importRe)) {
     const kebab = importToKebab(m[1]);
     if (kebab) imported.add(kebab);
+  }
+  for (const s of src.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
+    for (const m of s[1].matchAll(importRe)) {
+      const kebab = importToKebab(m[1]);
+      if (kebab) imported.add(kebab);
+    }
   }
 
   // A tag is "trackable" — a real component we reconcile — if it's a per-page
