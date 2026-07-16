@@ -69,6 +69,9 @@
 
   /* ===================== ICON BUTTON ===================== */
   --icon-button-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
+  /* Selected/toggled state pulls the brand color so it tracks the active theme. */
+  --icon-button-active-color: var(--color-primary);
+  --icon-button-active-bg: color-mix(in srgb, var(--color-primary) 12%, transparent);
 
   /* ===================== FILTERS ===================== */
   --filter-container-gap: var(--spacing-200);
@@ -332,6 +335,8 @@
   --icon-link-font-size-md: 1rem;
   --icon-link-font-size-sm: 0.875rem;
   --icon-link-gap: var(--spacing-150, 6px);
+  /* Active/current link adopts the brand color so it tracks the active theme. */
+  --icon-link-active-color: var(--color-primary);
 
   /* esa-file-upload */
   --icon-size-large: 24px;

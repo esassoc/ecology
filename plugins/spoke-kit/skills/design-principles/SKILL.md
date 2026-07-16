@@ -27,6 +27,36 @@ the "banned patterns" as Must-fix.
    tokens. (The component-first skill covers the never-hand-roll-a-primitive
    rule; this skill covers how the styling you ARE allowed to write looks.)
 
+## Accessibility (non-negotiable)
+
+These are contract, not polish — /design-qa and the pre-commit review treat a
+missing accessible name as **Must-fix**.
+
+1. **Every interactive control has an accessible name.** Buttons, links, inputs,
+   radios/checkboxes, toggles, tabs, menu items, icon-only controls, and any
+   grouping wrapper (`role="radiogroup"`, `role="group"`, `role="tablist"`) must
+   be announced with a name — never just its role. This is WCAG 4.1.2.
+2. **Name from the visible text, not a parallel string.** Prefer
+   `aria-labelledby` pointing at the on-screen label so the accessible name
+   *equals* the visible text (WCAG 2.5.3, Label in Name). Reach for `aria-label`
+   only when there is no visible text (icon-only controls, or a group already
+   introduced by nearby context). Don't hand-write an `aria-label` that
+   paraphrases visible text — it drifts.
+3. **A wrapping `<label>` only names native labelable controls.** `<label>`
+   associates with `<input>/<select>/<textarea>/<button>` (and form-associated
+   custom elements) — it does **not** give an accessible name to a `role="…"`
+   on a `<span>/<div>`. Custom-role elements need explicit `aria-labelledby`/
+   `aria-label`. (This is the exact bug that left `esa-radio-group`'s options
+   unnamed.)
+4. **Role + state + keyboard travel together.** A custom control that takes a
+   role must also carry its state (`aria-checked`/`-selected`/`-expanded`/
+   `-disabled`) and be operable by keyboard (Tab to reach, Space/Enter/arrows to
+   operate). Icon-only controls set the name via `label`/`aria-label`; decorative
+   icons are `aria-hidden`.
+5. **Fail loud in dev.** A component that can render nameless (e.g. a group whose
+   label prop is optional) should `console.warn` once when it does, so the gap
+   surfaces in development instead of an audit.
+
 ## Token-first styling
 
 A styling change in a spoke is a **token re-point until proven otherwise**:
@@ -45,6 +75,12 @@ A styling change in a spoke is a **token re-point until proven otherwise**:
    checking that no token applies. QA treats a checked hard-code as a warning
    to note, not an error to revert. Inventing a custom property that exists
    nowhere is still always a bug.
+5. **Color ramps are P3-first with a hex fallback** (Radix / hub pattern). A
+   spoke's raw ramp defines the **hex** value in the `[data-theme]` block and
+   the matching `color(display-p3 …)` in a trailing `@media (color-gamut: p3)`
+   block that overrides it — capable displays render P3, everything else falls
+   back to hex. Both come straight from the Radix custom-palette tool. Never ship
+   a ramp as hex-only (or P3-only); grays included. Pre-commit Check 8 enforces.
 
 ## Mock data
 

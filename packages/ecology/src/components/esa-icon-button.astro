@@ -21,11 +21,13 @@ interface Props {
   href?: string;
   size?: EsaSize;
   type?: 'button' | 'submit' | 'reset';
+  /** Selected/toggled state — adopts the brand color so it tracks the theme. */
+  active?: boolean;
 }
 
-const { icon, label, href, size = 'md', type = 'button' } = Astro.props;
+const { icon, label, href, size = 'md', type = 'button', active = false } = Astro.props;
 const Tag = href ? 'a' : 'button';
-const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
+const cls = ['esa-icon-button', `esa-icon-button--${size}`, active && 'is-active'].filter(Boolean).join(' ');
 ---
 <Tag
   class={cls}
@@ -33,6 +35,8 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
   type={href ? undefined : type}
   aria-label={label}
   title={label}
+  aria-pressed={!href && active ? 'true' : undefined}
+  aria-current={href && active ? 'true' : undefined}
 >
   <EsaIcon name={icon} size={size} />
 </Tag>
@@ -52,7 +56,9 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
     background: transparent;
     color: inherit;
     cursor: pointer;
-    transition: background var(--transition-fast, 150ms ease);
+    transition:
+      background var(--duration-fast, 150ms) var(--easing-standard, ease),
+      transform var(--duration-fast, 150ms) var(--easing-out, ease);
     -webkit-appearance: none;
     appearance: none;
   }
@@ -61,6 +67,16 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
   .esa-icon-button--lg { --_ib-size: var(--form-height-lg, 48px); }
 
   .esa-icon-button:hover { background: var(--_ib-bg-hover); }
+  /* Selected/toggled: brand foreground + subtle brand wash, both theme-driven. */
+  .esa-icon-button.is-active {
+    color: var(--icon-button-active-color, var(--color-primary, currentColor));
+    background: var(--icon-button-active-bg, transparent);
+  }
+  /* Tactile press — scale down slightly while the pointer/key is held. */
+  .esa-icon-button:active:not(:disabled) { transform: scale(0.97); }
+  @media (prefers-reduced-motion: reduce) {
+    .esa-icon-button:active:not(:disabled) { transform: none; }
+  }
   .esa-icon-button:focus-visible {
     outline: var(--focus-ring-width) solid currentColor;
     outline-offset: var(--focus-ring-offset, 2px);

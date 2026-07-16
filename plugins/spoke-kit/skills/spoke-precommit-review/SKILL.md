@@ -23,11 +23,11 @@ A repo is an ecology spoke when `package.json` depends on `@esa/ecology` + `@esa
 
 | Bucket | Auto-apply? | What lands here |
 |--------|-------------|-----------------|
-| **Must-fix** | Yes | Undefined/broken token (`var(--radius)` — ecology ships `--radius-050/100/200/...`, not `--radius`), `tsc` errors, `astro build` failure, font-weight used but not loaded |
+| **Must-fix** | Yes | Undefined/broken token (`var(--radius)` — ecology ships `--radius-050/100/200/...`, not `--radius`), `tsc` errors, `astro build` failure, font-weight used but not loaded, an interactive control or role group with no accessible name (WCAG 4.1.2) |
 | **Should-fix** | Yes (when mapping is unambiguous) | Hardcoded value with an exact existing token; a chrome value appearing 2+ times that should be promoted to `theme-<brand>.css`; copy-pasted render logic that belongs in a shared `.ts` |
 | **Consider** | No — list only | Whether a one-off rgba stays inline; whether a near-match value should snap to a token or get a new spoke token; component-split judgment calls; intentional vs accidental asset dupes |
 
-## The Six Checks (summary — full detail + greps in `checklist.md`)
+## The Eight Checks (summary — full detail + greps in `checklist.md`)
 
 1. **Ecology token usage** — map raw hex/px to semantic tokens (`#1e5386`→`--color-primary`, `#f3f7fc`→`--color-primary-subtle`, IBM Plex→`--font-sans`/`--font-display`, spacing→`--spacing-*`, radius→`--radius-100`/`--radius-200`). **Verify every referenced custom property actually exists** by grepping `node_modules/@esa/tokens/`. Recurring chrome values (2+ uses) → promote to `theme-<brand>.css` as `--cbf-*` or a reassigned semantic token. Primitives never move — re-point the consuming semantic token. `--cbf-*` raw-ramp tokens live ONLY in the theme file; components never read them directly.
 2. **Type contract** — when a component overrides `--font-sans`/`--font-display`, every `font-weight` it uses must be in the Google Fonts `<link>` request in `BaseLayout.astro`. (Real bug: `font-weight: 500` used, link requested only `400;600` → silent faux-bold.)
@@ -35,6 +35,8 @@ A repo is an ecology spoke when `package.json` depends on `@esa/ecology` + `@esa
 4. **CSS conventions** — each `.astro` carries a scoped `<style>`. JS-built (runtime) DOM can't get Astro's scope hash, so its CSS must be `<style is:global>` with every selector prefixed by one root class (e.g. `.cbf-search-surface ...`). No Tailwind. Divergence between two surfaces sharing one renderer belongs in a CSS scope boundary, not forked markup.
 5. **Design principles** — load the **`design-principles`** skill (the canonical home of these rules — banned visual patterns, 16px body minimum, token-first styling, mock-data rules) and check the diff against it. Its banned patterns are Must-fix. Plus: TypeScript types-first.
 6. **Asset hygiene** — assets referenced from `.astro`/built pages live in `public/` with absolute paths. Flag duplicated assets; note whether a dupe is intentional (specimen source-of-truth in `specimens/assets/` vs shipped `public/` copy) or accidental.
+7. **Accessible names** — every interactive control and role group must be *named*, not just given a role (WCAG 4.1.2). Grep the diff for `role="radiogroup|group|tablist|radio|tab|switch|button"` and icon-only controls; each needs `aria-labelledby` (→ visible text, preferred) or `aria-label`. A wrapping `<label>` does NOT name a `role="…"` span. Missing name → Must-fix. Full rule: the `design-principles` skill's Accessibility section.
+8. **Radix ramps are P3-first with a hex fallback** — a spoke's raw color ramp (`--<scope>-*-N`) authored in `theme-<slug>.css` must define BOTH a hex value (in the `[data-theme]` block) and a `color(display-p3 …)` value (in a `@media (color-gamut: p3)` block), mirroring the hub. Grep the theme file for `--<scope>-` ramp steps assigned a `#hex` and confirm each has a P3 twin under `@media (color-gamut: p3)`. A ramp shipped hex-only (or P3-only) is Should-fix — paste the missing half from the Radix custom-palette tool. Grays included. Full rule: `brand-extraction.md`.
 
 ## Quality Gates (must report)
 - `npx astro build` passes.

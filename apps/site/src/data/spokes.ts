@@ -38,4 +38,11 @@ export const spokes: Spoke[] = [
     repo: 'https://github.com/esassoc/noria-design',
     site: 'https://esassoc.github.io/noria-design/',
   },
+  {
+    name: 'SMAQMD',
+    slug: 'smaqmd',
+    purpose: 'Design system and prototypes for SMAQMD',
+    repo: 'https://github.com/esassoc/air-exchange-tool',
+    site: 'https://esassoc.github.io/air-exchange-tool/',
+  },
 ];

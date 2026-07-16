@@ -9,14 +9,21 @@
 interface Props {
   heading?: string;
   description?: string;
+  /**
+   * Heading level for the zone title (renders `<h2>`…`<h6>`). Set to match the
+   * zone's place in the document outline so it doesn't skip a level (WCAG 1.3.1
+   * / axe heading-order). Defaults to 3. Visual size is unchanged.
+   */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
 }
-const { heading = 'Danger Zone', description } = Astro.props;
+const { heading = 'Danger Zone', description, headingLevel = 3 } = Astro.props;
 
 let nextId = 0;
 const headingId = `esa-danger-zone-heading-${++nextId}`;
+const HeadingTag = `h${headingLevel}` as const;
 ---
 <section class="esa-danger-zone" role="group" aria-labelledby={headingId}>
-  <h3 class="esa-danger-zone__heading" id={headingId}>{heading}</h3>
+  <HeadingTag class="esa-danger-zone__heading" id={headingId}>{heading}</HeadingTag>
   {description && <p class="esa-danger-zone__description">{description}</p>}
   <div class="esa-danger-zone__actions">
     <slot />

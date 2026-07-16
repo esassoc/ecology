@@ -96,7 +96,13 @@ const cls = [
     outline-offset: var(--focus-ring-offset, 2px);
     border-radius: var(--radius-100, 4px);
   }
-  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold, 600); }
+  /* Active = current nav item: brand color (theme-driven) + heavier weight.
+     Falls back to currentColor when no brand token is present, so the link still
+     works dropped on a bare dark bar. */
+  .esa-icon-link.is-active {
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--icon-link-active-color, var(--color-primary, currentColor));
+  }
 
   .esa-icon-link__label { display: inline-block; }
 

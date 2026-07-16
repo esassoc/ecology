@@ -7,7 +7,8 @@ all new components follow.
 ## The tiers
 
 1. **Primitive** (`tokens/primitive/*.json` → compiled) — raw values on ramps:
-   `--color-teal-900`, `--spacing-400`, `--radius-100`, `--type-size-200`.
+   `--color-teal-9`, `--spacing-400`, `--radius-100`, `--type-size-200`. Color
+   ramps are **Radix 12-step** (`-1` … `-12`; step 9 = solid fill, 11/12 = text).
    **Primitives never move** — not in the hub, not in a theme.
 2. **Semantic** (`tokens/semantic/*.json` → compiled) — intent, referencing
    primitives: `--color-primary`, `--color-surface`, `--color-text-secondary`.

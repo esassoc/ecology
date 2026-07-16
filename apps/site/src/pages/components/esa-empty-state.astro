@@ -8,6 +8,7 @@ import EmptyState from '@esa/ecology/esa-empty-state.astro';
 
 const props = [
   { name: 'title', type: 'string', description: 'Required. The primary heading of the empty state.' },
+  { name: 'headingLevel', type: '2 | 3 | 4 | 5 | 6', default: '3', description: 'Heading level of the title. Match where the empty state sits in the outline so it doesn’t skip a level (WCAG 1.3.1). Visual size unchanged.' },
   { name: 'description', type: 'string', description: 'Optional supporting line below the title.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Scales icon, text, and padding.' },
 ];

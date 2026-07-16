@@ -9,11 +9,18 @@ interface Props {
   title: string;
   description?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
+  /**
+   * Heading level for the title (renders `<h2>`…`<h6>`). Set to match where the
+   * empty state sits in the document outline so it doesn't skip a level (WCAG
+   * 1.3.1 / axe heading-order). Defaults to 3. Visual size is unchanged.
+   */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
 }
-const { title, description, size = 'md' } = Astro.props;
+const { title, description, size = 'md', headingLevel = 3 } = Astro.props;
 
 const hasIconSlot = Astro.slots.has('icon');
 const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
+const TitleTag = `h${headingLevel}` as const;
 ---
 <div class={cls}>
   {hasIconSlot && (
@@ -21,7 +28,7 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
       <slot name="icon" />
     </div>
   )}
-  <h3 class="esa-empty-state__title">{title}</h3>
+  <TitleTag class="esa-empty-state__title">{title}</TitleTag>
   {description && <p class="esa-empty-state__description">{description}</p>}
   <div class="esa-empty-state__actions">
     <slot />

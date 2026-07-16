@@ -39,9 +39,16 @@
 }
 
 :root {
-  --meta-serif: 'Anthropic Serif', Georgia, serif;
-  --meta-sans: 'Anthropic Sans', system-ui, -apple-system, sans-serif;
-  --meta-mono: 'Anthropic Mono', ui-monospace, monospace;
+  /* Dogfood the design-system faces: the docs chrome uses the same DM Sans /
+     DM Mono the tokens declare, instead of Anthropic's editorial typefaces.
+     No editorial serif is in play yet, so the "display" slot maps to the sans
+     display face (DM Sans). A --font-serif token (Source Serif 4) exists in the
+     tokens for when we adopt one — point --meta-serif at var(--font-serif) and
+     load the webfont to switch. The Anthropic @font-face blocks above are left
+     in place but unreferenced — nothing loads them now. */
+  --meta-serif: var(--font-display, var(--font-sans, system-ui, sans-serif));
+  --meta-sans: var(--font-sans, system-ui, -apple-system, sans-serif);
+  --meta-mono: var(--font-mono, ui-monospace, monospace);
 }
 
 /* ---- Chrome typography (light + dark) ---- */

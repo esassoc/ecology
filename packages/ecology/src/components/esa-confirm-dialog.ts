@@ -1,4 +1,15 @@
 import { LitElement, html, css } from 'lit';
+import { html as staticHtml, literal } from 'lit/static-html.js';
+
+// Fixed map so the title's heading level is settable without an unsafe dynamic
+// tag. Keys are the validated levels; values are static `literal` tag names.
+const HEADING_TAGS = {
+  2: literal`h2`,
+  3: literal`h3`,
+  4: literal`h4`,
+  5: literal`h5`,
+  6: literal`h6`,
+} as const;
 
 type ConfirmVariant = 'default' | 'danger' | 'warning';
 
@@ -19,6 +30,7 @@ export class EsaConfirmDialog extends LitElement {
   static properties = {
     open: { type: Boolean, reflect: true },
     heading: { type: String },
+    headingLevel: { type: Number, attribute: 'heading-level' },
     message: { type: String },
     variant: { type: String, reflect: true },
     confirmLabel: { type: String, attribute: 'confirm-label' },
@@ -30,6 +42,8 @@ export class EsaConfirmDialog extends LitElement {
 
   declare open: boolean;
   declare heading: string;
+  /** Heading level of the title (2–6). Defaults to 2. */
+  declare headingLevel: 2 | 3 | 4 | 5 | 6;
   declare message: string;
   declare variant: ConfirmVariant;
   declare confirmLabel: string;
@@ -43,6 +57,7 @@ export class EsaConfirmDialog extends LitElement {
     super();
     this.open = false;
     this.heading = '';
+    this.headingLevel = 2;
     this.message = '';
     this.variant = 'default';
     this.confirmLabel = 'Confirm';
@@ -50,6 +65,11 @@ export class EsaConfirmDialog extends LitElement {
     this.showIcon = true;
     // hub-edit-approved: user approved (2026-06-29) — X close visible by default.
     this.showCloseButton = true;
+  }
+
+  private renderTitle() {
+    const tag = HEADING_TAGS[this.headingLevel] ?? HEADING_TAGS[2];
+    return staticHtml`<${tag} class="esa-confirm-dialog__title">${this.heading}</${tag}>`;
   }
 
   connectedCallback(): void {
@@ -162,7 +182,7 @@ export class EsaConfirmDialog extends LitElement {
             ${this.showIcon
               ? html`<div class="esa-confirm-dialog__icon esa-confirm-dialog__icon--${this.variant}">${this.icon()}</div>`
               : null}
-            <h2 class="esa-confirm-dialog__title">${this.heading}</h2>
+            ${this.renderTitle()}
             <p class="esa-confirm-dialog__message">${this.message}</p>
           </div>
           <div class="esa-confirm-dialog__footer">

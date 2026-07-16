@@ -14,7 +14,8 @@ const options = JSON.stringify([
 const props = [
   { name: 'options', type: 'EsaOption[] | string', default: '[]', description: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute." },
   { name: 'value', type: 'string | null', default: 'null', description: 'The single selected option value.' },
-  { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
+  { name: 'label', type: 'string', default: "''", description: 'Visible group label rendered above the options; also names the group for assistive tech (aria-labelledby). Preferred.' },
+  { name: 'aria-label', type: 'string', default: 'null', description: 'Accessible name when there is no visible label. A group MUST have one of label or aria-label — otherwise the radiogroup is announced unnamed. Ignored when label is set.' },
   { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Circle and label size.' },
 ];
@@ -76,9 +77,10 @@ const events = [
   </Section>
 
   <Section id="accessibility" title="Accessibility">
+    <p><strong>Always name the group.</strong> A <code>radiogroup</code> with no accessible name is announced as just "group" — set a visible <code>label</code> (preferred) or, when the group is already introduced by nearby context, an <code>aria-label</code>. The component warns in the console if neither is provided.</p>
     <ul class="a11y">
-      <li>The options container has <code>role="radiogroup"</code> labeled by the group label.</li>
-      <li>Each option has <code>role="radio"</code> with <code>aria-checked</code> and selects on Space or Enter.</li>
+      <li>The options container has <code>role="radiogroup"</code>, named by the visible <code>label</code> via <code>aria-labelledby</code>, or by <code>aria-label</code> when there's no visible label.</li>
+      <li>Each option has <code>role="radio"</code> named by its own visible option label via <code>aria-labelledby</code> (a wrapping <code>&lt;label&gt;</code> alone does <em>not</em> name a <code>role="radio"</code> span), with <code>aria-checked</code>, and selects on Space or Enter.</li>
       <li>Disabled options carry <code>aria-disabled</code> and a <code>-1</code> tabindex.</li>
       <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
     </ul>

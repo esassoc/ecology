@@ -10,8 +10,9 @@ const props = [
   { name: 'title', type: 'string', description: 'Header title. Presence (or a header/actions slot) renders the header band.' },
   { name: 'subtitle', type: 'string', description: 'Secondary line under the title.' },
   { name: 'icon', type: 'string', description: 'Lucide icon name shown left of the title.' },
-  { name: 'variant', type: "'default' | 'outlined' | 'elevated' | 'filled'", default: "'default'", description: 'Surface treatment: bordered, shadowed, or sunken.' },
+  { name: 'variant', type: "'default' | 'outlined' | 'elevated' | 'filled' | 'plain'", default: "'default'", description: 'Surface treatment: bordered (default/outlined), shadowed (elevated), sunken (filled), or none (plain — structure only, for cards inside an already-bounded region).' },
   { name: 'headerVariant', type: "'default' | 'primary' | 'muted'", default: "'default'", description: 'Header band tint.' },
+  { name: 'headingLevel', type: '2 | 3 | 4 | 5 | 6', default: '3', description: 'Heading level of the title element. Match the card’s place in the document outline — a card directly under a page h1 should use 2 so the outline doesn’t skip a level (WCAG 1.3.1). Visual size is unchanged; only the tag differs.' },
   { name: 'padding', type: "'none' | 'compact' | 'default' | 'spacious'", default: "'default'", description: 'Body and header padding scale.' },
 ];
 
@@ -45,6 +46,17 @@ const slots = [
         <div style="width: 240px;"><Card title="Default" subtitle="Bordered surface"><p style="margin: 0;">Default card.</p></Card></div>
         <div style="width: 240px;"><Card variant="elevated" title="Elevated" subtitle="Shadow, no border"><p style="margin: 0;">Elevated card.</p></Card></div>
         <div style="width: 240px;"><Card variant="filled" title="Filled" subtitle="Sunken background"><p style="margin: 0;">Filled card.</p></Card></div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="plain" title="Plain (structure only)">
+    <p>The <code>plain</code> variant draws no box — no border, shadow, or fill. Use it when the card already sits inside a bounded region (a panel, a bordered list, another card) and a second container would just add visual noise. Below, three plain cards share one outer surface, separated by their own structure rather than individual borders.</p>
+    <Preview align="start" code={`<Card variant="plain" title="Overview">…</Card>`}>
+      <div style="width: 100%; max-width: 420px; border: 1px solid var(--color-border); border-radius: var(--radius-300); background: var(--color-surface); padding: 8px; display: flex; flex-direction: column; gap: 4px;">
+        <Card variant="plain" title="Overview" padding="compact"><p style="margin: 0;">No box of its own — it borrows the panel's edge.</p></Card>
+        <Card variant="plain" title="Details" padding="compact"><p style="margin: 0;">Sits flush with its siblings.</p></Card>
+        <Card variant="plain" title="History" padding="compact"><p style="margin: 0;">Structure without a second container.</p></Card>
       </div>
     </Preview>
   </Section>
@@ -88,6 +100,18 @@ const slots = [
     </Preview>
   </Section>
 
+  <Section id="heading-level" title="Heading level (document outline)">
+    <p>The title defaults to <code>&lt;h3&gt;</code>. When a card sits directly under a higher heading, set <code>headingLevel</code> so the outline stays contiguous — the <strong>visual size is identical</strong>, only the tag (and thus the a11y outline) changes.</p>
+    <Preview align="start" code={`<!-- card directly under a page <h1> -->
+<Card title="Section title" headingLevel={2}>…</Card>`}>
+      <div style="width: 320px;">
+        <Card title="Rendered as h2" subtitle="Same look, correct outline" headingLevel={2} data-demo-h="2">
+          <p style="margin: 0;">Inspect the title — it's an <code>&lt;h2&gt;</code>.</p>
+        </Card>
+      </div>
+    </Preview>
+  </Section>
+
   <Section id="api" title="API">
     <Api props={props} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
@@ -97,7 +121,7 @@ const slots = [
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
       <li>Renders a plain <code>&lt;div&gt;</code> — add <code>role</code>/landmarks at the call site if the card is interactive or a region.</li>
-      <li>The title is an <code>&lt;h3&gt;</code>; keep heading order sensible within the surrounding page.</li>
+      <li>The title defaults to <code>&lt;h3&gt;</code>. Set <code>headingLevel</code> to keep the document outline contiguous — e.g. a card directly under a page <code>&lt;h1&gt;</code> should pass <code>headingLevel={'{2}'}</code> so it doesn't jump <code>h1&nbsp;→&nbsp;h3</code> (axe <em>heading-order</em> / WCAG 1.3.1).</li>
       <li>The header icon is <code>aria-hidden</code> — it decorates the title, not replaces it.</li>
     </ul>
   </Section>

@@ -10,6 +10,7 @@ const props = [
   { name: 'label', type: 'string', description: 'Accessible name (aria-label + title). Required — an icon-only control needs a name.' },
   { name: 'href', type: 'string', description: 'When present renders an <a>; otherwise a <button>.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Square footprint on the shared form size scale.' },
+  { name: 'active', type: 'boolean', default: 'false', description: 'Selected/toggled state — adopts the brand color (theme-driven) and sets aria-pressed.' },
 ];
 ---
 <ComponentDoc name="Icon Button" category="Core" slug="esa-icon-button" type=".astro" status="stable"
@@ -50,6 +51,17 @@ const props = [
           <EsaIconButton icon="search" label="Search" />
           <EsaIconButton icon="x" label="Close" />
         </div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="active" title="Active (theme-driven)">
+    <p>The <code>active</code> state adopts the brand color via <code>--color-primary</code>, so a selected toolbar toggle tracks the current theme. Switch the theme (top-right) to see it re-skin.</p>
+    <Preview code={`<EsaIconButton icon="list" label="List view" active />
+<EsaIconButton icon="grid-2x2" label="Grid view" />`}>
+      <div style="display:flex;gap:4px;align-items:center">
+        <EsaIconButton icon="list" label="List view" active />
+        <EsaIconButton icon="grid-2x2" label="Grid view" />
       </div>
     </Preview>
   </Section>

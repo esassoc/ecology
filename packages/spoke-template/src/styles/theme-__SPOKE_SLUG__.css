@@ -3,7 +3,7 @@
  *
  * THE CONTRACT: a [data-theme] block overrides the SEMANTIC layer (and, where
  * needed, the component layer) ONLY. @esa/tokens defines the primitives + the
- * default teal semantics on :root; this file re-skins to __SPOKE_NAME__ WITHOUT
+ * default grass semantics on :root; this file re-skins to __SPOKE_NAME__ WITHOUT
  * touching primitives. Because every esa-* component reads only the semantic
  * layer, re-pointing that layer re-skins the whole kit with no forks.
  *
@@ -18,8 +18,17 @@
  *     "re-point material" (the brand color ramp, neutral ramp) feeds the ecology
  *     tokens above; hub components never read --__SCOPE__-* directly.
  *
- * WORKED EXAMPLE: see ../ecology/../beacon-design/src/styles/theme-beacon.css for
- * a fully-filled version of this same skeleton (true-teal + warm-gray ramps).
+ * COLOR FORMAT — RADIX 12-STEP. The hub's primitives are Radix scales
+ * (--color-grass-1 … -12), and the semantics map onto specific STEPS whose
+ * meanings are load-bearing:
+ *     1–2  app / subtle backgrounds        9–10  solid fills (9 = the fill)
+ *     3–5  component backgrounds           11    low-contrast text on surface
+ *     6–8  borders (7 = the border)        12    high-contrast text
+ * Author this spoke's raw ramps (section 7) in the SAME 12-step format, so the
+ * re-points below are a mechanical 1:1 step mapping — identical to how the hub
+ * maps grass. Generate a full 12-step + alpha + P3 scale from one brand hex at
+ * https://www.radix-ui.com/colors/custom (do NOT carry a Tailwind 50–900 ramp
+ * into the system — its rungs don't line up with the step meanings above).
  *
  * Every section below is a FILL-IN. Replace each `/* __FILL__ *​/` marker and the
  * placeholder values with this spoke's real values; delete any section the spoke
@@ -27,30 +36,37 @@
  */
 
 [data-theme="__SPOKE_SLUG__"] {
-  /* ===== (1) BRAND / TEAL — re-point primary + secondary onto the spoke ramp =====
-     The hub ships a generic teal. Point the brand semantics at THIS spoke's own
-     primitive ramp (the --__SCOPE__-* raw ramp in section 7). If you skip this,
-     primary stays hub teal. */
-  --color-primary:         var(--__SCOPE__-brand-900);  /* __FILL__ the brand's strongest tint */
-  --color-primary-hover:   /* __FILL__ */ #00474f;
-  --color-primary-active:  /* __FILL__ */ #003940;
-  --color-primary-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
-  --color-primary-border:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
-  --color-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
-  --color-secondary-hover: var(--__SCOPE__-brand-800);
+  /* ===== (1) BRAND — re-point primary + secondary onto the spoke brand ramp =====
+     Point the brand semantics at THIS spoke's 12-step brand ramp (section 7).
+     The step mapping mirrors the hub exactly — when you change the ramp you MUST
+     also carry -strong / -on-fill (they're text-on-surface / text-on-fill and
+     don't follow automatically). If you skip this section, primary stays hub grass. */
+  --color-primary:          var(--__SCOPE__-brand-9);   /* step 9  — solid interactive fill */
+  --color-primary-hover:    var(--__SCOPE__-brand-10);  /* step 10 — hovered fill */
+  --color-primary-active:   var(--__SCOPE__-brand-10);
+  --color-primary-subtle:   var(--__SCOPE__-brand-2);   /* step 2  — subtle brand-tinted surface */
+  --color-primary-bg:       var(--__SCOPE__-brand-3);   /* step 3  — UI element bg (chips, pills) */
+  --color-primary-bg-hover: var(--__SCOPE__-brand-4);   /* step 4  — UI element bg (hover) */
+  --color-primary-border:   var(--__SCOPE__-brand-6);   /* step 6  — soft brand border */
+  --color-primary-strong:   var(--__SCOPE__-brand-11);  /* step 11 — brand text (outline buttons, links) */
+  --color-secondary:        var(--__SCOPE__-brand-8);   /* step 8  — secondary fill */
+  --color-secondary-hover:  var(--__SCOPE__-brand-9);
+  --color-secondary-strong: var(--__SCOPE__-brand-11);  /* step 11 — secondary brand text */
+  --color-secondary-on-fill:var(--__SCOPE__-brand-12);  /* text on the (bright) secondary fill */
 
   /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
-     Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
-     what warms or cools the entire UI vs the hub default. */
-  --color-text-primary:   var(--__SCOPE__-gray-900);
-  --color-text-secondary: var(--__SCOPE__-gray-700);
-  --color-text-tertiary:  var(--__SCOPE__-gray-600);
-  --color-text-muted:     var(--__SCOPE__-gray-500);
-  --color-border:         var(--__SCOPE__-gray-200);
-  --color-border-light:   var(--__SCOPE__-gray-100);
-  --color-border-strong:  var(--__SCOPE__-gray-300);
-  --color-background:     var(--__SCOPE__-gray-50);
-  --color-surface-sunken: var(--__SCOPE__-gray-100);
+     Map the whole neutral chain onto this spoke's 12-step gray ramp (section 7).
+     This is what warms or cools the entire UI vs the hub default. Step mapping
+     mirrors the hub. */
+  --color-text-primary:   var(--__SCOPE__-gray-12);
+  --color-text-secondary: var(--__SCOPE__-gray-11);
+  --color-text-tertiary:  var(--__SCOPE__-gray-11);
+  --color-text-muted:     var(--__SCOPE__-gray-10);
+  --color-border:         var(--__SCOPE__-gray-7);
+  --color-border-light:   var(--__SCOPE__-gray-6);
+  --color-border-strong:  var(--__SCOPE__-gray-8);
+  --color-background:     var(--__SCOPE__-gray-2);
+  --color-surface-sunken: var(--__SCOPE__-gray-3);
 
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so
@@ -64,11 +80,11 @@
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
      where it's standalone. */
-  --color-success:  var(--color-green-700);  /* __FILL__ */
-  --color-warning:  var(--color-orange-500); /* __FILL__ */
+  --color-success:  var(--color-green-9);  /* __FILL__ */
+  --color-warning:  var(--color-orange-9); /* __FILL__ */
   --color-info:     /* __FILL__ */ #228be6;
-  --color-ai:       var(--color-blue-500);   /* __FILL__ */
-  --color-ai-hover: var(--color-blue-700);   /* __FILL__ */
+  --color-ai:       var(--color-blue-9);   /* __FILL__ */
+  --color-ai-hover: var(--color-blue-10);  /* __FILL__ */
 
   /* ===== (5) FORM SIZING + RADIUS — match this spoke's control heights =====
      The hub defaults to xs 28 / sm 32 / md 40 / lg 48 and md/lg radius 8px.
@@ -90,33 +106,87 @@
 
   /* ===== (7) RAW PRIMITIVE RAMPS — the spoke tier (--__SCOPE__-*) =====
      Raw material only: feeds the semantic re-points above. Hub components never
-     read these directly. Define the brand ramp + the neutral ramp; add others as
-     the spoke needs. Replace EVERY value below with this spoke's real palette. */
+     read these directly. Author BOTH ramps as Radix 12-step scales (step 1 =
+     lightest app bg → step 12 = highest-contrast text). Generate from one brand
+     hex + one neutral hex at https://www.radix-ui.com/colors/custom, then paste
+     the 12 steps here. Replace EVERY value below with this spoke's real palette.
+     (Placeholder values are Radix teal / slate — swap them out.)
 
-  /* Neutral / gray ramp — this spoke's authoritative neutrals. */
-  --__SCOPE__-gray-0:    /* __FILL__ */ #ffffff;
-  --__SCOPE__-gray-50:   /* __FILL__ */ #fafafa;
-  --__SCOPE__-gray-100:  /* __FILL__ */ #efefef;
-  --__SCOPE__-gray-200:  /* __FILL__ */ #dcdcdc;
-  --__SCOPE__-gray-300:  /* __FILL__ */ #bdbdbd;
-  --__SCOPE__-gray-400:  /* __FILL__ */ #989898;
-  --__SCOPE__-gray-500:  /* __FILL__ */ #7c7c7c;
-  --__SCOPE__-gray-600:  /* __FILL__ */ #656565;
-  --__SCOPE__-gray-700:  /* __FILL__ */ #525252;
-  --__SCOPE__-gray-800:  /* __FILL__ */ #464646;
-  --__SCOPE__-gray-900:  /* __FILL__ */ #3d3d3d;
-  --__SCOPE__-gray-950:  /* __FILL__ */ #292929;
-  --__SCOPE__-gray-1000: /* __FILL__ */ #000000;
+     WIDE-GAMUT: these hex values are the sRGB FALLBACK. The Radix generator (and
+     Radix's stock scales) also emit a `color(display-p3 …)` version of every
+     step — paste those into the `@media (color-gamut: p3)` block at the BOTTOM of
+     this file (it mirrors these same tokens). P3 wins on capable displays; hex is
+     the fallback everywhere else. Do NOT ship a ramp as hex-only. */
 
-  /* Brand ramp — this spoke's signature color (feeds --color-primary*/secondary*). */
-  --__SCOPE__-brand-50:  /* __FILL__ */ #effefb;
-  --__SCOPE__-brand-100: /* __FILL__ */ #eef5f4;
-  --__SCOPE__-brand-200: /* __FILL__ */ #b9d6d2;
-  --__SCOPE__-brand-500: /* __FILL__ */ #00918b;
-  --__SCOPE__-brand-600: /* __FILL__ */ #0e807b;
-  --__SCOPE__-brand-800: /* __FILL__ */ #0a6562;
-  --__SCOPE__-brand-900: /* __FILL__ */ #43608a;
+  /* Neutral / gray ramp — this spoke's authoritative neutrals (Radix 12-step). */
+  --__SCOPE__-gray-1:  /* __FILL__ */ #fcfcfd;
+  --__SCOPE__-gray-2:  /* __FILL__ */ #f9f9fb;
+  --__SCOPE__-gray-3:  /* __FILL__ */ #f0f0f3;
+  --__SCOPE__-gray-4:  /* __FILL__ */ #e8e8ec;
+  --__SCOPE__-gray-5:  /* __FILL__ */ #e0e1e6;
+  --__SCOPE__-gray-6:  /* __FILL__ */ #d9d9e0;
+  --__SCOPE__-gray-7:  /* __FILL__ */ #cdced6;
+  --__SCOPE__-gray-8:  /* __FILL__ */ #b9bbc6;
+  --__SCOPE__-gray-9:  /* __FILL__ */ #8b8d98;
+  --__SCOPE__-gray-10: /* __FILL__ */ #80838d;
+  --__SCOPE__-gray-11: /* __FILL__ */ #60646c;
+  --__SCOPE__-gray-12: /* __FILL__ */ #1c2024;
+
+  /* Brand ramp — this spoke's signature color (Radix 12-step; feeds primary/secondary). */
+  --__SCOPE__-brand-1:  /* __FILL__ */ #fafefd;
+  --__SCOPE__-brand-2:  /* __FILL__ */ #f3fbf9;
+  --__SCOPE__-brand-3:  /* __FILL__ */ #e0f8f3;
+  --__SCOPE__-brand-4:  /* __FILL__ */ #ccf3ea;
+  --__SCOPE__-brand-5:  /* __FILL__ */ #b8eae0;
+  --__SCOPE__-brand-6:  /* __FILL__ */ #a1ded2;
+  --__SCOPE__-brand-7:  /* __FILL__ */ #83cdc1;
+  --__SCOPE__-brand-8:  /* __FILL__ */ #53b9ab;
+  --__SCOPE__-brand-9:  /* __FILL__ */ #12a594;
+  --__SCOPE__-brand-10: /* __FILL__ */ #0d9b8a;
+  --__SCOPE__-brand-11: /* __FILL__ */ #008573;
+  --__SCOPE__-brand-12: /* __FILL__ */ #0d3d38;
 
   /* Add any further spoke-only tokens below (status palettes, progress pairs,
-     citation surfaces, etc.) — see theme-beacon.css for examples. */
+     citation surfaces, etc.). Author additional ramps in the same 12-step format. */
+}
+
+/*
+ * ===== (8) WIDE-GAMUT (P3) OVERRIDES — the vivid half of every raw ramp =====
+ * Mirrors section (7) exactly, in `color(display-p3 …)`. Capable displays use
+ * these; the hex in section (7) is the fallback. Keep the two blocks in lockstep
+ * — every `--__SCOPE__-*` step defined above must have its P3 twin here. Paste
+ * the P3 values straight from the Radix custom-palette tool (or Radix's stock
+ * scale). Delete this whole block ONLY if the spoke ships no custom ramp.
+ * (Placeholder values are Radix teal / slate P3 — swap them out.)
+ */
+@media (color-gamut: p3) {
+  [data-theme="__SPOKE_SLUG__"] {
+    /* Neutral / gray ramp — P3 */
+    --__SCOPE__-gray-1:  /* __FILL__ */ color(display-p3 0.988 0.988 0.988);
+    --__SCOPE__-gray-2:  /* __FILL__ */ color(display-p3 0.975 0.975 0.975);
+    --__SCOPE__-gray-3:  /* __FILL__ */ color(display-p3 0.939 0.939 0.939);
+    --__SCOPE__-gray-4:  /* __FILL__ */ color(display-p3 0.908 0.908 0.908);
+    --__SCOPE__-gray-5:  /* __FILL__ */ color(display-p3 0.88 0.88 0.88);
+    --__SCOPE__-gray-6:  /* __FILL__ */ color(display-p3 0.849 0.849 0.849);
+    --__SCOPE__-gray-7:  /* __FILL__ */ color(display-p3 0.807 0.807 0.807);
+    --__SCOPE__-gray-8:  /* __FILL__ */ color(display-p3 0.732 0.732 0.732);
+    --__SCOPE__-gray-9:  /* __FILL__ */ color(display-p3 0.553 0.553 0.553);
+    --__SCOPE__-gray-10: /* __FILL__ */ color(display-p3 0.512 0.512 0.512);
+    --__SCOPE__-gray-11: /* __FILL__ */ color(display-p3 0.392 0.392 0.392);
+    --__SCOPE__-gray-12: /* __FILL__ */ color(display-p3 0.125 0.125 0.125);
+
+    /* Brand ramp — P3 */
+    --__SCOPE__-brand-1:  /* __FILL__ */ color(display-p3 0.983 0.996 0.992);
+    --__SCOPE__-brand-2:  /* __FILL__ */ color(display-p3 0.958 0.983 0.976);
+    --__SCOPE__-brand-3:  /* __FILL__ */ color(display-p3 0.895 0.971 0.952);
+    --__SCOPE__-brand-4:  /* __FILL__ */ color(display-p3 0.831 0.949 0.92);
+    --__SCOPE__-brand-5:  /* __FILL__ */ color(display-p3 0.761 0.914 0.878);
+    --__SCOPE__-brand-6:  /* __FILL__ */ color(display-p3 0.682 0.864 0.825);
+    --__SCOPE__-brand-7:  /* __FILL__ */ color(display-p3 0.581 0.798 0.756);
+    --__SCOPE__-brand-8:  /* __FILL__ */ color(display-p3 0.433 0.716 0.671);
+    --__SCOPE__-brand-9:  /* __FILL__ */ color(display-p3 0.297 0.637 0.581);
+    --__SCOPE__-brand-10: /* __FILL__ */ color(display-p3 0.275 0.599 0.542);
+    --__SCOPE__-brand-11: /* __FILL__ */ color(display-p3 0.08 0.5 0.43);
+    --__SCOPE__-brand-12: /* __FILL__ */ color(display-p3 0.11 0.235 0.219);
+  }
 }

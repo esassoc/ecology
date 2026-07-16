@@ -1,4 +1,15 @@
 import { LitElement, html, css } from 'lit';
+import { html as staticHtml, literal } from 'lit/static-html.js';
+
+// Fixed map so the title's heading level is settable without an unsafe dynamic
+// tag. Keys are the validated levels; values are static `literal` tag names.
+const HEADING_TAGS = {
+  2: literal`h2`,
+  3: literal`h3`,
+  4: literal`h4`,
+  5: literal`h5`,
+  6: literal`h6`,
+} as const;
 
 /**
  * esa-side-dialog — a slide-in drawer / side sheet (Ecology's first).
@@ -13,6 +24,7 @@ export class EsaSideDialog extends LitElement {
   static properties = {
     open: { type: Boolean, reflect: true },
     heading: { type: String },
+    headingLevel: { type: Number, attribute: 'heading-level' },
     position: { type: String, reflect: true },
     size: { type: String, reflect: true },
     showCloseButton: { type: Boolean, attribute: 'show-close-button' },
@@ -22,6 +34,9 @@ export class EsaSideDialog extends LitElement {
 
   declare open: boolean;
   declare heading: string;
+  /** Heading level of the default title (2–6). Defaults to 2. Ignored when a
+   * `header` slot is provided (the consumer owns the markup then). */
+  declare headingLevel: 2 | 3 | 4 | 5 | 6;
   declare position: 'left' | 'right';
   declare size: 'sm' | 'md' | 'lg';
   declare showCloseButton: boolean;
@@ -33,10 +48,16 @@ export class EsaSideDialog extends LitElement {
     super();
     this.open = false;
     this.heading = '';
+    this.headingLevel = 2;
     this.position = 'right';
     this.size = 'md';
     this.showCloseButton = true;
     this.closing = false;
+  }
+
+  private renderTitle() {
+    const tag = HEADING_TAGS[this.headingLevel] ?? HEADING_TAGS[2];
+    return staticHtml`<${tag} class="title">${this.heading}</${tag}>`;
   }
 
   updated(changed: Map<string, unknown>): void {
@@ -122,7 +143,7 @@ export class EsaSideDialog extends LitElement {
       >
         ${hasHeader
           ? html`<header class="header">
-              <slot name="header"><h2 class="title">${this.heading}</h2></slot>
+              <slot name="header">${this.renderTitle()}</slot>
               ${this.showCloseButton
                 ? html`<button class="close" @click=${this.close} aria-label="Close">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>

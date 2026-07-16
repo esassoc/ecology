@@ -25,9 +25,17 @@ interface Props {
   /** Title scale: the page-title role (default) or the oversized display role. */
   prominence?: 'page-title' | 'display';
   as?: 'header' | 'div' | 'section';
+  /**
+   * Heading level of the title element. Defaults to 1 — a page header is the
+   * page's top heading. Lower it (2/3) only when the header is a sub-hero nested
+   * under an existing h1, so the outline stays contiguous (WCAG 1.3.1). Title
+   * scale is governed by `prominence`, not this — visual size is unchanged.
+   */
+  headingLevel?: 1 | 2 | 3;
 }
-const { title, lede, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
+const { title, lede, eyebrow, icon, prominence = 'page-title', as = 'header', headingLevel = 1 } = Astro.props;
 const Tag = as;
+const TitleTag = `h${headingLevel}` as const;
 
 const hasBreadcrumbs = Astro.slots.has('breadcrumbs');
 const hasActions = Astro.slots.has('actions');
@@ -46,7 +54,7 @@ const hasActions = Astro.slots.has('actions');
           <span>{eyebrow}</span>
         </p>
       )}
-      <h1 class="esa-page-header__title">{title}</h1>
+      <TitleTag class="esa-page-header__title">{title}</TitleTag>
       {lede && <p class="esa-page-header__lede">{lede}</p>}
     </div>
     {hasActions && (

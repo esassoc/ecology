@@ -21,7 +21,7 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
   Includes the live theme switcher (default / beacon / qanat).
 
 ## Token tiers (3-tier)
-1. **Primitive** — raw values → `--color-teal-900`, `--spacing-400`
+1. **Primitive** — raw values → `--color-teal-9` (Radix 12-step ramps), `--spacing-400`
 2. **Semantic** — intent, references primitives → `--color-primary`
 3. **Component** — per-component theming surface → `--form-border-color`, `--sidenav-bg`
 

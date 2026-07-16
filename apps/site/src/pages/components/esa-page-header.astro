@@ -8,7 +8,8 @@ import PageHeader from '@esa/ecology/esa-page-header.astro';
 import Button from '@esa/ecology/esa-button.astro';
 
 const props = [
-  { name: 'title', type: 'string', description: 'The page title (required). Rendered as the <h1>.' },
+  { name: 'title', type: 'string', description: 'The page title (required). Rendered as the title heading (h1 by default).' },
+  { name: 'headingLevel', type: '1 | 2 | 3', default: '1', description: 'Heading level of the title. h1 is correct for a page’s top header; lower it only for a sub-hero nested under an existing h1 (WCAG 1.3.1). Title scale is set by prominence, not this.' },
   { name: 'lede', type: 'string', description: 'Optional supporting sentence below the title, at the body-large role in secondary text.' },
   { name: 'eyebrow', type: 'string', description: 'Small kicker above the title — e.g. a section or award name.' },
   { name: 'icon', type: 'string', description: 'esa-icon registry name for the eyebrow’s leading glyph, e.g. "award" (eyebrow only).' },

@@ -282,13 +282,26 @@ const buttonAttrs = {
     line-height: 1;
     text-decoration: none;
     cursor: pointer;
-    transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
+    transition:
+      background var(--duration-fast, 150ms) var(--easing-standard, ease),
+      border-color var(--duration-fast, 150ms) var(--easing-standard, ease),
+      transform var(--duration-fast, 150ms) var(--easing-standard, ease);
     -webkit-appearance: none;
     appearance: none;
+    /* Keep the button on its own compositor layer at rest (identity translateZ)
+       so the press-scale never creates/destroys a layer. Creating a layer on
+       demand re-rasterizes the label and snaps it a subpixel — that snap is the
+       "text jump". A permanent layer keeps the raster stable across the scale. */
+    transform: translateZ(0);
   }
   .esa-button__native:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset, 2px);
+  }
+  /* Tactile press — scale down slightly while the pointer/key is held. */
+  .esa-button__native:active:not(:disabled) { transform: scale(0.97) translateZ(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .esa-button__native:active:not(:disabled) { transform: translateZ(0); }
   }
 
   /* States */

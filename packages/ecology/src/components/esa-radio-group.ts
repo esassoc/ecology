@@ -6,6 +6,10 @@ interface EsaOption {
   disabled?: boolean;
 }
 
+// Per-instance id seed so each group's aria-labelledby references are unique on
+// a page with multiple radio groups.
+let esaRadioGroupUid = 0;
+
 /**
  * esa-radio-group — form-associated Lit Web Component.
  *
@@ -24,6 +28,7 @@ export class EsaRadioGroup extends LitElement {
   static properties = {
     options: { type: Array },
     label: { type: String },
+    ariaLabel: { type: String, attribute: 'aria-label' },
     size: { type: String, reflect: true },
     orientation: { type: String, reflect: true },
     value: { type: String },
@@ -31,20 +36,31 @@ export class EsaRadioGroup extends LitElement {
 
   declare options: EsaOption[];
   declare label: string;
+  /**
+   * Accessible name for the group when there is no visible `label` (e.g. the
+   * group is described by surrounding context). A radiogroup MUST be named:
+   * set `label` (visible, preferred) OR `aria-label` (invisible). Ignored when
+   * `label` is present — the visible text names the group via aria-labelledby.
+   */
+  declare ariaLabel: string | null;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare orientation: 'vertical' | 'horizontal';
   declare value: string | null;
 
   private internals: ElementInternals;
+  private uid: string;
+  private warnedNoName = false;
 
   constructor() {
     super();
     this.options = [];
     this.label = '';
+    this.ariaLabel = null;
     this.size = 'md';
     this.orientation = 'vertical';
     this.value = null;
     this.internals = this.attachInternals();
+    this.uid = `esa-radio-${++esaRadioGroupUid}`;
   }
 
   // Allow the `options` attribute to be a JSON string.
@@ -55,6 +71,16 @@ export class EsaRadioGroup extends LitElement {
       } catch {
         this.options = [];
       }
+    }
+
+    // A radiogroup must have an accessible name. Warn once (dev aid) if neither
+    // a visible `label` nor an `aria-label` fallback is set.
+    if (!this.warnedNoName && !this.label && !this.ariaLabel) {
+      this.warnedNoName = true;
+      console.warn(
+        '<esa-radio-group> has no accessible name. Set `label` (visible) or ' +
+          '`aria-label` (invisible) so screen readers announce the group.'
+      );
     }
   }
 
@@ -84,12 +110,24 @@ export class EsaRadioGroup extends LitElement {
   };
 
   render() {
+    const groupLabelId = `${this.uid}-label`;
     return html`
-      ${this.label ? html`<span class="group-label">${this.label}</span>` : null}
-      <div class="items" role="radiogroup" aria-label=${this.label}>
-        ${this.options.map((option) => {
+      ${this.label
+        ? html`<span class="group-label" id=${groupLabelId}>${this.label}</span>`
+        : null}
+      <div
+        class="items"
+        role="radiogroup"
+        aria-labelledby=${this.label ? groupLabelId : undefined}
+        aria-label=${!this.label && this.ariaLabel ? this.ariaLabel : undefined}
+      >
+        ${this.options.map((option, index) => {
           const selected = this.isSelected(option.value);
           const disabled = option.disabled ?? false;
+          // Each radio is named by its own visible label via aria-labelledby, so
+          // the accessible name matches the on-screen text (WCAG 2.5.3 / 4.1.2).
+          // A wrapping <label> does NOT name a role=radio span on its own.
+          const optionLabelId = `${this.uid}-option-${index}`;
           return html`
             <label
               class="item ${disabled ? 'item--disabled' : ''}"
@@ -101,11 +139,12 @@ export class EsaRadioGroup extends LitElement {
                 role="radio"
                 aria-checked=${String(selected)}
                 aria-disabled=${String(disabled)}
+                aria-labelledby=${optionLabelId}
                 tabindex=${disabled ? -1 : 0}
               >
                 <span class="dot"></span>
               </span>
-              <span class="item-label">${option.label}</span>
+              <span class="item-label" id=${optionLabelId}>${option.label}</span>
             </label>
           `;
         })}

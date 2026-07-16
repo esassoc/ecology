@@ -66,6 +66,14 @@ dropzone CSS) — get ahead of it by composing the lego. **Load the `component-f
   belong only in the theme's primitive ramp; everywhere else reads a token (a sanctioned
   font-size hard-code is OK after you've checked no token applies). **No Tailwind.**
 - Every section owns its **own markup + CSS** — the page should need zero `<style>`.
+- **Accessible name is mandatory for any interactive control** (WCAG 4.1.2): buttons,
+  inputs, radios, toggles, tabs, menu items, icon-only controls, and grouping wrappers
+  (`role="radiogroup"`/`"group"`/`"tablist"`) must be *named*, not just given a role.
+  Prefer `aria-labelledby` → the visible text (name == what's on screen); use `aria-label`
+  only when there's no visible text. A wrapping `<label>` does NOT name a `role="…"` on a
+  span — custom-role elements need explicit `aria-labelledby`/`aria-label`. Carry state
+  (`aria-checked`/`-selected`/`-expanded`) and keyboard operation with the role. **See the
+  `design-principles` skill's Accessibility section — it's the authority.**
 
 ## Hard boundaries
 

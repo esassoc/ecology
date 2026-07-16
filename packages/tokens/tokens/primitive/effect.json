@@ -6,10 +6,22 @@
     "300": { "$value": "0 6px 24px -6px rgba(0, 0, 0, 0.07)","$type": "other" },
     "400": { "$value": "0 8px 32px -8px rgba(0, 0, 0, 0.08)","$type": "other" }
   },
+  "duration": {
+    "instant": { "$value": "0ms",   "$type": "other", "$description": "No animation — snaps instantly." },
+    "fast":    { "$value": "150ms", "$type": "other", "$description": "Micro-interactions: hover, press, small state flips." },
+    "base":    { "$value": "200ms", "$type": "other", "$description": "Default UI transition." },
+    "slow":    { "$value": "350ms", "$type": "other", "$description": "Larger movements: panels, disclosures, overlays." }
+  },
+  "easing": {
+    "standard": { "$value": "ease",                        "$type": "other", "$description": "Default curve — general-purpose." },
+    "out":      { "$value": "cubic-bezier(0, 0, 0.2, 1)",  "$type": "other", "$description": "Decelerate — enters/appears (fast start, soft stop)." },
+    "in":       { "$value": "cubic-bezier(0.4, 0, 1, 1)",  "$type": "other", "$description": "Accelerate — exits/dismisses (soft start, fast end)." },
+    "in-out":   { "$value": "cubic-bezier(0.4, 0, 0.2, 1)","$type": "other", "$description": "Symmetric ease — movement that starts and ends on screen." }
+  },
   "transition": {
-    "fast": { "$value": "150ms ease", "$type": "other" },
-    "base": { "$value": "200ms ease", "$type": "other" },
-    "slow": { "$value": "350ms ease", "$type": "other" }
+    "fast": { "$value": "{duration.fast} {easing.standard}", "$type": "other", "$description": "Composite shorthand: fast duration + standard easing." },
+    "base": { "$value": "{duration.base} {easing.standard}", "$type": "other", "$description": "Composite shorthand: base duration + standard easing." },
+    "slow": { "$value": "{duration.slow} {easing.standard}", "$type": "other", "$description": "Composite shorthand: slow duration + standard easing." }
   },
   "z": {
     "dropdown":       { "$value": "50",  "$type": "other" },
