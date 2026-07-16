@@ -134,11 +134,15 @@ for (const file of targets) {
       add('error', 'banned-border-left', file, ln, 'colored left-border indicator is banned — use a badge/pill/dot/tint');
 
     // (c) Font-size floor: 13px hard floor; 13–15px allowed only for dense/meta text.
+    //     Owner override: a same-line `adherence-allow: font-too-small` comment records
+    //     an explicit Andy-sanctioned exception (e.g. 11px ID badges, 2026-07-15) —
+    //     the pragma is the audit trail; use it only when Andy has said so.
     const fm = text.match(/font-size\s*:\s*(\d+(?:\.\d+)?)(px|rem)/i);
     if (fm) {
       const px = fm[2].toLowerCase() === 'rem' ? parseFloat(fm[1]) * 16 : parseFloat(fm[1]);
-      if (px < 13) add('error', 'font-too-small', file, ln, `font-size ${fm[0]} (~${px}px) below the 13px hard floor`);
-      else if (px < 16) add('warning', 'font-below-base', file, ln, `font-size ${fm[0]} (~${px}px) — OK only for dense/meta text`);
+      const allowed = /adherence-allow:\s*font-too-small/i.test(text);
+      if (px < 13 && !allowed) add('error', 'font-too-small', file, ln, `font-size ${fm[0]} (~${px}px) below the 13px hard floor`);
+      else if (px < 16 && !allowed) add('warning', 'font-below-base', file, ln, `font-size ${fm[0]} (~${px}px) — OK only for dense/meta text`);
     }
 
     // (d) Component-first: no hand-rolled form primitives in .astro.
