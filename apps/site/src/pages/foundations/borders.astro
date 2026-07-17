@@ -1,0 +1,644 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+
+// Every elevated surface carries a lift shadow. The open question is how it
+// gets its EDGE: a real `border` property (today), or a hairline ring layered
+// into the same box-shadow as the lift. Both columns below share an identical
+// --elevation-* shadow; only the edge mechanism differs.
+// Layered shadow ramp (translucent 1px ring + tight contact + soft ambient lift),
+// derived from the two hand-tuned steps (Default=step2, Raised=step3). Geometry
+// is FIXED across the whole ramp; only alpha moves. Per step N: base α = 0.02×(N+1)
+// on the ring + contact layers, and (base − 0.02) on the ambient layer.
+// Ring = the "border" layer; lift = the contact + ambient shadow layers. The
+// layered format renders ring + lift; the alpha-border format reuses the SAME
+// lift but draws its edge with a real border property instead of the ring — so
+// the two differ ONLY in how the edge is drawn.
+const ring = (base) => `0px 0px 0px 1px rgba(0, 0, 0, ${base})`;
+const lift = (base, ambient) => `0px 1px 2px -1px rgba(0, 0, 0, ${base}), 0px 2px 4px 0px rgba(0, 0, 0, ${ambient})`;
+const layeredStack = (base, ambient) => `${ring(base)}, ${lift(base, ambient)}`;
+// Per-step [ring/contact base, ambient] alphas → derive both the full stack and lift-only.
+const ALPHAS = { '1': ['0.04', '0.02'], '2': ['0.06', '0.04'], '3': ['0.08', '0.06'], '4': ['0.10', '0.08'], '5': ['0.12', '0.10'] };
+const LIFT = Object.fromEntries(Object.entries(ALPHAS).map(([k, v]) => [k, lift(...v)]));
+const stepOf = (elevation) => elevation.replace('--elevation-', '');
+const SHADOW_L0 = '0px 0px 0px 1px var(--color-border-a)';        // Elevation 0 — ring only, alpha border token
+const SHADOW_L0_STRONG = '0px 0px 0px 1px var(--color-border-strong-a)'; // Elevation 0 ring, stronger (interactive hover)
+const SHADOW_L1 = layeredStack(...ALPHAS['1']); // Subtle   (step 1)
+const SHADOW_L2 = layeredStack(...ALPHAS['2']); // Default  (step 2, given)
+const SHADOW_L3 = layeredStack(...ALPHAS['3']); // Raised   (step 3, given)
+const SHADOW_L4 = layeredStack(...ALPHAS['4']); // Floating (step 4)
+const SHADOW_L5 = layeredStack(...ALPHAS['5']); // Overlay  (step 5)
+
+// Grown-geometry variant for the overlay tier. Same 1px ring + same alpha ramp,
+// but the contact and ambient layers scale their offset-y + blur so the surface
+// reads as physically further off the page (a modal shouldn't share a card's
+// 4px blur). Echoes the hub --shadow-300/-400 growth. Steps 1–3 stay flat.
+const SHADOW_L4_GROWN = '0px 0px 0px 1px rgba(0, 0, 0, 0.10), 0px 2px 4px -1px rgba(0, 0, 0, 0.10), 0px 6px 16px -2px rgba(0, 0, 0, 0.08)';
+const SHADOW_L5_GROWN = '0px 0px 0px 1px rgba(0, 0, 0, 0.12), 0px 4px 8px -2px rgba(0, 0, 0, 0.12), 0px 12px 32px -4px rgba(0, 0, 0, 0.10)';
+
+const overlayCompare = [
+  { level: 'Floating', elevation: '--elevation-4', flat: SHADOW_L4, grown: SHADOW_L4_GROWN, role: 'Dropdowns, popovers, menus',
+    flatGeo: 'contact 2px · ambient 4px', grownGeo: 'contact 4px · ambient 16px' },
+  { level: 'Overlay',  elevation: '--elevation-5', flat: SHADOW_L5, grown: SHADOW_L5_GROWN, role: 'Modals, dialogs',
+    flatGeo: 'contact 2px · ambient 4px', grownGeo: 'contact 8px · ambient 32px' },
+];
+
+// Per-level grown geometry for the side-by-side compare. Steps 1–3 are locked to
+// the flat stack (near-surface tier doesn't move); only 4–5 grow.
+const grownFor = { 'Floating': SHADOW_L4_GROWN, 'Overlay': SHADOW_L5_GROWN };
+const grownValue = (l) => grownFor[l.level] ?? layeredValue(l);
+
+const levels = [
+  { level: 'Subtle',   elevation: '--elevation-1', border: '--color-border-light',  role: 'Resting surface — always-visible panels',
+    layered: SHADOW_L1 },
+  // Everyday card hovers "up" to the Raised (step 3) treatment — one source of
+  // truth. The border/alpha/shadow hover targets below mirror the Raised row, so
+  // every edge language shows the same -2 → -3 lift on hover.
+  { level: 'Default',  elevation: '--elevation-2', border: '--color-border',        role: 'Cards, list items',
+    layered: SHADOW_L2, layeredHover: SHADOW_L3,
+    borderHover: '--color-border-strong', borderAlphaHover: '0.192', elevationHover: '--elevation-3' },
+  { level: 'Raised',   elevation: '--elevation-3', border: '--color-border-strong', role: 'Hover, pulled-forward cards',
+    layered: SHADOW_L3, borderAlpha: '0.192' },
+  { level: 'Floating', elevation: '--elevation-4', border: '--color-border', role: 'Dropdowns, popovers, menus',
+    layered: SHADOW_L4 },
+  { level: 'Overlay',  elevation: '--elevation-5', border: '--color-border', role: 'Modals, dialogs',
+    layered: SHADOW_L5 },
+];
+
+// Edge as a border property, plus the lift shadow — two separate mechanisms.
+// Border color is an alpha black (experiment on this page only): P3 with an
+// sRGB fallback so unsupported browsers keep the border instead of dropping it.
+// Default alpha is 0.153; a level may override it via `borderAlpha` (Raised = 0.192).
+const DEFAULT_BORDER_ALPHA = '0.153';
+const borderStyle = (l) => {
+  const a = l.borderAlpha ?? DEFAULT_BORDER_ALPHA;
+  // Lift = the layered stack minus its ring; the border property draws the edge.
+  return `border: 1px solid rgba(0, 0, 0, ${a}); border-color: color(display-p3 0 0 0 / ${a}); box-shadow: ${LIFT[stepOf(l.elevation)]}`;
+};
+// The original border treatment — the opaque --color-border-* tokens — kept for
+// side-by-side comparison against the alpha-black version above.
+const borderTokenStyle = (l) => `border: 1px solid var(${l.border}); box-shadow: var(${l.elevation})`;
+// Hover suffixes for the two border columns: a level with hover targets emits
+// --_bc-h (hover border color) + --_sh-h (hover lift shadow) that the .border-lift
+// class swaps in on :hover (inline styles can't express :hover themselves).
+const tokenHoverVars = (l) => l.borderHover ? `; --_bc-h: var(${l.borderHover}); --_sh-h: var(${l.elevationHover})` : '';
+const alphaHoverVars = (l) => l.borderAlphaHover ? `; --_bc-h: color(display-p3 0 0 0 / ${l.borderAlphaHover}); --_sh-h: ${LIFT[stepOf(l.elevationHover)]}` : '';
+// Edge as a 1px shadow ring layered in front of the lift shadow — one property,
+// no border. The ring composites with the soft elevation shadow. A level may
+// supply its own hand-tuned layered stack via `layered` (+ `layeredHover`).
+// Piped through --_shadow / --_shadow-hover custom props so the .layered-ring
+// class can animate box-shadow on :hover (inline styles can't express :hover).
+const layeredValue = (l) => l.layered ?? `0 0 0 1px var(${l.border}), var(${l.elevation})`;
+const layeredVars = (l) => `--_shadow: ${layeredValue(l)}${l.layeredHover ? `; --_shadow-hover: ${l.layeredHover}` : ''}`;
+
+// --- Nested composition demo -------------------------------------------------
+// Look up a level by its elevation step, then render one fixed nesting per edge
+// format to see how the shadows/borders stack when cards sit inside cards.
+const byStep = Object.fromEntries(levels.map((l) => [l.elevation.replace('--elevation-', ''), l]));
+const formats = [
+  { key: 'token', label: 'Border · token' },
+  { key: 'alpha', label: 'Border · alpha' },
+  { key: 'flat',  label: 'Layered · flat' },
+  { key: 'grown', label: 'Layered · grown' },
+];
+// Rest style for a card of a given format at a given level.
+const cardStyle = (key, l) =>
+  key === 'token' ? borderTokenStyle(l)
+  : key === 'alpha' ? borderStyle(l)
+  : key === 'grown' ? `box-shadow: ${grownValue(l)}`
+  : `box-shadow: ${layeredValue(l)}`;
+// The interactive Default (step 2) card that hover-lifts to Raised (step 3),
+// expressed in each format — returns the extra class + rest style + hover props.
+const hoverCard = (key) => {
+  const rest = byStep['2'], raised = byStep['3'];
+  if (key === 'flat')  return { cls: 'layered-ring', style: `--_shadow: ${layeredValue(rest)}; --_shadow-hover: ${layeredValue(raised)}` };
+  if (key === 'grown') return { cls: 'layered-ring', style: `--_shadow: ${grownValue(rest)}; --_shadow-hover: ${grownValue(raised)}` };
+  if (key === 'token') return { cls: 'border-lift', style: `${borderTokenStyle(rest)}; --_bc-h: var(${raised.border}); --_sh-h: var(${raised.elevation})` };
+  return { cls: 'border-lift', style: `${borderStyle(rest)}; --_bc-h: color(display-p3 0 0 0 / ${raised.borderAlpha ?? DEFAULT_BORDER_ALPHA}); --_sh-h: ${LIFT[stepOf(raised.elevation)]}` };
+};
+
+// --- Levers playground -------------------------------------------------------
+// Two independently-configurable panels. Each lever is a control; the preview +
+// CSS readout update live, over a shared switchable backdrop. Compute lives in
+// the client script (see <script>) so it's fully interactive.
+const LEVERS = [
+  { key: 'elevation',   label: 'Elevation',    options: ['0', '1', '2', '3', '4', '5'] },
+  { key: 'edge',        label: 'Edge',         options: ['none', 'border', 'ring'] },
+  { key: 'borderColor', label: 'Border color', options: ['solid', 'alpha'] },
+  { key: 'lift',        label: 'Lift shadow',  options: ['none', 'single', 'layered'] },
+];
+const PANEL_DEFAULTS = {
+  A: { elevation: '2', edge: 'ring',   borderColor: 'alpha', lift: 'layered' },
+  B: { elevation: '2', edge: 'border', borderColor: 'solid', lift: 'single' },
+};
+const panels = ['A', 'B'];
+// Playground backdrops + the color-family picker (Color-1/-2 = step-1/-2 of the
+// selected hue). Non-gray, non-white Radix families available in the tokens.
+const PG_BACKDROPS = [
+  { key: 'white',   label: 'White' },
+  { key: 'gray-1',  label: 'Gray-1' },
+  { key: 'gray-2',  label: 'Gray-2' },
+  { key: 'color-1', label: 'Color-1' },
+  { key: 'color-2', label: 'Color-2' },
+];
+const PG_COLORS = ['blue', 'copper', 'gold', 'grass', 'green', 'lime', 'orange', 'red', 'teal', 'yellow'];
+const PG_COLOR_DEFAULT = 'grass';
+// Border-token ladder: each of the three border tokens maps to a step (1–12) of
+// the selected hue. Defaults follow the Radix border band (6/7/8).
+const PG_STEPS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const PG_BORDER_TOKENS = [
+  { key: 'light',  label: 'Border light',  default: '6' },
+  { key: 'normal', label: 'Border',        default: '7' },
+  { key: 'strong', label: 'Border strong', default: '8' },
+];
+// Card surface options — white or a step of the selected hue.
+const PG_CARD = [
+  { key: 'white',    label: 'White' },
+  { key: 'color-1',  label: 'Color-1' },
+  { key: 'color-2',  label: 'Color-2' },
+  { key: 'color-3',  label: 'Color-3' },
+  { key: 'color-4',  label: 'Color-4' },
+  { key: 'color-5',  label: 'Color-5' },
+  { key: 'color-9',  label: 'Color-9' },
+  { key: 'color-10', label: 'Color-10' },
+];
+---
+<DocsLayout title="Borders — Ecology" activeHref="/foundations/borders">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Borders</span></nav>
+  <h1>Borders</h1>
+  <p class="lede">Every elevated surface has a lift shadow. The question is how it gets its <strong>edge</strong>: the way it works today — a real <code>border</code> property alongside the shadow — or drawing that hairline as a <strong>layered shadow ring</strong> composited into the same <code>box-shadow</code> as the lift, with no <code>border</code> at all.</p>
+
+  <Section id="playground" title="Levers playground">
+    <p>Isolate one variable at a time. Each panel configures the levers independently — <strong>elevation</strong> (0–5), <strong>edge</strong> (none / border / ring), <strong>border color</strong> (opaque token / alpha black, when edge is a border), and <strong>lift shadow</strong> (none / single / layered). Hold everything fixed but one lever across the two panels to compare its effect; switch the backdrop to test each choice over white, gray, or a color step.</p>
+    <div class="pg" data-bg="white" data-card="white">
+      <div class="pg-backdrops" role="group" aria-label="Backdrop">
+        <span>Backdrop</span>
+        {PG_BACKDROPS.map((b, i) => (
+          <button type="button" data-bg={b.key} class:list={[i === 0 && 'is-active']}>{b.label}</button>
+        ))}
+        <label class="pg-colorpick">
+          <span>Color</span>
+          <select data-colorpick>
+            {PG_COLORS.map((c) => (
+              <option value={c} selected={c === PG_COLOR_DEFAULT}>{c}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div class="pg-backdrops" role="group" aria-label="Card surface">
+        <span>Card</span>
+        {PG_CARD.map((c, i) => (
+          <button type="button" data-card={c.key} class:list={[i === 0 && 'is-active']}>{c.label}</button>
+        ))}
+      </div>
+      <div class="pg-backdrops" role="group" aria-label="Border token ladder">
+        <span>Border tokens</span>
+        {PG_BORDER_TOKENS.map((t) => (
+          <label class="pg-colorpick">
+            <span>{t.label}</span>
+            <select data-bordertoken={t.key}>
+              {PG_STEPS.map((s) => (<option value={s} selected={s === t.default}>{s}</option>))}
+            </select>
+          </label>
+        ))}
+        <span class="pg-ladder" aria-hidden="true">
+          <i data-ladder="light"></i><i data-ladder="normal"></i><i data-ladder="strong"></i>
+        </span>
+      </div>
+      <div class="pg-panels">
+        {panels.map((p) => (
+          <div class="pg-panel" data-panel={p}>
+            <div class="pg-panel__label">Panel {p}</div>
+            <div class="pg-controls">
+              {LEVERS.map((lv) => (
+                <fieldset class="lever">
+                  <legend>{lv.label}</legend>
+                  <div class="seg">
+                    {lv.options.map((o) => (
+                      <label class="seg__opt">
+                        <input type="radio" name={`${p}-${lv.key}`} value={o} checked={o === PANEL_DEFAULTS[p][lv.key]} />
+                        <span>{o}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+            <div class="pg-preview">
+              <div class="pg-card" data-preview>Aa</div>
+            </div>
+            <code class="pg-readout" data-readout></code>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <Section id="card-demo" title="Card">
+    <p>A single card in the layered treatment, resting at <strong>elevation 0</strong> (flat — ring only, no lift). Pick an interaction mode: <strong>static</strong> (no state change), <strong>hover</strong> (lifts to elevation 1 on hover), or <strong>interactive</strong> (clickable — lifts on hover, presses back down on click).</p>
+    <div class="carddemo">
+      <div class="seg carddemo__modes" role="radiogroup" aria-label="Card mode">
+        {['static', 'interactive', 'hover'].map((m, i) => (
+          <label class="seg__opt">
+            <input type="radio" name="carddemo-mode" value={m} checked={i === 0} />
+            <span>{m}</span>
+          </label>
+        ))}
+      </div>
+      <article class="card-demo" style={`--_rest: ${SHADOW_L0}; --_hover: ${SHADOW_L0}, ${lift(...ALPHAS['1'])}; --_hover-i: ${SHADOW_L0_STRONG}, ${lift(...ALPHAS['3'])}; --_press: ${SHADOW_L0}`}>
+        <span class="card-demo__eyebrow">Project</span>
+        <h3 class="card-demo__title">Riparian Buffer Assessment</h3>
+        <p class="card-demo__body">Field survey of vegetation cover and channel stability along the lower reach of Willow Creek.</p>
+        <div class="card-demo__meta">
+          <span class="card-demo__status">In review</span>
+          <span>Updated Jul 16, 2026</span>
+        </div>
+      </article>
+    </div>
+  </Section>
+
+  <Section id="side-by-side" title="Side by side">
+    <p>The direct comparison. Every card in a row carries the <em>identical</em> <code>--elevation-*</code> lift shadow — only the edge treatment differs. From left: a <code>border</code> using the original <code>--color-border-*</code> tokens, the same border with an alpha-black color, then the layered <code>0 0 0 1px</code> shadow ring in flat and grown geometry.</p>
+    <div class="compare compare--5col">
+      <div class="compare__head"><span>Level</span><span>Border · token</span><span>Border · alpha</span><span>Layered · flat</span><span>Layered · grown</span></div>
+      {levels.map((l) => (
+        <div class="compare__row">
+          <div class="compare__label">
+            <strong>{l.level}</strong>
+            <span>{l.role}</span>
+            <code>{l.elevation}</code>
+          </div>
+          <div class:list={['demo', l.borderHover && 'border-lift']} style={borderTokenStyle(l) + tokenHoverVars(l)}>
+            <span class="demo__tag">{l.border.replace('--color-', '')}{l.borderHover ? ' · hover' : ''}</span>
+          </div>
+          <div class:list={['demo', l.borderAlphaHover && 'border-lift']} style={borderStyle(l) + alphaHoverVars(l)}>
+            <span class="demo__tag">alpha {l.borderAlpha ?? DEFAULT_BORDER_ALPHA}{l.borderAlphaHover ? ' · hover' : ''}</span>
+          </div>
+          <div class="demo layered-ring" style={layeredVars(l)}>
+            <span class="demo__tag">flat{l.layeredHover ? ' · hover' : ''}</span>
+          </div>
+          <div class="demo layered-ring" style={`--_shadow: ${grownValue(l)}${l.layeredHover ? `; --_shadow-hover: ${l.layeredHover}` : ''}`}>
+            <span class="demo__tag">{grownFor[l.level] ? 'grown' : 'grown = flat'}{l.layeredHover ? ' · hover' : ''}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="border" title="Border property (current)">
+    <p>How elevated surfaces are edged today: a crisp <code>border</code> draws the line, and a separate <code>box-shadow</code> supplies the lift. Two mechanisms, and the border occupies layout box. Here the border color is an alpha black — <code>color(display-p3 0 0 0 / .153)</code> (<code>.192</code> on the Raised step), with an sRGB fallback — rather than the <code>--color-border-*</code> tokens, to match the layered ring's translucent-edge approach for a fair comparison.</p>
+    <div class="cards">
+      {levels.map((l) => (
+        <div class:list={['card', l.borderAlphaHover && 'border-lift']} style={borderStyle(l) + alphaHoverVars(l)}>
+          <code>{l.level}</code>
+          <span class="card__primitive">border · display-p3 0 0 0 / {l.borderAlpha ?? DEFAULT_BORDER_ALPHA}{l.borderAlphaHover ? ' · hover' : ''}</span>
+          <span class="card__primitive">shadow · layered lift (no ring)</span>
+          <span class="card__role">{l.role}</span>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="layered" title="Layered shadow ring">
+    <p>No <code>border</code> property. The edge is a <code>0 0 0 1px</code> ring layered ahead of the lift shadow in a single <code>box-shadow</code>. It never affects layout box, composites with the soft shadow, and can be tinted or made translucent independently.</p>
+    <div class="cards">
+      {levels.map((l) => (
+        <div class="card layered-ring" style={layeredVars(l)}>
+          <code>{l.level}</code>
+          {l.layered ? (
+            <span class="card__primitive">custom · 3-layer stack (ring + 2 lifts){l.layeredHover ? ' · hover' : ''}</span>
+          ) : (
+            <>
+              <span class="card__primitive">ring · 0 0 0 1px {l.border}</span>
+              <span class="card__primitive">shadow · {l.elevation}</span>
+            </>
+          )}
+          <span class="card__role">{l.role}</span>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="geometry" title="Overlay geometry — flat vs grown">
+    <p>The flat ramp keeps every level at the same <code>2px</code>/<code>4px</code> blur and only deepens alpha with height — crisp, but a modal can read as glued to the page. The grown variant keeps the identical 1px ring and alpha, but scales the contact + ambient <em>offset and blur</em> so overlays actually lift. Steps 1–3 are unchanged; only Floating and Overlay diverge.</p>
+    <div class="compare">
+      <div class="compare__head"><span>Level</span><span>Flat geometry</span><span>Grown geometry</span></div>
+      {overlayCompare.map((l) => (
+        <div class="compare__row">
+          <div class="compare__label">
+            <strong>{l.level}</strong>
+            <span>{l.role}</span>
+            <code>{l.elevation}</code>
+          </div>
+          <div class="demo layered-ring" style={`--_shadow: ${l.flat}`}>
+            <span class="demo__tag">{l.flatGeo}</span>
+          </div>
+          <div class="demo layered-ring" style={`--_shadow: ${l.grown}`}>
+            <span class="demo__tag">{l.grownGeo}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="nested" title="Nested composition">
+    <p>How the treatments read when cards sit inside cards. Each block is the same nesting — an <code>--elevation-5</code> parent, a Default card, an <code>--elevation-1</code> card, and inside it two interactive cards: one that lifts to <code>--elevation-3</code> on <strong>hover</strong>, and one that <strong>opens</strong> an <code>--elevation-4</code> popover on <strong>click</strong> (a top-layer dropdown — click outside or press Esc to dismiss). Compare how each edge format holds up under stacking.</p>
+    <p class="nest-hint">Drag the image behind the cards — the translucent rings and lift shadows tint over whatever color sits beneath them, so this shows how each treatment reads on a non-white surface.</p>
+    <div class="nest-stage">
+      <img class="nest-bg" src="https://picsum.photos/seed/ecology-shadows/360/300" alt="Draggable background image" draggable="false" />
+      <div class="nest-grid">
+      {formats.map((f) => (
+        <div class="nest-block">
+          <span class="nest-block__label">{f.label}</span>
+          <div class="nest-card" style={cardStyle(f.key, byStep['5'])}>
+            <span class="nest-tag">parent · elevation-5</span>
+            <div class="nest-card" style={cardStyle(f.key, byStep['2'])}>
+              <span class="nest-tag">default · elevation-2</span>
+              <div class="nest-card" style={cardStyle(f.key, byStep['1'])}>
+                <span class="nest-tag">subtle · elevation-1</span>
+                <div class:list={['nest-card', 'nest-card--interactive', hoverCard(f.key).cls]} style={hoverCard(f.key).style}>
+                  <span class="nest-tag">hover me · 2 → 3</span>
+                </div>
+                <div class="nest-toggle">
+                  <button type="button" popovertarget={`nest-pop-${f.key}`} class="nest-card nest-card--interactive nest-trigger" style={cardStyle(f.key, byStep['2'])}>
+                    <span class="nest-tag">click me · opens 4</span>
+                    <span class="nest-caret" aria-hidden="true">▾</span>
+                  </button>
+                  <div id={`nest-pop-${f.key}`} popover="auto" class="nest-card nest-popover" style={cardStyle(f.key, byStep['4'])}>
+                    <span class="nest-tag">popover · elevation-4</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+      </div>
+    </div>
+  </Section>
+</DocsLayout>
+
+<style>
+  /* Page background (DocsShell's .app) → white. This page's <style> ships only
+     on this page, so :global stays page-local. */
+  :global(.app) { background: #ffffff; }
+
+  /* Page-scoped token remap (experiment only): border steps + a gray-2 card
+     surface. Scoped to the demo containers, NOT the whole page, so it never
+     touches the section-title underlines (which also read --color-border) or
+     anything outside this file. All cards read var(--color-surface). */
+  .compare, .cards, .nest-stage {
+    --color-border-light: var(--color-gray-4);
+    --color-border: var(--color-gray-5);
+    --color-border-strong: var(--color-gray-7);
+    --color-surface: var(--color-gray-2);
+  }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--spacing-500, 1.5rem); padding: var(--spacing-300, 0.75rem) var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem); }
+  .card { display: flex; flex-direction: column; gap: 3px; background: var(--color-surface, #fff); border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-400, 1rem); min-height: 96px; }
+  .card code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .card__primitive { font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--color-text-muted, #737373); }
+  .card__role { font-size: 12.5px; color: var(--color-text-muted, #737373); margin-top: 2px; }
+
+  /* Layered shadow ring: box-shadow fed via --_shadow, deepening to
+     --_shadow-hover on hover with a transition on box-shadow only. */
+  .layered-ring { box-shadow: var(--_shadow); transition: box-shadow 150ms ease; }
+  .layered-ring:hover { box-shadow: var(--_shadow-hover, var(--_shadow)); }
+
+  /* Border-property hover: the rest state stays inline (keeps its sRGB fallback);
+     on hover the class swaps in --_bc-h / --_sh-h. Only cells that set those props
+     get the class, so the !important overrides never fire on non-hover cells. */
+  .border-lift { transition: box-shadow 150ms ease, border-color 150ms ease; }
+  .border-lift:hover { border-color: var(--_bc-h) !important; box-shadow: var(--_sh-h) !important; }
+  @media (prefers-reduced-motion: reduce) { .layered-ring, .border-lift { transition: none; } }
+
+  /* Nested composition: same fixed nesting rendered under each edge format. */
+  /* Levers playground */
+  .pg { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); margin: var(--spacing-300, 0.75rem) 0 var(--spacing-500, 1.5rem); }
+  .pg-backdrops { display: flex; align-items: center; flex-wrap: wrap; gap: var(--spacing-200, 0.5rem); font-size: 13px; color: var(--color-text-muted, #737373); }
+  .pg-backdrops button { font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--color-gray-6); background: var(--color-gray-1); color: var(--color-text-secondary, #525252); cursor: pointer; }
+  .pg-backdrops button.is-active { background: var(--color-text-primary, #171717); color: #fff; border-color: transparent; }
+  .pg-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-500, 1.5rem); }
+  .pg-panel { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); border: 1px solid var(--color-gray-4); border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-400, 1rem); background: var(--color-gray-1); }
+  .pg-panel__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted, #737373); }
+  .pg-controls { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); }
+  .lever { border: 0; padding: 0; margin: 0; min-inline-size: 0; display: flex; flex-direction: column; gap: 5px; }
+  .lever legend { font-size: 12px; color: var(--color-text-secondary, #525252); padding: 0; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+  .seg__opt { position: relative; display: inline-flex; }
+  .seg__opt input { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }
+  .seg__opt span { display: inline-block; font-size: 12px; padding: 4px 11px; border-radius: 7px; border: 1px solid var(--color-gray-5); color: var(--color-text-secondary, #525252); background: var(--color-gray-1); cursor: pointer; text-transform: capitalize; }
+  .seg__opt input:checked + span { background: var(--color-primary, #1e5386); color: #fff; border-color: transparent; }
+  .seg__opt input:focus-visible + span { outline: 2px solid var(--color-border-focus, #2f7d4f); outline-offset: 1px; }
+  .seg__opt input:disabled + span { opacity: 0.35; cursor: not-allowed; }
+  .pg-preview { display: grid; place-items: center; min-height: 176px; border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-500, 1.5rem); overflow: hidden; }
+  .pg-card { display: grid; place-items: center; width: 120px; height: 84px; border-radius: var(--radius-300, 0.5rem); background: #ffffff; font-size: 20px; color: var(--color-text-muted, #737373); }
+  .pg-readout { font-family: var(--font-mono, monospace); font-size: 11px; line-height: 1.5; color: var(--color-text-secondary, #525252); white-space: pre-wrap; word-break: break-word; background: var(--color-gray-2); padding: var(--spacing-250, 0.625rem); border-radius: 6px; }
+  .pg-colorpick { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-muted, #737373); }
+  .pg-colorpick select { font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--color-gray-6); background: var(--color-gray-1); color: var(--color-text-secondary, #525252); cursor: pointer; text-transform: capitalize; }
+  .pg-ladder { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: 4px; }
+  .pg-ladder i { width: 18px; height: 18px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08); }
+  .pg-ladder i[data-ladder="light"] { background: var(--color-border-light); }
+  .pg-ladder i[data-ladder="normal"] { background: var(--color-border); }
+  .pg-ladder i[data-ladder="strong"] { background: var(--color-border-strong); }
+  .pg[data-bg="white"] .pg-preview { background: #ffffff; }
+  .pg[data-bg="gray-1"] .pg-preview { background: var(--color-gray-1); }
+  .pg[data-bg="gray-2"] .pg-preview { background: var(--color-gray-2); }
+  .pg[data-bg="color-1"] .pg-preview { background: var(--pg-c1, var(--color-grass-1)); }
+  .pg[data-bg="color-2"] .pg-preview { background: var(--pg-c2, var(--color-grass-2)); }
+  .pg[data-card="white"] .pg-card { background: #ffffff; }
+  .pg[data-card="color-1"] .pg-card { background: var(--pg-c1, var(--color-grass-1)); }
+  .pg[data-card="color-2"] .pg-card { background: var(--pg-c2, var(--color-grass-2)); }
+  .pg[data-card="color-3"] .pg-card { background: var(--pg-c3, var(--color-grass-3)); }
+  .pg[data-card="color-4"] .pg-card { background: var(--pg-c4, var(--color-grass-4)); }
+  .pg[data-card="color-5"] .pg-card { background: var(--pg-c5, var(--color-grass-5)); }
+  .pg[data-card="color-9"] .pg-card { background: var(--pg-c9, var(--color-grass-9)); }
+  .pg[data-card="color-10"] .pg-card { background: var(--pg-c10, var(--color-grass-10)); }
+
+  /* Single card demo with static / interactive / hover modes (CSS :has()). */
+  .carddemo { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); align-items: flex-start; max-width: 380px; margin: var(--spacing-300, 0.75rem) 0 var(--spacing-500, 1.5rem); }
+  .carddemo__modes { gap: 4px; }
+  .card-demo { --color-border-a: var(--color-gray-a-7); --color-border-light-a: var(--color-gray-a-6); --color-border-strong-a: var(--color-gray-a-8); width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--spacing-200, 0.5rem); background: #ffffff; border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-500, 1.5rem); box-shadow: var(--_rest); transition: box-shadow 160ms ease, transform 160ms ease; }
+  .card-demo__eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-primary, #1e5386); }
+  .card-demo__title { margin: 0; font-size: 17px; font-weight: 600; color: var(--color-text-primary, #171717); }
+  .card-demo__body { margin: 0; font-size: 14px; line-height: 1.5; color: var(--color-text-secondary, #525252); }
+  /* Footer meta with a full-bleed internal separator (negative inline margins
+     pull the top border out to the card's edges). */
+  .card-demo__meta { display: flex; align-items: center; gap: var(--spacing-300, 0.75rem); margin-top: var(--spacing-100, 0.25rem); margin-inline: calc(-1 * var(--spacing-500, 1.5rem)); padding: var(--spacing-300, 0.75rem) var(--spacing-500, 1.5rem) 0; border-top: 1px solid var(--color-border-light-a); font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .card-demo__status { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500; background: var(--color-grass-3); color: var(--color-grass-11); }
+  /* hover mode: lift on hover, ring stays --color-border-a */
+  .carddemo:has(input[value="hover"]:checked) .card-demo:hover { box-shadow: var(--_hover); }
+  /* interactive mode: pointer, lift + ring strengthens to --color-border-strong-a on hover, press on click */
+  .carddemo:has(input[value="interactive"]:checked) .card-demo { cursor: pointer; }
+  .carddemo:has(input[value="interactive"]:checked) .card-demo:hover { box-shadow: var(--_hover-i); }
+  .carddemo:has(input[value="interactive"]:checked) .card-demo:active { box-shadow: var(--_press); transform: translateY(1px); }
+  @media (prefers-reduced-motion: reduce) { .card-demo { transition: none; } }
+
+  .nest-hint { font-size: 13px; color: var(--color-text-muted, #737373); margin: 0 0 var(--spacing-300, 0.75rem); }
+  /* Background stage: a draggable image sits behind the cards; the cards stay
+     opaque, so the translucent shadows spill onto the color in the gaps. */
+  .nest-stage { position: relative; overflow: hidden; border-radius: var(--radius-400, 0.75rem); background: var(--color-surface-sunken, #f5f5f5); padding: var(--spacing-500, 1.5rem); margin-bottom: var(--spacing-500, 1.5rem); }
+  .nest-bg { position: absolute; top: var(--spacing-400, 1rem); left: var(--spacing-400, 1rem); width: 320px; height: auto; border-radius: var(--radius-300, 0.5rem); z-index: 0; cursor: grab; touch-action: none; user-select: none; -webkit-user-drag: none; box-shadow: var(--shadow-200, 0 4px 20px -4px rgba(0,0,0,0.06)); }
+  .nest-bg:active { cursor: grabbing; }
+  .nest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--spacing-500, 1.5rem); padding: var(--spacing-300, 0.75rem) var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem); }
+  .nest-stage .nest-grid { position: relative; z-index: 1; padding: 0; }
+  .nest-block { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); }
+  .nest-block__label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted, #737373); }
+  .nest-card { background: var(--color-surface, #fff); border-radius: var(--radius-300, 0.5rem); padding: var(--spacing-300, 0.75rem); display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); }
+  .nest-tag { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--color-text-muted, #737373); }
+  .nest-card--interactive { cursor: pointer; }
+  /* Popover-dropdown trigger — a <button> styled as a Default card. */
+  .nest-trigger { font: inherit; color: inherit; text-align: left; border: 0; width: 100%; flex-direction: row; align-items: center; justify-content: space-between; gap: var(--spacing-200, 0.5rem); }
+  .nest-caret { font-size: 11px; color: var(--color-text-muted, #737373); }
+  /* The elevation-4 card as a top-layer popover, tethered under its trigger via
+     anchor positioning (implicit anchor from popovertarget). Where anchor
+     positioning is unsupported it falls back to the UA-centered popover. */
+  .nest-popover { border: 0; min-width: 160px; width: max-content; max-width: 220px;
+    opacity: 0; transform: translateY(-4px);
+    transition: opacity 120ms ease, transform 120ms ease, overlay 120ms allow-discrete, display 120ms allow-discrete; }
+  .nest-popover:popover-open { opacity: 1; transform: translateY(0); }
+  @starting-style { .nest-popover:popover-open { opacity: 0; transform: translateY(-4px); } }
+  @supports (position-area: block-end) {
+    .nest-popover { position-area: block-end span-inline-end; position-try-fallbacks: flip-block, flip-inline;
+      inset: auto; margin: 0; margin-block-start: var(--spacing-200, 0.5rem); }
+  }
+  @media (prefers-reduced-motion: reduce) { .nest-popover { transition: none; transform: none; } }
+
+  /* Side-by-side comparison grid: label | border demo | layered-shadow demo */
+  .compare { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); padding: var(--spacing-300, 0.75rem) var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem); }
+  .compare__head, .compare__row { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(0, 1.4fr) minmax(0, 1.4fr); gap: var(--spacing-500, 1.5rem); align-items: center; }
+  .compare--5col .compare__head, .compare--5col .compare__row { grid-template-columns: minmax(104px, 0.7fr) repeat(4, minmax(0, 1fr)); gap: var(--spacing-300, 0.75rem); }
+  .compare__head { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted, #737373); padding-bottom: var(--spacing-100, 0.25rem); }
+  .compare__head span:first-child { text-transform: none; letter-spacing: 0; }
+  .compare__label { display: flex; flex-direction: column; gap: 2px; }
+  .compare__label strong { font-size: 14px; color: var(--color-text-primary, #171717); }
+  .compare__label span { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .compare__label code { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--color-text-muted, #737373); margin-top: 2px; }
+  .demo { display: flex; align-items: center; justify-content: center; min-height: 84px; background: var(--color-surface, #fff); border-radius: var(--radius-400, 0.75rem); }
+  .demo__tag { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--color-text-muted, #737373); }
+
+  @media (max-width: 640px) {
+    .compare__head { display: none; }
+    .compare__row { grid-template-columns: 1fr; gap: var(--spacing-300, 0.75rem); }
+  }
+</style>
+
+<script>
+  // Drag the nested-composition background image via pointer + transform, so it
+  // can be moved under the cards to preview shadow/ring tinting over color.
+  for (const img of document.querySelectorAll('.nest-bg')) {
+    let originX = 0, originY = 0, startX = 0, startY = 0, dragging = false;
+    img.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      const m = new DOMMatrixReadOnly(getComputedStyle(img).transform);
+      originX = m.m41; originY = m.m42;
+      img.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    img.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      img.style.transform = `translate(${originX + e.clientX - startX}px, ${originY + e.clientY - startY}px)`;
+    });
+    const end = () => { dragging = false; };
+    img.addEventListener('pointerup', end);
+    img.addEventListener('pointercancel', end);
+  }
+
+  // Levers playground — compute border + box-shadow from each panel's controls.
+  // Per elevation step: ring/contact alpha + ambient alpha (a single scale).
+  const RING = { 0: 0.03, 1: 0.04, 2: 0.06, 3: 0.08, 4: 0.10, 5: 0.12 };
+  const AMB  = { 0: 0.015, 1: 0.02, 2: 0.04, 3: 0.06, 4: 0.08, 5: 0.10 };
+  function pgCompute(cfg) {
+    const ringA = RING[+cfg.elevation], ambA = AMB[+cfg.elevation];
+    let border = 'none';
+    const shadow = [];
+    if (cfg.edge === 'border') {
+      const n = +cfg.elevation;
+      // Rung by elevation: 0–1 light, 2–3 normal, 4–5 strong.
+      const rung = n <= 1 ? 'light' : n <= 3 ? 'normal' : 'strong';
+      const base = rung === 'normal' ? '--color-border' : `--color-border-${rung}`;
+      // Same step, rendered as the solid token or the alpha token of that step.
+      const varName = cfg.borderColor === 'alpha' ? `${base}-a` : base;
+      border = `1px solid var(${varName})`;
+    } else if (cfg.edge === 'ring') {
+      shadow.push(`0px 0px 0px 1px rgba(0, 0, 0, ${ringA})`);
+    }
+    if (cfg.lift === 'single') {
+      shadow.push(`0px 2px 8px 0px rgba(0, 0, 0, ${ambA})`);
+    } else if (cfg.lift === 'layered') {
+      shadow.push(`0px 1px 2px -1px rgba(0, 0, 0, ${ringA})`, `0px 2px 4px 0px rgba(0, 0, 0, ${ambA})`);
+    }
+    return { border, boxShadow: shadow.length ? shadow.join(', ') : 'none' };
+  }
+  for (const panel of document.querySelectorAll('.pg-panel')) {
+    const preview = panel.querySelector('[data-preview]');
+    const readout = panel.querySelector('[data-readout]');
+    const apply = () => {
+      const cfg = {};
+      for (const input of panel.querySelectorAll('input[type="radio"]:checked')) {
+        cfg[input.name.split('-').slice(1).join('-')] = input.value;
+      }
+      const { border, boxShadow } = pgCompute(cfg);
+      preview.style.border = border;
+      preview.style.boxShadow = boxShadow;
+      const edgeNote = cfg.edge === 'border' ? ` (${cfg.borderColor})` : '';
+      readout.textContent =
+        `elevation ${cfg.elevation} · edge ${cfg.edge}${edgeNote} · lift ${cfg.lift}\n` +
+        `border: ${border};\nbox-shadow: ${boxShadow};`;
+    };
+    panel.addEventListener('change', apply);
+    apply();
+  }
+  const pg = document.querySelector('.pg');
+  if (pg) {
+    const setActive = (btn) => {
+      for (const b of btn.closest('.pg-backdrops').querySelectorAll('button')) b.classList.toggle('is-active', b === btn);
+    };
+    const colorpick = pg.querySelector('[data-colorpick]');
+    const bordertokens = [...pg.querySelectorAll('[data-bordertoken]')];
+    // Card/backdrop color steps use the picked hue. The border-token ladder uses
+    // that same hue — except when the card is white, where it uses the gray ramp.
+    const syncColors = () => {
+      const hue = colorpick ? colorpick.value : 'grass';
+      for (const step of [1, 2, 3, 4, 5, 9, 10]) pg.style.setProperty(`--pg-c${step}`, `var(--color-${hue}-${step})`);
+      const borderHue = pg.dataset.card === 'white' ? 'gray' : hue;
+      for (const sel of bordertokens) {
+        const base = sel.dataset.bordertoken === 'normal' ? '--color-border' : `--color-border-${sel.dataset.bordertoken}`;
+        // Solid + alpha companion of the SAME step (Radix ships both: -N and -a-N).
+        pg.style.setProperty(base, `var(--color-${borderHue}-${sel.value})`);
+        pg.style.setProperty(`${base}-a`, `var(--color-${borderHue}-a-${sel.value})`);
+      }
+    };
+    // On a saturated card fill (color-9/10) an alpha edge is meaningless — disable
+    // the border + ring edge options and fall back to 'none'.
+    const syncEdgeOptions = () => {
+      const filled = pg.dataset.card === 'color-9' || pg.dataset.card === 'color-10';
+      for (const panel of pg.querySelectorAll('.pg-panel')) {
+        const name = `${panel.dataset.panel}-edge`;
+        let bumped = false;
+        for (const val of ['border', 'ring']) {
+          const input = panel.querySelector(`input[name="${name}"][value="${val}"]`);
+          if (!input) continue;
+          input.disabled = filled;
+          if (filled && input.checked) {
+            panel.querySelector(`input[name="${name}"][value="none"]`).checked = true;
+            bumped = true;
+          }
+        }
+        if (bumped) panel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    };
+    for (const btn of pg.querySelectorAll('.pg-backdrops button[data-bg]')) {
+      btn.addEventListener('click', () => { pg.dataset.bg = btn.dataset.bg; setActive(btn); });
+    }
+    for (const btn of pg.querySelectorAll('.pg-backdrops button[data-card]')) {
+      btn.addEventListener('click', () => { pg.dataset.card = btn.dataset.card; setActive(btn); syncEdgeOptions(); syncColors(); });
+    }
+    if (colorpick) colorpick.addEventListener('change', syncColors);
+    for (const sel of bordertokens) sel.addEventListener('change', syncColors);
+    syncEdgeOptions();
+    syncColors();
+  }
+</script>

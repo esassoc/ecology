@@ -71,8 +71,45 @@ for (const { jsonKey, radixKey } of P3_SCALES) {
   }
 }
 
+// P3 alpha ramps. Radix ships a `color(display-p3 … / a)` variant for every alpha
+// scale (e.g. blueP3A, grayDarkP3A). Their step keys drop the P3 — blueP3A.blueA9 —
+// and dark objects reuse the light base name (grayDarkP3A.grayA9). scaleName is the
+// authored JSON key, base is the radix step prefix. Mirrors the sRGB alpha ramps in
+// tokens/primitive/color.json so capable displays get vivid P3 transparency.
+const ALPHA_P3_SCALES = [
+  { scaleName: 'blue-a',        radixKey: 'blueP3A',      base: 'blue' },
+  { scaleName: 'teal-a',        radixKey: 'tealP3A',      base: 'teal' },
+  { scaleName: 'green-a',       radixKey: 'greenP3A',     base: 'green' },
+  { scaleName: 'red-a',         radixKey: 'redP3A',       base: 'red' },
+  { scaleName: 'orange-a',      radixKey: 'orangeP3A',    base: 'orange' },
+  { scaleName: 'yellow-a',      radixKey: 'amberP3A',     base: 'amber' },
+  { scaleName: 'copper-a',      radixKey: 'bronzeP3A',    base: 'bronze' },
+  { scaleName: 'grass-a',       radixKey: 'grassP3A',     base: 'grass' },
+  { scaleName: 'lime-a',        radixKey: 'limeP3A',      base: 'lime' },
+  { scaleName: 'gold-a',        radixKey: 'goldP3A',      base: 'gold' },
+  { scaleName: 'gray-a',        radixKey: 'grayP3A',      base: 'gray' },
+  { scaleName: 'gray-dark-a',   radixKey: 'grayDarkP3A',  base: 'gray' },
+  { scaleName: 'blue-dark-a',   radixKey: 'blueDarkP3A',  base: 'blue' },
+  { scaleName: 'green-dark-a',  radixKey: 'greenDarkP3A', base: 'green' },
+  { scaleName: 'grass-dark-a',  radixKey: 'grassDarkP3A', base: 'grass' },
+  { scaleName: 'lime-dark-a',   radixKey: 'limeDarkP3A',  base: 'lime' },
+  { scaleName: 'red-dark-a',    radixKey: 'redDarkP3A',   base: 'red' },
+  { scaleName: 'yellow-dark-a', radixKey: 'amberDarkP3A', base: 'amber' },
+];
+for (const { scaleName, radixKey, base } of ALPHA_P3_SCALES) {
+  const scale = radix[radixKey];
+  if (!scale) continue;
+  for (let step = 1; step <= 12; step++) {
+    const radixStepKey = `${base}A${step}`;
+    const cssVar = `--color-${scaleName}-${step}`;
+    if (scale[radixStepKey]) {
+      lines.push(`  ${cssVar}: ${scale[radixStepKey]};`);
+    }
+  }
+}
+
 const p3Block = `\n@media (color-gamut: p3) {\n  :root {\n${lines.join('\n')}\n  }\n}\n`;
 fs.appendFileSync('dist/tokens.css', p3Block);
 
 console.log('✓ tokens built → dist/tokens.css, dist/tokens.js');
-console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length} scales)`);
+console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length + ALPHA_P3_SCALES.length} scales)`);

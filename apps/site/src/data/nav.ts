@@ -43,6 +43,7 @@ export const foundations: NavGroup = {
     { label: 'Spacing', href: '/foundations/spacing' },
     { label: 'Radius', href: '/foundations/radius' },
     { label: 'Elevation', href: '/foundations/elevation' },
+    { label: 'Borders', href: '/foundations/borders' },
     { label: 'Motion', href: '/foundations/motion' },
   ],
 };
