@@ -57,8 +57,8 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`, active && 'is-active
     color: inherit;
     cursor: pointer;
     transition:
-      background var(--duration-fast, 150ms) var(--easing-standard, ease),
-      transform var(--duration-fast, 150ms) var(--easing-out, ease);
+      background-color var(--motion-ease-quick, 150ms ease),
+      transform var(--motion-ease-out-quick, 150ms cubic-bezier(0.215, 0.61, 0.355, 1));
     -webkit-appearance: none;
     appearance: none;
   }

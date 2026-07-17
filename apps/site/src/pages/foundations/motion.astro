@@ -3,88 +3,182 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
-const transitions = [
-  { token: '--transition-fast', value: '150ms ease', role: 'Hover, focus, small state flips', cls: 'fast' },
-  { token: '--transition-base', value: '200ms ease', role: 'Default for most interactions', cls: 'base' },
-  { token: '--transition-slow', value: '350ms ease', role: 'Panels, overlays, larger moves', cls: 'slow' },
+// Tier 1 — primitives. Two independent axes.
+const durations = [
+  { token: '--duration-quick', value: '150ms', role: 'Micro-interactions: hover, press, small flips' },
+  { token: '--duration-base',  value: '200ms', role: 'Default for most transitions' },
+  { token: '--duration-long',  value: '350ms', role: 'Panels, overlays, larger spatial moves' },
+];
+const easings = [
+  { token: '--easing-ease',     value: 'ease',                             role: 'Asymmetric house curve — hover & small state changes', cls: 'ease' },
+  { token: '--easing-out',      value: 'cubic-bezier(.215,.61,.355,1)',     role: 'Decelerate — the UI default (easeOutCubic)', cls: 'out' },
+  { token: '--easing-in-out',   value: 'cubic-bezier(.645,.045,.355,1)',    role: 'Symmetric — on-screen moves (easeInOutCubic)', cls: 'in-out' },
+];
+
+// Tier 2 — semantic. Each combines a duration + an ease (fade/move also bake the property).
+const motion = [
+  { family: 'ease',     note: 'House curve — hover/state. Name the property yourself.', tokens: ['--motion-ease-quick', '--motion-ease-base', '--motion-ease-long'] },
+  { family: 'ease-out', note: 'Decelerate — the default for enter/exit.',    tokens: ['--motion-ease-out-quick', '--motion-ease-out-base', '--motion-ease-out-long'] },
+  { family: 'fade',     note: 'Bakes in opacity — drop-in.',                 tokens: ['--motion-fade-quick', '--motion-fade-base', '--motion-fade-long'] },
+  { family: 'move',     note: 'Bakes in transform — drop-in.',               tokens: ['--motion-move-quick', '--motion-move-base', '--motion-move-long'] },
 ];
 ---
 <DocsLayout title="Motion — Ecology" activeHref="/foundations/motion">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Motion</span></nav>
   <h1>Motion</h1>
-  <p class="lede">Three transition tokens cover the whole system. They share an easing curve and differ only in duration — fast for direct feedback, slow for larger spatial moves. <strong>Hover a swatch</strong> to feel its timing.</p>
+  <p class="lede">Motion is built from two independent primitives — a <strong>duration</strong> (how long) and an <strong>ease</strong> (how it moves through that time). Semantic <code>--motion-*</code> tokens pair them into named transitions you apply by intent. <strong>Hover a swatch</strong> to feel its timing.</p>
 
-  <Section id="transitions" title="Transitions">
-    <p>Each swatch uses its token for both the color shift and the slide. Hover to trigger; the timing is the difference.</p>
+  <Section id="primitives" title="Tier 1 — Primitives">
+    <p>Duration and ease are chosen separately, so any curve pairs with any duration. These are the raw options; compose them directly, or reach for a semantic token below.</p>
+
+    <h3 class="sub">Duration</h3>
+    <div class="rows">
+      {durations.map((d) => (
+        <div class="row">
+          <code>{d.token}</code>
+          <span class="row__value">{d.value}</span>
+          <span class="row__role">{d.role}</span>
+        </div>
+      ))}
+    </div>
+
+    <h3 class="sub">Ease</h3>
     <div class="swatches">
-      {transitions.map((t) => (
+      {easings.map((e) => (
         <div class="swatch">
-          <div class={`swatch__demo swatch__demo--${t.cls}`}>
-            <div class="swatch__thumb"></div>
-            <span class="swatch__hint">Hover me</span>
+          <div class={`demo demo--ease-${e.cls}`}>
+            <div class="thumb"></div>
+            <span class="hint">Hover</span>
           </div>
-          <div class="swatch__meta">
-            <code>{t.token}</code>
-            <span class="swatch__value">{t.value}</span>
-            <span class="swatch__role">{t.role}</span>
+          <div class="meta">
+            <code>{e.token}</code>
+            <span class="meta__value">{e.value}</span>
+            <span class="meta__role">{e.role}</span>
           </div>
         </div>
       ))}
     </div>
   </Section>
 
+  <Section id="semantic" title="Tier 2 — Semantic motion">
+    <p>Each <code>--motion-*</code> token is a duration + an ease, named by intent. The <code>ease*</code> families leave the property to you; <code>fade</code> and <code>move</code> bake in <code>opacity</code> / <code>transform</code> so they drop straight onto <code>transition</code>. Projects retune the feel by overriding a duration or ease under <code>{'[data-theme]'}</code> — every motion that references it follows.</p>
+    <div class="families">
+      {motion.map((m) => (
+        <div class="family">
+          <div class="family__head"><code>--motion-{m.family}-*</code><span>{m.note}</span></div>
+          <div class="chips">
+            {m.tokens.map((t) => (
+              <div class="chip">
+                <div
+                  class={`chip__demo chip__demo--${m.family}`}
+                  style={m.family === 'fade' || m.family === 'move'
+                    /* fade/move bake the property into the token — use it verbatim. */
+                    ? `transition: var(${t});`
+                    /* ease/ease-out are property-agnostic — name the properties here. */
+                    : `transition: transform var(${t}), opacity var(${t});`}
+                >
+                  <div class="chip__thumb"></div>
+                </div>
+                <code>{t.replace('--motion-' + m.family + '-', '')}</code>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="guidance" title="Choosing a curve">
+    <div class="callout">
+      <p class="callout__lead">Default to <code>ease-out</code> for anything that enters and exits.</p>
+      <p>Menus, tooltips, popovers, dropdowns, toasts, dialogs, drawers, cards revealing — if it appears and disappears, reach for an <code>--motion-ease-out-*</code> token first. A decelerating curve (fast start, soft stop) makes an element look like it arrives with intent and settles into place. That reading — responsive on the way in, calm as it lands — is what you want for the vast majority of UI. When in doubt, <code>ease-out</code>.</p>
+    </div>
+    <p>Save the other curves for the cases that specifically call for them:</p>
+    <ul class="guide-list">
+      <li><code>ease-out</code> — <strong>the default.</strong> Both the enter and the exit of overlays, menus, reveals — anything that appears and disappears.</li>
+      <li><code>ease-in-out</code> — starts slowly, speeds up, then slows toward the end, like a car accelerating and decelerating. Use it for elements <em>already on screen</em> that move to a new position or morph into a new shape.</li>
+      <li><code>ease</code> — asymmetric, starts faster and ends slower than <code>ease-in-out</code>. The house curve for small, gentle animations: hover/state <code>color</code>, <code>background-color</code>, <code>opacity</code>, a subtle button transform, a success flourish. An elegant fit for these in-place, no-travel cases.</li>
+    </ul>
+    <p class="note"><strong>We don't ship an <code>ease-in</code>.</strong> A pure accelerating curve (slow start) makes UI feel sluggish — the element hesitates before it moves. Exits use <code>ease-out</code> like everything else.</p>
+  </Section>
+
   <Section id="usage" title="Usage">
-    <p>Bind the token on the <code>transition</code> property and name the properties you animate — never animate <code>all</code>. Default to <code>--transition-base</code> unless the change is tiny (fast) or spatial (slow).</p>
-    <pre class="snippet"><code>{`.button {
-  transition: background var(--transition-fast),
-              box-shadow var(--transition-fast);
-}
-.drawer {
-  transition: transform var(--transition-slow);
-}`}</code></pre>
+    <p>Name the properties you animate — never <code>all</code>. Reach for a semantic token first; drop to the primitives when you need a pairing the semantic set doesn't cover.</p>
+    <pre class="snippet"><code>{`/* semantic — apply by intent */
+.menu   { transition: var(--motion-fade-base); }          /* opacity baked in */
+.drawer { transition: var(--motion-move-long); }          /* transform baked in */
+.link   { transition: color var(--motion-ease-out-quick); } /* you name the property */
+
+/* primitives — compose your own pairing */
+.badge  { transition: background var(--duration-quick) var(--easing-in-out); }`}</code></pre>
   </Section>
 </DocsLayout>
 
 <style>
-  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400, 1rem); }
-  .swatch { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
-  .swatch__demo {
-    position: relative;
-    height: 72px;
-    border-radius: var(--radius-300, 0.5rem);
-    background: var(--color-surface-sunken, #f5f5f5);
-    display: flex; align-items: center;
-    padding: 0 var(--spacing-300, 0.75rem);
-    margin-bottom: var(--spacing-300, 0.75rem);
-    overflow: hidden;
-    cursor: pointer;
-  }
-  .swatch__thumb {
-    width: 40px; height: 40px; border-radius: 8px;
-    background: var(--color-primary, #43608a);
-    transform: translateX(0);
-  }
-  .swatch__hint {
-    margin-left: auto;
-    font-size: 13px; color: var(--color-text-muted, #737373);
-    transition: opacity var(--transition-fast, 150ms ease);
-  }
-  /* Each demo applies its own token to the animated thumb + background. */
-  .swatch__demo--fast .swatch__thumb { transition: transform var(--transition-fast, 150ms ease), background var(--transition-fast, 150ms ease); }
-  .swatch__demo--base .swatch__thumb { transition: transform var(--transition-base, 200ms ease), background var(--transition-base, 200ms ease); }
-  .swatch__demo--slow .swatch__thumb { transition: transform var(--transition-slow, 350ms ease), background var(--transition-slow, 350ms ease); }
-  .swatch__demo:hover .swatch__thumb { transform: translateX(calc(100% + var(--spacing-500, 1.5rem))); background: var(--color-accent, #f9a134); }
-  .swatch__demo:hover .swatch__hint { opacity: 0; }
+  .sub { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-muted, #737373); margin: var(--spacing-500, 1.5rem) 0 var(--spacing-300, .75rem); }
 
-  .swatch__meta { display: flex; flex-direction: column; gap: 2px; }
-  .swatch__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
-  .swatch__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-secondary, #525252); }
-  .swatch__role { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .rows { display: flex; flex-direction: column; gap: 2px; }
+  .row { display: grid; grid-template-columns: 200px 90px 1fr; align-items: baseline; gap: var(--spacing-300, .75rem); padding: var(--spacing-200, .5rem) 0; border-bottom: 1px solid var(--color-border, #e5e5e5); }
+  .row code, .row__value { font-family: var(--font-mono, monospace); font-size: 12.5px; }
+  .row code { color: var(--color-text-primary, #171717); }
+  .row__value { color: var(--color-text-secondary, #525252); }
+  .row__role { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--spacing-400, 1rem); }
+  .swatch { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .demo {
+    position: relative; height: 64px; border-radius: var(--radius-300, .5rem);
+    background: var(--color-surface-sunken, #f5f5f5);
+    display: flex; align-items: center; padding: 0 var(--spacing-300, .75rem);
+    margin-bottom: var(--spacing-300, .75rem); overflow: hidden; cursor: pointer;
+  }
+  .thumb { width: 36px; height: 36px; border-radius: 8px; background: var(--color-primary, #43608a); transform: translateX(0); }
+  .hint { margin-left: auto; font-size: 12px; color: var(--color-text-muted, #737373); }
+  /* Each ease demo uses base duration so only the curve differs. */
+  .demo--ease-ease .thumb     { transition: transform var(--duration-base) var(--easing-ease); }
+  .demo--ease-out .thumb      { transition: transform var(--duration-base) var(--easing-out); }
+  .demo--ease-in-out .thumb   { transition: transform var(--duration-base) var(--easing-in-out); }
+  .demo:hover .thumb { transform: translateX(calc(100% + var(--spacing-500, 1.5rem))); }
+
+  .meta { display: flex; flex-direction: column; gap: 2px; }
+  .meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
+  .meta__value { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-text-secondary, #525252); }
+  .meta__role { font-size: 12px; color: var(--color-text-muted, #737373); }
+
+  .families { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); }
+  .family { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .family__head { display: flex; align-items: baseline; gap: var(--spacing-300, .75rem); margin-bottom: var(--spacing-300, .75rem); flex-wrap: wrap; }
+  .family__head code { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-primary, #171717); }
+  .family__head span { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--spacing-300, .75rem); }
+  .chip { display: flex; flex-direction: column; gap: 6px; }
+  .chip__demo { position: relative; height: 44px; border-radius: var(--radius-200, .375rem); background: var(--color-surface-sunken, #f5f5f5); overflow: hidden; cursor: pointer; }
+  .chip__thumb { position: absolute; top: 6px; left: 6px; width: 32px; height: 32px; border-radius: 6px; background: var(--color-primary, #43608a); }
+  /* Each family demonstrates only the property it actually animates. */
+  .chip__demo--ease:hover .chip__thumb,
+  .chip__demo--ease-out:hover .chip__thumb,
+  .chip__demo--move:hover .chip__thumb { transform: translateX(calc(160px - 44px)); }
+  .chip__demo--ease:hover .chip__thumb,
+  .chip__demo--ease-out:hover .chip__thumb,
+  .chip__demo--fade:hover .chip__thumb { opacity: .35; }
+  .chip code { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-text-secondary, #525252); }
+
+  .callout { background: var(--color-surface-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); margin-bottom: var(--spacing-400, 1rem); }
+  .callout__lead { font-size: 16px; font-weight: 600; color: var(--color-text-primary, #171717); margin: 0 0 var(--spacing-200, .5rem); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: var(--spacing-200, .5rem); color: var(--color-text-secondary, #525252); }
+  .guide-list { margin: var(--spacing-200, .5rem) 0 0; padding-left: 1.25em; display: flex; flex-direction: column; gap: var(--spacing-200, .5rem); }
+  .guide-list li { color: var(--color-text-secondary, #525252); line-height: 1.55; }
+  .guide-list code { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-primary, #171717); }
+  .guide-list strong { color: var(--color-text-primary, #171717); }
+  .note { margin-top: var(--spacing-400, 1rem); font-size: 13.5px; color: var(--color-text-muted, #737373); }
+  .note strong { color: var(--color-text-secondary, #525252); }
+  .note code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
 
   .snippet { background: var(--color-surface-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
-  .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-text-primary, #171717); }
+  .snippet code { font-family: var(--font-mono, monospace); font-size: 13px; line-height: 1.7; color: var(--color-text-primary, #171717); }
 
   @media (prefers-reduced-motion: reduce) {
-    .swatch__thumb, .swatch__hint { transition: none !important; }
+    .thumb, .chip__thumb { transition: none !important; }
   }
 </style>

@@ -5,5 +5,22 @@
     "3": { "$value": "{shadow.200}", "$type": "other", "$description": "Raised cards, hover state." },
     "4": { "$value": "{shadow.300}", "$type": "other", "$description": "Dropdowns, popovers, menus." },
     "5": { "$value": "{shadow.400}", "$type": "other", "$description": "Modals and dialogs." }
+  },
+  "motion": {
+    "ease-quick":     { "$value": "{duration.quick} {easing.ease}", "$type": "other", "$description": "Ease (house) curve · quick. Name the property at the call site — e.g. transition: color var(--motion-ease-quick)." },
+    "ease-base":      { "$value": "{duration.base} {easing.ease}",  "$type": "other", "$description": "Ease (house) curve · base. Default for most state transitions." },
+    "ease-long":      { "$value": "{duration.long} {easing.ease}",  "$type": "other", "$description": "Ease (house) curve · long. Larger, slower state changes." },
+
+    "ease-out-quick": { "$value": "{duration.quick} {easing.out}", "$type": "other", "$description": "Decelerate (fast start, soft stop) · quick — entrances and reveals." },
+    "ease-out-base":  { "$value": "{duration.base} {easing.out}",  "$type": "other", "$description": "Decelerate · base — entrances and reveals." },
+    "ease-out-long":  { "$value": "{duration.long} {easing.out}",  "$type": "other", "$description": "Decelerate · long — large entrances arriving on screen." },
+
+    "fade-quick":     { "$value": "opacity {duration.quick} {easing.ease}", "$type": "other", "$description": "Opacity · quick · ease. Drop-in: transition: var(--motion-fade-quick)." },
+    "fade-base":      { "$value": "opacity {duration.base} {easing.ease}",  "$type": "other", "$description": "Opacity · base · ease. Drop-in fade." },
+    "fade-long":      { "$value": "opacity {duration.long} {easing.ease}",  "$type": "other", "$description": "Opacity · long · ease. Slow fade for overlays." },
+
+    "move-quick":     { "$value": "transform {duration.quick} {easing.ease}", "$type": "other", "$description": "Transform · quick · ease. Drop-in: transition: var(--motion-move-quick)." },
+    "move-base":      { "$value": "transform {duration.base} {easing.ease}",  "$type": "other", "$description": "Transform · base · ease. Drop-in move/slide/scale." },
+    "move-long":      { "$value": "transform {duration.long} {easing.ease}",  "$type": "other", "$description": "Transform · long · ease. Panels, drawers, larger spatial moves." }
   }
 }
