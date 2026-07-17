@@ -57,7 +57,7 @@ export class EsaSidebarNav extends LitElement {
   declare items: EsaSidebarNavItem[];
   declare collapsed: boolean;
   declare collapsible: boolean;
-  private _expanded: Set<string>;
+  private declare _expanded: Set<string>;
 
   constructor() {
     super();

@@ -34,9 +34,9 @@ export class EsaFileUpload extends LitElement {
   declare maxSizeMb: number;
   declare disabled: boolean;
   declare name: string;
-  private _isDragging: boolean;
-  private _files: File[];
-  private _error: string;
+  private declare _isDragging: boolean;
+  private declare _files: File[];
+  private declare _error: string;
 
   private internals: ElementInternals;
 

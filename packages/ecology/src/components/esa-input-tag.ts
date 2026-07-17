@@ -63,10 +63,10 @@ export class EsaInputTag extends LitElement {
   declare strict: boolean;
   declare tagsBelow: boolean;
   declare name: string;
-  private _values: string[];
-  private _search: string;
-  private _open: boolean;
-  private _active: number;
+  private declare _values: string[];
+  private declare _search: string;
+  private declare _open: boolean;
+  private declare _active: number;
 
   private internals: ElementInternals;
   private onDocClick = (e: MouseEvent): void => {
