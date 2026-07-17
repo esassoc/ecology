@@ -52,10 +52,10 @@ export class EsaSelect extends LitElement {
   declare multiple: boolean;
   declare searchable: boolean;
   declare chipMode: boolean;
-  private _search: string;
-  private _selected: string[];
-  private _open: boolean;
-  private _active: number;
+  private declare _search: string;
+  private declare _selected: string[];
+  private declare _open: boolean;
+  private declare _active: number;
 
   private internals: ElementInternals;
   private onDocClick = (e: MouseEvent): void => {
