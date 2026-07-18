@@ -8,7 +8,7 @@ const props = [
   { name: 'label', type: 'string', default: "''", description: 'Text rendered beside the box.' },
   { name: 'checked', type: 'boolean', default: 'false', description: 'Whether the box is checked.' },
   { name: 'indeterminate', type: 'boolean', default: 'false', description: 'Renders the mixed/partial state with a dash.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
   { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
 ];
 
@@ -42,11 +42,9 @@ const events = [
   </Section>
 
   <Section id="sizes" title="Sizes">
-    <Preview code={`<esa-checkbox label="Extra small" size="xs" checked></esa-checkbox>
-<esa-checkbox label="Small" size="sm" checked></esa-checkbox>
+    <Preview code={`<esa-checkbox label="Small" size="sm" checked></esa-checkbox>
 <esa-checkbox label="Medium" size="md" checked></esa-checkbox>
 <esa-checkbox label="Large" size="lg" checked></esa-checkbox>`}>
-      <esa-checkbox label="Extra small" size="xs" checked></esa-checkbox>
       <esa-checkbox label="Small" size="sm" checked></esa-checkbox>
       <esa-checkbox label="Medium" size="md" checked></esa-checkbox>
       <esa-checkbox label="Large" size="lg" checked></esa-checkbox>

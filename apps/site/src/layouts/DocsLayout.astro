@@ -9,9 +9,6 @@
 // [data-scheme] block and :root have equal specificity, so source order decides.
 import DocsShell from '@esa/docs/DocsShell.astro';
 import '../styles/docs-dark.css';
-// Anthropic-meta restyles the docs CHROME (cream paper, ink, serif display) — loaded
-// LAST so its global rules win on source order. Scoped to the harness, not components.
-import '../styles/anthropic-meta.css';
 import '../styles/themes.css';
 import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 import { allGroups } from '../data/nav';

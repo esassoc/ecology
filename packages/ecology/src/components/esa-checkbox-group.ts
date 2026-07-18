@@ -36,7 +36,7 @@ export class EsaCheckboxGroup extends LitElement {
 
   declare options: EsaOption[];
   declare label: string;
-  declare size: 'xs' | 'sm' | 'md' | 'lg';
+  declare size: 'sm' | 'md' | 'lg';
   declare orientation: 'vertical' | 'horizontal';
   declare name: string;
   declare value: string[];
@@ -110,6 +110,7 @@ export class EsaCheckboxGroup extends LitElement {
             <label
               class="item ${disabled ? 'item--disabled' : ''}"
               @keydown=${(e: KeyboardEvent) => this.onKeydown(e, option)}
+              @click=${() => this.toggleOption(option)}
             >
               <span
                 class="box ${checked ? 'box--checked' : ''}"
@@ -117,7 +118,6 @@ export class EsaCheckboxGroup extends LitElement {
                 aria-checked=${String(checked)}
                 aria-disabled=${String(disabled)}
                 tabindex=${disabled ? -1 : 0}
-                @click=${() => this.toggleOption(option)}
               >
                 ${checked
                   ? html`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -139,12 +139,6 @@ export class EsaCheckboxGroup extends LitElement {
       --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
       --_checkbox-icon-size: 16px;
       display: block;
-    }
-    :host([size='xs']) {
-      --_checkbox-size: 14px;
-      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
-      --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
@@ -218,6 +212,9 @@ export class EsaCheckboxGroup extends LitElement {
     }
 
     .icon {
+      display: block; /* block, not inline: an inline SVG adds a text baseline, so
+                         the empty vs. checked box would sit at a different height and
+                         nudge the row by ~1–2px on toggle. */
       width: var(--_checkbox-icon-size);
       height: var(--_checkbox-icon-size);
     }

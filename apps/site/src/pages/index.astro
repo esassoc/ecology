@@ -85,7 +85,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
     padding: var(--spacing-500, 1.5rem) 0 var(--spacing-800, 4rem);
   }
   .eyebrow {
-    font-family: var(--meta-mono, monospace);
+    font-family: var(--font-mono, monospace);
     font-size: 12px;
     font-weight: 500;
     text-transform: uppercase;
@@ -100,7 +100,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
     color: var(--meta-ink, #141413);
   }
   .tagline {
-    font-family: var(--meta-serif, Georgia, serif);
+    font-family: var(--font-display, var(--font-sans));
     font-size: 20px;
     line-height: 1.5;
     color: var(--meta-ink-2, #4d4c49);
@@ -132,16 +132,16 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
     border-top: 1px solid var(--meta-line, #e7e5dc);
     border-bottom: 1px solid var(--meta-line, #e7e5dc);
   }
-  .stat b { display: block; font-family: var(--meta-serif, serif); font-size: 26px; font-weight: 400; letter-spacing: -0.01em; color: var(--meta-ink, #141413); }
+  .stat b { display: block; font-family: var(--font-display, var(--font-sans)); font-size: 26px; font-weight: 400; letter-spacing: -0.01em; color: var(--meta-ink, #141413); }
   .stat span { font-size: 13px; color: var(--meta-ink-3, #8d949b); }
 
   /* ---- How ---- */
   .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-400, 1rem); margin: var(--spacing-800, 4rem) 0; }
   .card { border: 1px solid var(--meta-line, #e7e5dc); border-radius: 8px; padding: var(--spacing-500, 1.5rem); background: var(--meta-card, #fff); }
-  .card h3 { font-family: var(--meta-serif, serif); font-weight: 400; margin: 0 0 var(--spacing-200, 0.5rem); font-size: 21px; color: var(--meta-ink, #141413); }
+  .card h3 { font-family: var(--font-display, var(--font-sans)); font-weight: 400; margin: 0 0 var(--spacing-200, 0.5rem); font-size: 21px; color: var(--meta-ink, #141413); }
   .card p { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 15px; line-height: 1.6; color: var(--meta-ink-2, #4d4c49); }
   .card a { font-size: 14.5px; font-weight: 500; color: var(--meta-clay, #699BCB); }
-  .card code { font-family: var(--meta-mono, monospace); font-size: 0.9em; background: rgba(20,20,19,0.05); padding: 1px 5px; border-radius: 4px; }
+  .card code { font-family: var(--font-mono, monospace); font-size: 0.9em; background: rgba(20,20,19,0.05); padding: 1px 5px; border-radius: 4px; }
 
   /* ---- Rail: library + coming-soon ---- */
   .rail { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-400, 1rem); margin: var(--spacing-800, 4rem) 0; }
@@ -149,8 +149,8 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
   .rail__card--live { transition: border-color 140ms ease; }
   .rail__card--live:hover { border-color: var(--meta-clay, #699BCB); }
   .rail__card--soon { background: #f0f5f9; border-color: #e2ecf3; }
-  .rail__eyebrow { font-family: var(--meta-mono, monospace); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--meta-ink-3, #8d949b); }
-  .rail__card h2 { font-family: var(--meta-serif, serif); font-weight: 400; font-size: 26px; letter-spacing: -0.01em; margin: 0; color: var(--meta-ink, #141413); }
+  .rail__eyebrow { font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--meta-ink-3, #8d949b); }
+  .rail__card h2 { font-family: var(--font-display, var(--font-sans)); font-weight: 400; font-size: 26px; letter-spacing: -0.01em; margin: 0; color: var(--meta-ink, #141413); }
   .rail__card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--meta-ink-2, #4d4c49); }
   .rail__go { margin-top: auto; padding-top: var(--spacing-300, 0.75rem); font-size: 14.5px; font-weight: 500; color: var(--meta-clay, #699BCB); }
 
@@ -161,7 +161,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
   .group-card { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); border: 1px solid var(--meta-line, #e7e5dc); border-radius: 8px; background: var(--meta-card, #fff); transition: border-color 120ms ease; }
   .group-card:hover { border-color: var(--meta-clay, #699BCB); }
   .group-card__label { font-weight: 500; font-size: 15px; color: var(--meta-ink, #141413); }
-  .group-card__count { font-family: var(--meta-mono, monospace); font-size: 13px; color: var(--meta-ink-3, #8d949b); }
+  .group-card__count { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--meta-ink-3, #8d949b); }
 
   @media (max-width: 760px) {
     .hero { grid-template-columns: 1fr; }

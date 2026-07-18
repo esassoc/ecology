@@ -64,8 +64,20 @@ html[data-scheme='dark'] {
   --color-success-strong: var(--color-lime-dark-11);
   --color-warning-strong: var(--color-yellow-dark-11);
   --color-danger-strong:  var(--color-red-dark-11);
-}
 
-html[data-scheme='dark'] .nav-link[aria-current='page'] {
-  color: var(--color-primary);
+  /* Elevation — the light shadow ramp is black-alpha blur + a dark hairline ring,
+     both tuned to read on WHITE; on a near-black surface the blur vanishes and the
+     ring disappears. Radix's dark ramp is a different recipe: the hairline switches
+     to the whitish gray-DARK-alpha ramp (so the edge reads on dark) and the blur
+     leans on heavier black-alpha steps. gray-dark-a is used explicitly here because
+     this scheme overrides token VALUES (it does not remap the base alpha ramps),
+     so var(--color-gray-a-*) would still be the black-on-white light alpha. */
+  --shadow-edge:       0 0 0 1px var(--color-gray-dark-a-5);
+  --shadow-edge-inset: inset 0 0 0 1px var(--color-gray-dark-a-7);
+  --shadow-inset: inset 0 -1px 1px 0 var(--color-gray-dark-a-3), inset 0 0 0 1px var(--color-gray-dark-a-3), inset 0 1.5px 2px 0 var(--color-gray-dark-a-4), inset 0 1.5px 2px 0 var(--color-black-a-2);
+  --shadow-50:  0 0 0 1px var(--color-gray-dark-a-5), 0 0 0 0.5px var(--color-black-a-3), 0 1px 1px 0 var(--color-gray-dark-a-6), 0 2px 1px -1px var(--color-black-a-6), 0 1px 3px 0 var(--color-black-a-5);
+  --shadow-100: 0 0 0 1px var(--color-gray-dark-a-5), 0 2px 3px -2px var(--color-black-a-3), 0 3px 12px -4px var(--color-black-a-7), 0 4px 16px -8px var(--color-black-a-7);
+  --shadow-200: 0 0 0 1px var(--color-gray-dark-a-5), 0 8px 40px var(--color-black-a-3), 0 12px 32px -16px var(--color-black-a-5);
+  --shadow-300: 0 0 0 1px var(--color-gray-dark-a-5), 0 12px 60px var(--color-black-a-5), 0 12px 32px -16px var(--color-black-a-7);
+  --shadow-400: 0 0 0 1px var(--color-gray-dark-a-5), 0 12px 60px var(--color-black-a-4), 0 16px 64px var(--color-black-a-6), 0 16px 36px -20px var(--color-black-a-8);
 }

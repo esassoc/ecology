@@ -27,7 +27,7 @@ export class EsaCheckbox extends LitElement {
   };
 
   declare label: string;
-  declare size: 'xs' | 'sm' | 'md' | 'lg';
+  declare size: 'sm' | 'md' | 'lg';
   declare disabled: boolean;
   declare indeterminate: boolean;
   declare checked: boolean;
@@ -99,13 +99,12 @@ export class EsaCheckbox extends LitElement {
       --_checkbox-radius: var(--form-radius-md, 0.5rem);
       --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
       --_checkbox-icon-size: 16px;
-      display: inline-block;
-    }
-    :host([size='xs']) {
-      --_checkbox-size: 14px;
-      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
-      --_checkbox-icon-size: 10px;
+      /* inline-flex (not inline-block): the host becomes a flex context so its height
+         tracks the row directly, with no text line-box strut. As inline-block the row
+         sat in a line box whose height shifted with the box's baseline (empty vs. the
+         checked SVG), jumping ~2px on toggle. */
+      display: inline-flex;
+      align-items: center;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;

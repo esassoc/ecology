@@ -111,8 +111,11 @@ const showToggle = colorScheme === 'toggle';
       }
       .nav-link:hover { background: var(--color-surface-sunken, #f3f7fc); color: var(--color-text-primary, #171717); }
       .nav-link[aria-current='page'] {
-        background: color-mix(in srgb, var(--color-primary, #1e5386) 10%, transparent);
-        color: var(--color-primary, #1e5386); font-weight: 600;
+        /* Neutral active state — a subtle gray tint, consistent across light and
+           dark. (Deliberately NOT the brand accent, so the active page reads the
+           same in both appearances.) */
+        background: color-mix(in srgb, var(--color-text-primary, #171717) 6%, transparent);
+        color: var(--color-text-primary, #171717); font-weight: 600;
       }
       .nav-link .tag {
         font-size: 11px; font-family: var(--font-mono, monospace);
@@ -180,12 +183,19 @@ const showToggle = colorScheme === 'toggle';
       @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
 
       /* ---------- Shared content typography ---------- */
-      .article h1 { font-family: var(--font-display, var(--font-sans)); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--spacing-200, 0.5rem); line-height: 1.2; }
-      .article .lede { font-size: 18px; color: var(--color-text-secondary, #525252); margin: 0 0 var(--spacing-600, 2rem); line-height: 1.55; }
-      .article h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-primary, #1e5386); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border, #dcdcdc); scroll-margin-top: 76px; }
-      .article h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-text-primary, #171717); }
+      /* Editorial headings: the display face at weight 400 with tight tracking.
+         Uses --font-display (a spoke can re-point it at a real serif for a stronger
+         voice). Heading color stays neutral (text-primary) — not the brand accent. */
+      .article h1 { font-family: var(--font-display, var(--font-sans)); font-size: 34px; font-weight: 400; letter-spacing: -0.015em; margin: 0 0 var(--spacing-200, 0.5rem); line-height: 1.2; }
+      .article .lede { font-family: var(--font-display, var(--font-sans)); font-size: 18px; color: var(--color-text-secondary, #525252); margin: 0 0 var(--spacing-600, 2rem); line-height: 1.55; }
+      .article h2 { font-family: var(--font-display, var(--font-sans)); font-size: 22px; font-weight: 400; letter-spacing: -0.01em; color: var(--color-text-primary, #171717); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border, #dcdcdc); scroll-margin-top: 76px; }
+      .article h3 { font-family: var(--font-display, var(--font-sans)); font-size: 16px; font-weight: 400; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-text-primary, #171717); }
       .article p { color: var(--color-text-secondary, #525252); }
       .article code { font-family: var(--font-mono, monospace); font-size: 0.875em; background: var(--color-surface-sunken, #f3f7fc); padding: 0.12em 0.4em; border-radius: 5px; color: var(--color-text-primary, #171717); }
+      /* Keep component specimens TRUE: previews render in the system sans, never the
+         display face — so a spoke that re-points --font-display at a serif can't leak
+         it into the specimens. */
+      .preview__canvas, .preview__canvas * { font-family: var(--font-sans, system-ui, sans-serif); }
 
       /* ---------- Shared page header ---------- */
       .crumbs { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--color-text-muted, #7c7c7c); margin-bottom: var(--spacing-300, 0.75rem); }

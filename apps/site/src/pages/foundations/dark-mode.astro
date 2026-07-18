@@ -1,0 +1,106 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+
+// The semantic tokens whose VALUE is re-pointed under html[data-scheme='dark'].
+// Light column = the ramp step in the default (light) scheme; Dark column = what
+// docs-dark.css swaps it to. Note the inversion on surfaces: in light, `surface`
+// is the LIGHTEST step (1) sitting above the background; in dark it moves UP the
+// ramp (2) so a raised surface is LIGHTER than the near-black background.
+const flips = [
+  { token: '--color-background',      light: 'gray-2',  dark: 'gray-dark-1',   note: 'App background — the darkest layer in dark mode' },
+  { token: '--color-surface',         light: 'gray-1',  dark: 'gray-dark-2',   note: 'Cards / panels — one step LIGHTER than the background' },
+  { token: '--color-surface-elevated',light: 'gray-1',  dark: 'gray-dark-3',   note: 'Raised surfaces — lighter still' },
+  { token: '--color-surface-sunken',  light: 'gray-3',  dark: '#0d0d0f',       note: 'Wells — a touch darker than the background' },
+  { token: '--color-text-primary',    light: 'gray-12', dark: 'gray-dark-12',  note: 'Near-white body text (#ededef)' },
+  { token: '--color-text-secondary',  light: 'gray-11', dark: 'gray-dark-11',  note: 'Muted text (#b4b4b4)' },
+  { token: '--color-border',          light: 'gray-7',  dark: 'gray-dark-6',   note: 'Hairline / ring color' },
+  { token: '--color-*-strong',        light: 'step 11', dark: 'dark-11',       note: 'Status text (info/success/warning/danger) — lighter on dark' },
+  { token: '--color-*-subtle',        light: 'step 2',  dark: 'dark-2',        note: 'Status tint surfaces — visible on near-black' },
+];
+
+// The shadow ramp is re-authored, not re-pointed: light shadows are black-alpha
+// blur on WHITE, which vanishes on a dark surface. The dark recipe flips the
+// hairline to the WHITISH gray-dark-alpha ramp and leans on heavier black-alpha.
+const shadowFlips = [
+  { token: '--shadow-edge',  hairline: 'gray-a-5 (dark on white)', dark: 'gray-dark-a-5 (whitish)' },
+  { token: '--shadow-200',   hairline: 'gray-a-3 ring + black-a blur', dark: 'gray-dark-a-5 ring + heavier black-a blur' },
+  { token: '--shadow-400',   hairline: 'gray-a-3 ring + black-a blur', dark: 'gray-dark-a-5 ring + heavier black-a blur' },
+];
+---
+<DocsLayout title="Dark mode — Ecology" activeHref="/foundations/dark-mode">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Dark mode</span></nav>
+  <h1>Dark mode</h1>
+  <p class="lede">Dark mode is a second <strong>appearance</strong> of the whole system, toggled by the sun / moon button in the top bar. It is a separate axis from the brand <strong>theme</strong> — so the two <em>compose</em>: pick Qanat, flip to dark, and you get Qanat in dark.</p>
+
+  <Section id="two-axes" title="Two independent axes">
+    <p>The docs carry <strong>two</strong> switches, and they are deliberately orthogonal:</p>
+    <table class="dm-table">
+      <thead><tr><th>Axis</th><th>Attribute</th><th>Values</th><th>Control</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Brand theme</strong></td><td><code>data-theme</code></td><td><code>default</code> · <code>beacon</code> · <code>qanat</code></td><td>The theme dropdown</td></tr>
+        <tr><td><strong>Appearance</strong></td><td><code>data-scheme</code></td><td><code>light</code> · <code>dark</code></td><td>The sun / moon button</td></tr>
+      </tbody>
+    </table>
+    <p>Because they live on different attributes of the same <code>&lt;html&gt;</code> element, every brand has a light <em>and</em> a dark face — no cross-product to maintain, just two attributes read together. Dark is <strong>not</strong> a fourth theme in the dropdown; it is the appearance toggle.</p>
+  </Section>
+
+  <Section id="toggle" title="The toggle">
+    <p>The shared <code>@esa/docs</code> shell ships the button and the wiring; it flips the attribute on the root and remembers your choice:</p>
+    <pre class="dm-code"><code>{`// set on <html>, persisted to localStorage['docs-scheme'] (default: 'light')
+document.documentElement.setAttribute('data-scheme', 'dark');`}</code></pre>
+    <p>Setting it on the root element matters: the semantic and component tokens are all declared on <code>:root</code>, so re-pointing them on the same root element re-resolves the whole chain at once — surfaces, text, borders, and the tier-3 component hooks (<code>--form-bg</code>, <code>--sidenav-bg</code>, …) all flip together.</p>
+  </Section>
+
+  <Section id="how" title="How the flip works">
+    <p>The shell ships only the toggle — never the colors. The dark <em>values</em> live in one file (<code>apps/site/src/styles/docs-dark.css</code>), loaded <strong>after</strong> the tokens so its overrides win. It re-points the <strong>semantic</strong> layer at Radix's <code>*-dark</code> ramps under an <code>html[data-scheme='dark']</code> scope. Primitives never move; only the intent layer is reassigned.</p>
+    <p>The one thing that is not a mechanical step-swap is <strong>surfaces</strong>. In light, <code>surface</code> is the lightest step, sitting <em>above</em> the background. In dark that would make cards the darkest thing on screen — backwards. So dark walks surfaces <em>up</em> the ramp instead: background is the near-black floor, and each raised layer gets lighter.</p>
+    <table class="dm-table">
+      <thead><tr><th>Semantic token</th><th>Light</th><th>Dark</th><th>Role</th></tr></thead>
+      <tbody>
+        {flips.map((f) => (
+          <tr><td><code>{f.token}</code></td><td>{f.light}</td><td>{f.dark}</td><td class="dm-note">{f.note}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+
+  <Section id="shadows" title="Shadows in dark">
+    <p>Shadows are the one part that is <strong>re-authored</strong>, not re-pointed. The light ramp is black-alpha blur plus a dark hairline ring — both tuned to read on <strong>white</strong>. On a near-black surface the blur disappears and the ring vanishes. The dark ramp is Radix's dark recipe: the hairline switches to the <strong>whitish</strong> <code>gray-dark-alpha</code> ramp so the edge reads, and the blur leans on heavier <code>black-alpha</code> steps.</p>
+    <table class="dm-table">
+      <thead><tr><th>Token</th><th>Light recipe</th><th>Dark recipe</th></tr></thead>
+      <tbody>
+        {shadowFlips.map((s) => (
+          <tr><td><code>{s.token}</code></td><td class="dm-note">{s.hairline}</td><td class="dm-note">{s.dark}</td></tr>
+        ))}
+      </tbody>
+    </table>
+    <p>Scrims stay black in both appearances — <code>--color-backdrop</code> (the dialog overlay) is darkening the page <em>behind</em> a surface, not tinting one, so it keeps its <code>black-alpha</code> value.</p>
+  </Section>
+
+  <Section id="brand" title="Brand + dark">
+    <p>Because the axes compose, a brand's dark face is that brand's semantic overrides read on top of the dark base. A spoke that wants a bespoke dark palette adds its own <code>html[data-scheme='dark'][data-theme='&lt;brand&gt;']</code> block — otherwise it inherits the hub's dark values with its brand hues layered in. Each theme owns its own dark; there is never a <code>brand&nbsp;×&nbsp;dark</code> matrix to hand-maintain.</p>
+  </Section>
+
+  <Section id="spoke" title="Enabling it in a spoke">
+    <p>Two pieces:</p>
+    <ol class="dm-list">
+      <li>Render the shell with the toggle on — it wires <code>data-scheme</code> and the button for you.</li>
+      <li>Ship a dark-values stylesheet (copy the shape of <code>docs-dark.css</code>), loaded <strong>after</strong> <code>@esa/tokens</code>, scoping your overrides to <code>html[data-scheme='dark']</code>. Reference the compiled <code>*-dark</code> ramps from <code>@esa/tokens</code> — they are already in the bundle.</li>
+    </ol>
+    <p>The dark values are intentionally <em>not</em> baked into <code>@esa/tokens</code> because the dark palette is a design choice a spoke may want to tune — the same reason brand themes live in a spoke's own <code>theme-&lt;slug&gt;.css</code>.</p>
+  </Section>
+</DocsLayout>
+
+<style>
+  .dm-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 14px; }
+  .dm-table th, .dm-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  .dm-table th { font-weight: 600; color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .dm-table code { font-size: 12.5px; }
+  .dm-note { color: var(--color-text-secondary); }
+  .dm-code { background: var(--color-surface-sunken); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 13px; margin: 1rem 0; }
+  .dm-code code { font-family: var(--font-mono, monospace); }
+  .dm-list { margin: 0.5rem 0 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .dm-list li { line-height: 1.55; }
+</style>

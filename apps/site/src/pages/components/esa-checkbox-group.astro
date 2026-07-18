@@ -16,7 +16,7 @@ const props = [
   { name: 'value', type: 'string[]', default: '[]', description: 'Selected option values.' },
   { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
   { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
   { name: 'name', type: 'string', default: "''", description: 'Field name each selected value is submitted under.' },
 ];
 
@@ -45,12 +45,10 @@ const events = [
   </Section>
 
   <Section id="sizes" title="Sizes">
-    <Preview align="start" code={`<esa-checkbox-group label="Extra small" size="xs" orientation="horizontal" options="…"></esa-checkbox-group>
-<esa-checkbox-group label="Small" size="sm" orientation="horizontal" options="…"></esa-checkbox-group>
+    <Preview align="start" code={`<esa-checkbox-group label="Small" size="sm" orientation="horizontal" options="…"></esa-checkbox-group>
 <esa-checkbox-group label="Medium" size="md" orientation="horizontal" options="…"></esa-checkbox-group>
 <esa-checkbox-group label="Large" size="lg" orientation="horizontal" options="…"></esa-checkbox-group>`}>
       <div class="col">
-        <esa-checkbox-group label="Extra small" size="xs" orientation="horizontal" options={options}></esa-checkbox-group>
         <esa-checkbox-group label="Small" size="sm" orientation="horizontal" options={options}></esa-checkbox-group>
         <esa-checkbox-group label="Medium" size="md" orientation="horizontal" options={options}></esa-checkbox-group>
         <esa-checkbox-group label="Large" size="lg" orientation="horizontal" options={options}></esa-checkbox-group>
