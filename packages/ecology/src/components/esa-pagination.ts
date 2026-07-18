@@ -196,7 +196,7 @@ export class EsaPagination extends LitElement {
     }
     .page-size-select {
       padding: var(--spacing-100, 4px) var(--spacing-200, 8px);
-      border: 1px solid var(--_pagination-border-color);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_pagination-border-color);
       border-radius: var(--radius-100, 4px);
       background: var(--_pagination-bg);
       color: var(--_pagination-text-color);

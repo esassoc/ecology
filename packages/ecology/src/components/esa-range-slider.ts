@@ -161,10 +161,11 @@ export class EsaRangeSlider extends LitElement {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
       margin-top: calc((var(--_track-height) - var(--_thumb-size)) / 2);
-      border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      box-shadow:
+        inset 0 0 0 2px var(--color-primary, #43608a),
+        var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
       transition:
         box-shadow var(--transition-fast, 150ms ease),
         transform var(--transition-fast, 150ms ease);
@@ -182,19 +183,25 @@ export class EsaRangeSlider extends LitElement {
     .input::-moz-range-thumb {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
-      border: 2px solid var(--color-primary, #43608a);
+      border: 0;
       border-radius: 50%;
       background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      box-shadow:
+        inset 0 0 0 2px var(--color-primary, #43608a),
+        var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
     }
     .input:focus-visible {
       outline: none;
     }
     .input:focus-visible::-webkit-slider-thumb {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 2px var(--color-primary, #43608a),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:focus-visible::-moz-range-thumb {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 2px var(--color-primary, #43608a),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:hover:not(:disabled)::-webkit-slider-thumb {
       transform: scale(1.1);

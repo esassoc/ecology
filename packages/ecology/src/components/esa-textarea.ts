@@ -176,8 +176,8 @@ export class EsaTextarea extends LitElement {
       line-height: var(--form-line-height, 1.6);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       outline: none;
       resize: vertical;
       box-sizing: border-box;
@@ -190,8 +190,9 @@ export class EsaTextarea extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width)
-        var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -208,7 +209,9 @@ export class EsaTextarea extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-border-color-error, #ef4444);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width) var(--form-border-color-error, #ef4444);
     }
 
     .help,

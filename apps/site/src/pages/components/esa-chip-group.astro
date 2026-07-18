@@ -5,7 +5,8 @@ import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 
 const props = [
-  { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, brand, amber." },
+  { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same. Per-option tone is any accent hue or semantic tone (neutral, neutral-strong, brand, amber) and colors that chip's active state — overriding the group color." },
+  { name: 'color', type: 'hue | semantic', default: "''", description: "Group-level active accent — one hue applied to every chip's selected state (the plain single-select filter case). Any accent hue or semantic tone. An option's own tone wins over it. Empty = neutral." },
   { name: 'value', type: 'string', default: "''", description: 'The selected option value. Exactly one chip is active at a time.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Chip size on the shared form scale.' },
   { name: 'name', type: 'string', default: "''", description: 'Field name the selected value is submitted under.' },
@@ -17,7 +18,7 @@ const events = [
 ];
 ---
 <ComponentDoc name="Chip Group" category="Display" slug="esa-chip-group" type="wc" status="stable"
-  summary="Single-select pill toggles — a horizontal row where exactly one chip is active. Each option carries a <code>tone</code> (neutral, neutral-strong, brand, or amber) that colors its active state. Arrow keys move, Enter or Space select. Form-associated; emits a composed <code>change</code> event.">
+  summary="Single-select pill toggles — a horizontal row where exactly one chip is active. Set a group <code>color</code> for one shared accent, or a per-option <code>tone</code> for semantic status pickers (each status its own hue). Arrow keys move, Enter or Space select. Form-associated; emits a composed <code>change</code> event.">
 
   <Section id="preview" title="Preview">
     <p>Set the <code>options</code> property to a list of <code>{'{ value, label, tone? }'}</code>. Exactly one chip is active, tracked by <code>value</code>.</p>
@@ -41,6 +42,21 @@ const events = [
 { value: 't',  label: 'Brand',           tone: 'brand' }
 { value: 'a',  label: 'Amber',          tone: 'amber' }`}>
       <esa-chip-group data-demo="tones" label="Tone showcase" value="t"></esa-chip-group>
+    </Preview>
+  </Section>
+
+  <Section id="group-color" title="Group accent">
+    <p>For a plain single-select filter — where you just want the chosen chip highlighted in one color — set <code>color</code> on the group instead of a <code>tone</code> per option. Every chip's active state uses that hue; an option's own <code>tone</code> still overrides it.</p>
+    <Preview align="start" code={`<esa-chip-group color="blue" value="unread"></esa-chip-group>
+
+<script>
+  document.querySelector('esa-chip-group').options = [
+    { value: 'all',    label: 'All' },
+    { value: 'unread', label: 'Unread' },
+    { value: 'flagged', label: 'Flagged' },
+  ];
+</script>`}>
+      <esa-chip-group data-demo="group-color" color="blue" label="Mail filter" value="unread"></esa-chip-group>
     </Preview>
   </Section>
 
@@ -94,6 +110,12 @@ const events = [
     { value: 't', label: 'Brand', tone: 'brand' },
     { value: 'a', label: 'Amber', tone: 'amber' },
   ];
+  // No per-option tones — the group's color="blue" drives every active chip.
+  const mailSet = [
+    { value: 'all', label: 'All' },
+    { value: 'unread', label: 'Unread' },
+    { value: 'flagged', label: 'Flagged' },
+  ];
 
   const set = (selector: string, options: unknown) => {
     const el = document.querySelector(selector) as ChipEl | null;
@@ -102,6 +124,7 @@ const events = [
 
   set('[data-demo="preview"]', statusSet);
   set('[data-demo="tones"]', toneSet);
+  set('[data-demo="group-color"]', mailSet);
   for (const size of ['xs', 'sm', 'md', 'lg']) {
     set(`[data-demo="size-${size}"]`, statusSet);
   }

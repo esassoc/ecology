@@ -162,8 +162,10 @@ export class EsaDatePicker extends LitElement {
       font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
+      border: 0;
+      appearance: none;
       border-radius: var(--_field-radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       outline: none;
       box-sizing: border-box;
       transition:
@@ -172,7 +174,9 @@ export class EsaDatePicker extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -192,7 +196,9 @@ export class EsaDatePicker extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
     }
   `;
 }

@@ -111,5 +111,29 @@ for (const { scaleName, radixKey, base } of ALPHA_P3_SCALES) {
 const p3Block = `\n@media (color-gamut: p3) {\n  :root {\n${lines.join('\n')}\n  }\n}\n`;
 fs.appendFileSync('dist/tokens.css', p3Block);
 
+// Accent color context (Radix-style). Every accentable ramp ships both a solid
+// (1–12) and an alpha (a-1…a-12) scale. We emit an indirection tier --color-accent-*
+// plus one context block per hue (and per semantic alias) that re-points the whole
+// ramp. Set `data-accent="<hue|semantic>"` on any element and its accent fill /
+// ring / text / contrast all track that hue at once — no per-tone component CSS.
+const ACCENT_HUES = ['gray', 'blue', 'copper', 'gold', 'grass', 'green', 'lime', 'orange', 'red', 'teal', 'yellow'];
+// Bright step-9 fills need a DARK foreground; everything else takes white.
+const DARK_CONTRAST = new Set(['lime', 'yellow', 'gold']);
+// Semantic names map onto a hue so callers can pass intent OR a raw hue.
+const ACCENT_ALIASES = { accent: 'grass', brand: 'grass', primary: 'grass', secondary: 'green', neutral: 'gray', success: 'lime', warning: 'yellow', amber: 'yellow', danger: 'red', info: 'blue' };
+const accentVars = (hue) => {
+  const l = [];
+  for (let s = 1; s <= 12; s++) l.push(`  --color-accent-${s}: var(--color-${hue}-${s});`);
+  for (let s = 1; s <= 12; s++) l.push(`  --color-accent-a-${s}: var(--color-${hue}-a-${s});`);
+  l.push(`  --color-accent-contrast: ${DARK_CONTRAST.has(hue) ? '#21201c' : '#ffffff'};`);
+  return l.join('\n');
+};
+const accentBlocks = [`:where(:root) {\n${accentVars('grass')}\n}`];
+for (const hue of ACCENT_HUES) accentBlocks.push(`[data-accent="${hue}"] {\n${accentVars(hue)}\n}`);
+for (const [alias, hue] of Object.entries(ACCENT_ALIASES)) accentBlocks.push(`[data-accent="${alias}"] {\n${accentVars(hue)}\n}`);
+const accentBlock = `\n/* Accent color context — Radix-style. data-accent="<hue|semantic>" remaps\n   --color-accent-* (solid + alpha + contrast) to that ramp on the element + its\n   subtree. Default (:root) = brand grass. */\n${accentBlocks.join('\n')}\n`;
+fs.appendFileSync('dist/tokens.css', accentBlock);
+
 console.log('✓ tokens built → dist/tokens.css, dist/tokens.js');
 console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length + ALPHA_P3_SCALES.length} scales)`);
+console.log(`✓ Accent context appended (${ACCENT_HUES.length} hues + ${Object.keys(ACCENT_ALIASES).length} aliases)`);

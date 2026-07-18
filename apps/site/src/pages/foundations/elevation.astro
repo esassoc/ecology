@@ -4,12 +4,14 @@ import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
 const elevation = [
-  { token: '--elevation-1', primitive: '--shadow-50',  role: 'Resting lift — always-visible surfaces' },
-  { token: '--elevation-2', primitive: '--shadow-100', role: 'Cards, list items' },
-  { token: '--elevation-3', primitive: '--shadow-200', role: 'Raised cards, hover state' },
-  { token: '--elevation-4', primitive: '--shadow-300', role: 'Dropdowns, popovers, menus' },
-  { token: '--elevation-5', primitive: '--shadow-400', role: 'Modals, dialogs' },
+  { token: '--elevation-1', primitive: '--shadow-50',  role: 'Resting lift — always-visible surfaces', layers: ['0 0 0 1px gray-a-3', '0 0 0 0.5px black-a-1', '0 1px 1px 0 gray-a-2', '0 2px 1px -1px black-a-1', '0 1px 3px 0 black-a-1'] },
+  { token: '--elevation-2', primitive: '--shadow-100', role: 'Cards, list items', layers: ['0 0 0 1px gray-a-3', '0 2px 3px -2px gray-a-3', '0 3px 12px -4px black-a-2', '0 4px 16px -8px black-a-2'] },
+  { token: '--elevation-3', primitive: '--shadow-200', role: 'Raised cards, hover state', layers: ['0 0 0 1px gray-a-3', '0 8px 40px black-a-1', '0 12px 32px -16px gray-a-3'] },
+  { token: '--elevation-4', primitive: '--shadow-300', role: 'Dropdowns, popovers, menus', layers: ['0 0 0 1px gray-a-3', '0 12px 60px black-a-3', '0 12px 32px -16px gray-a-5'] },
+  { token: '--elevation-5', primitive: '--shadow-400', role: 'Modals, dialogs', layers: ['0 0 0 1px gray-a-3', '0 12px 60px black-a-3', '0 16px 64px gray-a-2', '0 16px 36px -20px gray-a-7'] },
 ];
+
+const insetShadow = { token: '--elevation-inset', primitive: '--shadow-inset', role: 'Sunken wells, pressed / active surfaces', layers: ['inset 0 0 0 1px gray-a-5', 'inset 0 1.5px 2px 0 gray-a-2', 'inset 0 1.5px 2px 0 black-a-2'] };
 
 
 const zIndex = [
@@ -28,7 +30,7 @@ const zIndex = [
   <p class="lede">Two systems work together to build depth: soft <strong>shadows</strong> imply lift off the surface, and a fixed <strong>z-index</strong> ladder keeps overlapping layers in a predictable stacking order.</p>
 
   <Section id="shadows" title="Shadows">
-    <p>Deliberately soft and low-contrast — elevation should be felt, not seen. Use the semantic <code>--elevation-*</code> tokens in components; the <code>--shadow-*</code> primitives are the raw ramp underneath.</p>
+    <p>Ported from Radix's elevation ramp. Each level layers a faint <strong>hairline ring</strong> (<code>0 0 0 1px</code>) that keeps the surface edge crisp, over softer blurred layers that cast the lift. Use the semantic <code>--elevation-*</code> tokens in components; the <code>--shadow-*</code> primitives are the raw ramp underneath.</p>
     <div class="cards">
       {elevation.map((s) => (
         <div class="card" style={`box-shadow: var(${s.primitive})`}>
@@ -40,12 +42,28 @@ const zIndex = [
     </div>
   </Section>
 
+  <Section id="inset" title="Inset">
+    <p>Negative elevation — the ring and blur point <em>inward</em>, so the surface reads as carved into the page rather than lifted off it. For sunken wells and pressed / active states.</p>
+    <div class="cards">
+      <div class="card card--inset" style={`box-shadow: var(${insetShadow.primitive})`}>
+        <code>{insetShadow.token}</code>
+        <span class="card__primitive">{insetShadow.primitive}</span>
+        <span class="card__role">{insetShadow.role}</span>
+      </div>
+    </div>
+  </Section>
+
   <Section id="shadow-ramp" title="Shadow ramp">
     <p>The primitive ramp that the elevation tokens alias. Prefer <code>--elevation-*</code> in components; reference <code>--shadow-*</code> only when you need a specific step not covered by the semantic scale.</p>
     <div class="cards">
-      {elevation.map((s) => (
-        <div class="card" style={`box-shadow: var(${s.primitive})`}>
+      {[...elevation, insetShadow].map((s) => (
+        <div class={`card${s.primitive === '--shadow-inset' ? ' card--inset' : ''}`} style={`box-shadow: var(${s.primitive})`}>
           <code>{s.primitive}</code>
+          <ul class="card__layers">
+            {s.layers.map((layer, i) => (
+              <li class={i === 0 && !layer.startsWith('inset') ? 'is-ring' : ''}>{layer}</li>
+            ))}
+          </ul>
         </div>
       ))}
     </div>
@@ -72,10 +90,15 @@ const zIndex = [
 
 <style>
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--spacing-500, 1.5rem); padding: var(--spacing-300, 0.75rem) var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem); }
-  .card { display: flex; flex-direction: column; gap: 3px; background: var(--color-surface, #fff); border: 1px solid var(--color-border-light, #efefef); border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-400, 1rem); min-height: 96px; }
+  .card { display: flex; flex-direction: column; gap: 3px; background: var(--color-surface, #fff); border-radius: var(--radius-400, 0.75rem); padding: var(--spacing-400, 1rem); min-height: 96px; }
+  .card--inset { background: var(--color-surface-sunken, #f5f5f5); }
   .card code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
   .card__primitive { font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--color-text-muted, #737373); }
 .card__role { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .card__layers { list-style: none; margin: auto 0 0; padding: var(--spacing-200, 0.5rem) 0 0; display: flex; flex-direction: column; gap: 3px; }
+  .card__layers li { font-family: var(--font-mono, monospace); font-size: 10.5px; line-height: 1.4; color: var(--color-text-muted, #737373); padding: 3px 6px; background: var(--color-surface-sunken, #f5f5f5); border-radius: var(--radius-100, 4px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card__layers li.is-ring { color: var(--color-text-secondary, #525252); background: var(--color-primary-soft, #e6f0f1); }
+  .card--inset .card__layers li { background: var(--color-surface, #fff); }
 
   .z-table { width: 100%; border-collapse: collapse; border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; overflow: hidden; }
   .z-table th { text-align: left; font-size: 13px; font-weight: 600; color: var(--color-text-secondary, #525252); padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem); background: var(--color-surface-sunken, #f5f5f5); border-bottom: 1px solid var(--color-border, #e5e5e5); }

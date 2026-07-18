@@ -136,7 +136,6 @@ export class EsaDropdownMenu extends LitElement {
       position: absolute;
       z-index: var(--z-dropdown, 50);
       background: var(--dropdown-menu-bg, var(--color-surface-elevated, #ffffff));
-      border: 1px solid var(--dropdown-menu-border-color, var(--color-border, #e5e5e5));
       border-radius: var(--dropdown-menu-radius, var(--radius-200, 0.5rem));
       box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       min-width: var(--dropdown-menu-min-width, 160px);

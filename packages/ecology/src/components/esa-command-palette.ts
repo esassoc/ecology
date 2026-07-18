@@ -233,7 +233,6 @@ export class EsaCommandPalette extends LitElement {
       max-width: calc(100vw - 2rem);
       max-height: var(--command-palette-max-height, 440px);
       background: var(--command-palette-bg, var(--color-surface-elevated, #ffffff));
-      border: 1px solid var(--command-palette-border-color, var(--color-border, #e5e5e5));
       border-radius: var(--command-palette-radius, var(--radius-400, 0.75rem));
       box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
@@ -273,7 +272,7 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
       padding: 2px 6px;
-      border: 1px solid var(--color-border, #e5e5e5);
+      box-shadow: inset 0 0 0 1px var(--color-border, #e5e5e5);
       border-radius: var(--radius-100, 0.25rem);
       font-size: var(--type-size-100, 0.75rem);
       font-family: inherit;

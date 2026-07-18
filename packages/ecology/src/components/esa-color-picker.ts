@@ -193,24 +193,29 @@ export class EsaColorPicker extends LitElement {
       overflow: hidden;
       clip: rect(0 0 0 0);
       clip-path: inset(50%);
+      border: 0;
     }
     .preview {
       display: inline-block;
       width: var(--_preview-size);
       height: var(--_preview-size);
       border-radius: var(--_radius);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px)
+        var(--_preview-border-color, var(--form-border-color, #d4d4d4));
       cursor: pointer;
       transition:
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .preview:hover {
-      border-color: var(--form-border-color-focus, #43608a);
+      --_preview-border-color: var(--form-border-color-focus, #43608a);
     }
     .native:focus-visible + .preview {
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      --_preview-border-color: var(--form-border-color-focus, #43608a);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px)
+          var(--_preview-border-color, var(--form-border-color, #d4d4d4)),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     .hex-input {
@@ -221,8 +226,11 @@ export class EsaColorPicker extends LitElement {
       font-size: var(--_font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: 0;
+      appearance: none;
       border-radius: var(--_radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px)
+        var(--_hex-border-color, var(--form-border-color, #d4d4d4));
       outline: none;
       box-sizing: border-box;
       transition:
@@ -230,8 +238,11 @@ export class EsaColorPicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .hex-input:focus {
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      --_hex-border-color: var(--form-border-color-focus, #43608a);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px)
+          var(--_hex-border-color, var(--form-border-color, #d4d4d4)),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .hex-input:disabled {
       background: var(--form-bg-disabled, #efefef);

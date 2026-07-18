@@ -122,7 +122,7 @@ export class EsaFileList extends LitElement {
          room without restyling the shadow DOM. Defaults reproduce the original tight row. */
       padding: var(--file-list-row-padding-y, 2px)
         var(--file-list-row-padding-x, var(--spacing-300, 12px));
-      border: var(--form-border-width, 1px) solid var(--color-border, #e5e5e5);
+      box-shadow: 0 0 0 var(--form-border-width, 1px) var(--color-border, #e5e5e5);
       border-radius: var(--radius-100, 4px);
       background: var(--color-surface, #fff);
       font-family: var(--font-sans, sans-serif);

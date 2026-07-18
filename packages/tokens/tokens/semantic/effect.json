@@ -1,5 +1,7 @@
 {
   "elevation": {
+    "inset": { "$value": "{shadow.inset}", "$type": "other", "$description": "Negative elevation — sunken wells, pressed/active surfaces." },
+    "0": { "$value": "{shadow.edge}", "$type": "other", "$description": "Flat on the surface — a hairline edge with no lift. The default for bordered, non-floating surfaces." },
     "1": { "$value": "{shadow.50}",  "$type": "other", "$description": "Resting lift — subtle depth for always-visible surfaces." },
     "2": { "$value": "{shadow.100}", "$type": "other", "$description": "Cards and list items." },
     "3": { "$value": "{shadow.200}", "$type": "other", "$description": "Raised cards, hover state." },

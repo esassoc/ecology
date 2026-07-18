@@ -335,7 +335,8 @@ export class EsaFilterDropdown extends LitElement {
       gap: var(--spacing-100, 0.25rem);
       height: var(--_filter-height);
       padding-inline: var(--_filter-padding-x);
-      border: 1px solid var(--_filter-border);
+      border: 0;
+      box-shadow: inset 0 0 0 1px var(--_filter-border);
       border-radius: var(--_filter-radius);
       background: var(--_filter-bg);
       color: var(--_filter-text);
@@ -347,13 +348,13 @@ export class EsaFilterDropdown extends LitElement {
       white-space: nowrap;
       transition:
         background var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
+        box-shadow var(--transition-fast, 150ms ease),
         color var(--transition-fast, 150ms ease);
       -webkit-appearance: none;
       appearance: none;
     }
     .esa-filter-dropdown__trigger:hover:not(.esa-filter-dropdown__trigger--active) {
-      border-color: var(--_filter-border-active);
+      --_filter-border: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -361,13 +362,13 @@ export class EsaFilterDropdown extends LitElement {
     }
     .esa-filter-dropdown__trigger--active {
       background: var(--_filter-bg-active);
-      border-color: var(--_filter-border-active);
+      --_filter-border: var(--_filter-border-active);
       color: var(--_filter-text-active);
       font-weight: var(--font-weight-semibold, 550);
     }
     /* Open (panel showing) but nothing selected yet → just lift the border. */
     .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
-      border-color: var(--_filter-border-active);
+      --_filter-border: var(--_filter-border-active);
     }
 
     .esa-filter-dropdown__label {
@@ -420,7 +421,6 @@ export class EsaFilterDropdown extends LitElement {
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
       background: var(--filter-dropdown-bg, var(--color-surface, #fff));
-      border: var(--filter-dropdown-border, 1px solid var(--color-border, #e5e5e5));
       border-radius: var(--filter-dropdown-radius, var(--radius-200, 0.5rem));
       box-shadow: var(--filter-dropdown-shadow, var(--shadow-200, 0 4px 20px -4px rgba(0, 0, 0, 0.06)));
       overflow: hidden;
@@ -436,7 +436,9 @@ export class EsaFilterDropdown extends LitElement {
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: 1px solid var(--color-border, #e5e5e5);
+      border: 0;
+      appearance: none;
+      box-shadow: inset 0 0 0 1px var(--color-border, #e5e5e5);
       border-radius: var(--radius-100, 0.25rem);
       font-family: var(--font-sans, inherit);
       font-size: var(--_filter-font-size);
@@ -445,8 +447,7 @@ export class EsaFilterDropdown extends LitElement {
       outline: none;
     }
     .esa-filter-dropdown__search-input:focus {
-      border-color: var(--color-primary, #43608a);
-      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
+      box-shadow: inset 0 0 0 1px var(--color-primary, #43608a), 0 0 0 2px var(--focus-ring-color, rgba(67, 96, 138, 0.25));
     }
 
     .esa-filter-dropdown__options {

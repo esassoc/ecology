@@ -7,7 +7,8 @@ import Badge from '@esa/ecology/esa-badge.astro';
 
 const props = [
   { name: 'value', type: 'string | number', description: 'Text or count shown inside the badge. Ignored in dot mode.' },
-  { name: 'variant', type: "'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'", default: "'primary'", description: 'Background color intent.' },
+  { name: 'color', type: "hue | semantic", default: "'primary'", description: 'Any accent hue (gray · blue · copper · gold · grass · green · lime · orange · red · teal · yellow) or a semantic tone (primary · secondary · success · warning · danger · info). Sets data-accent so the solid fill (accent-9) and contrast text track the hue.' },
+  { name: 'variant', type: "same as color", description: 'Deprecated alias for color — kept so existing markup keeps working.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Badge height and text size.' },
   { name: 'dot', type: 'boolean', default: 'false', description: 'Renders a small status dot with no text.' },
 ];
@@ -21,19 +22,44 @@ const props = [
     </Preview>
   </Section>
 
-  <Section id="variants" title="Variants">
-    <Preview code={`<Badge value="Primary" variant="primary" />
-<Badge value="Secondary" variant="secondary" />
-<Badge value="Success" variant="success" />
-<Badge value="Warning" variant="warning" />
-<Badge value="Danger" variant="danger" />
-<Badge value="Info" variant="info" />`}>
-      <Badge value="Primary" variant="primary" />
-      <Badge value="Secondary" variant="secondary" />
-      <Badge value="Success" variant="success" />
-      <Badge value="Warning" variant="warning" />
-      <Badge value="Danger" variant="danger" />
-      <Badge value="Info" variant="info" />
+  <Section id="variants" title="Semantic tones">
+    <Preview code={`<Badge value="Primary" color="primary" />
+<Badge value="Secondary" color="secondary" />
+<Badge value="Success" color="success" />
+<Badge value="Warning" color="warning" />
+<Badge value="Danger" color="danger" />
+<Badge value="Info" color="info" />`}>
+      <Badge value="Primary" color="primary" />
+      <Badge value="Secondary" color="secondary" />
+      <Badge value="Success" color="success" />
+      <Badge value="Warning" color="warning" />
+      <Badge value="Danger" color="danger" />
+      <Badge value="Info" color="info" />
+    </Preview>
+  </Section>
+
+  <Section id="hues" title="Any hue">
+    <p>Solid fill from <code>accent-9</code> with contrast text — pass any accent hue and both track it. Bright hues (lime, yellow, gold) automatically get dark text via <code>--color-accent-contrast</code>.</p>
+    <Preview code={`<Badge value="gray" color="gray" />
+<Badge value="blue" color="blue" />
+<Badge value="teal" color="teal" />
+<Badge value="grass" color="grass" />
+<Badge value="lime" color="lime" />
+<Badge value="yellow" color="yellow" />
+<Badge value="gold" color="gold" />
+<Badge value="orange" color="orange" />
+<Badge value="copper" color="copper" />
+<Badge value="red" color="red" />`}>
+      <Badge value="gray" color="gray" />
+      <Badge value="blue" color="blue" />
+      <Badge value="teal" color="teal" />
+      <Badge value="grass" color="grass" />
+      <Badge value="lime" color="lime" />
+      <Badge value="yellow" color="yellow" />
+      <Badge value="gold" color="gold" />
+      <Badge value="orange" color="orange" />
+      <Badge value="copper" color="copper" />
+      <Badge value="red" color="red" />
     </Preview>
   </Section>
 
@@ -51,12 +77,12 @@ const props = [
 
   <Section id="states" title="Dot mode">
     <p>With <code>dot</code>, the badge collapses to an 8px circle — useful as an inline status indicator next to a label.</p>
-    <Preview code={`<Badge dot variant="success" />
-<Badge dot variant="warning" />
-<Badge dot variant="danger" />`}>
-      <Badge dot variant="success" />
-      <Badge dot variant="warning" />
-      <Badge dot variant="danger" />
+    <Preview code={`<Badge dot color="success" />
+<Badge dot color="warning" />
+<Badge dot color="danger" />`}>
+      <Badge dot color="success" />
+      <Badge dot color="warning" />
+      <Badge dot color="danger" />
     </Preview>
   </Section>
 

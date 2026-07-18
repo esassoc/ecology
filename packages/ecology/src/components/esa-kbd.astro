@@ -20,8 +20,11 @@
     line-height: 1;
     color: var(--kbd-color, var(--color-text-muted));
     background: var(--kbd-bg, var(--color-surface));
-    border: 1px solid var(--kbd-border-color, var(--color-border));
-    border-bottom-width: 2px;
+    /* Inset ring edge (keeps the themeable color token). The extra inset-bottom
+       layer reproduces the keycap's thicker 2px bottom edge (the little 3D lip). */
+    box-shadow:
+      inset 0 0 0 1px var(--kbd-border-color, var(--color-border)),
+      inset 0 -1px 0 0 var(--kbd-border-color, var(--color-border));
     border-radius: var(--kbd-radius, 4px);
   }
 </style>

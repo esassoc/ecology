@@ -163,11 +163,37 @@ const PG_CARD = [
   { key: 'color-9',  label: 'Color-9' },
   { key: 'color-10', label: 'Color-10' },
 ];
+
+// --- Border colors reference -------------------------------------------------
+// The opaque semantic ladder — colors dividers and any themeable component edge.
+const borderColors = [
+  { token: '--color-border-light',  value: '--color-gray-6',  role: 'Lightest edges & subtle dividers' },
+  { token: '--color-border',        value: '--color-gray-7',  role: 'Default edge / divider color' },
+  { token: '--color-border-strong', value: '--color-gray-8',  role: 'Emphasis & hover — one step darker' },
+  { token: '--color-border-focus',  value: '--color-grass-8', role: 'Focus ring / interactive edge' },
+];
+// The alpha gray rings baked into the shadow/edge tokens — translucent, so they
+// tint over any background instead of sitting opaque.
+const ringColors = [
+  { token: '--color-gray-a-3', value: 'rgba(0,0,0,0.06)', role: 'Baked-in ring on --elevation-1…5' },
+  { token: '--color-gray-a-5', value: 'rgba(0,0,0,0.12)', role: 'Flat surface edge · --shadow-edge / --elevation-0' },
+  { token: '--color-gray-a-7', value: 'rgba(0,0,0,0.19)', role: 'Form-control edge · --shadow-edge-inset' },
+];
+// Which mechanism + color each kind of edge resolves to.
+const edgeMap = [
+  { edge: 'Flat surface',        mech: 'outset ring · box-shadow',          token: '--shadow-edge · gray-a-5',            where: 'Card (resting), panels, list rows' },
+  { edge: 'Form control',        mech: 'inset ring · box-shadow',           token: '--shadow-edge-inset · gray-a-7',      where: 'Inputs, select, checkbox, textarea' },
+  { edge: 'Elevated surface',    mech: 'ring baked into the lift shadow',   token: '--elevation-1…5 · gray-a-3',          where: 'Popover, dropdown, dialog, elevated card' },
+  { edge: 'Divider / separator', mech: 'real border-top / border-bottom',   token: '--color-border-light / --color-border', where: 'Card header rule, dialog header/footer, affix dividers' },
+  { edge: 'Focus',               mech: 'outer ring · box-shadow / outline', token: '--color-border-focus · grass-8',      where: 'All focusable controls' },
+  { edge: 'Hover',               mech: 'same ring, one step darker',        token: '--color-border-strong / gray-a-7',    where: 'Interactive cards, triggers, chips' },
+  { edge: 'Colored surface',     mech: 'inset ring from the accent ramp',   token: '--color-accent-a-6',                  where: 'Pills, chips, badges — tracks data-accent hue' },
+];
 ---
 <DocsLayout title="Borders — Ecology" activeHref="/foundations/borders">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Borders</span></nav>
   <h1>Borders</h1>
-  <p class="lede">Every elevated surface has a lift shadow. The question is how it gets its <strong>edge</strong>: the way it works today — a real <code>border</code> property alongside the shadow — or drawing that hairline as a <strong>layered shadow ring</strong> composited into the same <code>box-shadow</code> as the lift, with no <code>border</code> at all.</p>
+  <p class="lede">Ecology draws surface edges as <strong>hairline rings</strong> — a <code>0 0 0 1px</code> layer inside the same <code>box-shadow</code> as the lift, never a <code>border</code> property. The ring is colored with an <strong>alpha-gray</strong> token so it tints over any background. Real <code>border</code> lines survive only as internal <strong>dividers</strong> and a few geometric special cases; focus draws its own outer ring.</p>
 
   <Section id="playground" title="Levers playground">
     <p>Isolate one variable at a time. Each panel configures the levers independently — <strong>elevation</strong> (0–5), <strong>edge</strong> (none / border / ring), <strong>border color</strong> (opaque token / alpha black, when edge is a border), and <strong>lift shadow</strong> (none / single / layered). Hold everything fixed but one lever across the two panels to compare its effect; switch the backdrop to test each choice over white, gray, or a color step.</p>
@@ -235,6 +261,49 @@ const PG_CARD = [
     </div>
   </Section>
 
+  <Section id="border-colors" title="Border colors">
+    <p>Two families. The <strong>opaque</strong> <code>--color-border-*</code> ladder colors dividers and any themeable component edge. The <strong>alpha</strong> gray rings color the tokenized shadow edges, so they stay legible tinting over any surface instead of sitting opaque. <strong>Colored</strong> components (pills, chips, badges) draw their edge from the <code>--color-accent-a-6</code> step of whatever hue their <code>data-accent</code> context resolves to — fill (<code>a-3</code>), ring (<code>a-6</code>), and text (<code>11</code>) all track the one hue.</p>
+    <h3 class="sub">Token ladder — opaque</h3>
+    <div class="swatches">
+      {borderColors.map((c) => (
+        <div class="swatch" style={`--_a: var(${c.token})`}>
+          <span class="swatch__chip"></span>
+          <code>{c.token}</code>
+          <span class="swatch__val">{c.value}</span>
+          <span class="swatch__role">{c.role}</span>
+        </div>
+      ))}
+    </div>
+    <h3 class="sub">Ring scale — alpha</h3>
+    <div class="swatches swatches--alpha">
+      {ringColors.map((c) => (
+        <div class="swatch" style={`--_a: var(${c.token})`}>
+          <span class="swatch__chip"></span>
+          <code>{c.token}</code>
+          <span class="swatch__val">{c.value}</span>
+          <span class="swatch__role">{c.role}</span>
+        </div>
+      ))}
+    </div>
+  </Section>
+
+  <Section id="edge-map" title="Which edge uses which color">
+    <p>Every edge in the system resolves to one of these. Container edges are rings; only dividers keep a real <code>border</code> property.</p>
+    <table class="edge-table">
+      <thead><tr><th>Edge</th><th>Mechanism</th><th>Color · token</th><th>Where</th></tr></thead>
+      <tbody>
+        {edgeMap.map((e) => (
+          <tr>
+            <td><strong>{e.edge}</strong></td>
+            <td>{e.mech}</td>
+            <td><code>{e.token}</code></td>
+            <td class="edge-table__where">{e.where}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+
   <Section id="card-demo" title="Card">
     <p>A single card in the layered treatment, resting at <strong>elevation 0</strong> (flat — ring only, no lift). Pick an interaction mode: <strong>static</strong> (no state change), <strong>hover</strong> (lifts to elevation 1 on hover), or <strong>interactive</strong> (clickable — lifts on hover, presses back down on click).</p>
     <div class="carddemo">
@@ -258,50 +327,8 @@ const PG_CARD = [
     </div>
   </Section>
 
-  <Section id="side-by-side" title="Side by side">
-    <p>The direct comparison. Every card in a row carries the <em>identical</em> <code>--elevation-*</code> lift shadow — only the edge treatment differs. From left: a <code>border</code> using the original <code>--color-border-*</code> tokens, the same border with an alpha-black color, then the layered <code>0 0 0 1px</code> shadow ring in flat and grown geometry.</p>
-    <div class="compare compare--5col">
-      <div class="compare__head"><span>Level</span><span>Border · token</span><span>Border · alpha</span><span>Layered · flat</span><span>Layered · grown</span></div>
-      {levels.map((l) => (
-        <div class="compare__row">
-          <div class="compare__label">
-            <strong>{l.level}</strong>
-            <span>{l.role}</span>
-            <code>{l.elevation}</code>
-          </div>
-          <div class:list={['demo', l.borderHover && 'border-lift']} style={borderTokenStyle(l) + tokenHoverVars(l)}>
-            <span class="demo__tag">{l.border.replace('--color-', '')}{l.borderHover ? ' · hover' : ''}</span>
-          </div>
-          <div class:list={['demo', l.borderAlphaHover && 'border-lift']} style={borderStyle(l) + alphaHoverVars(l)}>
-            <span class="demo__tag">alpha {l.borderAlpha ?? DEFAULT_BORDER_ALPHA}{l.borderAlphaHover ? ' · hover' : ''}</span>
-          </div>
-          <div class="demo layered-ring" style={layeredVars(l)}>
-            <span class="demo__tag">flat{l.layeredHover ? ' · hover' : ''}</span>
-          </div>
-          <div class="demo layered-ring" style={`--_shadow: ${grownValue(l)}${l.layeredHover ? `; --_shadow-hover: ${l.layeredHover}` : ''}`}>
-            <span class="demo__tag">{grownFor[l.level] ? 'grown' : 'grown = flat'}{l.layeredHover ? ' · hover' : ''}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  </Section>
-
-  <Section id="border" title="Border property (current)">
-    <p>How elevated surfaces are edged today: a crisp <code>border</code> draws the line, and a separate <code>box-shadow</code> supplies the lift. Two mechanisms, and the border occupies layout box. Here the border color is an alpha black — <code>color(display-p3 0 0 0 / .153)</code> (<code>.192</code> on the Raised step), with an sRGB fallback — rather than the <code>--color-border-*</code> tokens, to match the layered ring's translucent-edge approach for a fair comparison.</p>
-    <div class="cards">
-      {levels.map((l) => (
-        <div class:list={['card', l.borderAlphaHover && 'border-lift']} style={borderStyle(l) + alphaHoverVars(l)}>
-          <code>{l.level}</code>
-          <span class="card__primitive">border · display-p3 0 0 0 / {l.borderAlpha ?? DEFAULT_BORDER_ALPHA}{l.borderAlphaHover ? ' · hover' : ''}</span>
-          <span class="card__primitive">shadow · layered lift (no ring)</span>
-          <span class="card__role">{l.role}</span>
-        </div>
-      ))}
-    </div>
-  </Section>
-
-  <Section id="layered" title="Layered shadow ring">
-    <p>No <code>border</code> property. The edge is a <code>0 0 0 1px</code> ring layered ahead of the lift shadow in a single <code>box-shadow</code>. It never affects layout box, composites with the soft shadow, and can be tinted or made translucent independently.</p>
+  <Section id="layered" title="Edge ring, level by level">
+    <p>This is the model. No <code>border</code> property — the edge is a <code>0 0 0 1px</code> ring layered ahead of the lift shadow in a single <code>box-shadow</code>. It never affects layout box, composites with the soft shadow, and stays translucent so it reads over any surface.</p>
     <div class="cards">
       {levels.map((l) => (
         <div class="card layered-ring" style={layeredVars(l)}>
@@ -400,6 +427,24 @@ const PG_CARD = [
   .card code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
   .card__primitive { font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--color-text-muted, #737373); }
   .card__role { font-size: 12.5px; color: var(--color-text-muted, #737373); margin-top: 2px; }
+
+  /* Border-colors reference: swatch chips + edge-map table. */
+  .sub { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted, #737373); margin: var(--spacing-400, 1rem) 0 var(--spacing-200, 0.5rem); }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); padding: var(--spacing-100, 0.25rem) 0 var(--spacing-400, 1rem); }
+  .swatch { display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto auto; column-gap: var(--spacing-300, 0.75rem); align-items: center; }
+  .swatch__chip { grid-row: 1 / 4; width: 44px; height: 44px; border-radius: 9px; background: var(--_a); box-shadow: inset 0 0 0 1px var(--color-gray-a-3); }
+  .swatches--alpha .swatch__chip { background: linear-gradient(var(--_a), var(--_a)), repeating-conic-gradient(#e2e2e2 0% 25%, #fff 0% 50%) 0 0 / 12px 12px; }
+  .swatch code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); align-self: end; }
+  .swatch__val { font-family: var(--font-mono, monospace); font-size: 11.5px; color: var(--color-text-muted, #737373); }
+  .swatch__role { font-size: 12.5px; color: var(--color-text-muted, #737373); align-self: start; }
+
+  .edge-table { width: 100%; border-collapse: collapse; box-shadow: 0 0 0 1px var(--color-border-light, #efefef); border-radius: 10px; overflow: hidden; margin: var(--spacing-300, 0.75rem) 0 var(--spacing-500, 1.5rem); }
+  .edge-table th { text-align: left; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary, #525252); padding: 10px 14px; background: var(--color-surface-sunken, #f5f5f5); }
+  .edge-table td { padding: 10px 14px; border-top: 1px solid var(--color-border-light, #efefef); font-size: 13.5px; color: var(--color-text-secondary, #525252); vertical-align: top; }
+  .edge-table td:first-child strong { color: var(--color-text-primary, #171717); }
+  .edge-table td code { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-text-primary, #171717); }
+  .edge-table__where { color: var(--color-text-muted, #737373); }
+  @media (max-width: 640px) { .edge-table, .edge-table thead, .edge-table tbody, .edge-table tr, .edge-table td, .edge-table th { display: block; } .edge-table thead { display: none; } .edge-table td { border-top: none; padding: 2px 14px; } .edge-table tr { padding: 10px 0; border-top: 1px solid var(--color-border-light, #efefef); } }
 
   /* Layered shadow ring: box-shadow fed via --_shadow, deepening to
      --_shadow-hover on hover with a transition on box-shadow only. */

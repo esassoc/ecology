@@ -259,7 +259,7 @@ export class EsaButtonToggle extends LitElement {
       gap: 2px;
       padding: 2px;
       background: var(--color-surface-sunken, #efefef);
-      border: var(--_border-width) solid var(--_border-color);
+      box-shadow: inset 0 0 0 var(--_border-width) var(--_border-color);
       border-radius: var(--_radius);
     }
 

@@ -39,12 +39,12 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
 
 <style>
   .esa-collapsible {
-    border: 1px solid var(--collapsible-border-color, var(--color-border, #e5e5e5));
+    box-shadow: 0 0 0 1px var(--collapsible-border-color, var(--color-border, #e5e5e5));
     border-radius: var(--collapsible-radius, var(--radius-300, 0.5rem));
     background: var(--collapsible-bg, var(--color-surface, #fff));
   }
   .esa-collapsible--flush {
-    border: none;
+    box-shadow: none;
     border-radius: 0;
     background: transparent;
   }

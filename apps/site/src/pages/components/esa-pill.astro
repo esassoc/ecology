@@ -8,7 +8,8 @@ import Pill from '@esa/ecology/esa-pill.astro';
 
 const props = [
   { name: 'label', type: 'string', description: 'Required. Text shown inside the pill.' },
-  { name: 'variant', type: "'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info'", default: "'default'", description: 'Color intent — drives background, text, and border.' },
+  { name: 'color', type: "hue | semantic", default: "'default'", description: 'Any accent hue (gray · blue · copper · gold · grass · green · lime · orange · red · teal · yellow) or a semantic tone (primary · success · warning · danger · info · neutral). Sets data-accent, which remaps the accent ramp so fill, ring, and text all track the hue at once.' },
+  { name: 'variant', type: "same as color", description: 'Deprecated alias for color — kept so existing markup keeps working.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Pill height and text size.' },
   { name: 'removable', type: 'boolean', default: 'true', description: 'Shows a remove (×) button.' },
 ];
@@ -25,24 +26,52 @@ const events = [
   summary="Compact, rounded tag with color variants, sizes, an optional leading icon, and an optional remove control.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<Pill label="Wetlands" variant="success" removable={false} />`}>
-      <Pill label="Wetlands" variant="success" removable={false} />
+    <Preview code={`<Pill label="Wetlands" color="success" removable={false} />`}>
+      <Pill label="Wetlands" color="success" removable={false} />
     </Preview>
   </Section>
 
-  <Section id="variants" title="Variants">
-    <Preview code={`<Pill label="Default" variant="default" removable={false} />
-<Pill label="Primary" variant="primary" removable={false} />
-<Pill label="Success" variant="success" removable={false} />
-<Pill label="Warning" variant="warning" removable={false} />
-<Pill label="Danger" variant="danger" removable={false} />
-<Pill label="Info" variant="info" removable={false} />`}>
-      <Pill label="Default" variant="default" removable={false} />
-      <Pill label="Primary" variant="primary" removable={false} />
-      <Pill label="Success" variant="success" removable={false} />
-      <Pill label="Warning" variant="warning" removable={false} />
-      <Pill label="Danger" variant="danger" removable={false} />
-      <Pill label="Info" variant="info" removable={false} />
+  <Section id="variants" title="Semantic tones">
+    <p>Semantic <code>color</code> values map to a hue and carry intent. Each sets <code>data-accent</code>, and the pill's fill, ring, and text all resolve from that one accent context.</p>
+    <Preview code={`<Pill label="Default" color="default" removable={false} />
+<Pill label="Primary" color="primary" removable={false} />
+<Pill label="Success" color="success" removable={false} />
+<Pill label="Warning" color="warning" removable={false} />
+<Pill label="Danger" color="danger" removable={false} />
+<Pill label="Info" color="info" removable={false} />`}>
+      <Pill label="Default" color="default" removable={false} />
+      <Pill label="Primary" color="primary" removable={false} />
+      <Pill label="Success" color="success" removable={false} />
+      <Pill label="Warning" color="warning" removable={false} />
+      <Pill label="Danger" color="danger" removable={false} />
+      <Pill label="Info" color="info" removable={false} />
+    </Preview>
+  </Section>
+
+  <Section id="hues" title="Any hue">
+    <p>Because <code>color</code> accepts any accent hue directly, pills are no longer a fixed enum — pass any Radix ramp and the fill/ring/text follow. No per-tone CSS.</p>
+    <Preview code={`<Pill label="gray" color="gray" removable={false} />
+<Pill label="blue" color="blue" removable={false} />
+<Pill label="teal" color="teal" removable={false} />
+<Pill label="grass" color="grass" removable={false} />
+<Pill label="lime" color="lime" removable={false} />
+<Pill label="yellow" color="yellow" removable={false} />
+<Pill label="gold" color="gold" removable={false} />
+<Pill label="orange" color="orange" removable={false} />
+<Pill label="copper" color="copper" removable={false} />
+<Pill label="red" color="red" removable={false} />
+<Pill label="green" color="green" removable={false} />`}>
+      <Pill label="gray" color="gray" removable={false} />
+      <Pill label="blue" color="blue" removable={false} />
+      <Pill label="teal" color="teal" removable={false} />
+      <Pill label="grass" color="grass" removable={false} />
+      <Pill label="lime" color="lime" removable={false} />
+      <Pill label="yellow" color="yellow" removable={false} />
+      <Pill label="gold" color="gold" removable={false} />
+      <Pill label="orange" color="orange" removable={false} />
+      <Pill label="copper" color="copper" removable={false} />
+      <Pill label="red" color="red" removable={false} />
+      <Pill label="green" color="green" removable={false} />
     </Preview>
   </Section>
 
@@ -60,19 +89,19 @@ const events = [
 
   <Section id="states" title="Icon & removable">
     <p>Pass a leading icon via the <code>icon</code> slot. With <code>removable</code> (the default), a × button emits a <code>removed</code> event and removes the pill from the DOM.</p>
-    <Preview code={`<Pill label="Tagged" variant="primary" removable={false}>
+    <Preview code={`<Pill label="Tagged" color="primary" removable={false}>
   <svg slot="icon">…</svg>
 </Pill>
-<Pill label="Wetlands" variant="success" />
-<Pill label="Overdue" variant="danger" />`}>
-      <Pill label="Tagged" variant="primary" removable={false}>
+<Pill label="Wetlands" color="success" />
+<Pill label="Overdue" color="danger" />`}>
+      <Pill label="Tagged" color="primary" removable={false}>
         <svg slot="icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"></path>
           <circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle>
         </svg>
       </Pill>
-      <Pill label="Wetlands" variant="success" />
-      <Pill label="Overdue" variant="danger" />
+      <Pill label="Wetlands" color="success" />
+      <Pill label="Overdue" color="danger" />
     </Preview>
   </Section>
 

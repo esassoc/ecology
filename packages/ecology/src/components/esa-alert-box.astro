@@ -13,6 +13,8 @@ interface Props {
 const { variant = 'info', title, dismissable = false } = Astro.props;
 
 const cls = ['esa-alert-box', `esa-alert-box--${variant}`].join(' ');
+// variant is semantic (it also picks the icon); it doubles as the accent context.
+const accent = variant;
 
 // Inlined Lucide icon paths per variant (avoids an icon dependency).
 const ICON_PATHS: Record<string, string> = {
@@ -27,7 +29,7 @@ const ICON_PATHS: Record<string, string> = {
 };
 const iconPath = ICON_PATHS[variant];
 ---
-<div class={cls}>
+<div class={cls} data-accent={accent}>
   <div class="esa-alert-box__icon">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -88,9 +90,11 @@ const iconPath = ICON_PATHS[variant];
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--alert-box-bg, var(--color-info-subtle, #eff6ff));
-    --_alert-border: var(--alert-box-border-color, var(--color-info-border, #bfdbfe));
-    --_alert-icon-color: var(--color-info-strong, #0d74ce);
+    /* Soft callout: a-2 tint, a-6 ring, step-11 icon — all from the accent context
+       set by data-accent (= the semantic variant). One block, every tone. */
+    --_alert-bg: var(--alert-box-bg, var(--color-accent-a-2));
+    --_alert-border: var(--alert-box-border-color, var(--color-accent-a-6));
+    --_alert-icon-color: var(--color-accent-11);
     --_alert-title-color: var(--alert-box-title-color, var(--color-text-primary, #171717));
     --_alert-text-color: var(--alert-box-text-color, var(--color-text-secondary, #525252));
 
@@ -98,29 +102,11 @@ const iconPath = ICON_PATHS[variant];
     align-items: flex-start;
     gap: var(--spacing-300, 0.75rem);
     padding: var(--alert-box-padding, var(--spacing-300, 0.75rem) var(--spacing-400, 1rem));
-    border: 1px solid var(--_alert-border);
+    box-shadow: 0 0 0 1px var(--_alert-border);
     border-radius: var(--alert-box-radius, var(--radius-200, 0.5rem));
     background: var(--_alert-bg);
     font-size: var(--type-size-150, 0.875rem);
     line-height: 1.5;
-  }
-
-  .esa-alert-box--success {
-    --_alert-bg: var(--color-success-subtle, #f0fdf4);
-    --_alert-border: var(--color-success-border, #bbf7d0);
-    --_alert-icon-color: var(--color-success-strong, #3a6d3f);
-  }
-
-  .esa-alert-box--warning {
-    --_alert-bg: var(--color-warning-subtle, #fffbeb);
-    --_alert-border: var(--color-warning-border, #fde68a);
-    --_alert-icon-color: var(--color-warning-strong, #915930);
-  }
-
-  .esa-alert-box--danger {
-    --_alert-bg: var(--color-danger-subtle, #fef2f2);
-    --_alert-border: var(--color-danger-border, #fecaca);
-    --_alert-icon-color: var(--color-danger-strong, #ce2c31);
   }
 
   .esa-alert-box__icon {

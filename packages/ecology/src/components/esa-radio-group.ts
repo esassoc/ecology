@@ -214,21 +214,19 @@ export class EsaRadioGroup extends LitElement {
       width: var(--_radio-size);
       height: var(--_radio-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
       border-radius: 50%;
       background: var(--form-bg, #fff);
-      transition:
-        border-color var(--transition-fast, 150ms ease),
-        box-shadow var(--transition-fast, 150ms ease);
+      box-shadow: inset 0 0 0 var(--form-border-width, 2px) var(--form-border-color, #d4d4d4);
+      transition: box-shadow var(--transition-fast, 150ms ease);
     }
     .circle--selected {
-      border-color: var(--color-primary, #43608a);
+      box-shadow: inset 0 0 0 var(--form-border-width, 2px) var(--color-primary, #43608a);
     }
     .circle:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width)
-        var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 2px) var(--form-border-color-focus, #43608a),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     .dot {

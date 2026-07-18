@@ -1,7 +1,31 @@
 import { LitElement, html, css } from 'lit';
 
 /** Active-state palette for a chip. Maps to Ecology semantic tokens inside the primitive. */
-export type EsaChipTone = 'neutral' | 'neutral-strong' | 'brand' | 'amber';
+// Semantic tones plus any accent hue. Shadow DOM can't read the global
+// [data-accent] context, so each tone resolves to a hue (+ intensity) here and
+// the active-state ramp steps are set inline per chip.
+export type EsaChipTone =
+  | 'neutral' | 'neutral-strong' | 'brand' | 'amber'
+  | 'gray' | 'blue' | 'copper' | 'gold' | 'grass' | 'green' | 'lime'
+  | 'orange' | 'red' | 'teal' | 'yellow';
+
+// tone → { hue, strong? }. Unknown tones pass straight through as a hue, so any
+// accent ramp works. `strong` bumps the alpha/text steps for a heavier chip.
+const CHIP_TONES: Record<string, { hue: string; strong?: boolean }> = {
+  neutral: { hue: 'gray' },
+  'neutral-strong': { hue: 'gray', strong: true },
+  brand: { hue: 'grass' },
+  amber: { hue: 'yellow' },
+};
+// Inline the active-state ramp steps for a chip's tone: a-3/a-6/11 (or the
+// heavier a-4/a-7/12 for a `strong` tone). These custom props feed .chip--active.
+function chipToneStyle(tone: string | undefined): string {
+  const spec = CHIP_TONES[tone ?? 'neutral'] ?? { hue: tone ?? 'gray' };
+  const [bg, bd, tx] = spec.strong ? ['4', '7', '12'] : ['3', '6', '11'];
+  return `--_active-bg: var(--color-${spec.hue}-a-${bg});` +
+    `--_active-border: var(--color-${spec.hue}-a-${bd});` +
+    `--_active-text: var(--color-${spec.hue}-${tx});`;
+}
 
 /** One selectable chip in an esa-chip-group. */
 export interface EsaChipOption {
@@ -46,6 +70,7 @@ export class EsaChipGroup extends LitElement {
     size: { type: String, reflect: true },
     name: { type: String },
     label: { type: String },
+    color: { type: String },
   };
 
   declare options: EsaChipOption[];
@@ -56,6 +81,9 @@ export class EsaChipGroup extends LitElement {
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare name: string;
   declare label: string;
+  /** Group-level active accent — a hue or semantic tone applied to every chip's
+   *  selected state, unless an option sets its own `tone`. Empty = neutral. */
+  declare color: EsaChipTone | '';
 
   private internals: ElementInternals;
 
@@ -68,6 +96,7 @@ export class EsaChipGroup extends LitElement {
     this.size = 'md';
     this.name = '';
     this.label = '';
+    this.color = '';
     this.internals = this.attachInternals();
   }
 
@@ -198,8 +227,9 @@ export class EsaChipGroup extends LitElement {
             <button
               type="button"
               role=${this.multiple ? 'checkbox' : 'radio'}
-              class="chip chip--${option.tone ?? 'neutral'} ${active ? 'chip--active' : ''}"
+              class="chip ${active ? 'chip--active' : ''}"
               part="chip"
+              style=${chipToneStyle(option.tone || this.color)}
               tabindex=${tabbable ? 0 : -1}
               aria-checked=${active}
               @click=${() => this.select(option)}
@@ -246,10 +276,14 @@ export class EsaChipGroup extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
       padding: var(--_pad-y) var(--_pad-x);
+      /* Reset the native <button> UA border (2px outset black) — the edge is the
+         inset ring below. Without this the browser default shows through. */
+      border: 0;
+      appearance: none;
       border-radius: var(--_radius, 0.25rem);
-      border: 1px solid var(--_border);
       background: var(--_bg);
       color: var(--_color);
+      box-shadow: inset 0 0 0 1px var(--_border);
       font: inherit;
       font-size: var(--_font);
       font-weight: 600;
@@ -258,45 +292,41 @@ export class EsaChipGroup extends LitElement {
       cursor: pointer;
       transition:
         background-color var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
+        box-shadow var(--transition-fast, 150ms ease),
         color var(--transition-fast, 150ms ease);
     }
 
     .chip:hover:not(.chip--active) {
       background: var(--_bg-hover);
-      border-color: var(--_border-hover);
+      box-shadow: inset 0 0 0 1px var(--_border-hover);
       color: var(--_color-hover);
     }
 
-    .chip:focus-visible {
+    /* Focus ring composes over whatever inset edge the chip currently has
+       (resting or active tone). Duplicated class raises specificity so the
+       focus ring stays visible on an active, focused chip. */
+    .chip.chip:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 1px var(--_border),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+    }
+    /* Active + focused: compose the tone's inset ring with the outer focus ring.
+       The tone's ramp steps arrive as inline --_active-* props (chipToneStyle). */
+    .chip--active.chip:focus-visible {
+      box-shadow:
+        inset 0 0 0 1px var(--_active-border),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     .chip__label { line-height: 1; }
 
-    /* Active palettes mirror Ecology semantic tokens. */
-    .chip--active.chip--neutral {
-      background: var(--color-surface-sunken, #efefef);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-tertiary, #404040);
-    }
-    .chip--active.chip--neutral-strong {
-      background: var(--color-border, #e5e5e5);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-primary, #171717);
-    }
-    /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
-       default is brand blue, a forest-green theme goes forest. */
-    .chip--active.chip--brand {
-      background: var(--color-primary-subtle, #f3f8fb);
-      border-color: var(--color-primary-border, #cfe2ee);
-      color: var(--color-primary-strong, #3a7c59);
-    }
-    .chip--active.chip--amber {
-      background: var(--color-warning-subtle, #fffbeb);
-      border-color: var(--color-warning-border, #fde68a);
-      color: var(--color-warning-strong, #915930);
+    /* One active rule for every tone — fill / ring / text come from the inline
+       --_active-* props, which resolve to the chip's accent hue. */
+    .chip--active {
+      background: var(--_active-bg);
+      box-shadow: inset 0 0 0 1px var(--_active-border);
+      color: var(--_active-text);
     }
   `;
 }

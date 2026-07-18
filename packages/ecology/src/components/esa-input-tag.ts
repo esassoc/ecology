@@ -452,8 +452,8 @@ export class EsaInputTag extends LitElement {
       min-height: var(--_field-min-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       box-sizing: border-box;
       transition:
         border-color var(--transition-fast, 150ms ease),
@@ -465,14 +465,16 @@ export class EsaInputTag extends LitElement {
     .container:focus-within,
     .container--open {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .container--disabled {
       background: var(--form-bg-disabled, #efefef);
       cursor: not-allowed;
     }
     .container--disabled:focus-within {
-      box-shadow: none;
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
 
@@ -591,7 +593,6 @@ export class EsaInputTag extends LitElement {
       overflow-y: auto;
       overscroll-behavior: contain;
       background: var(--color-surface, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
     }

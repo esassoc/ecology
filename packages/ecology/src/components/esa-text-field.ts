@@ -177,8 +177,8 @@ export class EsaTextField extends LitElement {
       align-items: stretch;
       height: var(--_field-height);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       box-sizing: border-box;
       overflow: hidden;
       transition:
@@ -187,7 +187,9 @@ export class EsaTextField extends LitElement {
     }
     .control:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .control:has(.input:disabled) {
       background: var(--form-bg-disabled, #efefef);
@@ -242,7 +244,9 @@ export class EsaTextField extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .control:focus-within {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-border-color-error, #ef4444);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width, 2px) var(--form-border-color-error, #ef4444);
     }
 
     .help,

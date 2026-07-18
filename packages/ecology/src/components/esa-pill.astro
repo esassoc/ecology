@@ -8,16 +8,25 @@
 // "icon" slot for the leading icon.
 interface Props {
   label: string;
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+  /** Accent hue (any Radix ramp) or a semantic tone — drives fill + ring + text
+   *  from a single accent context via data-accent. `default` = neutral gray. */
+  color?:
+    | 'default' | 'gray' | 'blue' | 'copper' | 'gold' | 'grass' | 'green'
+    | 'lime' | 'orange' | 'red' | 'teal' | 'yellow'
+    | 'accent' | 'brand' | 'primary' | 'neutral' | 'success' | 'warning' | 'danger' | 'info';
+  /** @deprecated Use `color`. Kept as an alias so existing markup keeps working. */
+  variant?: Props['color'];
   removable?: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
-const { label, variant = 'default', removable = true, size = 'md' } = Astro.props;
+const { label, color, variant, removable = true, size = 'md' } = Astro.props;
+const tone = color ?? variant ?? 'default';
+const accent = tone === 'default' ? 'gray' : tone;
 
 const hasIconSlot = Astro.slots.has('icon');
-const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
+const cls = ['esa-pill', `esa-pill--${size}`].join(' ');
 ---
-<span class={cls}>
+<span class={cls} data-accent={accent}>
   {hasIconSlot && (
     <span class="esa-pill__icon">
       <slot name="icon" />
@@ -62,9 +71,12 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
 
 <style>
   .esa-pill {
-    --_pill-bg: var(--pill-bg, var(--color-surface-sunken, #efefef));
-    --_pill-text: var(--pill-text-color, var(--color-text-primary, #171717));
-    --_pill-border: var(--pill-border-color, var(--color-border-light, #efefef));
+    /* Soft tone: a-3 fill, a-6 ring, step-11 text — all from the accent context
+       set by data-accent. Swap the hue and all three track it. Component tokens
+       still win when a theme wants to force a specific look. */
+    --_pill-bg: var(--pill-bg, var(--color-accent-a-3));
+    --_pill-text: var(--pill-text-color, var(--color-accent-11));
+    --_pill-border: var(--pill-border-color, var(--color-accent-a-6));
     --_pill-height: var(--pill-height-md, 28px);
     --_pill-font-size: 13px;
     --_pill-padding-x: var(--spacing-200, 0.5rem);
@@ -75,7 +87,7 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     gap: var(--_pill-gap);
     height: var(--_pill-height);
     padding-inline: var(--_pill-padding-x);
-    border: 1px solid var(--_pill-border);
+    box-shadow: inset 0 0 0 1px var(--_pill-border);
     border-radius: var(--pill-radius, var(--radius-full, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
@@ -101,36 +113,6 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     --_pill-height: var(--pill-height-lg, 34px);
     --_pill-font-size: 14px;
     --_pill-padding-x: var(--spacing-300, 0.75rem);
-  }
-
-  .esa-pill--primary {
-    --_pill-bg: var(--color-primary-subtle, var(--color-grass-2));
-    --_pill-text: var(--color-primary-strong, var(--color-grass-11));
-    --_pill-border: var(--color-primary-border, var(--color-grass-6));
-  }
-
-  .esa-pill--info {
-    --_pill-bg: var(--color-info-subtle, var(--color-blue-2));
-    --_pill-text: var(--color-info-strong, #0d74ce);
-    --_pill-border: var(--color-info-border, var(--color-blue-6));
-  }
-
-  .esa-pill--success {
-    --_pill-bg: var(--color-success-subtle, var(--color-lime-2));
-    --_pill-text: var(--color-success-strong, #5c7c2f);
-    --_pill-border: var(--color-success-border, var(--color-lime-6));
-  }
-
-  .esa-pill--warning {
-    --_pill-bg: var(--color-warning-subtle, var(--color-yellow-2));
-    --_pill-text: var(--color-warning-strong, #ab6400);
-    --_pill-border: var(--color-warning-border, var(--color-yellow-6));
-  }
-
-  .esa-pill--danger {
-    --_pill-bg: var(--color-danger-subtle, var(--color-red-2));
-    --_pill-text: var(--color-danger-strong, #ce2c31);
-    --_pill-border: var(--color-danger-border, var(--color-red-6));
   }
 
   .esa-pill__icon {

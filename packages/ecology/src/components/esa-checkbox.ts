@@ -139,19 +139,19 @@ export class EsaCheckbox extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--form-bg, #fff);
       color: var(--color-text-inverse, #fff);
+      box-shadow: inset 0 0 0 var(--form-border-width, 2px) var(--form-border-color, #d4d4d4);
       transition:
         background var(--transition-fast, 150ms ease),
-        border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box:focus-visible {
       outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 2px) var(--form-border-color-focus, #43608a),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
     .icon {
@@ -162,7 +162,7 @@ export class EsaCheckbox extends LitElement {
     :host([checked]) .box,
     :host([indeterminate]) .box {
       background: var(--color-primary, #43608a);
-      border-color: var(--color-primary, #43608a);
+      box-shadow: inset 0 0 0 var(--form-border-width, 2px) var(--color-primary, #43608a);
     }
 
     .label {

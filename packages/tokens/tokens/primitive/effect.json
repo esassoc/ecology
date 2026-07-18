@@ -1,10 +1,13 @@
 {
   "shadow": {
-    "50":  { "$value": "0 1px 4px 0 rgba(0, 0, 0, 0.03)",    "$type": "other" },
-    "100": { "$value": "0 2px 12px 0 rgba(0, 0, 0, 0.04)",   "$type": "other" },
-    "200": { "$value": "0 4px 20px -4px rgba(0, 0, 0, 0.06)","$type": "other" },
-    "300": { "$value": "0 6px 24px -6px rgba(0, 0, 0, 0.07)","$type": "other" },
-    "400": { "$value": "0 8px 32px -8px rgba(0, 0, 0, 0.08)","$type": "other" }
+    "edge":       { "$value": "0 0 0 1px var(--color-gray-a-5)", "$type": "other", "$description": "Flat surface hairline — a ring-only edge with no lift. The elevation-0 tier (Radix's resting flat card)." },
+    "edge-inset": { "$value": "inset 0 0 0 1px var(--color-gray-a-7)", "$type": "other", "$description": "Inset field hairline — the resting edge for form controls and wells (Radix's input ring)." },
+    "inset": { "$value": "inset 0 0 0 1px var(--color-gray-a-5), inset 0 1.5px 2px 0 var(--color-gray-a-2), inset 0 1.5px 2px 0 var(--color-black-a-2)", "$type": "other", "$description": "Inset well — sunken fields and pressed surfaces (Radix shadow-1)." },
+    "50":  { "$value": "0 0 0 1px var(--color-gray-a-3), 0 0 0 0.5px var(--color-black-a-1), 0 1px 1px 0 var(--color-gray-a-2), 0 2px 1px -1px var(--color-black-a-1), 0 1px 3px 0 var(--color-black-a-1)", "$type": "other", "$description": "Resting lift with hairline ring (Radix shadow-2)." },
+    "100": { "$value": "0 0 0 1px var(--color-gray-a-3), 0 2px 3px -2px var(--color-gray-a-3), 0 3px 12px -4px var(--color-black-a-2), 0 4px 16px -8px var(--color-black-a-2)", "$type": "other", "$description": "Cards and list items (Radix shadow-3)." },
+    "200": { "$value": "0 0 0 1px var(--color-gray-a-3), 0 8px 40px var(--color-black-a-1), 0 12px 32px -16px var(--color-gray-a-3)", "$type": "other", "$description": "Raised cards, hover state (Radix shadow-4)." },
+    "300": { "$value": "0 0 0 1px var(--color-gray-a-3), 0 12px 60px var(--color-black-a-3), 0 12px 32px -16px var(--color-gray-a-5)", "$type": "other", "$description": "Dropdowns, popovers, menus (Radix shadow-5)." },
+    "400": { "$value": "0 0 0 1px var(--color-gray-a-3), 0 12px 60px var(--color-black-a-3), 0 16px 64px var(--color-gray-a-2), 0 16px 36px -20px var(--color-gray-a-7)", "$type": "other", "$description": "Modals and dialogs (Radix shadow-6)." }
   },
   "duration": {
     "instant": { "$value": "0ms",   "$type": "other", "$description": "No animation — snaps instantly." },

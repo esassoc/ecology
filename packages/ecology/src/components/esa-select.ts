@@ -433,8 +433,8 @@ export class EsaSelect extends LitElement {
       padding: var(--_field-padding-y) calc(var(--_field-padding-x) + 24px)
         var(--_field-padding-y) var(--_field-padding-x);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       box-sizing: border-box;
       transition:
         border-color var(--transition-fast, 150ms ease),
@@ -442,7 +442,9 @@ export class EsaSelect extends LitElement {
     }
     .input-wrapper--tags:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
     }
     .input-wrapper--tags .input {
       /* Compact tag filter: at most ONE token renders (a single chip, or an
@@ -472,8 +474,10 @@ export class EsaSelect extends LitElement {
       font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--_field-border-color);
+      border: 0;
+      appearance: none;
       border-radius: var(--_field-radius);
+      box-shadow: inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color);
       outline: none;
       cursor: pointer;
       box-sizing: border-box;
@@ -486,7 +490,9 @@ export class EsaSelect extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
       background: var(--form-bg-disabled, #efefef);
@@ -522,7 +528,6 @@ export class EsaSelect extends LitElement {
       max-height: 256px;
       overflow-y: auto;
       background: var(--color-surface, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
       overscroll-behavior: contain;
@@ -638,7 +643,9 @@ export class EsaSelect extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
+      box-shadow:
+        inset 0 0 0 var(--form-border-width, 1px) var(--_field-border-color),
+        0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
     }
   `;
 }
