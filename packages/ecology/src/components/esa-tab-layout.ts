@@ -230,7 +230,7 @@ export class EsaTabLayout extends LitElement {
       align-self: flex-start;
       border-bottom: none;
       background: var(--color-surface-sunken, #efefef);
-      box-shadow: 0 0 0 1px var(--color-border, #e5e5e5);
+      box-shadow: inset 0 0 0 1px var(--color-border, #e5e5e5);
       border-radius: var(--radius-200, 8px);
       padding: var(--spacing-050, 2px);
       gap: var(--spacing-050, 2px);

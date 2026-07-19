@@ -230,18 +230,18 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     margin-inline: auto;
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
     width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
-    box-shadow: 0 0 0 1px var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
+    box-shadow: inset 0 0 0 1px var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
     background: var(--color-surface, #fff); color: var(--color-text-muted, #737373);
     font-family: inherit; font-size: var(--type-size-150, 0.875rem);
     cursor: pointer; transition: border-color 150ms ease;
   }
-  .esa-app-shell__search:hover { box-shadow: 0 0 0 1px var(--color-border-strong, #d4d4d4); }
+  .esa-app-shell__search:hover { box-shadow: inset 0 0 0 1px var(--color-border-strong, #d4d4d4); }
   .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-primary, #43608a); outline-offset: 2px; }
   .esa-app-shell__search-label { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .esa-app-shell__search-kbd {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     min-width: 18px; height: 18px; padding: 0 5px;
-    box-shadow: 0 0 0 1px var(--color-border, #e5e5e5); border-radius: var(--radius-100, 4px);
+    box-shadow: inset 0 0 0 1px var(--color-border, #e5e5e5); border-radius: var(--radius-100, 4px);
     background: var(--color-surface-sunken, #f2f6f3); font-size: var(--type-size-100, 0.8125rem);
   }
 

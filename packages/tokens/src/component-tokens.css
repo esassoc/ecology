@@ -178,13 +178,13 @@
 :root {
 
   /* esa-alert-box */
-  --alert-box-bg: var(--color-info-subtle, #eff6ff);
-  --alert-box-border-color: var(--color-info-border, #bfdbfe);
+  --alert-box-bg: var(--color-accent-a-2);
+  --alert-box-border-color: var(--color-accent-a-6);
   --alert-box-dismiss-bg-hover: rgba(0, 0, 0, 0.06);
   --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
   --alert-box-radius: var(--radius-200, 0.5rem);
-  --alert-box-text-color: var(--color-text-secondary, #525252);
-  --alert-box-title-color: var(--color-text-primary, #171717);
+  --alert-box-text-color: var(--color-accent-11);
+  --alert-box-title-color: var(--color-accent-12);
 
   /* esa-app-shell */
   --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
