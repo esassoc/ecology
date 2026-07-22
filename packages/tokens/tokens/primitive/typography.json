@@ -7,7 +7,7 @@
     "weight": {
       "light":    { "$value": "300", "$type": "fontWeight" },
       "regular":  { "$value": "350", "$type": "fontWeight" },
-      "medium":   { "$value": "450", "$type": "fontWeight" },
+      "medium":   { "$value": "500", "$type": "fontWeight" },
       "semibold": { "$value": "550", "$type": "fontWeight" },
       "bold":     { "$value": "650", "$type": "fontWeight" }
     }
