@@ -102,6 +102,10 @@ step by step.
 
 ## Part 3 — Install four tools
 
+These four are the **only** things you install onto your computer. Everything
+else the prototypes need — Astro, the design system, all of it — arrives
+automatically in Part 6 and lives inside the project folder.
+
 Run these one at a time in the terminal you just opened, waiting for the prompt
 to return between each. If your machine blocks installs, ask IT to run them.
 
@@ -252,6 +256,13 @@ A freshly cloned repo has the project's own files but not the outside pieces it
 depends on. `npm install` downloads those. It prints a lot of text and takes a
 few minutes per repo — that's normal, and warnings in the output are fine.
 
+**This is the step that installs Astro** — the website framework the prototypes
+are built on. You never install Astro separately, and there's no Astro command
+to run: `npm install` puts it inside the project folder, and `npm run dev`
+(Part 9) uses it from there. The same is true of every other piece the project
+needs. **If you ever see `astro: command not found`, it means `npm install`
+didn't finish in that folder** — not that Astro is missing. Re-run it.
+
 ```bash
 cd ~/Dev/ecology
 npm install
@@ -340,6 +351,12 @@ makes appears in the browser within a second, no refresh needed.
 - **To start it again:** `npm run dev`.
 - **If it says the port is in use:** it's already running in another window.
   Check your other terminals, or press `Ctrl` + `C` there.
+- **If it says `astro: command not found`:** Part 6's `npm install` didn't finish
+  in this folder. Run `npm install` here, then `npm run dev` again.
+
+Always start it with `npm run dev` — not by typing `astro` yourself. `astro`
+lives inside the project folder rather than on your computer generally, so
+typing it directly won't find it.
 
 Setup is done. Everything below is the actual work.
 
@@ -425,7 +442,8 @@ There are **two different "doctor" commands**:
 | `command not found` / `not recognized` | That tool isn't installed, or you're in a terminal opened before it was. Open a fresh terminal (Part 3). |
 | `claude` isn't recognized, right after installing | You're in the terminal you installed from. Close it, open a new one (Part 3). |
 | `'irm' is not recognized` | You're in Command Prompt, not PowerShell. Your prompt shows `PS C:\` in PowerShell. Reopen PowerShell (Part 2). |
-| "running scripts is disabled on this system" | Windows is blocking npm. Run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, then open a new terminal (Part 3). |
+| `astro: command not found` / `'astro' is not recognized` | **Astro isn't missing and doesn't need installing.** `npm install` didn't finish in that folder — `cd` to it and run `npm install` again (Part 6). |
+| "running scripts is disabled on this system" | Windows is blocking npm. Run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, then open a new terminal (Part 3). This also breaks `npm install`, which shows up later as the Astro error above. |
 | "The token `&&` is not a valid statement separator" | You pasted a command joined with `&&` into PowerShell, which doesn't accept it. Run the two halves as separate lines. |
 | Claude Code won't start at all | Run `claude doctor` — it checks Claude Code's own install and settings, and prints what's wrong. |
 | Slash commands like `/new-prototype` are missing | The spoke-kit plugin isn't installed or Claude Code wasn't restarted after installing it. Redo Part 7. |
@@ -453,7 +471,7 @@ There are **two different "doctor" commands**:
 | **Node** | The program that runs the site on your computer. |
 | **npm** | Node's downloader for the outside pieces a project depends on. |
 | **Dependency** | An outside piece of code a project needs to run. |
-| **Astro** | The website framework the prototypes are built with. It turns component files into plain HTML — which is why prototypes hand off cleanly to any dev team. |
+| **Astro** | The website framework the prototypes are built with. It turns component files into plain HTML — which is why prototypes hand off cleanly to any dev team. You never install it separately: `npm install` puts it inside each project folder, and `npm run dev` uses it from there. |
 | **Preview server / dev server** | The program `npm run dev` starts to serve the site locally. |
 | **localhost** | "This computer." A private web address only you can reach. |
 | **Port** | The number after `localhost:` — which local program you're reaching. Spokes use `4330`. |
