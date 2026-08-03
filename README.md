@@ -186,6 +186,20 @@ is to reassign ecology semantic tokens — components never read it directly, e.
 
 ## The Claude layer
 
+Not needed to build or serve the hub — but it is how the system is actually
+driven. If you don't have Claude Code yet:
+
+```powershell
+irm https://claude.ai/install.ps1 | iex          # Windows PowerShell
+```
+```bash
+curl -fsSL https://claude.ai/install.sh | bash   # macOS / Linux / WSL
+```
+
+It's self-contained (no Node needed) and auto-updates. `claude --version` to
+confirm, `claude doctor` if it misbehaves. Requires a paid Claude plan.
+[ONBOARDING.md](./ONBOARDING.md) has the fuller walkthrough.
+
 This repo is also a **Claude Code plugin marketplace**
 (`.claude-plugin/marketplace.json`). The **`spoke-kit`** plugin ships everything
 Claude needs inside a spoke: skills (`component-first`, `design-principles`,
