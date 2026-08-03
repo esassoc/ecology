@@ -3,7 +3,9 @@ dist/
 .astro/
 *.log
 .DS_Store
+# Tool scratch output — screenshots and scraped brand-reference JSON
 .playwright-mcp/
+.firecrawl/
 /.claude/agent-memory/
 **/.claude/settings.local.json
 
