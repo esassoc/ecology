@@ -38,4 +38,11 @@ export const spokes: Spoke[] = [
     repo: 'https://github.com/esassoc/noria-design',
     site: 'https://esassoc.github.io/noria-design/',
   },
+  {
+    name: 'Puget Sound Info',
+    slug: 'ps-info',
+    purpose: 'Design system and unified-navigation prototypes for Puget Sound Info',
+    repo: 'https://github.com/esassoc/ps-info-design',
+    site: 'https://esassoc.github.io/ps-info-design/',
+  },
 ];
