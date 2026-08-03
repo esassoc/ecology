@@ -1,6 +1,6 @@
 # Ecology Governance
 
-The operating model for the hub and its spoke fleet. This document governs how the system grows; `promotion-path.md` owns promotion mechanics, `system-improvement-ledger.md` owns the finding log, and `plugins/spoke-kit/` owns enforcement. When those documents and this one disagree, this one decides.
+The operating model for the hub and its spoke fleet. This document governs how the system grows; `promotion-path.md` owns promotion mechanics, `system-improvement-ledger.md` owns the finding log and the triage heartbeat, and `plugins/spoke-kit/` owns enforcement. When those documents and this one disagree, this one decides.
 
 ## The system, July 2026
 
@@ -49,11 +49,43 @@ Small builds, in leverage order:
 | `scripts/republish.mjs` | One command on the hub side: bump `plugin.json`, commit, push, print the exact three spoke-side steps. Extend `doctor.mjs` to detect a stale plugin cache and print the same steps. | `scripts/` |
 | Lifecycle field in `spokes.ts` | `state: 'demo' \| 'incubating' \| 'live' \| 'archived'` on each roster entry; doctor warns when a repo's behavior disagrees with its declared state. | `apps/site/src/data/spokes.ts` |
 
-## Cadence
+## How this runs
 
-- **Weekly, ~15 minutes:** run `collect-needs.mjs`, decide each item — promote (rule of two), add a prop, add a token hook, or decline with a note back into the spoke's NEEDS.md — and log outcomes in the ledger. This replaces the aspiration that findings route themselves.
+The July 2 version of this document prescribed a weekly cadence and stopped there. What followed was the same result as every prior intake mechanism: `/request-lego` required ceremony and was skipped; the ledger's June 13 routing proposal assumed findings would move themselves and the ledger has not been touched since; the weekly triage had no trigger and never ran. The pattern is exact — **mechanisms that fire where the work already happens succeed (hooks, build gates, doctor, the generated guide pages); mechanisms that depend on remembering fail.** The operating loop is built to that rule.
+
+### One verb: `/fleet`
+
+All recurring governance runs through a single hub-side command. One session, ~15 minutes, four steps:
+
+1. **Sweep** — machine-gathered, zero judgment: every spoke's `NEEDS.md` (spoke, ask, closest lego, age), doctor status per spoke, per-page bespoke-`<style>` counts, installed plugin version vs. published, roster state vs. observed behavior.
+2. **Decide** — the only human step. Each open ask gets one of four calls: promote (rule of two), add a prop, add a token hook, or decline with a note written back to the spoke's `NEEDS.md`. Precedent is canon: only Andy makes this call.
+3. **Execute** — prop-level and token-hook changes land in the same session, on a branch, build green. Promotions become a branch plus the six-step plan in `promotion-path.md`.
+4. **Log** — the session appends a dated triage block to the ledger: decisions made, declines with reasons, deferrals. The ledger is the heartbeat; its last triage date is the system's freshness measure.
+
+The 15-minute promise is only honest because steps 1, 3, and 4 are machine work. If the sweep is manual, the loop dies again.
+
+### The trigger is a hook, not a memory
+
+A SessionStart hook in this repo reads the ledger's last triage date and prints one line when it is more than seven days old: *fleet triage overdue — run `/fleet`*. Governance interrupts inside a hub session — where the work already happens — and nowhere else. No calendar, no cron, no goodwill required. If hub sessions themselves become rare, the fallback is a scheduled agent that runs the sweep overnight and leaves the staged table; build that only after the hook demonstrably fails.
+
+### Decision rights
+
+| Any Claude session, autonomous | Andy only |
+| --- | --- |
+| Run the sweep; stage the triage table | The promote / decline call |
+| Build declared mechanisms; fix bugs in them | Breaking changes to any `esa-*` surface |
+| Draft promotions on branches, builds green | Plugin republish (it reaches teammates' machines) |
+| Write decline notes back to `NEEDS.md` after the call | Roster state transitions; demo purges |
+
+### Intelligence lives in artifacts, not the operator
+
+The loop must run acceptably on whatever model is available on an ordinary Tuesday; a process that requires the strongest model is not a process, it is an event. Strong-model time goes to judgment-dense, durable artifacts — component API design (the app-shell slot union), token semantics, and the skills and scripts that encode this loop — never to turning the crank.
+
+### Other cadences
+
 - **Per ship:** the existing gates (`check-adherence`, `check-contrast`, hooks, decomposition-reviewer) plus `check-composition` once it lands.
-- **Per new spoke:** `create-spoke.mjs` + doctor green before the roster entry flips to live.
+- **Per new spoke:** `create-spoke.mjs` + doctor green before the roster entry flips to live — including a `NEEDS.md` at the root; a live spoke without a queue file has invisible needs.
+- **Quarterly:** a fleet audit alongside the global tool audit — burn-down check on grandfathered pages, roster true-up, and a decommission review of the governance mechanisms themselves. Each mechanism is born with its sunset: the composition gate's warning-only phase ends after one cycle; `republish.mjs` retires if distribution ever moves off `file:` links.
 
 ## What not to do
 
@@ -64,8 +96,9 @@ Small builds, in leverage order:
 
 ## First moves
 
-1. Fix `esa-app-shell` slots against the four hand-rolled shells; migrate noria first (its rejection is the spec), then beacon, biochar, cb-fish.
-2. Bundle `layouts.css` + `type-roles.css` into the tokens default export; republish.
-3. Ship `collect-needs.mjs` and run the first weekly triage on cb-fish's eight open asks and beacon's icon-button `paths` gap.
-4. Ship `check-composition.mjs` warning-only; add the lifecycle field to `spokes.ts`.
-5. Ship `republish.mjs` + the doctor staleness check, and retire the hand-run three-step dance.
+Ordered by what each needs, not by size. The original five moves stand; four days of non-execution re-sequenced them.
+
+1. **Strong-model, judgment:** fix `esa-app-shell`'s slots against the four hand-rolled shells — noria's documented rejection is the spec — and migrate noria first, then beacon, biochar, cb-fish.
+2. **Strong-model, durable process:** build the `/fleet` loop — `collect-needs.mjs`, the triage command, the ledger triage-log format, and the SessionStart staleness hook. This is the mechanism that makes every other mechanism happen; it outranks everything below because those items get done *by* the loop, not before it.
+3. **Any model, mechanical:** bundle `layouts.css` + `type-roles.css` into the tokens default export and republish; ship `check-composition.mjs` warning-only; add the lifecycle field to `spokes.ts`; ship `republish.mjs` + the doctor staleness check; create `noria-design/NEEDS.md`. These are `/fleet` agenda items, not prerequisites.
+4. **First triage:** run `/fleet` on the real backlog — cb-fish's eight open asks (queue last touched 6/22), beacon's icon-button `paths` gap (6/14), biochar's queue (6/18).
