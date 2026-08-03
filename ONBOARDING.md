@@ -73,8 +73,8 @@ That's all it is. Everything in Parts 3–9 happens in one.
 **Windows:** press the Start key, type `PowerShell`, press Enter.
 
 > **On a Mac:** press `Cmd` + `Space`, type `Terminal`, press Enter. Every
-> command below works the same; only the install commands in Part 3 differ, and
-> those are noted.
+> command below works the same; the few that differ on a Mac are noted where
+> they appear.
 
 Six things to know, and then you're fluent enough:
 
@@ -126,7 +126,7 @@ What you just installed:
   commands, and falls back to a more limited mode if Git isn't there.
 - **Node** (short for Node.js) — the program that runs the prototype site on
   your own computer so you can look at it in a browser before publishing. You'll
-  never use it directly; the commands in Part 6 and Part 9 use it for you. The
+  never use it directly; the commands in Parts 6, 8, and 9 use it for you. The
   command above installs the **LTS** ("Long Term Support") version — the system
   needs Node 20 or newer, and LTS satisfies that.
 - **npm** — comes bundled with Node. It downloads the pieces a project depends
@@ -145,7 +145,7 @@ What you just installed:
 > `curl -fsSL https://claude.ai/install.sh | bash`
 
 **Now close your terminal and open a new one.** Newly installed tools are only
-visible to terminals opened after the install. Then verify all four:
+visible to terminals opened after the install. Then verify them all:
 
 ```bash
 git --version
