@@ -81,6 +81,26 @@ check('hub tokens built (packages/tokens/dist/tokens.css)',
   existsSync(path.join(hubDir, 'packages', 'tokens', 'dist', 'tokens.css')),
   'cd ../ecology && npm install && npm run build:tokens');
 
+// --- 4b. hub git state (warn — file: symlinks serve the hub's LIVE working tree)
+// A spoke's @esa/* deps point at whatever state ../ecology is in. Off-main or
+// dirty means unmerged hub WIP is rendering in this spoke right now.
+if (isSpoke && existsSync(path.join(hubDir, '.git'))) {
+  const hubGit = (...args) => run('git', ['-C', hubDir, ...args]);
+  const branch = hubGit('rev-parse', '--abbrev-ref', 'HEAD');
+  if (branch) {
+    warn(`hub checkout is on main (found "${branch}")`, branch === 'main',
+      `this spoke is rendering unmerged hub branch "${branch}" — park the hub on main: git -C ../ecology switch main`);
+    const porcelain = hubGit('status', '--porcelain');
+    warn('hub working tree is clean', porcelain === '',
+      'uncommitted hub changes are live in this spoke right now — commit or stash them in ../ecology');
+    const behind = hubGit('rev-list', '--count', 'HEAD..origin/main');
+    if (behind !== null) {
+      warn('hub is up to date with origin/main', behind === '0',
+        `this machine is prototyping against a stale hub (${behind} commit(s) behind) — git -C ../ecology pull, then npm run build:tokens there`);
+    }
+  }
+}
+
 // --- 5. spoke install ----------------------------------------------------------
 if (isSpoke) {
   check('spoke dependencies installed (node_modules/@esa/ecology resolves)',
@@ -128,7 +148,7 @@ if (srcVersion && cached.length) {
   const highest = cached.sort(semverCmp).at(-1);
   warn(`spoke-kit plugin up to date (source ${srcVersion}, installed ${highest})`,
     semverCmp(srcVersion, highest) <= 0,
-    `spoke-kit source (${srcVersion}) is ahead of the installed plugin (${highest}) — its hook/skill fixes are inert until you republish: push the hub, then run \`claude plugin marketplace update ecology\`.`);
+    `spoke-kit source (${srcVersion}) is ahead of the installed plugin (${highest}) — its hook/skill fixes are inert until you republish: push the hub, then run BOTH \`claude plugin marketplace update ecology\` AND \`claude plugin update spoke-kit@ecology\` (the first alone only refreshes the listing), then restart Claude Code.`);
 }
 
 // --- Verdict -------------------------------------------------------------------

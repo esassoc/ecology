@@ -55,6 +55,10 @@ update the plugin: `claude plugin marketplace update ecology`.
 - Hooks (PreToolUse, from the plugin): `check-component-first` (no bespoke UI
   primitives) and `guard-hub-writes` (no hub edits from spoke sessions — use
   /request-lego; escape only with explicit human approval: `hub-edit-approved:`)
+- Hook (SessionStart, from the plugin): `check-hub-state` — warns when the
+  sibling ecology checkout is dirty/off-main/behind, because the `file:`
+  symlinks render that WIP live in this spoke. `/ship` hard-gates on the same
+  state (escape only with explicit human approval: `ship-wip-approved:`)
 - Workflow commands: **/new-prototype** (interview → compose from legos),
   **/design-qa** (on-demand quality pass), **/ship** (sync → build → deploy →
   public URL), **/request-lego** (file a hub gap)

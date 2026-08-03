@@ -74,7 +74,10 @@ spoke: skills (`component-first`, `design-principles` — the canonical aestheti
 rules, `spoke-init`, `spoke-precommit-review`), Node PreToolUse hooks
 (`check-component-first` — no bespoke UI primitives; `guard-hub-writes` — spoke
 sessions cannot edit this hub, even via the `node_modules/@esa/ecology` symlink;
-escape token `hub-edit-approved:` requires explicit human approval), and commands:
+escape token `hub-edit-approved:` requires explicit human approval), a
+SessionStart hook (`check-hub-state` — warns spoke sessions when this checkout
+is dirty/off-main, since the `file:` symlinks serve hub WIP live into spokes;
+`/ship`'s hub gate blocks deploying it, escape `ship-wip-approved:`), and commands:
 `/spoke-init` (scaffold a spoke), plus the non-dev workflow verbs `/new-prototype`,
 `/design-qa`, `/ship`, `/request-lego`. Spokes **never copy** these files — their
 checked-in `.claude/settings.json` declares the marketplace (github `esassoc/ecology`)
