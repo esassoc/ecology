@@ -56,8 +56,9 @@ Two accounts, both one-time, both may need someone else.
    [github.com](https://github.com) if you don't have one, then ask Andy to
    invite you to the **esassoc** organization with **write** access to your
    spoke repo (e.g. `cb-fish-design`). Write access is what lets you publish.
-2. **Claude seat** — ask Andy. You'll sign in the first time you run Claude Code
-   in Part 8.
+2. **Claude seat** — ask Andy. Claude Code needs a paid plan (Pro, Max, Team, or
+   Enterprise); a free Claude.ai account won't open it, so this one can't be
+   self-served. You'll sign in the first time you run Claude Code in Part 8.
 
 Wait until the GitHub invitation email arrives and accept it before continuing.
 
@@ -92,6 +93,10 @@ Six things to know, and then you're fluent enough:
 
 Errors in a terminal are normal and not dangerous. They're messages, not damage.
 
+If you want more than that, Anthropic's
+[terminal guide](https://code.claude.com/docs/en/terminal-guide) walks through it
+step by step.
+
 ---
 
 ## Part 3 — Install four tools
@@ -105,10 +110,19 @@ winget install OpenJS.NodeJS.LTS
 winget install GitHub.cli
 ```
 
+Then Claude Code itself — the tool you'll actually work in. This one isn't a
+`winget` line, deliberately (see the note below):
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
 What you just installed:
 
 - **Git** — the tool that tracks changes to files and moves them between your
-  computer and GitHub. It's the engine; GitHub is the website.
+  computer and GitHub. It's the engine; GitHub is the website. Installing it
+  *before* Claude Code is deliberate: Claude Code uses Git's bundled shell to run
+  commands, and falls back to a more limited mode if Git isn't there.
 - **Node** (short for Node.js) — the program that runs the prototype site on
   your own computer so you can look at it in a browser before publishing. You'll
   never use it directly; the commands in Part 6 and Part 9 use it for you. Pick
@@ -118,15 +132,18 @@ What you just installed:
   on. This is what `npm install` does.
 - **GitHub CLI** (`gh`) — lets the terminal sign in to your GitHub account so
   publishing works without pasting passwords.
+- **Claude Code** — Claude, running in your terminal, with access to your
+  project's files. This is where you'll spend your time. It doesn't need Node;
+  it's a self-contained program that **updates itself in the background**, which
+  is why it's installed this way rather than with `winget`. (`winget install
+  Anthropic.ClaudeCode` also works, but then you'd have to remember to run
+  `winget upgrade Anthropic.ClaudeCode` yourself. Let it auto-update.)
 
 > **On a Mac:** `xcode-select --install` for Git, then install
 > [Node LTS from nodejs.org](https://nodejs.org), then `brew install gh` for the
-> GitHub CLI. (`brew` is [Homebrew](https://brew.sh) — install it first if you
-> don't have it.)
-
-Then install **Claude Code** — the tool you'll actually work in — following the
-current instructions at [code.claude.com](https://code.claude.com). On Windows,
-use the installer.
+> GitHub CLI (`brew` is [Homebrew](https://brew.sh) — install it first if you
+> don't have it). For Claude Code:
+> `curl -fsSL https://claude.ai/install.sh | bash`
 
 **Now close your terminal and open a new one.** Newly installed tools are only
 visible to terminals opened after the install. Then verify all four:
@@ -138,9 +155,14 @@ gh --version
 claude --version
 ```
 
-Each should print a version number. If one says "not recognized" or "command not
-found", that tool didn't install — rerun its line above, then open a fresh
-terminal again.
+Each should print a version number — `claude --version` prints something like
+`2.1.211 (Claude Code)`. If one says "not recognized" or "command not found",
+that tool didn't install — rerun its line above, then open a fresh terminal
+again.
+
+> **Requirements, if you're on an older machine:** Windows 10 (version 1809) or
+> newer, 4 GB of RAM, and an internet connection. Node needs to be version 20 or
+> newer, which the LTS installer above gives you.
 
 ---
 
@@ -306,6 +328,14 @@ Two more, as needed:
   system doesn't have yet. It files the request; Andy builds it into the hub.
 - **`npm run doctor`** — whenever something feels broken.
 
+There are **two different "doctor" commands**, and it's worth keeping them
+straight:
+
+| Command | Checks | Run it when |
+|---|---|---|
+| `npm run doctor` | Your project setup — the two folders, tokens built, plugin installed | Anything about the prototypes or the repos seems wrong |
+| `claude doctor` | Claude Code itself — its install health and settings | Claude Code won't start, or slash commands are missing |
+
 ---
 
 ## The rules
@@ -332,6 +362,10 @@ Two more, as needed:
 | Anything at all feels broken | Run `npm run doctor` first. It diagnoses the common problems and prints the fix. |
 | Claude says something is **BLOCKED** | A guardrail working as designed. The message says what to do instead — usually "use the design-system component" or "run `/request-lego`". |
 | `command not found` / `not recognized` | That tool isn't installed, or you're in a terminal opened before it was. Open a fresh terminal (Part 3). |
+| `claude` isn't recognized, right after installing | You're in the terminal you installed from. Close it, open a new one (Part 3). |
+| `'irm' is not recognized` | You're in Command Prompt, not PowerShell. Your prompt shows `PS C:\` in PowerShell. Reopen PowerShell (Part 2). |
+| Claude Code won't start at all | Run `claude doctor` — it checks Claude Code's own install and settings, and prints what's wrong. |
+| Slash commands like `/new-prototype` are missing | The spoke-kit plugin isn't installed or Claude Code wasn't restarted after installing it. Redo Part 8. |
 | "Cannot find module" from `doctor` | The `ecology` folder isn't a sibling of your spoke. Redo Part 5. |
 | The browser page won't load | The preview server isn't running. `npm run dev` in your spoke folder (Part 9). |
 | "Port already in use" | The preview server is already running in another terminal window. |
@@ -364,6 +398,7 @@ Two more, as needed:
 | **Spoke** | One project's prototype repo, re-skinning the hub. Where you work. |
 | **Component** (or "lego") | A reusable interface piece — button, card, table, badge. |
 | **Token** | A named design value — a color, a spacing step, a font size. Re-pointing tokens is how a spoke gets its brand. |
-| **Claude Code** | The tool you work in — Claude, running in your terminal, with access to your project's files. |
+| **Claude Code** | The tool you work in — Claude, running in your terminal, with access to your project's files. Updates itself in the background. |
+| **PowerShell vs Command Prompt** | Two Windows terminals. This guide uses PowerShell — its prompt starts with `PS`. |
 | **spoke-kit** | The Claude plugin carrying this system's rules, guardrails, and `/`-commands into your spoke. |
 | **Build** | Converting project files into the finished website. `/ship` does it before publishing. |
