@@ -6,7 +6,7 @@ handful of setup commands once, and from then on you work by talking to Claude
 in plain English.
 
 **Time:** about 45 minutes the first time, most of it waiting on downloads.
-Parts 1–6 happen once, ever. Part 9 is what you do every day.
+Parts 1–8 happen once, ever. Part 9 is what you do every day.
 
 **What you're making:** prototypes — clickable, realistic screens used for
 business-development demos, client-alignment conversations, and developer
@@ -50,15 +50,16 @@ this document is the machine.
 
 ## Part 1 — Accounts
 
-Two accounts, both one-time, both may need someone else.
+Two accounts. You set each up once, and each needs something from Andy first.
 
 1. **GitHub** — GitHub is where the code lives online. Create a free account at
    [github.com](https://github.com) if you don't have one, then ask Andy to
    invite you to the **esassoc** organization with **write** access to your
-   spoke repo (e.g. `cb-fish-design`). Write access is what lets you publish.
+   spoke's repo (its project folder on GitHub — e.g. `cb-fish-design`). Write
+   access is what lets you publish.
 2. **Claude seat** — ask Andy. Claude Code needs a paid plan (Pro, Max, Team, or
    Enterprise); a free Claude.ai account won't open it, so this one can't be
-   self-served. You'll sign in the first time you run Claude Code in Part 8.
+   self-served. You'll sign in the first time you run Claude Code in Part 7.
 
 Wait until the GitHub invitation email arrives and accept it before continuing.
 
@@ -67,7 +68,7 @@ Wait until the GitHub invitation email arrives and accept it before continuing.
 ## Part 2 — Open a terminal
 
 A **terminal** is a window where you type commands instead of clicking buttons.
-That's all it is. Everything in Parts 3–7 happens in one.
+That's all it is. Everything in Parts 3–9 happens in one.
 
 **Windows:** press the Start key, type `PowerShell`, press Enter.
 
@@ -125,9 +126,9 @@ What you just installed:
   commands, and falls back to a more limited mode if Git isn't there.
 - **Node** (short for Node.js) — the program that runs the prototype site on
   your own computer so you can look at it in a browser before publishing. You'll
-  never use it directly; the commands in Part 6 and Part 9 use it for you. Pick
-  the **LTS** version ("Long Term Support"), which is what the command above
-  installs — the system needs Node 20 or newer.
+  never use it directly; the commands in Part 6 and Part 9 use it for you. The
+  command above installs the **LTS** ("Long Term Support") version — the system
+  needs Node 20 or newer, and LTS satisfies that.
 - **npm** — comes bundled with Node. It downloads the pieces a project depends
   on. This is what `npm install` does.
 - **GitHub CLI** (`gh`) — lets the terminal sign in to your GitHub account so
@@ -135,9 +136,7 @@ What you just installed:
 - **Claude Code** — Claude, running in your terminal, with access to your
   project's files. This is where you'll spend your time. It doesn't need Node;
   it's a self-contained program that **updates itself in the background**, which
-  is why it's installed this way rather than with `winget`. (`winget install
-  Anthropic.ClaudeCode` also works, but then you'd have to remember to run
-  `winget upgrade Anthropic.ClaudeCode` yourself. Let it auto-update.)
+  is why it's installed with its own command rather than with `winget`.
 
 > **On a Mac:** `xcode-select --install` for Git, then install
 > [Node LTS from nodejs.org](https://nodejs.org), then `brew install gh` for the
@@ -151,6 +150,7 @@ visible to terminals opened after the install. Then verify all four:
 ```bash
 git --version
 node --version
+npm --version
 gh --version
 claude --version
 ```
@@ -159,6 +159,13 @@ Each should print a version number — `claude --version` prints something like
 `2.1.211 (Claude Code)`. If one says "not recognized" or "command not found",
 that tool didn't install — rerun its line above, then open a fresh terminal
 again.
+
+If `npm --version` instead says **"running scripts is disabled on this system"**,
+Windows is blocking it. Run this once, then open a new terminal:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
 
 > **Requirements, if you're on an older machine:** Windows 10 (version 1809) or
 > newer, 4 GB of RAM, and an internet connection. Node needs to be version 20 or
@@ -185,23 +192,24 @@ browser**, and follow the prompts in the browser that opens.
 GitHub login to Git itself — **skip it and publishing fails later** with a
 confusing password prompt. Run it.
 
+To confirm you're signed in:
+
+```bash
+gh auth status
+```
+
+It should say **"Logged in to github.com"** with your username.
+
 ---
 
 ## Part 5 — Download the two repos
 
-"Cloning" means downloading a copy of a repo you can work in. Two clones, into a
-plain `Dev` folder:
+"Cloning" means downloading a copy of a repo you can work in. You'll clone two:
+the hub, and **your** spoke.
 
-```bash
-mkdir -p ~/Dev
-cd ~/Dev
-git clone https://github.com/esassoc/ecology.git
-git clone https://github.com/esassoc/cb-fish-design.git
-```
+**First, find your spoke in this table** — you'll need its line in a moment:
 
-Swap the second line for your spoke if it's a different one:
-
-| Spoke | Clone command |
+| Your project | Its clone command |
 |---|---|
 | Beacon | `git clone https://github.com/esassoc/beacon-design.git` |
 | CB Fish | `git clone https://github.com/esassoc/cb-fish-design.git` |
@@ -209,8 +217,32 @@ Swap the second line for your spoke if it's a different one:
 | Noria | `git clone https://github.com/esassoc/noria-design.git` |
 | Puget Sound Info | `git clone https://github.com/esassoc/ps-info-design.git` |
 
-You now have `~/Dev/ecology` and `~/Dev/<your-spoke>` as siblings, which is
-exactly what the two rules at the top require.
+Project not listed? Ask Andy to create its spoke first.
+
+Now make the folder and clone both. **Replace the last line with your spoke's
+command from the table** — the example below uses CB Fish:
+
+```powershell
+mkdir ~/Dev
+cd ~/Dev
+git clone https://github.com/esassoc/ecology.git
+git clone https://github.com/esassoc/cb-fish-design.git
+```
+
+If `mkdir ~/Dev` says the folder already exists, that's fine — continue to the
+next line.
+
+> **On a Mac:** identical, except use `mkdir -p ~/Dev` for the first line.
+
+Check it worked before moving on:
+
+```bash
+ls ~/Dev
+```
+
+You should see **two** folder names: `ecology` and your spoke. Side by side in
+the same place is exactly what the two rules at the top require — if you only see
+one, or they're nested, fix that now rather than later.
 
 ---
 
@@ -229,36 +261,21 @@ npm run build:tokens
 `npm run build:tokens` turns the design system's colors, spacing, and typography
 into the stylesheet everything else reads. Your spoke can't render without it.
 
-Then the spoke:
+Then the spoke — use **your** spoke's folder name here and everywhere below:
 
 ```bash
 cd ~/Dev/cb-fish-design
 npm install
 ```
 
+You know both worked when the prompt comes back with no line starting
+`npm ERR!`.
+
 ---
 
-## Part 7 — Check your work
+## Part 7 — First Claude Code launch
 
 From inside your spoke folder:
-
-```bash
-npm run doctor
-```
-
-This inspects your whole setup and prints one line per check. Every line should
-start with `ok`, ending in **"All clear — you are ready to prototype."**
-
-Any line starting with `FAIL` prints its own `fix:` line directly beneath it —
-run that fix, then run `npm run doctor` again. Lines starting with `WARN` are
-advisory; they won't stop you.
-
-If `doctor` itself won't start and says "Cannot find module", the `ecology`
-folder isn't sitting next to your spoke. Redo Part 5.
-
----
-
-## Part 8 — First Claude Code launch
 
 ```bash
 cd ~/Dev/cb-fish-design
@@ -275,6 +292,29 @@ On first run you'll be asked to sign in with your Claude account. Then:
    startup, so the one you just installed isn't active until you do.
 
 To confirm it worked, type `/` and look for `/new-prototype` in the list.
+
+Later on, if Claude ever offers a **plugin update**, accept it — that's how
+improvements to the guardrails and commands reach you.
+
+---
+
+## Part 8 — Check your work
+
+This is the final gate. In your spoke folder:
+
+```bash
+npm run doctor
+```
+
+It inspects your whole setup and prints one line per check. Every line should
+start with `ok`, ending in **"All clear — you are ready to prototype."**
+
+Any line starting with `FAIL` prints its own `fix:` line directly beneath it —
+run that fix, then run `npm run doctor` again. Lines starting with `WARN` are
+advisory; they won't stop you.
+
+If `doctor` itself won't start and says "Cannot find module", the `ecology`
+folder isn't sitting next to your spoke. Redo Part 5.
 
 ---
 
@@ -305,6 +345,27 @@ Setup is done. Everything below is the actual work.
 
 ---
 
+## Every day, you start like this
+
+Two terminal windows, both pointed at your spoke. That's the whole ritual —
+you'll never repeat Parts 1–8.
+
+```bash
+# Terminal 1 — Claude
+cd ~/Dev/cb-fish-design
+claude
+```
+```bash
+# Terminal 2 — the preview
+cd ~/Dev/cb-fish-design
+npm run dev
+```
+
+Then open `http://localhost:4330` in your browser and work in Terminal 1. When
+you're done for the day, close both windows — nothing is lost.
+
+---
+
 ## The daily loop
 
 Four commands, typed to Claude inside Claude Code. Claude explains what it's
@@ -325,11 +386,11 @@ doing as it goes; you never need to know the file names.
 Two more, as needed:
 
 - **`/request-lego`** — when you need a component or style control the design
-  system doesn't have yet. It files the request; Andy builds it into the hub.
+  system doesn't have yet. It files the request; the component gets built in the
+  hub, and every spoke picks it up automatically.
 - **`npm run doctor`** — whenever something feels broken.
 
-There are **two different "doctor" commands**, and it's worth keeping them
-straight:
+There are **two different "doctor" commands**:
 
 | Command | Checks | Run it when |
 |---|---|---|
@@ -364,13 +425,15 @@ straight:
 | `command not found` / `not recognized` | That tool isn't installed, or you're in a terminal opened before it was. Open a fresh terminal (Part 3). |
 | `claude` isn't recognized, right after installing | You're in the terminal you installed from. Close it, open a new one (Part 3). |
 | `'irm' is not recognized` | You're in Command Prompt, not PowerShell. Your prompt shows `PS C:\` in PowerShell. Reopen PowerShell (Part 2). |
+| "running scripts is disabled on this system" | Windows is blocking npm. Run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`, then open a new terminal (Part 3). |
+| "The token `&&` is not a valid statement separator" | You pasted a command joined with `&&` into PowerShell, which doesn't accept it. Run the two halves as separate lines. |
 | Claude Code won't start at all | Run `claude doctor` — it checks Claude Code's own install and settings, and prints what's wrong. |
-| Slash commands like `/new-prototype` are missing | The spoke-kit plugin isn't installed or Claude Code wasn't restarted after installing it. Redo Part 8. |
+| Slash commands like `/new-prototype` are missing | The spoke-kit plugin isn't installed or Claude Code wasn't restarted after installing it. Redo Part 7. |
 | "Cannot find module" from `doctor` | The `ecology` folder isn't a sibling of your spoke. Redo Part 5. |
 | The browser page won't load | The preview server isn't running. `npm run dev` in your spoke folder (Part 9). |
 | "Port already in use" | The preview server is already running in another terminal window. |
 | Git asks for a password when publishing | You skipped `gh auth setup-git`. Run it (Part 4). |
-| Your spoke looks unstyled or colors are wrong | The hub's tokens aren't built. `cd ~/Dev/ecology && npm run build:tokens`. |
+| Your spoke looks unstyled or colors are wrong | The hub's tokens aren't built. Run `cd ~/Dev/ecology` then `npm run build:tokens`. |
 | Still stuck | Message Andy with the `npm run doctor` output and what you were doing. |
 
 ---

@@ -60,8 +60,11 @@ check('git installed', !!gitV, 'install Git for Windows: winget install Git.Git 
 if (gitV) {
   const name = run('git', ['config', '--get', 'user.name']);
   const email = run('git', ['config', '--get', 'user.email']);
+  // Fix lines use `;` not `&&`: Windows PowerShell 5.1 — what teammates get from
+  // "Start -> PowerShell" — rejects `&&` ("not a valid statement separator").
+  // `;` sequences statements in PowerShell AND bash, so one string serves both.
   check('git identity set (user.name + user.email)', !!(name && email),
-    'git config --global user.name "Your Name" && git config --global user.email "you@esassoc.com"');
+    'git config --global user.name "Your Name" ; git config --global user.email "you@esassoc.com"');
 }
 
 // --- 3. gh CLI + auth --------------------------------------------------------
@@ -79,7 +82,7 @@ check('ecology hub cloned as a sibling', existsSync(path.join(hubDir, 'packages'
   `clone it NEXT TO this folder: git clone https://github.com/esassoc/ecology.git ${path.resolve(CWD, '..')}${path.sep}ecology`);
 check('hub tokens built (packages/tokens/dist/tokens.css)',
   existsSync(path.join(hubDir, 'packages', 'tokens', 'dist', 'tokens.css')),
-  'cd ../ecology && npm install && npm run build:tokens');
+  'cd ../ecology ; npm install ; npm run build:tokens');
 
 // --- 4b. hub git state (warn — file: symlinks serve the hub's LIVE working tree)
 // A spoke's @esa/* deps point at whatever state ../ecology is in. Off-main or
@@ -121,7 +124,7 @@ const hasMarketplace = [
   }
 });
 check('Claude ecology plugin marketplace installed', hasMarketplace,
-  'claude plugin marketplace add esassoc/ecology && claude plugin install spoke-kit@ecology');
+  'claude plugin marketplace add esassoc/ecology ; claude plugin install spoke-kit@ecology');
 
 // --- 7. spoke-kit plugin freshness (source vs installed cache) -----------------
 // The cached-plugin republish gotcha: hub edits to hooks/skills stay inert until
