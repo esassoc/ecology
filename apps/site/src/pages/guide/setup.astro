@@ -9,33 +9,89 @@ import { Content as Onboarding } from '../../../../../ONBOARDING.md';
 <DocsLayout title="Setup — Ecology" activeHref="/guide/setup">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Setup</span></nav>
 
-  <aside class="source-note">
-    This page renders <code>ONBOARDING.md</code> from the hub repo root at build
-    time — the same document teammates get as a Claude Code onboarding link.
-    To change it, edit that file (not this page).
-  </aside>
-
   <div class="onboarding">
     <Onboarding />
   </div>
 </DocsLayout>
 
 <style>
-  .source-note {
-    border: 1px solid var(--color-primary-border, #cfe5e5);
-    background: var(--color-primary-subtle, #eef6f6);
-    border-radius: 10px;
-    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    margin-bottom: var(--spacing-500, 1.25rem);
-    color: var(--color-text-secondary, #444);
-  }
   .onboarding :global(h1) { margin-top: 0; }
-  .onboarding :global(hr) { border: none; border-top: 1px solid var(--color-border, #e5e5e5); margin: var(--spacing-600, 1.5rem) 0; }
+
+  /* DocsShell resets every anchor to `color: inherit; text-decoration: none` for
+     the nav chrome. This is prose for people who don't code — a link they can't
+     see is a link they won't click, so put the affordance back. Scoped to the
+     markdown container so page chrome elsewhere is untouched. */
+  .onboarding :global(a) {
+    color: var(--color-primary, #1e5386);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .onboarding :global(a:hover) { text-decoration-thickness: 2px; }
+  .onboarding :global(hr) { border: none; border-top: 1px solid var(--color-border, #e5e5e5); margin: var(--spacing-700, 2rem) 0; }
   .onboarding :global(pre) {
     background: var(--color-surface-sunken, #f5f5f5);
     border: 1px solid var(--color-border, #e5e5e5);
     border-radius: 8px;
     padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
     overflow-x: auto;
+  }
+
+  /* Setup steps are numbered lists of commands — give them room to breathe. */
+  .onboarding :global(li) { margin-bottom: var(--spacing-200, 0.5rem); }
+  .onboarding :global(li > p) { margin-bottom: var(--spacing-200, 0.5rem); }
+
+  /* The "On a Mac:" asides. Read as a sidebar note, not a pull quote. */
+  .onboarding :global(blockquote) {
+    margin: var(--spacing-400, 1rem) 0;
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    background: var(--color-surface-sunken, #f5f5f5);
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 8px;
+    color: var(--color-text-secondary, #525252);
+  }
+  .onboarding :global(blockquote > :last-child) { margin-bottom: 0; }
+
+  /* Markdown tables: the spoke roster, troubleshooting, and glossary. These
+     carry instructions, so they stay at body size — not doc-chrome size. */
+  .onboarding :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--spacing-400, 1rem) 0;
+    border: 1px solid var(--color-border, #dcdcdc);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 16px;
+  }
+  .onboarding :global(thead th) {
+    text-align: left;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 10px var(--spacing-400, 1rem);
+    color: var(--color-text-secondary, #525252);
+    background: var(--color-surface-sunken, #f3f7fc);
+    border-bottom: 1px solid var(--color-border, #dcdcdc);
+  }
+  .onboarding :global(tbody td) {
+    padding: 11px var(--spacing-400, 1rem);
+    border-bottom: 1px solid var(--color-border-light, #efefef);
+    vertical-align: top;
+  }
+  .onboarding :global(tbody tr:last-child td) { border-bottom: 0; }
+  .onboarding :global(td code), .onboarding :global(li code), .onboarding :global(p code) {
+    font-family: var(--font-mono, monospace);
+    font-size: 14.5px;
+    background: var(--color-surface-sunken, #f3f7fc);
+    padding: 1px 6px;
+    border-radius: 5px;
+    color: var(--color-text-primary, #171717);
+  }
+  /* color: inherit keeps an untagged ``` fence legible even if a consumer's own
+     stylesheet reintroduces a dark color for `code`. */
+  .onboarding :global(pre code) { background: none; padding: 0; font-size: inherit; color: inherit; }
+
+  /* Tables hold the glossary and troubleshooting matrix — never let them push
+     the page sideways on a narrow window. */
+  @media (max-width: 640px) {
+    .onboarding :global(table) { display: block; overflow-x: auto; }
   }
 </style>

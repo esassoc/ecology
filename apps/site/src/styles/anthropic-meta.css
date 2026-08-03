@@ -88,7 +88,10 @@ html[data-scheme='light'] .article h1,
 html[data-scheme='light'] .article h2,
 html[data-scheme='light'] .article h3 { color: var(--color-text-primary); }
 html[data-scheme='light'] .article p { color: var(--color-text-secondary); }
-html[data-scheme='light'] .article code { background: color-mix(in srgb, var(--color-text-primary) 5%, transparent); color: var(--color-text-primary); }
+/* Inline code only — see the `:not(pre) >` note in DocsShell: an untagged ```
+   fence has no per-token inline color, so a dark color here would render it
+   invisible against Shiki's dark block background. */
+html[data-scheme='light'] .article :not(pre) > code { background: color-mix(in srgb, var(--color-text-primary) 5%, transparent); color: var(--color-text-primary); }
 
 html[data-scheme='light'] .search { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-muted); }
 html[data-scheme='light'] .topbar-action,

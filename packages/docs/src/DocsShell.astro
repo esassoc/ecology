@@ -185,7 +185,13 @@ const showToggle = colorScheme === 'toggle';
       .article h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-primary, #1e5386); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border, #dcdcdc); scroll-margin-top: 76px; }
       .article h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-text-primary, #171717); }
       .article p { color: var(--color-text-secondary, #525252); }
-      .article code { font-family: var(--font-mono, monospace); font-size: 0.875em; background: var(--color-surface-sunken, #f3f7fc); padding: 0.12em 0.4em; border-radius: 5px; color: var(--color-text-primary, #171717); }
+      /* INLINE code only — `:not(pre) >` is load-bearing. Shiki gives a fenced
+         block a dark background via inline style, and colors each token with its
+         own inline style, so a LANGUAGE-TAGGED block overrides whatever color
+         lands here. An untagged ``` fence emits bare spans with no inline color:
+         it would inherit this dark text color onto Shiki's dark background and
+         render invisible. Scope this to inline code and that can't happen. */
+      .article :not(pre) > code { font-family: var(--font-mono, monospace); font-size: 0.875em; background: var(--color-surface-sunken, #f3f7fc); padding: 0.12em 0.4em; border-radius: 5px; color: var(--color-text-primary, #171717); }
 
       /* ---------- Shared page header ---------- */
       .crumbs { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--color-text-muted, #7c7c7c); margin-bottom: var(--spacing-300, 0.75rem); }
