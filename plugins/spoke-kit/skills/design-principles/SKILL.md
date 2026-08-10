@@ -1,6 +1,6 @@
 ---
 name: design-principles
-description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), neutral house chrome (value-layered off-white surfaces, never a brand fill), type-roles-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
+description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), verbal restraint (no text ABOUT the page — editorial captions, provenance strings, table-restating chips; corpus in the global design-restraint skill), neutral house chrome (value-layered off-white surfaces, never a brand fill), type-roles-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
 ---
 
 # Design Principles (canonical)
@@ -26,6 +26,18 @@ the "banned patterns" as Must-fix.
 4. **No Tailwind, no utility-class frameworks.** Custom CSS reading design
    tokens. (The component-first skill covers the never-hand-roll-a-primitive
    rule; this skill covers how the styling you ARE allowed to write looks.)
+
+## Verbal restraint
+
+The banned-patterns rule has a verbal counterpart, same weight: **text ABOUT
+the page rather than OF the page is banned** — editorial captions narrating
+what the data shows, provenance/meta strings ("Pulled 10:54 PT · …", "Data as
+of…"), summary chips restating the table beneath them, subtitle apposition
+("March 4 — five projects, task level"), and scope-or-sources sections on tool
+surfaces. Data and structure tell the story; synthesis goes to the review memo
+or companion doc. The canonical corpus and review pass is the global
+`design-restraint` skill (Andy's tunable hates-list, seeded 2026-08-10);
+/design-qa treats ABOUT-text as Must-fix like any banned pattern.
 
 ## Token-first styling
 
