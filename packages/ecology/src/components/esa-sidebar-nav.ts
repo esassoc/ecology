@@ -236,7 +236,7 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-border: var(--sidenav-border, #efefef);
       --_sidenav-item-height: 40px;
       --_sidenav-item-padding: var(--spacing-300, 12px);
-      --_sidenav-item-radius: var(--radius-200, 8px);
+      --_sidenav-item-radius: var(--radius-surface, 8px);
       --_sidenav-item-color: var(--sidenav-link-text, #525252);
       --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-primary-strong, #3a7c59));
       --_sidenav-item-bg-hover: var(--color-surface-sunken, #efefef);
@@ -378,7 +378,7 @@ export class EsaSidebarNav extends LitElement {
       min-width: 20px;
       height: 20px;
       padding: 0 6px;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #ffffff);
       font-size: var(--type-size-100, 11px);

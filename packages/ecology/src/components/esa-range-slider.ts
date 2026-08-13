@@ -164,7 +164,7 @@ export class EsaRangeSlider extends LitElement {
       border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
       transition:
         box-shadow var(--transition-fast, 150ms ease),
         transform var(--transition-fast, 150ms ease);
@@ -185,7 +185,7 @@ export class EsaRangeSlider extends LitElement {
       border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
     }
     .input:focus-visible {
       outline: none;

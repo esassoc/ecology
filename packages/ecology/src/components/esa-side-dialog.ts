@@ -162,8 +162,8 @@ export class EsaSideDialog extends LitElement {
       display: flex;
       flex-direction: column;
       background: var(--side-dialog-bg, var(--color-surface, #fff));
-      border-radius: var(--side-dialog-radius, var(--radius-200, 8px));
-      box-shadow: var(--shadow-400, 0 8px 32px -8px rgba(0, 0, 0, 0.2));
+      border-radius: var(--side-dialog-radius, var(--radius-surface, 8px));
+      box-shadow: var(--elevation-5, 0 8px 32px -8px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       outline: none;
       overflow: hidden;
@@ -190,7 +190,7 @@ export class EsaSideDialog extends LitElement {
     .title { margin: 0; font-size: var(--type-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 600); color: var(--side-dialog-color, var(--color-text-primary, #171717)); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
-      border: 0; border-radius: var(--radius-100, 4px); background: none;
+      border: 0; border-radius: var(--radius-control, 4px); background: none;
       color: var(--color-text-muted, #737373); cursor: pointer;
     }
     .close:hover { background: var(--color-surface-sunken, #efefef); color: var(--color-text-primary, #171717); }

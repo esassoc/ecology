@@ -33,9 +33,11 @@ const {
   duplicateDeclarations,
   adHocHooks,
   orphans,
+  stagedSurfaces,
   unusedRampSteps,
   tierSkips,
   semanticHardcodes,
+  dimensionRoles,
   healthTotal,
   primitiveCategories,
   coreCategory,
@@ -93,9 +95,10 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     <Section id="health" title="Health">
       <p>
         Tripwires the per-component &ldquo;Theming surface&rdquo; table can&rsquo;t see, because each is a
-        statement about the graph rather than about one component. Only the first four count toward
-        the headline number — the last two are inventory, not defects, and folding them in would make
-        the tally permanently alarming and therefore ignorable.
+        statement about the graph rather than about one component. Three of these are
+        <b>inventory, not defects</b> — dimension roles, ad-hoc hooks, and unused ramp steps — and are
+        excluded from the headline number. Folding them in would make the tally permanently alarming
+        and therefore ignorable.
       </p>
 
       {[
@@ -103,8 +106,10 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header, then does it anyway. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead.', severity: 'bad' },
         { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
-        { id: 'hardcode', label: 'Semantic hardcodes', rows: semanticHardcodes, note: 'A tier-2 token terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer.', severity: 'warn' },
-        { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but no token and no component reads it. Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below.', severity: 'warn' },
+        { id: 'hardcode', label: 'Semantic colour hardcodes', rows: semanticHardcodes, note: 'A tier-2 COLOUR terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer, off the palette and unconstrained by it.', severity: 'warn' },
+        { id: 'dimroles', label: 'Dimension roles (tier 2, no ramp behind them)', rows: dimensionRoles, note: 'Tier-2 dimension tokens that hold a literal rather than aliasing a primitive — control heights, chip heights, layout widths. Not a defect: no tier-1 ramp exists for these, so tier 2 is where the definition belongs. Inventory, so that if one ever grows a ramp it can move onto it.', severity: 'info' },
+        { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but no token and no component reads it. Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below. Staged surfaces are excluded too — see the next check.', severity: 'warn' },
+        { id: 'staged', label: 'Staged surfaces (component not built yet)', rows: stagedSurfaces, note: 'Unread because the component that will read them does not exist yet — the contract is declared first so it can be reviewed before code depends on it. Governed by STAGED_PREFIXES in token-graph.ts; each prefix must be documented in SPEC.md and have a component doc page. Removing a prefix from that list should mean the component landed, not that the finding got annoying.', severity: 'info' },
         { id: 'adhoc', label: 'Ad-hoc hooks — promotion candidates', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. Legitimate per SPEC.md: the component offers the hook via its fallback only. This is the working list for tier-3 surface work — promote into component-tokens.css, or fold away.', severity: 'info' },
         { id: 'unused', label: 'Unused ramp steps (tier 1)', rows: unusedRampSteps, note: 'Primitive steps nothing references. Normal — a 12-step scale is a palette, not a checklist. Useful only for spotting a whole ramp that is carried but never used.', severity: 'info' },
       ].map((check) => (
@@ -412,11 +417,17 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <thead><tr><th>Prefix</th><th>At tier 1</th><th>At tier 3</th><th>Consequence</th></tr></thead>
         <tbody>
           {t3.tierCollisions.map((c) => (
-            <tr>
-              <td><code>{c.prefix}</code></td>
-              <td>{c.tier1.map((n) => <code class="vocab">{n}</code>)}</td>
-              <td>{c.tier3.map((n) => <code class="vocab warnv">{n}</code>)}</td>
-              <td>{c.cost}</td>
+            <tr class={c.live ? undefined : 'row-zero'}>
+              <td>
+                <code>{c.prefix}</code>
+                <span class={`slot-flag f-${c.live ? 'absent' : 'match'}`}>{c.live ? 'live' : 'closed'}</span>
+              </td>
+              <td>{c.tier1.length ? c.tier1.map((n) => <code class="vocab">{n}</code>) : <span class="dim">none</span>}</td>
+              <td>{c.tier3.length ? c.tier3.map((n) => <code class="vocab warnv">{n}</code>) : <span class="dim">none</span>}</td>
+              <td>
+                {c.cost}
+                {c.fix && <div class="detail"><b>Closed:</b> {c.fix}</div>}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -425,9 +436,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <b>The rubric offers a cheaper fix here than at tier 2.</b> It says the tier identifier can be
         the <em>component prefix</em> itself — you don&rsquo;t need <code>--eco-component-</code> on all
         {t3.total} if the component name is doing that work. Which it already is, on
-        {t3.total - t3.unnamespaced.length} of them. The exposure is the
-        {t3.unnamespaced.length} that name no component at all, plus the two prefixes above that
-        straddle tiers.
+        {t3.total - t3.unnamespaced.length} of them. The remaining exposure is the
+        {t3.unnamespaced.length} that name no component at all, plus the {t3.liveCollisions} prefix
+        above that still straddles tiers.
       </p>
       <table class="findings">
         <thead><tr><th>Unplaced token</th><th>Declared under</th><th>Reads as</th></tr></thead>
@@ -1118,7 +1129,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   /* Page-scoped styles are normally banned in this system — allowed here only
      because this page is debug-only and never ships. */
   .tokens-debug .dev-banner {
-    border: 1px dashed var(--color-warning, #d97706);
+    border: 1px dashed var(--color-warning-strong, #ab6400);
     background: var(--color-warning-subtle, #fffbeb);
     color: var(--color-text-primary, #111);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
@@ -1142,9 +1153,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-text-secondary, #666); }
   .tokens-debug .tally-cell.t3 { border-left: 3px solid var(--color-ai, #b45309); }
   .tokens-debug .tally-cell.t2 { border-left: 3px solid var(--color-primary, #16a34a); }
-  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-info, #0284c7); }
-  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-warning, #d97706); }
-  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-success, #16a34a); }
+  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-info-strong, #0d74ce); }
+  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-warning-strong, #ab6400); }
+  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-success-strong, #5c7c2f); }
   .tokens-debug .filter-bar {
     position: sticky;
     top: 0;
@@ -1182,8 +1193,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.9rem;
     /* Generous target: the whole summary row is clickable, not just the marker. */
   }
-  .tokens-debug details.check.bad > summary { color: var(--color-danger, #dc2626); }
-  .tokens-debug details.check.warn > summary { color: var(--color-warning, #b45309); }
+  /* -strong (step 11) is the "colored text on surfaces" step. --color-danger /
+     --color-warning are step 9 — solid FILL, for a background with dark text on
+     it. As text on white, --color-warning (#ffc53d) reads at ~1.7:1. The old
+     fallbacks here were hand-darkened to compensate, which never took effect
+     because the tokens are defined. */
+  .tokens-debug details.check.bad > summary { color: var(--color-danger-strong, #ce2c31); }
+  .tokens-debug details.check.warn > summary { color: var(--color-warning-strong, #ab6400); }
   .tokens-debug .check-count, .tokens-debug .group-count {
     font-variant-numeric: tabular-nums;
     background: var(--color-surface-sunken, #f0f0f0);
@@ -1224,7 +1240,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-warning, #b45309);
+    color: var(--color-warning-strong, #ab6400);
     border: 1px solid var(--color-warning-border, #fcd34d);
     background: var(--color-warning-subtle, #fffbeb);
     border-radius: var(--radius-100, 4px);
@@ -1235,7 +1251,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .cat-gap {
     margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
     padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
-    border-left: 3px solid var(--color-warning, #d97706);
+    border-left: 3px solid var(--color-warning-strong, #ab6400);
     background: var(--color-warning-subtle, #fffbeb);
     border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
     font-size: 0.82rem;
@@ -1331,7 +1347,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 1px 6px;
     font-size: 0.7rem;
   }
-  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-warning, #b45309); }
+  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-warning-strong, #ab6400); }
   .tokens-debug tr[hidden] { display: none; }
 
   /* ---------------------------------------------- tier-2 naming audit */
@@ -1444,7 +1460,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.7rem;
     font-style: italic;
     color: var(--color-warning-strong, #a35200);
-    border-bottom: 1px dotted var(--color-warning, #d97706);
+    border-bottom: 1px dotted var(--color-warning-strong, #ab6400);
     cursor: help;
   }
   /* Typography roles: six fixed property columns, so the table is wide. Let it

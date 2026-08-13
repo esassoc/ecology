@@ -23,6 +23,7 @@
     "surface":          { "$value": "{color.gray.1}", "$type": "color" },
     "surface-elevated": { "$value": "{color.gray.1}", "$type": "color" },
     "surface-sunken":   { "$value": "{color.gray.3}", "$type": "color" },
+    "surface-hover":    { "$value": "{color.gray.4}", "$type": "color", "$description": "Step 4 = UI element background, hovered. The neutral counterpart to primary-bg-hover, and the missing partner to surface-sunken (step 3, the resting UI element background). Added because two tier-3 hooks — the sidenav avatar and the topbar icon button — had no semantic gray-4 to read and were wired straight to the primitive." },
     "surface-inverse":       { "$value": "{color.gray.12}", "$type": "color", "$description": "Darkest chrome surface — top app bars, dark navigation. Pairs with text-inverse. A spoke re-points this to its darkest brand shade." },
     "surface-inverse-hover": { "$value": "{color.gray.11}", "$type": "color", "$description": "Hover/active state for surface-inverse." },
 

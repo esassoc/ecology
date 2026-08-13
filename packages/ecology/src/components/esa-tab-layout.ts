@@ -204,7 +204,7 @@ export class EsaTabLayout extends LitElement {
     .tab:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
-      border-radius: var(--radius-100, 4px);
+      border-radius: var(--radius-control, 4px);
     }
 
     .icon { display: inline-flex; }
@@ -220,7 +220,7 @@ export class EsaTabLayout extends LitElement {
       font-weight: var(--font-weight-semibold, 600);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
     }
 
     /* Segmented appearance (Beacon UiTabsAppearance='segmented').
@@ -231,16 +231,16 @@ export class EsaTabLayout extends LitElement {
       border-bottom: none;
       background: var(--color-surface-sunken, #efefef);
       border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-surface, 8px);
       padding: var(--spacing-050, 2px);
       gap: var(--spacing-050, 2px);
     }
     :host([appearance='segmented']) .tab,
-    :host([variant='pill']) .tab { border-radius: var(--radius-100, 4px); }
+    :host([variant='pill']) .tab { border-radius: var(--radius-control, 4px); }
     :host([appearance='segmented']) .tab--active,
     :host([variant='pill']) .tab--active {
       background: var(--color-surface, #ffffff);
-      box-shadow: var(--shadow-50, 0 1px 2px rgba(0, 0, 0, 0.06));
+      box-shadow: var(--elevation-1, 0 1px 2px rgba(0, 0, 0, 0.06));
     }
     :host([appearance='segmented']) .tab--active::after,
     :host([variant='pill']) .tab--active::after { display: none; }

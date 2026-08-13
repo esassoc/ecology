@@ -272,7 +272,7 @@ export class EsaSearchPanel extends LitElement {
       width: var(--search-panel-width, 400px);
       max-width: 90vw;
       background: var(--search-panel-bg, var(--color-surface-elevated, #ffffff));
-      box-shadow: var(--search-panel-shadow, var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1)));
+      box-shadow: var(--search-panel-shadow, var(--elevation-5, -4px 0 24px rgba(0, 0, 0, 0.1)));
       z-index: var(--z-modal, 9999);
       display: flex;
       flex-direction: column;
@@ -285,7 +285,7 @@ export class EsaSearchPanel extends LitElement {
 
     .panel--left {
       left: 0;
-      box-shadow: var(--search-panel-shadow, var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1)));
+      box-shadow: var(--search-panel-shadow, var(--elevation-5, 4px 0 24px rgba(0, 0, 0, 0.1)));
       animation: esa-search-slide-in-left 200ms ease-out;
     }
 
@@ -336,7 +336,7 @@ export class EsaSearchPanel extends LitElement {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-surface, 8px);
       background: transparent;
       color: var(--color-text-secondary, #525252);
       cursor: pointer;
@@ -368,7 +368,7 @@ export class EsaSearchPanel extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       border: none;
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-surface, 8px);
       background: transparent;
       color: var(--color-text-primary, #171717);
       font-family: inherit;

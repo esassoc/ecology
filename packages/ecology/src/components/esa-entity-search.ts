@@ -422,7 +422,7 @@ export class EsaEntitySearch extends LitElement {
       max-height: var(--entity-search-max-height, 70vh);
       background: var(--entity-search-bg, var(--color-surface-elevated, #ffffff));
       border: 1px solid var(--entity-search-border-color, var(--color-border, #dcdcdc));
-      border-radius: var(--entity-search-radius, var(--radius-400, 0.75rem));
+      border-radius: var(--entity-search-radius, var(--radius-overlay, 0.75rem));
       box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
@@ -484,7 +484,7 @@ export class EsaEntitySearch extends LitElement {
       gap: var(--spacing-100, 0.25rem);
       padding: 4px var(--spacing-250, 0.625rem);
       border: 1px solid var(--color-border, #dcdcdc);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--color-surface, #fff);
       color: var(--color-text-secondary, #525252);
       font: inherit;
@@ -496,7 +496,7 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__scope--active {
       background: var(--color-primary, #1e5386);
       border-color: var(--color-primary, #1e5386);
-      color: var(--color-primary-contrast, #fff);
+      color: var(--entity-search-selected-text, var(--color-text-inverse, #fcfcfc));
     }
     .esa-entity-search__scope-count {
       font-size: 11px;
@@ -527,7 +527,7 @@ export class EsaEntitySearch extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
       border: none;
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
       color: var(--color-text-primary, #171717);
       font-family: inherit;
@@ -537,7 +537,7 @@ export class EsaEntitySearch extends LitElement {
     }
     .esa-entity-search__row--active { background: var(--entity-search-row-bg-active, var(--color-surface-sunken, #f3f7fc)); }
     .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-text-muted, #7c7c7c); }
-    .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-primary, #1e5386); }
+    .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-primary-strong, #2a7e3b); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .esa-entity-search__row-title {
       font-size: var(--type-size-200, 0.9375rem);
@@ -562,7 +562,7 @@ export class EsaEntitySearch extends LitElement {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 8px;
       border: 1px solid var(--color-border, #dcdcdc);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--color-surface, #fff);
       color: var(--color-text-secondary, #525252);
       font: inherit; font-size: 12px; cursor: pointer;

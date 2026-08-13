@@ -407,7 +407,7 @@ export class EsaInputTag extends LitElement {
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
       --_chip-bg: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
       --_chip-color: var(--color-primary-strong, #3a7c59);
-      --_chip-radius: var(--radius-full, 9999px);
+      --_chip-radius: var(--radius-pill, 9999px);
     }
     :host([size='xs']) {
       --_field-padding-y: var(--form-padding-y-xs, 2px);
@@ -584,8 +584,8 @@ export class EsaInputTag extends LitElement {
       transition: transform var(--transition-fast, 150ms ease);
     }
     .arrow svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .arrow--open {
       transform: rotate(180deg);
@@ -603,7 +603,7 @@ export class EsaInputTag extends LitElement {
       background: var(--color-surface, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
     }
 
     .option {
@@ -639,8 +639,8 @@ export class EsaInputTag extends LitElement {
       border-top: var(--form-border-width, 1px) solid var(--color-border-light, #efefef);
     }
     .option__icon {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
       flex-shrink: 0;
     }
 

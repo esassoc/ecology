@@ -222,17 +222,17 @@ export class EsaFileUpload extends LitElement {
       display: block;
     }
     .icon {
-      width: var(--icon-size-medium, 20px);
-      height: var(--icon-size-medium, 20px);
+      width: var(--icon-size-md, 20px);
+      height: var(--icon-size-md, 20px);
       flex-shrink: 0;
     }
     .icon--sm {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .icon--lg {
-      width: var(--icon-size-large, 24px);
-      height: var(--icon-size-large, 24px);
+      width: var(--icon-size-lg, 24px);
+      height: var(--icon-size-lg, 24px);
     }
 
     .native {
@@ -270,7 +270,7 @@ export class EsaFileUpload extends LitElement {
     :host([dragging]) .zone {
       border-color: var(--color-primary, #43608a);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #2a7e3b);
     }
     :host([disabled]) .zone {
       opacity: 0.6;
@@ -293,7 +293,7 @@ export class EsaFileUpload extends LitElement {
       color: var(--color-text-muted, #737373);
     }
     .browse {
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #2a7e3b);
       text-decoration: underline;
     }
     .zone__limit {
@@ -306,7 +306,7 @@ export class EsaFileUpload extends LitElement {
       margin-top: var(--spacing-100, 4px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
     }
 
     .files {
@@ -358,7 +358,7 @@ export class EsaFileUpload extends LitElement {
     }
     .file__remove:hover {
       background: var(--color-border, #e5e5e5);
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
     }
     .file__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

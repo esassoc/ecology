@@ -64,6 +64,15 @@ html[data-scheme='dark'] {
   --color-success-strong: var(--color-lime-dark-11);
   --color-warning-strong: var(--color-yellow-dark-11);
   --color-danger-strong:  var(--color-red-dark-11);
+
+  /* Brand strong — same reasoning. These were missing while the four status
+     tokens above were mapped, which was harmless only while nothing used them
+     as foreground on dark. Components now read -strong for colored text
+     (step 11 is the "colored text on surfaces" step), so the gap would show as
+     dark green on a dark surface.
+     --color-ai-strong is NOT here: no copper dark ramp is shipped. */
+  --color-primary-strong:   var(--color-grass-dark-11);
+  --color-secondary-strong: var(--color-grass-dark-11);
 }
 
 html[data-scheme='dark'] .nav-link[aria-current='page'] {

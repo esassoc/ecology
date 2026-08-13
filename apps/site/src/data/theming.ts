@@ -3,7 +3,7 @@
 // from these). Rendered as the "Theming surface" section on every component
 // page, so "what can my spoke re-point?" is answered by the source itself
 // and can never drift.
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -42,9 +42,42 @@ const componentCss = readFileSync(path.join(ROOT, 'packages', 'tokens', 'src', '
 const defined = (css: string) => new Set([...css.matchAll(/(--[a-zA-Z0-9-]+)\s*:/g)].map((m) => m[1]));
 const componentTier = defined(componentCss);
 const baseTier = defined(tokensCss);
-// Primitives follow the ramp naming (e.g. --color-teal-9, --spacing-400, --radius-200).
-const isPrimitive = (t: string) =>
-  /^--(color-(gray|teal|blue|green|red|yellow|orange|copper|gold|status)-|spacing-\d|radius-|font-size-|font-weight-|shadow-|z-)/.test(t);
+
+// Which tier declared a token is decided by WHICH DIRECTORY its JSON lives in —
+// never by a name pattern. A regex on the name cannot do this job: nothing in
+// `--radius-200` (primitive) vs `--radius-surface` (semantic) marks the tier,
+// so the old pattern read every `--radius-*` as a primitive and mislabelled the
+// semantic shape roles as untouchable on every component doc page. Reading the
+// source directories is the same source of truth the token graph uses.
+const flattenDtcg = (obj: unknown, trail: string[] = [], out = new Set<string>()) => {
+  if (!obj || typeof obj !== 'object') return out;
+  const node = obj as Record<string, unknown>;
+  if ('$value' in node) {
+    out.add(`--${trail.join('-')}`);
+    return out;
+  }
+  for (const [key, child] of Object.entries(node)) {
+    if (key.startsWith('$')) continue;
+    flattenDtcg(child, [...trail, key], out);
+  }
+  return out;
+};
+
+const readTier = (dir: string): Set<string> => {
+  const out = new Set<string>();
+  const full = path.join(ROOT, 'packages', 'tokens', 'tokens', dir);
+  if (!existsSync(full)) return out;
+  for (const file of readdirSync(full)) {
+    if (!file.endsWith('.json')) continue;
+    for (const name of flattenDtcg(JSON.parse(readFileSync(path.join(full, file), 'utf8')))) {
+      out.add(name);
+    }
+  }
+  return out;
+};
+
+const primitiveSrc = readTier('primitive');
+const isPrimitive = (t: string) => primitiveSrc.has(t);
 
 const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
   componentTier.has(t) ? 'component'

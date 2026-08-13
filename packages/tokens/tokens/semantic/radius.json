@@ -1,0 +1,29 @@
+{
+  "radius": {
+    "control": {
+      "$value": "{radius.100}",
+      "$type": "dimension",
+      "$description": "Small interactive controls — inputs at xs/sm, badges, pills, tooltips, kbd. The quiet 4px chip."
+    },
+    "surface": {
+      "$value": "{radius.200}",
+      "$type": "dimension",
+      "$description": "The default surface corner — inputs at md/lg, dropdowns, popovers, panels, alerts, snackbars. The most-used role; re-point this to make a theme flatter or rounder overall."
+    },
+    "card": {
+      "$value": "{radius.300}",
+      "$type": "dimension",
+      "$description": "Content containers — cards, collapsibles. Separate from `surface` so a theme can round its cards without rounding every menu."
+    },
+    "overlay": {
+      "$value": "{radius.400}",
+      "$type": "dimension",
+      "$description": "Things that float above the page — dialogs, confirm dialogs, the command palette, entity search."
+    },
+    "pill": {
+      "$value": "{radius.full}",
+      "$type": "dimension",
+      "$description": "Fully rounded — avatars, progress bars, filter pills, breadcrumb pills, the back-to-top button."
+    }
+  }
+}

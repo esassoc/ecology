@@ -1,9 +1,31 @@
 {
+  "$description": "Promoted from tokens/primitive/effect.json. These were always INTENT names — `modal`, `tooltip`, `backdrop`, `hover-overlay` describe a job in the UI, not raw material — so tier 1 was the wrong home and every component reading them was breaking the read-tier-2 rule through no fault of its own. Names are unchanged; only the tier moved.",
+  "z": {
+    "dropdown":       { "$value": "50",  "$type": "other" },
+    "sidebar":        { "$value": "100", "$type": "other" },
+    "header":         { "$value": "200", "$type": "other" },
+    "modal-backdrop": { "$value": "300", "$type": "other" },
+    "modal":          { "$value": "400", "$type": "other" },
+    "toast":          { "$value": "500", "$type": "other" },
+    "tooltip":        { "$value": "600", "$type": "other" }
+  },
+  "color": {
+    "hover-overlay":        { "$value": "rgba(0, 0, 0, 0.03)",   "$type": "color", "$description": "Neutral wash for hover on a surface that has no colour of its own." },
+    "hover-overlay-strong": { "$value": "{color.black-a.1}",     "$type": "color", "$description": "As above, where the surface needs more separation. Aliases the black-alpha ramp — the value was already exactly this step." },
+    "active-overlay":       { "$value": "color-mix(in srgb, {color.primary} 8%, transparent)", "$type": "color", "$description": "Pressed/selected wash — the highlighted option in a dropdown, a selected chip, a drag-over drop zone. DERIVED from the brand rather than fixed, so a spoke re-pointing --color-primary moves it too. It was rgba(0, 88, 98, 0.08), a teal left over from an older brand, which is why selected rows used to read cool in a green UI." },
+    "hover-overlay-heavy":  { "$value": "{color.black-a.2}",     "$type": "color", "$description": "The heaviest wash — a control that sits ON a tinted surface and needs to read as pressable against it (the pill's remove button)." },
+    "backdrop":             { "$value": "{color.black-a.7}",     "$type": "color", "$description": "Scrim behind dialogs, side dialogs and the confirm dialog." },
+    "scrim-light":          { "$value": "{color.white-a.10}",    "$type": "color", "$description": "Light counterpart to `backdrop` — veils content in place rather than behind a dialog, so what is underneath stays readable (the loading overlay)." }
+  },
+  "touch-target": {
+    "min": { "$value": "44px", "$type": "dimension", "$description": "WCAG 2.5.5 floor. A role, not a ramp step — never re-point it smaller." }
+  },
   "elevation": {
     "1": { "$value": "{shadow.50}",  "$type": "other", "$description": "Resting lift — subtle depth for always-visible surfaces." },
     "2": { "$value": "{shadow.100}", "$type": "other", "$description": "Cards and list items." },
     "3": { "$value": "{shadow.200}", "$type": "other", "$description": "Raised cards, hover state." },
     "4": { "$value": "{shadow.300}", "$type": "other", "$description": "Dropdowns, popovers, menus." },
-    "5": { "$value": "{shadow.400}", "$type": "other", "$description": "Modals and dialogs." }
+    "5": { "$value": "{shadow.400}", "$type": "other", "$description": "Modals and dialogs." },
+    "6": { "$value": "{shadow.500}", "$type": "other", "$description": "Full-screen overlays that float above everything — the command palette, entity search. Deliberately heavier than the modal step." }
   }
 }

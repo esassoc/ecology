@@ -53,6 +53,14 @@ for (const [rubric, words] of Object.entries(SURFACE_VOCAB)) {
 
 const STATE_WORDS = new Set(['hover', 'active', 'focus', 'pressed']);
 
+/**
+ * Washes and scrims. They ARE backgrounds, but they name themselves after the
+ * effect rather than the surface, so the surface parser can't see it — and any
+ * trailing `-strong` on one is an intensity, not a content colour.
+ * `hover`/`active` lead these names, so match on the overlay word itself.
+ */
+const isOverlay = (name: string) => /(^|-)(overlay|scrim|backdrop)(-|$)/.test(name);
+
 export type SlotOrder = 'rubric' | 'inverted' | 'surface-only' | 'none';
 
 export interface Tier2Row {
@@ -82,7 +90,12 @@ const parseColor = (name: string): Tier2Row => {
   // where no surface word is present. In `--color-border-strong` the surface is
   // named and `strong` is a genuine variant (a heavier border), so the guard on
   // surfaceIdx is what keeps this from over-counting.
-  if (surfaceIdx === -1) {
+  //
+  // Overlays are the second exception: in `--color-hover-overlay-strong`,
+  // `strong` is an INTENSITY (a heavier wash), not a content colour. `overlay`,
+  // `scrim` and `backdrop` all name a background outright — they just don't use
+  // one of the rubric's three words for it.
+  if (surfaceIdx === -1 && !isOverlay(name)) {
     const rest = parts.join('-');
     if (rest.endsWith('-on-fill')) {
       flags.push('surface encoded as a variant: -on-fill = content on that background');
@@ -166,8 +179,8 @@ export interface CategoryRow {
   how: string;
 }
 
-const layoutCount = otherTokens.filter((t) => /width|height/.test(t.name)).length;
-const elevationCount = otherTokens.filter((t) => t.name.startsWith('--elevation-')).length;
+/** Count tier-2 tokens matching a pattern, so these rows can't go stale. */
+const t2Count = (re: RegExp) => semantic.filter((t) => re.test(t.name)).length;
 
 export const categoryRows: CategoryRow[] = [
   {
@@ -177,13 +190,13 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'typography',
-    count: 0,
-    how: 'No tokens. The role is filled by CSS classes in type-roles.css — see below.',
+    count: t2Count(/^--font-size-ui-/),
+    how: '`--font-size-ui-{xs,sm,md,lg}` — chrome text only, aligned step-for-step with `--control-height-*`. PROSE has no tier-2 tokens: that role is still filled by the CSS classes in type-roles.css, so Figma can’t consume it and a spoke can’t re-point it. See the typography section below.',
   },
   {
     category: 'spacing',
     count: 0,
-    how: 'No tier-2 layer. Components consume the `--spacing-*` primitives raw.',
+    how: 'No tier-2 layer, deliberately. Spacing is a MEASURE, not an intent — `--spacing-300` already says everything a `--space-inset-md` would, with a layer less indirection. Components read the primitives directly and that is correct.',
   },
   {
     category: 'border',
@@ -192,20 +205,24 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'width',
-    count: layoutCount,
-    how: 'Exists as layout.json, but leads with a region (`--sidebar-width`), not the category. Note `--header-height` has no home in the rubric — the list has width but no height.',
+    count: t2Count(/width|height/),
+    how: 'Splits in two. `--control-height-*` and `--chip-height-*` are proper roles. The layout.json set (`--sidebar-width`, `--header-height`) still leads with a region rather than the category — and `height` has no home in the rubric, which lists width but not height.',
   },
   {
     category: 'radius',
-    count: 0,
-    how: 'No tier-2 layer. Components read `--radius-100/200` primitives directly — and both themes re-point those primitives, which is the SPEC violation flagged under Health.',
+    count: t2Count(/^--radius-/),
+    how: '`--radius-{control,surface,card,overlay,pill}` — five intentions over the ramp. This is what let both themes stop re-pointing `--radius-200`, a primitive, which used to be the SPEC violation flagged under Health.',
   },
   {
     category: 'box-shadow',
-    count: elevationCount,
-    how: '`--elevation-1…5`. Named as an elevation scale rather than the category, and the variant is a number rather than an intention.',
+    count: t2Count(/^--elevation-/),
+    how: '`--elevation-1…6`. Named as an elevation scale rather than the category, and the variant is a number rather than an intention — but every component now reads it instead of `--shadow-*`.',
   },
-  { category: 'animation', count: 0, how: 'Nothing at tier 2.' },
+  {
+    category: 'animation',
+    count: 0,
+    how: 'Nothing at tier 2. `--transition-{fast,base,slow}` sits at tier 1 and is read directly by 27 components. Those are scale positions, not intents — an intent would be `--motion-hover` — so a semantic layer here is unbuilt design work rather than a mechanical move.',
+  },
 ];
 
 /* ------------------------------------------ the non-colour tier-2 tokens */
@@ -238,7 +255,7 @@ export const variantVocab: VocabRow[] = [
   { rubric: 'utility-warning', current: 'warning', status: 'renamed', note: 'As above.' },
   { rubric: 'utility-information', current: 'info', status: 'renamed', note: 'Abbreviated.' },
   { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed as a variant, not a state, which is the de-duplication the rubric recommends. Only the slot order is inverted (`--color-disabled-bg`).' },
-  { rubric: 'sizes lg / md / sm', current: '—', status: 'missing', note: 'The size axis skips tier 2 entirely. It exists at tier 1 (`--icon-size-*`) and tier 3 (`--form-height-sm`, `--form-padding-x-xs`) with nothing in between.' },
+  { rubric: 'sizes lg / md / sm', current: '--control-height-*, --chip-height-*, --font-size-ui-*', status: 'match', note: 'The size axis used to skip tier 2 entirely. It now has three ramps: control height, chip height, and the chrome text size that tracks them. Tier 3 narrows them per family (`--form-height-md` → `--control-height-md`). Padding is still tier 1 by design — spacing is a measure, not an intent.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
   { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; they just need a home in the variant vocabulary.' },
   { rubric: '—', current: 'link, inverse, elevated, sunken, muted, light, strong', status: 'extra', note: 'Ad-hoc variant words with no rubric equivalent. `strong` is the notable one — it is really a surface (content), not a variant.' },
@@ -333,6 +350,8 @@ export const slots: RubricSlot[] = [
  */
 const inferSurface = (name: string): 'background' | 'content' => {
   const body = name.replace(/^--color-/, '');
+  // Washes and scrims are backgrounds regardless of any `-strong` intensity.
+  if (isOverlay(name)) return 'background';
   if (body.endsWith('-on-fill')) return 'content';
   if (body.endsWith('-strong')) return 'content';
   return 'background';
@@ -340,6 +359,7 @@ const inferSurface = (name: string): 'background' | 'content' => {
 
 const inferReason = (name: string): string => {
   const body = name.replace(/^--color-/, '');
+  if (isOverlay(name)) return 'a wash or scrim — a background named after its effect, not its surface';
   if (body.endsWith('-on-fill')) return 'foreground text sitting on that fill (step 12)';
   if (body.endsWith('-strong')) return 'Radix step 11 — coloured text on a surface';
   if (body.endsWith('-subtle')) return 'Radix step 2 — subtle tinted surface';

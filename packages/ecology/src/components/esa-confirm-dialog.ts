@@ -209,7 +209,7 @@ export class EsaConfirmDialog extends LitElement {
       width: var(--confirm-dialog-width, 360px);
       max-width: calc(100vw - 2rem);
       background: var(--confirm-dialog-bg, var(--color-surface-elevated, #ffffff));
-      border-radius: var(--confirm-dialog-radius, var(--radius-400, 0.75rem));
+      border-radius: var(--confirm-dialog-radius, var(--radius-overlay, 0.75rem));
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       font-family: var(--font-sans, 'DM Sans', sans-serif);
@@ -243,7 +243,7 @@ export class EsaConfirmDialog extends LitElement {
       height: 32px;
       padding: 0;
       border: none;
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
       color: var(--color-text-muted, #737373);
       cursor: pointer;
@@ -271,20 +271,20 @@ export class EsaConfirmDialog extends LitElement {
       justify-content: center;
       width: 48px;
       height: 48px;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       margin-bottom: var(--spacing-300, 0.75rem);
     }
     .esa-confirm-dialog__icon--default {
       background: var(--color-info-subtle, #eff6ff);
-      color: var(--color-info, #3b82f6);
+      color: var(--color-info-strong, #0d74ce);
     }
     .esa-confirm-dialog__icon--danger {
       background: var(--color-danger-subtle, #fef2f2);
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
     }
     .esa-confirm-dialog__icon--warning {
       background: var(--color-warning-subtle, #fffbeb);
-      color: var(--color-warning, #f59e0b);
+      color: var(--color-warning-strong, #ab6400);
     }
     .esa-confirm-dialog__title {
       font-size: var(--type-size-400, 1.125rem);
@@ -309,7 +309,7 @@ export class EsaConfirmDialog extends LitElement {
 
     .esa-confirm-dialog__btn {
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-surface, 0.5rem);
       font-family: inherit;
       font-size: var(--type-size-200, 0.9375rem);
       font-weight: var(--font-weight-medium, 450);

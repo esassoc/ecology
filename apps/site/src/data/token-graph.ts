@@ -188,7 +188,33 @@ if (existsSync(COMPONENTS)) {
 
 /* -------------------------------------------------------------- build nodes */
 
-const COLOR_RE = /^(#|rgb|hsl|oklch|color\()/i;
+const COLOR_RE = /^(#|rgb|hsl|oklch|color\(|color-mix\()/i;
+
+/**
+ * A value that is nothing but a var() reference. `lineageOf` resolves these by
+ * walking to the terminal literal, which is right — the token IS its referent.
+ */
+const PURE_VAR = /^var\(\s*--[a-zA-Z][a-zA-Z0-9-]*\s*(,[\s\S]*)?\)$/;
+
+/**
+ * A value that WRAPS a reference — `color-mix(in srgb, var(--color-primary) 8%,
+ * transparent)`. Walking to the terminal here throws the wrapper away and
+ * reports the solid brand colour, so a 8% wash rendered as a swatch came out as
+ * a solid block. Substitute into the expression instead, which is both accurate
+ * and still valid CSS for the swatch to paint.
+ */
+const resolveEmbedded = (value: string): string =>
+  value.replace(/var\(\s*(--[a-zA-Z][a-zA-Z0-9-]*)\s*(?:,[^()]*)?\)/g, (whole, ref: string) => {
+    const end = lineageOf(`var(${ref})`).at(-1);
+    return end?.kind === 'raw' ? end.ref : whole;
+  });
+
+const resolveValue = (value: string, terminal: LineageLink | undefined): string =>
+  PURE_VAR.test(value.trim())
+    ? terminal?.kind === 'raw'
+      ? terminal.ref
+      : value
+    : resolveEmbedded(value);
 
 const nodes = new Map<string, TokenNode>();
 
@@ -201,8 +227,8 @@ for (const [name, value] of defs) {
     name,
     tier,
     value,
-    resolved: terminal?.kind === 'raw' ? terminal.ref : value,
-    isColor: COLOR_RE.test((terminal?.kind === 'raw' ? terminal.ref : value).trim()),
+    resolved: resolveValue(value, terminal),
+    isColor: COLOR_RE.test(resolveValue(value, terminal).trim()),
     description: tier === 'semantic' ? semanticSrc.get(name) : primitiveSrc.get(name),
     lineage,
     refs: refsOf(value),
@@ -554,13 +580,36 @@ export const adHocHooks: Finding[] = undeclared
     where: [...componentUse.get(t)!].sort().join(', '),
   }));
 
+/**
+ * Namespaces declared AHEAD of the component that will read them, so the
+ * theming contract is reviewable before code depends on it. Unread by
+ * definition — they are not orphans, and counting them as such buries the
+ * hooks that really are dead. Each entry must be documented in SPEC.md
+ * ("Staged surfaces") and have a component doc page describing the contract.
+ *
+ * Removing a name from here should mean the component landed, not that the
+ * finding got annoying.
+ */
+export const STAGED_PREFIXES = ['--grid-', '--topbar-'] as const;
+const isStaged = (name: string) => STAGED_PREFIXES.some((p) => name.startsWith(p));
+
+const unread = allTokens.filter(
+  (t) => t.tier !== 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length,
+);
+
 /** Declared at tier 2 or 3 but nothing reads it — dead surface, or a hook
  *  nobody wired up. Primitives are deliberately excluded: an unused ramp step
  *  is normal (a 12-step scale is a palette, not a checklist) and 290-odd of
- *  them would bury every other finding on this page. See `unusedRampSteps`. */
-export const orphans: Finding[] = allTokens
-  .filter((t) => t.tier !== 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length)
+ *  them would bury every other finding on this page. See `unusedRampSteps`.
+ *  Staged surfaces are excluded too — see `stagedSurfaces`. */
+export const orphans: Finding[] = unread
+  .filter((t) => !isStaged(t.name))
   .map((t) => ({ token: t.name, detail: `tier-${t.tier === 'semantic' ? 2 : 3} ${t.tier}, resolves to ${t.resolved}` }));
+
+/** Unread because the component hasn't been built yet. Inventory, not a defect. */
+export const stagedSurfaces: Finding[] = unread
+  .filter((t) => isStaged(t.name))
+  .map((t) => ({ token: t.name, detail: `staged — resolves to ${t.resolved}` }));
 
 /** Ramp steps nothing references. Informational — this is the palette headroom,
  *  not a defect. Useful for spotting a scale that's carried but never used. */
@@ -612,16 +661,34 @@ export const themePrimitiveOverrides: Finding[] = (() => {
 
 /** Tier-3 token wired straight to a primitive, skipping the semantic layer.
  *  Sometimes correct (geometry has no semantic peer) — but a color doing this
- *  means a spoke re-pointing the semantic layer will NOT re-skin it. */
+ *  means a spoke re-pointing the semantic layer will NOT re-skin it.
+ *
+ *  Tested on what the token IS (`isColor`), not on whether its NAME contains
+ *  "color". The name test missed 19 of 22, because this system spells content
+ *  colour `bg` / `text` / `color` depending on the component —
+ *  `--snackbar-item-bg-danger` is plainly a colour and matches no name pattern. */
 export const tierSkips: Finding[] = byTier('component')
-  .filter((t) => t.lineage[0]?.kind === 'primitive' && t.name.includes('color'))
+  .filter((t) => t.lineage[0]?.kind === 'primitive' && t.isColor)
   .map((t) => ({ token: t.name, detail: `-> ${t.lineage[0].ref} directly (no semantic hop)` }));
 
-/** Semantic token that terminates in a raw literal without passing through a
- *  primitive — a hardcoded value hiding at tier 2. */
-export const semanticHardcodes: Finding[] = byTier('semantic')
-  .filter((t) => !t.lineage.some((l) => l.kind === 'primitive') && t.lineage.at(-1)?.kind === 'raw')
+const semanticRaw = byTier('semantic').filter(
+  (t) => !t.lineage.some((l) => l.kind === 'primitive') && t.lineage.at(-1)?.kind === 'raw',
+);
+
+/** Semantic COLOR terminating in a raw literal without passing through a ramp —
+ *  a magic value hiding at the intent layer, and a real defect: it is off the
+ *  palette, so nothing about the ramp constrains it. */
+export const semanticHardcodes: Finding[] = semanticRaw
+  .filter((t) => t.isColor)
   .map((t) => ({ token: t.name, detail: `raw ${t.resolved} — never touches a ramp` }));
+
+/** Semantic DIMENSION holding a literal. Not a defect: there is no tier-1 ramp
+ *  behind control heights, chip heights, or layout widths, so tier 2 is where
+ *  the definition legitimately lives. Listed as inventory so the set stays
+ *  visible — if one of these ever grows a tier-1 ramp, it should move onto it. */
+export const dimensionRoles: Finding[] = semanticRaw
+  .filter((t) => !t.isColor)
+  .map((t) => ({ token: t.name, detail: `defines ${t.resolved} — no tier-1 ramp behind it` }));
 
 /** Only the actionable checks count toward the headline number. Ad-hoc hooks
  *  and unused ramp steps are inventory, not defects — folding them in would
