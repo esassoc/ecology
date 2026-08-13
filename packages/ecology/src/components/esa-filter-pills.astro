@@ -61,7 +61,7 @@ const { filters = [] } = Astro.props;
     --_pill-bg: var(--filter-pill-bg, var(--color-primary-bg, #d5edda));
     --_pill-text: var(--filter-pill-text, var(--color-primary-strong, #3a7c59));
     --_pill-font-size: var(--filter-pill-font-size, var(--type-size-100, 0.75rem));
-    --_pill-radius: var(--filter-pill-radius, var(--radius-full, 9999px));
+    --_pill-radius: var(--filter-pill-radius, var(--radius-pill, 9999px));
     --_pill-padding-x: var(--spacing-300, 0.75rem);
     --_pill-height: 28px;
 
@@ -111,7 +111,7 @@ const { filters = [] } = Astro.props;
     background: transparent;
     cursor: pointer;
     color: var(--filter-pill-remove-color, var(--color-text-secondary, #646464));
-    border-radius: var(--radius-full, 9999px);
+    border-radius: var(--radius-pill, 9999px);
     transition:
       color var(--transition-fast, 150ms ease),
       background var(--transition-fast, 150ms ease);

@@ -218,7 +218,7 @@ export class EsaChipGroup extends LitElement {
       --_pad-y: var(--spacing-150, 0.375rem);
       --_pad-x: var(--form-padding-x-md, 0.75rem);
       --_font: var(--form-font-size-md, 0.9375rem);
-      --_radius: var(--radius-100, 0.25rem);
+      --_radius: var(--radius-control, 0.25rem);
 
       /* Resting (unselected) chrome. */
       --_bg: var(--color-surface, #fff);

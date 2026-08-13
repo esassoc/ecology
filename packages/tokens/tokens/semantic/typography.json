@@ -1,0 +1,9 @@
+{
+  "font-size-ui": {
+    "$description": "Text inside interface furniture — control labels, table headers, pills, pagination. Deliberately aligned step-for-step with --control-height-*, so a component rendered at size `md` reads --font-size-ui-md. Prose keeps using the type-roles in type-roles.css; this ramp is for chrome, not content.",
+    "xs": { "$value": "{type.size.050}", "$type": "dimension" },
+    "sm": { "$value": "{type.size.100}", "$type": "dimension" },
+    "md": { "$value": "{type.size.200}", "$type": "dimension" },
+    "lg": { "$value": "{type.size.300}", "$type": "dimension" }
+  }
+}

@@ -197,7 +197,7 @@ export class EsaPagination extends LitElement {
     .page-size-select {
       padding: var(--spacing-100, 4px) var(--spacing-200, 8px);
       border: 1px solid var(--_pagination-border-color);
-      border-radius: var(--radius-100, 4px);
+      border-radius: var(--radius-control, 4px);
       background: var(--_pagination-bg);
       color: var(--_pagination-text-color);
       font-family: var(--font-sans, 'DM Sans', sans-serif);
@@ -228,7 +228,7 @@ export class EsaPagination extends LitElement {
       padding: 0;
       margin: 0;
       border: none;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: transparent;
       color: var(--_pagination-button-color);
       cursor: pointer;

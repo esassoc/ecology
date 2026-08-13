@@ -505,8 +505,8 @@ export class EsaSelect extends LitElement {
       transition: transform var(--transition-fast, 150ms ease);
     }
     .arrow svg {
-      width: var(--icon-size-medium, 20px);
-      height: var(--icon-size-medium, 20px);
+      width: var(--icon-size-md, 20px);
+      height: var(--icon-size-md, 20px);
     }
     .arrow--open {
       transform: translateY(-50%) rotate(180deg);
@@ -524,7 +524,7 @@ export class EsaSelect extends LitElement {
       background: var(--color-surface, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
       overscroll-behavior: contain;
     }
 
@@ -599,7 +599,7 @@ export class EsaSelect extends LitElement {
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
       color: var(--color-primary-strong, #3a7c59);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--type-size-150, 12px);
       line-height: 1.2;

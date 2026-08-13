@@ -10,9 +10,25 @@ all new components follow.
    `--color-teal-900`, `--spacing-400`, `--radius-100`, `--type-size-200`.
    **Primitives never move** — not in the hub, not in a theme.
 2. **Semantic** (`tokens/semantic/*.json` → compiled) — intent, referencing
-   primitives: `--color-primary`, `--color-surface`, `--color-text-secondary`.
-   A spoke's brand identity lives here: re-point a semantic token and the
-   intent re-skins everywhere it's used.
+   primitives. A spoke's brand identity lives here: re-point a semantic token
+   and the intent re-skins everywhere it's used. Every category gets a layer
+   here, not just colour:
+   - colour — `--color-primary`, `--color-surface`, `--color-text-secondary`
+   - shape — `--radius-control | -surface | -card | -overlay | -pill`
+   - size — `--control-height-{xs,sm,md,lg}`, `--chip-height-*`
+   - UI type — `--font-size-ui-{xs,sm,md,lg}` (chrome, not prose — prose uses
+     the type-roles in `src/type-roles.css`)
+   - elevation — `--elevation-1…6`
+   - layout — `--sidebar-width`, `--header-height`, `--content-max-width`
+
+   **Components read this tier, never a primitive.** A component reaching past
+   it (`border-radius: var(--radius-200)`) is the bug that forces a theme to
+   move a primitive, because the semantic layer no longer covers the property.
+
+   Most semantic tokens alias a primitive. **Dimension roles are allowed to
+   define instead** — there is no tier-1 ramp behind a control height or a
+   layout width, so tier 2 is where that value legitimately lives. The debug
+   page lists these separately from colour hardcodes for exactly this reason.
 3. **Component** (`src/component-tokens.css`, authored) — the per-component
    (or per-group) theming surface, defaulting to semantic references:
    `--card-bg: var(--color-surface)`. A spoke uses this tier to diverge ONE
@@ -69,15 +85,37 @@ Adding a hook NEVER changes rendered output:
 Spokes already shipping are untouched by construction: every new token's
 default resolves to exactly what the component read before.
 
+## Staged surfaces
+
+A tier-3 namespace may be declared **before** the component that reads it, so
+the theming contract can be reviewed before code depends on it. `--grid-*` and
+`--topbar-*` are staged today.
+
+A staged surface must:
+
+- be listed in `STAGED_PREFIXES` in `apps/site/src/data/token-graph.ts`, which
+  keeps it out of the orphan check and into its own inventory bucket;
+- carry a `(STAGED)` banner comment in `component-tokens.css` saying why;
+- have a component doc page describing the contract in the same names.
+
+Removing a prefix from that list should mean **the component landed**, not that
+the finding got annoying. A staged surface that no one has claimed after a
+release cycle is dead surface — fold it away.
+
 ## Themes consume the tiers like this
 
 ```css
 [data-theme="cb-fish"] {
   /* tier 2 — the brand: everything 'primary' becomes navy */
   --color-primary: #1e5386;
-  /* tier 3 — one component diverges from the brand default */
-  --card-radius: var(--radius-100);
+  /* tier 2 — shape and size are roles too: flatter corners, tighter controls */
+  --radius-surface: 4px;
+  --control-height-md: 36px;
+  /* tier 3 — ONE component diverges from those defaults */
+  --card-radius: var(--radius-control);
 }
 ```
 
-Never re-point a primitive; never style `.esa-*` internals from a theme.
+Never re-point a primitive; never style `.esa-*` internals from a theme. If a
+theme finds itself wanting to move `--radius-200` or `--shadow-300`, the real
+problem is a missing semantic role — add the role, don't move the ingredient.

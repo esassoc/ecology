@@ -177,14 +177,25 @@ import Section from '@esa/docs/Section.astro';
   </Section>
 
   <Section id="tokens" title="Tokens">
-    <p class="meta">The wrapper exposes <code>--grid-*</code> override hooks, each falling back to a semantic token. Consume these to re-skin AG Grid:</p>
+    <p class="meta">
+      The <code>--grid-*</code> hooks are <strong>staged</strong>: declared in
+      <code>component-tokens.css</code> ahead of the wrapper, so the theming contract is reviewable
+      before code depends on it. Every one falls back to a semantic token. The list below mirrors
+      that file by hand — check it against <code>component-tokens.css</code> when the wrapper lands.
+    </p>
     <ul class="tokens">
-      <li><strong>Container:</strong> <code>--grid-border-color → --color-border</code>, <code>--grid-border-radius → --radius-300</code>, <code>--grid-shadow → --shadow-200</code>, <code>--grid-bg → --color-surface</code>.</li>
-      <li><strong>Type:</strong> <code>--grid-font-family → --font-sans</code>, <code>--grid-font-size → --type-size-200</code>.</li>
-      <li><strong>Header:</strong> <code>--grid-header-bg → --color-surface-sunken</code>, <code>--grid-header-text → --color-text-secondary</code>, <code>--grid-header-font-size → --type-size-100</code>.</li>
-      <li><strong>Rows:</strong> <code>--grid-row-hover-bg → --color-hover-overlay</code>, <code>--grid-row-selected-bg → --color-active-overlay</code>, <code>--grid-row-border-color → --color-border</code>.</li>
+      <li><strong>Container:</strong> <code>--grid-bg → --color-surface</code>, <code>--grid-border-color → --color-border</code>, <code>--grid-radius → --radius-surface</code>, <code>--grid-shadow → --elevation-3</code>.</li>
+      <li><strong>Type:</strong> <code>--grid-font-family → --font-sans</code>, <code>--grid-font-size → --font-size-ui-md</code>.</li>
+      <li><strong>Header:</strong> <code>--grid-header-bg</code>, <code>--grid-header-color</code>, <code>--grid-header-weight</code>, <code>--grid-header-font-size → --font-size-ui-sm</code>, <code>--grid-header-border-color</code>.</li>
+      <li><strong>Rows:</strong> <code>--grid-row-bg</code>, <code>--grid-row-bg-hover</code>, <code>--grid-row-bg-selected</code>, <code>--grid-row-stripe-bg</code>, <code>--grid-row-border-color</code>, <code>--grid-row-font-size</code>.</li>
       <li><strong>Cells:</strong> <code>--grid-cell-padding-x → --spacing-300</code>, <code>--grid-cell-padding-y → --spacing-200</code>; focus uses <code>--focus-ring-width</code> / <code>--focus-ring-color</code>.</li>
+      <li><strong>Chrome:</strong> <code>--grid-toolbar-bg</code>, <code>--grid-toolbar-gap</code>, <code>--grid-toolbar-padding</code>, <code>--grid-pagination-bg</code>, <code>--grid-pagination-border-color</code>.</li>
     </ul>
+    <p class="meta">
+      State goes last, after the property — <code>--grid-row-bg-hover</code>, not
+      <code>--grid-row-hover-bg</code> — matching every other stateful token in the system. Border
+      tokens hold a <em>colour</em>, so a theme can re-point it without restating width and style.
+    </p>
   </Section>
 </ComponentDoc>
 
@@ -234,7 +245,7 @@ import Section from '@esa/docs/Section.astro';
   .chk-on::after { content: ''; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid var(--color-text-inverse, #fff); border-width: 0 2px 2px 0; transform: rotate(45deg); }
   .sort { color: var(--color-text-muted, #737373); }
 
-  .link-cell { color: var(--color-primary, #43608a); font-weight: var(--font-weight-medium, 450); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .link-cell { color: var(--color-primary-strong, #2a7e3b); font-weight: var(--font-weight-medium, 450); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 
   .chips-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-full, 9999px); font-size: var(--type-size-100, 0.75rem); font-weight: var(--font-weight-medium, 450); background: var(--color-surface-sunken, #efefef); color: var(--color-text-primary, #171717); white-space: nowrap; }
@@ -248,7 +259,7 @@ import Section from '@esa/docs/Section.astro';
   .tip-cell .copy { color: var(--color-text-muted, #737373); flex-shrink: 0; }
 
   .flag { color: var(--color-disabled-text, #a3a3a3); }
-  .flag-on { color: var(--color-primary, #43608a); }
+  .flag-on { color: var(--color-primary-strong, #2a7e3b); }
 
   .btn-cell { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid transparent; border-radius: var(--radius-100, 4px); font-size: var(--type-size-100, 0.75rem); font-weight: var(--font-weight-medium, 450); font-family: inherit; cursor: pointer; white-space: nowrap; }
   .btn-primary { background: var(--color-primary, #43608a); color: var(--color-text-inverse, #fff); }

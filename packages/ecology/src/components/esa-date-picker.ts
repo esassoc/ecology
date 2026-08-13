@@ -142,7 +142,7 @@ export class EsaDatePicker extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
       margin-left: 2px;
     }
     .field__help {

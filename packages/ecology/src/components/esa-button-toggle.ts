@@ -245,7 +245,7 @@ export class EsaButtonToggle extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
       margin-left: 2px;
     }
 
@@ -307,7 +307,7 @@ export class EsaButtonToggle extends LitElement {
 
     .option--selected {
       background: var(--form-bg, #fff);
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #2a7e3b);
       font-weight: var(--font-weight-semibold, 550);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
