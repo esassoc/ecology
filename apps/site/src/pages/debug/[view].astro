@@ -28,7 +28,6 @@ export function getStaticPaths() {
 const {
   tierCounts,
   primitiveGroups,
-  semanticGroups,
   componentGroups,
   undefinedRefs,
   duplicateDeclarations,
@@ -43,6 +42,9 @@ const {
   coreSetNotes,
   themePrimitiveOverrides,
 } = await import('../../data/token-graph');
+
+const t2 = await import('../../data/tier2-naming');
+const t3 = await import('../../data/tier3-naming');
 
 const TIER_NOTE = {
   component:
@@ -132,17 +134,930 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       ))}
     </Section>
 
-    {(
-      [
-        ['component', 'Tier 3 · Component', componentGroups],
-        ['semantic', 'Tier 2 · Semantic', semanticGroups],
-      ] as [keyof typeof TIER_NOTE, string, TokenGroup[]][]
-    ).map(([tier, title, groups]) => (
-      <Section id={tier} title={title}>
-        <p>{TIER_NOTE[tier]}</p>
-        {groups.map((group) => <TokenGroupTable group={group} />)}
-      </Section>
-    ))}
+    <Section id="tier2-naming" title="Tier 2 · Naming audit">
+      <p>
+        Every tier-2 name measured against the 6-slot rubric. Counts here are derived from the real
+        token names at build time, not typed in — the vocabulary tables and the prose are authored,
+        because that part is judgment a parser can&rsquo;t make.
+      </p>
+
+      <div class="grammar">
+        <div>
+          <span class="grammar-label">Rubric</span>
+          <code>{t2.grammars.rubric}</code>
+        </div>
+        <div>
+          <span class="grammar-label">What we ship</span>
+          {t2.grammars.current.map((g) => <code>{g}</code>)}
+        </div>
+      </div>
+
+      <p class="cat-note">
+        Three slots where the rubric specifies six, and in the colour family slots 4 and 5 swap order
+        depending on the token. The gap is front-loaded: everything from <em>variant</em> rightward is
+        largely sound; everything to its left is missing or unstable.
+      </p>
+
+      <h3 class="sub">Slot by slot</h3>
+      <table class="findings slots">
+        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t2.slots.map((s) => (
+            <tr class={`slot-${s.status}`}>
+              <td class="slot-n">{s.n}</td>
+              <td class="slot-name">
+                {s.name}
+                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
+              </td>
+              <td><code class="spec">{s.spec}</code></td>
+              <td>{s.verdict}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 class="sub">Slots 1–2 · no namespace, no tier signal</h3>
+      <p class="cat-note">
+        <b>{t2.prefixCollision.primitive}</b> tier-1 and <b>{t2.prefixCollision.semantic}</b> tier-2
+        tokens share the <code>--color-</code> prefix. <code>{t2.prefixCollision.example.primitive}</code>
+        and <code>{t2.prefixCollision.example.semantic}</code> are indistinguishable by name — under the
+        rubric the second would be <code>--eco-theme-color-background-brand</code>.
+      </p>
+      <p class="cat-gap">
+        <b>This has already cost you.</b> <code>token-graph.ts</code> classifies tier by
+        <em>source directory</em> because no regex on the name can do it (<code>theming.ts</code> still
+        tries the regex route). Both themes re-point <code>--radius-200</code>, a primitive — invisible,
+        because nothing in the name announces which tier you are editing. And
+        <code>--focus-ring-color</code> is declared in both <code>tokens/primitive/effect.json</code>
+        and <code>src/component-tokens.css</code>; tier 3 loads last and wins. See <b>Health</b> above
+        for all three.
+      </p>
+
+      <h3 class="sub">Slot 4 · the surface — biggest divergence</h3>
+      <div class="tally">
+        <div class="tally-cell t2"><b>{t2.surfaceNamed}</b><span>of {t2.colorTotal} name a surface</span></div>
+        <div class="tally-cell warn"><b>{t2.surfaceImplied}</b><span>surface implied only</span></div>
+        <div class="tally-cell ok"><b>{t2.orderRubric}</b><span>rubric order</span></div>
+        <div class="tally-cell warn"><b>{t2.orderInverted}</b><span>inverted order</span></div>
+        <div class="tally-cell"><b>{t2.orderSurfaceOnly}</b><span>surface, no variant</span></div>
+        <div class="tally-cell warn"><b>{t2.variantAsSurface}</b><span>surface as a variant word</span></div>
+      </div>
+
+      <p class="cat-note">Five words in use for the rubric&rsquo;s three surfaces:</p>
+      <table class="findings">
+        <thead><tr><th>Rubric surface</th><th>Words in use</th><th>Tokens</th></tr></thead>
+        <tbody>
+          {t2.surfaceVocabRows.map((r) => (
+            <tr>
+              <td><code>{r.rubric}</code></td>
+              <td>{r.words.map((w) => <code class="vocab">{w}</code>)}</td>
+              <td class="num">{r.count}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p class="cat-note">
+        <code>text</code> is a legal split of <code>content</code> per the rubric — but there is no
+        <code>icon</code> counterpart, so icon colour is unmanaged at tier 2. And two suffixes are
+        surfaces wearing a variant costume: <code>-strong</code> means <em>content</em> colour,
+        <code>-on-fill</code> means <em>content on that background</em>.
+      </p>
+
+      <details class="tok-group" data-group>
+        <summary>
+          <code class="group-label">Every colour token, parsed into slots</code>
+          <span class="summary-right"><span class="group-count">{t2.colorTotal}</span></span>
+        </summary>
+        <table class="tok-table parse">
+          <thead>
+            <tr><th>Token</th><th>Surface</th><th>Variant</th><th>State</th><th>Order</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            {t2.colorRows.map((r) => (
+              <tr data-token={r.name}>
+                <td class="c-name"><code>{r.name}</code></td>
+                <td>
+                  {r.surfaceWord ? (
+                    <>
+                      <code class="vocab">{r.surfaceWord}</code>
+                      {r.surfaceWord !== r.surface && <span class="dim"> → {r.surface}</span>}
+                    </>
+                  ) : (
+                    <span class="dim">implied</span>
+                  )}
+                </td>
+                <td>{r.variant ? <code class="vocab">{r.variant}</code> : <span class="dim">—</span>}</td>
+                <td>{r.state ? <code class="vocab st">{r.state}</code> : <span class="dim">—</span>}</td>
+                <td><span class={`ord o-${r.order}`}>{r.order}</span></td>
+                <td class="notes">
+                  {r.flags.length === 0 ? <span class="dim">—</span> : r.flags.map((f) => <div>{f}</div>)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+
+      <h3 class="sub">Slot 5 · variant — right idea, different words</h3>
+      <table class="findings">
+        <thead><tr><th>Rubric</th><th>Current</th><th></th><th>Note</th></tr></thead>
+        <tbody>
+          {t2.variantVocab.map((v) => (
+            <tr>
+              <td><code>{v.rubric}</code></td>
+              <td><code>{v.current}</code></td>
+              <td><span class={`slot-flag f-${v.status}`}>{v.status}</span></td>
+              <td>{v.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 class="sub">Slot 6 · state — this one is already correct</h3>
+      <p class="cat-note">
+        All {t2.stateRows.length} stateful tokens put the state last, and <code>default</code> is
+        correctly omitted rather than spelled out.
+      </p>
+      <table class="findings">
+        <thead><tr><th>State</th><th>Tokens</th></tr></thead>
+        <tbody>
+          {t2.stateBreakdown.map((s) => (
+            <tr>
+              <td><code class="vocab st">{s.state}</code> <span class="num">({s.tokens.length})</span></td>
+              <td>{s.tokens.map((n) => <code class="vocab">{n}</code>)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 class="sub">Slot 3 · which categories exist at tier 2 at all</h3>
+      <table class="findings">
+        <thead><tr><th>Category</th><th>Tokens</th><th>How it is handled today</th></tr></thead>
+        <tbody>
+          {t2.categoryRows.map((c) => (
+            <tr class={c.count === 0 ? 'row-zero' : undefined}>
+              <td><code>{c.category}</code></td>
+              <td class="num">{c.count}</td>
+              <td>{c.how}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p class="cat-note">
+        Typography is the interesting one: the intention vocabulary <em>already exists</em>, just as
+        CSS classes in <code>type-roles.css</code> rather than tokens. Because they are classes, Figma
+        can&rsquo;t consume them and a spoke can&rsquo;t re-point them by overriding a token.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Rubric intention</th><th>Current</th><th></th></tr></thead>
+        <tbody>
+          {t2.typeRoleMapping.map((m) => (
+            <tr>
+              <td><code>{m.rubric}</code></td>
+              <td><code>{m.current}</code></td>
+              <td><span class={`slot-flag f-${m.status}`}>{m.status}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-note">
+        All {t2.typeRoleClasses.length} classes as shipped:
+        {t2.typeRoleClasses.map((c) => <code class="vocab">.{c}</code>)}
+      </p>
+
+      <h3 class="sub">The non-colour tier-2 tokens</h3>
+      <table class="findings">
+        <thead><tr><th>Token</th><th>Leads with</th><th>Then</th></tr></thead>
+        <tbody>
+          {t2.layoutRows.map((l) => (
+            <tr>
+              <td><code>{l.name}</code></td>
+              <td><code class="vocab warnv">{l.region}</code> <span class="dim">region, not a category</span></td>
+              <td><code class="vocab">{l.rest}</code></td>
+            </tr>
+          ))}
+          {t2.elevationRows.map((e) => (
+            <tr>
+              <td><code>{e.name}</code></td>
+              <td><code class="vocab warnv">elevation</code> <span class="dim">scale, not the box-shadow category</span></td>
+              <td class="dim">{e.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Section>
+
+    <Section id="tier3-naming" title="Tier 3 · Naming audit">
+      <p>
+        The same exercise, one tier down. Every tier-3 name measured against the rubric&rsquo;s six
+        slots, with counts derived from the real names at build time. Two things make tier 3 read
+        differently from tier 2: the component slot is the one place this system is already
+        <em>right</em>, and the names carry a seventh concept the rubric has no slot for.
+      </p>
+
+      <div class="grammar">
+        <div>
+          <span class="grammar-label">Rubric</span>
+          <code>{t3.grammars.rubric}</code>
+        </div>
+        <div>
+          <span class="grammar-label">What we ship</span>
+          {t3.grammars.current.map((g) => <code>{g}</code>)}
+        </div>
+      </div>
+
+      <div class="tally">
+        <div class="tally-cell t3"><b>{t3.total}</b><span>tier-3 tokens</span></div>
+        <div class="tally-cell"><b>{t3.namespaceCount}</b><span>namespaces</span></div>
+        <div class="tally-cell ok"><b>{t3.total - t3.unnamespaced.length}</b><span>name a component</span></div>
+        <div class="tally-cell warn"><b>{t3.partTally.tokens}</b><span>name an internal part</span></div>
+        <div class="tally-cell"><b>{t3.stateRows.length}</b><span>stateful</span></div>
+        <div class="tally-cell warn"><b>{t3.unnamespaced.length}</b><span>unplaced</span></div>
+      </div>
+
+      <p class="cat-note">
+        The shape of the gap is the mirror image of tier 2. There, everything left of
+        <em>variant</em> was missing. Here slot 3 is solid and slots 4–5 are inverted: we write
+        <code>--form-padding-x-md</code> where the rubric writes
+        <code>--eco-component-form-md-padding-x</code>. Same information, opposite order.
+      </p>
+
+      <h3 class="sub">Slot by slot</h3>
+      <table class="findings slots">
+        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.slots.map((s) => (
+            <tr class={`slot-${s.status}`}>
+              <td class="slot-n">{s.n}</td>
+              <td class="slot-name">
+                {s.name}
+                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
+              </td>
+              <td><code class="spec">{s.spec}</code></td>
+              <td>{s.verdict}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 class="sub">Slots 1–2 · where the missing tier identifier finally bites</h3>
+      <p class="cat-note">
+        At tier 2 the absent tier identifier was an argument about readability. At tier 3 it names
+        real collisions — the same prefix declaring tokens at two tiers, with nothing in the name to
+        say which one you are editing.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Prefix</th><th>At tier 1</th><th>At tier 3</th><th>Consequence</th></tr></thead>
+        <tbody>
+          {t3.tierCollisions.map((c) => (
+            <tr>
+              <td><code>{c.prefix}</code></td>
+              <td>{c.tier1.map((n) => <code class="vocab">{n}</code>)}</td>
+              <td>{c.tier3.map((n) => <code class="vocab warnv">{n}</code>)}</td>
+              <td>{c.cost}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-gap">
+        <b>The rubric offers a cheaper fix here than at tier 2.</b> It says the tier identifier can be
+        the <em>component prefix</em> itself — you don&rsquo;t need <code>--eco-component-</code> on all
+        {t3.total} if the component name is doing that work. Which it already is, on
+        {t3.total - t3.unnamespaced.length} of them. The exposure is the
+        {t3.unnamespaced.length} that name no component at all, plus the two prefixes above that
+        straddle tiers.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Unplaced token</th><th>Declared under</th><th>Reads as</th></tr></thead>
+        <tbody>
+          {t3.unnamespaced.map((r) => (
+            <tr>
+              <td><code>{r.name}</code></td>
+              <td><code class="vocab">{r.owner ?? '—'}</code></td>
+              <td class="dim">
+                {r.name.startsWith('--color-')
+                  ? 'a tier-2 semantic colour role'
+                  : 'a bare CSS property with no owner'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 class="sub">Slot 3 · component / category / special case — the one that already works</h3>
+      <p class="cat-note">
+        The rubric allows three kinds of name in this slot, and all three are in use. Reach is the
+        number of distinct components that read a namespace&rsquo;s tokens — it is what separates a
+        genuine category from a component that happens to be named oddly.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Kind</th><th>Namespaces</th><th>Tokens</th></tr></thead>
+        <tbody>
+          {t3.nsKindTally.map((k) => (
+            <tr class={k.namespaces === 0 ? 'row-zero' : undefined}>
+              <td>
+                <code>{k.kind}</code>
+                <span class={`slot-flag f-${k.kind === 'none' ? 'absent' : 'match'}`}>
+                  {k.kind === 'none' ? 'unplaced' : 'rubric-legal'}
+                </span>
+              </td>
+              <td class="num">{k.namespaces}</td>
+              <td class="num">{k.tokens}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <table class="findings">
+        <thead><tr><th>Namespace</th><th>Tokens</th><th>Reach</th><th>Why it is not a component name</th></tr></thead>
+        <tbody>
+          {t3.nsGroups.filter((g) => g.note).map((g) => (
+            <tr>
+              <td>
+                <code>{g.ns}</code>
+                <span class={`slot-flag f-${g.hasComponent ? 'match' : 'partial'}`}>{g.kind}</span>
+              </td>
+              <td class="num">{g.tokens.length}</td>
+              <td class="num">{g.reach}</td>
+              <td>{g.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-note">
+        <code>form</code> (read by {t3.nsGroups.find((g) => g.ns === 'form')?.reach} components) and
+        <code>focus-ring</code> (read by {t3.nsGroups.find((g) => g.ns === 'focus-ring')?.reach}) are
+        the rubric&rsquo;s own two examples, arrived at independently. Every other namespace has a
+        reach of one or zero, which is what a component-scoped hook should look like.
+      </p>
+      <p class="cat-gap">
+        <b>The boundary is not machine-readable.</b> Nothing in a name marks where the component ends
+        and the property begins — these parse only because the parser checks the component roster
+        longest-match-first:
+        {t3.nsAmbiguity.map((p) => (
+          <span class="pair"><code class="vocab">{p.shorter}</code> vs {p.longer.map((l) => <code class="vocab warnv">{l}</code>)}</span>
+        ))}
+        A dash-delimited slot the rubric assumes is one word is, here, one-to-three words that only a
+        roster can segment.
+      </p>
+      {t3.ownerMismatch.length > 0 && (
+        <>
+          <p class="cat-note">
+            {t3.ownerMismatch.length} tokens are named for one component but declared in another
+            block. Mostly legitimate sharing — worth listing because it shows the block comment is
+            not authoritative, the name is.
+          </p>
+          <table class="findings">
+            <thead><tr><th>Token</th><th>Named for</th><th>Declared under</th></tr></thead>
+            <tbody>
+              {t3.ownerMismatch.map((r) => (
+                <tr>
+                  <td><code>{r.name}</code></td>
+                  <td><code class="vocab">{r.ns}</code></td>
+                  <td><code class="vocab warnv">{r.owner}</code></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <h3 class="sub">The seventh concept · the internal part</h3>
+      <p class="cat-note">
+        <b>{t3.partTally.tokens} of {t3.total}</b> tokens name a piece <em>inside</em> the component —
+        the row of a grid, the thumb of a switch, the header of a card — across
+        {t3.partTally.distinct} distinct words. The rubric has six slots and none of them is this
+        one. Under a strict reading these words land in <em>variant</em>, but a part is not a
+        variant: <code>--grid-row-bg</code> and <code>--grid-header-bg</code> are not two variants of
+        a grid, they are two different elements of the same one.
+      </p>
+      <p class="cat-gap">
+        <b>Which matters because the slot is doing double duty.</b> The same unlabelled position
+        holds parts ({t3.partTally.asPart} tokens), real variants ({t3.partTally.asVariant}) and even
+        a state ({t3.partTally.asState}) — and nothing in the name tells you which you are reading.
+        <code>--grid-row-bg</code> names a part, <code>--grid-row-stripe-bg</code> a variant of that
+        part, and <code>--app-bar-brand-bg</code> a variant of the whole component. All three look
+        the same.
+      </p>
+      {t3.partWordClash.length > 0 && (
+        <p class="cat-gap">
+          <b>And the same word can mean both.</b> {t3.partWordClash.map((c) => (
+            <span class="pair">
+              <code class="vocab warnv">{c.word}</code> is {c.readings.join(', ')}
+            </span>
+          ))} — <code>tone="brand"</code> on <code>esa-app-bar</code> against
+          <code>.esa-app-shell__brand</code>, the BEM element. Two concepts, one spelling, one slot.
+        </p>
+      )}
+      <details class="tok-group" data-group>
+        <summary>
+          <code class="group-label">Every word used in the part position</code>
+          <span class="summary-right"><span class="group-count">{t3.partRows.length}</span></span>
+        </summary>
+        <table class="tok-table parse">
+          <thead><tr><th>Word</th><th>Tokens</th><th>Actually a</th><th>Examples</th></tr></thead>
+          <tbody>
+            {t3.partRows.map((p) => (
+              <tr>
+                <td><code class="vocab">{p.part}</code></td>
+                <td class="num">{p.count}</td>
+                <td><span class={`pk pk-${p.kind}`}>{p.kind}</span></td>
+                <td>{p.examples.map((e) => <code class="vocab">{e}</code>)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+
+      <h3 class="sub">Slot 4 · variant — present, and in the wrong place</h3>
+      <div class="tally">
+        <div class="tally-cell"><b>{t3.sizeRows.short.length + t3.sizeRows.long.length}</b><span>carry a size</span></div>
+        <div class="tally-cell warn"><b>{t3.sizeRows.afterProperty.length}</b><span>of those, size after the property</span></div>
+        <div class="tally-cell warn"><b>{t3.sizeRows.long.length}</b><span>in the long dialect</span></div>
+        <div class="tally-cell"><b>{t3.variantRows.length}</b><span>semantic variants</span></div>
+      </div>
+      <p class="cat-note">
+        The size axis that tier 2 skips entirely lands here instead, on
+        {t3.sizeRows.scales.length} separate per-component scales — every one of them with the size
+        trailing the property. <code>default</code> is correctly omitted throughout: there is no
+        <code>--form-padding-x-default</code>, the unsuffixed name <em>is</em> the default.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Dialect</th><th>Tokens</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code class="vocab">xs · sm · md · lg</code></td>
+            <td class="num">{t3.sizeRows.short.length}</td>
+            <td class="dim">The shared scale, aligned to Beacon&rsquo;s UiSize.</td>
+          </tr>
+          <tr>
+            <td><code class="vocab warnv">small · medium · large</code></td>
+            <td class="num">{t3.sizeRows.long.length}</td>
+            <td>{t3.sizeRows.long.map((r) => <code class="vocab">{r.name}</code>)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="cat-note">
+        Semantic variants exist too, and they sit in the same trailing position:
+        {t3.variantRows.map((r) => <code class="vocab">{r.name}</code>)}
+      </p>
+
+      <h3 class="sub">Slot 5 · property — nearly universal, never qualified</h3>
+      <p class="cat-note">
+        <b>{t3.withProperty} of {t3.total}</b> name a property. None of them qualify it the way the
+        rubric does: <code>color-content</code>, <code>color-background</code> and
+        <code>color-border</code> appear <b>{t3.colorQualified}</b> times in the whole file. Instead
+        the colour-ness is implied and the word is abbreviated.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Rubric property</th><th>Words in use</th><th>Tokens</th><th>Note</th></tr></thead>
+        <tbody>
+          {t3.propVocab.map((p) => (
+            <tr>
+              <td><code>{p.rubric}</code></td>
+              <td>
+                {p.words.map((w) => (
+                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="num">{w.count}</span></code>
+                ))}
+              </td>
+              <td class="num">{p.total}</td>
+              <td>{p.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-gap">
+        <b>One suffix, two property types.</b> <code>-border</code> holds a colour on
+        {t3.borderSplit.colour.length} tokens and a full shorthand on {t3.borderSplit.shorthand.length}.
+        A theme overriding <code>--sidenav-border</code> changes a colour; overriding
+        <code>--grid-row-border</code> means restating the width and style to change one.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Token</th><th>Holds</th><th>Value</th></tr></thead>
+        <tbody>
+          {[...t3.borderSplit.colour, ...t3.borderSplit.shorthand].map((r) => (
+            <tr>
+              <td><code>{r.name}</code></td>
+              <td>
+                <span class={`slot-flag f-${r.prop === 'color-border' ? 'match' : 'partial'}`}>
+                  {r.prop === 'color-border' ? 'colour' : 'shorthand'}
+                </span>
+              </td>
+              <td><code>{r.value}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {t3.withoutProperty.length > 0 && (
+        <p class="cat-note">
+          {t3.withoutProperty.length} name no property at all — you have to read the value to know
+          what they control:
+          {t3.withoutProperty.map((r) => <code class="vocab warnv">{r.name}</code>)}
+        </p>
+      )}
+
+      <h3 class="sub">Slot 6 · state — correctly placed, one word short</h3>
+      <p class="cat-note">
+        All {t3.stateRows.length} stateful tokens put the state last and omit
+        <code>default</code>, exactly as the rubric prescribes.
+        {t3.stateNotTrailing.length > 0 && (
+          <>
+            {' '}The exceptions are {t3.stateNotTrailing.length} tokens carrying a state word in the
+            middle of the name instead:
+            {t3.stateNotTrailing.map((r) => <code class="vocab warnv">{r.name}</code>)}
+          </>
+        )}
+      </p>
+      <table class="findings">
+        <thead><tr><th>State</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.stateVocab.map((s) => (
+            <tr class={s.tokens.length === 0 ? 'row-zero' : undefined}>
+              <td>
+                <code class="vocab st">{s.state}</code>
+                <span class={`slot-flag f-${s.inRubric ? 'match' : 'extra'}`}>
+                  {s.inRubric ? 'rubric' : 'ours'}
+                </span>
+              </td>
+              <td class="num">{s.tokens.length}</td>
+              <td>
+                {s.note && <div class="detail">{s.note}</div>}
+                {s.tokens.map((n) => <code class="vocab">{n}</code>)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-note">
+        <b>State is exclusive to colour — nearly.</b> {t3.stateColorCheck.onColor} of
+        {t3.stateColorCheck.total} stateful tokens name a colour property outright. Of the
+        {t3.stateColorCheck.exceptions.length} that don&rsquo;t, {t3.stateColorCheck.nonColour} really
+        do move something other than a colour, and {t3.stateColorCheck.unnamedColour} is a colour
+        whose property the name never states — so the rule holds on
+        {t3.stateColorCheck.onColor + t3.stateColorCheck.unnamedColour} of {t3.stateColorCheck.total}.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Token</th><th>Property</th><th>State</th><th>Value</th><th></th></tr></thead>
+        <tbody>
+          {t3.stateColorCheck.exceptions.map((e) => (
+            <tr>
+              <td><code>{e.row.name}</code></td>
+              <td><code class="vocab warnv">{e.row.propWord ?? 'implied'}</code></td>
+              <td><code class="vocab st">{e.row.state}</code></td>
+              <td><code>{e.row.value}</code></td>
+              <td>
+                <span class={`slot-flag f-${e.kind === 'non-colour' ? 'absent' : 'partial'}`}>
+                  {e.kind === 'non-colour' ? 'genuinely not a colour' : 'a colour, unnamed'}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <details class="tok-group" data-group>
+        <summary>
+          <code class="group-label">Every tier-3 token, parsed into slots</code>
+          <span class="summary-right"><span class="group-count">{t3.total}</span></span>
+        </summary>
+        <table class="tok-table parse">
+          <thead>
+            <tr>
+              <th>Token</th><th>Component</th><th>Part</th><th>Variant</th>
+              <th>Property</th><th>State</th><th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {t3.rows.map((r) => (
+              <tr data-token={r.name}>
+                <td class="c-name"><code>{r.name}</code></td>
+                <td>
+                  {r.ns ? (
+                    <>
+                      <code class="vocab">{r.ns}</code>
+                      {r.nsKind !== 'component' && <span class="dim"> {r.nsKind}</span>}
+                    </>
+                  ) : (
+                    <span class="ord o-none">unplaced</span>
+                  )}
+                </td>
+                <td>{r.part ? <code class="vocab">{r.part}</code> : <span class="dim">—</span>}</td>
+                <td>
+                  {r.size || r.variant ? (
+                    <code class="vocab">{[r.variant, r.size].filter(Boolean).join(' · ')}</code>
+                  ) : (
+                    <span class="dim">—</span>
+                  )}
+                </td>
+                <td>
+                  {r.propWord ? (
+                    <>
+                      <code class="vocab">{r.propWord}</code>
+                      {r.prop !== 'other' && r.prop !== null && (
+                        <span class="dim"> → {r.prop}</span>
+                      )}
+                    </>
+                  ) : (
+                    <span class="dim">implied</span>
+                  )}
+                </td>
+                <td>{r.state ? <code class="vocab st">{r.state}</code> : <span class="dim">—</span>}</td>
+                <td class="notes">
+                  {r.flags.length === 0 ? <span class="dim">—</span> : r.flags.map((f) => <div>{f}</div>)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    </Section>
+
+    <Section id="component" title="Tier 3 · Component">
+      <p>{TIER_NOTE.component}</p>
+      {componentGroups.map((group: TokenGroup) => <TokenGroupTable group={group} />)}
+    </Section>
+
+    <Section id="semantic" title="Tier 2 · Semantic">
+      <p>{TIER_NOTE.semantic}</p>
+      <p class="cat-note">
+        Colour tokens map tier 1 to specific colour roles in the default (vanilla) theme, grouped here
+        by <b>property</b> — the surface the colour lands on — then by variant family within each.
+        Only {t2.surfaceNamed} of {t2.colorTotal} spell their property in the name; the other
+        {' '}{t2.surfaceImplied} are placed by convention and marked <span class="inf">inferred</span>,
+        so this grouping doubles as the worklist for making the names say what the grouping knows.
+      </p>
+
+      {t2.propertyGroups.map((prop) => (
+        <details class="tok-category prop" data-group open>
+          <summary>
+            <span class="cat-label">{prop.label}</span>
+            <span class="summary-right">
+              {prop.inferred > 0 && <span class="inf-flag">{prop.inferred} inferred</span>}
+              <span class="group-count">{prop.total}</span>
+            </span>
+          </summary>
+          <p class="cat-note">{prop.note}</p>
+          <p class="cat-note">
+            Spelled in the name as {prop.words.map((w) => <code class="vocab">{w}</code>)}
+            {prop.words.length > 1 && <span> — {prop.words.length} words for one property.</span>}
+            {' '}<b>{prop.declared}</b> declared · <b>{prop.inferred}</b> inferred.
+          </p>
+          <div class="cat-body">
+            {prop.families.map((fam) => (
+              <details class="tok-group" data-group>
+                <summary>
+                  <code class="group-label">{fam.label}</code>
+                  <span class="summary-right"><span class="group-count">{fam.rows.length}</span></span>
+                </summary>
+                <table class="tok-table">
+                  <thead>
+                    <tr><th>Token</th><th>Property</th><th>Variant</th><th>State</th><th>Resolves to</th><th>Used by</th></tr>
+                  </thead>
+                  <tbody>
+                    {fam.rows.map((r) => {
+                      const node = t2.semanticNodes.get(r.name);
+                      return (
+                        <tr data-token={r.name} title={node?.description ?? undefined}>
+                          <td class="c-name"><code>{r.name}</code></td>
+                          <td>
+                            {r.declared ? (
+                              <code class="vocab">{r.word}</code>
+                            ) : (
+                              <span class="inf" title={r.reason ?? undefined}>inferred</span>
+                            )}
+                          </td>
+                          <td>{r.variant ? <code class="vocab">{r.variant}</code> : <span class="dim">—</span>}</td>
+                          <td>{r.state ? <code class="vocab st">{r.state}</code> : <span class="dim">—</span>}</td>
+                          <td class="c-value">
+                            {node?.isColor && <span class="swatch" style={`background:${node.resolved}`} />}
+                            <code>{node?.lineage[0]?.ref ?? '—'}</code>
+                            <span class="dim"> · {node?.resolved}</span>
+                          </td>
+                          <td class="c-used">
+                            {node && node.usedByTokens.length === 0 && node.usedByComponents.length === 0 ? (
+                              <span class="orphan-flag">orphan</span>
+                            ) : (
+                              <details class="uses">
+                                <summary>
+                                  {node && node.usedByTokens.length > 0 && <span class="pill">{node.usedByTokens.length} tok</span>}
+                                  {node && node.usedByComponents.length > 0 && <span class="pill">{node.usedByComponents.length} comp</span>}
+                                </summary>
+                                {node && node.usedByTokens.length > 0 && <p><b>Tokens:</b> {node.usedByTokens.join(', ')}</p>}
+                                {node && node.usedByComponents.length > 0 && <p><b>Components:</b> {node.usedByComponents.join(', ')}</p>}
+                              </details>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </details>
+            ))}
+          </div>
+        </details>
+      ))}
+
+      <h3 class="sub">Typography · grouped by intention</h3>
+      <p class="cat-note">
+        There are <b>zero</b> tier-2 typography <em>tokens</em>. The layer exists as the composable
+        classes in <code>type-roles.css</code> — composites of the tier-1 typography primitives, in
+        exactly the shape the rubric describes for tier 2, just not expressed as tokens. Because they
+        are classes, Figma can&rsquo;t consume them and a spoke can&rsquo;t re-point them by overriding
+        a token. All {t2.typeCoverage.roles} roles are shown: {t2.typeCoverage.placed} across the six
+        intentions, {t2.typeCoverage.outliers} outside them.
+      </p>
+      <p class="cat-note">
+        The six property columns are fixed, so an unset property is visible as a hole rather than an
+        absence. Two of the six are opt-in by design — <code>font-family</code> unset means
+        &ldquo;the body face&rdquo; and <code>text-transform</code> unset means <code>none</code> — so
+        those read <span class="dim">unset</span> quietly. The other four must be pinned for the role
+        to be a complete composite; missing one is marked <span class="req">required</span>.
+      </p>
+
+      {[...t2.typeIntentions, { label: 'Outside the six', definition: t2.typeOutliers.note, roles: t2.typeOutliers.roles, note: undefined }].map((intent) => (
+        <details class="tok-category prop type" data-group open>
+          <summary>
+            <span class="cat-label">{intent.label}</span>
+            <span class="summary-right">
+              {intent.note && <span class="inf-flag">inconsistent</span>}
+              <span class="group-count">{intent.roles.length}</span>
+            </span>
+          </summary>
+          <p class="cat-note">{intent.definition}</p>
+          {intent.note && <p class="cat-gap">{intent.note}</p>}
+          <div class="cat-body">
+            <table class="tok-table type-table">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  {t2.TYPE_PROPS.map((p) => <th>{p}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {intent.roles.map((role) => (
+                  <tr data-token={`.${role.className}`}>
+                    <td class="c-name"><code>.{role.className}</code></td>
+                    {t2.TYPE_PROPS.map((p) => {
+                      const d = role.props[p];
+                      if (!d) {
+                        const required = (t2.REQUIRED_TYPE_PROPS as readonly string[]).includes(p);
+                        return (
+                          <td class={required ? 'unset is-required' : 'unset'}>
+                            <span class={required ? 'req' : 'dim'}>{required ? 'required' : 'unset'}</span>
+                          </td>
+                        );
+                      }
+                      if (d.literal) return <td><code class="vocab warnv">{d.resolved}</code></td>;
+                      return (
+                        <td>
+                          <code class="vocab">{d.ref}</code>
+                          {d.fallbackRef && (
+                            <span class="fb">↳ fallback <code>{d.fallbackRef}</code></span>
+                          )}
+                          <span class="dim resolved">{d.resolved ?? '?'}</span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ))}
+
+      {t2.typeCoverage.incomplete.length > 0 && (
+        <p class="cat-gap">
+          <b>Incomplete composites:</b>{' '}
+          {t2.typeCoverage.incomplete.map((r, i) => (
+            <>
+              {i > 0 && ', '}
+              <code>.{r.className}</code> (no {r.missing.join(', ')})
+            </>
+          ))}
+          . A composite is meant to fully determine how text renders. Where a required property is
+          unset the role inherits it instead, so the same class renders differently depending on what
+          it sits inside — the exact failure a composite exists to prevent.
+        </p>
+      )}
+
+      <h3 class="sub">Distance to the reference model</h3>
+      <p class="cat-note">
+        A worked example of the target <b>shape</b>, for calibration only —
+        {' '}<b>{t2.referenceGap.refTotal}</b> composites named
+        {' '}<code>&lt;intention&gt;-&lt;size&gt;[-mobile]</code>, each declaring all six properties,
+        every value a reference with no literals, and each <code>-mobile</code> variant aliasing its
+        desktop sibling for whatever doesn&rsquo;t change.
+      </p>
+      <p class="dev-banner">
+        <strong>Structure, not values.</strong> The reference&rsquo;s px numbers are illustrative —
+        they are not a scale we are trying to hit, and nothing on this page measures ours against
+        them. What is being compared is which roles exist, which slots the names carry, whether a
+        composite is complete, and whether a mobile/desktop pair is expressible.
+      </p>
+
+      <div class="tally">
+        <div class="tally-cell t2"><b>{t2.referenceGap.covered}</b><span>of {t2.referenceGap.refDesktop} desktop roles have an equivalent</span></div>
+        <div class="tally-cell warn"><b>{t2.referenceGap.missing.length}</b><span>desktop roles with no equivalent</span></div>
+        <div class="tally-cell ok"><b>{t2.referenceGap.refMobile}</b><span>-mobile roles · ours live inside the clamp</span></div>
+        <div class="tally-cell"><b>{t2.referenceGap.extra.length}</b><span>of ours with no reference slot</span></div>
+      </div>
+
+      <p class="cat-gap">
+        <b>The clamp point.</b> Our sizes are fluid, but <code>clamp(min, fluid, max)</code> already
+        carries the two discrete values the reference splits into two named roles — the <b>min is the
+        mobile size</b> and the <b>max is the desktop size</b>. Every one of our roles therefore
+        already <em>has</em> a desktop/mobile pair; it has just never been named as one. Exporting to
+        Figma is a build-time extraction of the bounds, not a re-authoring. What we genuinely
+        can&rsquo;t do is move the mobile value independently of the desktop one — the interpolation
+        ties them together, so a <code>-mobile</code> role that changes letter-spacing has no
+        equivalent here.
+      </p>
+
+      <table class="findings cov">
+        <thead>
+          <tr>
+            <th>Reference role</th><th>-mobile sibling</th>
+            <th>Our equivalent</th><th>size token</th><th>mobile/desktop pair</th>
+          </tr>
+        </thead>
+        <tbody>
+          {t2.coverageByIntention.map((grp) => (
+            <>
+              <tr class="cov-head"><td colspan="5">{grp.intention}</td></tr>
+              {grp.cells.map((c) => (
+                <tr class={c.ours ? undefined : 'cov-miss'}>
+                  <td><code>{c.reference.name}</code></td>
+                  <td>
+                    {c.mobile ? (
+                      <span class="dim">declares {c.mobile.aliases.length ? `${6 - c.mobile.aliases.length} of 6, aliases the rest` : 'all 6'}</span>
+                    ) : (
+                      <span class="dim">none</span>
+                    )}
+                  </td>
+                  <td>{c.ours ? <code>.{c.ours}</code> : <span class="req">none</span>}</td>
+                  <td>{c.oursToken ? <code class="vocab">{c.oursToken}</code> : <span class="dim">—</span>}</td>
+                  <td>
+                    {c.oursBounds ? (
+                      <span class="pair">encoded in the clamp</span>
+                    ) : (
+                      <span class="dim">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-note">
+        Structure only — the reference&rsquo;s px values are a worked example, not a target, so
+        nothing here compares our scale against theirs. What the last column says is that wherever we
+        have a role, the mobile/desktop pair already exists inside its clamp; it has never been given
+        a name.
+      </p>
+
+      <h3 class="sub">Where the distance actually is</h3>
+      <p class="cat-note">
+        <span class="slot-flag f-absent">gap</span> is something the reference has and we lack.
+        {' '}<span class="slot-flag f-partial">divergence</span> is a different decision with a
+        rationale already written down in this repo — closing it would be a trade, not a fix.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Dimension</th><th>Reference</th><th>Ours</th><th></th><th>Detail</th></tr></thead>
+        <tbody>
+          {t2.structuralGaps.map((g) => (
+            <tr>
+              <td><b>{g.dimension}</b></td>
+              <td><code>{g.reference}</code></td>
+              <td><code>{g.ours}</code></td>
+              <td>
+                <span class={`slot-flag f-${g.verdict === 'gap' ? 'absent' : g.verdict === 'divergence' ? 'partial' : 'match'}`}>
+                  {g.verdict}
+                </span>
+              </td>
+              <td class="detail">{g.detail}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {t2.nonColorGroups.map((g) => (
+        <details class="tok-category" data-group>
+          <summary>
+            <span class="cat-label">{g.label}</span>
+            <span class="summary-right">
+              <span class="gap-flag">no property slot</span>
+              <span class="group-count">{g.tokens.length}</span>
+            </span>
+          </summary>
+          <p class="cat-note">{g.note}</p>
+          <TokenGroupTable group={{ label: g.label, tokens: g.tokens }} bare />
+        </details>
+      ))}
+    </Section>
 
     <Section id="core" title="Tier 1 · Core / universal">
       <p>{coreCategory.note}</p>
@@ -418,6 +1333,190 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-warning, #b45309); }
   .tokens-debug tr[hidden] { display: none; }
+
+  /* ---------------------------------------------- tier-2 naming audit */
+  .tokens-debug h3.sub {
+    font-size: 0.95rem;
+    margin: var(--spacing-600, 24px) 0 var(--spacing-250, 10px);
+    padding-bottom: var(--spacing-200, 8px);
+    border-bottom: 1px solid var(--color-border-light, #e5e5e5);
+  }
+  /* The two grammars side by side — the whole finding in one glance. */
+  .tokens-debug .grammar {
+    display: grid;
+    gap: var(--spacing-300, 12px);
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    margin: var(--spacing-400, 16px) 0;
+  }
+  .tokens-debug .grammar > div {
+    padding: var(--spacing-300, 12px);
+    border: 1px solid var(--color-border-light, #e5e5e5);
+    border-radius: var(--radius-200, 6px);
+    background: var(--color-surface-sunken, #fafafa);
+  }
+  .tokens-debug .grammar-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary, #666);
+    margin-bottom: var(--spacing-200, 8px);
+  }
+  .tokens-debug .grammar code { display: block; font-size: 0.78rem; line-height: 1.7; word-break: break-word; }
+  .tokens-debug .grammar > div:first-child code { color: var(--color-success-strong, #2a7e3b); }
+  .tokens-debug .grammar > div:last-child code { color: var(--color-warning-strong, #a35200); }
+
+  .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-text-muted, #999); width: 1.5rem; }
+  .tokens-debug .slots .slot-name { font-weight: 600; white-space: nowrap; }
+  .tokens-debug code.spec { font-size: 0.72rem; color: var(--color-text-secondary, #666); }
+  .tokens-debug .slot-flag {
+    display: inline-block;
+    margin-left: var(--spacing-200, 8px);
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: var(--radius-100, 4px);
+    padding: 1px 6px;
+    border: 1px solid transparent;
+  }
+  .tokens-debug .f-absent, .tokens-debug .f-missing {
+    color: var(--color-danger-strong, #c62a2f);
+    background: var(--color-danger-subtle, #fef2f2);
+    border-color: var(--color-danger-border, #fbbcbc);
+  }
+  .tokens-debug .f-partial, .tokens-debug .f-renamed {
+    color: var(--color-warning-strong, #a35200);
+    background: var(--color-warning-subtle, #fffbeb);
+    border-color: var(--color-warning-border, #fcd34d);
+  }
+  .tokens-debug .f-match {
+    color: var(--color-success-strong, #2a7e3b);
+    background: var(--color-success-subtle, #f0fdf4);
+    border-color: var(--color-success-border, #a7e8a7);
+  }
+  .tokens-debug .f-extra {
+    color: var(--color-text-secondary, #666);
+    background: var(--color-surface-sunken, #f4f4f4);
+    border-color: var(--color-border, #d4d4d4);
+  }
+  .tokens-debug tr.slot-absent td { background: var(--color-danger-subtle, #fef2f2); }
+  .tokens-debug tr.slot-match td { background: var(--color-success-subtle, #f0fdf4); }
+  .tokens-debug tr.row-zero code { color: var(--color-text-muted, #999); }
+
+  .tokens-debug code.vocab {
+    display: inline-block;
+    margin: 1px 4px 1px 0;
+    padding: 1px 6px;
+    font-size: 0.72rem;
+    border-radius: var(--radius-100, 4px);
+    background: var(--color-surface-sunken, #f4f4f4);
+    border: 1px solid var(--color-border-light, #e5e5e5);
+  }
+  .tokens-debug code.vocab.st { background: var(--color-info-subtle, #eff6ff); border-color: var(--color-info-border, #93c5fd); }
+  .tokens-debug code.vocab.warnv { background: var(--color-warning-subtle, #fffbeb); border-color: var(--color-warning-border, #fcd34d); }
+
+  .tokens-debug .ord {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .tokens-debug .o-rubric { color: var(--color-success-strong, #2a7e3b); }
+  .tokens-debug .o-inverted { color: var(--color-danger-strong, #c62a2f); font-weight: 600; }
+  .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-text-muted, #999); }
+  .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-text-secondary, #666); max-width: 30ch; }
+  .tokens-debug table.parse .notes div + div { margin-top: 3px; }
+  .tokens-debug .num { font-variant-numeric: tabular-nums; }
+
+  /* Tier-2 grouped by property. The property level is the loudest thing on the
+     section, because "which surface does this colour land on" is the question
+     the grouping exists to answer. */
+  .tokens-debug details.tok-category.prop > summary .cat-label {
+    text-transform: lowercase;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.9rem;
+  }
+  .tokens-debug details.tok-category.prop { border-left: 3px solid var(--color-primary, #16a34a); }
+  /* `inferred` marks a token whose property the NAME does not carry — the thing
+     this grouping is meant to make visible, so it stays legible, not decorative. */
+  .tokens-debug .inf {
+    font-size: 0.7rem;
+    font-style: italic;
+    color: var(--color-warning-strong, #a35200);
+    border-bottom: 1px dotted var(--color-warning, #d97706);
+    cursor: help;
+  }
+  /* Typography roles: six fixed property columns, so the table is wide. Let it
+     scroll inside its own box rather than pushing the page sideways. */
+  .tokens-debug details.tok-category.type > .cat-body { overflow-x: auto; }
+  .tokens-debug table.type-table { min-width: 60rem; }
+  .tokens-debug table.type-table td { white-space: nowrap; }
+  .tokens-debug table.type-table .resolved { display: block; font-size: 0.68rem; margin-top: 2px; }
+  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-text-muted, #999); margin-top: 2px; }
+  /* An unset property is the finding, not an absence — mark it, don't blank it.
+     The quiet hatch is opt-in-unset; is-required is the one that's a defect. */
+  .tokens-debug .req {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: var(--color-danger-strong, #c62a2f);
+  }
+  .tokens-debug table.type-table td.is-required { background: var(--color-danger-subtle, #fef2f2); }
+  .tokens-debug table.type-table td.unset {
+    background: repeating-linear-gradient(
+      45deg,
+      transparent, transparent 4px,
+      var(--color-surface-sunken, #f4f4f4) 4px, var(--color-surface-sunken, #f4f4f4) 8px
+    );
+    font-size: 0.7rem;
+    font-style: italic;
+  }
+  /* Coverage table: an intention header row separates the six blocks, and a
+     missing role is tinted so the holes read as a shape, not a list. */
+  .tokens-debug table.cov .cov-head td {
+    font-weight: 600;
+    font-size: 0.8rem;
+    background: var(--color-surface-sunken, #f4f4f4);
+    border-top: 1px solid var(--color-border, #d4d4d4);
+  }
+  .tokens-debug table.cov tr.cov-miss td { background: var(--color-danger-subtle, #fef2f2); }
+  .tokens-debug table.findings .detail { font-size: 0.78rem; line-height: 1.55; max-width: 46ch; }
+  .tokens-debug .pair {
+    font-size: 0.7rem;
+    color: var(--color-success-strong, #2a7e3b);
+  }
+  .tokens-debug .inf-flag {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-warning-strong, #a35200);
+    border: 1px solid var(--color-warning-border, #fcd34d);
+    background: var(--color-warning-subtle, #fffbeb);
+    border-radius: var(--radius-100, 4px);
+    padding: 1px 6px;
+  }
+
+  /* Tier-3 audit: what a word in the part position actually turned out to be. */
+  .tokens-debug .pk {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: var(--radius-100, 4px);
+    padding: 1px 6px;
+    border: 1px solid transparent;
+  }
+  .tokens-debug .pk-part {
+    color: var(--color-text-secondary, #525252);
+    border-color: var(--color-border, #e5e5e5);
+  }
+  .tokens-debug .pk-variant,
+  .tokens-debug .pk-state {
+    color: var(--color-warning-strong, #a35200);
+    border-color: var(--color-warning-border, #fcd34d);
+    background: var(--color-warning-subtle, #fffbeb);
+  }
 </style>
 
 <!-- is:inline for the same reason as the <style> above: an Astro-processed
