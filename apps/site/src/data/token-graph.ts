@@ -590,8 +590,31 @@ export const adHocHooks: Finding[] = undeclared
  * Removing a name from here should mean the component landed, not that the
  * finding got annoying.
  */
-export const STAGED_PREFIXES = ['--grid-', '--topbar-'] as const;
+export const STAGED_PREFIXES = ['--grid-'] as const;
 const isStaged = (name: string) => STAGED_PREFIXES.some((p) => name.startsWith(p));
+
+/**
+ * Chrome namespaces held EXEMPT by decision: the component exists and could
+ * read these, and we are choosing not to wire it. Distinct from staged, which
+ * means the component does not exist yet — `--topbar-*` sat under STAGED for
+ * months on that false premise, and because "staged" reads as "arriving soon"
+ * nobody re-checked it. The two must not share a bucket.
+ *
+ * `owner` is required and is the whole point: it records which component the
+ * surface belongs to, so the exemption can never again imply "nothing owns
+ * this". `cost` states plainly what a spoke loses, because an exemption that
+ * only says "ignore me" is how the last one went quiet.
+ */
+export const CHROME_EXEMPT: { prefix: string; owner: string; why: string; cost: string }[] = [
+  {
+    prefix: '--topbar-',
+    owner: 'esa-app-shell',
+    why: 'App chrome. esa-app-shell renders the bar, the sidebar toggle and the omnibox, and these 12 map onto them exactly — but chrome is held exempt from the wire-or-delete rule by decision.',
+    cost: 'A spoke overriding --topbar-bg, --topbar-icon-bg-hover or --topbar-search-* gets nothing. The chrome re-skins only through the semantic layer the component reads directly.',
+  },
+];
+const CHROME_PREFIXES = CHROME_EXEMPT.map((c) => c.prefix);
+const isChrome = (name: string) => CHROME_PREFIXES.some((p) => name.startsWith(p));
 
 const unread = allTokens.filter(
   (t) => t.tier !== 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length,
@@ -601,15 +624,24 @@ const unread = allTokens.filter(
  *  nobody wired up. Primitives are deliberately excluded: an unused ramp step
  *  is normal (a 12-step scale is a palette, not a checklist) and 290-odd of
  *  them would bury every other finding on this page. See `unusedRampSteps`.
- *  Staged surfaces are excluded too — see `stagedSurfaces`. */
+ *  Staged and chrome-exempt surfaces are excluded too — see below. */
 export const orphans: Finding[] = unread
-  .filter((t) => !isStaged(t.name))
+  .filter((t) => !isStaged(t.name) && !isChrome(t.name))
   .map((t) => ({ token: t.name, detail: `tier-${t.tier === 'semantic' ? 2 : 3} ${t.tier}, resolves to ${t.resolved}` }));
 
 /** Unread because the component hasn't been built yet. Inventory, not a defect. */
 export const stagedSurfaces: Finding[] = unread
   .filter((t) => isStaged(t.name))
   .map((t) => ({ token: t.name, detail: `staged — resolves to ${t.resolved}` }));
+
+/** Unread by DECISION, not by accident. The component exists; see CHROME_EXEMPT. */
+export const chromeSurfaces: Finding[] = unread
+  .filter((t) => isChrome(t.name))
+  .map((t) => ({
+    token: t.name,
+    detail: `exempt — resolves to ${t.resolved}`,
+    where: CHROME_EXEMPT.find((c) => t.name.startsWith(c.prefix))?.owner,
+  }));
 
 /** Ramp steps nothing references. Informational — this is the palette headroom,
  *  not a defect. Useful for spotting a scale that's carried but never used. */

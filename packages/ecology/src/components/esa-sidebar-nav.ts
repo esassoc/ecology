@@ -234,14 +234,27 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
       --_sidenav-bg: var(--sidenav-bg, #ffffff);
       --_sidenav-border: var(--sidenav-border, #efefef);
-      --_sidenav-item-height: 40px;
-      --_sidenav-item-padding: var(--spacing-300, 12px);
+      --_sidenav-item-height: var(--sidenav-item-height, 40px);
+      --_sidenav-item-padding: var(--sidenav-item-padding-x, var(--spacing-300, 12px));
+      --_sidenav-item-gap: var(--sidenav-item-gap, 0);
+      --_sidenav-icon-gap: var(--sidenav-icon-gap, var(--spacing-200, 8px));
+      --_sidenav-icon-size: var(--sidenav-icon-size, 18px);
+      --_sidenav-icon-size-collapsed: var(--sidenav-icon-size-collapsed, 18px);
       --_sidenav-item-radius: var(--radius-surface, 8px);
       --_sidenav-item-color: var(--sidenav-link-text, #525252);
+      --_sidenav-item-color-hover: var(--sidenav-link-text-hover, var(--sidenav-link-text, #525252));
       --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-primary-strong, #3a7c59));
-      --_sidenav-item-bg-hover: var(--color-surface-sunken, #efefef);
-      --_sidenav-item-bg-active: var(--color-primary-subtle, #f3f8fb);
+      --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
+      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-surface-sunken, #efefef));
+      --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-primary-subtle, #f3f8fb));
+      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--font-weight-semibold, 600));
+      --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
+      --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-primary, #43608a));
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
+      --_sidenav-section-spacing: var(--sidenav-section-spacing, var(--spacing-300, 12px));
+      --_sidenav-section-margin-top: var(--sidenav-section-margin-top, 0);
+      --_sidenav-nested-gap: var(--sidenav-nested-gap, 0);
+      --_sidenav-nested-indent: var(--sidenav-nested-indent, var(--spacing-400, 16px));
       --_sidenav-transition: var(--transition-base, 200ms ease);
 
       display: block;
@@ -310,11 +323,22 @@ export class EsaSidebarNav extends LitElement {
 
     .list,
     .children { list-style: none; margin: 0; padding: 0; }
-    .children { padding-left: var(--spacing-400, 16px); }
+    /* Flex column so --sidenav-item-gap / --sidenav-nested-gap have something to
+       act on. Both default to 0, which lays out identically to the plain blocks
+       these were before. */
+    .list { display: flex; flex-direction: column; gap: var(--_sidenav-item-gap); }
+    .children {
+      display: flex;
+      flex-direction: column;
+      gap: var(--_sidenav-nested-gap);
+      padding-left: var(--_sidenav-nested-indent);
+    }
 
     .group-heading {
-      padding: var(--spacing-300, 12px) var(--_sidenav-item-padding) var(--spacing-100, 4px);
+      padding: var(--_sidenav-section-spacing) var(--_sidenav-item-padding) var(--spacing-100, 4px);
     }
+    /* Only between sections — the first heading keeps the rail's own top padding. */
+    .group-heading:not(:first-child) { margin-top: var(--_sidenav-section-margin-top); }
     .group-label {
       display: block;
       font-size: var(--type-size-100, 11px);
@@ -330,13 +354,16 @@ export class EsaSidebarNav extends LitElement {
     .link {
       display: flex;
       align-items: center;
-      gap: var(--spacing-200, 8px);
+      gap: var(--_sidenav-icon-gap);
       width: 100%;
       height: var(--_sidenav-item-height);
       padding: 0 var(--_sidenav-item-padding);
       border: none;
+      /* Inset rather than a real border so switching the marker on cannot shift
+         the row's box — width 0 (the default) paints nothing. */
+      box-shadow: inset var(--_sidenav-active-border-width) 0 0 0 transparent;
       border-radius: var(--_sidenav-item-radius);
-      background: transparent;
+      background: var(--_sidenav-item-bg);
       color: var(--_sidenav-item-color);
       font-family: inherit;
       font-size: var(--type-size-200, 14px);
@@ -348,6 +375,9 @@ export class EsaSidebarNav extends LitElement {
       transition: background 150ms ease, color 150ms ease;
     }
     .link:hover:not(.link--disabled) { background: var(--_sidenav-item-bg-hover); }
+    /* Scoped off the active row so it keeps its active colour while hovered —
+       that is the behaviour that shipped before this hook existed. */
+    .link:hover:not(.link--disabled):not(.link--active) { color: var(--_sidenav-item-color-hover); }
     .link:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
@@ -356,13 +386,22 @@ export class EsaSidebarNav extends LitElement {
     .link--active {
       color: var(--_sidenav-item-color-active);
       background: var(--_sidenav-item-bg-active);
-      font-weight: var(--font-weight-semibold, 600);
+      box-shadow: inset var(--_sidenav-active-border-width) 0 0 0 var(--_sidenav-active-border-color);
+      font-weight: var(--_sidenav-item-weight-active);
     }
     .link--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     .link--inert { cursor: default; }
     .link--child { height: 36px; font-size: var(--type-size-150, 13px); }
 
     .icon { flex-shrink: 0; display: inline-flex; }
+    /* iconSvg() stamps width/height ATTRIBUTES (18px). A presentational attribute
+       loses to any rule, so these win without !important — but they must set both
+       axes, or the attribute's other axis survives and the glyph goes oblong. */
+    .icon svg { width: var(--_sidenav-icon-size); height: var(--_sidenav-icon-size); }
+    :host([collapsed]) .icon svg {
+      width: var(--_sidenav-icon-size-collapsed);
+      height: var(--_sidenav-icon-size-collapsed);
+    }
     .label {
       flex: 1;
       text-align: left;

@@ -54,11 +54,12 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
     --_crumb-font-size: var(--type-size-200, 0.875rem);
     --_crumb-link-color: var(--breadcrumbs-link-color, #43608a);
     --_crumb-link-hover: var(--breadcrumbs-link-hover, #39506f);
-    --_crumb-current-color: var(--color-text-primary, #171717);
+    --_crumb-current-color: var(--breadcrumbs-text-color, var(--color-text-primary, #171717));
     --_crumb-separator-color: var(--breadcrumbs-separator-color, #737373);
     --_crumb-gap: var(--spacing-200, 8px);
 
     display: block;
+    background: var(--breadcrumbs-bg, transparent);
   }
 
   /* base .esa-breadcrumbs = md. xs is one step below sm; sm/lg keep the old small/large values. */

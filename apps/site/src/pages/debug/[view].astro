@@ -1,24 +1,33 @@
 ---
 /**
- * DEBUG-ONLY token explorer. NOT SHIPPED.
+ * DEBUG-ONLY explorer. NOT SHIPPED.
  *
  * This is a dynamic route whose getStaticPaths returns ZERO paths in a
- * production build, so `npm run build` emits no HTML for it at all — the page
- * exists only under `astro dev`. That's the whole reason for the [view] param
- * on a page that has exactly one view: a static `tokens.astro` would always be
- * built. Delete this directory (and src/data/token-graph.ts) when the
- * refinement work it supports is done.
+ * production build, so `npm run build` emits no HTML for it at all — the pages
+ * exist only under `astro dev`. That is the whole reason for the [view] param:
+ * a static `tokens.astro` would always be built. Every debug view routes
+ * through here to inherit that guarantee — adding a `foo.astro` beside this
+ * file would ship it. Delete this directory (and src/data/token-graph.ts,
+ * src/data/component-promises.ts) when the refinement work it supports is done.
+ *
+ *   /debug/tokens      the three-tier graph + health checks
+ *   /debug/components  the tier-3 surface as a promise, checked against delivery
  */
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import Section from '@esa/docs/Section.astro';
 import TokenGroupTable from './_TokenGroup.astro';
+import ComponentsView from './_ComponentsView.astro';
 import type { TokenGroup } from '../../data/token-graph';
 
+const VIEWS = ['tokens', 'components'] as const;
+
 export function getStaticPaths() {
-  // Production emits nothing. Dev serves /debug/tokens.
+  // Production emits nothing.
   if (!import.meta.env.DEV) return [];
-  return [{ params: { view: 'tokens' } }];
+  return ['tokens', 'components'].map((view) => ({ params: { view } }));
 }
+
+const view = Astro.params.view as (typeof VIEWS)[number];
 
 // Deliberately a DYNAMIC import inside the component body, not a static one at
 // the top. A static import is evaluated whenever Astro loads this module to
@@ -34,6 +43,8 @@ const {
   adHocHooks,
   orphans,
   stagedSurfaces,
+  chromeSurfaces,
+  CHROME_EXEMPT,
   unusedRampSteps,
   tierSkips,
   semanticHardcodes,
@@ -60,7 +71,9 @@ const TIER_NOTE = {
 const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 ---
 
-<DocsLayout title="Token graph (debug)">
+<DocsLayout title={view === 'components' ? 'Component promises (debug)' : 'Token graph (debug)'}>
+  {view === 'components' && <ComponentsView />}
+  {view === 'tokens' && (
   <article class="article tokens-debug">
     <h1>Token graph</h1>
 
@@ -110,6 +123,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         { id: 'dimroles', label: 'Dimension roles (tier 2, no ramp behind them)', rows: dimensionRoles, note: 'Tier-2 dimension tokens that hold a literal rather than aliasing a primitive — control heights, chip heights, layout widths. Not a defect: no tier-1 ramp exists for these, so tier 2 is where the definition belongs. Inventory, so that if one ever grows a ramp it can move onto it.', severity: 'info' },
         { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but no token and no component reads it. Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below. Staged surfaces are excluded too — see the next check.', severity: 'warn' },
         { id: 'staged', label: 'Staged surfaces (component not built yet)', rows: stagedSurfaces, note: 'Unread because the component that will read them does not exist yet — the contract is declared first so it can be reviewed before code depends on it. Governed by STAGED_PREFIXES in token-graph.ts; each prefix must be documented in SPEC.md and have a component doc page. Removing a prefix from that list should mean the component landed, not that the finding got annoying.', severity: 'info' },
+        { id: 'chrome', label: 'Chrome, exempt by decision (component EXISTS)', rows: chromeSurfaces, note: `Not staged and not dead: the component is built and these map onto real elements in it, and we are choosing not to wire them. Kept in its own bucket because --topbar-* spent months filed as "staged" — which reads as "arriving soon" — on the false premise that no component owned it. The "Where" column names the owner so that cannot recur. Governed by CHROME_EXEMPT in token-graph.ts; every entry states what a spoke loses. ${CHROME_EXEMPT.map((c) => `${c.prefix}* → ${c.owner}: ${c.cost}`).join(' ')}`, severity: 'info' },
         { id: 'adhoc', label: 'Ad-hoc hooks — promotion candidates', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. Legitimate per SPEC.md: the component offers the hook via its fallback only. This is the working list for tier-3 surface work — promote into component-tokens.css, or fold away.', severity: 'info' },
         { id: 'unused', label: 'Unused ramp steps (tier 1)', rows: unusedRampSteps, note: 'Primitive steps nothing references. Normal — a 12-step scale is a palette, not a checklist. Useful only for spotting a whole ramp that is carried but never used.', severity: 'info' },
       ].map((check) => (
@@ -1123,8 +1137,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       ))}
     </Section>
   </article>
+  )}
 </DocsLayout>
 
+<!-- Both debug views' styles load on both routes. Harmless and deliberate:
+     each is namespaced (.tokens-debug / .promises-debug) and neither ships. -->
 <style is:inline>
   /* Page-scoped styles are normally banned in this system — allowed here only
      because this page is debug-only and never ships. */
