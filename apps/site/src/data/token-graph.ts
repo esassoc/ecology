@@ -237,13 +237,52 @@ export interface TokenGroup {
   tokens: TokenNode[];
 }
 
-/** Primitives group by ramp/scale: --color-grass-9 -> "color-grass". */
+/** A tier-1 category holding one or more sub-groups (color has one per ramp;
+ *  the rest are a single flat list). */
+export interface TokenCategory {
+  label: string;
+  note: string;
+  /** Where what this repo actually ships diverges from the note's model.
+   *  Stated per category so the taxonomy doubles as the refinement worklist. */
+  gap?: string;
+  groups: TokenGroup[];
+  count: number;
+}
+
+/** Scales must sort by magnitude, not lexically — otherwise a 12-step ramp
+ *  reads 1, 10, 11, 12, 2, 3 and the spacing scale puts 1000 between 100
+ *  and 150, which makes a scale unreadable as a scale. */
+const naturalCompare = (a: string, b: string) => {
+  const chunk = (s: string) => s.match(/\d+|\D+/g) ?? [];
+  const [ca, cb] = [chunk(a), chunk(b)];
+  for (let i = 0; i < Math.max(ca.length, cb.length); i++) {
+    const x = ca[i], y = cb[i];
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    const [nx, ny] = [Number(x), Number(y)];
+    if (!Number.isNaN(nx) && !Number.isNaN(ny)) {
+      if (nx !== ny) return nx - ny;
+    } else if (x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+};
+
+/**
+ * Colors sub-group by ramp: --color-grass-9 -> "grass", --color-gray-a3 ->
+ * "gray-a". Everything that is NOT a stepped ramp collapses into one bucket —
+ * status and the overlay washes are single tokens, and keying them the same way
+ * as a ramp produced 13 groups of one, which is noise rather than structure.
+ */
 const primitiveGroupKey = (name: string) => {
-  const body = name.slice(2);
+  const body = name.replace(/^--color-/, '');
+  if (body.startsWith('status-')) return 'status (fixed, not a ramp)';
   const parts = body.split('-');
-  // trailing numeric step (grass-9) or alpha step (grass-a9) belongs to the ramp
-  if (/^a?\d+$/.test(parts.at(-1) ?? '')) parts.pop();
-  return parts.join('-') || body;
+  const step = parts.at(-1) ?? '';
+  if (!/^a?\d+$/.test(step)) return 'overlays + washes';
+  parts.pop();
+  // An alpha ramp is written --color-gray-a3: the `a` rides on the step, so put
+  // it back on the ramp name to keep alpha and solid variants distinct.
+  return parts.join('-') + (step.startsWith('a') ? '-a' : '');
 };
 
 /** Semantics group by role family: --color-text-primary -> "color-text". */
@@ -265,13 +304,112 @@ const group = (tokens: TokenNode[], key: (n: string) => string): TokenGroup[] =>
     map.get(k)!.push(t);
   }
   return [...map.entries()]
-    .map(([label, tokens]) => ({ label, tokens }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+    .map(([label, tokens]) => ({ label, tokens: tokens.sort((a, b) => naturalCompare(a.name, b.name)) }))
+    .sort((a, b) => naturalCompare(a.label, b.label));
 };
 
-export const primitiveGroups = group(byTier('primitive'), primitiveGroupKey);
 export const semanticGroups = group(byTier('semantic'), semanticGroupKey);
 export const componentGroups = group(byTier('component'), componentGroupKey);
+
+/* --------------------------------------------------- tier-1 categorisation */
+
+/**
+ * Tier 1 by CONCEPT rather than by source file — the ramps live in color.json
+ * but shadows, transitions, and z-indexes are all crammed into effect.json, so
+ * the file layout is not the taxonomy anyone reasons in.
+ *
+ * Matchers run in order, first hit wins. The trailing `Other` bucket is
+ * deliberate: an unmatched primitive must SHOW UP rather than vanish, so adding
+ * a new kind of primitive surfaces here instead of being silently dropped.
+ */
+const PRIMITIVE_CATEGORIES: {
+  label: string;
+  note: string;
+  gap?: string;
+  match: (n: string) => boolean;
+}[] = [
+  {
+    label: 'Color',
+    note:
+      'The primitive ramp VALUES for each available color — one row per step. This hub names its ramps UNCATEGORISED (grass-9, gray-3) rather than categorised (brand-grass-9): the brand/neutral/utility distinction is made at tier 2, where a semantic role points at a step. Ramps are Radix-derived, 12 steps each, with separate -dark and -a (alpha) variants. The neutral (gray) ramp is shared by every theme rather than redefined per theme, which is why themes re-point semantics instead of shipping their own neutrals.',
+    match: (n) => n.startsWith('--color-'),
+  },
+  {
+    label: 'Typography',
+    note:
+      'The individual values available for font-family, font-size, font-weight, line-height, letter-spacing, and text-transform. These are meant to be combined into COMPOSITE tokens at tier 2 — a type role names one family + size + weight + line-height together, so components reference the role rather than assembling four primitives at the call site.',
+    gap:
+      'Two divergences. (1) There are no text-transform primitives at all. (2) There is no tier-2 typography composite — tokens/semantic/ contains only color.json, layout.json, and effect.json. The composite job is currently done by src/type-roles.css, which ships CSS utility CLASSES rather than tokens, so a type role cannot be referenced by a token, re-pointed by a theme, or exported to Figma the way a composite token could.',
+    match: (n) => /^--(font-|type-size-|line-height-|letter-spacing-|text-transform-|text-case-)/.test(n),
+  },
+  {
+    label: 'Spacing',
+    note: 'The one linear-then-modular scale. Spokes inherit this unchanged — re-skin color and type, not density.',
+    match: (n) => n.startsWith('--spacing-'),
+  },
+  {
+    label: 'Border',
+    note:
+      'border-radius defines the available radius values; border-width the available widths (less common); border-style the available styles (rarely used). The focus ring sits here too — including --focus-ring-color, which is kept with the ring rather than filed under Color so the ring reads as one set.',
+    gap:
+      'Only border-radius exists. There are no border-width and no border-style primitives, so every border in the kit writes its width literally (1px) at the call site. Both are named as less common / rarely used, so this may be the right call — but it is currently an absence by default rather than by decision. Separately, --focus-ring-color and --focus-ring-width are declared at BOTH tier 1 and tier 3 (see Health), which is why only --focus-ring-offset lists here.',
+    match: (n) => /^--(radius-|border-width|border-style|focus-ring-)/.test(n),
+  },
+  {
+    label: 'Shadow',
+    note:
+      'Shadow tokens are composite: x offset, y offset, blur radius, and spread, plus a color. The shadow color usually references a transparent color managed in the Color category, though it can be managed separately.',
+    gap:
+      'These are NOT composite here. Each shadow is a single opaque string typed "other" in the DTCG source (e.g. "0 4px 20px -4px rgba(0, 0, 0, 0.06)"), so x / y / blur / spread are not addressable and cannot be re-pointed independently. The color is a hardcoded rgba(0,0,0,α) literal that references nothing in the Color category — which means a theme cannot tint its shadows, and the alpha ramp already shipped (gray-a, black-a) goes unused by them.',
+    match: (n) => n.startsWith('--shadow-'),
+  },
+  {
+    label: 'Animation',
+    note:
+      'duration defines how long an animation takes to complete; ease sets how it progresses through that duration; property names the style property being animated (opacity, color, …). These work in code but Figma cannot consume animation tokens.',
+    gap:
+      'Fused, not separated. The three tokens are single strings ("150ms ease") that weld duration and ease together, so neither axis is addressable on its own and no property axis exists at all. A component wanting the standard duration with a different easing has to re-declare the whole value.',
+    match: (n) => /^--(transition-|duration-|easing-|ease-)/.test(n),
+  },
+  {
+    label: 'Z-index',
+    note:
+      'z-index defines the stacking order. It cannot be applied in Figma, and it is a genuine judgement call whether to manage stacking as tokens at all — they are a known source of confusion. Where they are kept, the recommendation is to manage them as core/shared tokens rather than per-theme.',
+    match: (n) => n.startsWith('--z-'),
+  },
+];
+
+export const primitiveCategories: TokenCategory[] = (() => {
+  const primitives = byTier('primitive');
+  const claimed = new Set<string>();
+  const out: TokenCategory[] = [];
+
+  for (const cat of PRIMITIVE_CATEGORIES) {
+    const tokens = primitives.filter((t) => !claimed.has(t.name) && cat.match(t.name));
+    tokens.forEach((t) => claimed.add(t.name));
+    out.push({
+      label: cat.label,
+      note: cat.note,
+      gap: cat.gap,
+      // Only color is big enough to need a second level; the rest read better flat.
+      groups: cat.label === 'Color'
+        ? group(tokens, primitiveGroupKey)
+        : [{ label: cat.label.toLowerCase(), tokens: tokens.sort((a, b) => naturalCompare(a.name, b.name)) }],
+      count: tokens.length,
+    });
+  }
+
+  const rest = primitives.filter((t) => !claimed.has(t.name));
+  if (rest.length) {
+    out.push({
+      label: 'Other',
+      note: 'Primitives that fit none of the categories above — currently icon sizing and the minimum touch target. Not a defect, but if this grows it wants its own category.',
+      groups: [{ label: 'other', tokens: rest.sort((a, b) => naturalCompare(a.name, b.name)) }],
+      count: rest.length,
+    });
+  }
+  return out;
+})();
 
 /* ------------------------------------------------------------------- health */
 
@@ -331,6 +469,22 @@ export const unusedRampSteps: Finding[] = allTokens
   .filter((t) => t.tier === 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length)
   .map((t) => ({ token: t.name, detail: t.resolved }));
 
+/**
+ * The same name declared at two tiers. component-tokens.css is loaded AFTER
+ * tokens.css, so the tier-3 copy always wins and the compiled tier-1/2
+ * declaration is dead weight that reads as authoritative in the JSON. It also
+ * breaks the tier model: the token is simultaneously "never moves" and "a
+ * per-component theming hook". Whichever tier is right, only one should declare it.
+ */
+export const duplicateDeclarations: Finding[] = [...componentSrc]
+  .filter((n) => primitiveSrc.has(n) || semanticSrc.has(n))
+  .sort()
+  .map((n) => ({
+    token: n,
+    detail: `declared in tokens/${primitiveSrc.has(n) ? 'primitive' : 'semantic'}/*.json AND in component-tokens.css — the tier-3 copy wins, the compiled one is dead`,
+    where: [...(componentUse.get(n) ?? [])].sort().join(', ') || undefined,
+  }));
+
 /** Tier-3 token wired straight to a primitive, skipping the semantic layer.
  *  Sometimes correct (geometry has no semantic peer) — but a color doing this
  *  means a spoke re-pointing the semantic layer will NOT re-skin it. */
@@ -348,4 +502,8 @@ export const semanticHardcodes: Finding[] = byTier('semantic')
  *  and unused ramp steps are inventory, not defects — folding them in would
  *  make the tally permanently alarming and therefore ignorable. */
 export const healthTotal =
-  undefinedRefs.length + orphans.length + tierSkips.length + semanticHardcodes.length;
+  undefinedRefs.length +
+  duplicateDeclarations.length +
+  orphans.length +
+  tierSkips.length +
+  semanticHardcodes.length;
