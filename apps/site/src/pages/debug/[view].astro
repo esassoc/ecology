@@ -1,0 +1,371 @@
+---
+/**
+ * DEBUG-ONLY token explorer. NOT SHIPPED.
+ *
+ * This is a dynamic route whose getStaticPaths returns ZERO paths in a
+ * production build, so `npm run build` emits no HTML for it at all — the page
+ * exists only under `astro dev`. That's the whole reason for the [view] param
+ * on a page that has exactly one view: a static `tokens.astro` would always be
+ * built. Delete this directory (and src/data/token-graph.ts) when the
+ * refinement work it supports is done.
+ */
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
+import type { TokenNode, TokenGroup } from '../../data/token-graph';
+
+export function getStaticPaths() {
+  // Production emits nothing. Dev serves /debug/tokens.
+  if (!import.meta.env.DEV) return [];
+  return [{ params: { view: 'tokens' } }];
+}
+
+// Deliberately a DYNAMIC import inside the component body, not a static one at
+// the top. A static import is evaluated whenever Astro loads this module to
+// call getStaticPaths — including in a production build, where token-graph.ts
+// would then hit the filesystem for a page that is never emitted. The body runs
+// only when a route actually renders, and in production there are none.
+const {
+  tierCounts,
+  primitiveGroups,
+  semanticGroups,
+  componentGroups,
+  undefinedRefs,
+  adHocHooks,
+  orphans,
+  unusedRampSteps,
+  tierSkips,
+  semanticHardcodes,
+  healthTotal,
+} = await import('../../data/token-graph');
+
+const TIER_NOTE = {
+  component:
+    'Tier 3 — the per-component theming surface, authored in packages/tokens/src/component-tokens.css. A spoke overrides these to diverge ONE component from the semantic default.',
+  semantic:
+    'Tier 2 — intent, compiled from tokens/semantic/*.json. This is where a spoke’s brand lives: re-point a role and every component reading it re-skins.',
+  primitive:
+    'Tier 1 — the raw ramps, compiled from tokens/primitive/*.json. These never move, not in the hub and not in a theme. "Used by" below is the blast radius if one ever did.',
+} as const;
+
+const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
+---
+
+<DocsLayout title="Token graph (debug)">
+  <article class="article tokens-debug">
+    <h1>Token graph</h1>
+
+    <p class="dev-banner">
+      <strong>Debug page — not shipped.</strong> This route is emitted only under
+      <code>astro dev</code>; <code>npm run build</code> produces no HTML for it. Values shown are the
+      <code>:root</code> light defaults compiled into <code>@esa/tokens</code> — theme blocks are
+      deliberately excluded so you see the shipped default chain, not one theme&rsquo;s overrides.
+    </p>
+
+    <p class="lede">
+      Every token in the system, classified by the tier that <em>declares</em> it (source of truth:
+      which directory the JSON lives in, not a name pattern), with its full resolution chain and its
+      reverse dependencies — who points at it.
+    </p>
+
+    <div class="tally">
+      <div class="tally-cell"><b>{total}</b><span>tokens</span></div>
+      <div class="tally-cell t3"><b>{tierCounts.component}</b><span>tier 3 · component</span></div>
+      <div class="tally-cell t2"><b>{tierCounts.semantic}</b><span>tier 2 · semantic</span></div>
+      <div class="tally-cell t1"><b>{tierCounts.primitive}</b><span>tier 1 · primitive</span></div>
+      <div class={`tally-cell ${healthTotal ? 'warn' : 'ok'}`}>
+        <b>{healthTotal}</b><span>health findings</span>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input id="tok-filter" type="search" placeholder="Filter tokens… (e.g. surface, grass-9, dialog)" autocomplete="off" />
+      <span id="tok-count" class="filter-count"></span>
+    </div>
+
+    <Section id="health" title="Health">
+      <p>
+        Tripwires the per-component &ldquo;Theming surface&rdquo; table can&rsquo;t see, because each is a
+        statement about the graph rather than about one component. Only the first four count toward
+        the headline number — the last two are inventory, not defects, and folding them in would make
+        the tally permanently alarming and therefore ignorable.
+      </p>
+
+      {[
+        { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
+        { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
+        { id: 'hardcode', label: 'Semantic hardcodes', rows: semanticHardcodes, note: 'A tier-2 token terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer.', severity: 'warn' },
+        { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but no token and no component reads it. Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below.', severity: 'warn' },
+        { id: 'adhoc', label: 'Ad-hoc hooks — promotion candidates', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. Legitimate per SPEC.md: the component offers the hook via its fallback only. This is the working list for tier-3 surface work — promote into component-tokens.css, or fold away.', severity: 'info' },
+        { id: 'unused', label: 'Unused ramp steps (tier 1)', rows: unusedRampSteps, note: 'Primitive steps nothing references. Normal — a 12-step scale is a palette, not a checklist. Useful only for spotting a whole ramp that is carried but never used.', severity: 'info' },
+      ].map((check) => (
+        <details class={`check ${check.severity}`} open={check.rows.length > 0 && check.severity !== 'info'}>
+          <summary>
+            <span class="check-label">{check.label}</span>
+            <span class="check-count">{check.rows.length}</span>
+          </summary>
+          <p class="check-note">{check.note}</p>
+          {check.rows.length === 0 ? (
+            <p class="empty">None.</p>
+          ) : (
+            <table class="findings">
+              <thead><tr><th>Token</th><th>Detail</th><th>Where</th></tr></thead>
+              <tbody>
+                {check.rows.map((r) => (
+                  <tr>
+                    <td><code>{r.token}</code></td>
+                    <td>{r.detail}</td>
+                    <td class="dim">{r.where ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </details>
+      ))}
+    </Section>
+
+    {(
+      [
+        ['component', 'Tier 3 · Component', componentGroups],
+        ['semantic', 'Tier 2 · Semantic', semanticGroups],
+        ['primitive', 'Tier 1 · Primitive', primitiveGroups],
+      ] as [keyof typeof TIER_NOTE, string, TokenGroup[]][]
+    ).map(([tier, title, groups]) => (
+      <Section id={tier} title={title}>
+        <p>{TIER_NOTE[tier]}</p>
+        {groups.map((group) => (
+          <details class="tok-group" data-group>
+            <summary>
+              <code class="group-label">{group.label}</code>
+              <span class="group-count">{group.tokens.length}</span>
+            </summary>
+            <table class="tok-table">
+              <thead>
+                <tr><th>Token</th><th>Resolution chain</th><th>Value</th><th>Used by</th></tr>
+              </thead>
+              <tbody>
+                {group.tokens.map((t: TokenNode) => (
+                  <tr data-token={t.name} title={t.description ?? undefined}>
+                    <td class="c-name">
+                      <code>{t.name}</code>
+                      {t.description && <span class="has-note" aria-hidden="true">*</span>}
+                    </td>
+                    <td class="c-chain">
+                      {t.lineage.length === 0 ? (
+                        <span class="dim">—</span>
+                      ) : (
+                        t.lineage.map((link, i) => (
+                          <>
+                            {i > 0 && <span class="arrow">→</span>}
+                            <span class={`chip k-${link.kind}`}>{link.ref}</span>
+                          </>
+                        ))
+                      )}
+                    </td>
+                    <td class="c-value">
+                      {t.isColor && <span class="swatch" style={`background:${t.resolved}`} />}
+                      <code>{t.resolved}</code>
+                    </td>
+                    <td class="c-used">
+                      {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 ? (
+                        <span class="orphan-flag">orphan</span>
+                      ) : (
+                        <details class="uses">
+                          <summary>
+                            {t.usedByTokens.length > 0 && <span class="pill">{t.usedByTokens.length} tok</span>}
+                            {t.usedByComponents.length > 0 && <span class="pill">{t.usedByComponents.length} comp</span>}
+                          </summary>
+                          {t.usedByTokens.length > 0 && (
+                            <p><b>Tokens:</b> {t.usedByTokens.join(', ')}</p>
+                          )}
+                          {t.usedByComponents.length > 0 && (
+                            <p><b>Components:</b> {t.usedByComponents.join(', ')}</p>
+                          )}
+                        </details>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
+        ))}
+      </Section>
+    ))}
+  </article>
+</DocsLayout>
+
+<style is:inline>
+  /* Page-scoped styles are normally banned in this system — allowed here only
+     because this page is debug-only and never ships. */
+  .tokens-debug .dev-banner {
+    border: 1px dashed var(--color-warning, #d97706);
+    background: var(--color-warning-subtle, #fffbeb);
+    color: var(--color-text-primary, #111);
+    padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
+    border-radius: var(--radius-200, 6px);
+    font-size: 0.9rem;
+  }
+  .tokens-debug .tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-300, 12px);
+    margin: var(--spacing-500, 20px) 0;
+  }
+  .tokens-debug .tally-cell {
+    flex: 1 1 8rem;
+    padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
+    border: 1px solid var(--color-border, #d4d4d4);
+    border-radius: var(--radius-200, 6px);
+    background: var(--color-surface, #fff);
+  }
+  .tokens-debug .tally-cell b { display: block; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-text-secondary, #666); }
+  .tokens-debug .tally-cell.t3 { border-left: 3px solid var(--color-ai, #b45309); }
+  .tokens-debug .tally-cell.t2 { border-left: 3px solid var(--color-primary, #16a34a); }
+  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-info, #0284c7); }
+  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-warning, #d97706); }
+  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-success, #16a34a); }
+  .tokens-debug .filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-300, 12px);
+    padding: var(--spacing-300, 12px) 0;
+    background: var(--color-background, #fafafa);
+  }
+  .tokens-debug #tok-filter {
+    flex: 1;
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+    font: inherit;
+    font-size: 0.9rem;
+    border: 1px solid var(--color-border, #d4d4d4);
+    border-radius: var(--radius-200, 6px);
+    background: var(--color-surface, #fff);
+    color: inherit;
+  }
+  .tokens-debug .filter-count { font-size: 0.8rem; color: var(--color-text-secondary, #666); white-space: nowrap; }
+  .tokens-debug details.check, .tokens-debug details.tok-group {
+    border: 1px solid var(--color-border-light, #e5e5e5);
+    border-radius: var(--radius-200, 6px);
+    margin-bottom: var(--spacing-250, 10px);
+    background: var(--color-surface, #fff);
+  }
+  .tokens-debug details.check > summary, .tokens-debug details.tok-group > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+    cursor: pointer;
+    font-size: 0.9rem;
+    /* Generous target: the whole summary row is clickable, not just the marker. */
+  }
+  .tokens-debug details.check.bad > summary { color: var(--color-danger, #dc2626); }
+  .tokens-debug details.check.warn > summary { color: var(--color-warning, #b45309); }
+  .tokens-debug .check-count, .tokens-debug .group-count {
+    font-variant-numeric: tabular-nums;
+    background: var(--color-surface-sunken, #f0f0f0);
+    border-radius: var(--radius-full, 999px);
+    padding: 1px 8px;
+    font-size: 0.75rem;
+  }
+  .tokens-debug .check-note, .tokens-debug .empty { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); font-size: 0.85rem; color: var(--color-text-secondary, #666); margin: 0; }
+  .tokens-debug .group-label { font-size: 0.85rem; }
+  .tokens-debug table.findings, .tokens-debug table.tok-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    table-layout: auto;
+  }
+  .tokens-debug table.findings th, .tokens-debug table.tok-table th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary, #666);
+    padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
+    border-top: 1px solid var(--color-border-light, #e5e5e5);
+    border-bottom: 1px solid var(--color-border-light, #e5e5e5);
+  }
+  .tokens-debug table.findings td, .tokens-debug table.tok-table td {
+    padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
+    border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+    vertical-align: top;
+  }
+  .tokens-debug code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.95em; }
+  .tokens-debug .dim { color: var(--color-text-muted, #999); }
+  .tokens-debug .has-note { color: var(--color-text-muted, #999); margin-left: 2px; }
+  .tokens-debug .c-chain { line-height: 1.9; }
+  .tokens-debug .chip {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: var(--radius-100, 4px);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    border: 1px solid transparent;
+  }
+  .tokens-debug .k-component { background: var(--color-ai-subtle, #fff7ed); border-color: var(--color-ai, #b45309); }
+  .tokens-debug .k-semantic { background: var(--color-primary-subtle, #f0fdf4); border-color: var(--color-primary-border, #86efac); }
+  .tokens-debug .k-primitive { background: var(--color-info-subtle, #eff6ff); border-color: var(--color-info-border, #93c5fd); }
+  .tokens-debug .k-raw { background: var(--color-surface-sunken, #f4f4f4); border-color: var(--color-border, #d4d4d4); }
+  .tokens-debug .k-unknown { background: var(--color-danger-subtle, #fef2f2); border-color: var(--color-danger, #dc2626); }
+  .tokens-debug .arrow { color: var(--color-text-muted, #999); margin: 0 4px; }
+  .tokens-debug .c-value { white-space: nowrap; }
+  .tokens-debug .swatch {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--color-border, #d4d4d4);
+    vertical-align: -2px;
+    margin-right: 6px;
+  }
+  .tokens-debug .uses > summary { cursor: pointer; display: flex; gap: 4px; }
+  .tokens-debug .uses p { margin: 6px 0 0; font-size: 0.75rem; word-break: break-word; }
+  .tokens-debug .pill {
+    background: var(--color-surface-sunken, #f0f0f0);
+    border-radius: var(--radius-100, 4px);
+    padding: 1px 6px;
+    font-size: 0.7rem;
+  }
+  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-warning, #b45309); }
+  .tokens-debug tr[hidden] { display: none; }
+</style>
+
+<!-- is:inline for the same reason as the <style> above: an Astro-processed
+     script is bundled into dist/_astro/ even when the page itself is never
+     emitted, leaving an orphan chunk in the shipped output. Inline means plain
+     JS (no TS annotations) and no bundling — correct for a dev-only page. -->
+<script is:inline>
+  // Filter by token name. A group with no visible row hides itself, and any
+  // group holding a match opens so hits are never buried behind a closed
+  // <details>. Clearing the box re-collapses everything.
+  (function () {
+    var input = document.getElementById('tok-filter');
+    var count = document.getElementById('tok-count');
+    var groups = Array.prototype.slice.call(document.querySelectorAll('[data-group]'));
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-token]'));
+
+    function apply() {
+      var q = ((input && input.value) || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var hit = !q || (row.dataset.token || '').toLowerCase().indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) shown++;
+      });
+      groups.forEach(function (group) {
+        var any = group.querySelector('tr[data-token]:not([hidden])') !== null;
+        group.hidden = !any;
+        group.open = q ? any : false;
+      });
+      if (count) count.textContent = q ? shown + ' of ' + rows.length : rows.length + ' tokens';
+    }
+
+    if (input) input.addEventListener('input', apply);
+    apply();
+  })();
+</script>
