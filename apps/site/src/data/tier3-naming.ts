@@ -1,0 +1,706 @@
+/**
+ * DEBUG-ONLY audit of tier-3 token NAMES against the 6-slot naming rubric.
+ *
+ * Sibling of tier2-naming.ts, same contract: everything countable is DERIVED
+ * from the real token names at build time, never typed in. The vocabularies and
+ * the prose are authored, because that part is judgment a parser can't make.
+ *
+ *   rubric:  --eco-<tier>-<component|category|special>-<variant>-<property>[-<state>]
+ *
+ * Tier 3 has one structural difference from tier 2 that shapes this whole file:
+ * a component token frequently names an internal PART of the component
+ * (--grid-row-bg, --switch-toggle-thumb-bg, --card-header-color). The rubric has
+ * no slot for a part. It is not an error in our names — it is a seventh concept
+ * our names carry and the rubric doesn't model, so it gets its own section
+ * rather than being scored as a variant.
+ *
+ * Consumed only by /debug/tokens, which is excluded from production builds.
+ * Delete alongside token-graph.ts when the refinement work is done.
+ */
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { byTier, type TokenNode } from './token-graph';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+const COMPONENT_CSS = path.join(ROOT, 'packages', 'tokens', 'src', 'component-tokens.css');
+const COMPONENT_DIR = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
+
+const nodes = new Map(byTier('component').map((t) => [t.name, t]));
+
+/* ------------------------------------------------------------- the source */
+
+interface RawDecl {
+  name: string;
+  value: string;
+  /** The `/* esa-x *\/` comment the declaration sits under, where there is one. */
+  owner: string | null;
+}
+
+/**
+ * Parsed from the CSS rather than from the token graph because we need two
+ * things the graph drops: source order, and the declaring block's comment. That
+ * comment is the only record of which component ASKED for the hook, which is
+ * what makes "the name disagrees with its block" checkable at all.
+ */
+const raw: RawDecl[] = (() => {
+  if (!existsSync(COMPONENT_CSS)) return [];
+  const out: RawDecl[] = [];
+  let owner: string | null = null;
+  for (const line of readFileSync(COMPONENT_CSS, 'utf8').split('\n')) {
+    const own = line.match(/^\s*\/\* (esa-[a-z-]+) \*\/\s*$/);
+    if (own) {
+      owner = own[1];
+      continue;
+    }
+    // A `===== BUTTON =====` banner: a section, not a component attribution.
+    if (/^\s*\/\* =+/.test(line)) {
+      owner = null;
+      continue;
+    }
+    const decl = line.match(/^\s{2}(--[a-z0-9-]+)\s*:\s*(.+?);/);
+    if (decl) out.push({ name: decl[1], value: decl[2], owner });
+  }
+  return out;
+})();
+
+/* --------------------------------------------------- slot 3: the namespace */
+
+export type NsKind = 'component' | 'category' | 'special' | 'none';
+
+/** Every `esa-*` file in the library, minus the prefix. The authoritative roster. */
+const componentRoster: string[] = existsSync(COMPONENT_DIR)
+  ? [
+      ...new Set(
+        readdirSync(COMPONENT_DIR)
+          .map((f) => f.replace(/\.[a-z]+$/, ''))
+          .filter((f) => f.startsWith('esa-'))
+          .map((f) => f.slice(4)),
+      ),
+    ]
+  : [];
+
+/**
+ * Namespaces that are NOT a component — the rubric's other two cases. Authored,
+ * because "is this a category or a component nobody built" is a judgment; the
+ * evidence for each (how many components read it) is derived below.
+ */
+const NON_COMPONENT_NS: { ns: string; kind: NsKind; note: string }[] = [
+  { ns: 'form', kind: 'category', note: 'The rubric’s own example of a component category. Read by every form control, so it earns the category name.' },
+  { ns: 'filter', kind: 'category', note: 'The family name for the filter surfaces that have no component of their own — the pill and the clear button. esa-filter-dropdown and esa-filter-container take their own namespaces, so this is what is left over.' },
+  { ns: 'focus-ring', kind: 'special', note: 'The rubric’s own example of a special case — and the widest-read namespace in the file.' },
+  { ns: 'grid', kind: 'category', note: 'Ported from the Angular data grid. No esa-grid-* component exists, so this names a surface with nothing behind it.' },
+  { ns: 'topbar', kind: 'category', note: 'Same: a ported surface. The components that would read it are named esa-app-bar and esa-header-nav.' },
+  { ns: 'sidenav', kind: 'component', note: 'A component namespace whose component is spelled differently: esa-sidebar-nav. The token prefix and the tag disagree.' },
+];
+
+const NS_LIST = [...new Set([...componentRoster, ...NON_COMPONENT_NS.map((n) => n.ns)])];
+const NS_KIND = new Map<string, NsKind>(NON_COMPONENT_NS.map((n) => [n.ns, n.kind]));
+
+/**
+ * Longest match wins, and it has to: `pill` and `pillbox` are both real, as are
+ * `icon`, `icon-button` and `icon-link`. Nothing in the NAME marks where the
+ * component ends — the roster is what makes these parseable, which is itself a
+ * finding (see `nsAmbiguity`).
+ */
+const nsOf = (name: string): string | null => {
+  const body = name.slice(2);
+  let best: string | null = null;
+  for (const p of NS_LIST) {
+    if ((body === p || body.startsWith(`${p}-`)) && (!best || p.length > best.length)) best = p;
+  }
+  return best;
+};
+
+/* ------------------------------------------------------- the vocabularies */
+
+export type RubricProp =
+  | 'color-content'
+  | 'color-background'
+  | 'color-border'
+  | 'other'
+  | null;
+
+/** Property word -> the rubric property it fills. Longest match applied first. */
+const PROPERTY_VOCAB: { word: string; rubric: RubricProp }[] = [
+  { word: 'text-color', rubric: 'color-content' },
+  { word: 'text', rubric: 'color-content' },
+  { word: 'color', rubric: 'color-content' },
+  { word: 'bg', rubric: 'color-background' },
+  { word: 'background', rubric: 'color-background' },
+  { word: 'border-color', rubric: 'color-border' },
+  { word: 'border', rubric: 'color-border' }, // re-classified below when the value is a shorthand
+  { word: 'border-width', rubric: 'other' },
+  { word: 'radius', rubric: 'other' },
+  { word: 'padding-x', rubric: 'other' },
+  { word: 'padding-y', rubric: 'other' },
+  { word: 'padding', rubric: 'other' },
+  { word: 'pad-x', rubric: 'other' },
+  { word: 'pad-y', rubric: 'other' },
+  { word: 'gap', rubric: 'other' },
+  { word: 'min-width', rubric: 'other' },
+  { word: 'max-width', rubric: 'other' },
+  { word: 'width', rubric: 'other' },
+  { word: 'min-height', rubric: 'other' },
+  { word: 'max-height', rubric: 'other' },
+  { word: 'height', rubric: 'other' },
+  { word: 'icon-size', rubric: 'other' },
+  { word: 'size', rubric: 'other' },
+  { word: 'shadow', rubric: 'other' },
+  { word: 'font-size', rubric: 'other' },
+  { word: 'font-weight', rubric: 'other' },
+  { word: 'weight', rubric: 'other' },
+  { word: 'line-height', rubric: 'other' },
+  { word: 'inset', rubric: 'other' },
+  { word: 'spacing', rubric: 'other' },
+  { word: 'margin-top', rubric: 'other' },
+  { word: 'indent', rubric: 'other' },
+  { word: 'top', rubric: 'other' },
+  { word: 'right', rubric: 'other' },
+  { word: 'bottom', rubric: 'other' },
+  { word: 'left', rubric: 'other' },
+  { word: 'filter', rubric: 'other' },
+  { word: 'percent', rubric: 'other' },
+].sort((a, b) => b.word.length - a.word.length);
+
+/** Rubric states, plus the two this system adds. */
+const STATE_WORDS = new Set(['hover', 'active', 'focus', 'pressed', 'visited', 'disabled', 'checked', 'selected', 'collapsed']);
+/** Words in a state position that are not states. Kept separate so they surface. */
+const PSEUDO_STATE: Record<string, string> = {
+  error: 'a validation status — a variant under the rubric, not a state',
+  transparent: 'a component variant (the see-through overlay), not a state',
+  collapsed: 'a genuine component state the rubric’s list doesn’t cover',
+};
+const SIZE_SHORT = ['xs', 'sm', 'md', 'lg', 'xl'];
+const SIZE_LONG = ['small', 'medium', 'large'];
+const SIZE_WORDS = new Set([...SIZE_SHORT, ...SIZE_LONG]);
+/** Semantic variants that trail the property, e.g. --snackbar-item-bg-danger. */
+const VARIANT_WORDS = new Set(['danger', 'info', 'success', 'warning', 'primary', 'secondary', 'strong', 'inverse']);
+
+/* -------------------------------------------------------------- the parse */
+
+export interface Tier3Row {
+  name: string;
+  value: string;
+  /** Declaring block comment, where there is one. */
+  owner: string | null;
+  ns: string | null;
+  nsKind: NsKind;
+  /** Slot 4 — size and/or semantic variant. */
+  size: string | null;
+  variant: string | null;
+  /** Slot 5 — the literal word, and the rubric property it fills. */
+  propWord: string | null;
+  prop: RubricProp;
+  /** Slot 6. */
+  state: string | null;
+  /** The seventh concept: the internal part, which the rubric has no slot for. */
+  part: string | null;
+  isColor: boolean;
+  /** How many components read this token — evidence for component vs category. */
+  reach: number;
+  flags: string[];
+}
+
+const isShorthand = (value: string) => /^\d|\bsolid\b|\bdashed\b/.test(value);
+
+const parse = (d: RawDecl): Tier3Row => {
+  const flags: string[] = [];
+  const node: TokenNode | undefined = nodes.get(d.name);
+
+  const ns = nsOf(d.name);
+  const nsKind: NsKind = ns === null ? 'none' : (NS_KIND.get(ns) ?? 'component');
+  if (!ns) flags.push('no component, category or special case in the name — this reads as a tier-1 or tier-2 token');
+
+  let rest = ns ? d.name.slice(2 + ns.length).replace(/^-/, '') : d.name.slice(2);
+
+  // Peel trailing modifiers. Order-independent on purpose: --dialog-width-lg
+  // and --pillbox-gap-small put the size last, --app-bar-brand-strong-bg puts
+  // the variant first, and neither ordering is enforced anywhere.
+  let state: string | null = null;
+  let size: string | null = null;
+  let variant: string | null = null;
+  for (;;) {
+    const seg = rest.split('-');
+    const last = seg[seg.length - 1];
+    if (!state && (STATE_WORDS.has(last) || last in PSEUDO_STATE)) {
+      state = last;
+      rest = seg.slice(0, -1).join('-');
+      continue;
+    }
+    if (!size && SIZE_WORDS.has(last)) {
+      size = last;
+      rest = seg.slice(0, -1).join('-');
+      continue;
+    }
+    if (!variant && VARIANT_WORDS.has(last)) {
+      variant = last;
+      rest = seg.slice(0, -1).join('-');
+      continue;
+    }
+    break;
+  }
+
+  let propWord: string | null = null;
+  let prop: RubricProp = null;
+  for (const p of PROPERTY_VOCAB) {
+    if (rest === p.word || rest.endsWith(`-${p.word}`)) {
+      propWord = p.word;
+      prop = p.rubric;
+      rest = rest.slice(0, rest.length - p.word.length).replace(/-$/, '');
+      break;
+    }
+  }
+
+  // `-border` means two different things depending on what it holds.
+  if (propWord === 'border' && isShorthand(d.value)) {
+    prop = 'other';
+    flags.push('`border` here is a shorthand (width + style + colour in one value), not a colour — a theme cannot re-point just the colour');
+  }
+
+  if (!propWord) {
+    flags.push('no property in the name — you have to read the value to know what it controls');
+  }
+
+  // An unplaced token has no component, so whatever is left is not a part of
+  // anything — it is the whole name. Counting it as a part would inflate the
+  // part tally with four tokens whose problem is the opposite one.
+  const part = ns && rest ? rest : null;
+
+  if (state && size) flags.push('carries both a size and a state, with nothing marking which slot is which');
+  if (state && PSEUDO_STATE[state]) flags.push(`\`${state}\` sits in the state slot but is ${PSEUDO_STATE[state]}`);
+  if (state === 'active' && !/pressed/.test(d.name)) {
+    flags.push('`active` here means current/selected, not the rubric’s pressed state');
+  }
+  if (size && SIZE_LONG.includes(size)) {
+    flags.push(`size spelled \`${size}\` where the rest of the system uses \`${SIZE_SHORT.join(' | ')}\``);
+  }
+  if (propWord && size && d.name.indexOf(propWord) < d.name.lastIndexOf(size)) {
+    flags.push('variant after property — inverted vs rubric');
+  }
+  if (d.owner && ns && ns !== d.owner.slice(4)) {
+    flags.push(`declared under \`${d.owner}\` but named for \`${ns}\``);
+  }
+
+  return {
+    name: d.name,
+    value: d.value,
+    owner: d.owner,
+    ns,
+    nsKind,
+    size,
+    variant,
+    propWord,
+    prop,
+    state,
+    part,
+    isColor: node?.isColor ?? false,
+    reach: node?.usedByComponents.length ?? 0,
+    flags,
+  };
+};
+
+export const rows: Tier3Row[] = raw.map(parse);
+
+/* --------------------------------------------------------- derived counts */
+
+const count = (fn: (r: Tier3Row) => boolean) => rows.filter(fn).length;
+
+export const total = rows.length;
+export const unnamespaced = rows.filter((r) => !r.ns);
+export const withPart = count((r) => r.part !== null);
+export const withProperty = count((r) => r.propWord !== null);
+export const withoutProperty = rows.filter((r) => !r.propWord);
+export const withSize = count((r) => r.size !== null);
+export const withVariant = count((r) => r.variant !== null);
+export const stateRows = rows.filter((r) => r.state);
+export const ownerMismatch = rows.filter((r) => r.owner && r.ns && r.ns !== r.owner.slice(4));
+
+/* ------------------------------------- slots 1-2: the prefix collision, again */
+
+/**
+ * Tier 2's audit found 268 tier-1 and 60 tier-2 tokens sharing `--color-`. At
+ * tier 3 the collision stops being theoretical and starts naming real pairs:
+ * the same prefix declared at two different tiers, with only the dialect (or
+ * nothing at all) to tell them apart.
+ */
+export const tierCollisions = (() => {
+  const t1 = byTier('primitive').map((t) => t.name);
+  const t2 = byTier('semantic').map((t) => t.name);
+  const iconT1 = t1.filter((n) => n.startsWith('--icon-size-'));
+  const iconT3 = rows.filter((r) => r.name.startsWith('--icon-size-')).map((r) => r.name);
+  const focusT1 = t1.filter((n) => n.startsWith('--focus-ring-'));
+  const focusT3 = rows.filter((r) => r.name.startsWith('--focus-ring-')).map((r) => r.name);
+  return [
+    {
+      prefix: '--icon-size-*',
+      tier1: iconT1,
+      tier3: iconT3,
+      cost:
+        'The same prefix carries a size scale at tier 1 and three more sizes at tier 3, in a different dialect. Nothing in either name says which tier you are editing, and the dialects are the only hint that they are not one scale.',
+    },
+    {
+      prefix: '--focus-ring-*',
+      tier1: focusT1,
+      tier3: focusT3,
+      cost:
+        'One conceptual surface split across two tiers. `--focus-ring-color` is declared in BOTH — tier 3 loads last and wins, so the tier-1 declaration is dead while still reading as authoritative. See Health above.',
+    },
+    {
+      prefix: '--color-*',
+      tier1: [`${t1.filter((n) => n.startsWith('--color-')).length} tier-1 tokens`],
+      tier3: rows.filter((r) => r.name.startsWith('--color-')).map((r) => r.name),
+      cost:
+        `Two tier-3 tokens sit inside the colour namespace that ${t2.filter((n) => n.startsWith('--color-')).length} tier-2 tokens occupy. Read on their own, \`--color-link\` and \`--color-primary-contrast\` are indistinguishable from semantic roles — but they are per-component hooks, and re-pointing one only re-skins the single component that reads it.`,
+    },
+  ];
+})();
+
+/* --------------------------------------------- slot 3: the namespace roster */
+
+export interface NsGroup {
+  ns: string;
+  kind: NsKind;
+  note: string | null;
+  tokens: Tier3Row[];
+  /** Distinct components that read any token in this namespace. */
+  reach: number;
+  /** True when an esa-<ns> component actually exists. */
+  hasComponent: boolean;
+}
+
+const NON_COMPONENT_NOTE = new Map(NON_COMPONENT_NS.map((n) => [n.ns, n.note]));
+const componentSet = new Set(componentRoster);
+
+export const nsGroups: NsGroup[] = (() => {
+  const map = new Map<string, Tier3Row[]>();
+  for (const r of rows) {
+    const key = r.ns ?? '(none)';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(r);
+  }
+  return [...map.entries()]
+    .map(([ns, tokens]) => {
+      const reach = new Set<string>();
+      for (const t of tokens) nodes.get(t.name)?.usedByComponents.forEach((c) => reach.add(c));
+      return {
+        ns,
+        kind: ns === '(none)' ? ('none' as NsKind) : (NS_KIND.get(ns) ?? ('component' as NsKind)),
+        note: NON_COMPONENT_NOTE.get(ns) ?? null,
+        tokens,
+        reach: reach.size,
+        hasComponent: componentSet.has(ns),
+      };
+    })
+    .sort((a, b) => b.tokens.length - a.tokens.length);
+})();
+
+/** Real namespaces, excluding the `(none)` bucket. */
+export const namespaceCount = nsGroups.filter((g) => g.ns !== '(none)').length;
+
+export const nsKindTally = (['component', 'category', 'special', 'none'] as NsKind[]).map((kind) => ({
+  kind,
+  namespaces: nsGroups.filter((g) => g.kind === kind).length,
+  tokens: nsGroups.filter((g) => g.kind === kind).reduce((n, g) => n + g.tokens.length, 0),
+}));
+
+/**
+ * Namespace pairs where one name is a prefix of another. These parse correctly
+ * ONLY because the roster is consulted longest-first — a name alone can't tell
+ * you where the component ends and the property begins.
+ */
+export const nsAmbiguity = (() => {
+  const present = nsGroups.map((g) => g.ns).filter((n) => n !== '(none)');
+  const pairs: { shorter: string; longer: string[]; example: string }[] = [];
+  for (const s of present) {
+    const longer = present.filter((l) => l !== s && l.startsWith(`${s}-`));
+    if (longer.length) {
+      const ex = rows.find((r) => r.ns === longer[0])?.name ?? '';
+      pairs.push({ shorter: s, longer, example: ex });
+    }
+  }
+  return pairs;
+})();
+
+/* --------------------------------- the seventh concept: the internal part */
+
+export type PartKind = 'part' | 'variant' | 'state' | 'artefact';
+
+export interface PartRow {
+  part: string;
+  count: number;
+  examples: string[];
+  /** Authored: is this word naming a sub-element, or something else in disguise? */
+  kind: PartKind;
+}
+
+/**
+ * Words in the part position that are NOT parts. Keyed by `<namespace>:<word>`
+ * rather than by the word alone, because the same word means different things
+ * in different components — `brand` is a TONE VARIANT of esa-app-bar
+ * (tone="brand") and a BEM ELEMENT of esa-app-shell (.esa-app-shell__brand).
+ * One position, one spelling, two concepts, and nothing in the name to separate
+ * them. Anything not listed here is a genuine part.
+ */
+const PART_KIND: Record<string, Exclude<PartKind, 'part'>> = {
+  'app-bar:brand': 'variant',
+  'app-bar:brand-strong': 'variant',
+  'grid:row-stripe': 'variant',
+  'sidenav:active': 'state',
+  'sidenav:nested': 'variant',
+  'button:on': 'artefact',
+  'loading-overlay:message': 'part',
+} as Record<string, Exclude<PartKind, 'part'>>;
+
+const partKindOf = (r: Tier3Row): PartKind => PART_KIND[`${r.ns}:${r.part}`] ?? 'part';
+
+export const partRows: PartRow[] = (() => {
+  const map = new Map<string, { names: string[]; kinds: Set<PartKind> }>();
+  for (const r of rows) {
+    if (!r.part) continue;
+    if (!map.has(r.part)) map.set(r.part, { names: [], kinds: new Set() });
+    const e = map.get(r.part)!;
+    e.names.push(r.name);
+    e.kinds.add(partKindOf(r));
+  }
+  return [...map.entries()]
+    .map(([part, e]) => ({
+      part,
+      count: e.names.length,
+      examples: e.names.slice(0, 3),
+      // A word used both ways reports as the non-part reading, because that is
+      // the case the name fails to signal.
+      kind: ([...e.kinds].find((k) => k !== 'part') ?? 'part') as PartKind,
+    }))
+    .sort((a, b) => b.count - a.count || a.part.localeCompare(b.part));
+})();
+
+const partKindCount = (kind: PartKind) => rows.filter((r) => r.part && partKindOf(r) === kind).length;
+
+export const partTally = {
+  tokens: withPart,
+  distinct: partRows.length,
+  asPart: partKindCount('part'),
+  asVariant: partKindCount('variant'),
+  asState: partKindCount('state'),
+  asArtefact: partKindCount('artefact'),
+};
+
+/** Words that mean a part in one component and something else in another. */
+export const partWordClash = partRows
+  .filter((p) => {
+    const kinds = new Set(rows.filter((r) => r.part === p.part).map(partKindOf));
+    return kinds.size > 1;
+  })
+  .map((p) => ({
+    word: p.part,
+    readings: [...new Set(rows.filter((r) => r.part === p.part).map((r) => `${partKindOf(r)} in ${r.ns}`))],
+    tokens: rows.filter((r) => r.part === p.part).map((r) => r.name),
+  }));
+
+/* ----------------------------------------------------- slot 4: the variant */
+
+export const sizeRows = {
+  short: rows.filter((r) => r.size && SIZE_SHORT.includes(r.size)),
+  long: rows.filter((r) => r.size && SIZE_LONG.includes(r.size)),
+  /** Sizes that trail the property, which is the rubric's order reversed. */
+  afterProperty: rows.filter(
+    (r) => r.size && r.propWord && r.name.indexOf(r.propWord) < r.name.lastIndexOf(r.size),
+  ),
+  scales: [...new Set(rows.filter((r) => r.size && r.propWord).map((r) => `${r.ns}-${r.propWord}`))].sort(),
+};
+
+export const variantRows = rows.filter((r) => r.variant);
+
+/* ---------------------------------------------------- slot 5: the property */
+
+export interface PropVocabRow {
+  rubric: string;
+  words: { word: string; count: number }[];
+  total: number;
+  note: string;
+}
+
+const wordsFor = (test: (r: Tier3Row) => boolean) => {
+  const map = new Map<string, number>();
+  for (const r of rows) if (test(r) && r.propWord) map.set(r.propWord, (map.get(r.propWord) ?? 0) + 1);
+  return [...map.entries()]
+    .map(([word, count]) => ({ word, count }))
+    .sort((a, b) => b.count - a.count);
+};
+
+export const propVocab: PropVocabRow[] = [
+  {
+    rubric: 'color-content',
+    words: wordsFor((r) => r.prop === 'color-content'),
+    total: count((r) => r.prop === 'color-content'),
+    note: 'Three spellings for one property, and the bare `color` reading (39 tokens) is the ambiguous one — `--dialog-color` is text, `--tab-layout-color` is text, but nothing in the word says so. No `icon` split anywhere, so icon colour has no hook independent of text.',
+  },
+  {
+    rubric: 'color-background',
+    words: wordsFor((r) => r.prop === 'color-background'),
+    total: count((r) => r.prop === 'color-background'),
+    note: 'The one property with a single consistent word. Abbreviated to `bg` rather than the rubric’s `background`, but never spelled two ways.',
+  },
+  {
+    rubric: 'color-border',
+    words: wordsFor((r) => r.prop === 'color-border'),
+    total: count((r) => r.prop === 'color-border'),
+    note: 'Split between `border-color` (an actual colour) and a bare `border` that sometimes holds a colour and sometimes a whole shorthand. The shorthands are counted under `other`.',
+  },
+  {
+    rubric: 'other CSS properties',
+    words: wordsFor((r) => r.prop === 'other'),
+    total: count((r) => r.prop === 'other'),
+    note: 'The rubric explicitly allows any CSS property here. The dialect drifts anyway — `padding` / `padding-x` / `pad-x` are the same property under three names, and `weight` / `font-weight` under two.',
+  },
+];
+
+export const colorQualified = count((r) => /(^|-)color-(content|background|border)(-|$)/.test(r.name));
+
+export const borderSplit = {
+  shorthand: rows.filter((r) => r.propWord === 'border' && isShorthand(r.value)),
+  colour: rows.filter((r) => r.propWord === 'border' && !isShorthand(r.value)),
+};
+
+/* ------------------------------------------------------- slot 6: the state */
+
+export const stateVocab = (() => {
+  const map = new Map<string, string[]>();
+  for (const r of stateRows) {
+    if (!map.has(r.state!)) map.set(r.state!, []);
+    map.get(r.state!)!.push(r.name);
+  }
+  const RUBRIC_STATES = ['hover', 'focus', 'pressed', 'active', 'disabled', 'visited'];
+  const seen = [...map.keys()];
+  const out = RUBRIC_STATES.filter((s) => s !== 'active').map((s) => ({
+    state: s,
+    inRubric: true,
+    tokens: map.get(s) ?? [],
+    note:
+      s === 'pressed'
+        ? 'Nothing. No token anywhere describes the pressed/clicked state — and the word `active`, which would be the CSS spelling of it, is in use for something else.'
+        : s === 'visited'
+          ? 'Nothing. No link component exposes a visited hook.'
+          : s === 'disabled'
+            ? 'Exactly one, and it is the rubric’s own model: tier 2 manages disabled as a variant (--color-disabled-bg), tier 3 reaches for it only where a component needs its own.'
+            : s === 'focus'
+              ? 'One, and that is the right number: the rubric says a focus token should hold only what differs from the global ring, and the global ring is --focus-ring-color / -width. This one is the input’s border, which genuinely does differ.'
+              : '',
+  }));
+  const extras = seen
+    .filter((s) => !RUBRIC_STATES.includes(s))
+    .map((s) => ({ state: s, inRubric: false, tokens: map.get(s)!, note: PSEUDO_STATE[s] ?? 'A component state the rubric’s list doesn’t cover.' }));
+  const activeRow = {
+    state: 'active',
+    inRubric: true,
+    tokens: map.get('active') ?? [],
+    note: 'Present, but meaning "current / selected" — the nav item you are on, the open tab, the highlighted row. Under the rubric `active` is the pressed state. Same word, different concept, and the pressed state is the one that goes unnamed.',
+  };
+  return [...out.slice(0, 2), activeRow, ...out.slice(2), ...extras];
+})();
+
+/**
+ * "State is exclusive to colour, usually." Checkable: every stateful token
+ * should be controlling a colour property. The exceptions are the interesting
+ * part — they are the cases where a state changes something other than colour.
+ */
+export const stateColorCheck = (() => {
+  const colorProps: RubricProp[] = ['color-content', 'color-background', 'color-border'];
+  const named = stateRows.filter((r) => colorProps.includes(r.prop));
+  const rest = stateRows.filter((r) => !colorProps.includes(r.prop));
+  return {
+    total: stateRows.length,
+    onColor: named.length,
+    // Split so the two failure modes don't get conflated: a state that really
+    // does move something other than colour, versus a colour whose property the
+    // name simply never says.
+    exceptions: rest.map((r) => ({
+      row: r,
+      kind: r.isColor ? ('unnamed-colour' as const) : ('non-colour' as const),
+    })),
+    nonColour: rest.filter((r) => !r.isColor).length,
+    unnamedColour: rest.filter((r) => r.isColor).length,
+  };
+})();
+
+/**
+ * State words appearing anywhere other than the final slot. Tested against the
+ * name MINUS its namespace, so `--focus-ring-color` — where `focus` is the
+ * special-case component name, not a state — doesn't register.
+ */
+export const stateNotTrailing = rows.filter(
+  (r) =>
+    !r.state &&
+    /(^|-)(hover|active|focus|pressed|disabled|checked|selected)(-|$)/.test(
+      r.name.slice(2 + (r.ns?.length ?? 0)),
+    ),
+);
+
+/* ------------------------------------------------------------ the verdict */
+
+export interface RubricSlot {
+  n: number;
+  name: string;
+  spec: string;
+  verdict: string;
+  status: 'absent' | 'partial' | 'match';
+}
+
+export const slots: RubricSlot[] = [
+  {
+    n: 1,
+    name: 'Global prefix',
+    spec: 'eco-',
+    verdict: `0 of ${total}. Same as tier 2 — no token at any tier carries a namespace.`,
+    status: 'absent',
+  },
+  {
+    n: 2,
+    name: 'Tier identifier',
+    spec: 'theme / semantic / component',
+    verdict: `0 of ${total}. And at tier 3 this stops being abstract: --icon-size-* and --focus-ring-* each name tokens at two different tiers, and --focus-ring-color is declared at both.`,
+    status: 'absent',
+  },
+  {
+    n: 3,
+    name: 'Component / category / special case',
+    spec: 'button, link, form, focus-ring…',
+    verdict: `${total - unnamespaced.length} of ${total} lead with one, across ${nsGroups.length - (unnamespaced.length ? 1 : 0)} namespaces — including the rubric’s own examples, form (a category) and focus-ring (a special case). Multi-word names use dashes as prescribed. This is the strongest slot in the system.`,
+    status: 'match',
+  },
+  {
+    n: 4,
+    name: 'Component variant',
+    spec: 'default, primary, inverted…',
+    verdict: `${withSize} carry a size and ${withVariant} a semantic variant, with default correctly omitted. But every one of the ${sizeRows.afterProperty.length} sized tokens puts the size AFTER the property, which is the rubric’s order reversed, and the dialect splits ${sizeRows.short.length}/${sizeRows.long.length} between xs|sm|md|lg and small|medium|large.`,
+    status: 'partial',
+  },
+  {
+    n: 5,
+    name: 'Property',
+    spec: 'color-content, color-background, color-border, or any CSS property',
+    verdict: `${withProperty} of ${total} name a property, so the slot is nearly universal. None qualify it with color- : content is spelled three ways, background one, border two — and a bare \`border\` sometimes holds a whole shorthand instead of a colour.`,
+    status: 'partial',
+  },
+  {
+    n: 6,
+    name: 'State',
+    spec: 'default (omitted), hover, focus, pressed/active, disabled, visited',
+    verdict: `${stateRows.length} stateful tokens, all trailing, default omitted, and disabled used exactly as the rubric describes. The gap is \`active\`: it is in use for "currently selected", so the pressed state has no name — and there is no visited hook.`,
+    status: 'partial',
+  },
+];
+
+export const grammars = {
+  rubric: '--eco-<tier>-<component|category|special>-<variant>-<property>[-<state>]',
+  current: [
+    'component:  --<component>[-<part>][-<variant>]-<property>[-<state>]',
+    'category:   --<category>-<property>-<size>            (--form-padding-x-md)',
+    'special:    --focus-ring-<property>                    (rubric-shaped, tier-ambiguous)',
+    'unplaced:   --<property>                               (--backdrop-filter, --fill-percent)',
+  ],
+};
+
+/** Node lookup so the page can render values and reverse deps for a parsed row. */
+export const componentNodes = nodes;
