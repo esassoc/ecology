@@ -39,6 +39,9 @@ const {
   semanticHardcodes,
   healthTotal,
   primitiveCategories,
+  coreCategory,
+  coreSetNotes,
+  themePrimitiveOverrides,
 } = await import('../../data/token-graph');
 
 const TIER_NOTE = {
@@ -95,6 +98,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
       {[
         { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
+        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header, then does it anyway. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead.', severity: 'bad' },
         { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
         { id: 'hardcode', label: 'Semantic hardcodes', rows: semanticHardcodes, note: 'A tier-2 token terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer.', severity: 'warn' },
@@ -139,6 +143,31 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         {groups.map((group) => <TokenGroupTable group={group} />)}
       </Section>
     ))}
+
+    <Section id="core" title="Tier 1 · Core / universal">
+      <p>{coreCategory.note}</p>
+      <div class="core-wrap">
+        {coreCategory.groups.map((group) => (
+          <details class="tok-group is-core" data-group>
+            <summary>
+              <code class="group-label">{group.label}</code>
+              <span class="summary-right">
+                <span class="core-flag">core</span>
+                <span class="group-count">{group.tokens.length}</span>
+              </span>
+            </summary>
+            <p class="cat-note">{coreSetNotes[group.label]}</p>
+            <TokenGroupTable group={group} bare />
+          </details>
+        ))}
+      </div>
+      <p class="cat-note">
+        Verified against <code>themes.css</code>: neither shipped theme (beacon, qanat) re-points any
+        token in these three sets, so the core contract holds today. Z-index is a further candidate —
+        it is theme-invariant here and is conventionally managed as core/shared — but it is left out
+        above rather than promoted silently.
+      </p>
+    </Section>
 
     <Section id="primitive" title="Tier 1 · Primitive">
       <p>{TIER_NOTE.primitive}</p>
@@ -298,6 +327,18 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     line-height: 1.55;
     max-width: 72ch;
   }
+  .tokens-debug .core-wrap { margin-bottom: var(--spacing-400, 16px); }
+  .tokens-debug .tok-group.is-core { border-color: var(--color-info-border, #93c5fd); }
+  .tokens-debug .core-flag {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-info-strong, #0d74ce);
+    border: 1px solid var(--color-info-border, #93c5fd);
+    background: var(--color-info-subtle, #eff6ff);
+    border-radius: var(--radius-100, 4px);
+    padding: 1px 6px;
+  }
   .tokens-debug .tok-group.is-empty {
     border-style: dashed;
     background: transparent;
@@ -393,14 +434,26 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     var groups = Array.prototype.slice.call(document.querySelectorAll('[data-group]'));
     var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-token]'));
 
+    // The Core section is a second view over tokens that also appear under their
+    // property category, so a row count would double-count them. Count distinct
+    // token NAMES instead — otherwise the page claims more tokens than exist.
+    function distinct(list) {
+      var seen = {};
+      var n = 0;
+      list.forEach(function (name) { if (!seen[name]) { seen[name] = 1; n++; } });
+      return n;
+    }
+    var totalDistinct = distinct(rows.map(function (r) { return r.dataset.token; }));
+
     function apply() {
       var q = ((input && input.value) || '').trim().toLowerCase();
-      var shown = 0;
+      var hits = [];
       rows.forEach(function (row) {
         var hit = !q || (row.dataset.token || '').toLowerCase().indexOf(q) !== -1;
         row.hidden = !hit;
-        if (hit) shown++;
+        if (hit) hits.push(row.dataset.token);
       });
+      var shown = distinct(hits);
       groups.forEach(function (group) {
         var any = group.querySelector('tr[data-token]:not([hidden])') !== null;
         // Only hide while filtering. An expected-but-empty group has no rows and
@@ -408,7 +461,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         group.hidden = q ? !any : false;
         group.open = q ? any : false;
       });
-      if (count) count.textContent = q ? shown + ' of ' + rows.length : rows.length + ' tokens';
+      if (count) count.textContent = q ? shown + ' of ' + totalDistinct : totalDistinct + ' tokens';
     }
 
     if (input) input.addEventListener('input', apply);
