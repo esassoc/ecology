@@ -136,7 +136,7 @@ export class EsaTextarea extends LitElement {
       --_field-font-size: var(--form-font-size-md, 0.9375rem);
       --_field-radius: var(--form-radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #e5e5e5);
-      --_label-font-size: var(--type-size-200, 0.9375rem);
+      --_label-font-size: var(--font-size-200, 0.9375rem);
       display: block;
       font-family: var(--font-sans, sans-serif);
     }
@@ -145,21 +145,21 @@ export class EsaTextarea extends LitElement {
       --_field-padding-x: var(--form-padding-x-xs, 0.5rem);
       --_field-font-size: var(--form-font-size-xs, 0.8125rem);
       --_field-radius: var(--form-radius-xs, 0.25rem);
-      --_label-font-size: var(--type-size-050, 0.8125rem);
+      --_label-font-size: var(--font-size-050, 0.8125rem);
     }
     :host([size='sm']) {
       --_field-padding-y: var(--form-padding-y-sm, 0.375rem);
       --_field-padding-x: var(--form-padding-x-sm, 0.5rem);
       --_field-font-size: var(--form-font-size-sm, 0.875rem);
       --_field-radius: var(--form-radius-sm, 0.25rem);
-      --_label-font-size: var(--type-size-150, 0.875rem);
+      --_label-font-size: var(--font-size-150, 0.875rem);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--form-padding-y-lg, 0.75rem);
       --_field-padding-x: var(--form-padding-x-lg, 1rem);
       --_field-font-size: var(--form-font-size-lg, 1.125rem);
       --_field-radius: var(--form-radius-lg, 0.5rem);
-      --_label-font-size: var(--type-size-300, 1.125rem);
+      --_label-font-size: var(--font-size-300, 1.125rem);
     }
 
     .field {
@@ -229,7 +229,7 @@ export class EsaTextarea extends LitElement {
     .error {
       margin: 0;
       margin-block-start: var(--form-help-gap, 4px);
-      font-size: var(--type-size-100, 0.75rem);
+      font-size: var(--font-size-100, 0.75rem);
     }
     .help {
       color: var(--form-help-color, #737373);

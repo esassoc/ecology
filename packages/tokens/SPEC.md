@@ -7,7 +7,16 @@ all new components follow.
 ## The tiers
 
 1. **Primitive** (`tokens/primitive/*.json` → compiled) — raw values on ramps:
-   `--color-teal-900`, `--spacing-400`, `--radius-100`, `--type-size-200`.
+   `--color-teal-9`, `--spacing-400`, `--radius-100`, `--font-size-200`.
+   Colour ramps are Radix's 1–12 step scale; the other ramps use a padded
+   numeric scale (`050`, `100`, `200`, …).
+
+   **Tier-1 names describe the value, not a job.** `--font-family-dm-sans`
+   names the face; `--font-weight-350` names the weight. The uncomfortable
+   literalness is the point — nothing consumes these directly, so a name that
+   says exactly what the value *is* makes the tier-2 mapping legible. A tier-1
+   token named for a role (`--font-sans`, `--color-status-success`) reads as
+   themeable and isn't, which is how a theme ends up re-pointing a primitive.
    **Primitives never move** — not in the hub, not in a theme.
 2. **Semantic** (`tokens/semantic/*.json` → compiled) — intent, referencing
    primitives. A spoke's brand identity lives here: re-point a semantic token

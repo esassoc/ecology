@@ -1,9 +1,23 @@
 {
+  "font": {
+    "$description": "The type ROLES — the surface a spoke re-points. These were tier-1 primitives until the tier-1 typography audit: `--font-sans` names a classification rather than a face, and type-roles.css documents it as the spoke's override surface, which made the shipped contract an instruction to re-point a primitive. The names are unchanged, so every reader kept working; only the tier moved. NOTE: a `$description` at the ROOT of a semantic file collides with the one in effect.json — Style Dictionary merges file roots — so group level is the right home for it.",
+    "sans":    { "$value": "{font-family.dm-sans}", "$type": "fontFamily", "$description": "The body face. A spoke re-points this to its brand face." },
+    "mono":    { "$value": "{font-family.dm-mono}", "$type": "fontFamily", "$description": "The code/tabular face." },
+    "display": { "$value": "{font.sans}",           "$type": "fontFamily", "$description": "Headline/display face. Defaults to the body face (zero visual change) so the slot exists for a spoke to override with a distinct face — e.g. a condensed family for logotypes and big numbers. Wired into the display/title type-roles." }
+  },
+  "font-weight": {
+    "$description": "Weight ROLES. The numbers are typeface-bound — 350/500/550/650 are DM Sans's optical weights, not universal values — so a spoke swapping the body face re-points these to that face's matching weights. That is exactly why they are roles at tier 2 and the raw numbers are the primitives at tier 1.",
+    "light":    { "$value": "{font-weight.300}", "$type": "fontWeight" },
+    "regular":  { "$value": "{font-weight.350}", "$type": "fontWeight" },
+    "medium":   { "$value": "{font-weight.500}", "$type": "fontWeight" },
+    "semibold": { "$value": "{font-weight.550}", "$type": "fontWeight" },
+    "bold":     { "$value": "{font-weight.650}", "$type": "fontWeight" }
+  },
   "font-size-ui": {
     "$description": "Text inside interface furniture — control labels, table headers, pills, pagination. Deliberately aligned step-for-step with --control-height-*, so a component rendered at size `md` reads --font-size-ui-md. Prose keeps using the type-roles in type-roles.css; this ramp is for chrome, not content.",
-    "xs": { "$value": "{type.size.050}", "$type": "dimension" },
-    "sm": { "$value": "{type.size.100}", "$type": "dimension" },
-    "md": { "$value": "{type.size.200}", "$type": "dimension" },
-    "lg": { "$value": "{type.size.300}", "$type": "dimension" }
+    "xs": { "$value": "{font-size.050}", "$type": "dimension" },
+    "sm": { "$value": "{font-size.100}", "$type": "dimension" },
+    "md": { "$value": "{font-size.200}", "$type": "dimension" },
+    "lg": { "$value": "{font-size.300}", "$type": "dimension" }
   }
 }

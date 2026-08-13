@@ -537,11 +537,11 @@ export class EsaCombobox extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
     }
 
@@ -750,7 +750,7 @@ export class EsaCombobox extends LitElement {
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      font-size: var(--type-size-100, 11px);
+      font-size: var(--font-size-100, 11px);
       color: var(--color-text-muted, #737373);
       border-bottom: 1px solid var(--color-border-light, #efefef);
     }
@@ -833,7 +833,7 @@ export class EsaCombobox extends LitElement {
       color: var(--color-primary-strong, #3a7c59);
       border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       line-height: 1.4;
       user-select: none;
     }

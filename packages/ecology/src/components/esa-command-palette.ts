@@ -270,7 +270,7 @@ export class EsaCommandPalette extends LitElement {
       flex: 1;
       border: none;
       outline: none;
-      font-size: var(--type-size-300, 1rem);
+      font-size: var(--font-size-300, 1rem);
       color: var(--color-text-primary, #171717);
       background: transparent;
       font-family: inherit;
@@ -282,7 +282,7 @@ export class EsaCommandPalette extends LitElement {
       padding: 2px 6px;
       border: 1px solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-control, 0.25rem);
-      font-size: var(--type-size-100, 0.75rem);
+      font-size: var(--font-size-100, 0.75rem);
       font-family: inherit;
       color: var(--color-text-muted, #737373);
       background: var(--color-surface-sunken, #efefef);
@@ -294,7 +294,7 @@ export class EsaCommandPalette extends LitElement {
     }
     .esa-command-palette__group-label {
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      font-size: var(--type-size-100, 0.75rem);
+      font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
       text-transform: uppercase;
       letter-spacing: var(--letter-spacing-wide, 0.03em);
@@ -311,7 +311,7 @@ export class EsaCommandPalette extends LitElement {
       border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
       color: var(--color-text-primary, #171717);
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
@@ -331,7 +331,7 @@ export class EsaCommandPalette extends LitElement {
     }
     .esa-command-palette__item-label { font-weight: var(--font-weight-medium, 450); }
     .esa-command-palette__item-desc {
-      font-size: var(--type-size-150, 0.875rem);
+      font-size: var(--font-size-150, 0.875rem);
       color: var(--color-text-muted, #737373);
     }
 
@@ -339,7 +339,7 @@ export class EsaCommandPalette extends LitElement {
       padding: var(--spacing-600, 2rem);
       text-align: center;
       color: var(--color-text-muted, #737373);
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
     }
   `;
 }

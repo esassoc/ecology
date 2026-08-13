@@ -14,9 +14,17 @@ import {
   undefinedReads,
   tally,
   chromeExemptions,
+  nestedComponents,
   GAP_KIND_NOTE,
   type GapKind,
+  type NestingStatus,
 } from '../../data/component-promises';
+
+const NESTING_LABEL: Record<NestingStatus, string> = {
+  open: 'open',
+  accepted: 'accepted',
+  resolved: 'resolved',
+};
 
 const KIND_LABEL: Record<GapKind, string> = {
   'no-component': 'no component',
@@ -72,6 +80,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     <div class="tally-cell ok"><b>{tally.read}</b><span>read ({pct(tally.read / tally.declared)})</span></div>
     <div class={`tally-cell ${tally.gaps ? 'warn' : 'ok'}`}><b>{tally.gaps}</b><span>gaps, across {tally.affected} of {tally.total} namespaces</span></div>
     <div class="tally-cell"><b>{tally.exempt}</b><span>exempt by decision</span></div>
+    <div class={`tally-cell ${tally.nestedOpen ? 'warn' : ''}`}><b>{tally.nested}</b><span>name a component ({tally.nestedOpen} open)</span></div>
     <div class="tally-cell"><b>{tally.adHoc}</b><span>ad-hoc (under-promised)</span></div>
     <div class={`tally-cell ${tally.undefinedReads ? 'bad' : 'ok'}`}><b>{tally.undefinedReads}</b><span>undefined reads</span></div>
   </div>
@@ -237,6 +246,52 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     </details>
   </Section>
 
+  <Section id="nested" title="Tokens naming another component">
+    <p>
+      A tier-3 token is for a part the component draws <em>itself</em>. When the &ldquo;part&rdquo; is
+      really another component, it should be <b>composed</b> and themed through <em>its</em> tokens.
+      <code>--sidenav-user-avatar-bg</code> was the first of these found — <code>esa-avatar</code>
+      already owns <code>--avatar-bg</code>, so the token was a second avatar implementation living
+      in the token file. The tell is in the name: two nested part words means you have stopped
+      naming a part and started naming a component tree.
+    </p>
+    <p class="part-n">
+      Reported apart from the gap tally, and deliberately so — this is a different defect class, and
+      folding classes into one bucket is what let <code>--topbar-*</code> hide. A group appears only
+      when at least one of its tokens has a <b>direct counterpart</b> in the child&rsquo;s namespace;
+      that filter is what removes the noise. The 13 tokens naming <code>icon</code> are suppressed
+      because <code>esa-icon</code> has no tier-3 surface at all, so a parent sizing a glyph inside
+      its own layout is correct. <code>--pagination-button-color</code> is suppressed because
+      <code>esa-button</code> declares only <code>--button-on-warning</code> — there is no
+      <code>--button-color</code> to duplicate.
+    </p>
+    {nestedComponents.map((g) => (
+      <details class="ns" open={g.status === 'open'}>
+        <summary>
+          <span class="ns-name">
+            <code>--{g.ns}-*</code>
+            <span class="dim">names</span>
+            <a class="ns-slug" href={`/components/${g.slug}`}>{g.slug}</a>
+            <span class={`kind-flag n-${g.status}`}>{NESTING_LABEL[g.status]}</span>
+          </span>
+          <span class="summary-right"><span class="ns-count">{g.tokens.length}</span></span>
+        </summary>
+        {g.note && <p class="part-n pad">{g.note}</p>}
+        <table class="findings">
+          <thead><tr><th>Token</th><th>Counterpart it duplicates</th></tr></thead>
+          <tbody>
+            {g.tokens.map((t) => (
+              <tr>
+                <td><code>{t.token}</code></td>
+                <td>{t.counterpart ? <code>{t.counterpart}</code> : <span class="dim">— (same family, no direct counterpart)</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    ))}
+  </Section>
+
   <Section id="adhoc" title="Under-promise — read, declared nowhere">
     <p>
       The inverse failure. These hooks <em>work</em> — the component reads them with an inline
@@ -351,6 +406,9 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   .promises-debug .kind-flag.k-unwired { background: var(--color-info-subtle, #eff6ff); color: var(--color-info-strong, #0d74ce); }
   .promises-debug .kind-flag.k-elsewhere { background: var(--color-surface-sunken, #f0f0f0); color: var(--color-text-secondary, #666); }
   .promises-debug .kind-flag.k-exempt { background: var(--color-surface-sunken, #f0f0f0); color: var(--color-text-secondary, #666); }
+  .promises-debug .kind-flag.n-open { background: var(--color-warning-subtle, #fffbeb); color: var(--color-warning-strong, #ab6400); }
+  .promises-debug .kind-flag.n-accepted { background: var(--color-surface-sunken, #f0f0f0); color: var(--color-text-secondary, #666); }
+  .promises-debug .kind-flag.n-resolved { background: var(--color-success-subtle, #f3fbf0); color: var(--color-success-strong, #5c7c2f); }
   .promises-debug h3.sub { margin-top: var(--spacing-500, 20px); font-size: 0.95rem; }
   .promises-debug table.exemptions { margin-bottom: var(--spacing-300, 12px); }
   .promises-debug table.exemptions td:last-child { font-size: 0.8rem; }

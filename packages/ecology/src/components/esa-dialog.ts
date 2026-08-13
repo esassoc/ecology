@@ -240,7 +240,7 @@ export class EsaDialog extends LitElement {
       flex-shrink: 0;
     }
     .esa-dialog__title {
-      font-size: var(--type-size-400, 1.125rem);
+      font-size: var(--font-size-400, 1.125rem);
       font-weight: var(--font-weight-semibold, 550);
       margin: 0;
       color: var(--dialog-color, var(--color-text-primary, #171717));

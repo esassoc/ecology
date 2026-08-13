@@ -6,9 +6,15 @@
 //   esa-app-bar      → the bar shell + start/main/end slots + tone
 //   esa-icon-link    → plain nav links
 //   esa-nav-dropdown → items with children (native <details>, zero JS)
-// The signed-in user menu stays bespoke here (an avatar-triggered disclosure is
-// set-specific, not a generic brick). `icon` on an item is a Lucide name (passed
-// straight to esa-icon-link), consistent with the rest of the system.
+//   esa-avatar       → the user menu's trigger face
+// The user menu's DISCLOSURE stays bespoke here (an avatar-triggered menu is
+// set-specific, not a generic brick), but the avatar inside it no longer is: it
+// used to be a hand-rolled img/initials circle, which meant --header-nav-avatar-*
+// was a second implementation of what esa-avatar already owns via --avatar-*.
+// Those three tokens now ALIAS the avatar's own, scoped to the trigger — the
+// spoke-facing hooks are unchanged, the duplicate markup is gone. `icon` on an
+// item is a Lucide name (passed straight to esa-icon-link), consistent with the
+// rest of the system.
 //
 // For full control, compose esa-app-bar + the bricks directly (see cb-fish-design's
 // cbf-public-nav, or the App Bar specimen). This component is the batteries-included
@@ -17,6 +23,7 @@ import EsaAppBar from './esa-app-bar.astro';
 import EsaIconLink from './esa-icon-link.astro';
 import EsaNavDropdown from './esa-nav-dropdown.astro';
 import EsaIcon from './esa-icon.astro';
+import EsaAvatar from './esa-avatar.astro';
 
 export interface EsaHeaderNavItem {
   label: string;
@@ -78,11 +85,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
     {user && (
       <details class="esa-header-nav__user">
         <summary class="esa-header-nav__avatar-btn" aria-label={`User menu for ${user.name}`}>
-          {user.avatarUrl ? (
-            <img class="esa-header-nav__avatar-img" src={user.avatarUrl} alt={user.name} />
-          ) : (
-            <span class="esa-header-nav__avatar-initials">{initialsFor(user)}</span>
-          )}
+          <EsaAvatar name={user.name} src={user.avatarUrl} initials={initialsFor(user)} size="sm" />
         </summary>
         <div class="esa-header-nav__user-dropdown">
           <div class="esa-header-nav__user-info">
@@ -121,29 +124,37 @@ function initialsFor(u: EsaHeaderNavUser): string {
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
     color: var(--header-nav-menu-item-color, var(--color-text-secondary, #525252));
-    font-size: var(--type-size-200, 1rem);
+    font-size: var(--font-size-200, 1rem);
     text-decoration: none;
   }
   .esa-header-nav__menu-item:hover { background: var(--color-surface-sunken, #efefef); }
   .esa-header-nav__menu-item--inert { color: var(--color-text-muted, #737373); }
 
-  /* User menu (bespoke — avatar-triggered disclosure) */
+  /* User menu (the DISCLOSURE is bespoke; the avatar inside it is esa-avatar) */
   .esa-header-nav__user { position: relative; display: flex; align-items: center; }
   .esa-header-nav__avatar-btn {
+    /* The three --header-nav-avatar-* hooks are kept and re-pointed at the
+       avatar's own tokens, scoped to this trigger. Nothing global moves: a spoke
+       still themes this face through the header-nav names it already knows, and
+       an --avatar-* override elsewhere on the page is unaffected. This is also
+       what makes the swap a no-op — 32px is not a step on the avatar's
+       20/28/40/56 scale, and the brand fill is not its name-hash hue, so both
+       arrive as scoped overrides rather than as compromises. */
+    --avatar-size-sm: var(--header-nav-avatar-size, 32px);
+    --avatar-bg: var(--header-nav-avatar-bg, var(--color-primary, #43608a));
+    --avatar-text-color: var(--header-nav-avatar-text, var(--color-text-inverse, #fff));
+    --avatar-font-size: var(--font-size-100, 0.75rem);
+
+    /* The summary is now only the focusable trigger — the avatar draws the
+       circle, so width/height/radius/background/overflow all moved to it. */
     display: flex; align-items: center; justify-content: center;
-    width: var(--header-nav-avatar-size, 32px); height: var(--header-nav-avatar-size, 32px);
-    border-radius: var(--radius-pill, 9999px);
-    background: var(--header-nav-avatar-bg, var(--color-primary, #43608a));
-    color: var(--header-nav-avatar-text, var(--color-text-inverse, #fff));
-    cursor: pointer; overflow: hidden; list-style: none;
+    cursor: pointer; list-style: none;
   }
   .esa-header-nav__avatar-btn::-webkit-details-marker { display: none; }
   .esa-header-nav__avatar-btn:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset, 2px);
   }
-  .esa-header-nav__avatar-img { width: 100%; height: 100%; object-fit: cover; }
-  .esa-header-nav__avatar-initials { font-size: var(--type-size-100, 0.75rem); font-weight: var(--font-weight-semibold, 600); }
 
   .esa-header-nav__user-dropdown {
     position: absolute; top: calc(100% + var(--spacing-100, 4px)); right: 0;
@@ -160,15 +171,15 @@ function initialsFor(u: EsaHeaderNavUser): string {
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-bottom: 1px solid var(--color-border, #e5e5e5);
   }
-  .esa-header-nav__user-name { font-size: var(--type-size-200, 1rem); font-weight: var(--font-weight-semibold, 600); color: var(--color-text-primary, #171717); }
-  .esa-header-nav__user-email { font-size: var(--type-size-100, 0.75rem); color: var(--color-text-secondary, #525252); }
+  .esa-header-nav__user-name { font-size: var(--font-size-200, 1rem); font-weight: var(--font-weight-semibold, 600); color: var(--color-text-primary, #171717); }
+  .esa-header-nav__user-email { font-size: var(--font-size-100, 0.75rem); color: var(--color-text-secondary, #525252); }
   .esa-header-nav__user-actions { padding: var(--spacing-100, 4px); }
   .esa-header-nav__user-action {
     display: flex; align-items: center; gap: var(--spacing-200, 8px);
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
     color: var(--header-nav-menu-item-color, var(--color-text-secondary, #525252));
-    font-size: var(--type-size-200, 1rem); text-decoration: none;
+    font-size: var(--font-size-200, 1rem); text-decoration: none;
   }
   .esa-header-nav__user-action:hover { background: var(--color-surface-sunken, #efefef); }
   .esa-header-nav__user-action--danger { color: var(--color-danger-strong, #ce2c31); }

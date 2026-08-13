@@ -156,11 +156,11 @@ export class EsaDatePicker extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, #ef4444);
     }
 

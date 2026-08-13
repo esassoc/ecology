@@ -374,20 +374,24 @@ const PRIMITIVE_CATEGORIES: {
   {
     label: 'Typography',
     note:
-      'The individual values available for font-family, font-size, font-weight, line-height, letter-spacing, and text-transform. These are meant to be combined into COMPOSITE tokens at tier 2 — a type role names one family + size + weight + line-height together, so components reference the role rather than assembling four primitives at the call site.',
+      'The individual values available for font-family, font-size, font-weight, font-style, line-height, letter-spacing, and text-transform. Every one is named `--<css-property>-<value>` — the property it sets plus the value it holds — so the name reads as the declaration it ends up in. These are meant to be combined into COMPOSITE tokens at tier 2: a type role names one family + size + weight + line-height together, so components reference the role rather than assembling four primitives at the call site.',
     gap:
-      'Two divergences. (1) There are no text-transform primitives at all. (2) There is no tier-2 typography composite — tokens/semantic/ contains only color.json, layout.json, and effect.json. The composite job is currently done by src/type-roles.css, which ships CSS utility CLASSES rather than tokens, so a type role cannot be referenced by a token, re-pointed by a theme, or exported to Figma the way a composite token could.',
-    match: (n) => /^--(font-|type-size-|line-height-|letter-spacing-|text-transform-|text-case-)/.test(n),
-    // Order matters: --font-weight-bold also starts with --font-, so weight has
-    // to be claimed before family.
+      'Two divergences remain. (1) There are still no text-transform or font-style primitives, and both are used literally in the kit — 5 `text-transform: uppercase`, 4 `font-style: italic`. They are deliberately NOT tokenised yet: with no tier-2 composite to consume them they would be orphan surface, which SPEC.md warns against. (2) There is no tier-2 typography COMPOSITE. The composite job is done by src/type-roles.css, which ships CSS utility CLASSES rather than tokens, so a type role cannot be referenced by a token, re-pointed by a theme, or exported to Figma the way a composite token could. What HAS been fixed: every tier-1 typography token now follows one shape, --<css-property>-<value>, and the family/weight ROLES moved to tier 2 where a spoke may legally re-point them.',
+    match: (n) => /^--(font-|line-height-|letter-spacing-|text-transform-|font-style-)/.test(n),
+    // Order matters and is fragile: every key here is a prefix of `--font-`, so
+    // the most specific has to be claimed first. `--font-family-dm-sans` and
+    // `--font-size-200` both start with `--font-`, so a bare `--font-` test
+    // placed above them silently swallows both — which is exactly what happened
+    // when --type-size-* was renamed to --font-size-*.
     subGroupKey: (n) =>
       n.startsWith('--font-weight-') ? 'font-weight'
-      : n.startsWith('--font-') ? 'font-family'
-      : n.startsWith('--type-size-') ? 'font-size'
+      : n.startsWith('--font-size-') ? 'font-size'
+      : n.startsWith('--font-family-') ? 'font-family'
+      : n.startsWith('--font-style-') ? 'font-style'
       : n.startsWith('--line-height-') ? 'line-height'
       : n.startsWith('--letter-spacing-') ? 'letter-spacing'
       : 'text-transform',
-    expect: ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform'],
+    expect: ['font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'text-transform'],
   },
   {
     label: 'Spacing',
@@ -430,10 +434,17 @@ const PRIMITIVE_CATEGORIES: {
 
 /**
  * The universal/core set: tier-1 tokens shared by EVERY theme, as opposed to the
- * brand ramps a theme re-points. Three sets qualify —
+ * brand ramps a theme re-points. Two sets qualify —
  *   - the neutral (gray) palette: the greyscale the UI is built on
- *   - the utility palette: fixed error / warning / success / info values
  *   - spacing: explicit values every theme follows, so there is nothing to re-skin
+ *
+ * There was a third, the utility palette (error / warning / success / info). It
+ * matched `--color-status-*`, a block of tier-1 ALIASES that existed mainly to
+ * give the utility palette a tier-1 home — see the tier-1 naming audit. Those
+ * are gone: the tier-2 roles they fed now point straight at their ramp steps.
+ * The concept did not disappear, it moved tiers, and since Core is by definition
+ * a view over tier 1 it no longer has members here. Whether those roles are
+ * theme-invariant is now a tier-2 question.
  *
  * This is an ORTHOGONAL axis, not an eighth property category. A gray step is
  * both "Color -> gray ramp" and "core"; filing it under Core INSTEAD of Color
@@ -447,11 +458,6 @@ const CORE_SETS: { label: string; note: string; match: (n: string) => boolean }[
     label: 'neutral color palette',
     note: 'The greyscale values the UI is built on — surfaces, text, borders. Defined once here rather than per theme because every theme shares them.',
     match: (n) => /^--color-(gray|black-a|white-a)/.test(n),
-  },
-  {
-    label: 'utility color palette',
-    note: 'Messaging values — error, warning, success, info. Fixed across themes so a danger state means the same thing everywhere.',
-    match: (n) => n.startsWith('--color-status-'),
   },
   {
     label: 'spacing',

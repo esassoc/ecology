@@ -100,7 +100,7 @@ export class EsaTooltip extends LitElement {
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--tooltip-radius, var(--radius-control, 0.25rem));
       font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--type-size-150, 0.875rem);
+      font-size: var(--font-size-150, 0.875rem);
       line-height: var(--line-height-tight, 1.3);
       max-width: var(--tooltip-max-width, 240px);
       pointer-events: none;

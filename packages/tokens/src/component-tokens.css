@@ -85,6 +85,19 @@
   --filter-dropdown-radius: var(--radius-surface);
   --filter-dropdown-shadow: var(--elevation-3);
   --filter-dropdown-min-width: 200px;
+  /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
+     that is ACCEPTED, not an oversight — do not re-open it without new evidence.
+     esa-filter-pills hand-rolls its chip because the chip is not an esa-pill:
+     it renders a two-tone `label: value` where esa-pill takes one string in one
+     colour, and its remove button emits { name, value } for a parent to update
+     filter state where esa-pill removes ITSELF from the DOM (wrong for a
+     controlled list — the source of truth is the filter state, not the markup).
+     Composing would mean adding a default slot and an opt-out of self-removal to
+     esa-pill, which is `stable` and already read by esa-pillbox and
+     esa-file-list, to serve one caller.
+     Revisit only if esa-pill grows those two capabilities for other reasons;
+     then this collapses to scoped --pill-* aliases the way esa-header-nav's
+     avatar did. */
   --filter-pill-bg: var(--color-primary-bg);
   --filter-pill-bg-hover: var(--color-primary-bg-hover);
   --filter-pill-label-color: var(--color-text-secondary);
@@ -119,7 +132,7 @@
   --grid-row-bg-selected: color-mix(in srgb, var(--color-primary) 6%, transparent);
   --grid-row-stripe-bg: var(--color-background);
   --grid-row-border-color: var(--color-border-light);
-  --grid-row-font-size: var(--type-size-150);
+  --grid-row-font-size: var(--font-size-150);
   --grid-cell-padding-x: var(--spacing-300);
   --grid-cell-padding-y: var(--spacing-200);
   --grid-pagination-bg: var(--color-surface);
@@ -230,14 +243,14 @@
   --breadcrumbs-link-hover: var(--color-text-primary);
   --breadcrumbs-separator-color: var(--color-border-strong);
 
-  /* UNRESOLVED — a "pill" breadcrumb variant that esa-breadcrumbs does not have.
-     No markup, no prop, no doc-page specimen: four tokens describing a component
-     that was never built. Either the variant ships or these are deleted. Left
-     declared so the orphan check keeps surfacing them. */
-  --breadcrumbs-pill-bg: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --breadcrumbs-pill-bg-hover: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  --breadcrumbs-pill-radius: var(--radius-pill);
-  --breadcrumbs-pill-padding: var(--spacing-100) var(--spacing-250);
+  /* DELETED (2026-08-13) — --breadcrumbs-pill-{bg,bg-hover,radius,padding}, a
+     "pill" breadcrumb variant esa-breadcrumbs never had: no markup, no prop, no
+     specimen. Same defect as the --sidenav-user-avatar-* tokens deleted the same
+     day — the part they named is a COMPONENT. esa-pill owns --pill-bg /
+     --pill-radius / --pill-text-color already, so a pill variant would compose
+     esa-pill and these four would be dead on arrival.
+     If the variant is ever built: compose esa-pill and scope --pill-* on the
+     crumb, the way esa-header-nav scopes --avatar-* on its user trigger. */
 }
 
 /* ============================================================
@@ -280,6 +293,11 @@
   --avatar-size-sm: 28px;
   --avatar-size-xs: 20px;
   --avatar-text-color: var(--color-text-inverse, #fff);
+  /* Initials type. One hook rather than four: each size rule repeats it with its
+     own literal default, so an override lands on whichever size is active. Left
+     UNSET here on purpose — declaring a value would pin every size to one number
+     and destroy the scale. Callers set it in their own scope; esa-header-nav
+     does, to hold 12px initials in a 32px face. */
 
   /* esa-back-to-top */
   --back-to-top-bg: var(--color-primary, #43608a);
@@ -416,7 +434,7 @@
 
   /* esa-link-column */
   --link-column-heading-font-size: var(--font-size-ui-md, 1rem);
-  --link-column-item-font-size: var(--type-size-150, 0.875rem);
+  --link-column-item-font-size: var(--font-size-150, 0.875rem);
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
   /* esa-loading-overlay */

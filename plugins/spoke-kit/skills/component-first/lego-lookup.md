@@ -48,7 +48,7 @@ cat node_modules/@esa/tokens/layouts.css   # full set + per-primitive knobs
 ```
 
 **Typography roles** (`@esa/tokens/type-roles.css`) — style text with role classes, **never
-raw `--type-size-*` in pages** (that's a smell — see design-principles). Roles:
+raw `--font-size-*` in pages** (that's a smell — see design-principles). Roles:
 `.type-display`, `.type-page-title`, `.type-section-title`, `.type-card-title`, `.type-body`,
 `.type-body-large`, `.type-body-small`, `.type-label`, `.type-caption`, `.type-overline`,
 `.type-code`.

@@ -64,11 +64,11 @@
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
      where it's standalone. */
-  --color-success:  var(--color-green-700);  /* __FILL__ */
-  --color-warning:  var(--color-orange-500); /* __FILL__ */
+  --color-success:  var(--color-green-9);   /* __FILL__ */
+  --color-warning:  var(--color-orange-9);  /* __FILL__ */
   --color-info:     /* __FILL__ */ #228be6;
-  --color-ai:       var(--color-blue-500);   /* __FILL__ */
-  --color-ai-hover: var(--color-blue-700);   /* __FILL__ */
+  --color-ai:       var(--color-blue-9);    /* __FILL__ */
+  --color-ai-hover: var(--color-blue-10);   /* __FILL__ */
 
   /* ===== (5) CONTROL SIZING + SHAPE — match this spoke's density =====
      These are SEMANTIC roles, so re-pointing one moves every component that

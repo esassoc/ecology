@@ -8,7 +8,7 @@
 // (or nothing). Pair it with whatever validation layer the host stack provides.
 //
 // Matches the error styling esa-form-field uses: --color-danger text at
-// --type-size-100. Collapses out of layout when empty so it doesn't reserve a
+// --font-size-100. Collapses out of layout when empty so it doesn't reserve a
 // gap under the input. An optional leading icon mirrors common form patterns.
 import EsaIcon from './esa-icon.astro';
 
@@ -32,7 +32,7 @@ const show = !!(message && String(message).trim());
 <style>
   .esa-field-error {
     --_error-color: var(--color-danger-strong, #ce2c31);
-    --_error-font-size: var(--type-size-100, 0.75rem);
+    --_error-font-size: var(--font-size-100, 0.75rem);
     --_error-gap: var(--form-help-gap, 4px);
 
     display: flex;

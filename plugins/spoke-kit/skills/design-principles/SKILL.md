@@ -138,7 +138,7 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
 - **Type roles, not raw sizes.** Style text with the role classes in
   `@esa/tokens/type-roles.css` (`.type-page-title`, `.type-section-title`,
   `.type-card-title`, `.type-body`, `.type-label`, `.type-caption`, …) — they
-  bundle size + weight + line-height + family per role. **Raw `--type-size-*`
+  bundle size + weight + line-height + family per role. **Raw `--font-size-*`
   in page CSS is a smell** (it scatters ad-hoc 200/250/300 sizes and drifts
   from the scale). Don't default body text oversized — `.type-body` is the
   baseline.

@@ -73,7 +73,7 @@ esa-tooltip
   `data-gap="xs|sm|md|lg|xl"`, per-primitive knobs like `--grid-min`. Use these instead of
   bespoke flex/grid CSS.
 - **Typography roles** (`@esa/tokens/type-roles.css`): `.type-page-title` `.type-card-title`
-  `.type-body` `.type-label` … — style text with role classes, **never** raw `--type-size-*`
+  `.type-body` `.type-label` … — style text with role classes, **never** raw `--font-size-*`
   in pages.
 - **Mid-tier legos**: `esa-page-header` (title/lede/actions), `esa-stat` (value/label/sub/
   accent), `esa-app-shell` (the canonical neutral chrome).

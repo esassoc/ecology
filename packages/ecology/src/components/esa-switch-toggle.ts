@@ -153,7 +153,7 @@ export class EsaSwitchToggle extends LitElement {
     }
 
     .label {
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       line-height: var(--line-height-normal, 1.6);
     }
   `;
