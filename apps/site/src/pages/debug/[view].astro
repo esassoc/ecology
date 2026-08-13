@@ -11,7 +11,8 @@
  */
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import Section from '@esa/docs/Section.astro';
-import type { TokenNode, TokenGroup } from '../../data/token-graph';
+import TokenGroupTable from './_TokenGroup.astro';
+import type { TokenGroup } from '../../data/token-graph';
 
 export function getStaticPaths() {
   // Production emits nothing. Dev serves /debug/tokens.
@@ -30,12 +31,14 @@ const {
   semanticGroups,
   componentGroups,
   undefinedRefs,
+  duplicateDeclarations,
   adHocHooks,
   orphans,
   unusedRampSteps,
   tierSkips,
   semanticHardcodes,
   healthTotal,
+  primitiveCategories,
 } = await import('../../data/token-graph');
 
 const TIER_NOTE = {
@@ -92,6 +95,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
       {[
         { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
+        { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
         { id: 'hardcode', label: 'Semantic hardcodes', rows: semanticHardcodes, note: 'A tier-2 token terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer.', severity: 'warn' },
         { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but no token and no component reads it. Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below.', severity: 'warn' },
@@ -128,70 +132,41 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       [
         ['component', 'Tier 3 · Component', componentGroups],
         ['semantic', 'Tier 2 · Semantic', semanticGroups],
-        ['primitive', 'Tier 1 · Primitive', primitiveGroups],
       ] as [keyof typeof TIER_NOTE, string, TokenGroup[]][]
     ).map(([tier, title, groups]) => (
       <Section id={tier} title={title}>
         <p>{TIER_NOTE[tier]}</p>
-        {groups.map((group) => (
-          <details class="tok-group" data-group>
-            <summary>
-              <code class="group-label">{group.label}</code>
-              <span class="group-count">{group.tokens.length}</span>
-            </summary>
-            <table class="tok-table">
-              <thead>
-                <tr><th>Token</th><th>Resolution chain</th><th>Value</th><th>Used by</th></tr>
-              </thead>
-              <tbody>
-                {group.tokens.map((t: TokenNode) => (
-                  <tr data-token={t.name} title={t.description ?? undefined}>
-                    <td class="c-name">
-                      <code>{t.name}</code>
-                      {t.description && <span class="has-note" aria-hidden="true">*</span>}
-                    </td>
-                    <td class="c-chain">
-                      {t.lineage.length === 0 ? (
-                        <span class="dim">—</span>
-                      ) : (
-                        t.lineage.map((link, i) => (
-                          <>
-                            {i > 0 && <span class="arrow">→</span>}
-                            <span class={`chip k-${link.kind}`}>{link.ref}</span>
-                          </>
-                        ))
-                      )}
-                    </td>
-                    <td class="c-value">
-                      {t.isColor && <span class="swatch" style={`background:${t.resolved}`} />}
-                      <code>{t.resolved}</code>
-                    </td>
-                    <td class="c-used">
-                      {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 ? (
-                        <span class="orphan-flag">orphan</span>
-                      ) : (
-                        <details class="uses">
-                          <summary>
-                            {t.usedByTokens.length > 0 && <span class="pill">{t.usedByTokens.length} tok</span>}
-                            {t.usedByComponents.length > 0 && <span class="pill">{t.usedByComponents.length} comp</span>}
-                          </summary>
-                          {t.usedByTokens.length > 0 && (
-                            <p><b>Tokens:</b> {t.usedByTokens.join(', ')}</p>
-                          )}
-                          {t.usedByComponents.length > 0 && (
-                            <p><b>Components:</b> {t.usedByComponents.join(', ')}</p>
-                          )}
-                        </details>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </details>
-        ))}
+        {groups.map((group) => <TokenGroupTable group={group} />)}
       </Section>
     ))}
+
+    <Section id="primitive" title="Tier 1 · Primitive">
+      <p>{TIER_NOTE.primitive}</p>
+      {primitiveCategories.map((cat) => (
+        <details class="tok-category" data-group>
+          <summary>
+            <span class="cat-label">{cat.label}</span>
+            <span class="summary-right">
+              {cat.gap && <span class="gap-flag">diverges</span>}
+              <span class="group-count">{cat.count}</span>
+            </span>
+          </summary>
+          <p class="cat-note">{cat.note}</p>
+          {cat.gap && (
+            <p class="cat-gap">
+              <b>What we actually ship:</b> {cat.gap}
+            </p>
+          )}
+          {cat.groups.length === 1 && cat.groups[0].label === cat.label.toLowerCase() ? (
+            <TokenGroupTable group={cat.groups[0]} bare />
+          ) : (
+            <div class="cat-body">
+              {cat.groups.map((group) => <TokenGroupTable group={group} />)}
+            </div>
+          )}
+        </details>
+      ))}
+    </Section>
   </article>
 </DocsLayout>
 
@@ -274,6 +249,57 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .check-note, .tokens-debug .empty { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); font-size: 0.85rem; color: var(--color-text-secondary, #666); margin: 0; }
   .tokens-debug .group-label { font-size: 0.85rem; }
+
+  /* Tier-1 categories: an outer level above the per-ramp groups. Visually
+     heavier than a group so the two levels don't read as one flat list. */
+  .tokens-debug details.tok-category {
+    border: 1px solid var(--color-border, #d4d4d4);
+    border-radius: var(--radius-200, 6px);
+    margin-bottom: var(--spacing-300, 12px);
+    background: var(--color-surface, #fff);
+  }
+  .tokens-debug details.tok-category > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-300, 12px);
+    padding: var(--spacing-300, 12px);
+    cursor: pointer;
+  }
+  .tokens-debug .cat-label { font-weight: 600; font-size: 0.95rem; }
+  .tokens-debug .cat-note {
+    margin: 0;
+    padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--color-text-secondary, #666);
+    max-width: 68ch;
+  }
+  .tokens-debug .summary-right { display: flex; align-items: center; gap: var(--spacing-200, 8px); }
+  .tokens-debug .gap-flag {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-warning, #b45309);
+    border: 1px solid var(--color-warning-border, #fcd34d);
+    background: var(--color-warning-subtle, #fffbeb);
+    border-radius: var(--radius-100, 4px);
+    padding: 1px 6px;
+  }
+  /* The gap note is the refinement worklist — where what we ship diverges from
+     the category's stated model. Deliberately louder than the note above it. */
+  .tokens-debug .cat-gap {
+    margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+    border-left: 3px solid var(--color-warning, #d97706);
+    background: var(--color-warning-subtle, #fffbeb);
+    border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    max-width: 72ch;
+  }
+  .tokens-debug .cat-body { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
+  .tokens-debug .cat-body details.tok-group { background: var(--color-surface-sunken, #fafafa); }
   .tokens-debug table.findings, .tokens-debug table.tok-table {
     width: 100%;
     border-collapse: collapse;
