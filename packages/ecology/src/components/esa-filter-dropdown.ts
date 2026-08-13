@@ -294,7 +294,7 @@ export class EsaFilterDropdown extends LitElement {
 
       --_filter-height: 40px;
       --_filter-padding-x: var(--spacing-400, 1rem);
-      --_filter-font-size: var(--type-size-200, 0.9375rem);
+      --_filter-font-size: var(--font-size-200, 0.9375rem);
       --_filter-radius: var(--radius-surface, 0.5rem);
       --_filter-bg: var(--color-surface, #fff);
       --_filter-bg-active: var(--color-primary-subtle, #f3f8fb);
@@ -308,19 +308,19 @@ export class EsaFilterDropdown extends LitElement {
     :host([size='xs']) {
       --_filter-height: 28px;
       --_filter-padding-x: var(--spacing-200, 0.5rem);
-      --_filter-font-size: var(--type-size-100, 0.75rem);
+      --_filter-font-size: var(--font-size-100, 0.75rem);
       --_filter-radius: var(--radius-control, 0.25rem);
     }
     :host([size='sm']) {
       --_filter-height: 32px;
       --_filter-padding-x: var(--spacing-300, 0.75rem);
-      --_filter-font-size: var(--type-size-150, 0.875rem);
+      --_filter-font-size: var(--font-size-150, 0.875rem);
       --_filter-radius: var(--radius-control, 0.25rem);
     }
     :host([size='lg']) {
       --_filter-height: 48px;
       --_filter-padding-x: var(--spacing-500, 1.5rem);
-      --_filter-font-size: var(--type-size-300, 1.125rem);
+      --_filter-font-size: var(--font-size-300, 1.125rem);
       --_filter-radius: var(--radius-card, 0.5rem);
     }
 
@@ -386,7 +386,7 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #fff);
-      font-size: var(--type-size-100, 0.75rem);
+      font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
       line-height: 1;
     }
@@ -512,7 +512,7 @@ export class EsaFilterDropdown extends LitElement {
       border: none;
       color: var(--color-primary-strong, #2a7e3b);
       font-family: var(--font-sans, inherit);
-      font-size: var(--type-size-150, 0.875rem);
+      font-size: var(--font-size-150, 0.875rem);
       font-weight: var(--font-weight-medium, 450);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);

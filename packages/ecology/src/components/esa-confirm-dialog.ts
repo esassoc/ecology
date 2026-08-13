@@ -280,14 +280,14 @@ export class EsaConfirmDialog extends LitElement {
       color: var(--color-warning-strong, #ab6400);
     }
     .esa-confirm-dialog__title {
-      font-size: var(--type-size-400, 1.125rem);
+      font-size: var(--font-size-400, 1.125rem);
       font-weight: var(--font-weight-semibold, 550);
       margin: 0 0 var(--spacing-150, 0.375rem);
       color: var(--confirm-dialog-color, var(--color-text-primary, #171717));
     }
     .esa-confirm-dialog__message {
       color: var(--confirm-dialog-color, var(--color-text-secondary, #525252));
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       line-height: var(--line-height-normal, 1.6);
       margin: 0;
     }
@@ -304,7 +304,7 @@ export class EsaConfirmDialog extends LitElement {
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
       border-radius: var(--radius-surface, 0.5rem);
       font-family: inherit;
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       font-weight: var(--font-weight-medium, 450);
       cursor: pointer;
       border: 1px solid transparent;

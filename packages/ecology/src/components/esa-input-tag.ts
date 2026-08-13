@@ -392,7 +392,7 @@ export class EsaInputTag extends LitElement {
       --_field-min-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
-      --_chip-font-size: var(--type-size-150, 12px);
+      --_chip-font-size: var(--font-size-150, 12px);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
       --_chip-bg: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
@@ -405,7 +405,7 @@ export class EsaInputTag extends LitElement {
       --_field-font-size: var(--form-font-size-xs, 11px);
       --_field-min-height: var(--form-height-xs, 28px);
       --_field-radius: var(--form-radius-xs, 4px);
-      --_chip-font-size: var(--type-size-100, 11px);
+      --_chip-font-size: var(--font-size-100, 11px);
     }
     :host([size='sm']) {
       --_field-padding-y: var(--form-padding-y-sm, 4px);
@@ -413,7 +413,7 @@ export class EsaInputTag extends LitElement {
       --_field-font-size: var(--form-font-size-sm, 12px);
       --_field-min-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 6px);
-      --_chip-font-size: var(--type-size-100, 11px);
+      --_chip-font-size: var(--font-size-100, 11px);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--form-padding-y-lg, 12px);
@@ -421,7 +421,7 @@ export class EsaInputTag extends LitElement {
       --_field-font-size: var(--form-font-size-lg, 16px);
       --_field-min-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 10px);
-      --_chip-font-size: var(--type-size-200, 14px);
+      --_chip-font-size: var(--font-size-200, 14px);
     }
 
     .field {
@@ -440,7 +440,7 @@ export class EsaInputTag extends LitElement {
       margin-left: 2px;
     }
     .field__hint {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
 

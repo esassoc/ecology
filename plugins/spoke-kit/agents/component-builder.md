@@ -42,7 +42,7 @@ When you need any UI inside your component, walk these in order, stop at the fir
    `.repel` `.grid` `.sidebar` `.switcher` `.frame` `.reel` `.center`; gap via
    `data-gap="xs|sm|md|lg|xl"`) and `@esa/tokens/type-roles.css` roles (`.type-page-title`
    `.type-card-title` `.type-body` `.type-label` …). Use these instead of bespoke flex/grid
-   or raw `--type-size-*`.
+   or raw `--font-size-*`.
 3. **Beacon `ui-*`** (optional, if `~/Dev/Beacon` is cloned) — port faithfully.
 4. **Only then** bespoke, with an honest `<!-- bcn-lego-checked: … -->` reason naming what
    you ruled out.

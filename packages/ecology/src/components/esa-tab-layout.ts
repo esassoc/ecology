@@ -129,7 +129,7 @@ export class EsaTabLayout extends LitElement {
   static styles = css`
     :host {
       --_tab-height: var(--tab-layout-height-md, 44px);
-      --_tab-font-size: var(--type-size-200, 0.875rem);
+      --_tab-font-size: var(--font-size-200, 0.875rem);
       --_tab-color: var(--tab-layout-color, var(--color-text-secondary, #525252));
       --_tab-color-active: var(--tab-layout-color-active, var(--color-primary, #43608a));
       --_tab-color-hover: var(--color-text-primary, #171717);
@@ -148,17 +148,17 @@ export class EsaTabLayout extends LitElement {
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
     :host([size='xs']) {
       --_tab-height: var(--tab-layout-height-xs, 30px);
-      --_tab-font-size: var(--type-size-100, 0.6875rem);
+      --_tab-font-size: var(--font-size-100, 0.6875rem);
       --_tab-padding-x: var(--spacing-200, 8px);
     }
     :host([size='sm']) {
       --_tab-height: var(--tab-layout-height-sm, 36px);
-      --_tab-font-size: var(--type-size-150, 0.75rem);
+      --_tab-font-size: var(--font-size-150, 0.75rem);
       --_tab-padding-x: var(--spacing-300, 12px);
     }
     :host([size='lg']) {
       --_tab-height: var(--tab-layout-height-lg, 52px);
-      --_tab-font-size: var(--type-size-300, 1rem);
+      --_tab-font-size: var(--font-size-300, 1rem);
       --_tab-padding-x: var(--spacing-500, 24px);
     }
 
@@ -216,7 +216,7 @@ export class EsaTabLayout extends LitElement {
       min-width: 20px;
       height: 20px;
       padding-inline: var(--spacing-150, 6px);
-      font-size: var(--type-size-100, 0.6875rem);
+      font-size: var(--font-size-100, 0.6875rem);
       font-weight: var(--font-weight-semibold, 600);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);

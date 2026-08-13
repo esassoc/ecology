@@ -9,19 +9,19 @@ const families = [
 ];
 
 const scale = [
-  { token: '--type-size-050', min: '8px', max: '10px' },
-  { token: '--type-size-100', min: '10px', max: '12px' },
-  { token: '--type-size-150', min: '11px', max: '14px' },
-  { token: '--type-size-200', min: '12px', max: '15px' },
-  { token: '--type-size-250', min: '13px', max: '17px' },
-  { token: '--type-size-300', min: '14px', max: '18px' },
-  { token: '--type-size-400', min: '16px', max: '20px' },
-  { token: '--type-size-500', min: '18px', max: '24px' },
-  { token: '--type-size-600', min: '22px', max: '30px' },
-  { token: '--type-size-700', min: '26px', max: '36px' },
-  { token: '--type-size-800', min: '32px', max: '44px' },
-  { token: '--type-size-900', min: '40px', max: '54px' },
-  { token: '--type-size-1000', min: '48px', max: '64px' },
+  { token: '--font-size-050', min: '8px', max: '10px' },
+  { token: '--font-size-100', min: '10px', max: '12px' },
+  { token: '--font-size-150', min: '11px', max: '14px' },
+  { token: '--font-size-200', min: '12px', max: '15px' },
+  { token: '--font-size-250', min: '13px', max: '17px' },
+  { token: '--font-size-300', min: '14px', max: '18px' },
+  { token: '--font-size-400', min: '16px', max: '20px' },
+  { token: '--font-size-500', min: '18px', max: '24px' },
+  { token: '--font-size-600', min: '22px', max: '30px' },
+  { token: '--font-size-700', min: '26px', max: '36px' },
+  { token: '--font-size-800', min: '32px', max: '44px' },
+  { token: '--font-size-900', min: '40px', max: '54px' },
+  { token: '--font-size-1000', min: '48px', max: '64px' },
 ];
 
 const weights = [
@@ -203,17 +203,17 @@ const roles = [
   .role__sample { color: var(--color-text-primary, #171717); min-width: 0; flex: 1; }
 
   /* Local copies of the semantic type-role utilities (type-roles.css isn't loaded globally on the site). */
-  .role__sample.type-display { font-size: var(--type-size-800); font-weight: var(--font-weight-bold, 650); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-  .role__sample.type-page-title { font-size: var(--type-size-600); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-  .role__sample.type-section-title { font-size: var(--type-size-500); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-  .role__sample.type-card-title { font-size: var(--type-size-400); font-weight: var(--font-weight-medium, 450); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-body-large { font-size: var(--type-size-300); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-body { font-size: var(--type-size-200); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-body-small { font-size: var(--type-size-150); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-label { font-size: var(--type-size-100); font-weight: var(--font-weight-medium, 450); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-caption { font-size: var(--type-size-100); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-overline { font-size: var(--type-size-050); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-wider, 0.06em); text-transform: uppercase; }
-  .role__sample.type-code { font-family: var(--font-mono, monospace); font-size: var(--type-size-100); line-height: var(--line-height-normal, 1.6); }
+  .role__sample.type-display { font-size: var(--font-size-800); font-weight: var(--font-weight-bold, 650); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
+  .role__sample.type-page-title { font-size: var(--font-size-600); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
+  .role__sample.type-section-title { font-size: var(--font-size-500); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
+  .role__sample.type-card-title { font-size: var(--font-size-400); font-weight: var(--font-weight-medium, 450); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-body-large { font-size: var(--font-size-300); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-body { font-size: var(--font-size-200); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-body-small { font-size: var(--font-size-150); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-label { font-size: var(--font-size-100); font-weight: var(--font-weight-medium, 450); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-caption { font-size: var(--font-size-100); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
+  .role__sample.type-overline { font-size: var(--font-size-050); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-wider, 0.06em); text-transform: uppercase; }
+  .role__sample.type-code { font-family: var(--font-mono, monospace); font-size: var(--font-size-100); line-height: var(--line-height-normal, 1.6); }
   .role__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
   .role__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
   .role__meta span { font-size: 12.5px; color: var(--color-text-muted, #737373); }

@@ -126,7 +126,7 @@ export class EsaFileList extends LitElement {
       border-radius: var(--radius-control, 4px);
       background: var(--color-surface, #fff);
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
     }
     .file__icon {
       display: inline-flex;

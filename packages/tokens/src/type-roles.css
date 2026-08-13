@@ -9,72 +9,78 @@
  *   2. --font-display   the headline face (defaults to --font-sans; the display
  *                       and title roles below read it, so a spoke that sets it
  *                       gets distinct headlines for free).
- * Font-WEIGHT values are typeface-bound: the hub's --font-weight-* numbers match
- * DM Sans's optical weights (350/450/550/650). The role NAMES (regular/medium/
- * semibold/bold) are the stable contract; the numbers travel with the family —
- * so a spoke overriding --font-sans must also set --font-weight-* to that face's
- * matching weights. (See cb-fish-design for a worked IBM Plex remap: 400/500/600.)
+ * Both are TIER 2. They used to be tier-1 primitives, which made this paragraph
+ * an instruction to break SPEC.md's one hard rule — a theme may never re-point a
+ * primitive. The faces themselves now live at tier 1 under their own names
+ * (--font-family-dm-sans, --font-family-dm-mono) and these roles point at them.
+ *
+ * Font-WEIGHT values are typeface-bound: the hub's numbers are DM Sans's optical
+ * weights (300/350/500/550/650). The role NAMES (light/regular/medium/semibold/
+ * bold) are the stable contract and are tier 2; the raw numbers are tier 1. A
+ * spoke overriding --font-sans re-points --font-weight-* to its own face's
+ * matching weights — a tier-2 override, which is exactly what it should be.
+ * (See cb-fish-design for a worked IBM Plex remap: 400/500/600.)
  */
 
 .type-display {
   font-family: var(--font-display, var(--font-sans));
-  font-size: var(--type-size-800);
+  font-size: var(--font-size-800);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
 .type-page-title {
   font-family: var(--font-display, var(--font-sans));
-  font-size: var(--type-size-600);
+  font-size: var(--font-size-600);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
 .type-section-title {
   font-family: var(--font-display, var(--font-sans));
-  font-size: var(--type-size-500);
+  font-size: var(--font-size-500);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
 }
 .type-card-title {
-  font-size: var(--type-size-400);
+  font-size: var(--font-size-400);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing-normal);
 }
 .type-body-large {
-  font-size: var(--type-size-300);
+  font-size: var(--font-size-300);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-relaxed);
   letter-spacing: var(--letter-spacing-normal);
 }
 .type-body {
-  font-size: var(--type-size-200);
+  font-size: var(--font-size-200);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-relaxed);
   letter-spacing: var(--letter-spacing-normal);
 }
 .type-body-small {
-  font-size: var(--type-size-150);
+  font-size: var(--font-size-150);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing-normal);
 }
 .type-label {
-  font-size: var(--type-size-100);
+  font-size: var(--font-size-100);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing-normal);
 }
 .type-caption {
-  font-size: var(--type-size-100);
+  font-size: var(--font-size-100);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing-normal);
 }
 .type-overline {
-  font-size: var(--type-size-050);
+  font-size: var(--font-size-050);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-normal);
   letter-spacing: var(--letter-spacing-wider);
@@ -82,6 +88,6 @@
 }
 .type-code {
   font-family: var(--font-mono);
-  font-size: var(--type-size-100);
+  font-size: var(--font-size-100);
   line-height: var(--line-height-normal);
 }

@@ -323,7 +323,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .hint {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
   `;

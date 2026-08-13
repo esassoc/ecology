@@ -403,11 +403,11 @@ export class EsaSelect extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
     }
 
@@ -605,7 +605,7 @@ export class EsaSelect extends LitElement {
       color: var(--color-primary-strong, #3a7c59);
       border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       line-height: 1.2;
       user-select: none;
     }

@@ -9,10 +9,19 @@ interface Props {
   icon?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   shape?: 'circle' | 'square';
+  /**
+   * Explicit initials, overriding the first+last derivation below. Some callers
+   * carry their own rule — esa-header-nav takes the first letter of EVERY word
+   * capped at two, so "Mary Jane Watson" is MJ there and MW here — and a caller
+   * that already knows the answer should not have to reshape `name` to smuggle
+   * it through.
+   */
+  initials?: string;
 }
-const { name = '', src = '', icon = '', size = 'md', shape = 'circle' } = Astro.props;
+const { name = '', src = '', icon = '', size = 'md', shape = 'circle', initials: initialsProp } = Astro.props;
 
 const initials = (() => {
+  if (initialsProp) return initialsProp;
   if (!name) return '';
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
@@ -63,7 +72,10 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
 <style>
   .esa-avatar {
     --_avatar-size: var(--avatar-size-md, 40px);
-    --_avatar-font-size: 16px;
+    /* Public so initials type can be re-pointed per instance. Each size rule
+       below repeats the hook with its own literal, so an override wins whichever
+       size is active rather than only at md. */
+    --_avatar-font-size: var(--avatar-font-size, 16px);
     --_avatar-radius: var(--avatar-radius, var(--radius-pill, 9999px));
     --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
     --_avatar-text: var(--avatar-text-color, var(--color-text-inverse, #fff));
@@ -77,16 +89,18 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     background: var(--_avatar-bg);
     color: var(--_avatar-text);
     font-size: var(--_avatar-font-size);
-    font-weight: 600;
+    /* Was a raw 600. The token is 550, which is what every other component's
+       semibold resolves to — the literal was quietly heavier than the system. */
+    font-weight: var(--font-weight-semibold, 600);
     overflow: hidden;
     flex-shrink: 0;
     user-select: none;
     box-sizing: border-box;
   }
 
-  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: 9px; }
-  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: 11px; }
-  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: 22px; }
+  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size, 9px); }
+  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, 11px); }
+  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, 22px); }
 
   .esa-avatar--square { --_avatar-radius: var(--radius-surface, 0.5rem); }
 

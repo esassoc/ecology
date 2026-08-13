@@ -61,12 +61,12 @@ const hasActions = Astro.slots.has('actions');
   .esa-page-header {
     --_ph-title-color: var(--page-header-title-color, var(--color-text-primary, #171717));
     --_ph-title-font: var(--page-header-title-font, var(--font-display, var(--font-sans, 'DM Sans', sans-serif)));
-    --_ph-title-size: var(--page-header-title-size, var(--type-size-600, 1.875rem));
+    --_ph-title-size: var(--page-header-title-size, var(--font-size-600, 1.875rem));
     --_ph-title-weight: var(--page-header-title-weight, var(--font-weight-semibold, 550));
     --_ph-lede-color: var(--page-header-lede-color, var(--color-text-secondary, #525252));
-    --_ph-lede-size: var(--page-header-lede-size, var(--type-size-300, 1.125rem));
+    --_ph-lede-size: var(--page-header-lede-size, var(--font-size-300, 1.125rem));
     --_ph-eyebrow-color: var(--page-header-eyebrow-color, var(--color-text-secondary, #525252));
-    --_ph-eyebrow-size: var(--page-header-eyebrow-size, var(--type-size-200, 0.9375rem));
+    --_ph-eyebrow-size: var(--page-header-eyebrow-size, var(--font-size-200, 0.9375rem));
     --_ph-gap: var(--page-header-gap, var(--spacing-200, 0.5rem));
     --_ph-bar-gap: var(--page-header-bar-gap, var(--spacing-500, 1.5rem));
     --_ph-crumb-gap: var(--page-header-breadcrumbs-gap, var(--spacing-300, 0.75rem));
@@ -77,7 +77,7 @@ const hasActions = Astro.slots.has('actions');
 
   /* prominence="display" — the oversized hero title (display role + bold). */
   .esa-page-header--display {
-    --_ph-title-size: var(--page-header-title-size-display, var(--type-size-800, 3rem));
+    --_ph-title-size: var(--page-header-title-size-display, var(--font-size-800, 3rem));
     --_ph-title-weight: var(--page-header-title-weight-display, var(--font-weight-bold, 700));
   }
 

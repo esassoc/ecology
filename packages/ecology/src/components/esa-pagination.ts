@@ -163,7 +163,7 @@ export class EsaPagination extends LitElement {
       --_pagination-bg: var(--pagination-bg, var(--color-surface, #ffffff));
       --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
       --_pagination-text-color: var(--pagination-text-color, var(--color-text-secondary, #525252));
-      --_pagination-font-size: var(--pagination-font-size, var(--type-size-200, 14px));
+      --_pagination-font-size: var(--pagination-font-size, var(--font-size-200, 14px));
       --_pagination-button-color: var(--pagination-button-color, var(--color-text-primary, #171717));
       --_pagination-button-disabled-color: var(--color-disabled-text, #bdbdbd);
       --_pagination-button-hover-bg: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));

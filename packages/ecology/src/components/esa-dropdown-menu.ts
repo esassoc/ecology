@@ -170,7 +170,7 @@ export class EsaDropdownMenu extends LitElement {
       background: transparent;
       color: var(--dropdown-menu-item-color, var(--color-text-primary, #171717));
       font-family: inherit;
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       cursor: pointer;
       text-align: left;
       transition: background 100ms ease;

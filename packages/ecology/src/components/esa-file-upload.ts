@@ -298,7 +298,7 @@ export class EsaFileUpload extends LitElement {
     }
     .zone__limit {
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-100, 11px);
+      font-size: var(--font-size-100, 11px);
       color: var(--color-text-muted, #737373);
     }
 
@@ -337,7 +337,7 @@ export class EsaFileUpload extends LitElement {
     }
     .file__size {
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-100, 11px);
+      font-size: var(--font-size-100, 11px);
       color: var(--color-text-muted, #737373);
       white-space: nowrap;
     }

@@ -261,20 +261,6 @@
       "11": { "$value": "#f1a10d", "$type": "color" },
       "12": { "$value": "#ffe7b3", "$type": "color" }
     },
-    "status": {
-      "info":            { "$value": "{color.blue.9}",    "$type": "color", "$description": "Fixed semantic hues — brand-independent. Info uses blue-9 (Radix solid fill step)." },
-      "info-subtle":     { "$value": "{color.blue.2}",    "$type": "color" },
-      "info-border":     { "$value": "{color.blue.6}",    "$type": "color" },
-      "info-strong":     { "$value": "{color.blue.11}",   "$type": "color" },
-      "success":         { "$value": "{color.lime.9}",    "$type": "color" },
-      "success-subtle":  { "$value": "{color.lime.2}",    "$type": "color" },
-      "success-border":  { "$value": "{color.lime.6}",    "$type": "color" },
-      "success-strong":  { "$value": "{color.lime.11}",   "$type": "color" },
-      "warning":         { "$value": "{color.yellow.9}",  "$type": "color" },
-      "warning-subtle":  { "$value": "{color.yellow.2}",  "$type": "color" },
-      "warning-border":  { "$value": "{color.yellow.6}",  "$type": "color" },
-      "warning-strong":  { "$value": "{color.yellow.11}", "$type": "color" }
-    },
     "gray-a": {
       "1":  { "$value": "#00000003", "$type": "color" },
       "2":  { "$value": "#00000006", "$type": "color" },

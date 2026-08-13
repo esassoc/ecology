@@ -51,7 +51,7 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
 
 <style>
   .esa-breadcrumbs {
-    --_crumb-font-size: var(--type-size-200, 0.875rem);
+    --_crumb-font-size: var(--font-size-200, 0.875rem);
     --_crumb-link-color: var(--breadcrumbs-link-color, #43608a);
     --_crumb-link-hover: var(--breadcrumbs-link-hover, #39506f);
     --_crumb-current-color: var(--breadcrumbs-text-color, var(--color-text-primary, #171717));
@@ -63,9 +63,9 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
   }
 
   /* base .esa-breadcrumbs = md. xs is one step below sm; sm/lg keep the old small/large values. */
-  .esa-breadcrumbs--xs { --_crumb-font-size: var(--type-size-100, 0.6875rem); }
-  .esa-breadcrumbs--sm { --_crumb-font-size: var(--type-size-150, 0.75rem); }
-  .esa-breadcrumbs--lg { --_crumb-font-size: var(--type-size-300, 1rem); }
+  .esa-breadcrumbs--xs { --_crumb-font-size: var(--font-size-100, 0.6875rem); }
+  .esa-breadcrumbs--sm { --_crumb-font-size: var(--font-size-150, 0.75rem); }
+  .esa-breadcrumbs--lg { --_crumb-font-size: var(--font-size-300, 1rem); }
 
   .esa-breadcrumbs__list {
     display: flex;

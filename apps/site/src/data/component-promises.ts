@@ -211,6 +211,125 @@ function chromeOf(ns: string) {
 /** Exemptions, surfaced so the page can state them rather than just apply them. */
 export const chromeExemptions = CHROME_EXEMPT;
 
+/* --------------------------------------------- tokens naming a COMPONENT */
+
+/**
+ * `open`     — duplication, undecided. The working list.
+ * `accepted` — duplication, looked at and kept, reason recorded.
+ * `resolved` — NOT duplication any more: the parent composes the child, and
+ *              these tokens are scoped aliases re-pointing the child's own.
+ *              Indistinguishable from `open` by name alone, which is why the
+ *              state has to be recorded rather than derived.
+ */
+export type NestingStatus = 'open' | 'accepted' | 'resolved';
+
+export interface NestedGroup {
+  /** The declaring namespace, e.g. `filter`. */
+  ns: string;
+  /** The component its tokens name inside that namespace, e.g. `pill`. */
+  names: string;
+  /** `esa-<names>`. */
+  slug: string;
+  tokens: { token: string; counterpart: string | null }[];
+  status: NestingStatus;
+  note: string | null;
+}
+
+/**
+ * Duplication that has been looked at and kept, with the reason. Mirrors the
+ * comment on the same block in component-tokens.css — recorded in both places so
+ * neither the token file nor this page can quietly drift into re-litigating it.
+ */
+const NESTING_STATUS: Record<string, { status: NestingStatus; note: string }> = {
+  'header-nav::avatar': {
+    status: 'resolved',
+    note: 'esa-header-nav composes esa-avatar. These three no longer style a second implementation — they are scoped aliases on .esa-header-nav__avatar-btn re-pointing --avatar-size-sm / --avatar-bg / --avatar-text-color. The spoke-facing names survive, the duplicate markup is gone, and the two value differences (a 32px face that is not a step on the 20/28/40/56 scale, a brand fill rather than the name-hash hue) arrive as scoped overrides instead of compromises. This is the pattern to copy for the rest.',
+  },
+  'filter::pill': {
+    status: 'accepted',
+    note: 'The filter chip is not an esa-pill: it renders a two-tone `label: value` where esa-pill takes one string in one colour, and its remove button emits { name, value } for a parent to update filter state where esa-pill removes itself from the DOM. Composing would mean adding a default slot and an opt-out of self-removal to esa-pill — which is stable and already read by esa-pillbox and esa-file-list — to serve one caller. Revisit only if esa-pill grows those for other reasons.',
+  },
+  'grid::pagination': {
+    status: 'open',
+    note: 'Rides on the staged --grid-* decision. If the AG Grid wrapper is built it should compose esa-pagination and scope --pagination-*, at which point these two are redundant; if grid is abandoned they go with it.',
+  },
+};
+
+/**
+ * A tier-3 token whose "part" is really ANOTHER COMPONENT.
+ * `--sidenav-user-avatar-bg` was the first one found: esa-avatar already owns
+ * `--avatar-bg`, so the token was a second avatar implementation living in the
+ * token file. A tier-3 token is for a part the component draws ITSELF; when the
+ * part is another component it gets composed, and it themes through its own
+ * tokens.
+ *
+ * The whole difficulty is suppression. Matching component names against token
+ * names alone produces mostly noise — 13 tokens name `icon`, and esa-icon has no
+ * tier-3 surface at all, so a parent sizing a glyph inside its own layout is
+ * correct and unremarkable. So a group is reported only when at least ONE of its
+ * tokens has a DIRECT COUNTERPART in the child's namespace, which is the actual
+ * evidence of duplication:
+ *
+ *   --filter-pill-bg          -> --pill-bg exists          -> group reported
+ *   --pagination-button-color -> no --button-color, and    -> suppressed
+ *                                esa-button declares only
+ *                                --button-on-warning
+ *   --empty-state-icon-color  -> esa-icon declares nothing -> suppressed
+ *
+ * Reported separately from gaps and never folded into that tally: it is a
+ * different defect class, and mixing classes into one bucket is exactly what let
+ * `--topbar-*` hide for months.
+ */
+export const nestedComponents: NestedGroup[] = (() => {
+  const declared = new Set(tier3Rows.map((r) => r.name));
+  /** Longest first so `icon-button` wins over `icon`. */
+  const slugs = [...roster.keys()].map((s) => s.slice(4)).sort((a, b) => b.length - a.length);
+
+  const groups = new Map<string, NestedGroup>();
+  for (const row of tier3Rows) {
+    if (!row.ns) continue;
+    const rest = row.name.slice(2 + row.ns.length + 1);
+    if (!rest) continue;
+    const segs = rest.split('-');
+
+    for (const comp of slugs) {
+      if (comp === row.ns) continue;
+      const cs = comp.split('-');
+      const at = segs.findIndex(
+        (_, i) => i + cs.length <= segs.length && cs.every((c, j) => segs[i + j] === c),
+      );
+      if (at < 0) continue;
+
+      // The same token with the child's namespace substituted for the parent's
+      // prefix-up-to-and-including the component name: the counterpart it would
+      // have used had the part been composed instead of re-implemented.
+      const tail = segs.slice(at + cs.length).join('-');
+      const counterpart = tail ? `--${comp}-${tail}` : null;
+      const key = `${row.ns}::${comp}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          ns: row.ns,
+          names: comp,
+          slug: `esa-${comp}`,
+          tokens: [],
+          status: 'open',
+          note: null,
+        });
+      }
+      groups.get(key)!.tokens.push({
+        token: row.name,
+        counterpart: counterpart && declared.has(counterpart) ? counterpart : null,
+      });
+      break; // one component per token is enough to make the point
+    }
+  }
+
+  return [...groups.values()]
+    .filter((g) => g.tokens.some((t) => t.counterpart))
+    .map((g) => ({ ...g, ...(NESTING_STATUS[`${g.ns}::${g.names}`] ?? {}) }))
+    .sort((a, b) => b.tokens.length - a.tokens.length);
+})();
+
 /* ------------------------------------------------------- the inverse gap */
 
 export interface AdHocGroup {
@@ -266,6 +385,11 @@ export const tally = {
   exempt: allGaps.filter((g) => g.kind === 'exempt').length,
   adHoc: adHoc.reduce((n, g) => n + g.tokens.length, 0),
   undefinedReads: undefinedReads.length,
+  /** Deliberately NOT added to `gaps` — a different defect class. */
+  nested: nestedComponents.reduce((n, g) => n + g.tokens.length, 0),
+  nestedOpen: nestedComponents
+    .filter((g) => g.status === 'open')
+    .reduce((n, g) => n + g.tokens.length, 0),
   /** Namespaces with at least one REAL gap. */
   affected: namespaces.filter((n) => n.gaps.some((g) => g.kind !== 'exempt')).length,
   total: namespaces.length,

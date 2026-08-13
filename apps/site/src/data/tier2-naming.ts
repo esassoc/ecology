@@ -251,7 +251,7 @@ export const variantVocab: VocabRow[] = [
   { rubric: 'brand', current: 'primary, secondary', status: 'renamed', note: 'Same concept, different word. `secondary` is a second brand ramp rather than a separate intention.' },
   { rubric: 'subtle', current: 'subtle', status: 'match', note: 'Exact match, and used consistently: primary-subtle, ai-subtle, info/success/warning/danger-subtle.' },
   { rubric: 'utility-error', current: 'danger', status: 'renamed', note: 'No `utility-` grouping prefix, and error is spelled danger.' },
-  { rubric: 'utility-success', current: 'success', status: 'renamed', note: 'Concept 1:1. Tier 1 already groups these as `--color-status-*` — the same family under a third name.' },
+  { rubric: 'utility-success', current: 'success', status: 'renamed', note: 'Concept 1:1. Tier 1 used to group these as `--color-status-*`, giving the family a third name one tier down; those aliases have been deleted and these roles now point straight at their ramp steps.' },
   { rubric: 'utility-warning', current: 'warning', status: 'renamed', note: 'As above.' },
   { rubric: 'utility-information', current: 'info', status: 'renamed', note: 'Abbreviated.' },
   { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed as a variant, not a state, which is the de-duplication the rubric recommends. Only the slot order is inverted (`--color-disabled-bg`).' },
@@ -508,7 +508,7 @@ export const REQUIRED_TYPE_PROPS = [
 
 export interface RoleProp {
   property: string;
-  /** The token the role reads, e.g. --type-size-800. Null when unset. */
+  /** The token the role reads, e.g. --font-size-800. Null when unset. */
   ref: string | null;
   /** Second token in a `var(a, var(b))` chain — the fallback face. */
   fallbackRef: string | null;
@@ -618,7 +618,7 @@ export const typeIntentions: TypeIntention[] = [
     definition:
       'Secondary annotation — help text, captions, timestamps, and eyebrow/overline text above a heading.',
     roles: pick('type-caption', 'type-overline'),
-    note: '`caption` and `label` are the same size (--type-size-100) and differ only in weight — regular vs medium. The size scale does not separate them; only the weight does.',
+    note: '`caption` and `label` are the same size (--font-size-100) and differ only in weight — regular vs medium. The size scale does not separate them; only the weight does.',
   },
 ];
 
@@ -832,7 +832,7 @@ export const structuralGaps: StructuralGap[] = [
     ours: 'fluid clamp() in the primitive',
     verdict: 'divergence',
     detail:
-      'We ship zero -mobile roles because every --type-size-* is a clamp() that interpolates continuously with the viewport. Their model steps at a breakpoint; ours never steps. Critically, the discrete pair is NOT lost: clamp(min, fluid, max) already encodes the mobile floor and the desktop ceiling as real values — --type-size-800 is 32px…44px, which is exactly a display-default-mobile / display-default pair. Exporting to Figma is a build-time extraction of the two bounds, not a re-authoring. The one thing genuinely absent is the ability to set a mobile value INDEPENDENTLY of the desktop one; ours are tied together by the interpolation.',
+      'We ship zero -mobile roles because every --font-size-* is a clamp() that interpolates continuously with the viewport. Their model steps at a breakpoint; ours never steps. Critically, the discrete pair is NOT lost: clamp(min, fluid, max) already encodes the mobile floor and the desktop ceiling as real values — --font-size-800 is 32px…44px, which is exactly a display-default-mobile / display-default pair. Exporting to Figma is a build-time extraction of the two bounds, not a re-authoring. The one thing genuinely absent is the ability to set a mobile value INDEPENDENTLY of the desktop one; ours are tied together by the interpolation.',
   },
   {
     dimension: 'line-height',

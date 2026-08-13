@@ -187,7 +187,7 @@ export class EsaSideDialog extends LitElement {
       border-bottom: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5));
       flex: none;
     }
-    .title { margin: 0; font-size: var(--type-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 600); color: var(--side-dialog-color, var(--color-text-primary, #171717)); }
+    .title { margin: 0; font-size: var(--font-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 600); color: var(--side-dialog-color, var(--color-text-primary, #171717)); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
       border: 0; border-radius: var(--radius-control, 4px); background: none;

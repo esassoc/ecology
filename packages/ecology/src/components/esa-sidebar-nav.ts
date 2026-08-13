@@ -341,7 +341,7 @@ export class EsaSidebarNav extends LitElement {
     .group-heading:not(:first-child) { margin-top: var(--_sidenav-section-margin-top); }
     .group-label {
       display: block;
-      font-size: var(--type-size-100, 11px);
+      font-size: var(--font-size-100, 11px);
       font-weight: var(--font-weight-semibold, 600);
       text-transform: uppercase;
       letter-spacing: var(--letter-spacing-wide, 0.05em);
@@ -366,7 +366,7 @@ export class EsaSidebarNav extends LitElement {
       background: var(--_sidenav-item-bg);
       color: var(--_sidenav-item-color);
       font-family: inherit;
-      font-size: var(--type-size-200, 14px);
+      font-size: var(--font-size-200, 14px);
       font-weight: var(--font-weight-medium, 500);
       line-height: 1;
       text-decoration: none;
@@ -391,7 +391,7 @@ export class EsaSidebarNav extends LitElement {
     }
     .link--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     .link--inert { cursor: default; }
-    .link--child { height: 36px; font-size: var(--type-size-150, 13px); }
+    .link--child { height: 36px; font-size: var(--font-size-150, 13px); }
 
     .icon { flex-shrink: 0; display: inline-flex; }
     /* iconSvg() stamps width/height ATTRIBUTES (18px). A presentational attribute
@@ -420,7 +420,7 @@ export class EsaSidebarNav extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #ffffff);
-      font-size: var(--type-size-100, 11px);
+      font-size: var(--font-size-100, 11px);
       font-weight: var(--font-weight-semibold, 600);
       line-height: 1;
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
