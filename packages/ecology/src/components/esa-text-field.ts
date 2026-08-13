@@ -195,6 +195,10 @@ export class EsaTextField extends LitElement {
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
+    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    .control:hover:not(:has(.input:disabled)) {
+      background: var(--form-bg-hover, var(--form-bg, #fff));
+    }
     .control:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);

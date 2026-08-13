@@ -198,6 +198,10 @@ export class EsaTextarea extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
+    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    .input:hover:not(:disabled) {
+      background: var(--form-bg-hover, var(--form-bg, #fff));
+    }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width)

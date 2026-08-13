@@ -29,5 +29,7 @@ const style = [
     flex-wrap: wrap;
     align-items: center;
     gap: var(--_filter-container-row-gap, 0.5rem) var(--_filter-container-gap, 0.75rem);
+    /* 0 by default — the bar sits flush and the page owns its own rhythm. */
+    padding: var(--filter-container-padding, 0);
   }
 </style>

@@ -88,8 +88,14 @@ default resolves to exactly what the component read before.
 ## Staged surfaces
 
 A tier-3 namespace may be declared **before** the component that reads it, so
-the theming contract can be reviewed before code depends on it. `--grid-*` and
-`--topbar-*` are staged today.
+the theming contract can be reviewed before code depends on it. `--grid-*` is
+staged today — no `esa-grid` component ships yet.
+
+`--topbar-*` **was** listed here and should not have been: `esa-app-shell`
+renders the bar, the sidebar toggle and the omnibox that those 12 tokens name.
+The premise of staging is *"the component does not exist yet"*, and because
+"staged" reads as *"arriving soon"* nobody re-checked it once that stopped
+being true. It is now a **chrome exemption** — see below.
 
 A staged surface must:
 
@@ -101,6 +107,26 @@ A staged surface must:
 Removing a prefix from that list should mean **the component landed**, not that
 the finding got annoying. A staged surface that no one has claimed after a
 release cycle is dead surface — fold it away.
+
+## Chrome exemptions
+
+Distinct from staged, and the distinction is the point: here the component
+**exists** and could read the tokens, and we are choosing not to wire it.
+Staged is a prediction that can come true; an exemption is a standing decision,
+so it carries a heavier disclosure burden.
+
+A chrome exemption must:
+
+- be listed in `CHROME_EXEMPT` in `apps/site/src/data/token-graph.ts` with an
+  `owner` (the component that renders the surface) and a `cost` sentence
+  stating in plain terms what a spoke gives up;
+- keep every token rendered by name on `/debug/components` — an exemption that
+  hid them would be indistinguishable from having wired them.
+
+`--topbar-*` → `esa-app-shell` is the only entry. The cost: a spoke overriding
+`--topbar-bg`, `--topbar-icon-bg-hover` or `--topbar-search-*` gets nothing;
+the chrome re-skins only through the semantic layer the component reads
+directly.
 
 ## Themes consume the tiers like this
 

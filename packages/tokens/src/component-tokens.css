@@ -13,11 +13,15 @@
 
 :root {
   /* ===================== BUTTON ===================== */
-  /* Text/icon color painted on a solid `warning` fill. The right choice depends
-     on the themed --color-warning shade: a light amber wants dark text (the hub
-     default), a darker orange wants white. Themeable so a spoke whose warning is
-     dark (e.g. Beacon's #f2770e) can flip it to white without forking the button. */
-  --button-on-warning: var(--color-text-primary);
+  /* Text/icon color painted on a solid `warning` fill. Defaults to the tier-2
+     role so a filled warning button and an esa-badge warning agree by default —
+     they paint on the same --color-warning fill and must not diverge.
+     The hook stays because the right choice depends on the themed
+     --color-warning shade: a light amber wants dark text (the hub default), a
+     darker orange wants white. A spoke whose warning is dark (e.g. Beacon's
+     #f2770e) flips the button to white here without forking the component;
+     to move BOTH, re-point --color-warning-on-fill instead. */
+  --button-on-warning: var(--color-warning-on-fill);
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
@@ -73,7 +77,9 @@
 
   /* ===================== FILTERS ===================== */
   --filter-container-gap: var(--spacing-200);
-  --filter-container-padding: var(--spacing-200) 0;
+  /* 0, not the old `spacing-200 0` — the bar has always rendered flush, so the
+     declared value was describing padding no spoke could have been seeing. */
+  --filter-container-padding: 0;
   --filter-dropdown-bg: var(--color-surface);
   --filter-dropdown-border: 1px solid var(--color-border);
   --filter-dropdown-radius: var(--radius-surface);
@@ -127,36 +133,80 @@
      carried a blue tint (B+3 over R) that no Radix gray has. Both are Tailwind
      values that predate this palette. On the roles now, so a spoke re-pointing
      its neutrals moves the rail too. */
+  /* Every hook below is READ by esa-sidebar-nav. Defaults were re-pointed to the
+     values the component actually shipped — several were aspirational and had
+     drifted (nested-indent said 36px while the rail rendered 16px; link-bg-hover
+     said `transparent` while the row washed to surface-sunken), so declaring one
+     thing and painting another made the surface unusable: a spoke overriding a
+     "default" it could already see was the only way to get the shipped look back.
+     Hooks for behaviour the component does not do by default are declared at
+     their INERT value (0 / same-as-resting) so they stay zero-regression and
+     opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
   --sidenav-bg: var(--color-surface-sunken);
   --sidenav-border: var(--color-border-light);
-  --sidenav-item-padding-y: var(--spacing-250);
+  /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
+     --sidenav-item-padding-y, which nothing could ever have read. */
+  --sidenav-item-height: 40px;
   --sidenav-item-padding-x: var(--spacing-300);
-  --sidenav-item-gap: var(--spacing-200);
-  --sidenav-icon-gap: var(--spacing-300);
-  --sidenav-icon-size: 20px;
-  --sidenav-icon-size-collapsed: 22px;
+  /* Gap BETWEEN rows. 0 = the shipped stacked rail; raise it for an airier one. */
+  --sidenav-item-gap: 0;
+  /* Gap between a row's icon and its label. */
+  --sidenav-icon-gap: var(--spacing-200);
+  --sidenav-icon-size: 18px;
+  --sidenav-icon-size-collapsed: 18px;
   --sidenav-section-text: var(--color-text-muted);
-  --sidenav-section-spacing: var(--spacing-400);
-  --sidenav-section-margin-top: var(--spacing-500);
-  --sidenav-nested-gap: var(--spacing-150);
-  --sidenav-nested-indent: 36px;
+  --sidenav-section-spacing: var(--spacing-300);
+  /* Extra breathing room above a group heading that follows another section. */
+  --sidenav-section-margin-top: 0;
+  --sidenav-nested-gap: 0;
+  --sidenav-nested-indent: var(--spacing-400);
   --sidenav-link-text: var(--color-text-secondary);
   --sidenav-link-bg: transparent;
-  --sidenav-link-text-hover: var(--color-text-primary);
-  --sidenav-link-bg-hover: transparent;
+  /* Inherits the resting colour by default — the rail signals hover with the
+     background wash alone. Re-point to also shift the text. */
+  --sidenav-link-text-hover: var(--sidenav-link-text);
+  --sidenav-link-bg-hover: var(--color-surface-sunken);
   --sidenav-link-text-active: var(--color-primary-strong);
-  --sidenav-link-bg-active: transparent;
-  --sidenav-link-weight-active: var(--font-weight-medium);
-  --sidenav-active-border-width: 2px;
+  --sidenav-link-bg-active: var(--color-primary-subtle);
+  --sidenav-link-weight-active: var(--font-weight-semibold);
+  /* Inset marker on the active row. Width 0 = off, which is what ships. */
+  --sidenav-active-border-width: 0;
   --sidenav-active-border-color: var(--color-primary);
-  --sidenav-user-border: var(--color-border-light);
-  --sidenav-user-text: var(--color-text-secondary);
-  --sidenav-user-text-hover: var(--color-text-primary);
-  --sidenav-user-avatar-bg: var(--color-surface-hover);
-  --sidenav-user-avatar-text: var(--color-text-secondary);
-  --sidenav-divider: var(--color-border-light);
 
-  /* ===================== NAVIGATION — HEADER / TOPBAR ===================== */
+  /* DELETED (2026-08-13) — six tokens describing a user/account block at the
+     foot of the rail: --sidenav-user-{border,text,text-hover,avatar-bg,
+     avatar-text} and --sidenav-divider. esa-sidebar-nav never had that block;
+     its published API has one slot, `header`, and it holds the brand lockup.
+     The chrome puts the user menu in the app bar instead (esa-app-shell ->
+     esa-dropdown-menu), which is the documented pattern.
+
+     They are not coming back in this shape. Two of them were a SECOND avatar
+     implementation — esa-avatar already owns --avatar-bg / --avatar-text-color
+     — two were plain text colours with no component-specific behaviour, and
+     two were one divider named twice. A tier-3 token is for a part the
+     component draws ITSELF; when the part is really another component it gets
+     composed, and it themes through its own tokens. The give-away was in the
+     name: --sidenav-user-avatar-bg nests two part words, which means it had
+     stopped naming a part and started naming a component tree.
+
+     If a rail user block is ever built, compose esa-avatar and add ONE divider
+     hook — not this namespace. */
+
+  /* ============ NAVIGATION — HEADER / TOPBAR (CHROME, EXEMPT) ============
+     Read by NOTHING, by decision. esa-app-shell renders every surface these
+     name — the bar, the sidebar toggle (--topbar-icon-*) and the omnibox
+     (--topbar-search-*) — and styles them from the semantic layer directly
+     instead. Held exempt from the wire-or-delete rule; see SPEC.md "Chrome
+     exemptions" and CHROME_EXEMPT in apps/site/src/data/token-graph.ts.
+
+     NOT staged. This block carried a STAGED banner for months on the premise
+     that no component existed to read it, which was never true.
+
+     The values below therefore document intent, not what paints. Seven of the
+     twelve already disagree with esa-app-shell's actual chrome (it renders the
+     bar on --color-surface, not surface-sunken; the toggle on text-tertiary,
+     not text-secondary). Do not trust them as a record of the shipped look —
+     read esa-app-shell.astro. If this is ever wired, reconcile there first. */
   --topbar-bg: var(--color-surface-sunken);
   --topbar-border: var(--color-border-light);
   --topbar-shadow: none;
@@ -172,10 +222,18 @@
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
   --breadcrumbs-bg: transparent;
-  --breadcrumbs-text-color: var(--color-text-secondary);
+  /* The trail's non-link text — i.e. the current (last) crumb. Was declared as
+     text-secondary while the component painted text-primary; on the shipped
+     value now. */
+  --breadcrumbs-text-color: var(--color-text-primary);
   --breadcrumbs-link-color: var(--color-text-secondary);
   --breadcrumbs-link-hover: var(--color-text-primary);
   --breadcrumbs-separator-color: var(--color-border-strong);
+
+  /* UNRESOLVED — a "pill" breadcrumb variant that esa-breadcrumbs does not have.
+     No markup, no prop, no doc-page specimen: four tokens describing a component
+     that was never built. Either the variant ships or these are deleted. Left
+     declared so the orphan check keeps surfacing them. */
   --breadcrumbs-pill-bg: color-mix(in srgb, var(--color-primary) 6%, transparent);
   --breadcrumbs-pill-bg-hover: color-mix(in srgb, var(--color-primary) 10%, transparent);
   --breadcrumbs-pill-radius: var(--radius-pill);
