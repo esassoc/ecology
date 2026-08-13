@@ -327,9 +327,18 @@ const PRIMITIVE_CATEGORIES: {
   note: string;
   gap?: string;
   match: (n: string) => boolean;
+  /** Sub-group within the category. Omit to render one flat list. */
+  subGroupKey?: (n: string) => string;
+  /**
+   * The sub-groups this category is EXPECTED to have, in display order. Any
+   * expected group with no tokens still renders, empty — so a missing property
+   * is visible in the taxonomy itself rather than only in the gap prose.
+   */
+  expect?: string[];
 }[] = [
   {
     label: 'Color',
+    subGroupKey: (n) => primitiveGroupKey(n),
     note:
       'The primitive ramp VALUES for each available color — one row per step. This hub names its ramps UNCATEGORISED (grass-9, gray-3) rather than categorised (brand-grass-9): the brand/neutral/utility distinction is made at tier 2, where a semantic role points at a step. Ramps are Radix-derived, 12 steps each, with separate -dark and -a (alpha) variants. The neutral (gray) ramp is shared by every theme rather than redefined per theme, which is why themes re-point semantics instead of shipping their own neutrals.',
     match: (n) => n.startsWith('--color-'),
@@ -341,6 +350,16 @@ const PRIMITIVE_CATEGORIES: {
     gap:
       'Two divergences. (1) There are no text-transform primitives at all. (2) There is no tier-2 typography composite — tokens/semantic/ contains only color.json, layout.json, and effect.json. The composite job is currently done by src/type-roles.css, which ships CSS utility CLASSES rather than tokens, so a type role cannot be referenced by a token, re-pointed by a theme, or exported to Figma the way a composite token could.',
     match: (n) => /^--(font-|type-size-|line-height-|letter-spacing-|text-transform-|text-case-)/.test(n),
+    // Order matters: --font-weight-bold also starts with --font-, so weight has
+    // to be claimed before family.
+    subGroupKey: (n) =>
+      n.startsWith('--font-weight-') ? 'font-weight'
+      : n.startsWith('--font-') ? 'font-family'
+      : n.startsWith('--type-size-') ? 'font-size'
+      : n.startsWith('--line-height-') ? 'line-height'
+      : n.startsWith('--letter-spacing-') ? 'letter-spacing'
+      : 'text-transform',
+    expect: ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform'],
   },
   {
     label: 'Spacing',
@@ -387,14 +406,29 @@ export const primitiveCategories: TokenCategory[] = (() => {
   for (const cat of PRIMITIVE_CATEGORIES) {
     const tokens = primitives.filter((t) => !claimed.has(t.name) && cat.match(t.name));
     tokens.forEach((t) => claimed.add(t.name));
+    let groups: TokenGroup[];
+    if (cat.subGroupKey) {
+      const found = group(tokens, cat.subGroupKey);
+      if (cat.expect) {
+        // Render in the declared order, and keep expected-but-empty groups so a
+        // missing property reads as a hole in the set rather than as absence.
+        const byLabel = new Map(found.map((g) => [g.label, g]));
+        groups = cat.expect.map((label) => byLabel.get(label) ?? { label, tokens: [] });
+        // Anything real but unexpected still has to appear.
+        groups.push(...found.filter((g) => !cat.expect!.includes(g.label)));
+      } else {
+        groups = found;
+      }
+    } else {
+      // Flat: small enough that a second level would be noise.
+      groups = [{ label: cat.label.toLowerCase(), tokens: tokens.sort((a, b) => naturalCompare(a.name, b.name)) }];
+    }
+
     out.push({
       label: cat.label,
       note: cat.note,
       gap: cat.gap,
-      // Only color is big enough to need a second level; the rest read better flat.
-      groups: cat.label === 'Color'
-        ? group(tokens, primitiveGroupKey)
-        : [{ label: cat.label.toLowerCase(), tokens: tokens.sort((a, b) => naturalCompare(a.name, b.name)) }],
+      groups,
       count: tokens.length,
     });
   }

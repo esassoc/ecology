@@ -298,6 +298,24 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     line-height: 1.55;
     max-width: 72ch;
   }
+  .tokens-debug .tok-group.is-empty {
+    border-style: dashed;
+    background: transparent;
+    opacity: 0.75;
+  }
+  .tokens-debug .empty-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+  }
+  .tokens-debug .group-count.none {
+    background: transparent;
+    border: 1px dashed var(--color-border, #d4d4d4);
+    color: var(--color-text-muted, #999);
+    font-style: italic;
+  }
   .tokens-debug .cat-body { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
   .tokens-debug .cat-body details.tok-group { background: var(--color-surface-sunken, #fafafa); }
   .tokens-debug table.findings, .tokens-debug table.tok-table {
@@ -385,7 +403,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       });
       groups.forEach(function (group) {
         var any = group.querySelector('tr[data-token]:not([hidden])') !== null;
-        group.hidden = !any;
+        // Only hide while filtering. An expected-but-empty group has no rows and
+        // must stay visible at rest — that hole in the set is the point.
+        group.hidden = q ? !any : false;
         group.open = q ? any : false;
       });
       if (count) count.textContent = q ? shown + ' of ' + rows.length : rows.length + ' tokens';

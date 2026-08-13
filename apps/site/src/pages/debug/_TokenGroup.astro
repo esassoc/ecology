@@ -64,6 +64,15 @@ const { group, bare = false } = Astro.props;
       ))}
     </tbody>
   </table>
+) : group.tokens.length === 0 ? (
+  /* An expected sub-group with nothing in it. Rendered rather than skipped so a
+     missing property is a visible hole in the set, not a silent absence. */
+  <div class="tok-group is-empty" data-group>
+    <div class="empty-head">
+      <code class="group-label">{group.label}</code>
+      <span class="group-count none">none defined</span>
+    </div>
+  </div>
 ) : (
   <details class="tok-group" data-group>
     <summary>
