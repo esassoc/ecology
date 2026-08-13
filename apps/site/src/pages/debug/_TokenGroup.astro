@@ -77,7 +77,10 @@ const { group, bare = false } = Astro.props;
   <details class="tok-group" data-group>
     <summary>
       <code class="group-label">{group.label}</code>
-      <span class="group-count">{group.tokens.length}</span>
+      <span class="summary-right">
+        {group.core && <span class="core-flag" title="Shared across all themes — see the Core / universal section">core</span>}
+        <span class="group-count">{group.tokens.length}</span>
+      </span>
     </summary>
     <table class="tok-table">
       <thead>

@@ -235,6 +235,8 @@ export const tierCounts: Record<Tier, number> = {
 export interface TokenGroup {
   label: string;
   tokens: TokenNode[];
+  /** Part of the universal/core set — shared by every theme. */
+  core?: boolean;
 }
 
 /** A tier-1 category holding one or more sub-groups (color has one per ramp;
@@ -398,6 +400,63 @@ const PRIMITIVE_CATEGORIES: {
   },
 ];
 
+/* ------------------------------------------------------- core / universal */
+
+/**
+ * The universal/core set: tier-1 tokens shared by EVERY theme, as opposed to the
+ * brand ramps a theme re-points. Three sets qualify —
+ *   - the neutral (gray) palette: the greyscale the UI is built on
+ *   - the utility palette: fixed error / warning / success / info values
+ *   - spacing: explicit values every theme follows, so there is nothing to re-skin
+ *
+ * This is an ORTHOGONAL axis, not an eighth property category. A gray step is
+ * both "Color -> gray ramp" and "core"; filing it under Core INSTEAD of Color
+ * would empty the neutral palette out of the color taxonomy. So Core is rendered
+ * as a second view over the same tokens — the exportable set, the one handed to
+ * design and code — and the property categories stay complete, with their core
+ * sub-groups badged.
+ */
+const CORE_SETS: { label: string; note: string; match: (n: string) => boolean }[] = [
+  {
+    label: 'neutral color palette',
+    note: 'The greyscale values the UI is built on — surfaces, text, borders. Defined once here rather than per theme because every theme shares them.',
+    match: (n) => /^--color-(gray|black-a|white-a)/.test(n),
+  },
+  {
+    label: 'utility color palette',
+    note: 'Messaging values — error, warning, success, info. Fixed across themes so a danger state means the same thing everywhere.',
+    match: (n) => n.startsWith('--color-status-'),
+  },
+  {
+    label: 'spacing',
+    note: 'Explicit values on one scale. Core because every theme follows the same grid — density is not a branding axis.',
+    match: (n) => n.startsWith('--spacing-'),
+  },
+];
+
+const isCore = (name: string) => CORE_SETS.some((s) => s.match(name));
+
+export const coreCategory: TokenCategory = (() => {
+  const primitives = byTier('primitive');
+  const groups = CORE_SETS.map((set) => ({
+    label: set.label,
+    core: true,
+    tokens: primitives.filter((t) => set.match(t.name)).sort((a, b) => naturalCompare(a.name, b.name)),
+  }));
+  return {
+    label: 'Core / universal',
+    note:
+      'Tokens shared across ALL themes, exportable, and meant to be consumed directly by components in both design and code. A theme re-points brand ramps; it never re-points these. This is a second VIEW over the tier-1 tokens below, not an eighth category — a gray step is both “Color → gray ramp” and “core”, so it appears in both places rather than being moved out of the colour taxonomy.',
+    groups,
+    count: groups.reduce((n, g) => n + g.tokens.length, 0),
+  };
+})();
+
+/** Per-set notes, keyed by label, for rendering under each core sub-group. */
+export const coreSetNotes: Record<string, string> = Object.fromEntries(
+  CORE_SETS.map((s) => [s.label, s.note]),
+);
+
 export const primitiveCategories: TokenCategory[] = (() => {
   const primitives = byTier('primitive');
   const claimed = new Set<string>();
@@ -422,6 +481,12 @@ export const primitiveCategories: TokenCategory[] = (() => {
     } else {
       // Flat: small enough that a second level would be noise.
       groups = [{ label: cat.label.toLowerCase(), tokens: tokens.sort((a, b) => naturalCompare(a.name, b.name)) }];
+    }
+
+    // Badge any sub-group that is entirely core, so the two views reconcile
+    // without the reader having to cross-reference by hand.
+    for (const g of groups) {
+      if (g.tokens.length && g.tokens.every((t) => isCore(t.name))) g.core = true;
     }
 
     out.push({
@@ -519,6 +584,32 @@ export const duplicateDeclarations: Finding[] = [...componentSrc]
     where: [...(componentUse.get(n) ?? [])].sort().join(', ') || undefined,
   }));
 
+/**
+ * A theme re-pointing a tier-1 primitive. SPEC.md is unambiguous — "Primitives
+ * never move — not in the hub, not in a theme" — and themes.css says the same in
+ * its own header. A theme that moves a primitive moves it for every token
+ * downstream of it, which is precisely the blast radius the tier model exists to
+ * prevent. Re-point the semantic (or component) token instead.
+ */
+export const themePrimitiveOverrides: Finding[] = (() => {
+  const themeCss = readIf(path.join(ROOT, 'apps', 'site', 'src', 'styles', 'themes.css'));
+  const out: Finding[] = [];
+  // Split on theme scopes so each override is attributed to the theme making it.
+  for (const m of themeCss.matchAll(/\[data-theme=["']([^"']+)["']\]\s*\{([^}]*)\}/g)) {
+    const [, theme, body] = m;
+    for (const [, name] of body.matchAll(/(--[a-zA-Z0-9-]+)\s*:/g)) {
+      if (primitiveSrc.has(name)) {
+        out.push({
+          token: name,
+          detail: 'a theme re-points a tier-1 primitive — SPEC.md says primitives never move, in the hub or in a theme',
+          where: `[data-theme="${theme}"]`,
+        });
+      }
+    }
+  }
+  return out.sort((a, b) => a.token.localeCompare(b.token) || (a.where ?? '').localeCompare(b.where ?? ''));
+})();
+
 /** Tier-3 token wired straight to a primitive, skipping the semantic layer.
  *  Sometimes correct (geometry has no semantic peer) — but a color doing this
  *  means a spoke re-pointing the semantic layer will NOT re-skin it. */
@@ -538,6 +629,7 @@ export const semanticHardcodes: Finding[] = byTier('semantic')
 export const healthTotal =
   undefinedRefs.length +
   duplicateDeclarations.length +
+  themePrimitiveOverrides.length +
   orphans.length +
   tierSkips.length +
   semanticHardcodes.length;
