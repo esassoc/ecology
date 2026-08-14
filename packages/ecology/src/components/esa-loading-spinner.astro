@@ -37,7 +37,7 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
     border: var(--_spinner-border-width) solid var(--loading-spinner-track-color, var(--color-border-subtle, #efefef));
     border-top-color: var(--_spinner-color);
     border-radius: var(--radius-pill, 9999px);
-    animation: esa-spinner-rotate 0.75s linear infinite;
+    animation: esa-spinner-rotate var(--animation-spin, 750ms linear infinite);
     box-sizing: border-box;
   }
 

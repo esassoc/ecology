@@ -91,6 +91,20 @@
       ]
     },
     {
+      "id": "shadow-composites-to-elevation",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "The composite `--shadow-050…500` were ordinal names for intents living in tier 1 — the same misfiling that put `--transition-fast` there. Tier 1 now holds only the raw axes (offset-x / offset-y / blur / spread / color); clustering them into a usable box-shadow is the semantic act, so the composites are `--elevation-1…6` at tier 2. The old names also formed a 1:1 passthrough — six primitives, six roles, no reuse — so nothing was lost by collapsing them. A spoke should read the tier-2 role, which is the one it is allowed to override. NOTE: `--shadow-50` (the earlier `shadow-50-padding` row) still points at `--shadow-050` and resolves through this row's alias — custom-property resolution is order-independent, so the two-hop chain holds.",
+      "pairs": [
+        ["--shadow-050", "--elevation-1"],
+        ["--shadow-100", "--elevation-2"],
+        ["--shadow-200", "--elevation-3"],
+        ["--shadow-300", "--elevation-4"],
+        ["--shadow-400", "--elevation-5"],
+        ["--shadow-500", "--elevation-6"]
+      ]
+    },
+    {
       "id": "status-colors-to-semantic",
       "kind": "token",
       "since": "2026-08-13",

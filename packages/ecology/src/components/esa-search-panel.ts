@@ -280,13 +280,13 @@ export class EsaSearchPanel extends LitElement {
 
     .panel--right {
       right: 0;
-      animation: esa-search-slide-in-right 200ms ease-out;
+      animation: esa-search-slide-in-right var(--animation-overlay-enter, 250ms ease-out);
     }
 
     .panel--left {
       left: 0;
       box-shadow: var(--search-panel-shadow, var(--elevation-5, 4px 0 24px rgba(0, 0, 0, 0.1)));
-      animation: esa-search-slide-in-left 200ms ease-out;
+      animation: esa-search-slide-in-left var(--animation-overlay-enter, 250ms ease-out);
     }
 
     @keyframes esa-search-slide-in-right {

@@ -89,6 +89,13 @@ const PAIRS = [
  * the same colours, not a different palette.
  */
 function stripAtRules(css) {
+  // Comments FIRST. This scanner brace-matches from the next `{` after any literal
+  // `@media`, so an `@media` mentioned inside a comment sends it hunting for a brace
+  // that belongs to unrelated CSS and swallows everything up to the match. That is
+  // not hypothetical: build.js emits each token's DTCG $description as a comment, and
+  // --duration-0 documents the `@media (prefers-reduced-motion: reduce)` block it
+  // exists for — which silently ate most of :root and dropped the audit to 0/29.
+  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
   let out = '';
   for (let i = 0; i < css.length; i++) {
     if (css.startsWith('@media', i)) {

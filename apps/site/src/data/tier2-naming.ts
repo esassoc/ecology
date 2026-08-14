@@ -36,7 +36,9 @@ export interface RubricSlot {
 
 const semantic = byTier('semantic');
 const colorTokens = semantic.filter((t) => t.name.startsWith('--color-'));
-const otherTokens = semantic.filter((t) => !t.name.startsWith('--color-'));
+/** Everything in tier 2 that is not a colour. Grouped into explicit families by
+ *  `nonColorGroups` below — never rendered as one undifferentiated list. */
+const allNonColor = semantic.filter((t) => !t.name.startsWith('--color-'));
 
 /* ------------------------------------------------------ the name parser */
 
@@ -203,7 +205,7 @@ export const categoryRows: CategoryRow[] = [
   {
     category: 'typography',
     count: t2Count(/^--font-size-ui-/),
-    how: '`--font-size-ui-{xs,sm,md,lg}` — chrome text only, aligned step-for-step with `--control-height-*`. PROSE has no tier-2 tokens: that role is still filled by the CSS classes in typography.css, so Figma can’t consume it and a spoke can’t re-point it. See the typography section below.',
+    how: 'Three sets. `--typography-<role>[-<size>]-<property>` are the composite PROSE roles (66 tokens); `--font-{sans,mono,display}` and `--font-weight-*` are the faces and weights they are assembled from; `--font-size-ui-{xs,sm,md,lg}` is chrome text, aligned step-for-step with `--control-height-*` and referenced by no composite. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.',
   },
   {
     category: 'spacing',
@@ -232,23 +234,31 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'animation',
-    count: 0,
-    how: 'Nothing at tier 2. `--transition-{fast,base,slow}` sits at tier 1 and is read directly by 27 components. Those are scale positions, not intents — an intent would be `--motion-hover` — so a semantic layer here is unbuilt design work rather than a mechanical move.',
+    count: t2Count(/^--(transition|animation)-/),
+    how: 'Two sets, because CSS has two motion properties: `--transition-{fast,base,slow}` for `transition:` and `--animation-{enter,exit,overlay-enter,overlay-exit,spin,indeterminate}` for `animation:`. Both compose tier-1 `--duration-*` and `--easing-*`, which is the composite pattern typography already follows. The transition set used to sit at tier 1 as fused strings ("150ms ease") — scale positions wearing intent names, in the raw-value tier, with neither axis addressable.',
   },
 ];
 
 /* ------------------------------------------ the non-colour tier-2 tokens */
 
-export const layoutRows = otherTokens
-  .filter((t) => !t.name.startsWith('--elevation-'))
-  .map((t) => {
-    const parts = t.name.replace(/^--/, '').split('-');
-    return { name: t.name, region: parts[0], rest: parts.slice(1).join('-') };
-  });
-
-export const elevationRows = otherTokens
-  .filter((t) => t.name.startsWith('--elevation-'))
-  .map((t) => ({ name: t.name, description: t.description ?? '' }));
+/**
+ * One row per FAMILY for the summary table — what each family's names lead with,
+ * and where the CSS property sits.
+ *
+ * Per-TOKEN rows are what this used to be, and the middle column hardcoded the
+ * string "region, not a category" for every one of them. Since the row set was the
+ * leftover bucket, that meant asserting `--typography-body-md-font-size` leads with
+ * a region. The claim can only be made per family, so it is now made there.
+ */
+export const nonColorLeadRows = () =>
+  nonColorGroups
+    .filter((g) => g.tokens.length > 0)
+    .map((g) => ({
+      label: g.label,
+      count: g.tokens.length,
+      leads: FAMILY_LEADS[g.label] ?? '—',
+      property: g.property,
+    }));
 
 /* ------------------------------------------------- slot 5: the vocabulary */
 
@@ -481,27 +491,145 @@ export const propertyGroups: PropertyGroup[] = (['background', 'content', 'borde
 /** Node lookup so the page can render the full chain for a grouped row. */
 export const semanticNodes = new Map(semantic.map((t) => [t.name, t]));
 
-/** Tier-2 tokens that are not colours, so have no property slot at all. */
-export const nonColorGroups = [
+/**
+ * The non-colour half of tier 2, grouped by FAMILY.
+ *
+ * This used to be two groups: `--elevation-*`, and a second holding everything
+ * else under the heading "width / height". Everything else was 107 tokens across
+ * twelve unrelated families — 66 typography composites, 12 font tokens, 7
+ * z-indexes, 5 radius roles — of which EIGHT were actually a width or a height.
+ * All 107 also carried a hardcoded `no property slot` chip, which is false for
+ * most of them (`--z-dropdown`, `--radius-card` and `--font-weight-medium` all
+ * lead with their property).
+ *
+ * The failure is the bucket being defined by exclusion (`!startsWith('--color-')`)
+ * and then labelled after one of its residents. A leftover bucket cannot report
+ * that something new landed in it wearing the wrong name — it always looks full
+ * and correct. So: families are matched EXPLICITLY, first match wins, and whatever
+ * matches nothing lands in `unclassified`, which renders even when empty. A new
+ * token family shows up there as a visible hole instead of being absorbed.
+ */
+type PropertyPosition = 'first' | 'last' | 'none';
+
+/** What each family's names lead with — the claim the summary table makes. */
+const FAMILY_LEADS: Record<string, string> = {
+  'typography (composite roles)': 'a role (display, heading, body, label…)',
+  'typography — faces & weights': 'the CSS property (font-family, font-weight)',
+  'font-size-ui (chrome text)': 'the CSS property (font-size)',
+  'border-radius': 'the property, abbreviated (radius)',
+  'border-width': 'the property',
+  'box-shadow': 'a scale name (elevation), not the property',
+  'transition / animation': 'the property',
+  'z-index': 'the property, abbreviated (z)',
+  'width / height': 'a region or element (sidebar, header, control, chip)',
+  'touch target': 'a concept with no CSS property behind it',
+  unclassified: '—',
+};
+
+const NON_COLOR_FAMILIES: {
+  label: string;
+  match: RegExp;
+  property: PropertyPosition;
+  note: string;
+}[] = [
   {
-    label: 'width / height',
-    note: 'layout.json. No category and no property slot — these lead with a region (sidebar, header, footer, content). Under the rubric a width token has no `property` at all, so slots 3 and 5 carry the whole name.',
-    tokens: otherTokens.filter((t) => !t.name.startsWith('--elevation-')),
+    label: 'typography (composite roles)',
+    match: /^--typography-/,
+    property: 'last',
+    note: 'semantic/typography.json. `--typography-<role>[-<size>]-<property>` — role first, property last, one token per property so the composite is addressable piece by piece. These are the tokenised form of the `.type-*` classes; the section below decomposes each role across the six tier-1 properties.',
+  },
+  {
+    label: 'typography — faces & weights',
+    // Excludes --font-size-ui-* explicitly rather than relying on match order, so the
+    // families can be listed ingredient-next-to-composite for reading.
+    match: /^--font-(?!size-ui-)/,
+    property: 'first',
+    note: 'semantic/typography.json — the INGREDIENT layer the composite roles are assembled from, within the same tier. `--typography-display-font-family` resolves to `--font-display`; `--typography-display-font-weight` to `--font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (`--font-sans` 69 reads, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38). Chrome legitimately reaches for a weight without wanting a whole prose role — there is a `--font-size-ui-*` ramp but no matching weight role, which is why. `--font-display` is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to `--font-sans` so the slot exists for a spoke to swap in a distinct headline face.',
+  },
+  {
+    label: 'font-size-ui (chrome text)',
+    match: /^--font-size-ui-/,
+    property: 'first',
+    note: 'semantic/typography.json. Text inside interface furniture — control labels, table headers, pills, pagination — aligned step-for-step with `--control-height-*`, so a component rendered at `md` reads `--font-size-ui-md`. NOT an ingredient of any composite: zero composites reference it, because prose sizing goes through the roles above. It sits apart from the faces and weights for that reason.',
+  },
+  {
+    label: 'border-radius',
+    match: /^--radius-/,
+    property: 'first',
+    note: 'semantic/radius.json. `--radius-{control,surface,card,overlay,pill}` — five intentions over the tier-1 ramp. This is what let both themes stop re-pointing `--radius-200`, a primitive, which used to be the SPEC violation flagged under Health.',
+  },
+  {
+    label: 'border-width',
+    match: /^--border-width-/,
+    property: 'first',
+    note: 'semantic/border.json. One role, not a t-shirt scale, because the audit found the system has one: 49 hairline borders across 25 components. Every other width in the kit is internal micro-geometry that SPEC excludes from the theming surface.',
   },
   {
     label: 'box-shadow',
-    note: 'effect.json. Named as an elevation scale rather than the box-shadow category, and the variant is a step number rather than an intention.',
-    tokens: otherTokens.filter((t) => t.name.startsWith('--elevation-')),
+    match: /^--elevation-/,
+    property: 'none',
+    note: 'semantic/effect.json. Named as an elevation scale rather than the box-shadow category, and the variant is a step number rather than an intention — but every component reads it instead of `--shadow-*`.',
+  },
+  {
+    label: 'transition / animation',
+    match: /^--(transition|animation)-/,
+    property: 'first',
+    note: 'semantic/motion.json. Named for the CSS property they land in — the same rule colour follows — so `--transition-*` belongs in a `transition:` declaration and `--animation-*` in an `animation:`. Two sets rather than one `--motion-*` set because they are not interchangeable: `infinite` cannot appear in a transition. Each composes tier-1 `--duration-*` and `--easing-*`; the animation set carries duration, easing and iteration but never the @keyframes name, which stays with the component.',
+  },
+  {
+    label: 'z-index',
+    match: /^--z-/,
+    property: 'first',
+    note: 'semantic/effect.json. A stacking ORDER named by what stacks — dropdown, sidebar, header, modal, toast, tooltip — so the layer relationships are readable without comparing numbers. The taxonomy notes it is a genuine judgement call whether to tokenise stacking at all.',
+  },
+  {
+    label: 'width / height',
+    match: /^--(sidebar|header|footer|content|control-height|chip-height)/,
+    property: 'last',
+    note: 'semantic/layout.json and size.json, and really two families. `--control-height-*` and `--chip-height-*` are proper size ROLES on a shared scale. The layout set (`--sidebar-width`, `--header-height`, `--content-max-width`) leads with a REGION and puts the property last — the same shape colour had before it was flipped, where `--color-danger-border` became `--color-border-danger`. Flipping these would scatter a region across the file for no gain: a sidebar has one dimension that matters, so there is no cross-product to group by. What is genuinely inconsistent is the content trio — `--content-max-width` names the CSS property, `--content-narrow-width` and `--content-wide-width` put a variant where the property word sits, so a reader cannot tell whether they are max-widths or fixed widths.',
+  },
+  {
+    label: 'touch target',
+    match: /^--touch-target-/,
+    property: 'none',
+    note: 'semantic/effect.json. `--touch-target-min` is the WCAG 2.5.5 floor — a role, not a ramp step, and never re-pointed smaller.',
   },
 ];
+
+export const nonColorGroups: {
+  label: string;
+  note: string;
+  tokens: typeof otherTokens;
+  property: PropertyPosition;
+  /** True for the catch-all, which renders even when empty. */
+  isUnclassified?: boolean;
+}[] = (() => {
+  const claimed = new Set<string>();
+  const groups = NON_COLOR_FAMILIES.map((f) => {
+    const tokens = allNonColor.filter((t) => !claimed.has(t.name) && f.match.test(t.name));
+    tokens.forEach((t) => claimed.add(t.name));
+    return { label: f.label, note: f.note, property: f.property, tokens };
+  });
+  const rest = allNonColor.filter((t) => !claimed.has(t.name));
+  groups.push({
+    label: 'unclassified',
+    property: 'none',
+    note:
+      'Nothing should be here. This group exists so a NEW tier-2 family announces itself instead of being swallowed by whichever group is defined as "the rest" — which is exactly how 107 tokens spent time filed under the heading "width / height". Anything appearing here needs a family added above.',
+    tokens: rest,
+    isUnclassified: true,
+  } as (typeof groups)[number]);
+  return groups;
+})();
 
 /* =========================================================================
  * Tier 2 TYPOGRAPHY, grouped by intention.
  *
- * There are zero tier-2 typography TOKENS. The layer exists — as the composable
- * utility classes in typography.css, which are composites of the tier-1
- * typography primitives in exactly the shape the rubric describes. So this
- * groups what we actually ship, by intention, and decomposes each role into the
+ * Tier-2 typography is now tokenised: 66 `--typography-<role>[-<size>]-<property>`
+ * composites, which the utility classes in typography.css read. (This note used to
+ * say "there are zero tier-2 typography TOKENS" and kept saying it after they
+ * landed — the layer moved, the audit describing it did not.) So this groups what
+ * we actually ship, by intention, and decomposes each role into the
  * six tier-1 properties so the composite is visible as a composite.
  *
  * The six columns are fixed on purpose: a role that leaves one unset shows a
@@ -766,9 +894,12 @@ export const typeCoverage = {
 /** The de facto grammar, written as a rule, next to the rubric's. */
 export const grammars = {
   current: [
-    'color:   --color-<variant|surface>[-<surface|variant>][-<state>]',
-    'layout:  --<region>-<dimension>[-<modifier>]',
-    'effect:  --elevation-<step>',
+    'color:      --color-<property>-<intention>[-<variant>][-<state>]',
+    'typography: --typography-<intention>[-<size>]-<property>',
+    'motion:     --<transition|animation>-<intention>',
+    'radius:     --radius-<intention>',
+    'layout:     --<region>-<dimension>[-<modifier>]',
+    'effect:     --elevation-<step>',
   ],
   rubric: '--eco-<tier>-<category>-<property>-<variant>[-<state>]',
 };

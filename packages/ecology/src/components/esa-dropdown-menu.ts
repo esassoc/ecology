@@ -145,7 +145,7 @@ export class EsaDropdownMenu extends LitElement {
       overflow-y: auto;
       max-height: 320px;
       font-family: var(--font-sans, 'DM Sans', sans-serif);
-      animation: esa-dropdown-fade 120ms ease-out;
+      animation: esa-dropdown-fade var(--animation-enter, 150ms ease-out);
     }
     @keyframes esa-dropdown-fade {
       from { opacity: 0; transform: translateY(-4px); }

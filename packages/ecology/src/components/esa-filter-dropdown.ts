@@ -422,7 +422,7 @@ export class EsaFilterDropdown extends LitElement {
       background: var(--filter-dropdown-bg, var(--color-background-raised, #fff));
       border: var(--filter-dropdown-border, 1px solid var(--color-border, #e5e5e5));
       border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
-      box-shadow: var(--filter-dropdown-shadow, var(--elevation-3, 0 4px 20px -4px rgba(0, 0, 0, 0.06)));
+      box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
       overflow: hidden;
       display: flex;
       flex-direction: column;
