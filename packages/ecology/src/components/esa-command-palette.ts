@@ -241,7 +241,7 @@ export class EsaCommandPalette extends LitElement {
       flex-direction: column;
       overflow: hidden;
       font-family: var(--font-sans, 'DM Sans', sans-serif);
-      animation: esa-cmdk-enter 150ms ease-out;
+      animation: esa-cmdk-enter var(--animation-enter, 150ms ease-out);
     }
     @keyframes esa-cmdk-enter {
       from { opacity: 0; transform: translateX(-50%) scale(0.96); }

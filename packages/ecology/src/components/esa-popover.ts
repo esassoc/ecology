@@ -160,7 +160,7 @@ export class EsaPopover extends LitElement {
       border: var(--border-width-default, 1px) solid var(--_popover-border);
       border-radius: var(--_popover-radius);
       box-shadow: var(--_popover-shadow);
-      animation: esa-popover-fade-in 150ms ease-out;
+      animation: esa-popover-fade-in var(--animation-enter, 150ms ease-out);
       font-family: var(--font-sans, 'DM Sans', sans-serif);
       color: var(--_popover-color);
     }

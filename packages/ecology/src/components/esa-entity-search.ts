@@ -424,7 +424,7 @@ export class EsaEntitySearch extends LitElement {
       flex-direction: column;
       overflow: hidden;
       font-family: var(--font-sans, sans-serif);
-      animation: esa-entity-enter 150ms ease-out;
+      animation: esa-entity-enter var(--animation-enter, 150ms ease-out);
     }
     @keyframes esa-entity-enter {
       from { opacity: 0; transform: translateX(-50%) scale(0.96); }

@@ -115,7 +115,7 @@ const showHeader = !!label || showValue;
 
   .esa-progress-bar--indeterminate .esa-progress-bar__fill {
     width: 40% !important;
-    animation: esa-progress-indeterminate 1.5s ease-in-out infinite;
+    animation: esa-progress-indeterminate var(--animation-indeterminate, 1500ms ease-in-out infinite);
   }
 
   @keyframes esa-progress-indeterminate {

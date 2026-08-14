@@ -3,12 +3,27 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
+// `step` is the tier-1 axis rung each role clusters — --shadow-offset-y-050,
+// --shadow-blur-050 and so on. The role numbering (1–6) and the ramp numbering
+// (050–500) are deliberately independent: one is a set of jobs, the other a scale.
 const elevation = [
-  { token: '--elevation-1', primitive: '--shadow-050', role: 'Resting lift — always-visible surfaces' },
-  { token: '--elevation-2', primitive: '--shadow-100', role: 'Cards, list items' },
-  { token: '--elevation-3', primitive: '--shadow-200', role: 'Raised cards, hover state' },
-  { token: '--elevation-4', primitive: '--shadow-300', role: 'Dropdowns, popovers, menus' },
-  { token: '--elevation-5', primitive: '--shadow-400', role: 'Modals, dialogs' },
+  { token: '--elevation-1', step: '050', role: 'Resting lift — always-visible surfaces' },
+  { token: '--elevation-2', step: '100', role: 'Cards, list items' },
+  { token: '--elevation-3', step: '200', role: 'Raised cards; resting rung for unanchored floating controls' },
+  { token: '--elevation-4', step: '300', role: 'Dropdowns, popovers, menus, tooltips, toasts' },
+  { token: '--elevation-5', step: '400', role: 'Modals, dialogs' },
+  { token: '--elevation-6', step: '500', role: 'Full-screen overlays — command palette, entity search' },
+];
+
+// The tier-1 material. offset-x is one shared token (every shadow casts straight
+// down), so it is not a column here.
+const axes = [
+  { step: '050', y: '1px',  blur: '4px',  spread: '0',    color: 'rgba(0, 0, 0, 0.03)' },
+  { step: '100', y: '2px',  blur: '12px', spread: '0',    color: 'rgba(0, 0, 0, 0.04)' },
+  { step: '200', y: '4px',  blur: '20px', spread: '-4px', color: 'rgba(0, 0, 0, 0.06)' },
+  { step: '300', y: '6px',  blur: '24px', spread: '-6px', color: 'rgba(0, 0, 0, 0.07)' },
+  { step: '400', y: '8px',  blur: '32px', spread: '-8px', color: 'rgba(0, 0, 0, 0.08)' },
+  { step: '500', y: '20px', blur: '60px', spread: '0',    color: 'rgba(0, 0, 0, 0.2)'  },
 ];
 
 
@@ -28,27 +43,37 @@ const zIndex = [
   <p class="lede">Two systems work together to build depth: soft <strong>shadows</strong> imply lift off the surface, and a fixed <strong>z-index</strong> ladder keeps overlapping layers in a predictable stacking order.</p>
 
   <Section id="shadows" title="Shadows">
-    <p>Deliberately soft and low-contrast — elevation should be felt, not seen. Use the semantic <code>--elevation-*</code> tokens in components; the <code>--shadow-*</code> primitives are the raw ramp underneath.</p>
+    <p>Deliberately soft and low-contrast — elevation should be felt, not seen. <code>--elevation-*</code> is the full public surface: these six tokens <em>are</em> the shadows, assembled from the tier-1 axes below. Components read these and nothing else.</p>
+    <p><strong>Hover is not a rung.</strong> Every rung names a <em>kind of surface</em>; a hover lift moves an element one rung up from wherever it rests. Rung 3 used to be described as “raised cards, hover state,” and being the only rung that named an interaction is why it became the drawer everything lifted got thrown into — six dropdown surfaces sat on it instead of rung 4.</p>
     <div class="cards">
       {elevation.map((s) => (
-        <div class="card" style={`box-shadow: var(${s.primitive})`}>
+        <div class="card" style={`box-shadow: var(${s.token})`}>
           <code>{s.token}</code>
-          <span class="card__primitive">{s.primitive}</span>
+          <span class="card__primitive">step {s.step}</span>
           <span class="card__role">{s.role}</span>
         </div>
       ))}
     </div>
   </Section>
 
-  <Section id="shadow-ramp" title="Shadow ramp">
-    <p>The primitive ramp that the elevation tokens alias. Prefer <code>--elevation-*</code> in components; reference <code>--shadow-*</code> only when you need a specific step not covered by the semantic scale.</p>
-    <div class="cards">
-      {elevation.map((s) => (
-        <div class="card" style={`box-shadow: var(${s.primitive})`}>
-          <code>{s.primitive}</code>
-        </div>
-      ))}
-    </div>
+  <Section id="shadow-axes" title="Shadow axes">
+    <p>The tier-1 material each role clusters. A box-shadow has four axes plus a colour, and splitting them is what makes a shadow themeable — re-point <code>--shadow-color-*</code> and every elevation retints. <code>--shadow-offset-x</code> is a single shared token, not a ramp, because every shadow in the kit casts straight down.</p>
+    <table class="z-table">
+      <thead>
+        <tr><th>Step</th><th>offset-y</th><th>blur</th><th>spread</th><th>color</th></tr>
+      </thead>
+      <tbody>
+        {axes.map((a) => (
+          <tr>
+            <td><code>{a.step}</code></td>
+            <td class="z-table__val">{a.y}</td>
+            <td class="z-table__val">{a.blur}</td>
+            <td class="z-table__val">{a.spread}</td>
+            <td class="z-table__role">{a.color}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </Section>
 
   <Section id="z-index" title="Z-index">

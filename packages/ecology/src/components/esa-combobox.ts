@@ -580,7 +580,7 @@ export class EsaCombobox extends LitElement {
     .spinner {
       display: inline-flex;
       color: var(--color-content-muted, #737373);
-      animation: esa-cb-spin 1s linear infinite;
+      animation: esa-cb-spin var(--animation-spin, 750ms linear infinite);
     }
     .spinner svg {
       width: var(--icon-size-sm, 16px);
@@ -602,7 +602,7 @@ export class EsaCombobox extends LitElement {
       }
     }
     .spinner--inline {
-      animation: esa-cb-spin-inline 1s linear infinite;
+      animation: esa-cb-spin-inline var(--animation-spin, 750ms linear infinite);
     }
     @keyframes esa-cb-spin-inline {
       from {
@@ -708,7 +708,7 @@ export class EsaCombobox extends LitElement {
       background: var(--color-background-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overflow: hidden;
     }
 

@@ -593,7 +593,7 @@ export class EsaInputTag extends LitElement {
       background: var(--color-background-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
     }
 
     .option {

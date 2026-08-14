@@ -221,7 +221,7 @@ export class EsaDialog extends LitElement {
         max-height: 92vh;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
-        animation: esa-dialog-sheet-in 0.24s ease;
+        animation: esa-dialog-sheet-in var(--animation-overlay-enter, 250ms ease-out);
       }
     }
     @keyframes esa-dialog-sheet-in {

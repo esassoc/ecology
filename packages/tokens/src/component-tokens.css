@@ -89,7 +89,7 @@
   --filter-dropdown-bg: var(--color-background-raised);
   --filter-dropdown-border: 1px solid var(--color-border);
   --filter-dropdown-radius: var(--radius-surface);
-  --filter-dropdown-shadow: var(--elevation-3);
+  --filter-dropdown-shadow: var(--elevation-4);
   --filter-dropdown-min-width: 200px;
   /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
      that is ACCEPTED, not an oversight — do not re-open it without new evidence.
@@ -456,7 +456,7 @@
   --nav-dropdown-panel-min-width: 240px;
   --nav-dropdown-panel-padding: var(--spacing-300, 12px);
   --nav-dropdown-panel-radius: var(--radius-surface, 8px);
-  --nav-dropdown-panel-shadow: var(--elevation-3, 0 8px 24px rgba(0, 0, 0, 0.12));
+  --nav-dropdown-panel-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
   --nav-dropdown-panel-text: var(--color-content-primary, #171717);
 
   /* esa-pagination */

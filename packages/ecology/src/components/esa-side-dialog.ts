@@ -149,7 +149,7 @@ export class EsaSideDialog extends LitElement {
       backdrop-filter: var(--backdrop-filter, none);
       -webkit-backdrop-filter: var(--backdrop-filter, none);
       z-index: var(--z-modal-backdrop, 300);
-      animation: fade 150ms ease;
+      animation: fade var(--animation-enter, 150ms ease-out);
     }
     /* Inset floating panel (matches Beacon prod .ui-side-dialog): 16px gap on the
        top / bottom / anchored side, rounded corners. --_inset is overridable. */
@@ -171,12 +171,12 @@ export class EsaSideDialog extends LitElement {
          second dialog on top) — ease the reposition instead of jumping. */
       transition: top 220ms ease, right 220ms ease, bottom 220ms ease, left 220ms ease;
     }
-    :host([position='right']) .panel { right: var(--_inset); animation: slide-right 220ms ease; }
-    :host([position='left']) .panel { left: var(--_inset); animation: slide-left 220ms ease; }
+    :host([position='right']) .panel { right: var(--_inset); animation: slide-right var(--animation-overlay-enter, 250ms ease-out); }
+    :host([position='left']) .panel { left: var(--_inset); animation: slide-left var(--animation-overlay-enter, 250ms ease-out); }
     /* Exit: keep the end state so it doesn't flash back before unmounting. */
-    :host([position='right']) .panel.is-closing { animation: slide-out-right 200ms ease forwards; }
-    :host([position='left']) .panel.is-closing { animation: slide-out-left 200ms ease forwards; }
-    .backdrop.is-closing { animation: fade-out 150ms ease forwards; }
+    :host([position='right']) .panel.is-closing { animation: slide-out-right var(--animation-overlay-exit, 200ms ease-in) forwards; }
+    :host([position='left']) .panel.is-closing { animation: slide-out-left var(--animation-overlay-exit, 200ms ease-in) forwards; }
+    .backdrop.is-closing { animation: fade-out var(--animation-exit, 150ms ease-in) forwards; }
 
     .header {
       display: flex;

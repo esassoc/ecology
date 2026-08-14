@@ -23,7 +23,7 @@ all new components follow.
      the value is the identity and there is no meaningful ordering.
    - **Radix 1–12** — colour only, where each step carries a fixed job
      (2 = subtle surface, 9 = solid fill, 11 = text on a surface).
-   - **padded ordinal** — `--spacing-400`, `--radius-100`, `--shadow-050`,
+   - **padded ordinal** — `--spacing-400`, `--radius-100`, `--shadow-blur-200`,
      `--font-size-200`. Use where the set is a *scale* a designer picks a rung
      from. Spacing was converted to value-names (`--spacing-16`) and converted
      back: the ramp is the thing being chosen from, the ordinal keeps the rungs
@@ -172,6 +172,61 @@ them were missing, components hardcoded `#fff` in the gap, and on the bright Rad
 ramps (lime, yellow, amber, sky, mint) white fails contrast on step 9.
 `scripts/check-contrast.mjs` checks each of these pairs, so a spoke that re-points
 a fill without re-pointing its foreground gets told.
+
+### Composite families keep their axes separate at tier 1
+
+Where a CSS value has more than one axis, **tier 1 holds the axes; tier 2 does the
+composing.** Typography already worked this way — `--font-size-*` and
+`--line-height-*` are separate primitives that tier-2 roles assemble. Motion now
+matches: `--duration-*` and `--easing-*` at tier 1, combined into `--transition-*`
+and `--animation-*` at tier 2.
+
+Fusing them looks harmless and is not. Motion shipped as three composite strings
+(`--transition-fast: 150ms ease`), which meant wanting the standard duration with a
+different easing required leaving the token system entirely — so 42 of the 73
+`transition:` declarations in components and **all 22** `@keyframes` timings
+hardcoded their values. A fused token does not just fail to cover a case; it pushes
+the case out of the system, where nothing can see or theme it.
+
+It also cost the accessibility feature outright. Honouring
+`prefers-reduced-motion` against composite strings means editing every declaration
+by hand, so nobody did — the preference appeared in exactly one file in the repo,
+the docs page guarding its own demo. With the axes split it is one override block.
+
+`--shadow-*` was the last family still fused, and was split the same way. Tier 1 now
+holds only the axes — `--shadow-offset-x`, `--shadow-offset-y-*`, `--shadow-blur-*`,
+`--shadow-spread-*`, `--shadow-color-*` — and the composites that cluster them are
+`--elevation-1…6` at **tier 2**. That placement is the point: choosing which
+combination of axes is a resting card and which is a modal is an intent, not a
+material, so the old ordinal `--shadow-050…500` composites were an intent wearing a
+tier-1 name, exactly like `--transition-fast` before it. They also formed a 1:1
+passthrough — six primitives, six roles, nothing reused — so collapsing them cost
+nothing. The old names resolve through the aliases generated from `migrations.json`
+(`shadow-composites-to-elevation`).
+
+The motivating axis was colour: every shadow terminated in a hardcoded
+`rgba(0,0,0,α)` referencing nothing, so a theme could not tint its shadows at all.
+`offset-x` is a single token rather than a ramp because every shadow in the kit casts
+straight down; an axis earns a ramp when it has one. The colours deliberately do
+**not** alias `black-a`, which starts at 0.05 and steps by 0.05 — five of the six
+shadow alphas (0.03–0.08) fall between its steps, so aliasing would have moved
+rendered values to make a lineage diagram tidier.
+
+**Compose at the tier that knows the role.** The reduced-motion override re-points
+tier 2, not the duration scale, because `reduce` means remove *non-essential*
+motion: `--animation-spin` and `--animation-indeterminate` keep running, since a
+frozen spinner reads as a hung app. Tier 2 knows which motion is feedback and which
+is decoration. Zeroing tier 1 would have taken the spinners with it, and the
+exemption would have had to be written as "except steps 750 and 1500" — a fact
+about the scale, not about the roles.
+
+**Name composites for the property they land in**, the same rule colour follows.
+`--transition-*` goes in `transition`, `--animation-*` goes in `animation`. These
+are two sets rather than one `--motion-*` set because they are not
+interchangeable — `infinite` cannot appear in a `transition`. *Motion* is the name
+of the family, not a prefix; no token is prefixed `--motion-` any more than a
+spacing token is prefixed `--foundations-`.
+
 3. **Component** (`src/component-tokens.css`, authored) — the per-component
    (or per-group) theming surface, defaulting to semantic references:
    `--card-bg: var(--color-background-raised)`. A spoke uses this tier to diverge ONE
@@ -286,5 +341,5 @@ directly.
 ```
 
 Never re-point a primitive; never style `.esa-*` internals from a theme. If a
-theme finds itself wanting to move `--radius-200` or `--shadow-300`, the real
+theme finds itself wanting to move `--radius-200` or `--shadow-blur-300`, the real
 problem is a missing semantic role — add the role, don't move the ingredient.

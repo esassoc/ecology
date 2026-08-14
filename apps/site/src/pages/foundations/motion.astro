@@ -3,19 +3,83 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
+const durations = [
+  { token: '--duration-0',    value: '0ms',    role: 'The reduced-motion destination' },
+  { token: '--duration-75',   value: '75ms',   role: 'Barely perceptible — colour flips' },
+  { token: '--duration-100',  value: '100ms',  role: '' },
+  { token: '--duration-150',  value: '150ms',  role: 'The workhorse' },
+  { token: '--duration-200',  value: '200ms',  role: '' },
+  { token: '--duration-250',  value: '250ms',  role: 'Large surfaces arriving' },
+  { token: '--duration-300',  value: '300ms',  role: 'Spatial moves' },
+  { token: '--duration-500',  value: '500ms',  role: '' },
+  { token: '--duration-750',  value: '750ms',  role: 'Spinner revolution' },
+  { token: '--duration-1000', value: '1000ms', role: '' },
+  { token: '--duration-1500', value: '1500ms', role: 'Indeterminate sweep' },
+];
+
+const easings = [
+  { token: '--easing-standard',   value: 'ease',        cls: 'standard',   role: 'Starts and ends on screen — hover, colour, size' },
+  { token: '--easing-enter',      value: 'ease-out',    cls: 'enter',      role: 'Arriving. Fast, then settles' },
+  { token: '--easing-exit',       value: 'ease-in',     cls: 'exit',       role: 'Leaving. Slow, then accelerates away' },
+  { token: '--easing-emphasized', value: 'ease-in-out', cls: 'emphasized', role: 'Travels a distance and stays — drawers, sheets' },
+  { token: '--easing-linear',     value: 'linear',      cls: 'linear',     role: 'Continuous loops ONLY — spinners' },
+];
+
 const transitions = [
   { token: '--transition-fast', value: '150ms ease', role: 'Hover, focus, small state flips', cls: 'fast' },
   { token: '--transition-base', value: '200ms ease', role: 'Default for most interactions', cls: 'base' },
-  { token: '--transition-slow', value: '350ms ease', role: 'Panels, overlays, larger moves', cls: 'slow' },
+  { token: '--transition-slow', value: '300ms ease', role: 'Panels, overlays, larger moves', cls: 'slow' },
+];
+
+const animations = [
+  { token: '--animation-enter',         value: '150ms ease-out',           role: 'Dropdown, tooltip, popover, palette' },
+  { token: '--animation-exit',          value: '150ms ease-in',            role: 'The counterpart — dismissals' },
+  { token: '--animation-overlay-enter', value: '250ms ease-out',           role: 'Sheets, side dialogs, snackbar' },
+  { token: '--animation-overlay-exit',  value: '200ms ease-in',            role: '' },
+  { token: '--animation-spin',          value: '750ms linear infinite',    role: 'Spinners, button loading' },
+  { token: '--animation-indeterminate', value: '1500ms ease-in-out infinite', role: 'Progress-bar sweep' },
 ];
 ---
 <DocsLayout title="Motion — Ecology" activeHref="/foundations/motion">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Motion</span></nav>
   <h1>Motion</h1>
-  <p class="lede">Three transition tokens cover the whole system. They share an easing curve and differ only in duration — fast for direct feedback, slow for larger spatial moves. <strong>Hover a swatch</strong> to feel its timing.</p>
+  <p class="lede">Motion is a <strong>composite</strong> token family. Tier 1 holds the ingredients separately — <code>--duration-*</code> and <code>--easing-*</code> — and tier 2 combines them into the token you actually write. There are two tier-2 sets because CSS has two motion properties: <code>--transition-*</code> for <code>transition</code>, <code>--animation-*</code> for <code>animation</code>.</p>
 
-  <Section id="transitions" title="Transitions">
-    <p>Each swatch uses its token for both the color shift and the slide. Hover to trigger; the timing is the difference.</p>
+  <Section id="durations" title="Tier 1 — duration">
+    <p>How long. Named for the value they hold, because with timing the number <em>is</em> the meaning — <code>--duration-150</code> tells you more than <code>--duration-300</code> would. Never write one of these directly on a <code>transition</code>; reach for a tier-2 token and drop to tier 1 only when composing a new one.</p>
+    <table class="tok-table">
+      <thead><tr><th>Token</th><th>Value</th><th>Typical use</th></tr></thead>
+      <tbody>
+        {durations.map((d) => (
+          <tr>
+            <td><code>{d.token}</code></td>
+            <td class="tok-table__val">{d.value}</td>
+            <td>{d.role}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+
+  <Section id="easings" title="Tier 1 — easing">
+    <p>How it gets there. <strong>Hover a row</strong> — every dot travels the same distance over the same 900ms, so the only difference you see is the curve.</p>
+    <div class="easings">
+      {easings.map((e) => (
+        <div class={`ease ease--${e.cls}`}>
+          <div class="ease__track"><div class="ease__dot"></div></div>
+          <div class="ease__meta">
+            <code>{e.token}</code>
+            <span class="ease__value">{e.value}</span>
+            <span class="ease__role">{e.role}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+    <p class="aside"><strong>Why <code>ease</code> and not a designed curve?</strong> <code>--easing-standard</code> is CSS's built-in <code>ease</code>, which is exactly what every transition in the system already used. Keeping it verbatim meant introducing this scale changed no rendered timing. Replacing it with a bespoke <code>cubic-bezier()</code> is a decision about how the system <em>feels</em> and gets made on its own terms, not smuggled in as part of a restructure.</p>
+  </Section>
+
+  <Section id="transitions" title="Tier 2 — transitions">
+    <p>For state changes the browser interpolates. Each swatch uses its token for both the colour shift and the slide. Hover to trigger; the timing is the difference.</p>
     <div class="swatches">
       {transitions.map((t) => (
         <div class="swatch">
@@ -33,8 +97,30 @@ const transitions = [
     </div>
   </Section>
 
+  <Section id="animations" title="Tier 2 — animations">
+    <p>For keyframed sequences. These carry duration, easing and iteration but <strong>not</strong> the <code>@keyframes</code> name — that stays with the component, because the shape of the move is the component's business and its timing is the system's.</p>
+    <pre class="snippet"><code>{`.esa-dropdown__panel {
+  animation: esa-dropdown-fade var(--animation-enter);
+}
+.esa-spinner {
+  animation: esa-spinner-rotate var(--animation-spin);
+}`}</code></pre>
+    <table class="tok-table">
+      <thead><tr><th>Token</th><th>Value</th><th>Typical use</th></tr></thead>
+      <tbody>
+        {animations.map((a) => (
+          <tr>
+            <td><code>{a.token}</code></td>
+            <td class="tok-table__val">{a.value}</td>
+            <td>{a.role}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </Section>
+
   <Section id="usage" title="Usage">
-    <p>Bind the token on the <code>transition</code> property and name the properties you animate — never animate <code>all</code>. Default to <code>--transition-base</code> unless the change is tiny (fast) or spatial (slow).</p>
+    <p>Bind the token on the <code>transition</code> property and name the properties you animate — never animate <code>all</code>. Default to <code>--transition-fast</code> unless the change is larger (base) or spatial (slow).</p>
     <pre class="snippet"><code>{`.button {
   transition: background var(--transition-fast),
               box-shadow var(--transition-fast);
@@ -42,10 +128,54 @@ const transitions = [
 .drawer {
   transition: transform var(--transition-slow);
 }`}</code></pre>
+    <p>Reach for tier 1 only when you are composing a timing the system does not have yet — and when you do, consider whether it should become a tier-2 token instead:</p>
+    <pre class="snippet"><code>{`/* justified: a bespoke pairing, written once, in one component */
+transition: transform var(--duration-500) var(--easing-emphasized);`}</code></pre>
+  </Section>
+
+  <Section id="reduced-motion" title="Reduced motion">
+    <p>Tokens ship a <code>@media (prefers-reduced-motion: reduce)</code> block that re-points every transition and enter/exit token at <code>--duration-0</code>. Anything bound to a tier-2 motion token honours the preference with no work from the component.</p>
+    <p><strong>Loading indicators are deliberately exempt.</strong> <code>--animation-spin</code> and <code>--animation-indeterminate</code> keep running: <code>reduce</code> means remove non-essential motion, and a frozen spinner reads as a hung app. This is also why the override lives at tier 2 — tier 2 knows which motion is feedback and which is decoration, and the duration scale cannot.</p>
+    <p class="aside">The override only reaches <strong>tokenised</strong> call sites. Components that still hardcode <code>150ms ease</code> ignore the preference, and a fair number do — moving them onto these tokens is what makes the block worth having.</p>
   </Section>
 </DocsLayout>
 
 <style>
+  .tok-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: var(--spacing-500, 1.5rem); }
+  .tok-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); font-weight: 600; color: var(--color-content-secondary, #525252); border-bottom: 1px solid var(--color-border, #dcdcdc); }
+  .tok-table td { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); color: var(--color-content-muted, #737373); border-bottom: 1px solid var(--color-border-subtle, #e8e8e8); }
+  .tok-table td:first-child code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); white-space: nowrap; }
+  .tok-table__val { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); white-space: nowrap; }
+
+  /* Easing demos: identical distance and duration, so the curve is the only variable. */
+  .easings { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); }
+  .ease {
+    display: grid; grid-template-columns: minmax(140px, 1fr) minmax(220px, 300px);
+    gap: var(--spacing-400, 1rem); align-items: center;
+    border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px;
+    padding: var(--spacing-300, 0.75rem); cursor: pointer;
+  }
+  .ease__track {
+    position: relative; height: 32px; border-radius: var(--radius-300, 0.5rem);
+    background: var(--color-background-sunken, #f5f5f5); overflow: hidden;
+  }
+  .ease__dot {
+    position: absolute; top: 6px; left: 6px;
+    width: 20px; height: 20px; border-radius: 999px;
+    background: var(--color-background-brand, #43608a);
+    transform: translateX(0);
+    transition: transform 900ms var(--easing-standard, ease);
+  }
+  .ease--enter      .ease__dot { transition-timing-function: var(--easing-enter, ease-out); }
+  .ease--exit       .ease__dot { transition-timing-function: var(--easing-exit, ease-in); }
+  .ease--emphasized .ease__dot { transition-timing-function: var(--easing-emphasized, ease-in-out); }
+  .ease--linear     .ease__dot { transition-timing-function: var(--easing-linear, linear); }
+  .ease:hover .ease__dot { transform: translateX(calc(100% - 32px)); left: calc(100% - 26px); background: var(--color-background-accent, #f9a134); }
+  .ease__meta { display: flex; flex-direction: column; gap: 2px; }
+  .ease__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
+  .ease__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); }
+  .ease__role { font-size: 12.5px; color: var(--color-content-muted, #737373); }
+
   .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400, 1rem); }
   .swatch { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
   .swatch__demo {
@@ -72,7 +202,7 @@ const transitions = [
   /* Each demo applies its own token to the animated thumb + background. */
   .swatch__demo--fast .swatch__thumb { transition: transform var(--transition-fast, 150ms ease), background var(--transition-fast, 150ms ease); }
   .swatch__demo--base .swatch__thumb { transition: transform var(--transition-base, 200ms ease), background var(--transition-base, 200ms ease); }
-  .swatch__demo--slow .swatch__thumb { transition: transform var(--transition-slow, 350ms ease), background var(--transition-slow, 350ms ease); }
+  .swatch__demo--slow .swatch__thumb { transition: transform var(--transition-slow, 300ms ease), background var(--transition-slow, 300ms ease); }
   .swatch__demo:hover .swatch__thumb { transform: translateX(calc(100% + var(--spacing-500, 1.5rem))); background: var(--color-background-accent, #f9a134); }
   .swatch__demo:hover .swatch__hint { opacity: 0; }
 
@@ -81,10 +211,17 @@ const transitions = [
   .swatch__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); }
   .swatch__role { font-size: 12.5px; color: var(--color-content-muted, #737373); }
 
+  .aside {
+    border-left: 3px solid var(--color-border-brand, #cde3cd);
+    padding-left: var(--spacing-400, 1rem);
+    color: var(--color-content-secondary, #525252);
+  }
+
   .snippet { background: var(--color-background-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
   .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-content-primary, #171717); }
 
+  /* The demos on this page animate on purpose, so they opt out by hand. */
   @media (prefers-reduced-motion: reduce) {
-    .swatch__thumb, .swatch__hint { transition: none !important; }
+    .swatch__thumb, .swatch__hint, .ease__dot { transition: none !important; }
   }
 </style>

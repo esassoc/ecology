@@ -75,6 +75,40 @@ const p3Block = `\n@media (color-gamut: p3) {\n  :root {\n${lines.join('\n')}\n 
 fs.appendFileSync('dist/tokens.css', p3Block);
 
 /*
+ * REDUCED MOTION. Re-points the tier-2 motion tokens at --duration-0 for users whose
+ * OS asks for it. This is the reason tier 1 splits duration from easing at all: while
+ * a token's value was the composite string "150ms ease", honouring this preference
+ * meant editing all 73 `transition:` declarations by hand, so nobody did — before this
+ * block, `prefers-reduced-motion` appeared in exactly ONE file in the whole repo, and
+ * it was the docs page demonstrating its own hover swatch.
+ *
+ * Overridden at TIER 2, not tier 1, deliberately. `reduce` means remove NON-ESSENTIAL
+ * motion, not all motion: a frozen spinner reads as a hung app, so --animation-spin and
+ * --animation-indeterminate are left running. Zeroing the tier-1 duration scale instead
+ * would have taken them with it, and the exemption would have had to be expressed as
+ * "except steps 750 and 1500," which is a fact about the scale rather than about roles.
+ * Tier 2 knows which motion is feedback and which is decoration; tier 1 cannot.
+ *
+ * Reaches tokenized call sites only. The 42 hardcoded `transition:` declarations and 22
+ * hardcoded `@keyframes` timings in components still ignore the preference until they
+ * are moved onto these tokens.
+ */
+const REDUCED_MOTION = [
+  '--transition-fast', '--transition-base', '--transition-slow',
+  '--animation-enter', '--animation-exit',
+  '--animation-overlay-enter', '--animation-overlay-exit',
+];
+fs.appendFileSync(
+  'dist/tokens.css',
+  `\n/* Honours prefers-reduced-motion at the token layer. Loading indicators` +
+    ` (--animation-spin,\n   --animation-indeterminate) keep moving on purpose —` +
+    ` a frozen spinner reads as a crash. */\n` +
+    `@media (prefers-reduced-motion: reduce) {\n  :root {\n` +
+    REDUCED_MOTION.map((t) => `    ${t}: var(--duration-0);`).join('\n') +
+    `\n  }\n}\n`,
+);
+
+/*
  * DEPRECATED token aliases, GENERATED from migrations.json.
  *
  * Spokes consume this package through a `file:` symlink, so a rename here lands

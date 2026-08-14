@@ -329,9 +329,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       </table>
 
       <p class="cat-note">
-        Typography is the interesting one: the intention vocabulary <em>already exists</em>, just as
-        CSS classes in <code>typography.css</code> rather than tokens. Because they are classes, Figma
-        can&rsquo;t consume them and a spoke can&rsquo;t re-point them by overriding a token.
+        Typography was the interesting one: the intention vocabulary existed only as CSS classes in
+        <code>typography.css</code>, which Figma cannot consume and a spoke cannot re-point by
+        overriding a token. It is now tokenised &mdash; {t2.nonColorGroups.find((g) => g.label === 'typography (composite roles)')?.tokens.length ?? 0} composite
+        tokens assembled from the faces and weights below them, with the classes reading the
+        composites rather than the primitives. The mapping the audit was built to measure:
       </p>
       <table class="findings">
         <thead><tr><th>Rubric intention</th><th>Current</th><th></th></tr></thead>
@@ -351,21 +353,24 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       </p>
 
       <h3 class="sub">The non-colour tier-2 tokens</h3>
+      <p class="cat-note">
+        Colour is the only family the property-first rubric was written for. These are
+        judged on the same question — does the name say which CSS declaration it belongs
+        in — one row per family, because that is the level the claim is true at.
+      </p>
       <table class="findings">
-        <thead><tr><th>Token</th><th>Leads with</th><th>Then</th></tr></thead>
+        <thead><tr><th>Family</th><th>Count</th><th>Names lead with</th><th>Property slot</th></tr></thead>
         <tbody>
-          {t2.layoutRows.map((l) => (
+          {t2.nonColorLeadRows().map((r) => (
             <tr>
-              <td><code>{l.name}</code></td>
-              <td><code class="vocab warnv">{l.region}</code> <span class="dim">region, not a category</span></td>
-              <td><code class="vocab">{l.rest}</code></td>
-            </tr>
-          ))}
-          {t2.elevationRows.map((e) => (
-            <tr>
-              <td><code>{e.name}</code></td>
-              <td><code class="vocab warnv">elevation</code> <span class="dim">scale, not the box-shadow category</span></td>
-              <td class="dim">{e.description}</td>
+              <td><code>{r.label}</code></td>
+              <td class="dim">{r.count}</td>
+              <td class="dim">{r.leads}</td>
+              <td>
+                {r.property === 'first' ? <code class="vocab">first</code>
+                : r.property === 'last' ? <code class="vocab warnv">last</code>
+                : <code class="vocab warnv">none</code>}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -806,7 +811,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p>
         The last of the three, and the one with the most riding on it. A tier-1 name is the only
         description a raw value ever gets — there is no layer beneath it to explain what
-        <code>--color-yellow-9</code> or <code>--shadow-050</code> means. Counts are derived from the
+        <code>--color-yellow-9</code> or <code>--shadow-blur-200</code> means. Counts are derived from the
         real names and the real files at build time; the prose is authored.
       </p>
 
@@ -1483,8 +1488,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           <summary>
             <span class="cat-label">{g.label}</span>
             <span class="summary-right">
-              <span class="gap-flag">no property slot</span>
-              <span class="group-count">{g.tokens.length}</span>
+              {/* The catch-all is empty in the healthy case, so it carries no verdict —
+                  a chip there would read as a finding about tokens that do not exist. */}
+              {!g.isUnclassified && g.property === 'last' && <span class="gap-flag">property last</span>}
+              {!g.isUnclassified && g.property === 'none' && <span class="gap-flag">no property slot</span>}
+              <span class={g.isUnclassified && g.tokens.length === 0 ? 'group-count none' : 'group-count'}>
+                {g.tokens.length}
+              </span>
             </span>
           </summary>
           <p class="cat-note">{g.note}</p>
@@ -1523,6 +1533,16 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
     <Section id="primitive" title="Tier 1 · Primitive">
       <p>{TIER_NOTE.primitive}</p>
+      <p class="legend">
+        <b>Reading these tables.</b>
+        <span><code>*</code> after a token name — it carries a <code>$description</code> in the
+        DTCG source; hover the row to read it.</span>
+        <span><span class="gap-flag">diverges</span> — the STRUCTURE departs from the model
+        (a wrong or missing axis), not that work is outstanding. Adoption debt gets its own
+        line and no chip, because the two call for opposite responses: rethink the tier, versus
+        go and edit call sites.</span>
+        <span><span class="orphan-flag">orphan</span> — nothing reads this token.</span>
+      </p>
       {primitiveCategories.map((cat) => (
         <details class="tok-category" data-group>
           <summary>
@@ -1536,6 +1556,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           {cat.gap && (
             <p class="cat-gap">
               <b>What we actually ship:</b> {cat.gap}
+            </p>
+          )}
+          {cat.adoption && (
+            <p class="cat-adoption">
+              <b>Adoption:</b> {cat.adoption}
             </p>
           )}
           {cat.groups.length === 1 && cat.groups[0].label === cat.label.toLowerCase() ? (
@@ -1685,6 +1710,31 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
     font-size: 0.82rem;
     line-height: 1.55;
+    max-width: 72ch;
+  }
+  /* Adoption reads calmer than a gap on purpose: the structure is right, so this
+     is a worklist item rather than a design defect. Same shape, neutral colour. */
+  .tokens-debug .cat-adoption {
+    margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+    border-left: 3px solid var(--color-border-strong, #b9b9b9);
+    background: var(--color-background-sunken, #f5f5f5);
+    border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    max-width: 72ch;
+  }
+  .tokens-debug .legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-150, 6px);
+    margin-bottom: var(--spacing-400, 16px);
+    padding: var(--spacing-300, 12px);
+    border: 1px dashed var(--color-border, #dcdcdc);
+    border-radius: var(--radius-200, 8px);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--color-content-secondary, #525252);
     max-width: 72ch;
   }
   .tokens-debug .core-wrap { margin-bottom: var(--spacing-400, 16px); }

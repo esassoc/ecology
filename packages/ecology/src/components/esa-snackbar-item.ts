@@ -93,7 +93,7 @@ export class EsaSnackbarItem extends LitElement {
       color: var(--snackbar-item-color, var(--color-content-inverse, #ffffff));
       font-family: var(--font-sans, 'DM Sans', sans-serif);
       font-size: var(--font-size-200, 0.9375rem);
-      animation: esa-snackbar-enter 200ms ease-out;
+      animation: esa-snackbar-enter var(--animation-overlay-enter, 250ms ease-out);
     }
     @keyframes esa-snackbar-enter {
       from { transform: translateX(100%); opacity: 0; }

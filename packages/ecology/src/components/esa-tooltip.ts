@@ -100,8 +100,8 @@ export class EsaTooltip extends LitElement {
       max-width: var(--tooltip-max-width, 240px);
       pointer-events: none;
       white-space: nowrap;
-      box-shadow: var(--elevation-2, 0 2px 12px rgba(0, 0, 0, 0.04));
-      animation: esa-tooltip-fade 120ms ease-out;
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
+      animation: esa-tooltip-fade var(--animation-enter, 150ms ease-out);
     }
     @keyframes esa-tooltip-fade {
       from { opacity: 0; }

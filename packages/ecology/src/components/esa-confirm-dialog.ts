@@ -217,7 +217,7 @@ export class EsaConfirmDialog extends LitElement {
         max-width: 100%;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
-        animation: esa-confirm-sheet-in 0.24s ease;
+        animation: esa-confirm-sheet-in var(--animation-overlay-enter, 250ms ease-out);
       }
     }
     @keyframes esa-confirm-sheet-in {
