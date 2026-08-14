@@ -74,5 +74,35 @@ for (const { jsonKey, radixKey } of P3_SCALES) {
 const p3Block = `\n@media (color-gamut: p3) {\n  :root {\n${lines.join('\n')}\n  }\n}\n`;
 fs.appendFileSync('dist/tokens.css', p3Block);
 
+/*
+ * DEPRECATED token aliases.
+ *
+ * Spokes consume this package through a `file:` symlink, so a rename here lands
+ * in every spoke on their next dev-server tick — there is no publish step to
+ * absorb it. `--type-size-*` was renamed to `--font-size-*`; cb-fish-design
+ * alone had 84 BARE `var(--type-size-N)` reads across 27 files, and a bare read
+ * of an undeclared token drops the whole declaration. Silent, not loud.
+ *
+ * Emitted here rather than in tokens/primitive/ deliberately: a primitive whose
+ * value is a reference is exactly the defect the tier-1 audit exists to catch,
+ * and these would light it up. They are compatibility shims, not tokens.
+ *
+ * Remove once the spokes are migrated — `grep -rn -- '--type-size-' <spoke>/src`
+ * returning nothing is the signal.
+ */
+const DEPRECATED_ALIASES = [
+  ['--type-size-', '--font-size-', ['050', '100', '150', '200', '250', '300', '400', '500', '600', '700', '800', '900', '1000']],
+];
+
+const shims = [];
+for (const [oldPrefix, newPrefix, steps] of DEPRECATED_ALIASES) {
+  for (const step of steps) shims.push(`  ${oldPrefix}${step}: var(${newPrefix}${step});`);
+}
+fs.appendFileSync(
+  'dist/tokens.css',
+  `\n/* DEPRECATED — renamed tokens, kept so spoke source keeps resolving. See build.js. */\n:root {\n${shims.join('\n')}\n}\n`,
+);
+
 console.log('✓ tokens built → dist/tokens.css, dist/tokens.js');
 console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length} scales)`);
+console.log(`✓ ${shims.length} deprecated aliases appended`);

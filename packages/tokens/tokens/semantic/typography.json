@@ -85,10 +85,22 @@
     "eyebrow-letter-spacing":  { "$value": "{letter-spacing.wider}",       "$type": "dimension" },
     "eyebrow-text-transform":  { "$value": "{text-transform.uppercase}",   "$type": "other" },
 
-    "code-font-family":    { "$value": "{font.mono}",             "$type": "fontFamily" },
-    "code-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },
-    "code-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "code-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "code-letter-spacing": { "$value": "{letter-spacing.normal}", "$type": "dimension" }
+    "code-lg-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily" },
+    "code-lg-font-size":      { "$value": "{font-size.300}",         "$type": "dimension" },
+    "code-lg-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
+    "code-lg-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
+    "code-lg-letter-spacing": { "$value": "{letter-spacing.normal}", "$type": "dimension" },
+
+    "code-md-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily", "$description": "Inline and block code. Sized to match body-md so code sits at the size of the prose around it."  },
+    "code-md-font-size":      { "$value": "{font-size.200}",         "$type": "dimension" },
+    "code-md-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
+    "code-md-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
+    "code-md-letter-spacing": { "$value": "{letter-spacing.normal}", "$type": "dimension" },
+
+    "code-sm-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily" },
+    "code-sm-font-size":      { "$value": "{font-size.150}",         "$type": "dimension" },
+    "code-sm-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
+    "code-sm-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
+    "code-sm-letter-spacing": { "$value": "{letter-spacing.normal}", "$type": "dimension" }
   }
 }

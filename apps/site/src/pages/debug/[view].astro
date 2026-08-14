@@ -1363,13 +1363,21 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       </p>
       {t2.deprecatedAliases.length > 0 && (
         <p class="cat-gap">
-          <b>Not counted above:</b> {t2.deprecatedAliases.length} deprecated aliases —
-          {' '}{t2.deprecatedAliases.map((c) => <code class="vocab">.{c}</code>)} — the pre-composite
-          names, kept because spoke markup lives outside this repo and deleting a selector would
-          silently unstyle live pages rather than fail loudly. Each resolves through the identical
-          tokens as its replacement, so they cannot drift. They are parsed separately rather than
-          filtered out, because a count of 19 roles where only 11 place into an intention reads as
-          unaccounted-for composites instead of aliases doing their job.
+          <b>Not counted above:</b> {t2.deprecatedAliases.length} deprecated aliases, the
+          pre-composite class names. They are kept because spoke markup lives outside this repo and
+          deleting a selector would silently unstyle live pages rather than fail loudly. All but one
+          resolve through the identical tokens as their replacement, so they cannot drift.
+          They are parsed separately rather than filtered out, because
+          {' '}{t2.deprecatedAliases.length + t2.typeCoverage.placed} classes of which only
+          {' '}{t2.typeCoverage.placed} place into an intention reads as unaccounted-for composites
+          rather than as aliases doing their job.
+          <span class="alias-list">
+            {t2.deprecatedAliases.map((c) => <code class="vocab">.{c}</code>)}
+          </span>
+          <b>To retire them:</b> migrate spoke markup to the composite names (a find-and-replace —
+          the hub itself has zero usages), publish the plugin so spoke sessions stop teaching the old
+          names, then delete the DEPRECATED block in <code>typography.css</code> and the
+          {' '}<code>./type-roles.css</code> entry from the package exports.
         </p>
       )}
 
@@ -1378,12 +1386,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           <summary>
             <span class="cat-label">{intent.label}</span>
             <span class="summary-right">
-              {intent.note && <span class="inf-flag">inconsistent</span>}
+              {intent.inconsistency && <span class="inf-flag">inconsistent</span>}
               <span class="group-count">{intent.roles.length}</span>
             </span>
           </summary>
           <p class="cat-note">{intent.definition}</p>
-          {intent.note && <p class="cat-gap">{intent.note}</p>}
+          {intent.note && <p class="cat-note">{intent.note}</p>}
+          {intent.inconsistency && <p class="cat-gap">{intent.inconsistency}</p>}
           <div class="cat-body">
             <table class="tok-table type-table">
               <thead>
@@ -2027,6 +2036,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
 
   /* ---------------------------------------------- tier-1 naming audit */
+  .tokens-debug .alias-list { display: block; margin: var(--spacing-200, 8px) 0; }
   .tokens-debug .rank { width: 1.5rem; color: var(--color-text-muted, #999); }
   /* A finding whose check now returns zero. Deliberately keeps the finding text
      above it — the record of what was wrong is the useful part. */
