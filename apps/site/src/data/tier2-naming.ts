@@ -494,10 +494,12 @@ export const TYPE_PROPS = [
  * Of the six, these are the four a role MUST pin to be a complete composite.
  * The other two are opt-in by design and their absence is not a defect:
  *   font-family    — unset means "the body face", which is what most roles want.
- *                    Only the display/title roles opt into --font-display.
+ *                    Since the composite refactor every role pins it anyway, via
+ *                    its own --typography-*-font-family hook, so this is now a
+ *                    rule nothing tests rather than a rule anything violates.
  *   text-transform — unset means `none`; writing it everywhere would be noise.
- * Measuring completeness against all six flagged 11 of 11 roles, which is a
- * check that reports nothing. Measured against these four it finds one.
+ * Measuring completeness against all six flagged every role, which is a check
+ * that reports nothing. Measured against these four it reports the real defect.
  */
 export const REQUIRED_TYPE_PROPS = [
   'font-size',
@@ -788,11 +790,30 @@ export const clampBounds = (value: string | null | undefined): { min: number; ma
   return { min: Number(m[1]) * 16, max: Number(m[2]) * 16 };
 };
 
+/**
+ * Walk a composite's tier-2 property token down to the PRIMITIVE it lands on.
+ *
+ * A composite now reads `--typography-display-font-size`, which is a restatement
+ * of the composite's own name — reporting it answers nothing the role name did
+ * not already say. The question worth asking is which rung of the shared scale
+ * the role sits on, and that is one hop further down. Before the composite
+ * refactor the class referenced `--font-size-800` directly, so a single-level
+ * read used to be right; it silently stopped being right when the tier-2 layer
+ * was inserted.
+ */
+const primitiveBehind = (ref: string | null | undefined, prefix: string): string | null => {
+  if (!ref) return null;
+  if (ref.startsWith(prefix)) return ref;
+  return nodeByName.get(ref)?.lineage.find((l) => l.ref.startsWith(prefix))?.ref ?? null;
+};
+
 export interface CoverageCell {
   reference: ReferenceRole;
   ours: string | null;
-  /** Our role's font-size token, where we have one. */
+  /** Our role's own tier-2 font-size token — the composite's private surface. */
   oursToken: string | null;
+  /** The rung of the shared size scale that token lands on. The informative one. */
+  oursStep: string | null;
   /** The px pair the clamp already encodes: min = mobile, max = desktop. */
   oursBounds: { min: number; max: number } | null;
   mobile: ReferenceRole | null;
@@ -811,6 +832,7 @@ export const coverageByIntention = ['Display', 'Headline', 'Title', 'Label', 'Bo
           reference,
           ours,
           oursToken: ref,
+          oursStep: primitiveBehind(ref, '--font-size-'),
           oursBounds: clampBounds(ref ? nodeByName.get(ref)?.resolved : null),
           mobile: REFERENCE_ROLES.find((r) => r.mobile && r.name === `${reference.name}-mobile`) ?? null,
         };
@@ -842,6 +864,38 @@ export interface StructuralGap {
   detail: string;
 }
 
+/* -------------------------------------------------------------------------
+ * Counts the prose below used to state as literals. Every one of them was
+ * wrong within two commits of being typed — "11 classes" survived the split of
+ * `.typography-code` into three, "heading-lg/md/sm" survived `heading-sm`
+ * becoming its own `title` intention, and the text-transform row went on
+ * reporting an open gap after the primitives landed. Derive them, so the table
+ * cannot claim something the tokens contradict.
+ * ---------------------------------------------------------------------- */
+
+const typographyTokens = allTokens.filter((t) => t.name.startsWith('--typography-'));
+const textTransformPrimitives = allTokens.filter((t) => t.name.startsWith('--text-transform-'));
+
+/** Distinct line-height rungs the composites actually reach for. */
+const lineHeightRungs = [
+  ...new Set(
+    allRoles
+      .map((r) => primitiveBehind(r.props['line-height']?.ref, '--line-height-'))
+      .filter((n): n is string => n !== null),
+  ),
+];
+
+/** Intentions carrying a full lg/md/sm range vs. the ones that ship one size. */
+const fullSizeAxis = typeIntentions.filter((i) => i.roles.length >= 3).map((i) => i.label);
+const singleSizeAxis = typeIntentions.filter((i) => i.roles.length === 1).map((i) => i.label);
+
+/** Composites reading the `uppercase` primitive rather than a literal. */
+const transformRoles = allRoles.filter((r) => r.props['text-transform']);
+const transformLiterals = transformRoles.filter((r) => r.props['text-transform']!.literal);
+
+const list = (xs: string[]) =>
+  xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+
 /**
  * `divergence` is not a softer word for `gap`. A gap is something the reference
  * has and we lack. A divergence is a different decision with its own rationale
@@ -851,10 +905,10 @@ export const structuralGaps: StructuralGap[] = [
   {
     dimension: 'Expressed as',
     reference: '22 tokens in JSON',
-    ours: '56 tokens + 11 classes',
+    ours: `${typographyTokens.length} tokens + ${allRoles.length} classes`,
     verdict: 'match',
     detail:
-      'CLOSED. This was the largest single gap and the one everything else sat on: the composite structure was right but expressed only as CSS classes, which Figma cannot consume, a spoke cannot re-point through the token layer, and no other platform compiles. The 56 tier-2 `--typography-*` tokens now hold the values; the classes are the assembly layer on top, because CSS has no composite custom property. A class contains no size and no weight — only var()s.',
+      `CLOSED. This was the largest single gap and the one everything else sat on: the composite structure was right but expressed only as CSS classes, which Figma cannot consume, a spoke cannot re-point through the token layer, and no other platform compiles. The ${typographyTokens.length} tier-2 \`--typography-*\` tokens now hold the values; the classes are the assembly layer on top, because CSS has no composite custom property. A class contains no size and no weight — only var()s.`,
   },
   {
     dimension: 'Naming',
@@ -867,10 +921,10 @@ export const structuralGaps: StructuralGap[] = [
   {
     dimension: 'Size axis',
     reference: 'lg / default / sm per intention',
-    ours: 'three sizes for 2 of 6 intentions',
+    ours: `three sizes for ${fullSizeAxis.length} of ${typeIntentions.length} intentions`,
     verdict: 'gap',
     detail:
-      'Narrowed, not closed. Heading joined Body at a full three-step range when `page-title`/`section-title`/`card-title` were regularised into `heading-lg/md/sm` — so the "no smaller headline to reach for" complaint is answered. Display, Label and Meta still ship a single size each. Whether that is a gap or a correct reading of demand is a design question, not a naming one: nothing in the kit has asked for a `label-sm`.',
+      `Narrowed, not closed. ${list(fullSizeAxis.map((s) => `\`${s}\``))} carry a full three-step range; ${list(singleSizeAxis.map((s) => `\`${s}\``))} ship a single size each. Note that \`heading\` is NOT one of the three-step intentions: the smallest step split off into its own \`title\` intention once it turned out to change the typeface as well as the size, so the "no smaller headline to reach for" complaint is answered by a different intention rather than by a third size. Whether the single-size intentions are a gap or a correct reading of demand is a design question, not a naming one: nothing in the kit has asked for a \`label-sm\`.`,
   },
   {
     dimension: 'Responsive',
@@ -883,10 +937,10 @@ export const structuralGaps: StructuralGap[] = [
   {
     dimension: 'line-height',
     reference: 'absolute px, one per role',
-    ours: 'unitless ratio, 4 shared values',
+    ours: `unitless ratio, ${lineHeightRungs.length} shared values`,
     verdict: 'divergence',
     detail:
-      'Forced by the choice above: a fixed px line-height cannot pair with a fluid font-size. Theirs pins an exact line-height per role, so every role owns its own value; ours composes a ratio that holds at any interpolated size, so a handful of values serve every role. Theirs gives per-role control, ours gives automatic consistency. Four rungs (none/tight/normal/relaxed) serve all eleven roles.',
+      `Forced by the choice above: a fixed px line-height cannot pair with a fluid font-size. Theirs pins an exact line-height per role, so every role owns its own value; ours composes a ratio that holds at any interpolated size, so a handful of values serve every role. Theirs gives per-role control, ours gives automatic consistency. ${lineHeightRungs.length} rungs (${list(lineHeightRungs.map((n) => n.replace('--line-height-', '')))}) serve all ${allRoles.length} composites.`,
   },
   {
     dimension: 'font-weight',
@@ -907,18 +961,25 @@ export const structuralGaps: StructuralGap[] = [
   {
     dimension: 'text-transform',
     reference: 'a referenced primitive, set on all 22',
-    ours: 'no primitive exists',
-    verdict: 'gap',
+    ours:
+      textTransformPrimitives.length === 0
+        ? 'no primitive exists'
+        : `${textTransformPrimitives.length} primitives, read by ${transformRoles.length} of ${allRoles.length}`,
+    verdict: transformLiterals.length === 0 && textTransformPrimitives.length > 0 ? 'match' : 'gap',
     detail:
-      'There is no --text-transform-* token at any tier, so `.typography-eyebrow` writes `uppercase` as a literal — the only raw value in any of our roles. Their model has text-transform.none/uppercase as real primitives, which is what lets all 22 roles declare the property rather than inherit it.',
+      textTransformPrimitives.length === 0
+        ? 'There is no --text-transform-* token at any tier, so a role that transforms its text has to write the keyword as a literal. Their model has text-transform.none/uppercase as real primitives, which is what lets all 22 roles declare the property rather than inherit it.'
+        : `CLOSED. ${list(textTransformPrimitives.map((t) => `\`${t.name.replace('--text-transform-', '')}\``))} now exist as primitives, and ${list(transformRoles.map((r) => `\`.${r.className}\``))} reach them through a tier-2 hook rather than writing the keyword literally — this was the last raw value in any of our composites. The remaining difference is one of coverage, not of vocabulary: the reference sets the property on every role, we set it only where a role actually transforms, and everything else inherits \`none\`.`,
   },
   {
     dimension: 'Completeness',
     reference: 'all 6 properties on all 22',
-    ours: '4 required on 10 of 11',
-    verdict: 'match',
+    ours: `${REQUIRED_TYPE_PROPS.length} required on ${allRoles.length - typeCoverage.incomplete.length} of ${allRoles.length}`,
+    verdict: typeCoverage.incomplete.length === 0 ? 'match' : 'gap',
     detail:
-      'Closer than it looks. Every role but .typography-code pins size, weight, line-height and letter-spacing. font-family and text-transform are left unset by design in ours where the reference declares them explicitly — a stylistic difference, except that it is what makes ours non-exportable as a complete composite.',
+      typeCoverage.incomplete.length === 0
+        ? `CLOSED. All ${allRoles.length} composites pin every required property (${list(REQUIRED_TYPE_PROPS.map((p) => `\`${p}\``))}), so no role inherits one and none renders differently depending on what it sits inside. The only property left unset is text-transform, and only on the roles that do not transform.`
+        : `${allRoles.length - typeCoverage.incomplete.length} of ${allRoles.length} composites pin every required property. The rest — ${list(typeCoverage.incomplete.map((r) => `\`.${r.className}\``))} — leave one to inheritance, which is what makes them non-exportable as complete composites.`,
   },
   {
     dimension: 'Sibling aliasing',
