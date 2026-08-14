@@ -990,6 +990,48 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           </tbody>
         </table>
       </details>
+
+      <h3 class="sub">Typography · the third narrow rubric</h3>
+      <p class="cat-note">
+        Colour is not the only family with its own shape. Typography gets one too —
+        <code class="spec">--&lt;component&gt;-&lt;variant&gt;-&lt;font-size|font-weight|font-style|line-height&gt;</code>
+        — and it differs from colour in the direction it wants to be measured. The model is explicit
+        that components should wire to the tier-2 typography <em>composites</em>, and that tier 3 is
+        for the exceptions only: <q>most of the use cases for this are either tweaking a font size, or
+        setting a line height to one in order to remove white space above and below a text</q>. So a
+        <em>small</em> number here is the healthy result. A large tier-3 type surface would mean
+        components are re-deriving type instead of reading a role.
+      </p>
+      <div class="tally">
+        <div class="tally-cell t3"><b>{t3.typeTally.total}</b><span>typographic tier-3 tokens</span></div>
+        <div class="tally-cell ok"><b>{t3.typeTally.rubricSpelled}</b><span>spelled the rubric&rsquo;s way</span></div>
+        <div class="tally-cell warn"><b>{t3.typeTally.total - t3.typeTally.rubricSpelled - t3.typeTally.outside}</b><span>abbreviated</span></div>
+        <div class="tally-cell warn"><b>{t3.typeTally.outside}</b><span>property outside the four</span></div>
+      </div>
+      <table class="findings">
+        <thead><tr><th>Rubric property</th><th>Our words</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.typePropVocab.map((p) => (
+            <tr>
+              <td><code class="spec">{p.rubric}</code></td>
+              <td>
+                {p.words.length === 0 ? <span class="dim">—</span> : p.words.map((w) => (
+                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="dim">×{w.count}</span></code>
+                ))}
+              </td>
+              <td class="num">{p.total}</td>
+              <td>{p.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {t3.typeOutsideRubric.length > 0 && (
+        <p class="cat-gap">
+          <b>{t3.typeOutsideRubric.length} outside the model&rsquo;s four properties</b> — the rubric closes
+          the list at font-size, font-weight, font-style and line-height, so these have no slot to sit in:
+          {t3.typeOutsideRubric.map((t) => <code class="vocab warnv">{t.row.name}</code>)}
+        </p>
+      )}
     </Section>
 
     <Section id="tier1-naming" title="Tier 1 · Naming audit">

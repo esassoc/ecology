@@ -1,0 +1,91 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import PropsTable from '@esa/docs/PropsTable.astro';
+import Container from '@esa/ecology/esa-container.astro';
+
+const props = [
+  { name: 'maxWidth', type: 'string', default: "'1556px'", description: "Max content width, as any CSS length. The kit's wide page width by default." },
+];
+
+const slots = [
+  { name: 'default', type: 'slot', description: 'The content being constrained.' },
+];
+---
+<ComponentDoc name="Container" category="Layout & Sections" slug="esa-container" type=".astro" status="stable"
+  summary="Centered, max-width layout wrapper with a symmetric side gutter. The single place the kit owns &ldquo;constrain page content to a readable width.&rdquo;">
+
+  <Section id="preview" title="Preview">
+    <p>The container fills its parent, caps at <code>maxWidth</code>, centers, and applies a gutter on both sides. The dashed rule below marks its edges.</p>
+    <Preview align="start" code={`<Container maxWidth="480px">
+  <p>Content constrained to 480px and centered.</p>
+</Container>`}>
+      <div class="ctr-demo" style="width: 100%;">
+        <Container maxWidth="480px">
+          <p style="margin: 0;">Content constrained to 480px and centered, with the standard gutter inside the edge.</p>
+        </Container>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="widths" title="Widths">
+    <p>
+      The <code>1556px</code> default is the kit's wide app width — the same figure
+      <a href="/components/esa-app-bar"><code>esa-app-bar</code></a> centers its own bar at, so a
+      bar and the content beneath it line up without either knowing about the other. Narrow it for
+      reading-width layouts: article bodies, settings forms, single-column detail pages.
+    </p>
+    <Preview align="start" code={`<Container maxWidth="1556px">…</Container>  <!-- default: wide app -->
+<Container maxWidth="1080px">…</Container>  <!-- dense forms, detail pages -->
+<Container maxWidth="720px">…</Container>   <!-- reading width -->`}>
+      <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <div class="ctr-demo"><Container maxWidth="640px"><p style="margin: 0;">640px</p></Container></div>
+        <div class="ctr-demo"><Container maxWidth="420px"><p style="margin: 0;">420px</p></Container></div>
+        <div class="ctr-demo"><Container maxWidth="260px"><p style="margin: 0;">260px</p></Container></div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="gutter" title="Gutter">
+    <p>
+      The side gutter is <code>--container-gutter</code> (defaults to <code>--spacing-600</code>), not a
+      prop — every container on a page should breathe the same amount, so it is a token a spoke
+      re-points once rather than a value each call site argues about. Override it on a scope when a
+      region genuinely differs:
+    </p>
+    <Preview align="start" code={`<div style="--container-gutter: 0;">
+  <Container>…</Container>   <!-- flush to the edge -->
+</div>`}>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+        <div class="ctr-demo"><Container maxWidth="420px"><p style="margin: 0;">default gutter</p></Container></div>
+        <div class="ctr-demo" style="--container-gutter: 0;"><Container maxWidth="420px"><p style="margin: 0;">--container-gutter: 0</p></Container></div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} nameHeader="Slot" />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a plain <code>&lt;div&gt;</code> with no role — it is pure layout and adds nothing to the accessibility tree. Put landmarks (<code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>) around or inside it, not on it.</li>
+      <li>Never remove the gutter globally to fit more in: text touching the viewport edge is a real readability and zoom problem at 320px.</li>
+      <li>The max-width caps the measure, not the font size. Long-form text still wants a narrower <code>maxWidth</code> — around 65–75 characters — rather than a wide container with big type.</li>
+    </ul>
+  </Section>
+
+</ComponentDoc>
+
+<style>
+  .ctr-demo {
+    border: 1px dashed var(--color-border-strong, #c9c9c9);
+    border-radius: 8px;
+    background: var(--color-background-sunken, #f7f7f5);
+    padding-block: var(--spacing-300, 0.75rem);
+  }
+</style>

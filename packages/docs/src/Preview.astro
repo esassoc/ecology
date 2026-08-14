@@ -20,11 +20,15 @@ const { code, lang = 'astro', align = 'center' } = Astro.props;
 </figure>
 
 <style>
+  /* NO `overflow: hidden` here. Every dropdown/menu/popover specimen positions its
+     panel with `position: absolute`, so any clipping ancestor severs it at the frame
+     edge. The frame's own corners are already clipped by its border-radius (an
+     element's own background is painted inside its radius) — only the CHILDREN with
+     their own background need rounding, which is what the two rules below do. */
   .preview {
     margin: 0 0 var(--spacing-300, 0.75rem);
     border: 1px solid var(--color-border, #dcdcdc);
     border-radius: 12px;
-    overflow: hidden;
     background: var(--color-background-raised, #fff);
   }
   .preview__canvas {
@@ -43,7 +47,11 @@ const { code, lang = 'astro', align = 'center' } = Astro.props;
     padding: 6px var(--spacing-300, 0.75rem);
     border-top: 1px solid var(--color-border, #dcdcdc);
     background: var(--color-background-raised, #fff);
+    /* 12px frame radius minus the 1px border = the inner curve. */
+    border-radius: 0 0 11px 11px;
   }
+  /* When the code panel is open the bar is no longer the last child. */
+  .preview[data-open='true'] .preview__bar { border-radius: 0; }
   .preview__bar button {
     font: inherit;
     font-size: 13px;
@@ -55,7 +63,12 @@ const { code, lang = 'astro', align = 'center' } = Astro.props;
     cursor: pointer;
   }
   .preview__bar button:hover { background: var(--color-background-sunken, #f3f7fc); color: var(--color-content-primary, #171717); }
-  .preview__code { display: none; border-top: 1px solid var(--color-border, #dcdcdc); }
+  .preview__code {
+    display: none;
+    border-top: 1px solid var(--color-border, #dcdcdc);
+    border-radius: 0 0 11px 11px;
+    overflow: hidden; /* clips the shiki <pre>'s dark fill to the frame's bottom corners */
+  }
   .preview[data-open='true'] .preview__code { display: block; }
   .preview__code :global(pre) { margin: 0; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
 </style>

@@ -1,0 +1,199 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import PropsTable from '@esa/docs/PropsTable.astro';
+import { withBase } from '@esa/docs/base';
+import AppShell from '@esa/ecology/esa-app-shell.astro';
+import Stat from '@esa/ecology/esa-stat.astro';
+import Card from '@esa/ecology/esa-card.astro';
+
+const props = [
+  { name: 'title', type: 'string', default: "'App'", description: 'Wordmark text in the sidenav header. Not the document title.' },
+  { name: 'active', type: 'string', description: 'The `key` of the current nav item. Matching is by key, never by label or href.' },
+  { name: 'items', type: 'AppShellNavItem[]', default: '[]', description: 'Navigation as data: label, key, href, icon, badge, group, children. Serialized into a JSON island the client script hands to esa-sidebar-nav.' },
+  { name: 'userMenu', type: 'AppShellMenuItem[]', default: 'Profile / Settings / Sign out', description: 'Rows in the profile dropdown. `divider: true` inserts a rule; `variant: "danger"` tints a destructive row.' },
+  { name: 'userName', type: 'string', default: "'Account'", description: 'Label on the profile trigger.' },
+  { name: 'searchIndex', type: 'AppShellSearchEntry[]', default: '[]', description: 'Omnibox index (id is a real in-app href, plus title, subtitle, category). Omit or leave empty to drop the search control entirely.' },
+  { name: 'searchPlaceholder', type: 'string', default: "'Search…'", description: 'Placeholder inside the omnibox trigger.' },
+  { name: 'mark', type: 'string', description: 'Raw inline SVG (a full <svg>…</svg>) for the sidenav logo mark, rendered directly into the sidenav header.' },
+  { name: 'brandHref', type: 'string', default: "'/'", description: 'Where the wordmark links.' },
+  { name: 'accent', type: 'boolean', default: 'false', description: 'Adds a faint brand-tinted neutral wash to the bar — a color-mix, not a brand fill.' },
+  { name: 'collapsed', type: 'boolean', default: 'false', description: 'Start with the sidenav collapsed to an icon rail.' },
+  { name: 'id', type: 'string', default: "'esa-shell'", description: 'Stable id base for the nav, menu, and search elements. Required when more than one shell is on a page.' },
+];
+
+const slots = [
+  { name: 'default', type: 'slot', description: 'Page content. Rendered into <main> — the only region that scrolls.' },
+  { name: 'logo', type: 'slot', description: 'Replaces the mark + wordmark in the sidenav header. Content is rendered directly (no nested slot), so it projects through esa-sidebar-nav’s shadow boundary.' },
+];
+
+const navItems = [
+  { key: 'dashboard', label: 'Dashboard', href: '#preview', icon: 'layout-dashboard', group: 'Monitoring' },
+  { key: 'sites', label: 'Sites', href: '#preview', icon: 'map-pin', badge: 14, group: 'Monitoring' },
+  { key: 'permits', label: 'Permits', href: '#preview', icon: 'notepad-text', badge: 6, group: 'Monitoring' },
+  {
+    key: 'reports', label: 'Reports', icon: 'file-text', group: 'Monitoring',
+    children: [
+      { key: 'monthly', label: 'Monthly monitoring', href: '#preview' },
+      { key: 'annual', label: 'Annual compliance', href: '#preview' },
+    ],
+  },
+  { key: 'team', label: 'Team', href: '#preview', icon: 'users', group: 'Workspace' },
+  { key: 'settings', label: 'Settings', href: '#preview', icon: 'settings', group: 'Workspace' },
+];
+
+const searchIndex = [
+  { id: '#preview', title: 'Carquinez Strait', subtitle: 'Shoreline stabilization', category: 'Sites' },
+  { id: '#preview', title: 'Tomales Bay', subtitle: 'Eelgrass restoration', category: 'Sites' },
+  { id: '#preview', title: 'Permit 2026-118', subtitle: 'Renewal due in 12 days', category: 'Permits' },
+];
+---
+<ComponentDoc name="App Shell" category="Layout & Sections" slug="esa-app-shell" type=".astro" status="stable"
+  summary="The canonical application chrome: neutral off-white surfaces layered by value, a sidebar toggle in the top-left corner, the wordmark at the top of the sidenav, a centered omnibox, and a profile dropdown. A composition of esa-app-bar + esa-sidebar-nav + esa-entity-search + esa-dropdown-menu — it owns no new visual primitives.">
+
+  <Section id="preview" title="Preview">
+    <p>
+      The miniature below is the real composition, framed at a fixed height. Toggle the sidebar from
+      the square button in the top-left, expand <strong>Reports</strong> for accordion children, open
+      the omnibox, and scroll the content region — the chrome never moves.
+    </p>
+    <Preview align="start" code={`<AppShell
+  title="Estuary"
+  active="dashboard"
+  items={navItems}
+  searchIndex={searchIndex}
+  userName="Maya Okafor"
+>
+  <h1>Dashboard</h1>
+  <!-- page content -->
+</AppShell>`}>
+      <div class="shell-frame">
+        <AppShell id="doc-shell" title="Estuary" active="dashboard" items={navItems}
+          searchIndex={searchIndex} searchPlaceholder="Search sites and permits…" userName="Maya Okafor">
+          <div class="shell-page">
+            <h3 class="shell-page__title">Dashboard</h3>
+            <div class="shell-page__stats">
+              <Stat value="14" label="Monitored sites" sub="across 3 counties" />
+              <Stat value="1,284" label="Active permits" sub="+12 this quarter" />
+              <Stat value="3" label="Needs attention" accent />
+            </div>
+            <Card title="Recent activity" subtitle="Last 7 days">
+              <p style="margin: 0;">Only this region scrolls — the bar and the rail are fixed to the frame.</p>
+            </Card>
+          </div>
+        </AppShell>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="house-decisions" title="House decisions baked in">
+    <p>
+      This component exists to stop every prototype re-litigating the same four questions. It is
+      opinionated on purpose — if you find yourself overriding these, that is a signal to talk about
+      the house style, not to fork the shell.
+    </p>
+    <ul class="a11y">
+      <li><strong>Brand color never fills the chrome.</strong> Surfaces are neutral off-whites layered by value (canvas &lt; bar &lt; rail). Brand appears on the active nav item and primary actions only. <code>accent</code> adds a faint brand-<em>tinted</em> neutral wash to the bar — a <code>color-mix</code>, not a fill.</li>
+      <li><strong>The wordmark lives in the sidenav</strong>, at the top of the rail — not in the top bar.</li>
+      <li><strong>The top-left corner is the collapse toggle</strong>, where a user reaches for it.</li>
+      <li><strong>The omnibox is compact and centered</strong>, not a full-width search bar spanning the chrome.</li>
+    </ul>
+  </Section>
+
+  <Section id="data-in" title="Data in, not markup">
+    <p>
+      Nav items, the user menu, and the search index are <em>props</em>, not slotted markup. They are
+      server-serialized into a JSON island that the shell's client script reads and hands to
+      <code>esa-sidebar-nav</code>, <code>esa-dropdown-menu</code>, and <code>esa-entity-search</code>.
+      That is what lets one shell definition sit in a layout and every page pass only its
+      <code>active</code> key.
+    </p>
+    <Preview align="start" code={`const items = [
+  { key: 'sites', label: 'Sites', href: '/sites', icon: 'map-pin', badge: 14, group: 'Monitoring' },
+  { key: 'reports', label: 'Reports', icon: 'file-text', group: 'Monitoring', children: [
+      { key: 'monthly', label: 'Monthly monitoring', href: '/reports/monthly' },
+  ] },
+];
+
+<AppShell items={items} active="sites" />`} lang="ts">
+      <p style="margin: 0; color: var(--color-content-secondary, #525252);">
+        <code>icon</code> takes an <code>esa-icon</code> registry name (<code>'map-pin'</code>) or a raw
+        inline SVG string. <code>active</code> matches on <code>key</code> — never on label or href, so
+        renaming a page or moving a route doesn't silently unhighlight the nav.
+      </p>
+    </Preview>
+  </Section>
+
+  <Section id="layout" title="Layout contract">
+    <p>
+      The shell is <strong>layout-agnostic</strong>: it does not wrap <code>BaseLayout</code> or own
+      <code>&lt;html&gt;</code>. Render it inside a parent with a fixed height and the frame fills that
+      parent, with only <code>&lt;main&gt;</code> scrolling. Give it no height and the whole page
+      scrolls, chrome included — which is the one way to make it look broken.
+    </p>
+    <Preview align="start" code={`<div style="height: 100dvh;">
+  <AppShell title="Estuary" items={items}>
+    <!-- page content -->
+  </AppShell>
+</div>`}>
+      <p style="margin: 0; color: var(--color-content-secondary, #525252);">
+        The <code>logo</code> slot replaces the mark + wordmark; <code>mark</code> takes a raw inline
+        <code>&lt;svg&gt;</code> for the common case. Content is rendered directly into the sidenav
+        header rather than through a nested <code>&lt;slot&gt;</code>, which is what previously failed
+        to project into <code>esa-sidebar-nav</code>'s shadow DOM.
+      </p>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} nameHeader="Slot" />
+    <p style="margin-top: 1rem;">
+      Composed from <a href={withBase('/components/esa-app-bar')}><code>esa-app-bar</code></a>,
+      <a href={withBase('/components/esa-sidebar-nav')}><code>esa-sidebar-nav</code></a>,
+      <a href={withBase('/components/esa-entity-search')}><code>esa-entity-search</code></a>,
+      <a href={withBase('/components/esa-dropdown-menu')}><code>esa-dropdown-menu</code></a>, and
+      <a href={withBase('/components/esa-icon-link')}><code>esa-icon-link</code></a>. Those four
+      register themselves — no extra imports at the call site. For the wider frame in context, see the
+      <a href={withBase('/patterns/app-shell')}>App shell pattern</a>.
+    </p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>The content region is a real <code>&lt;main&gt;</code> and the bar renders as <code>&lt;header&gt;</code>, so the landmarks are correct without anything added at the call site. Don't nest another <code>&lt;main&gt;</code> in the slot.</li>
+      <li>The collapse toggle carries <code>aria-label="Toggle sidebar"</code> and <code>aria-controls</code> pointing at the nav. Collapsing to the icon rail keeps every item reachable — labels move to tooltips, they are not dropped.</li>
+      <li>The omnibox binds <code>/</code> as a <strong>document-level</strong> hotkey, skipped while focus is in an editable field. It is document-level by design (a global shortcut), so a page hosting a shell has given that key away — worth knowing before embedding one inside a larger document.</li>
+      <li>Nav items with <code>children</code> render as expandable parents rather than links. Give a parent both a <code>href</code> and children only if the parent is genuinely a destination.</li>
+      <li>Set <code>id</code> when a page carries more than one shell — the nav, menu, and search ids derive from it, and duplicates break both the wiring and the <code>aria-controls</code> reference.</li>
+    </ul>
+  </Section>
+
+</ComponentDoc>
+
+<style>
+  /* The framed miniature: the shell fills a parent with a fixed height, exactly
+     as the layout contract requires. */
+  .shell-frame {
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 10px;
+  }
+  .shell-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-500, 1.25rem);
+    padding: var(--spacing-500, 1.25rem);
+  }
+  .shell-page__title { margin: 0; font-size: var(--font-size-400, 1.25rem); }
+  .shell-page__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--spacing-500, 1.25rem);
+  }
+</style>

@@ -29,8 +29,14 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
 scope. Primitives never move; component internals are never touched.
 The full contract — naming, when a property earns a tier-3 hook, the
 zero-regression splice mechanic — is **`packages/tokens/SPEC.md`**. As of
-2026-06-12 all 61 components expose a tier-3 surface (each component doc page
-renders its generated "Theming surface" table).
+2026-08-14 all 64 components expose a tier-3 surface and all 64 (+3 reference
+wrappers) have a doc page rendering its generated "Theming surface" table. The
+"61" that stood here through 2026-06-12 was a doc-page count, not a component
+count — five later-promoted components (`esa-container`, `esa-kbd`,
+`esa-collapsible`, `esa-app-shell`, `esa-stat`) had catalog entries but no page.
+The drift guard in `apps/site/src/data/catalog.ts` only enforces that every
+source file is CATEGORISED; a missing doc page degrades silently to an unlinked
+catalog row, so check both when adding a component.
 
 ## Component buckets
 - **Presentational → `.astro`.** Golden pattern: `packages/ecology/src/components/esa-badge.astro`.
