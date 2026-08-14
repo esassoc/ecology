@@ -260,7 +260,7 @@ export class EsaSidebarNav extends LitElement {
       display: block;
       width: var(--_sidenav-width);
       height: 100%;
-      border-right: 1px solid var(--_sidenav-border);
+      border-right: var(--border-width-default, 1px) solid var(--_sidenav-border);
       background: var(--_sidenav-bg);
       transition: width var(--_sidenav-transition);
       overflow: hidden;

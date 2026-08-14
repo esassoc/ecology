@@ -117,7 +117,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
       {[
         { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
-        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header, then does it anyway. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead.', severity: 'bad' },
+        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead — which is what both shipped themes now do, re-skinning shape through --radius-surface rather than --radius-200.', severity: 'bad' },
         { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
         { id: 'hardcode', label: 'Semantic colour hardcodes', rows: semanticHardcodes, note: 'A tier-2 COLOUR terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer, off the palette and unconstrained by it.', severity: 'warn' },
@@ -206,11 +206,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-gap">
         <b>This has already cost you.</b> <code>token-graph.ts</code> classifies tier by
         <em>source directory</em> because no regex on the name can do it (<code>theming.ts</code> still
-        tries the regex route). Both themes re-point <code>--radius-200</code>, a primitive — invisible,
-        because nothing in the name announces which tier you are editing. And
-        <code>--focus-ring-color</code> is declared in both <code>tokens/primitive/effect.json</code>
-        and <code>src/component-tokens.css</code>; tier 3 loads last and wins. See <b>Health</b> above
-        for all three.
+        tries the regex route). Two further costs have since been paid off. Both themes used to
+        re-point <code>--radius-200</code>, a primitive — invisible, because nothing in the name
+        announces which tier you are editing; they now re-point <code>--radius-surface</code>, the
+        tier-2 role. And <code>--focus-ring-color</code> was once declared in both
+        <code>tokens/primitive/effect.json</code> and <code>src/component-tokens.css</code>, with
+        tier 3 loading last and winning; the tier-1 block was removed, so the ring lives only at
+        tier 3 now. Both read <b>0</b> under <b>Health</b> above — but the prefix collision that let
+        them happen unnoticed is still here, so the next one lands the same way.
       </p>
 
       <h3 class="sub">Slot 4 · the surface — biggest divergence</h3>

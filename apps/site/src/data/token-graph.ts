@@ -416,10 +416,23 @@ const PRIMITIVE_CATEGORIES: {
   {
     label: 'Border',
     note:
-      'border-radius defines the available radius values; border-width the available widths (less common); border-style the available styles (rarely used). The focus ring sits here too — including --focus-ring-color, which is kept with the ring rather than filed under Color so the ring reads as one set.',
-    gap:
-      'Only border-radius exists. There are no border-width and no border-style primitives, so every border in the kit writes its width literally (1px) at the call site. Both are named as less common / rarely used, so this may be the right call — but it is currently an absence by default rather than by decision. Separately, --focus-ring-color and --focus-ring-width are declared at BOTH tier 1 and tier 3 (see Health), which is why only --focus-ring-offset lists here.',
-    match: (n) => /^--(radius-|border-width|border-style|focus-ring-)/.test(n),
+      'border-radius defines the available radius values, border-width the available widths, and border-style the available styles (the rarest of the three). Tier 2 maps those into themeable roles — the model names them with t-shirt sizing, e.g. theme-border-radius-large. Most components wire to the tier-2 roles, but radius and the other border properties can also be controlled per component at tier 3. Two of the three axes ship here: seven --radius-* steps and four --border-width-* steps (100–400 = 1–4px), each with a tier-2 role above it and tier-3 hooks below. border-style is deliberately absent — 56 of the 57 borders in the kit are solid and the one dashed border is the file-upload dropzone affordance, so a --border-style-solid token would alias a keyword nobody would re-point. Two departures from the model, both on purpose. The roles are named by INTENTION rather than t-shirt size — control / surface / card / overlay / pill for radius — because naming WHERE a corner belongs lets a theme round its cards without rounding every menu, which radius-lg cannot express. And width gets exactly ONE role, --border-width-default, because it turned out to have exactly one: the hairline, read by the 49 real borders in the kit. Every other width here (2px, 3px, 4px) is internal micro-geometry — spinner rings, the kbd keycap lip, a chevron built from two borders — which SPEC.md excludes from the theming surface by name, so those stay literals rather than becoming a role nobody can point at.',
+    gap: undefined,
+    match: (n) => /^--(radius-|border-width|border-style)/.test(n),
+    // Grouped by CSS PROPERTY, the way Typography is — one sub-table per axis
+    // instead of one flat list, now that the category holds more than radius.
+    // The labels are the properties, not the token prefixes, which is why the
+    // radius group reads `border-radius` while its tokens read `--radius-*`:
+    // Typography's own rule is that a primitive is named for the property it
+    // sets, and radius is the one tier-1 set that predates it.
+    subGroupKey: (n) =>
+      n.startsWith('--border-width-') ? 'border-width'
+      : n.startsWith('--border-style-') ? 'border-style'
+      : 'border-radius',
+    // border-style is listed but ships nothing, so it renders as an empty group.
+    // That is the point of `expect` — the absence is a documented decision (see
+    // the note), and a visible hole states it better than prose alone.
+    expect: ['border-radius', 'border-width', 'border-style'],
   },
   {
     label: 'Shadow',

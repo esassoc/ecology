@@ -717,7 +717,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      border-bottom: 1px solid var(--color-border, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
     }
     .search__icon {
       width: var(--icon-size-sm, 16px);
@@ -742,7 +742,7 @@ export class EsaCombobox extends LitElement {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
       font-size: var(--font-size-100, 11px);
       color: var(--color-content-muted, #737373);
-      border-bottom: 1px solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
     }
 
     .viewport {

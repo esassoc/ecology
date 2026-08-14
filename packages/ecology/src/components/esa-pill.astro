@@ -75,7 +75,7 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     gap: var(--_pill-gap);
     height: var(--_pill-height);
     padding-inline: var(--_pill-padding-x);
-    border: 1px solid var(--_pill-border);
+    border: var(--border-width-default, 1px) solid var(--_pill-border);
     border-radius: var(--pill-radius, var(--radius-pill, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);

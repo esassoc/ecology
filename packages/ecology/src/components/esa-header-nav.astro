@@ -112,7 +112,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
     --app-bar-gap: var(--spacing-300, 12px);
     --app-bar-pad-x: var(--spacing-500, 24px);
     --app-bar-pad-y: var(--spacing-150, 6px);
-    border-bottom: 1px solid var(--header-nav-border-color, var(--color-border, #e5e5e5));
+    border-bottom: var(--border-width-default, 1px) solid var(--header-nav-border-color, var(--color-border, #e5e5e5));
   }
   .esa-header-nav__brand { display: inline-flex; align-items: center; }
   .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200, 8px); }
@@ -161,7 +161,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
     z-index: var(--z-dropdown, 50);
     min-width: 220px;
     background: var(--color-background-raised, #fff);
-    border: 1px solid var(--color-border, #e5e5e5);
+    border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
     border-radius: var(--radius-surface, 8px);
     box-shadow: var(--elevation-3, 0 8px 24px rgba(0, 0, 0, 0.12));
     overflow: hidden;
@@ -169,7 +169,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
   .esa-header-nav__user-info {
     display: flex; flex-direction: column; gap: 2px;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border-bottom: 1px solid var(--color-border, #e5e5e5);
+    border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
   }
   .esa-header-nav__user-name { font-size: var(--font-size-200, 1rem); font-weight: var(--font-weight-semibold, 550); color: var(--color-content-primary, #171717); }
   .esa-header-nav__user-email { font-size: var(--font-size-100, 0.75rem); color: var(--color-content-secondary, #525252); }

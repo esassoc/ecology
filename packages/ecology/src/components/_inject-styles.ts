@@ -8,7 +8,7 @@ export function injectStyles(): void {
     .esa-field__label { font-size:.875rem; font-weight:600; color:var(--form-label-color,var(--color-content-secondary,#525252)); }
     .esa-field__req { color:var(--color-content-danger,#ce2c31); }
     .esa-field__input, .esa-field__select, .esa-field__textarea {
-      width:100%; padding:.5rem .75rem; border:1px solid var(--form-border-color,#e5e5e5);
+      width:100%; padding:.5rem .75rem; border: var(--border-width-default, 1px) solid var(--form-border-color,#e5e5e5);
       border-radius:.25rem; font-family:inherit; font-size:.9375rem;
       color:var(--form-text-color,#171717); background:var(--form-bg,#fff);
       transition:border-color .12s,box-shadow .12s; outline:none; box-sizing:border-box;

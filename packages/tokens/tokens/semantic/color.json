@@ -10,7 +10,8 @@
     "background-disabled": { "$value": "{color.gray.3}", "$type": "color", "$description": "Disabled sits at the INTENTION level, not the state level — one disabled definition per property instead of a disabled variant of every intention." },
 
     "background-brand": { "$value": "{color.grass.9}", "$type": "color", "$description": "The brand solid fill. Step 9 = Radix solid fill, the canonical interactive fill. Named `brand` rather than `primary` because `primary` is already spoken for one tier down the same word: `content-primary` means the most prominent TEXT, not brand-coloured text." },
-    "background-brand-hover": { "$value": "{color.grass.10}", "$type": "color", "$description": "Step 10 = Radix hovered solid fill. Absorbed the old `--color-primary-active`, which held the identical value and had no readers." },
+    "background-brand-hover": { "$value": "{color.grass.10}", "$type": "color", "$description": "Step 10 = Radix hovered solid fill." },
+    "background-brand-active": { "$value": "{color.grass.10}", "$type": "color", "$description": "The PRESSED fill. Equal to `-hover` in this palette, and briefly deleted for that reason — a mistake. Identical default values do not make two tokens redundant at a layer whose whole job is being re-pointed; `background-raised` and `background-floating` are both gray-1 and stay separate on exactly this reasoning. cb-fish proved it by giving hover and active distinct navy steps. A token earns its slot by naming a real role, not by holding a distinct value. NOTE: 34 of 35 components style `:hover` and only one styles `:active`, so this role is declared but barely delivered — that gap is the real work, not this token." },
     "background-brand-subtle": { "$value": "{color.grass.2}", "$type": "color", "$description": "Step 2 = subtle brand-tinted surface. Section backgrounds, card tints." },
     "background-brand-muted": { "$value": "{color.grass.3}", "$type": "color", "$description": "Step 3 = brand-tinted UI element at rest. Chips, tags, active filter pills." },
     "background-brand-muted-hover": { "$value": "{color.grass.4}", "$type": "color", "$description": "Step 4 = brand-tinted UI element, hovered." },
@@ -38,7 +39,8 @@
     "background-danger-subtle": { "$value": "{color.red.2}", "$type": "color" },
 
     "content-primary": { "$value": "{color.gray.12}", "$type": "color", "$description": "Body text and icons. `content` rather than `text` because these are read by icons and SVG strokes too — that was already happening under the old `--color-text-*` names, which made those call sites read wrong." },
-    "content-secondary": { "$value": "{color.gray.11}", "$type": "color", "$description": "Supporting text. Absorbed the old `--color-text-tertiary`, which held the identical value — a third level the ramp did not actually have." },
+    "content-secondary": { "$value": "{color.gray.11}", "$type": "color", "$description": "Supporting text." },
+    "content-tertiary": { "$value": "{color.gray.11}", "$type": "color", "$description": "A third prominence level. Equal to `-secondary` in the hub's neutral ramp, and briefly deleted for that reason — same mistake as `background-brand-active`. cb-fish runs a four-step grey ramp (900/700/600/500) where this is a distinct step, so the level is real even though this palette does not separate it." },
     "content-muted": { "$value": "{color.gray.10}", "$type": "color", "$description": "The least prominent readable text. Placeholders, timestamps, help text." },
     "content-inverse": { "$value": "{color.gray.1}", "$type": "color", "$description": "Content on `background-inverse`." },
     "content-disabled": { "$value": "{color.gray.9}", "$type": "color" },

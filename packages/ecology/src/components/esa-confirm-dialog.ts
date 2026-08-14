@@ -294,7 +294,7 @@ export class EsaConfirmDialog extends LitElement {
 
     .esa-confirm-dialog__footer {
       padding: var(--spacing-300, 0.75rem) var(--spacing-500, 1.5rem);
-      border-top: 1px solid var(--confirm-dialog-border-color, var(--color-border-subtle, #efefef));
+      border-top: var(--border-width-default, 1px) solid var(--confirm-dialog-border-color, var(--color-border-subtle, #efefef));
       display: flex;
       justify-content: flex-end;
       gap: var(--spacing-200, 0.5rem);
@@ -307,7 +307,7 @@ export class EsaConfirmDialog extends LitElement {
       font-size: var(--font-size-200, 0.9375rem);
       font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
-      border: 1px solid transparent;
+      border: var(--border-width-default, 1px) solid transparent;
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-confirm-dialog__btn:focus-visible {

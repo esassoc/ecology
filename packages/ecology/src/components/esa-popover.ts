@@ -157,7 +157,7 @@ export class EsaPopover extends LitElement {
       min-width: max-content;
       max-width: var(--popover-max-width, none);
       background: var(--_popover-bg);
-      border: 1px solid var(--_popover-border);
+      border: var(--border-width-default, 1px) solid var(--_popover-border);
       border-radius: var(--_popover-radius);
       box-shadow: var(--_popover-shadow);
       animation: esa-popover-fade-in 150ms ease-out;
@@ -200,7 +200,7 @@ export class EsaPopover extends LitElement {
       width: var(--_popover-arrow-size);
       height: var(--_popover-arrow-size);
       background: var(--_popover-bg);
-      border: 1px solid var(--_popover-border);
+      border: var(--border-width-default, 1px) solid var(--_popover-border);
       transform: rotate(45deg);
     }
     .esa-popover__arrow--bottom {

@@ -164,7 +164,7 @@ export class EsaTabLayout extends LitElement {
 
     .tabs {
       display: flex;
-      border-bottom: 1px solid var(--_tab-border);
+      border-bottom: var(--border-width-default, 1px) solid var(--_tab-border);
       gap: var(--_tab-gap);
     }
 
@@ -230,7 +230,7 @@ export class EsaTabLayout extends LitElement {
       align-self: flex-start;
       border-bottom: none;
       background: var(--color-background-sunken, #efefef);
-      border: 1px solid var(--color-border, #e5e5e5);
+      border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-surface, 8px);
       padding: var(--spacing-050, 2px);
       gap: var(--spacing-050, 2px);

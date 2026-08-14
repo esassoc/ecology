@@ -233,7 +233,7 @@ export class EsaCommandPalette extends LitElement {
       max-width: calc(100vw - 2rem);
       max-height: var(--command-palette-max-height, 440px);
       background: var(--command-palette-bg, var(--color-background-floating, #ffffff));
-      border: 1px solid var(--command-palette-border-color, var(--color-border, #e5e5e5));
+      border: var(--border-width-default, 1px) solid var(--command-palette-border-color, var(--color-border, #e5e5e5));
       border-radius: var(--command-palette-radius, var(--radius-overlay, 0.75rem));
       box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
@@ -253,7 +253,7 @@ export class EsaCommandPalette extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
     }
     .esa-command-palette__search-icon {
       color: var(--color-content-muted, #737373);
@@ -273,7 +273,7 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
       padding: 2px 6px;
-      border: 1px solid var(--color-border, #e5e5e5);
+      border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-control, 0.25rem);
       font-size: var(--font-size-100, 0.75rem);
       font-family: inherit;
