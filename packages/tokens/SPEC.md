@@ -60,7 +60,11 @@ all new components follow.
    here, not just colour:
    - colour — `--color-background-brand`, `--color-background-raised`, `--color-content-secondary`
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
-   - size — `--control-height-{xs,sm,md,lg}`, `--chip-height-*`
+   - size — `--chip-height-*`, and only that. `--control-height-{xs,sm,md,lg}` was
+     deleted on 2026-08-14: a px height cannot grow with rem text, so it clipped.
+     Inputs and buttons are now as tall as their padding plus their text, and that
+     padding is `--spacing-*` read directly — so this category has no ramp for them
+     at any tier. See `tokens/semantic/size.json`.
    - type — the **composites**, `--typography-<intention>[-<size>]-<property>`,
      plus the faces (`--font-sans | -mono | -display`) and named weights they are
      assembled from. There is no separate chrome ramp. A `--font-size-ui-*` set
@@ -96,8 +100,12 @@ all new components follow.
    A theme re-points brand ramps; it never re-points these. So there is nothing
    for a semantic layer to intervene in, and inserting one would be indirection
    with no theme behind it — which is why `spacing` has **no tier-2 layer at all**
-   and why `--form-padding-x-lg: var(--spacing-400)` is correct rather than
-   tolerated. The set is defined in `apps/site/src/data/token-graph.ts`
+   and why `--_pill-padding-x: var(--spacing-200)` in `esa-pill` is correct rather
+   than tolerated. Note where that example now lives: at the **component read**.
+   This exception used to be illustrated by a tier-3 hook (`--form-padding-x-lg:
+   var(--spacing-400)`), and that hook was deleted on 2026-08-14 — being allowed to
+   read spacing directly was never a licence to put a passthrough in front of it.
+   The set is defined in `apps/site/src/data/token-graph.ts`
    (`CORE_SETS`) and rendered as "Tier 1 · Core / universal" on `/debug/tokens`;
    that definition is the authority, not this list.
 
@@ -277,15 +285,19 @@ spacing token is prefixed `--foundations-`.
    component from the semantic default without forking it.
 
 Inside components, **private `--_*` tokens** consume the public tiers, always
-with a literal fallback: `--_btn-height: var(--form-height-md, 40px)`.
+with a literal fallback: `--_field-padding-y: var(--spacing-300, 0.75rem)`.
 Privates are internals — never themed, never documented as surface.
 
 ## Tier-3 naming
 
 - **Shared group surfaces** for things that must align across components:
-  `--form-height-md`, `--form-radius-sm`, `--form-padding-x-lg` — one scale so
+  `--form-radius-sm`, `--form-bg`, `--form-border-color-focus` — one scale so
   inputs, selects, and buttons line up on a row. Prefer extending a group
-  surface over duplicating the same knob per component.
+  surface over duplicating the same knob per component. A group surface still has
+  to earn its place: `--form-height-*` and `--form-padding-*` were both examples
+  here until 2026-08-14, and both were deleted for being passthroughs that added a
+  name and nothing else. `--form-radius-*` survives because it encodes a real
+  mapping (xs/sm → `--radius-control`, md/lg → `--radius-surface`).
 - **Per-component surfaces**: `--<component>-<part?>-<property>` —
   `--card-bg`, `--card-border-color`, `--dialog-width`, `--badge-radius`,
   `--sidenav-item-color`. Size-variant knobs take the size suffix last:
@@ -370,6 +382,17 @@ rows in `migrations.json`; one of them,
 `filter-dropdown-border-shorthand-to-colour`, is marked `exact: false` because
 the value *shape* changed — a spoke that wrote `border: var(--filter-dropdown-border)`
 now gets a bare colour where a shorthand was, which is not a valid border.
+
+**The sharpest case of that asymmetry is `form-padding-to-spacing` (2026-08-14),
+because there the hub itself invited the declaration.** `packages/spoke-template`
+shipped four `__FILL__` slots for `--form-padding-y-*` under a heading that called
+padding "the density lever", with defaults one spacing rung tighter than the hub's.
+So a spoke could have declared those names *on the hub's own instruction* and will
+now silently lose the override — and, because the template ran tighter, get
+**roomier** controls rather than merely unchanged ones. The alias covers readers;
+deleting the template slot and running `/update-tokens` is the only thing that
+covers declarers. When a row removes something the template offered, the template
+edit belongs in the same commit.
 
 This is the reason the property-qualification divergence above stays open rather
 than being tidied up: 158 colour hooks would move, and every spoke would have to
@@ -490,9 +513,12 @@ directly.
 [data-theme="cb-fish"] {
   /* tier 2 — the brand: everything 'primary' becomes navy */
   --color-background-brand: #1e5386;
-  /* tier 2 — shape and size are roles too: flatter corners, tighter controls */
+  /* tier 2 — shape is a role too: flatter corners.
+     Note what is NOT here: there is no size lever. This example used to read
+     `--control-height-md: 36px` beside the radius; that token was deleted on
+     2026-08-14 and the padding hook that briefly replaced it went the same day.
+     A theme cannot make its inputs tighter — see tokens/semantic/size.json. */
   --radius-surface: 4px;
-  --control-height-md: 36px;
   /* tier 3 — ONE component diverges from those defaults */
   --card-radius: var(--radius-control);
 }

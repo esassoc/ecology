@@ -172,8 +172,8 @@ export class EsaTextField extends LitElement {
     typography,
     css`
     :host {
-      --_field-padding-y: var(--form-padding-y-md, 0.75rem);
-      --_field-padding-x: var(--form-padding-x-md, 0.75rem);
+      --_field-padding-y: var(--spacing-300, 0.75rem);
+      --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--form-radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #e5e5e5);
       display: block;
@@ -183,18 +183,18 @@ export class EsaTextField extends LitElement {
        component says "this text is a label" rather than assembling a size, a
        weight and a leading at the call site. */
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 0.5rem);
-      --_field-padding-x: var(--form-padding-x-xs, 0.5rem);
+      --_field-padding-y: var(--spacing-200, 0.5rem);
+      --_field-padding-x: var(--spacing-200, 0.5rem);
       --_field-radius: var(--form-radius-xs, 0.25rem);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 0.625rem);
-      --_field-padding-x: var(--form-padding-x-sm, 0.5rem);
+      --_field-padding-y: var(--spacing-250, 0.625rem);
+      --_field-padding-x: var(--spacing-250, 0.625rem);
       --_field-radius: var(--form-radius-sm, 0.25rem);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 1rem);
-      --_field-padding-x: var(--form-padding-x-lg, 1rem);
+      --_field-padding-y: var(--spacing-400, 1rem);
+      --_field-padding-x: var(--spacing-400, 1rem);
       --_field-radius: var(--form-radius-lg, 0.5rem);
     }
 

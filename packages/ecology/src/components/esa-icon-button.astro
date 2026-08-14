@@ -39,7 +39,13 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
 
 <style>
   .esa-icon-button {
-    --_ib-pad: var(--form-padding-y-md, 0.75rem);
+    /* ONE value spends on all four sides. It names the same spacing rung a text
+       button's padding-inline does, so the two still agree on a row — but that
+       agreement used to be carried by --form-padding-y-* and -x-* being equal
+       tokens, and since 2026-08-14 it is carried only by both sites naming
+       --spacing-300. If the axes ever need to diverge, this is a site that will
+       not follow on its own. */
+    --_ib-pad: var(--spacing-300, 0.75rem);
     --_ib-bg-hover: var(--icon-button-bg-hover, color-mix(in srgb, currentColor 14%, transparent));
     display: inline-flex;
     align-items: center;
@@ -60,9 +66,9 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
     -webkit-appearance: none;
     appearance: none;
   }
-  .esa-icon-button--xs { --_ib-pad: var(--form-padding-y-xs, 0.5rem); }
-  .esa-icon-button--sm { --_ib-pad: var(--form-padding-y-sm, 0.625rem); }
-  .esa-icon-button--lg { --_ib-pad: var(--form-padding-y-lg, 1rem); }
+  .esa-icon-button--xs { --_ib-pad: var(--spacing-200, 0.5rem); }
+  .esa-icon-button--sm { --_ib-pad: var(--spacing-250, 0.625rem); }
+  .esa-icon-button--lg { --_ib-pad: var(--spacing-400, 1rem); }
 
   .esa-icon-button:hover { background: var(--_ib-bg-hover); }
   .esa-icon-button:focus-visible {

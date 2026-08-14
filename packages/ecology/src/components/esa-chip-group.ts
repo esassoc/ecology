@@ -230,7 +230,7 @@ export class EsaChipGroup extends LitElement {
     :host {
       --_gap: var(--spacing-150, 0.375rem);
       --_height: var(--chip-height-md, 28px);
-      --_pad-x: var(--form-padding-x-md, 0.75rem);
+      --_pad-x: var(--spacing-300, 0.75rem);
       --_radius: var(--radius-control, 0.25rem);
 
       /* Resting (unselected) chrome. */
@@ -243,9 +243,14 @@ export class EsaChipGroup extends LitElement {
 
       display: inline-flex;
     }
-    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_height: var(--chip-height-xs, 18px); }
-    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_height: var(--chip-height-sm, 22px); }
-    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_height: var(--chip-height-lg, 34px); }
+    /* --_pad-x walks --spacing-200/250/300/400 — the CONTROL ramp, shared with the
+       inputs and buttons, because a chip is interactive and lines up beside them.
+       esa-badge and esa-pill look identical in shape but walk 100/150/200/300: they
+       are static marks, not controls. Same code, different ramp; don't sync them.
+       (--chip-height-* stays a fixed height on purpose — see its description.) */
+    :host([size='xs']) { --_pad-x: var(--spacing-200, 0.5rem); --_height: var(--chip-height-xs, 18px); }
+    :host([size='sm']) { --_pad-x: var(--spacing-250, 0.625rem); --_height: var(--chip-height-sm, 22px); }
+    :host([size='lg']) { --_pad-x: var(--spacing-400, 1rem); --_height: var(--chip-height-lg, 34px); }
 
     .root {
       display: inline-flex;
