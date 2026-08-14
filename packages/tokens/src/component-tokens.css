@@ -56,10 +56,11 @@
      paired it with overflow:hidden, so the excess was cut silently (WCAG 1.4.4).
 
      Nothing replaced it. An input, a button or a select is now as tall as the
-     padding below plus its own text, and --form-padding-y-* is the density lever
-     a spoke reaches for. That is why each step sits one spacing rung higher than
-     it used to: the padding now CARRIES the height, where before the height
-     carried it and the padding was absorbed into the box.
+     padding below plus its own text. That is why each step sits one spacing rung
+     higher than it used to: the padding now CARRIES the height, where before the
+     height carried it and the padding was absorbed into the box. It carries it
+     through --spacing-* read directly, though — see below; --form-padding-* was
+     the lever for a matter of hours and is gone too.
 
      Two consequences worth knowing. Heights are fluid, because the type is —
      roughly 38px on a phone where a wide monitor gets 41px. And a row still
@@ -67,8 +68,8 @@
      share a padding value and a type rung, so they resolve to the same height.
      See typography-migration-log.md Change 9.
 
-     WHY --form-radius-* AND --form-padding-* SURVIVE. They are not the same
-     problem, and deleting them by analogy would make the file worse:
+     WHY --form-radius-* SURVIVES AND --form-padding-* DID NOT. Both sat on this
+     ramp; only one was doing work:
 
        --form-radius-* is NOT a passthrough. It encodes a documented mapping —
        --radius-control's description says "inputs at xs/sm", --radius-surface's
@@ -77,26 +78,34 @@
        hook was hiding the rung offset; here it hides nothing, so the hook is
        doing honest work.
 
-       --form-padding-* reads --spacing-* directly, and that is CORRECT, not a
-       tier skip. Spacing is one of the two CORE sets (see SPEC.md): universal,
-       shared by every theme, meant to be consumed directly. There is nothing for
-       a semantic layer to intervene in, which is why tier 2 has no spacing layer
-       and why a --control-padding-* role should not be invented. */
+       --form-padding-{y,x}-* was a flat passthrough and was deleted the same day
+       (migrations.json: form-padding-to-spacing). Reading --spacing-* was never
+       the problem — spacing is one of the two CORE sets (see SPEC.md): universal,
+       shared by every theme, meant to be consumed directly, which is why tier 2
+       has no spacing layer and why a --control-padding-* role should not be
+       invented. The problem was the hook in FRONT of that read. It renamed four
+       numbers sixteen times (x and y were identical at every step after Change 9),
+       nothing anywhere ever re-pointed one, and 31 of 66 components already walked
+       --spacing-* directly for their own padding ramps. The eleven controls now
+       do the same, and the ramp lives here as a table instead of as tokens:
+
+           step   padding (both axes)
+           xs     --spacing-200   0.5rem
+           sm     --spacing-250   0.625rem
+           md     --spacing-300   0.75rem
+           lg     --spacing-400   1rem
+
+       Note what this costs, so nobody rediscovers it as a bug: a spoke has NO
+       one-line density lever any more. Re-declaring --form-padding-y-md does
+       nothing (nothing reads it) and re-pointing --spacing-* moves every gap in
+       the kit. Tightening the controls is a /request-lego. */
   /* size — xs */
-  --form-padding-y-xs: var(--spacing-200);
-  --form-padding-x-xs: var(--spacing-200);
   --form-radius-xs: var(--radius-control);
   /* size — sm */
-  --form-padding-y-sm: var(--spacing-250);
-  --form-padding-x-sm: var(--spacing-250);
   --form-radius-sm: var(--radius-control);
   /* size — md (default) */
-  --form-padding-y-md: var(--spacing-300);
-  --form-padding-x-md: var(--spacing-300);
   --form-radius-md: var(--radius-surface);
   /* size — lg */
-  --form-padding-y-lg: var(--spacing-400);
-  --form-padding-x-lg: var(--spacing-400);
   --form-radius-lg: var(--radius-surface);
   /* colors */
   --form-bg: var(--color-background-raised);

@@ -468,13 +468,33 @@ codemod rather than a flag day.
   up. Separately, `1556px` — the kit's actual content width — is a literal in four places
   across `esa-container` and `esa-app-bar`, and matches none of the 1200/800/1440 tokens
   deleted 2026-08-14, which is exactly why those were dead ·
-  *Action:* introduce a tier-2 **width scale** in `semantic/size.json`, which after the
-  layout deletion holds only `chip-height` and has room. The 13 distinct values already
-  cluster on a usable ramp; pick the rungs from what components actually ask for rather than
-  inventing a geometric series, then re-point the 18 tier-3 tokens at it and give the page
-  width a rung so `esa-container` and `esa-app-bar` stop each spelling 1556 twice. Note the
-  Change 9 caveat: a width scale is safe where a height scale was not — a fixed width does
-  not clip growing text, it wraps it · `hub-fix` · **P2**
+  *Action:* **NOT a tier-2 width scale — that was the first proposal here and it is
+  withdrawn.** The stated position (2026-08-14) is that a component needing a hard ceiling
+  declares `max-width` on itself when it is built; a width is a decision about one
+  component's shape, not a shared agreement, and `esa-page-header` (`70ch`) and
+  `esa-empty-state` (`360px`) already work that way. Change 10 is the cautionary precedent:
+  `--form-padding-*` was a ramp of tier-3 tokens over values nobody ever re-pointed, and
+  every argument for building it applied equally here. So the work is to **decide which of
+  the 18 earn a hook at all** — a dialog width plausibly does, since SPEC.md names "dialog
+  width" as earning one; a tooltip's max-width plausibly does not — then delete the rest in
+  favour of a literal in the component, and give the page width one name so `esa-container`
+  and `esa-app-bar` stop each spelling 1556 twice. The duplicated values are evidence of
+  components not coordinating, which a scale would paper over rather than resolve. Note the
+  Change 9 caveat if a ramp is ever revisited: a fixed width is safe where a fixed height was
+  not — it does not clip growing text, it wraps it · `hub-fix` · **P2**
+- **`theming.ts` calls every primitive read "moves the whole system", including the CORE
+  sets it is safe to read** · *Evidence:* `apps/site/src/data/theming.ts` maps tier
+  `primitive` → scope `system`, warning that re-pointing it moves everything. That is right
+  for `--radius-200` and wrong for `--spacing-300`: SPEC.md:87-106 defines spacing and the
+  neutral palette as CORE — universal, never re-pointed by a theme, *meant* to be consumed
+  directly — and `token-graph.ts` (`CORE_SETS`) already encodes exactly which tokens those
+  are. `theming.ts` does not import it. The badge was already wrong on the 31 components that
+  read `--spacing-*` for padding; Change 10 makes it 42, and now it sits on the most visible
+  geometry row of every input and button page. So the docs site tells a spoke its controls
+  are un-themeable-without-consequence in the one place SPEC.md goes out of its way to say
+  the opposite · *Action:* give `theming.ts` a fourth scope, `core`, driven by importing
+  `CORE_SETS` rather than re-listing it — "shared by every theme; read it directly, never
+  re-point it." Pre-existing, surfaced by Change 10, not caused by it · `hub-fix` · **P2**
 - **Motion has no tier-3 surface** · *Evidence:* every other family exposes component tokens;
   motion exposes none, so `esa-sidebar-nav` invented a private `--_sidenav-transition` and a
   spoke cannot re-time anything · *Action:* decide whether motion earns hooks at all — SPEC's

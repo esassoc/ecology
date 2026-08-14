@@ -357,8 +357,7 @@ should have covered: mono runs and tabular figures where 0.01em breaks column al
   the 13px floor in `check-adherence.mjs:140` only matches literal `px`/`rem`, so it has
   never measured the token ramp and is not evidence either way.
 - ~~`--form-height-*`~~ — **done, same day.** See Change 8.
-- `--form-padding-*` reads `--spacing-*` (tier 1) with no `--control-padding-*` behind it.
-  Unlike type, spacing has no composite, so this is a genuine open question.
+- ~~`--form-padding-*`~~ — **done, same day.** See Change 10.
 - `esa-file-upload` still has no size ramp — it names composites now, but its geometry is
   hardcoded at the md/sm rungs.
 - `esa-select` still has no `xs` step; `size="xs"` silently renders `md`.
@@ -416,6 +415,22 @@ not the same problem:
   `tier2-naming.ts` records a deliberate position that spacing is a MEASURE, not an intent,
   so the answer is not obviously yes. Left open.
 
+  > **SUPERSEDED 2026-08-14 — the tokens were deleted. See Change 10.** Kept above rather
+  > than edited, because the reversal is the useful part of the record. Two of its premises
+  > were simply wrong. The reader count was 11, not 10. And "would push a tier-1 read into
+  > 10 components" was framed as a cost when **31 of 66 components already read `--spacing-*`
+  > directly for their padding** — `esa-pill`, `esa-badge`, `esa-tab-layout` and
+  > `esa-filter-dropdown` each walk a full xs→lg ramp that way. The hook was not protecting
+  > the kit from a tier-1 read; it was the minority pattern.
+  >
+  > The framing error was treating this as the same question as type. It isn't. There, the
+  > hook hid a real rung offset, so deleting it had to put something back (the composite).
+  > Here `--form-padding-x-lg` *was* `--spacing-400` — same value, one more name, and after
+  > Change 9 the x and y ramps were identical, so eight names carried four numbers. The
+  > question "should control padding be a semantic role" was answered correctly (no, spacing
+  > is a measure) and then the wrong conclusion drawn from it: having no role behind it is
+  > what made the hook a passthrough, not what made it necessary.
+
 ### Verified
 
 Resolved px captured from `dist/tokens.css` + `component-tokens.css` before and after:
@@ -471,7 +486,9 @@ a fixed-height centred flex box, so leading never reached an edge" — a premise
 removes, so they came back.
 
 `--form-padding-y-*` moves up one spacing rung at every step, because it now **carries**
-the height where before the height carried it and the padding was absorbed.
+the height where before the height carried it and the padding was absorbed. (That token was
+itself deleted hours later — Change 10 — so the rungs it moved to now sit in the components
+as direct `--spacing-*` reads. The re-point stands; only its spelling changed.)
 
 ### Measured
 
@@ -515,6 +532,8 @@ with different arithmetic, not a new spelling.
 
 The spoke template's `--control-height-*` slot became `--form-padding-y-*`, with a warning
 not to translate old values across: 36px of height is roughly 12px of padding, not 36px.
+Change 10 deleted that replacement slot too, so the template now offers **no** density lever
+at all and says so — see there for why that is the honest state rather than a regression.
 
 ### Still fixed, deliberately
 
@@ -523,3 +542,99 @@ every badge is the same height whatever its label, and a padding-sized one could
 up with the others on a row. It carries the same clipping exposure in principle, but with
 `line-height: none` and no `overflow: hidden`, overgrown text spills visibly rather than
 being cropped silently.
+
+---
+
+## Change 10 — padding stops being a token (2026-08-14)
+
+`--form-padding-{y,x}-{xs,sm,md,lg}` deleted. The eleven inputs and buttons that read them
+now read `--spacing-200/250/300/400` directly.
+
+### Why
+
+Change 9 handed padding the job of carrying height and moved it up a rung. That made the
+eight tokens **identical on both axes at every step** — eight names for four numbers, each
+a flat passthrough to a spacing rung. Nothing had ever re-pointed one: not `themes.css`, not
+`cb-fish-design`, not `air-exchange-tool`. Meanwhile **31 of 66 components already walked
+`--spacing-*` directly** for their own padding ramps, four of them (`esa-pill`, `esa-badge`,
+`esa-tab-layout`, `esa-filter-dropdown`) with a full xs→lg ramp. The kit was carrying two
+patterns to say one thing, and the hook was the minority one.
+
+Reading `--spacing-*` from a component was never the problem — SPEC.md has always said so:
+spacing is one of the two CORE sets, universal, shared by every theme, meant to be consumed
+directly, which is why tier 2 has no spacing layer at all. The problem was the hook in front
+of that read.
+
+### What it costs
+
+A spoke has **no one-line density lever** any more, and that is a real loss, not a
+technicality. Re-declaring `--form-padding-y-md` does nothing because nothing reads it, and
+re-pointing `--spacing-*` moves every gap, grid and stack in the kit. Tightening the
+controls is now a `/request-lego` against the hub. Taken knowingly: a hook is earned by a
+spoke asking for it, and in three spokes none ever had.
+
+The spoke template's section (5) was the load-bearing casualty — its four `__FILL__` slots
+were the only dimension slots left in the file. It now states plainly that there is no lever
+and why, rather than deleting the section silently. Worth recording: those slots shipped
+defaults **one rung tighter than the hub's**, so any scaffolded-but-unfilled spoke had been
+running denser than the hub and gets *roomier* as its declarations go inert. No spoke is
+affected today.
+
+### Alias, not `removed: true`
+
+The opposite of Change 9's call, and for a concrete reason. `cb-fish-design` **reads** these
+at six sites, and its fallbacks are wrong — `var(--form-padding-x-sm, 12px)` where the token
+resolves to `0.625rem` = 10px. A `removed` row emits no shim, so those reads would have
+fallen through to a fallback 2px per side too wide, silently. The alias is value-identical
+(`--form-padding-y-md: var(--spacing-300)` is exactly what it already resolved to), so
+readers keep rendering unchanged and `/update-tokens` rewrites the name in place.
+
+`removed: true` is for when there is no equivalent value. Here there is, exactly — using it
+would have burned the one signal the file has for "the arithmetic changed."
+
+Two things the tooling cannot enforce, so the row's `why` carries them: the collapse from
+8 names to 4 will make `findCollapseCollisions` **refuse** to run in any spoke that gave y
+and x different values on the same step; and `check-adherence.mjs` builds its vocabulary
+from `dist/tokens.css`, which now contains the aliases, so **Gate 1 will not flag** a spoke
+still reading an old name. `/update-tokens` and `doctor` are the only enforcement.
+
+`control-height-removed`'s pairs pointed at `--form-padding-y-*` and were re-pointed to `""`,
+matching `layout-orphans-removed`. The `to` half of a `removed` row's pairs is dead data —
+`build.js`, `doctor.mjs` and `migrate-tokens.mjs` all destructure `[from]` — so aiming it at
+a live token bought nothing and would have re-orphaned on the next ramp move.
+
+### Verified
+
+The claim is that components changed which token they name, not what they draw.
+
+A resolver walking privates → tier 3 → tier 2 → tier 1 to a terminal literal, run over every
+padding declaration in the kit before and after: **the diff is empty.** The substitution
+itself was scripted from a four-row table rather than hand-applied, and that table is
+verifiably the deleted declarations (`xs→200, sm→250, md→300, lg→400`, both axes), with the
+step read off the old token name — so all 78 sites are correct by construction.
+
+78 substitutions landed across exactly the 11 predicted files, with the predicted per-file
+counts: 8 each for the eight full-ramp components, 6 for `esa-select` (no `xs` block — still
+open, deliberately not fixed here), 4 for `esa-chip-group` (x-axis only) and 4 for
+`esa-icon-button` (one value, all four sides).
+
+A second pass with the token definitions emptied — which is the only way to see the
+*fallback* rewrite — changed exactly two things, both intended. `esa-textarea`'s whole ramp
+was a rung low, left over from before Change 9, and is now correct. `esa-button`'s x
+fallbacks narrowed (16px→0.75rem, 20px→1rem, 12px→0.625rem): someone once wanted buttons
+wider than tall, but that intent had survived only in dead fallbacks — the resolved values
+have been square on both axes since Change 9.
+
+*A note on the harness, since it nearly hid this:* the first version of the resolver matched
+Lit styles as `` css`…`; `` and so **skipped every component written as
+`static styles = [typography, css`…`]`** — `esa-textarea` among them. The empty diff was
+narrower than it looked until that was fixed. Coverage went from 156 declarations to 261
+across 48 components.
+
+### Not touched
+
+`--form-radius-*` stays. It is not a passthrough: it encodes the documented xs/sm →
+`--radius-control`, md/lg → `--radius-surface` mapping, and deleting it would make 13
+components each restate it. `--chip-height-*` stays fixed for the reasons in Change 9.
+`esa-select`'s missing `xs` step stays open — fixing it during a de-indirection sweep would
+have been a rendered change wearing a value-identical one's clothes.

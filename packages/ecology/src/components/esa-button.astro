@@ -186,8 +186,8 @@ const buttonAttrs = {
 <style>
   .esa-button {
     /* Size tokens — md default. */
-    --_btn-pad-y: var(--form-padding-y-md, 0.75rem);
-    --_btn-padding-x: var(--form-padding-x-md, 16px);
+    --_btn-pad-y: var(--spacing-300, 0.75rem);
+    --_btn-padding-x: var(--spacing-300, 0.75rem);
     --_btn-radius: var(--form-radius-md, 6px);
     /* Color tokens — primary default.
        --_accent      = fill / border color (step 9)
@@ -204,9 +204,9 @@ const buttonAttrs = {
   }
 
   /* ---------- Sizes ---------- */
-  .esa-button--xs { --_btn-pad-y: var(--form-padding-y-xs, 0.5rem); --_btn-padding-x: var(--form-padding-x-xs, 8px);  --_btn-radius: var(--form-radius-xs, 4px); }
-  .esa-button--sm { --_btn-pad-y: var(--form-padding-y-sm, 0.625rem); --_btn-padding-x: var(--form-padding-x-sm, 12px); --_btn-radius: var(--form-radius-sm, 4px); }
-  .esa-button--lg { --_btn-pad-y: var(--form-padding-y-lg, 1rem); --_btn-padding-x: var(--form-padding-x-lg, 20px); --_btn-radius: var(--form-radius-lg, 8px); }
+  .esa-button--xs { --_btn-pad-y: var(--spacing-200, 0.5rem); --_btn-padding-x: var(--spacing-200, 0.5rem);  --_btn-radius: var(--form-radius-xs, 4px); }
+  .esa-button--sm { --_btn-pad-y: var(--spacing-250, 0.625rem); --_btn-padding-x: var(--spacing-250, 0.625rem); --_btn-radius: var(--form-radius-sm, 4px); }
+  .esa-button--lg { --_btn-pad-y: var(--spacing-400, 1rem); --_btn-padding-x: var(--spacing-400, 1rem); --_btn-radius: var(--form-radius-lg, 8px); }
 
   /* sm is NOT height-locked to the form scale — standalone small buttons get relaxed
      vertical padding (6px block) instead of matching input height. Icon-only keeps a
@@ -343,6 +343,10 @@ const buttonAttrs = {
 
   /* States */
   .esa-button--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+  /* Deliberately the *y* private on the *inline* axis: an icon-only button is square,
+     so both axes take one value. Safe because every step names the same spacing rung
+     on both axes — which was a token fact until 2026-08-14 and is now a coincidence
+     two separate declarations have to keep. Diverge the axes and revisit this line. */
   .esa-button--icon-only .esa-button__native { padding-inline: var(--_btn-pad-y); aspect-ratio: 1; }
 
   /* Label + loading */
