@@ -497,7 +497,7 @@ export class EsaInputTag extends LitElement {
       padding: 2px var(--spacing-100, 4px) 2px var(--spacing-200, 8px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_chip-font-size);
-      line-height: var(--line-height-snug, 1.4);
+      line-height: var(--line-height-tight, 1.3);
       background: var(--_chip-bg);
       color: var(--_chip-color);
       border-radius: var(--_chip-radius);

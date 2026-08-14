@@ -824,7 +824,7 @@ export class EsaCombobox extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--font-size-150, 12px);
-      line-height: var(--line-height-snug, 1.4);
+      line-height: var(--line-height-tight, 1.3);
       user-select: none;
     }
     .chip__label {
