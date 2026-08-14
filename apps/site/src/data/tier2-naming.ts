@@ -36,9 +36,18 @@ export interface RubricSlot {
 
 const semantic = byTier('semantic');
 const colorTokens = semantic.filter((t) => t.name.startsWith('--color-'));
-/** Everything in tier 2 that is not a colour. Grouped into explicit families by
- *  `nonColorGroups` below — never rendered as one undifferentiated list. */
-const allNonColor = semantic.filter((t) => !t.name.startsWith('--color-'));
+/**
+ * Everything in tier 2 that is not a colour, grouped into explicit families by
+ * `nonColorGroups` below — never rendered as one undifferentiated list.
+ *
+ * `--typography-*` is excluded. Those are the composites' individual properties, and
+ * the typography section already renders every one of them decomposed by intention.
+ * Listing them a second time as a flat group of 66 is duplication, and it invites
+ * reading them as things to consume — a component names the composite, not its parts.
+ */
+const allNonColor = semantic.filter(
+  (t) => !t.name.startsWith('--color-') && !t.name.startsWith('--typography-'),
+);
 
 /* ------------------------------------------------------ the name parser */
 
@@ -513,7 +522,6 @@ type PropertyPosition = 'first' | 'last' | 'none';
 
 /** What each family's names lead with — the claim the summary table makes. */
 const FAMILY_LEADS: Record<string, string> = {
-  'typography (composite roles)': 'a role (display, heading, body, label…)',
   'typography — faces & weights': 'the CSS property (font-family, font-weight)',
   'font-size-ui (chrome text)': 'the CSS property (font-size)',
   'border-radius': 'the property, abbreviated (radius)',
@@ -533,18 +541,12 @@ const NON_COLOR_FAMILIES: {
   note: string;
 }[] = [
   {
-    label: 'typography (composite roles)',
-    match: /^--typography-/,
-    property: 'last',
-    note: 'semantic/typography.json. `--typography-<role>[-<size>]-<property>` — role first, property last, one token per property so the composite is addressable piece by piece. These are the tokenised form of the `.type-*` classes; the section below decomposes each role across the six tier-1 properties.',
-  },
-  {
     label: 'typography — faces & weights',
     // Excludes --font-size-ui-* explicitly rather than relying on match order, so the
     // families can be listed ingredient-next-to-composite for reading.
     match: /^--font-(?!size-ui-)/,
     property: 'first',
-    note: 'semantic/typography.json — the INGREDIENT layer the composite roles are assembled from, within the same tier. `--typography-display-font-family` resolves to `--font-display`; `--typography-display-font-weight` to `--font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (`--font-sans` 69 reads, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38). Chrome legitimately reaches for a weight without wanting a whole prose role — there is a `--font-size-ui-*` ramp but no matching weight role, which is why. `--font-display` is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to `--font-sans` so the slot exists for a spoke to swap in a distinct headline face.',
+    note: 'semantic/typography.json — the INGREDIENT layer the composites are assembled from, within the same tier. `--typography-display-font-family` resolves to `--font-display`; `--typography-display-font-weight` to `--font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (`--font-sans` 69 reads, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38). Chrome legitimately reaches for a weight without wanting a whole prose composite — there is a `--font-size-ui-*` ramp but no matching weight token, which is why. `--font-display` is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to `--font-sans` so the slot exists for a spoke to swap in a distinct headline face.',
   },
   {
     label: 'font-size-ui (chrome text)',

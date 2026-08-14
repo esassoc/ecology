@@ -94,14 +94,32 @@
       "id": "shadow-composites-to-elevation",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "The composite `--shadow-050…500` were ordinal names for intents living in tier 1 — the same misfiling that put `--transition-fast` there. Tier 1 now holds only the raw axes (offset-x / offset-y / blur / spread / color); clustering them into a usable box-shadow is the semantic act, so the composites are `--elevation-1…6` at tier 2. The old names also formed a 1:1 passthrough — six primitives, six roles, no reuse — so nothing was lost by collapsing them. A spoke should read the tier-2 role, which is the one it is allowed to override. NOTE: `--shadow-50` (the earlier `shadow-50-padding` row) still points at `--shadow-050` and resolves through this row's alias — custom-property resolution is order-independent, so the two-hop chain holds.",
+      "why": "The composite `--shadow-050\u2026500` were ordinal names for intents living in tier 1 \u2014 the same misfiling that put `--transition-fast` there. Tier 1 now holds only the raw axes (offset-x / offset-y / blur / spread / color); clustering them into a usable box-shadow is the semantic act, so the composites are `--elevation-1\u20266` at tier 2. The old names also formed a 1:1 passthrough \u2014 six primitives, six roles, no reuse \u2014 so nothing was lost by collapsing them. A spoke should read the tier-2 role, which is the one it is allowed to override. NOTE: `--shadow-50` (the earlier `shadow-50-padding` row) still points at `--shadow-050` and resolves through this row's alias \u2014 custom-property resolution is order-independent, so the two-hop chain holds.",
       "pairs": [
-        ["--shadow-050", "--elevation-1"],
-        ["--shadow-100", "--elevation-2"],
-        ["--shadow-200", "--elevation-3"],
-        ["--shadow-300", "--elevation-4"],
-        ["--shadow-400", "--elevation-5"],
-        ["--shadow-500", "--elevation-6"]
+        [
+          "--shadow-050",
+          "--elevation-1"
+        ],
+        [
+          "--shadow-100",
+          "--elevation-2"
+        ],
+        [
+          "--shadow-200",
+          "--elevation-3"
+        ],
+        [
+          "--shadow-300",
+          "--elevation-4"
+        ],
+        [
+          "--shadow-400",
+          "--elevation-5"
+        ],
+        [
+          "--shadow-500",
+          "--elevation-6"
+        ]
       ]
     },
     {
@@ -498,6 +516,82 @@
         [
           "--color-scrim-light",
           "--color-overlay-scrim"
+        ]
+      ]
+    },
+    {
+      "id": "typography-label-sized",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "UI text runs at three sizes and two weights in the component kit; `label` shipped with one of each, which is why 59 rules across 54 components set typography by hand instead of naming a role. `label` is now `label-xs` alongside `label-sm`/`label-md` and a `-strong` weight variant, following the same shape `body-*` and `code-*` already use.",
+      "pairs": [
+        [
+          "--typography-label-font-family",
+          "--typography-label-xs-font-family"
+        ],
+        [
+          "--typography-label-font-size",
+          "--typography-label-xs-font-size"
+        ],
+        [
+          "--typography-label-font-weight",
+          "--typography-label-xs-font-weight"
+        ],
+        [
+          "--typography-label-line-height",
+          "--typography-label-xs-line-height"
+        ],
+        [
+          "--typography-label-letter-spacing",
+          "--typography-label-xs-letter-spacing"
+        ]
+      ]
+    },
+    {
+      "id": "typography-eyebrow-sized",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "The caps treatment exists at two sizes \u2014 the page-level eyebrow and the menu group heading one step up. Same intention, so one role with a size variant rather than two roles.",
+      "pairs": [
+        [
+          "--typography-eyebrow-font-family",
+          "--typography-eyebrow-sm-font-family"
+        ],
+        [
+          "--typography-eyebrow-font-size",
+          "--typography-eyebrow-sm-font-size"
+        ],
+        [
+          "--typography-eyebrow-font-weight",
+          "--typography-eyebrow-sm-font-weight"
+        ],
+        [
+          "--typography-eyebrow-line-height",
+          "--typography-eyebrow-sm-line-height"
+        ],
+        [
+          "--typography-eyebrow-letter-spacing",
+          "--typography-eyebrow-sm-letter-spacing"
+        ],
+        [
+          "--typography-eyebrow-text-transform",
+          "--typography-eyebrow-sm-text-transform"
+        ]
+      ]
+    },
+    {
+      "id": "typography-label-eyebrow-classes",
+      "kind": "class",
+      "since": "2026-08-13",
+      "why": "Class names track their tokens: .typography-label-xs reads --typography-label-xs-*.",
+      "pairs": [
+        [
+          "typography-label",
+          "typography-label-xs"
+        ],
+        [
+          "typography-eyebrow",
+          "typography-eyebrow-sm"
         ]
       ]
     }

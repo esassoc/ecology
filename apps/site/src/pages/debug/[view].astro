@@ -331,7 +331,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-note">
         Typography was the interesting one: the intention vocabulary existed only as CSS classes in
         <code>typography.css</code>, which Figma cannot consume and a spoke cannot re-point by
-        overriding a token. It is now tokenised &mdash; {t2.nonColorGroups.find((g) => g.label === 'typography (composite roles)')?.tokens.length ?? 0} composite
+        overriding a token. It is now tokenised &mdash; {t2.nonColorGroups.find((g) => g.label === 'typography')?.tokens.length ?? 0} composite
         tokens assembled from the faces and weights below them, with the classes reading the
         composites rather than the primitives. The mapping the audit was built to measure:
       </p>

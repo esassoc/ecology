@@ -6,6 +6,7 @@
   "exports": {
     "./tokens.css": "./dist/tokens.css",
     "./tokens.js": "./dist/tokens.js",
+    "./typography-styles.js": "./dist/typography-styles.js",
     "./typography.css": "./src/typography.css",
     "./type-roles.css": "./src/typography.css",
     "./layouts.css": "./src/layouts.css",

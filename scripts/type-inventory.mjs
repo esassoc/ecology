@@ -129,10 +129,16 @@ const norm = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
 /** Tie-break order. Prose roles beat code roles at the same size; the big display
  *  roles sit last because a component landing there is nearly always a mis-match. */
 const PREFERENCE = [
-  'body-md', 'body-sm', 'label', 'meta', 'body-lg', 'title',
+  'body-md', 'body-sm', 'body-lg', 'meta',
+  'label-md', 'label-sm', 'label-xs',
+  'label-md-strong', 'label-sm-strong', 'label-xs-strong',
+  'title', 'title-strong',
   'code-sm', 'code-md', 'code-lg',
-  'heading-md', 'heading-lg', 'eyebrow', 'display',
+  'heading-md', 'heading-lg', 'eyebrow-md', 'eyebrow-sm', 'display',
 ];
+/** Unlisted roles must sort LAST, not first — `indexOf` returning -1 made every new
+ *  role beat every established one and swallowed body-md's 25 rules whole. */
+const prefOf = (role) => (PREFERENCE.indexOf(role) === -1 ? 999 : PREFERENCE.indexOf(role));
 
 /**
  * font-size is the DISCRIMINATOR. Without gating on it, a rule that sets only
@@ -165,7 +171,7 @@ for (const row of rows) {
     // Ties are common: body-md and code-md are the same size, so a rule setting only
     // size + weight scores identically against both. Break toward the prose role —
     // code-* is only right when the rule actually asks for the mono face.
-    const pref = PREFERENCE.indexOf(r.role);
+    const pref = prefOf(r.role);
     if (!best || score > best.score || (score === best.score && pref < best.pref)) {
       best = { role: r.role, score, pref, match, differ, delta };
     }
