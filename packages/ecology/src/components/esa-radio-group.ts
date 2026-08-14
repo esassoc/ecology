@@ -141,7 +141,7 @@ export class EsaRadioGroup extends LitElement {
       margin-bottom: var(--spacing-200, 8px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_radio-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-primary, #171717);
     }
 
@@ -207,7 +207,7 @@ export class EsaRadioGroup extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_radio-font-size);
       color: var(--color-text-primary, #171717);
-      line-height: 1.4;
+      line-height: var(--line-height-snug, 1.4);
     }
   `;
 }

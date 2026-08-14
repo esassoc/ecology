@@ -91,7 +91,7 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     font-size: var(--_avatar-font-size);
     /* Was a raw 600. The token is 550, which is what every other component's
        semibold resolves to — the literal was quietly heavier than the system. */
-    font-weight: var(--font-weight-semibold, 600);
+    font-weight: var(--font-weight-semibold, 550);
     overflow: hidden;
     flex-shrink: 0;
     user-select: none;
@@ -111,7 +111,7 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
   }
 
   .esa-avatar__initials {
-    line-height: 1;
+    line-height: var(--line-height-none, 1);
     letter-spacing: 0.02em;
   }
 </style>

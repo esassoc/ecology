@@ -241,7 +241,7 @@ export class EsaButtonToggle extends LitElement {
     .label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #171717);
     }
     .required {
@@ -273,7 +273,7 @@ export class EsaButtonToggle extends LitElement {
       padding: 0 var(--_padding-x);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-secondary, #525252);
       background: transparent;
       border: 0;

@@ -217,7 +217,7 @@ export class EsaTabLayout extends LitElement {
       height: 20px;
       padding-inline: var(--spacing-150, 6px);
       font-size: var(--font-size-100, 0.6875rem);
-      font-weight: var(--font-weight-semibold, 600);
+      font-weight: var(--font-weight-semibold, 550);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);
       border-radius: var(--radius-pill, 9999px);

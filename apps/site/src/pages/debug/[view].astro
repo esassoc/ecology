@@ -1050,6 +1050,47 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         name pushes dark mode out of the token package entirely and into app CSS a spoke does not get.
       </p>
 
+      <h3 class="sub">
+        Fallback drift · {t1.fallbackTally.tokens} tokens whose read sites disagree with them
+      </h3>
+      <p class="cat-note">
+        CLAUDE.md requires every private token to carry a literal fallback —
+        <code>var(--font-size-200, 0.875rem)</code>. Nothing checks that the literal agrees with the
+        token. For a scale named for a <em>rung</em> rather than a value there is nothing for an
+        author to check against, so they guess, and they guess differently:
+        {' '}<b>{t1.fallbackTally.contradictory}</b> of these carry more than one distinct fallback
+        across the kit. The <b>{t1.fallbackTally.wrong}</b> marked <em>exact</em> are the unambiguous
+        ones — the token holds a single literal, so the fallback could have been right and isn&rsquo;t.
+      </p>
+      <p class="cat-gap">
+        <b>This check is scoped, and the scope hides something.</b> It looks only at the tier-1
+        measure tokens. Run the same comparison across <em>every</em> token and it returns roughly
+        <b> 1,250</b> disagreeing read sites in ~110 files — overwhelmingly colour
+        (<code>--color-text-primary</code> is <code>#202020</code> and is written as
+        <code>#171717</code> in 118 places; <code>--color-primary</code> is grass and is written as a
+        navy left over from another brand in 72). That is a real finding and it is <em>not</em> being
+        fixed here: it is mostly tier-2 colour, it needs its own pass, and a blind rewrite would be
+        wrong in at least one class of case — <code>var(--font-sans, sans-serif)</code> is a
+        deliberate generic-family degradation, not a failed restatement of the token, and
+        &ldquo;correcting&rdquo; it would name a face that by definition isn&rsquo;t loading.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Token</th><th>Actual value</th><th>Fallbacks written</th><th>Read in</th></tr></thead>
+        <tbody>
+          {t1.fallbackDrift.map((r) => (
+            <tr class={r.exact ? 'slot-absent' : undefined}>
+              <td>
+                <code>{r.token}</code>
+                {r.exact && <span class="slot-flag f-absent">exact</span>}
+              </td>
+              <td><code class="vocab">{r.actual}</code></td>
+              <td>{r.fallbacks.map((f) => <code class="vocab warnv">{f}</code>)}</td>
+              <td class="dim">{r.files.length} file{r.files.length === 1 ? '' : 's'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       <h3 class="sub">Slot 5 · the scale systems</h3>
       <p class="cat-note">
         Mixed scale <em>types</em> across categories is what the rubric asks for — &ldquo;homogeneity

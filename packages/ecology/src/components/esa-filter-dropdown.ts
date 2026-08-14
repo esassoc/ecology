@@ -341,8 +341,8 @@ export class EsaFilterDropdown extends LitElement {
       color: var(--_filter-text);
       font-family: var(--font-sans, inherit);
       font-size: var(--_filter-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      line-height: 1;
+      font-weight: var(--font-weight-medium, 500);
+      line-height: var(--line-height-none, 1);
       cursor: pointer;
       white-space: nowrap;
       transition:
@@ -388,7 +388,7 @@ export class EsaFilterDropdown extends LitElement {
       color: var(--color-text-inverse, #fff);
       font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
-      line-height: 1;
+      line-height: var(--line-height-none, 1);
     }
 
     .esa-filter-dropdown__arrow {
@@ -497,7 +497,7 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
       color: var(--color-text-muted, #737373);
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
       text-align: center;
     }
 
@@ -513,7 +513,7 @@ export class EsaFilterDropdown extends LitElement {
       color: var(--color-primary-strong, #2a7e3b);
       font-family: var(--font-sans, inherit);
       font-size: var(--font-size-150, 0.875rem);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--radius-control, 0.25rem);

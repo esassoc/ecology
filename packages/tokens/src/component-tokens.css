@@ -412,7 +412,7 @@
 
   /* esa-select */
   --form-label-font-size: var(--_field-font-size);
-  --form-label-font-weight: var(--font-weight-medium, 450);
+  --form-label-font-weight: var(--font-weight-medium, 500);
 
   /* esa-header-nav */
   --header-nav-avatar-bg: var(--color-primary, #43608a);

@@ -284,7 +284,7 @@ export class EsaFileUpload extends LitElement {
     .zone__label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-font-size-md, 14px);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-primary, #171717);
     }
     .zone__hint {

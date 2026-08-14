@@ -247,7 +247,7 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
       --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-surface-sunken, #efefef));
       --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-primary-subtle, #f3f8fb));
-      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--font-weight-semibold, 600));
+      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--font-weight-semibold, 550));
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
       --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-primary, #43608a));
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
@@ -342,9 +342,9 @@ export class EsaSidebarNav extends LitElement {
     .group-label {
       display: block;
       font-size: var(--font-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 600);
-      text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-wide, 0.05em);
+      font-weight: var(--font-weight-semibold, 550);
+      text-transform: var(--text-transform-uppercase, uppercase);
+      letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--_sidenav-group-color);
       white-space: nowrap;
       overflow: hidden;
@@ -368,7 +368,7 @@ export class EsaSidebarNav extends LitElement {
       font-family: inherit;
       font-size: var(--font-size-200, 14px);
       font-weight: var(--font-weight-medium, 500);
-      line-height: 1;
+      line-height: var(--line-height-none, 1);
       text-decoration: none;
       cursor: pointer;
       white-space: nowrap;
@@ -421,8 +421,8 @@ export class EsaSidebarNav extends LitElement {
       background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #ffffff);
       font-size: var(--font-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 600);
-      line-height: 1;
+      font-weight: var(--font-weight-semibold, 550);
+      line-height: var(--line-height-none, 1);
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }
     .chevron {

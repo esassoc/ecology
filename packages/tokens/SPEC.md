@@ -8,8 +8,6 @@ all new components follow.
 
 1. **Primitive** (`tokens/primitive/*.json` → compiled) — raw values on ramps:
    `--color-teal-9`, `--spacing-400`, `--radius-100`, `--font-size-200`.
-   Colour ramps are Radix's 1–12 step scale; the other ramps use a padded
-   numeric scale (`050`, `100`, `200`, …).
 
    **Tier-1 names describe the value, not a job.** `--font-family-dm-sans`
    names the face; `--font-weight-350` names the weight. The uncomfortable
@@ -17,6 +15,21 @@ all new components follow.
    says exactly what the value *is* makes the tier-2 mapping legible. A tier-1
    token named for a role (`--font-sans`, `--color-status-success`) reads as
    themeable and isn't, which is how a theme ends up re-pointing a primitive.
+
+   Three scale conventions are in play. Which one a category uses depends on
+   whether the value can name itself *and* whether the set reads better as a
+   sequence:
+   - **value-named** — `--font-weight-350`, `--font-family-dm-sans`. Use where
+     the value is the identity and there is no meaningful ordering.
+   - **Radix 1–12** — colour only, where each step carries a fixed job
+     (2 = subtle surface, 9 = solid fill, 11 = text on a surface).
+   - **padded ordinal** — `--spacing-400`, `--radius-100`, `--shadow-050`,
+     `--font-size-200`. Use where the set is a *scale* a designer picks a rung
+     from. Spacing was converted to value-names (`--spacing-16`) and converted
+     back: the ramp is the thing being chosen from, the ordinal keeps the rungs
+     evenly spaced in the name regardless of the values behind them, and it
+     leaves room to insert a step without renumbering everything after it.
+
    **Primitives never move** — not in the hub, not in a theme.
 2. **Semantic** (`tokens/semantic/*.json` → compiled) — intent, referencing
    primitives. A spoke's brand identity lives here: re-point a semantic token

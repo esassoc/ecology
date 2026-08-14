@@ -43,7 +43,12 @@ export class EsaSelect extends LitElement {
 
   declare label: string;
   declare options: EsaOption[];
-  declare size: 'xs' | 'sm' | 'md' | 'lg';
+  // No `xs`. A select is a click target with a popup — at 28px the trigger and
+  // its chevron are below a comfortable tap size, and the option list it opens
+  // is unaffected by the trigger's size anyway, so the compaction buys nothing
+  // downstream. `sm` (32px) is the floor. See esa-text-field for a control where
+  // xs is still legitimate: it has no popup and no hit target beyond the field.
+  declare size: 'sm' | 'md' | 'lg';
   declare placeholder: string;
   declare helpText: string;
   declare errorText: string;
@@ -365,13 +370,6 @@ export class EsaSelect extends LitElement {
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
-    :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
-      --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-height: var(--form-height-xs, 28px);
-      --_field-radius: var(--form-radius-xs, 4px);
-    }
     :host([size='sm']) {
       --_field-padding-y: var(--form-padding-y-sm, 4px);
       --_field-padding-x: var(--form-padding-x-sm, 8px);
@@ -395,7 +393,7 @@ export class EsaSelect extends LitElement {
     .field__label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-label-font-size, var(--_field-font-size));
-      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 450));
+      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 500));
       color: var(--form-label-color, #171717);
     }
     .field__required {
@@ -563,7 +561,7 @@ export class EsaSelect extends LitElement {
     .option--empty {
       color: var(--color-text-muted, #737373);
       cursor: default;
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
     }
     .option--empty:hover {
       background: transparent;
@@ -606,7 +604,7 @@ export class EsaSelect extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--font-size-150, 12px);
-      line-height: 1.2;
+      line-height: var(--line-height-none, 1);
       user-select: none;
     }
     .chip__label {

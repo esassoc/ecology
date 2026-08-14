@@ -3,11 +3,12 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import { withBase } from '@esa/docs/base';
 
 const props = [
   { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
   { name: 'options', type: '{ label, value, disabled? }[]', default: '[]', description: 'Selectable options. Set as a property (not an attribute).' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
+  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute). No xs — see Sizes.' },
   { name: 'placeholder', type: 'string', default: "'Select...'", description: 'Placeholder shown when nothing is selected.' },
   { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the control.' },
   { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
@@ -33,11 +34,16 @@ const events = [
   </Section>
 
   <Section id="sizes" title="Sizes">
-    <Preview code={`<esa-select label="Extra small" size="xs"></esa-select>
-<esa-select label="Small" size="sm"></esa-select>
+    <p>
+      Three sizes, not four. Select has no <code>xs</code>: at 28px the trigger and its chevron fall
+      below a comfortable tap target, and because the option list it opens is sized independently,
+      shrinking the trigger buys nothing downstream. <code>sm</code> is the floor — reach for it in
+      dense table rows and filter bars. Controls without a popup, like
+      <a href={withBase('/components/esa-text-field')}>Text Field</a>, still offer <code>xs</code>.
+    </p>
+    <Preview code={`<esa-select label="Small" size="sm"></esa-select>
 <esa-select label="Medium" size="md"></esa-select>
 <esa-select label="Large" size="lg"></esa-select>`}>
-      <esa-select label="Extra small" size="xs"></esa-select>
       <esa-select label="Small" size="sm"></esa-select>
       <esa-select label="Medium" size="md"></esa-select>
       <esa-select label="Large" size="lg"></esa-select>

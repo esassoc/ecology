@@ -138,7 +138,7 @@ export class EsaDatePicker extends LitElement {
     .field__label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #171717);
     }
     .field__required {

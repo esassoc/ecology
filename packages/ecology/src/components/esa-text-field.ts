@@ -161,7 +161,7 @@ export class EsaTextField extends LitElement {
 
     .label {
       color: var(--form-label-color, #171717);
-      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 450));
+      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 500));
       font-size: var(--form-label-font-size, var(--_label-font-size));
       margin-block-end: var(--form-label-gap, 4px);
     }

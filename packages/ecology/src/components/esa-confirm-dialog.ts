@@ -305,7 +305,7 @@ export class EsaConfirmDialog extends LitElement {
       border-radius: var(--radius-surface, 0.5rem);
       font-family: inherit;
       font-size: var(--font-size-200, 0.9375rem);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
       border: 1px solid transparent;
       transition: background var(--transition-fast, 150ms ease);
