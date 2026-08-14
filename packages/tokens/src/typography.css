@@ -119,12 +119,28 @@
   text-transform: var(--typography-eyebrow-text-transform);
 }
 
-.typography-code {
-  font-family: var(--typography-code-font-family);
-  font-size: var(--typography-code-font-size);
-  font-weight: var(--typography-code-font-weight);
-  line-height: var(--typography-code-line-height);
-  letter-spacing: var(--typography-code-letter-spacing);
+.typography-code-lg {
+  font-family: var(--typography-code-lg-font-family);
+  font-size: var(--typography-code-lg-font-size);
+  font-weight: var(--typography-code-lg-font-weight);
+  line-height: var(--typography-code-lg-line-height);
+  letter-spacing: var(--typography-code-lg-letter-spacing);
+}
+
+.typography-code-md {
+  font-family: var(--typography-code-md-font-family);
+  font-size: var(--typography-code-md-font-size);
+  font-weight: var(--typography-code-md-font-weight);
+  line-height: var(--typography-code-md-line-height);
+  letter-spacing: var(--typography-code-md-letter-spacing);
+}
+
+.typography-code-sm {
+  font-family: var(--typography-code-sm-font-family);
+  font-size: var(--typography-code-sm-font-size);
+  font-weight: var(--typography-code-sm-font-weight);
+  line-height: var(--typography-code-sm-line-height);
+  letter-spacing: var(--typography-code-sm-letter-spacing);
 }
 
 /* ---------------------------------------------------------------------------
@@ -227,11 +243,15 @@
   text-transform: var(--typography-eyebrow-text-transform);
 }
 
-/* -> .typography-code */
+/* -> .typography-code-sm. NOT an exact alias: .type-code was font-size-100 and
+   code now tracks body, whose smallest step is font-size-150. This is the one
+   alias in this file that changes rendering — inline code gets slightly larger.
+   Mapped to -sm as the nearest step rather than to -md, which would be a jump
+   of two steps. */
 .type-code {
-  font-family: var(--typography-code-font-family);
-  font-size: var(--typography-code-font-size);
-  font-weight: var(--typography-code-font-weight);
-  line-height: var(--typography-code-line-height);
-  letter-spacing: var(--typography-code-letter-spacing);
+  font-family: var(--typography-code-sm-font-family);
+  font-size: var(--typography-code-sm-font-size);
+  font-weight: var(--typography-code-sm-font-weight);
+  line-height: var(--typography-code-sm-line-height);
+  letter-spacing: var(--typography-code-sm-letter-spacing);
 }

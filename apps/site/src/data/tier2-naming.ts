@@ -597,8 +597,15 @@ export interface TypeIntention {
   /** What this intention is for. */
   definition: string;
   roles: Composite[];
-  /** Where the roles inside this intention are inconsistent with each other. */
+  /**
+   * An OBSERVATION about this intention — context worth knowing, not a defect.
+   * Deliberately separate from `inconsistency`: the badge used to fire on any
+   * note at all, so `meta` was labelled inconsistent for a remark comparing it
+   * to `label`. A single-composite group cannot be internally inconsistent.
+   */
   note?: string;
+  /** A real defect: the composites inside this intention disagree with each other. */
+  inconsistency?: string;
 }
 
 /**
@@ -611,7 +618,7 @@ export interface TypeIntention {
  * headings that exist nowhere in our names. Deriving the intention from the
  * token means the grouping cannot disagree with the tokens again.
  */
-const INTENTION_NOTES: Record<string, { definition: string; note?: string }> = {
+const INTENTION_NOTES: Record<string, { definition: string; note?: string; inconsistency?: string }> = {
   display: {
     definition:
       'The largest type in the system — hero numbers, landing statements, logotype-adjacent text. One size, one use.',
@@ -626,7 +633,8 @@ const INTENTION_NOTES: Record<string, { definition: string; note?: string }> = {
   },
   body: {
     definition: 'Running prose and the default text of the interface, in three sizes.',
-    note: '`body-lg` and `body-md` use line-height-relaxed; `body-sm` drops to normal. Deliberate at small sizes, but it means the three are not one composite scaled.',
+    inconsistency:
+      '`body-lg` and `body-md` set line-height-relaxed; `body-sm` drops to normal. Under the rule that split `title` out of `heading` — a size variant may only change size — this is the same defect one step smaller: two properties move, not one. It is left flagged rather than quietly fixed because closing it is a rendering change (body-sm leading 1.6 -> 1.8), and the counter-argument is real: leading pairs with size, so it may belong to the size axis in a way that face and weight never do.',
   },
   label: {
     definition:
@@ -635,7 +643,7 @@ const INTENTION_NOTES: Record<string, { definition: string; note?: string }> = {
   meta: {
     definition:
       'Secondary annotation beside the thing it describes — help text, captions, timestamps, counts.',
-    note: '`meta` and `label` are the same size (--font-size-100) and differ only in weight — regular vs medium. The size scale does not separate them; only the weight does.',
+    note: '`meta` and `label` are the same size (--font-size-100) and differ only in weight — regular vs medium. An observation about the two intentions, not a defect inside this one: `meta` has a single composite, so there is nothing here to be inconsistent WITH.',
   },
   eyebrow: {
     definition:
@@ -643,7 +651,8 @@ const INTENTION_NOTES: Record<string, { definition: string; note?: string }> = {
   },
   code: {
     definition:
-      'Monospace — code, tokens, tabular figures. Arguably a face swap rather than an intention, since it cuts across the others rather than naming a place in the hierarchy.',
+      'Monospace — code, tokens, tabular figures. Three sizes matching body step for step, so inline code sits at the size of the prose around it: `code-md` inside `body-md`, `code-sm` inside `body-sm`.',
+    note: 'Unlike body, the leading does NOT change at the small end — all three set line-height-normal, so this intention is a pure size axis.',
   },
 };
 
