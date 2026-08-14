@@ -1,0 +1,107 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import PropsTable from '@esa/docs/PropsTable.astro';
+import Collapsible from '@esa/ecology/esa-collapsible.astro';
+
+const props = [
+  { name: 'title', type: 'string', description: 'Summary label. Required — the row is the control, so it always needs a name.' },
+  { name: 'icon', type: 'string', description: 'Optional leading Lucide icon name (kebab-case), rendered through esa-icon at size sm.' },
+  { name: 'iconPaths', type: 'string', description: "Inner SVG markup for an icon outside esa-icon's registry. Passed straight through." },
+  { name: 'open', type: 'boolean', default: 'false', description: 'Render expanded on load.' },
+  { name: 'flush', type: 'boolean', default: 'false', description: 'Drop the card chrome (border, radius, background) and the horizontal padding — for stacked drawer or sidebar sections separated by the host’s own dividers.' },
+];
+
+const slots = [
+  { name: 'default', type: 'slot', description: 'The disclosed body. A flex column with a 1rem gap between children.' },
+];
+---
+<ComponentDoc name="Collapsible" category="Display" slug="esa-collapsible" type=".astro" status="stable"
+  summary="A single disclosure section — icon + title over a slotted body — built on native &lt;details&gt;/&lt;summary&gt;. Free a11y, keyboard, and open/close state, with no JavaScript.">
+
+  <Section id="preview" title="Preview">
+    <Preview align="start" code={`<Collapsible title="Permit conditions">
+  <p>Body content, revealed on toggle.</p>
+</Collapsible>`}>
+      <div style="width: 420px; max-width: 100%;">
+        <Collapsible title="Permit conditions">
+          <p style="margin: 0;">Body content, revealed on toggle. The whole summary row is the control — not just the caret.</p>
+        </Collapsible>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="icon-open" title="Icon and default state">
+    <p>
+      A leading icon reads as a quiet, secondary glyph — it labels the section, it doesn't decorate it.
+      <code>open</code> renders the section expanded on load.
+    </p>
+    <Preview align="start" code={`<Collapsible title="Site details" icon="map-pin" open>…</Collapsible>
+<Collapsible title="Attachments" icon="file-text">…</Collapsible>`}>
+      <div style="display: flex; flex-direction: column; gap: 12px; width: 420px; max-width: 100%;">
+        <Collapsible title="Site details" icon="map-pin" open>
+          <p style="margin: 0;">Open on load — use this for the section a reader wants first.</p>
+        </Collapsible>
+        <Collapsible title="Attachments" icon="file-text">
+          <p style="margin: 0;">Closed by default.</p>
+        </Collapsible>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="flush" title="Flush">
+    <p>
+      <code>flush</code> strips the card chrome and the horizontal padding, so sections sit directly
+      in a drawer, sidebar, or filter rail where the host already supplies the dividers and gutter.
+    </p>
+    <Preview align="start" code={`<Collapsible title="Status" icon="circle-check" flush open>…</Collapsible>
+<Collapsible title="Date range" icon="calendar" flush>…</Collapsible>`}>
+      <div style="width: 300px; max-width: 100%; border: 1px solid var(--color-border, #e5e5e5); border-radius: 8px; padding: 8px 16px; background: var(--color-background-raised, #fff);">
+        <Collapsible title="Status" icon="circle-check" flush open>
+          <p style="margin: 0;">Flush sections take the host's gutter, not their own.</p>
+        </Collapsible>
+        <Collapsible title="Date range" icon="calendar" flush>
+          <p style="margin: 0;">Stacked, each opening independently.</p>
+        </Collapsible>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="stacking" title="Stacking — not an accordion">
+    <p>
+      This is a <strong>single</strong> disclosure, not a single-open accordion group. Stack several
+      for a set and each opens independently, matching native <code>&lt;details&gt;</code> semantics.
+      There is deliberately no group component: "only one open at a time" is a behavior that costs
+      readers the comparison they usually want, and it takes JS to enforce something the platform
+      gives you for free otherwise.
+    </p>
+    <Preview align="start" code={`<Collapsible title="Overview" icon="info" open>…</Collapsible>
+<Collapsible title="Conditions" icon="notepad-text">…</Collapsible>
+<Collapsible title="History" icon="history">…</Collapsible>`}>
+      <div style="display: flex; flex-direction: column; gap: 12px; width: 420px; max-width: 100%;">
+        <Collapsible title="Overview" icon="info" open><p style="margin: 0;">Both of these can be open at once.</p></Collapsible>
+        <Collapsible title="Conditions" icon="notepad-text"><p style="margin: 0;">Independent state per section.</p></Collapsible>
+        <Collapsible title="History" icon="history"><p style="margin: 0;">No coordination between siblings.</p></Collapsible>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+    <h3 style="margin-top: 1.5rem;">Slots</h3>
+    <PropsTable rows={slots} nameHeader="Slot" />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Native <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code>: the expanded state, the button role, <kbd>Enter</kbd>/<kbd>Space</kbd> activation, and focus all come from the platform. No ARIA is added, and none should be — hand-written <code>aria-expanded</code> on a summary fights the element.</li>
+      <li>The entire summary row is the hit target, not just the caret — a full-width tap target, which is the point of using the native element.</li>
+      <li>The caret is a CSS <code>::after</code> and the native marker is hidden, so nothing is announced twice.</li>
+      <li>Collapsed content is genuinely hidden from find-in-page in some browsers. Don't hide content a reader must be able to search for — and never a form field carrying a validation error.</li>
+      <li><code>title</code> is a <code>&lt;span&gt;</code>, not a heading. If the sections are page structure rather than a widget, wrap each summary's label in the right <code>&lt;h*&gt;</code> at the call site.</li>
+    </ul>
+  </Section>
+
+</ComponentDoc>

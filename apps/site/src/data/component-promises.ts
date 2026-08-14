@@ -39,7 +39,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { byTier, CHROME_EXEMPT, type TokenNode } from './token-graph';
 import { rows as tier3Rows } from './tier3-naming';
-import { themingSurface } from './theming';
+import { themingSurface, type ThemingHook } from './theming';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const COMPONENT_DIR = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
@@ -369,6 +369,82 @@ export const undefinedReads: { slug: string; token: string }[] = Object.entries(
     hooks.filter((h) => h.tier === 'undefined').map((h) => ({ slug, token: h.token })),
   )
   .sort((a, b) => a.slug.localeCompare(b.slug) || a.token.localeCompare(b.token));
+
+/* ----------------------------------------------------- shared tier-3 surface */
+
+export type SharingKind = 'group-surface' | 'borrowed' | 'unowned';
+
+export interface SharedToken {
+  token: string;
+  kind: SharingKind;
+  /** Group surface it belongs to (`forms`), when one declared it. */
+  family: string | null;
+  /** Owning component, when a single component's group declared it. */
+  owner: string | null;
+  readers: string[];
+}
+
+/**
+ * Tier-3 tokens read by MORE THAN ONE component.
+ *
+ * The question this answers: a tier-3 token is meant to theme one component, so
+ * why do several read it? Three different answers, and only one is a defect —
+ * which is the whole reason this is a table and not a count:
+ *
+ * - `group-surface` — declared under a family header (`--form-*`). Working as
+ *   designed: SPEC.md's "Shared group surfaces for things that must align
+ *   across components... prefer extending a group surface over duplicating the
+ *   same knob per component". NOT a tier-2 candidate — tier 2 is intent, and a
+ *   group surface is coordination scoped to a family. Promoting `--form-height-md`
+ *   would leak form sizing to badge, card and dialog.
+ * - `borrowed` — one component's declared hook, read by another. Real coupling:
+ *   re-skinning the owner silently moves the borrower.
+ * - `unowned` — read by several, declared by nobody's group. No one owns the
+ *   contract, so nothing stops it drifting. The genuine promotion candidates.
+ *
+ * Derived, never typed in: adding a component that reads `--dialog-bg` makes it
+ * show up here on the next build.
+ */
+export const sharedTokens: SharedToken[] = (() => {
+  const readers = new Map<string, Set<string>>();
+  const meta = new Map<string, ThemingHook>();
+  for (const [slug, hooks] of Object.entries(themingSurface)) {
+    if (!slug.startsWith('esa-')) continue;
+    for (const h of hooks) {
+      if (h.tier !== 'component' && h.tier !== 'ad-hoc') continue;
+      let set = readers.get(h.token);
+      if (!set) readers.set(h.token, (set = new Set()));
+      set.add(slug);
+      // Any component's view carries the same declared owner/family for a
+      // token; keep the first that names one so `ownedBy` isn't lost to
+      // whichever page happens to be the owner itself (where it reads null).
+      if (!meta.has(h.token) || (!meta.get(h.token)!.family && !meta.get(h.token)!.ownedBy)) {
+        meta.set(h.token, h);
+      }
+    }
+  }
+  return [...readers.entries()]
+    .filter(([, set]) => set.size > 1)
+    .map(([token, set]) => {
+      const h = meta.get(token)!;
+      const owner = h.ownedBy ?? ([...set].find((s) => token.startsWith(`--${s.slice(4)}-`)) ?? null);
+      const kind: SharingKind =
+        h.family ? 'group-surface'
+        : owner ? 'borrowed'
+        : 'unowned';
+      return { token, kind, family: h.family, owner, readers: [...set].sort() };
+    })
+    .sort(
+      (a, b) =>
+        b.readers.length - a.readers.length || a.token.localeCompare(b.token),
+    );
+})();
+
+export const SHARING_KIND_NOTE: Record<SharingKind, string> = {
+  'group-surface': 'Declared under a family header so several components align on one scale — the pattern SPEC.md prefers over duplicating a knob per component. Working as designed, and NOT a tier-2 candidate: tier 2 holds intent, a group surface holds coordination scoped to a family.',
+  borrowed: 'One component\'s declared hook, read by another. The borrower inherits the owner\'s theming: re-skin the owner and the borrower moves with it, silently. Either promote it to a group surface with a name that covers both, or give the borrower its own hook.',
+  unowned: 'Read by several components and declared under nobody\'s group, so no component owns the contract and nothing stops the readers drifting apart. These are the real candidates to either adopt into a group surface or lift to a tier-2 role.',
+};
 
 /* ------------------------------------------------------------- headline */
 

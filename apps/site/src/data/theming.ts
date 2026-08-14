@@ -41,8 +41,15 @@ export interface ThemingHook {
   scope: 'exclusive' | 'shared' | 'system';
   /** Other components reading this token — populated only when scope=shared. */
   alsoReadBy: string[];
-  /** Namespace label for a shared token, e.g. `--form-bg` → `form`. */
+  /** Group surface a shared token belongs to, e.g. `--form-bg` → `forms`. */
   family: string | null;
+  /**
+   * The component that OWNS a shared token, when another one declared it —
+   * `esa-loading-overlay` reading `--loading-spinner-color`. Distinct from
+   * `family`: this is one component borrowing another's hook, which is worth
+   * seeing, where a family surface is shared by design.
+   */
+  ownedBy: string | null;
   fallback: string | null;
   /**
    * The token's real resolution chain, walked from its DEFINITION (not its
@@ -256,7 +263,11 @@ for (const [slug, hooks] of readsBySlug) {
         tier: t,
         scope,
         alsoReadBy: scope === 'shared' ? readers : [],
-        family: scope === 'shared' && owner ? owner.label : null,
+        family: scope === 'shared' && owner?.kind === 'family' ? owner.label : null,
+        ownedBy:
+          scope === 'shared' && owner?.kind === 'component' && owner.label !== slug
+            ? owner.label
+            : null,
         fallback,
         // Resolve from the token's own definition; ad-hoc tokens (defined nowhere)
         // fall back to walking their inline fallback literal.

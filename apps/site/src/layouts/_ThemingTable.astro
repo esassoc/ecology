@@ -14,11 +14,14 @@ const { hooks, mode } = Astro.props;
 const isColor = (v: string) => /^#[0-9a-fA-F]{3,8}$|^(rgb|rgba|hsl|hsla|oklch|color)\(/.test(v.trim());
 
 // What else moves if you re-point this token.
-const reach = (h: ThemingHook): string =>
-  h.scope === 'system' ? 'every component'
-  : h.family && h.alsoReadBy.length ? `${h.family} · +${h.alsoReadBy.length} more`
-  : h.family ? h.family
-  : `+${h.alsoReadBy.length} more`;
+const reach = (h: ThemingHook): string => {
+  if (h.scope === 'system') return 'every component';
+  const others = h.alsoReadBy.length ? `+${h.alsoReadBy.length} more` : '';
+  // A family surface is shared by design; borrowing another component's hook
+  // is a different fact and reads as one.
+  const source = h.family ? `${h.family} group` : h.ownedBy ? `owned by ${h.ownedBy}` : '';
+  return [source, others].filter(Boolean).join(' · ') || 'shared';
+};
 ---
 <table class="ts-table">
   <thead>

@@ -1,0 +1,84 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import Api from '@esa/docs/Api.astro';
+import Stat from '@esa/ecology/esa-stat.astro';
+
+const props = [
+  { name: 'value', type: 'string | number', description: 'The metric itself — rendered large, in the display face.' },
+  { name: 'label', type: 'string', description: 'What the value counts. Sentence case, readable body size — not an uppercase overline.' },
+  { name: 'sub', type: 'string', description: 'Optional muted caption under the label (a delta, a period, a qualifier).' },
+  { name: 'accent', type: 'boolean', default: 'false', description: 'Tints the value with the brand secondary emphasis. Off by default keeps it primary text.' },
+];
+---
+<ComponentDoc name="Stat" category="Layout & Sections" slug="esa-stat" type=".astro" status="stable"
+  summary="A single-metric block: a big display value, a readable label, and an optional muted caption. Replaces the bespoke .stat / .stat__value / .stat__label cluster every prototype re-implements.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<Stat value="1,284" label="Active permits" />`}>
+      <Stat value="1,284" label="Active permits" />
+    </Preview>
+  </Section>
+
+  <Section id="sub" title="With a caption">
+    <p>The <code>sub</code> line is muted meta — a delta, a reporting period, a qualifier. Keep it short enough not to compete with the label.</p>
+    <Preview code={`<Stat value="1,284" label="Active permits" sub="+12 this quarter" />
+<Stat value="94%" label="On-time review" sub="rolling 90 days" />`}>
+      <Stat value="1,284" label="Active permits" sub="+12 this quarter" />
+      <Stat value="94%" label="On-time review" sub="rolling 90 days" />
+    </Preview>
+  </Section>
+
+  <Section id="accent" title="Accent">
+    <p>
+      <code>accent</code> tints the value with <code>--color-content-brand-secondary</code>. Use it to
+      single out <em>one</em> figure in a row — a headline number among supporting ones. A row where
+      every stat is accented reads as no emphasis at all.
+    </p>
+    <Preview code={`<Stat value="14" label="Monitored sites" />
+<Stat value="3" label="Needs attention" accent />
+<Stat value="27" label="Reports filed" />`}>
+      <Stat value="14" label="Monitored sites" />
+      <Stat value="3" label="Needs attention" accent />
+      <Stat value="27" label="Reports filed" />
+    </Preview>
+  </Section>
+
+  <Section id="rows" title="Stat rows">
+    <p>
+      The component is a bare <code>flex</code> column with a transparent background and no padding
+      of its own — the surface is the caller's job. Lay a row out with a layout primitive or a grid;
+      wrap it in an <a href="/components/esa-card"><code>esa-card</code></a> when the group needs
+      chrome. Deliberately no <code>&lt;esa-stat-group&gt;</code>: spacing between stats belongs to
+      the page, not to the metric.
+    </p>
+    <Preview align="start" code={`<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;">
+  <Stat value="14" label="Monitored sites" sub="across 3 counties" />
+  <Stat value="1,284" label="Active permits" sub="+12 this quarter" />
+  <Stat value="94%" label="On-time review" sub="rolling 90 days" />
+  <Stat value="3" label="Needs attention" accent />
+</div>`}>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2rem; width: 100%;">
+        <Stat value="14" label="Monitored sites" sub="across 3 counties" />
+        <Stat value="1,284" label="Active permits" sub="+12 this quarter" />
+        <Stat value="94%" label="On-time review" sub="rolling 90 days" />
+        <Stat value="3" label="Needs attention" accent />
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <Api props={props} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders plain <code>&lt;div&gt;</code>s — no heading semantics. The value is not an <code>&lt;h*&gt;</code>, so a stat row never disturbs the page's heading outline.</li>
+      <li>The value comes before the label in the DOM, which is also the reading order screen readers announce. Keep the label self-describing (<em>"Active permits"</em>, not <em>"Active"</em>) so the pair makes sense read aloud.</li>
+      <li>Abbreviate carefully: <code>1.2M</code> is announced as written. Prefer the full figure, or add an <code>aria-label</code> at the call site.</li>
+      <li><code>accent</code> is decoration, not meaning — never let the tint be the only signal that a number is the alarming one. Say so in the label or <code>sub</code>.</li>
+    </ul>
+  </Section>
+
+</ComponentDoc>

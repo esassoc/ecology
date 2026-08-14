@@ -15,10 +15,19 @@ import {
   tally,
   chromeExemptions,
   nestedComponents,
+  sharedTokens,
   GAP_KIND_NOTE,
+  SHARING_KIND_NOTE,
   type GapKind,
   type NestingStatus,
+  type SharingKind,
 } from '../../data/component-promises';
+
+const SHARING_KIND_LABEL: Record<SharingKind, string> = {
+  'group-surface': 'a family surface, shared by design',
+  borrowed: 'one component’s hook, read by another',
+  unowned: 'declared under nobody’s group',
+};
 
 const NESTING_LABEL: Record<NestingStatus, string> = {
   open: 'open',
@@ -292,6 +301,56 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     ))}
   </Section>
 
+  <Section id="shared" title="Read by more than one component">
+    <p>
+      A tier-3 token themes <em>one</em> component, so several readers is worth a look — but it is
+      not one defect, it is three different facts, and only two of them are problems. Sorted by
+      reader count, so the widest blast radius is first.
+    </p>
+    <p class="part-n">
+      The component doc pages read the same data: each one splits its theming surface into the hooks
+      wired to <em>it</em> and the shared tokens it merely consumes, so a spoke author can tell
+      &ldquo;mine to turn&rdquo; from &ldquo;turning this moves the family&rdquo;. This table is the
+      system-wide view of the second half. Everything here is derived — a new component that reads
+      <code>--dialog-bg</code> appears on the next build.
+    </p>
+    {(['unowned', 'borrowed', 'group-surface'] as SharingKind[]).map((kind) => {
+      const group = sharedTokens.filter((t) => t.kind === kind);
+      if (!group.length) return null;
+      return (
+        <details class="ns" open={kind !== 'group-surface'}>
+          <summary>
+            <span class="ns-name">
+              <span class={`kind-flag s-${kind}`}>{kind}</span>
+              <span class="dim">{SHARING_KIND_LABEL[kind]}</span>
+            </span>
+            <span class="summary-right"><span class="ns-count">{group.length}</span></span>
+          </summary>
+          <p class="part-n pad">{SHARING_KIND_NOTE[kind]}</p>
+          <table class="findings">
+            <thead><tr><th>Token</th><th>Declared under</th><th>Readers</th></tr></thead>
+            <tbody>
+              {group.map((t) => (
+                <tr>
+                  <td><code>{t.token}</code></td>
+                  <td>
+                    {t.family ? <span>{t.family} <span class="dim">group</span></span>
+                    : t.owner ? <a class="ns-slug" href={`/components/${t.owner}`}>{t.owner}</a>
+                    : <span class="dim">— nobody</span>}
+                  </td>
+                  <td>
+                    <span class="ns-count">{t.readers.length}</span>{' '}
+                    <span class="dim">{t.readers.join(', ')}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      );
+    })}
+  </Section>
+
   <Section id="adhoc" title="Under-promise — read, declared nowhere">
     <p>
       The inverse failure. These hooks <em>work</em> — the component reads them with an inline
@@ -409,6 +468,11 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   .promises-debug .kind-flag.n-open { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
   .promises-debug .kind-flag.n-accepted { background: var(--color-background-sunken, #f0f0f0); color: var(--color-content-secondary, #666); }
   .promises-debug .kind-flag.n-resolved { background: var(--color-background-success-subtle, #f3fbf0); color: var(--color-content-success, #5c7c2f); }
+  /* Sharing: `group-surface` is the healthy one, so it reads as success — the
+     other two are the ones to look at. */
+  .promises-debug .kind-flag.s-unowned { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
+  .promises-debug .kind-flag.s-borrowed { background: var(--color-background-info-subtle, #eff6ff); color: var(--color-content-info, #0d74ce); }
+  .promises-debug .kind-flag.s-group-surface { background: var(--color-background-success-subtle, #f3fbf0); color: var(--color-content-success, #5c7c2f); }
   .promises-debug h3.sub { margin-top: var(--spacing-500, 20px); font-size: 0.95rem; }
   .promises-debug table.exemptions { margin-bottom: var(--spacing-300, 12px); }
   .promises-debug table.exemptions td:last-child { font-size: 0.8rem; }

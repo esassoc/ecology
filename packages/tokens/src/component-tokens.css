@@ -57,9 +57,6 @@
   --form-border-color: var(--color-border);
   --form-border-color-hover: var(--color-border-strong);
   --form-border-color-focus: var(--color-border-focus);
-  --focus-ring-color: var(--color-border-focus);
-  --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
   /* `error` is a validation VARIANT, not an interaction state — it does not sit
      with hover/focus/pressed, and it was the one token in the file with a
      variant in the trailing state slot. Now variant-first, which also pairs it
@@ -70,6 +67,12 @@
   --form-label-color: var(--color-content-secondary);
   --form-help-color: var(--color-content-muted);
   --form-error-color: var(--color-content-danger);
+  /* Was filed under the esa-select group in the HOOKIFY block, which read as a
+     per-component hook. It is a family token: esa-select and esa-text-field
+     both read it, and any control with a label wants the same weight. Its
+     partner --form-label-font-size is deliberately NOT declared — see the note
+     where it used to sit. */
+  --form-label-font-weight: var(--font-weight-medium, 500);
   /* structure */
   /* Every form edge, including the checkbox box and the radio circle. There was
      briefly a --form-indicator-border-width at --border-width-200, added because both
@@ -86,6 +89,33 @@
   --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
+
+  /* ===================== FOCUS RING ===================== */
+  /* Lived in FORMS until now, which was the wrong home by a wide margin: 33
+     components read --focus-ring-width and 31 read --focus-ring-color, among
+     them alert-box, back-to-top, dialog and button — a focus ring is a
+     system-wide accessibility affordance, not a form control's concern. The
+     namespace itself is correct and stays: `focus-ring` is the naming rubric's
+     own worked example of a `special` case in the component slot, which is how
+     tier3-naming.ts already classifies it.
+
+     All three are thin aliases over tier 2, which is the shape --focus-ring-color
+     always had and the other two have now caught up to. `width` held a bare 2px
+     with no role behind it, so a spoke could not reach the ring's weight at all;
+     it now reads --border-width-focus. See that token for why the tier-2 width
+     role was rejected once and why the rejection did not survive contact with
+     this token (short version: the survey it rested on counted BORDERS, and
+     every component paints this ring with outline or box-shadow).
+
+     `offset` stays a literal, and that is not an oversight. There is no 2px
+     anywhere to point at: the spacing scale is a 4px grid starting at
+     --spacing-100 (0.25rem), and minting a 2px primitive to serve exactly one
+     consumer is the move SPEC.md forbids — a role nobody can point at. The ring
+     gap is genuine micro-geometry, which is the category the width turned out
+     not to belong to. */
+  --focus-ring-color: var(--color-border-focus);
+  --focus-ring-width: var(--border-width-focus);
+  --focus-ring-offset: 2px;
 
   /* ===================== ICON BUTTON ===================== */
   --icon-button-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
@@ -431,9 +461,15 @@
   /* esa-range-slider */
   --fill-percent: 0%;
 
-  /* esa-select */
-  --form-label-font-size: var(--_field-font-size);
-  --form-label-font-weight: var(--font-weight-medium, 500);
+  /* --form-label-font-size is intentionally NOT declared here. It is the
+     umbrella case the header describes: esa-select falls back to
+     --_field-font-size and esa-text-field to --_label-font-size, so there is no
+     one value this could hold without pinning every size to it. It was also
+     declared as `var(--_field-font-size)` — a PRIVATE, which exists only inside
+     a component's shadow root and resolves to nothing at :root, so the
+     declaration was inert and every consumer was already running on its own
+     fallback. Stays ad-hoc; the component pages document it as a hook.
+     --form-label-font-weight moved up to the FORMS section, where it belongs. */
 
   /* esa-header-nav */
   --header-nav-avatar-bg: var(--color-background-brand, #43608a);
@@ -462,6 +498,13 @@
   --loading-overlay-bg: var(--color-background-raised, #fff);
   --loading-overlay-bg-transparent: var(--color-overlay-scrim);
   --loading-overlay-message-color: var(--color-content-secondary, #525252);
+
+  /* The spinner owns these; the overlay reads them because it renders one.
+     Filed under esa-loading-overlay until now, which made the spinner's own
+     page show zero hooks of its own. NOTE: the owner marker below has to be a
+     comment containing ONLY the slug — theming.ts parses these to decide which
+     component a hook belongs to, and any trailing prose stops it matching. */
+  /* esa-loading-spinner */
   --loading-spinner-color: var(--color-background-brand, #43608a);
   --loading-spinner-track-color: var(--color-border-subtle, #efefef);
 
@@ -544,6 +587,24 @@
   --snackbar-item-warning-bg: var(--color-content-warning);
   --snackbar-item-color: var(--color-content-inverse, #ffffff);
   --snackbar-item-radius: var(--radius-surface, 0.5rem);
+
+  /* esa-stat — the whole surface is TYPE, which is unusual for a tier-3 block
+     and is the point: a metric's authority comes from the size/weight/face of
+     its value, so a spoke that cannot turn those cannot re-skin the stat at
+     all. Sizes stay pointed at tier-2 font-size roles (NOT at a type role
+     class) because the value deliberately sits at a large-but-tasteful step,
+     below the display/900 roles. */
+  --stat-accent-color: var(--color-content-brand-secondary, #3a7c59);
+  --stat-gap: var(--spacing-050, 0.125rem);
+  --stat-label-color: var(--color-content-secondary, #525252);
+  --stat-label-size: var(--font-size-200, 0.9375rem);
+  --stat-label-weight: var(--font-weight-medium, 500);
+  --stat-sub-color: var(--color-content-muted, #737373);
+  --stat-sub-size: var(--font-size-150, 0.875rem);
+  --stat-value-color: var(--color-content-primary, #171717);
+  --stat-value-font: var(--font-display, var(--font-sans, 'DM Sans', sans-serif));
+  --stat-value-size: var(--font-size-700, 2.25rem);
+  --stat-value-weight: var(--font-weight-bold, 650);
 
   /* esa-switch-toggle */
   --switch-toggle-label-color: var(--color-content-primary, #171717);

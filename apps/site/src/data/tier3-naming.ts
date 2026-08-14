@@ -984,6 +984,107 @@ export const slots: RubricSlot[] = [
   },
 ];
 
+/* ======================================================================
+ * The TYPOGRAPHY rubric — the third narrow shape, beside colour.
+ * ======================================================================
+ *
+ *   --<component>-<variant>-<font-size|font-weight|font-style|line-height>
+ *
+ * The model, in its own words: most components wire straight to the tier-2
+ * typography COMPOSITE tokens, and tier 3 exists only for the component-specific
+ * exceptions — "most of the use cases for this are either tweaking a font size,
+ * or setting a line height to one in order to remove white space above and
+ * below a text". So unlike colour, a SMALL count here is the healthy result: a
+ * large tier-3 typography surface would mean components are re-deriving type
+ * instead of reading a role.
+ *
+ * Note the property list is closed at four, and every one is spelled with its
+ * full CSS property name — there is no `size`/`weight` shorthand in the model.
+ */
+
+const TYPOGRAPHIC_PROPS = ['font-size', 'font-weight', 'font-style', 'line-height'] as const;
+type TypographicProp = (typeof TYPOGRAPHIC_PROPS)[number];
+
+/** The word we actually use → the rubric property it fills. Abbreviations are
+ *  mapped here rather than being silently dropped, so the dialect shows up as a
+ *  spelling difference rather than as a missing token.
+ *
+ *  A bare `size` is deliberately NOT mapped, and the omission is the whole
+ *  reason this is a table rather than a regex on `/size|weight/`: in this kit
+ *  `size` means a BOX dimension — `--avatar-size-md`, `--back-to-top-size`,
+ *  `--empty-state-icon-size-lg` — and mapping it caught 12 of those and
+ *  reported them as type. A bare `weight` has no such second meaning (border
+ *  thickness is spelled `width`), so that one is safe to fold in. */
+const TYPE_WORD_TO_PROP: Record<string, TypographicProp> = {
+  'font-size': 'font-size',
+  'font-weight': 'font-weight',
+  'font-style': 'font-style',
+  'line-height': 'line-height',
+  weight: 'font-weight',
+};
+
+export interface TypeRow {
+  row: Tier3Row;
+  /** The rubric property, or null when the name uses a word outside the model. */
+  prop: TypographicProp | null;
+  /** The word actually written in the name. */
+  word: string;
+  /** True when the word matches the rubric's own spelling exactly. */
+  rubricSpelling: boolean;
+}
+
+/** Tier-3 tokens whose property is typographic, matched on the NAME (minus its
+ *  namespace, so a namespace containing `font` can't produce a false hit). */
+export const typeRows: TypeRow[] = rows
+  .map((r) => {
+    const tail = r.name.slice(2 + (r.ns?.length ?? 0));
+    const word = Object.keys(TYPE_WORD_TO_PROP)
+      // Longest first: `font-size` has to win over `size`, `font-weight` over `weight`.
+      .sort((a, b) => b.length - a.length)
+      .find((w) => new RegExp(`(^|-)${w}(-|$)`).test(tail));
+    if (!word && !/(^|-)font-family(-|$)/.test(tail)) return null;
+    return {
+      row: r,
+      prop: word ? TYPE_WORD_TO_PROP[word] : null,
+      word: word ?? 'font-family',
+      rubricSpelling: !!word && (TYPOGRAPHIC_PROPS as readonly string[]).includes(word),
+    };
+  })
+  .filter((x): x is TypeRow => x !== null)
+  .sort((a, b) => a.row.name.localeCompare(b.row.name));
+
+/** Per rubric property: which words we use for it, with counts. */
+export const typePropVocab: PropVocabRow[] = TYPOGRAPHIC_PROPS.map((p) => {
+  const mine = typeRows.filter((t) => t.prop === p);
+  const m = new Map<string, number>();
+  for (const t of mine) m.set(t.word, (m.get(t.word) ?? 0) + 1);
+  return {
+    rubric: p,
+    words: [...m.entries()].map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count),
+    total: mine.length,
+    note:
+      p === 'font-size'
+        ? 'The bulk of the surface, and exactly the case the model predicts — components tweaking one size rather than re-deriving a role. Spelled the rubric’s way throughout.'
+        : p === 'font-weight'
+          ? 'Two spellings for one property: `font-weight` once, and a bare `weight` twice (--grid-header-weight, --sidenav-link-weight-active). Same drift the general rubric’s property slot already records, in miniature.'
+          : p === 'line-height'
+            ? 'One token, and it is NOT the model’s worked example — `--form-line-height` carries --line-height-normal, not the `line-height: 1` trick for stripping the half-leading above and below a single line of text. That case is handled inside components where it comes up, so it has no tier-3 hook.'
+            : 'Nothing. No component exposes a font-style hook, which is the expected result — italics in this kit are a content decision, not a themeable axis.',
+  };
+});
+
+/** Typographic tier-3 tokens whose property is OUTSIDE the model's four. */
+export const typeOutsideRubric = typeRows.filter((t) => t.prop === null);
+
+export const typeTally = {
+  total: typeRows.length,
+  rubricSpelled: typeRows.filter((t) => t.rubricSpelling).length,
+  outside: typeOutsideRubric.length,
+  /** Components reading a tier-2 composite instead — the healthy default. */
+  withVariant: typeRows.filter((t) => t.row.variant).length,
+  withSize: typeRows.filter((t) => t.row.size).length,
+};
+
 export const grammars = {
   rubric: '--eco-<tier>-<component|category|special>-<variant>-<property>[-<state>]',
   current: [
