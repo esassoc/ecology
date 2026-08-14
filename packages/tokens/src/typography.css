@@ -107,12 +107,62 @@
   letter-spacing: var(--typography-body-sm-letter-spacing);
 }
 
-.typography-label {
-  font-family: var(--typography-label-font-family);
-  font-size: var(--typography-label-font-size);
-  font-weight: var(--typography-label-font-weight);
-  line-height: var(--typography-label-line-height);
-  letter-spacing: var(--typography-label-letter-spacing);
+/* UI TEXT. Three sizes × two weights. The sizes share the body ramp on purpose —
+   label-md and body-md are the same size doing different jobs. */
+.typography-label-xs {
+  font-family: var(--typography-label-xs-font-family);
+  font-size: var(--typography-label-xs-font-size);
+  font-weight: var(--typography-label-xs-font-weight);
+  line-height: var(--typography-label-xs-line-height);
+  letter-spacing: var(--typography-label-xs-letter-spacing);
+}
+
+.typography-label-sm {
+  font-family: var(--typography-label-sm-font-family);
+  font-size: var(--typography-label-sm-font-size);
+  font-weight: var(--typography-label-sm-font-weight);
+  line-height: var(--typography-label-sm-line-height);
+  letter-spacing: var(--typography-label-sm-letter-spacing);
+}
+
+.typography-label-md {
+  font-family: var(--typography-label-md-font-family);
+  font-size: var(--typography-label-md-font-size);
+  font-weight: var(--typography-label-md-font-weight);
+  line-height: var(--typography-label-md-line-height);
+  letter-spacing: var(--typography-label-md-letter-spacing);
+}
+
+.typography-label-xs-strong {
+  font-family: var(--typography-label-xs-strong-font-family);
+  font-size: var(--typography-label-xs-strong-font-size);
+  font-weight: var(--typography-label-xs-strong-font-weight);
+  line-height: var(--typography-label-xs-strong-line-height);
+  letter-spacing: var(--typography-label-xs-strong-letter-spacing);
+}
+
+.typography-label-sm-strong {
+  font-family: var(--typography-label-sm-strong-font-family);
+  font-size: var(--typography-label-sm-strong-font-size);
+  font-weight: var(--typography-label-sm-strong-font-weight);
+  line-height: var(--typography-label-sm-strong-line-height);
+  letter-spacing: var(--typography-label-sm-strong-letter-spacing);
+}
+
+.typography-label-md-strong {
+  font-family: var(--typography-label-md-strong-font-family);
+  font-size: var(--typography-label-md-strong-font-size);
+  font-weight: var(--typography-label-md-strong-font-weight);
+  line-height: var(--typography-label-md-strong-line-height);
+  letter-spacing: var(--typography-label-md-strong-letter-spacing);
+}
+
+.typography-title-strong {
+  font-family: var(--typography-title-strong-font-family);
+  font-size: var(--typography-title-strong-font-size);
+  font-weight: var(--typography-title-strong-font-weight);
+  line-height: var(--typography-title-strong-line-height);
+  letter-spacing: var(--typography-title-strong-letter-spacing);
 }
 
 .typography-meta {
@@ -123,13 +173,22 @@
   letter-spacing: var(--typography-meta-letter-spacing);
 }
 
-.typography-eyebrow {
-  font-family: var(--typography-eyebrow-font-family);
-  font-size: var(--typography-eyebrow-font-size);
-  font-weight: var(--typography-eyebrow-font-weight);
-  line-height: var(--typography-eyebrow-line-height);
-  letter-spacing: var(--typography-eyebrow-letter-spacing);
-  text-transform: var(--typography-eyebrow-text-transform);
+.typography-eyebrow-sm {
+  font-family: var(--typography-eyebrow-sm-font-family);
+  font-size: var(--typography-eyebrow-sm-font-size);
+  font-weight: var(--typography-eyebrow-sm-font-weight);
+  line-height: var(--typography-eyebrow-sm-line-height);
+  letter-spacing: var(--typography-eyebrow-sm-letter-spacing);
+  text-transform: var(--typography-eyebrow-sm-text-transform);
+}
+
+.typography-eyebrow-md {
+  font-family: var(--typography-eyebrow-md-font-family);
+  font-size: var(--typography-eyebrow-md-font-size);
+  font-weight: var(--typography-eyebrow-md-font-weight);
+  line-height: var(--typography-eyebrow-md-line-height);
+  letter-spacing: var(--typography-eyebrow-md-letter-spacing);
+  text-transform: var(--typography-eyebrow-md-text-transform);
 }
 
 .typography-code-lg {
@@ -164,6 +223,25 @@
  * its composite — same tokens, same output — so migrating is a find-and-replace
  * with no visual diff. Remove once the spokes have migrated.
  * ------------------------------------------------------------------------ */
+
+/* -> .typography-label-xs  (label gained sizes: xs/sm/md × regular/strong) */
+.typography-label {
+  font-family: var(--typography-label-xs-font-family);
+  font-size: var(--typography-label-xs-font-size);
+  font-weight: var(--typography-label-xs-font-weight);
+  line-height: var(--typography-label-xs-line-height);
+  letter-spacing: var(--typography-label-xs-letter-spacing);
+}
+
+/* -> .typography-eyebrow-sm  (eyebrow gained a second size) */
+.typography-eyebrow {
+  font-family: var(--typography-eyebrow-sm-font-family);
+  font-size: var(--typography-eyebrow-sm-font-size);
+  font-weight: var(--typography-eyebrow-sm-font-weight);
+  line-height: var(--typography-eyebrow-sm-line-height);
+  letter-spacing: var(--typography-eyebrow-sm-letter-spacing);
+  text-transform: var(--typography-eyebrow-sm-text-transform);
+}
 
 /* -> .typography-display */
 .type-display {

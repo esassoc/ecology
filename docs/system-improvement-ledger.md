@@ -315,6 +315,22 @@ codemod rather than a flag day.
   move them onto `--transition-*`. Until they do they **ignore the reduced-motion override**,
   which is what makes that block worth having. Not a codemod: each site needs the right role
   chosen, and 80ms sites have no exact rung · `hub-fix` · **P1**
+- **FOR THE TIER-3 PASS — adopting a typography composite removes the component's
+  typography hook** · *Evidence:* 13 tier-3 typography hooks exist (`--grid-font-size`,
+  `--grid-header-font-size`, `--grid-row-font-size`, `--grid-font-family`,
+  `--form-font-size`, `--form-label-font-size`, `--form-label-font-weight`,
+  `--form-line-height`, `--filter-pill-font-size`, `--icon-link-font-size`,
+  `--link-column-heading-font-size`, `--link-column-item-font-size`,
+  `--pagination-font-size`). A spoke re-points them today. An element that takes its
+  typography from `class="typography-label-md"` stops reading them · *Action:* decide
+  as part of the tier-3 pass, not per component. Three options, and the answer changes
+  the migration mechanism for the WHOLE kit rather than just the hooked components, so
+  the typography migration waits on it: (a) let them go — a spoke that wants different
+  header type changes the composite or picks another one, and per-component font-size
+  overrides are the fragmentation composites exist to prevent; (b) keep them, defaulting
+  to composite tokens — preserves the surface but puts components back to per-property
+  wiring, which is the thing being removed; (c) keep only the hooks a spoke plausibly
+  needs (form controls, data grid) and drop the rest · `hub-fix` · **P1**
 - **Typography is assembled from parts at 200+ call sites** · *Evidence:* the composite roles
   exist, but components read the ingredients directly far more than they read a role —
   `--font-sans` 69, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38 ·
