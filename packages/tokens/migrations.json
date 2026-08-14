@@ -594,6 +594,87 @@
           "typography-eyebrow-sm"
         ]
       ]
+    },
+    {
+      "id": "font-size-ui-to-composites",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "A size-only ramp running parallel to the typography composites. It let a component pick a size without adopting a composite, which is how the kit ended up with 100 tier-1 font-size reads and no shared typographic vocabulary. Its nine tier-3 consumers now point at the composite whose job matches \u2014 form control text at label, the large step at body-lg \u2014 so the size travels with a weight, a line-height and a face instead of alone.",
+      "pairs": [
+        [
+          "--font-size-ui-xs",
+          "--typography-label-2xs-font-size"
+        ],
+        [
+          "--font-size-ui-sm",
+          "--typography-label-xs-font-size"
+        ],
+        [
+          "--font-size-ui-md",
+          "--typography-label-md-font-size"
+        ],
+        [
+          "--font-size-ui-lg",
+          "--typography-body-lg-font-size"
+        ]
+      ]
+    },
+    {
+      "id": "tier3-border-to-border-color",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "The word `border` named two different things at tier 3. These two held a plain colour; --filter-dropdown-border held a whole `1px solid \u2026` shorthand (see the row below, which is NOT an exact alias). All three are now `-border-color`, matching the 27 border hooks in the file that already were. Names only, values untouched. FIRST TIER-3 ROWS IN THIS FILE \u2014 note the asymmetry: the emitted alias rescues a spoke that READS an old name, but tier 3 is the surface a spoke DECLARES, and an alias cannot rescue a declaration. A spoke that overrode --sidenav-border silently loses that override and renders the hub default with no error, so /update-tokens has to run in every spoke rather than the alias being left to absorb it.",
+      "pairs": [
+        [
+          "--sidenav-border",
+          "--sidenav-border-color"
+        ],
+        [
+          "--topbar-border",
+          "--topbar-border-color"
+        ]
+      ]
+    },
+    {
+      "id": "filter-dropdown-border-shorthand-to-colour",
+      "kind": "token",
+      "since": "2026-08-14",
+      "exact": false,
+      "why": "NOT an exact alias \u2014 the VALUE SHAPE changed, not just the name. --filter-dropdown-border held `1px solid var(--color-border)`; --filter-dropdown-border-color holds the colour alone, and esa-filter-dropdown now composes the shorthand from --border-width-default. The hub renders identically (that role is 1px, the same literal the shorthand carried), but a spoke is NOT safe by construction here: anything that wrote `border: var(--filter-dropdown-border)` now gets a bare colour where a shorthand was, which is not a valid border. That is the whole reason the token changed \u2014 a theme could not re-point this colour without restating a width and style it had no reason to care about. Rewrite such a site as `border: var(--border-width-default, 1px) solid var(--filter-dropdown-border-color)`.",
+      "pairs": [
+        [
+          "--filter-dropdown-border",
+          "--filter-dropdown-border-color"
+        ]
+      ]
+    },
+    {
+      "id": "tier3-variant-before-property",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "Five tokens put their variant AFTER the property, where the rest of the file puts it before (--app-bar-brand-bg, --app-bar-brand-strong-text). Four were esa-snackbar-item's colour-variant surface \u2014 the only component in the kit that exposes its variant axis at tier 3 at all \u2014 and the fifth, --form-border-color-error, put a validation VARIANT in the trailing slot reserved for interaction states, beside hover and focus. Renaming it also pairs it with the existing --form-error-color: one error treatment, two properties. Names only; every value is untouched. Same tier-3 declaration caveat as the border row above.",
+      "pairs": [
+        [
+          "--snackbar-item-bg-danger",
+          "--snackbar-item-danger-bg"
+        ],
+        [
+          "--snackbar-item-bg-info",
+          "--snackbar-item-info-bg"
+        ],
+        [
+          "--snackbar-item-bg-success",
+          "--snackbar-item-success-bg"
+        ],
+        [
+          "--snackbar-item-bg-warning",
+          "--snackbar-item-warning-bg"
+        ],
+        [
+          "--form-border-color-error",
+          "--form-error-border-color"
+        ]
+      ]
     }
   ]
 }

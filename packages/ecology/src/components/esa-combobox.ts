@@ -869,7 +869,7 @@ export class EsaCombobox extends LitElement {
 
     .field--error .input,
     .field--error .trigger--field {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .field--error .input:focus,
     .field--error .trigger--field:focus-visible {

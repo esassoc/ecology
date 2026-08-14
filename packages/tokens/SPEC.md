@@ -265,31 +265,42 @@ tier 2:
                                                                 focus-ring
 ```
 
-**We do not ship this shape, and the divergence is deliberate in one place and
-outstanding in three.** `/debug/tokens` measures all four slots against the real
-names; the summary:
+**We do not ship this shape. One divergence is deliberate, one is outstanding,
+and two have been closed.** `/debug/tokens` measures all four slots against the
+real names; the summary:
 
 - **Component slot — matches.** Including both non-component cases: `form` is a
   category, `focus-ring` a special case.
 - **Property — not qualified.** We write `--card-bg`, not
   `--card-color-background`. Tier 2 qualifies and tier 3 never followed, so one
-  property is spelled `bg`, one three ways (`color`, `text`, `text-color`), and
-  one two ways (`border-color`, and a bare `border` that holds a colour in two
-  tokens and a `1px solid …` shorthand in a third — the only spelling that costs
-  more than legibility, since a theme can't re-point the shorthand's colour
-  alone).
-- **State — placed correctly, one word missing.** States trail, `default` is
-  omitted. But `active` is in use for *currently selected*, so the rubric's
-  **pressed** state has no name available at tier 3, and one token puts a
-  variant (`error`) in the state slot.
+  property is spelled `bg` and one three ways (`color`, `text`, `text-color`).
+  This is the one still outstanding, and it is a legibility cost rather than a
+  capability cost — see the note on rename risk below before taking it on.
+
+  *Closed:* `border` used to be the fourth spelling and the only one that cost
+  more than legibility. Three tokens were named `border` while `--sidenav-border`
+  and `--topbar-border` held a plain colour and `--filter-dropdown-border` held a
+  whole `1px solid …` shorthand — so a theme could re-point two of them and could
+  not re-point the third's colour without restating a width and style it had no
+  reason to care about. All three are now `-border-color` holding a colour, and
+  the component composes the shorthand from `--border-width-default`.
+- **State — placed correctly.** States trail and `default` is omitted. `active`
+  is in use for *currently selected*, so the rubric's **pressed** state still has
+  no name available at tier 3 — that one is real and open.
+
+  *Closed:* `--form-border-color-error` put a validation **variant** in the
+  trailing slot reserved for interaction states. It is now
+  `--form-error-border-color`, which also pairs it with the existing
+  `--form-error-color`: one error treatment, two properties.
 - **Variant — mostly absent, and this is the substantive gap.** Seven components
   have a real colour-variant axis (button, badge, pill, alert-box,
   confirm-dialog, progress-bar, snackbar-item — measured as reading three or
   more of the four status intentions). **Six of them expose none of it at
   tier 3**: they read `--color-background-danger` and friends directly, so their
-  variants are themeable only by moving the whole kit's danger. `esa-snackbar-item`
-  is the one exception — and it puts the variant *after* the property
-  (`--snackbar-item-bg-danger`), which is the rubric's order reversed.
+  variants are themeable only by moving the whole kit's danger.
+  `esa-snackbar-item` is the one exception, and its four hooks now put the
+  variant *before* the property (`--snackbar-item-danger-bg`), matching
+  `--app-bar-brand-bg` and the rubric alike.
 
 **On `disabled`, we disagree with the rubric on purpose.** It puts disabled in
 the state slot, per component. We manage it one tier up as an intention
@@ -298,6 +309,28 @@ the state slot, per component. We manage it one tier up as an intention
 genuinely differs — currently once, `--form-bg-disabled`. That de-duplicates:
 one disabled treatment for the kit instead of one per component. Same reasoning
 as the tier-2 note above, where `disabled` is a variant rather than a state.
+
+**Renaming a tier-3 token is riskier than renaming one at tier 1 or 2, and the
+machinery does not say so.** `build.js` emits `--old: var(--new)` for every row
+in `migrations.json`, which rescues a spoke that **reads** the old name. But
+tier 3 is the surface a spoke **declares** — that is its entire job — and an
+alias cannot rescue a declaration. A spoke whose theme file sets
+`--sidenav-border: <its colour>` keeps setting a token nothing reads any more:
+it loses the override, renders the hub default, and **nothing errors**. The
+alias makes it look fine.
+
+So a tier-3 rename is only half-done when the row lands. `/update-tokens` has to
+run in every spoke, and `doctor.mjs` has to come back clean, before the rename
+can be considered absorbed. The eight renames on this page are the first tier-3
+rows in `migrations.json`; one of them,
+`filter-dropdown-border-shorthand-to-colour`, is marked `exact: false` because
+the value *shape* changed — a spoke that wrote `border: var(--filter-dropdown-border)`
+now gets a bare colour where a shorthand was, which is not a valid border.
+
+This is the reason the property-qualification divergence above stays open rather
+than being tidied up: 158 colour hooks would move, and every spoke would have to
+be walked through the same gate for a change that buys legibility and no new
+capability.
 
 **What the variant gap actually forecloses.** Reading tier 2 directly is legal
 and keeps the surface small — the whole kit's danger moves as one, which is
@@ -363,6 +396,29 @@ A staged surface must:
 Removing a prefix from that list should mean **the component landed**, not that
 the finding got annoying. A staged surface that no one has claimed after a
 release cycle is dead surface — fold it away.
+
+## A shipped `.css` partial is a token READER
+
+Three of the audit's worst findings have been the same mistake: a token reported as
+having no readers because nothing looked at the file reading it. `--duration-0`
+(its reader was a `@media` block), `--topbar-*` (filed "staged" on a false
+premise), and then all 113 `--typography-*` composites, which
+`src/typography.css` reads 169 times while the graph scanned only
+`packages/ecology/src/components`. That last one made 102 of 125 reported
+orphans false and the health tally read 126 instead of 23.
+
+So: **this package ships more than `dist/tokens.css`.** `src/typography.css` and
+`src/layouts.css` are authored partials in the `exports` map, and they consume
+tokens exactly the way a component does. Adding another one requires a
+`SCAN_ROOTS` entry in `apps/site/src/data/token-graph.ts`, or a
+`READ_SCAN_EXEMPT` entry stating why not. The check is derived from this
+package's own `exports` map and counts toward the health total, so shipping a
+partial from a location no root covers fails visibly rather than quietly
+inflating the orphan list.
+
+The general form, which is worth keeping in mind beyond tokens: **usage is a
+different question from value, and it has to be asked of every surface that
+ships — not of the surfaces a tool happened to open for some other reason.**
 
 ## Chrome exemptions
 

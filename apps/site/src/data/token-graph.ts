@@ -27,6 +27,73 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const TOKENS = path.join(ROOT, 'packages', 'tokens');
 const COMPONENTS = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
 
+/**
+ * Where this module looks for token READS — explicit and exported, so an
+ * unscanned surface shows up on the page instead of silently inflating the
+ * orphan count.
+ *
+ * Two kinds, because reader identity differs. Under a `component` root a file's
+ * basename IS a component slug (`esa-card`); a `file` root has no component
+ * identity, so its readers are recorded as repo-relative paths.
+ *
+ * This roster exists because "the reader was real, the scanner never looked"
+ * has now happened three times:
+ *   1. --duration-0, whose only reader is the prefers-reduced-motion block —
+ *      fixed by `conditionalEdges` below;
+ *   2. --topbar-*, mislabelled "staged" for months (SPEC.md, Staged surfaces);
+ *   3. every --typography-* token, 102 of them, reported orphan while
+ *      packages/tokens/src/typography.css read them 169 times.
+ *
+ * Note what (1)'s fix did and did not do: it taught the module about at-rules
+ * inside the two files it already opened. It never asked whether there were
+ * files it wasn't opening at all — which is the whole of (3). The generalised
+ * rule is in the conditionalEdges comment: usage is a different question from
+ * value, and it has to be asked of EVERY surface that ships, not of the
+ * surfaces this module happened to read for some other reason.
+ */
+export const SCAN_ROOTS: { rel: string; kind: 'component' | 'file'; why: string }[] = [
+  {
+    rel: 'packages/ecology/src',
+    kind: 'component',
+    why: 'The component kit. Files directly under components/ carry slug identity; anything else in the package is recorded by path.',
+  },
+  {
+    rel: 'packages/tokens/src',
+    kind: 'file',
+    why: 'The authored partials @esa/tokens ships alongside the compiled output — typography.css assembles the composites into classes, layouts.css the layout primitives.',
+  },
+  {
+    rel: 'packages/docs/src',
+    kind: 'file',
+    why: '@esa/docs — the shared doc-site chrome, consumed by this site and by every spoke.',
+  },
+  {
+    rel: 'packages/spoke-template/src',
+    kind: 'file',
+    why: 'The seed scripts/create-spoke.mjs copies wholesale, so a token it reads is load-bearing for every spoke that will ever exist.',
+  },
+];
+
+/**
+ * Surfaces deliberately NOT read-scanned, with the reason on the record. An
+ * exemption has to be as visible as a root — an undisclosed one is
+ * indistinguishable from the oversight this roster exists to prevent.
+ */
+export const READ_SCAN_EXEMPT: { rel: string; why: string }[] = [
+  {
+    rel: 'packages/tokens/src/component-tokens.css',
+    why: 'Already covered twice over. Every var() in the file sits on the right-hand side of a custom-property declaration — the only exceptions are three mentions inside comments — so refsOf() -> usedByTokens carries the :root ones and conditionalEdges the at-rule ones. Read-scanning would double-count every edge and push tier-3 right-hand refs into `undeclared`, inventing bugs.',
+  },
+  {
+    rel: 'packages/tokens/dist/tokens.css',
+    why: 'The compiled output — declarations, not reads. parseDefs() already takes every one of them, and every var() in the file sits on a declaration right-hand side, which refsOf() carries. Same reasoning as component-tokens.css above.',
+  },
+  {
+    rel: 'apps/site/src',
+    why: 'A documentation surface, not a consumer of the packages — the question orphan answers is "is this load-bearing for anyone consuming @esa/tokens", and the manual is not a consumer. Two concrete hazards if it were included: this debug page would de-orphan --color-background-ai-subtle by styling ITSELF, and styles/themes.css would re-enter through the back door as reader edges when its `--x: var(--y)` lines are writes, which the header rule above excludes on purpose. It would rescue exactly three tokens (--color-background-accent, --color-background-ai-subtle, --transition-slow); those want a component reader or folding away, not an exemption.',
+  },
+];
+
 export type Tier = 'primitive' | 'semantic' | 'component';
 
 export interface LineageLink {
@@ -52,11 +119,35 @@ export interface TokenNode {
   usedByTokens: string[];
   /** Component slugs whose source reads this token via var(). */
   usedByComponents: string[];
+  /**
+   * Non-component readers, as repo-relative paths — the shipped CSS partials,
+   * @esa/docs, the spoke template.
+   *
+   * Kept SEPARATE from usedByComponents rather than folded in, because two
+   * downstream consumers treat that array as a set of component slugs and
+   * would break silently: tier3-naming.ts counts its length as `reach` to tell
+   * a genuine category namespace from a component that happens to be named
+   * oddly, and component-promises.ts matches slugs by equality. A path in
+   * either place corrupts both answers while still type-checking.
+   */
+  usedByFiles: string[];
 }
 
 /* ------------------------------------------------------------------ sources */
 
 const readIf = (p: string) => (existsSync(p) ? readFileSync(p, 'utf8') : '');
+
+/** Every source file under `dir`, recursively. Build output and deps excluded. */
+const walk = (dir: string, out: string[] = []): string[] => {
+  if (!existsSync(dir)) return out;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist') continue;
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(p, out);
+    else if (/\.(astro|ts|tsx|css)$/.test(entry.name)) out.push(p);
+  }
+  return out;
+};
 
 const tokensCss = readIf(path.join(TOKENS, 'dist', 'tokens.css'));
 const componentCss = readIf(path.join(TOKENS, 'src', 'component-tokens.css'));
@@ -67,10 +158,20 @@ if (!tokensCss) {
   );
 }
 
-/** Every `--name: value;` in source order; first (=:root default) wins. */
+/**
+ * Every `--name: value;` in source order; first (=:root default) wins.
+ *
+ * Comments are stripped FIRST, and that is not tidiness. The value pattern is
+ * `[^;]+`, which spans newlines, so a comment merely MENTIONING a token with a
+ * colon — `/* Was `--filter-dropdown-border: 1px solid …` *\/` — matched from
+ * inside the comment through to the next real semicolon and registered a
+ * declaration that does not exist. The token then showed up as a fully-fledged
+ * orphan: declared, unread, "safe to delete". Prose about a token is not a
+ * declaration of it.
+ */
 const parseDefs = (css: string): Map<string, string> => {
   const m = new Map<string, string>();
-  for (const [, name, value] of css.matchAll(/(--[a-zA-Z0-9-]+)\s*:\s*([^;]+);/g)) {
+  for (const [, name, value] of css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(--[a-zA-Z0-9-]+)\s*:\s*([^;]+);/g)) {
     if (!m.has(name)) m.set(name, value.trim());
   }
   return m;
@@ -151,40 +252,102 @@ const refsOf = (value: string): string[] => [
   ...new Set([...value.matchAll(/var\(\s*(--[a-zA-Z0-9-]+)/g)].map((m) => m[1])),
 ];
 
-/* ------------------------------------------------- component consumption map */
+/* ------------------------------------------------------- consumption map */
 
 /** token -> component slugs that read it. Comments stripped so docs prose
  *  mentioning `var(--x)` doesn't register as real usage. */
 const componentUse = new Map<string, Set<string>>();
+/** token -> repo-relative paths of NON-component shipped files that read it. */
+const fileUse = new Map<string, Set<string>>();
 /** A read site is "bare" when it supplies NO fallback: `var(--x)`. That
  *  distinction decides whether an undeclared token is a bug or legitimate
- *  ad-hoc surface (SPEC.md), so it has to be tracked, not just the name. */
+ *  ad-hoc surface (SPEC.md), so it has to be tracked, not just the name.
+ *
+ *  Fed from COMPONENTS ONLY, on purpose — see `undeclared` below. */
 const bareRead = new Map<string, Set<string>>();
 
-if (existsSync(COMPONENTS)) {
-  for (const file of readdirSync(COMPONENTS)) {
-    if (!/\.(astro|ts)$/.test(file)) continue;
-    const slug = file.replace(/\.(astro|ts)$/, '');
-    const src = readFileSync(path.join(COMPONENTS, file), 'utf8')
+/** Per-root file tallies, for the rendered scan-coverage disclosure. */
+const scanStats = new Map<string, { files: number; tokens: Set<string> }>();
+
+// Match the token name and only the ONE delimiter that follows it: `)` means
+// a bare read, `,` means a fallback was supplied. Deliberately does not try
+// to capture the fallback itself — a fallback can nest arbitrarily deep
+// (`var(--a, var(--b, 1rem) var(--c, 1rem))`), and a regex that tries to
+// bracket-match it fails on those and silently loses the usage record.
+const READ_RE = /var\(\s*(--[a-zA-Z][a-zA-Z0-9-]*)\s*([,)])/g;
+const LOCAL_DECL_RE = /(--[a-zA-Z][a-zA-Z0-9-]*)\s*:/g;
+
+const exemptFromReadScan = (rel: string) =>
+  READ_SCAN_EXEMPT.some((e) => rel === e.rel || rel.startsWith(`${e.rel}/`));
+
+for (const root of SCAN_ROOTS) {
+  const stats = { files: 0, tokens: new Set<string>() };
+  scanStats.set(root.rel, stats);
+
+  for (const abs of walk(path.join(ROOT, root.rel))) {
+    const rel = path.relative(ROOT, abs).split(path.sep).join('/');
+    if (exemptFromReadScan(rel)) continue;
+
+    const src = readFileSync(abs, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|\s)\/\/.*$/gm, '$1');
-    // Match the token name and only the ONE delimiter that follows it: `)` means
-    // a bare read, `,` means a fallback was supplied. Deliberately does not try
-    // to capture the fallback itself — a fallback can nest arbitrarily deep
-    // (`var(--a, var(--b, 1rem) var(--c, 1rem))`), and a regex that tries to
-    // bracket-match it fails on those and silently loses the usage record.
-    for (const m of src.matchAll(/var\(\s*(--[a-zA-Z][a-zA-Z0-9-]*)\s*([,)])/g)) {
+
+    // A file under a `component` root only earns slug identity if it sits
+    // directly in components/ — packages/ecology/src/typography.ts is in the
+    // package but is not a component, and giving it a slug would invent one.
+    const inComponentDir = path.dirname(abs) === COMPONENTS;
+    const slug =
+      root.kind === 'component' && inComponentDir && /\.(astro|ts)$/.test(abs)
+        ? path.basename(abs).replace(/\.(astro|ts)$/, '')
+        : null;
+
+    // Tokens a FILE-kind surface declares itself are not tokens it reads from
+    // the system. layouts.css forces this: it bare-reads --gap, --align,
+    // --grid-min and six more that it declares on the element a line above, so
+    // without the filter they land in `undefinedRefs` as "declared nowhere —
+    // the declaration drops", which is the opposite of true. It also stops the
+    // file being credited with reading --sidebar-width, where its own 18rem
+    // shadows a differently-valued semantic token of the same name.
+    //
+    // NOT applied to components, and that asymmetry is load-bearing. A
+    // component declaring a public tier-3 token and then reading it is the
+    // documented pattern, not a local knob: esa-range-slider sets
+    // `style="--fill-percent: …"` on the input and reads it back in the track
+    // gradient. Filtering there invented a fresh orphan out of a token with two
+    // live readers — the exact failure this whole roster exists to stop.
+    const localDecls =
+      root.kind === 'file' ? new Set([...src.matchAll(LOCAL_DECL_RE)].map((m) => m[1])) : new Set<string>();
+
+    let counted = false;
+    for (const m of src.matchAll(READ_RE)) {
       const token = m[1];
       if (token.startsWith('--_')) continue; // privates are internals
-      if (!componentUse.has(token)) componentUse.set(token, new Set());
-      componentUse.get(token)!.add(slug);
-      if (m[2] === ')') {
-        if (!bareRead.has(token)) bareRead.set(token, new Set());
-        bareRead.get(token)!.add(slug);
+      if (localDecls.has(token)) continue;
+      counted = true;
+      stats.tokens.add(token);
+
+      if (slug) {
+        if (!componentUse.has(token)) componentUse.set(token, new Set());
+        componentUse.get(token)!.add(slug);
+        if (m[2] === ')') {
+          if (!bareRead.has(token)) bareRead.set(token, new Set());
+          bareRead.get(token)!.add(slug);
+        }
+      } else {
+        if (!fileUse.has(token)) fileUse.set(token, new Set());
+        fileUse.get(token)!.add(rel);
       }
     }
+    if (counted) stats.files += 1;
   }
 }
+
+/** Per-root coverage, for the disclosure table on /debug/tokens. */
+export const scanCoverage = SCAN_ROOTS.map((r) => ({
+  ...r,
+  files: scanStats.get(r.rel)?.files ?? 0,
+  tokens: scanStats.get(r.rel)?.tokens.size ?? 0,
+}));
 
 /* -------------------------------------------------------------- build nodes */
 
@@ -234,6 +397,7 @@ for (const [name, value] of defs) {
     refs: refsOf(value),
     usedByTokens: [],
     usedByComponents: [...(componentUse.get(name) ?? [])].sort(),
+    usedByFiles: [...(fileUse.get(name) ?? [])].sort(),
   });
 }
 
@@ -388,6 +552,49 @@ const group = (tokens: TokenNode[], key: (n: string) => string): TokenGroup[] =>
 export const semanticGroups = group(byTier('semantic'), semanticGroupKey);
 export const componentGroups = group(byTier('component'), componentGroupKey);
 
+/* ------------------------------------------------------- motion adoption */
+
+/**
+ * How many `transition:` declarations in the component kit still hold literal
+ * timings rather than reading a token.
+ *
+ * DERIVED, and it has to be. This number lived in the Animation category's
+ * `adoption` prose as a hardcoded "42 of 73", and by the time anyone checked,
+ * four different counts were in circulation — because the answer depends
+ * entirely on how you count, and prose cannot carry a definition. The one used
+ * here, stated once: every `transition:` declaration in a component source with
+ * comments stripped, tokenised if its value reads a `--transition-*`,
+ * `--duration-*` or `--easing-*` token anywhere. The companion `animation:`
+ * count uses the same rule.
+ *
+ * The animation half counts `animation:` CALL SITES, not `@keyframes` bodies —
+ * the declaration is where a duration and an easing get chosen, so it is the
+ * thing that can be on a token or not. (A first pass here counted the
+ * `@keyframes` blocks instead and reported 16 of them untokenised, which was
+ * both the wrong denominator and the wrong question.)
+ *
+ * A hardcoded ratio in an `adoption` string is the same defect as a hardcoded
+ * orphan count — a claim about the codebase that the codebase cannot contradict.
+ */
+export const motionAdoption = (() => {
+  const count = (re: RegExp, tokenRe: RegExp) => {
+    let total = 0;
+    let literal = 0;
+    for (const abs of walk(COMPONENTS)) {
+      const src = readFileSync(abs, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const m of src.matchAll(re)) {
+        total += 1;
+        if (!tokenRe.test(m[1])) literal += 1;
+      }
+    }
+    return { total, literal, tokenised: total - literal };
+  };
+  return {
+    transition: count(/transition:\s*([^;}]+)[;}]/g, /var\(\s*--(transition|duration|easing)-/),
+    animation: count(/animation:\s*([^;}]+)[;}]/g, /var\(\s*--(animation|duration|easing)-/),
+  };
+})();
+
 /* --------------------------------------------------- tier-1 categorisation */
 
 /**
@@ -424,7 +631,7 @@ const PRIMITIVE_CATEGORIES: {
   {
     label: 'Typography',
     note:
-      'The individual values available for font-family, font-size, font-weight, font-style, line-height, letter-spacing, and text-transform. Every one is named `--<css-property>-<value>` — the property it sets plus the value it holds — so the name reads as the declaration it ends up in. They are combined into COMPOSITE tokens at tier 2 (`--typography-<intention>[-<size>]-<property>`), which src/typography.css assembles into the `.type-*` classes. Components and spokes reference a role; nothing outside this tier assembles primitives at the call site.',
+      'The individual values available for font-family, font-size, font-weight, font-style, line-height, letter-spacing, and text-transform. Every one is named `--<css-property>-<value>` — the property it sets plus the value it holds — so the name reads as the declaration it ends up in. They are combined into COMPOSITE tokens at tier 2 (`--typography-<intention>[-<size>]-<property>`), which src/typography.css assembles into the `.typography-*` classes (the `.type-*` spellings beside them are the deprecated aliases, kept resolving via migrations.json). Components and spokes reference a role; nothing outside this tier assembles primitives at the call site.',
     gap: undefined,
     match: (n) => /^--(font-|line-height-|letter-spacing-|text-transform-|font-style-)/.test(n),
     // Order matters and is fragile: every key here is a prefix of `--font-`, so
@@ -490,7 +697,7 @@ const PRIMITIVE_CATEGORIES: {
     note:
       'Animation is a COMPOSITE family, so tier 1 holds the ingredients and tier 2 assembles them. The ingredients are two: duration (how long) and ease (how it progresses through that duration). The animated property — opacity, color — is deliberately NOT tokenised at tier 1; the model is explicit that properties "are more just applied" at the call site. Tier 2 is where the named animations live. Tier 3 (component-specific animations) is sanctioned but the model notes it has never been needed in production. These work in code but Figma cannot consume animation tokens.',
     adoption:
-      'All 22 `@keyframes` call sites are on tokens; 42 of the 73 `transition:` declarations still hold literals. The animation pass settled three disagreements nothing had chosen: four components were spinning at three different speeds (600ms, 750ms, 1000ms) because there was no token to spin at, and several entrances and exits shared one `ease` curve where the system now distinguishes decelerate from accelerate. The remaining transition literals still ignore the `prefers-reduced-motion` override, which can only reach tokenised call sites.',
+      `All ${motionAdoption.animation.total} \`animation:\` call sites are on tokens; ${motionAdoption.transition.literal} of the ${motionAdoption.transition.total} \`transition:\` declarations still hold literals. The animation pass settled three disagreements nothing had chosen: four components were spinning at three different speeds (600ms, 750ms, 1000ms) because there was no token to spin at, and several entrances and exits shared one \`ease\` curve where the system now distinguishes decelerate from accelerate. The remaining transition literals still ignore the \`prefers-reduced-motion\` override, which can only reach tokenised call sites. Both figures are derived at build time — this sentence used to hardcode "42 of the 73", and by the time anyone re-checked, four different counts were in circulation because the prose could not carry the counting rule. See motionAdoption above for the rule.`,
     match: (n) => /^--(duration-|easing-|ease-)/.test(n),
     subGroupKey: (n) => (n.startsWith('--duration-') ? 'duration' : 'easing'),
     expect: ['duration', 'easing'],
@@ -624,6 +831,19 @@ export interface Finding {
   where?: string;
 }
 
+/**
+ * Deliberately `componentUse` ONLY, not the file readers.
+ *
+ * `undefinedRefs` and `adHocHooks` below are both statements about the
+ * @esa/ecology COMPONENT contract — SPEC.md's ad-hoc-hook rule is about tier-3
+ * theming surfaces a component offers through a fallback, and the promote-or-
+ * fold worklist it feeds is a list of component hooks. A layout primitive's
+ * element-scoped knob (`--gap` on `.cluster`) is a different construct that
+ * happens to share the syntax, and folding it in here would file it as a
+ * missing tier-3 hook, which it is not.
+ *
+ * This looks like an omission. It is not — do not "complete" it.
+ */
 const undeclared = [...componentUse.keys()].filter((t) => !defs.has(t)).sort();
 
 /** Undeclared AND read somewhere with no fallback — the var() resolves to
@@ -696,9 +916,20 @@ export const CHROME_EXEMPT: { prefix: string; owner: string; why: string; cost: 
 const CHROME_PREFIXES = CHROME_EXEMPT.map((c) => c.prefix);
 const isChrome = (name: string) => CHROME_PREFIXES.some((p) => name.startsWith(p));
 
-const unread = allTokens.filter(
-  (t) => t.tier !== 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length,
-);
+/**
+ * Does ANY shipped surface read this token?
+ *
+ * The three arms stay separate everywhere else, because they answer different
+ * questions — blast radius, component reach, shipped-surface reach. They are
+ * OR-ed here and nowhere else. Every "is this dead?" test must go through this
+ * helper: the reason 102 typography tokens once reported as orphans is that
+ * this predicate was written inline against the two arms that existed, so
+ * adding a third reader kind would otherwise have to be remembered at each site.
+ */
+const hasReader = (t: TokenNode) =>
+  t.usedByTokens.length > 0 || t.usedByComponents.length > 0 || t.usedByFiles.length > 0;
+
+const unread = allTokens.filter((t) => t.tier !== 'primitive' && !hasReader(t));
 
 /** Declared at tier 2 or 3 but nothing reads it — dead surface, or a hook
  *  nobody wired up. Primitives are deliberately excluded: an unused ramp step
@@ -726,7 +957,7 @@ export const chromeSurfaces: Finding[] = unread
 /** Ramp steps nothing references. Informational — this is the palette headroom,
  *  not a defect. Useful for spotting a scale that's carried but never used. */
 export const unusedRampSteps: Finding[] = allTokens
-  .filter((t) => t.tier === 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length)
+  .filter((t) => t.tier === 'primitive' && !hasReader(t))
   .map((t) => ({ token: t.name, detail: t.resolved }));
 
 /**
@@ -778,7 +1009,7 @@ export const themePrimitiveOverrides: Finding[] = (() => {
  *  Tested on what the token IS (`isColor`), not on whether its NAME contains
  *  "color". The name test missed 19 of 22, because this system spells content
  *  colour `bg` / `text` / `color` depending on the component —
- *  `--snackbar-item-bg-danger` is plainly a colour and matches no name pattern. */
+ *  `--snackbar-item-danger-bg` is plainly a colour and matches no name pattern. */
 export const tierSkips: Finding[] = byTier('component')
   .filter((t) => t.lineage[0]?.kind === 'primitive' && t.isColor)
   .map((t) => ({ token: t.name, detail: `-> ${t.lineage[0].ref} directly (no semantic hop)` }));
@@ -802,6 +1033,41 @@ export const dimensionRoles: Finding[] = semanticRaw
   .filter((t) => !t.isColor)
   .map((t) => ({ token: t.name, detail: `defines ${t.resolved} — no tier-1 ramp behind it` }));
 
+/**
+ * A `.css` file @esa/tokens SHIPS that no scan root covers and no exemption
+ * names — so every token it reads will report as an orphan, and orphan on this
+ * page reads as "nothing needs this, delete it".
+ *
+ * Derived from the package's own `exports` map, which is the authoritative
+ * declaration of what ships, rather than from a list someone maintains here.
+ * That is what makes this a guard rather than a note: shipping a partial from a
+ * location no root covers turns the health tally red on the next build and
+ * names the file. Had it existed, typography.css would have surfaced the day it
+ * was exported, instead of after 102 tokens had been mislabelled.
+ *
+ * What it catches is a new LOCATION, not a new file. Roots are directories, so
+ * dropping another partial into packages/tokens/src is picked up automatically
+ * — which is the desired behaviour, not a hole. The failure mode this exists
+ * for is a surface that ships from somewhere nobody thought to look.
+ */
+export const scanCoverageGaps: Finding[] = (() => {
+  const pkg = JSON.parse(readIf(path.join(TOKENS, 'package.json')) || '{}');
+  const shipped = [
+    ...new Set(Object.values((pkg.exports ?? {}) as Record<string, string>).filter((v) => v.endsWith('.css'))),
+  ].map((v) => `packages/tokens/${v.replace(/^\.\//, '')}`);
+
+  return shipped
+    .filter((rel) => !SCAN_ROOTS.some((r) => rel === r.rel || rel.startsWith(`${r.rel}/`)))
+    .filter((rel) => !READ_SCAN_EXEMPT.some((e) => rel === e.rel || rel.startsWith(`${e.rel}/`)))
+    .sort()
+    .map((rel) => ({
+      token: rel,
+      detail:
+        '@esa/tokens ships this file but nothing read-scans it — every token it reads will report as an orphan',
+      where: 'SCAN_ROOTS / READ_SCAN_EXEMPT in token-graph.ts',
+    }));
+})();
+
 /** Only the actionable checks count toward the headline number. Ad-hoc hooks
  *  and unused ramp steps are inventory, not defects — folding them in would
  *  make the tally permanently alarming and therefore ignorable. */
@@ -809,6 +1075,7 @@ export const healthTotal =
   undefinedRefs.length +
   duplicateDeclarations.length +
   themePrimitiveOverrides.length +
+  scanCoverageGaps.length +
   orphans.length +
   tierSkips.length +
   semanticHardcodes.length;

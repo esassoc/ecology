@@ -109,6 +109,14 @@
 
 /* UI TEXT. Three sizes × two weights. The sizes share the body ramp on purpose —
    label-md and body-md are the same size doing different jobs. */
+.typography-label-2xs {
+  font-family: var(--typography-label-2xs-font-family);
+  font-size: var(--typography-label-2xs-font-size);
+  font-weight: var(--typography-label-2xs-font-weight);
+  line-height: var(--typography-label-2xs-line-height);
+  letter-spacing: var(--typography-label-2xs-letter-spacing);
+}
+
 .typography-label-xs {
   font-family: var(--typography-label-xs-font-family);
   font-size: var(--typography-label-xs-font-size);

@@ -233,7 +233,7 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-width: var(--sidebar-width, 260px);
       --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
       --_sidenav-bg: var(--sidenav-bg, #ffffff);
-      --_sidenav-border: var(--sidenav-border, #efefef);
+      --_sidenav-border: var(--sidenav-border-color, #efefef);
       --_sidenav-item-height: var(--sidenav-item-height, 40px);
       --_sidenav-item-padding: var(--sidenav-item-padding-x, var(--spacing-300, 12px));
       --_sidenav-item-gap: var(--sidenav-item-gap, 0);

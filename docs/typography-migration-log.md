@@ -192,3 +192,43 @@ Noticed in passing, not fixed: `esa-avatar`'s four size variants all read the sa
 `--avatar-font-size` hook and differ only in their FALLBACK. The fallback fires today
 because the hook is undeclared — but a spoke declaring it collapses all four sizes to one
 value. Same shape as the checkbox/radio 1px→2px finding already in the ledger.
+
+## Change 6 — `--font-size-ui-*` is gone, and it never needed the tier-3 decision
+
+The size-only ramp is deleted. Its nine tier-3 consumers now point at the size token of
+the composite whose job matches:
+
+| hook | was | now |
+|---|---|---|
+| `--form-font-size-xs` | `--font-size-ui-xs` | `--typography-label-2xs-font-size` |
+| `--form-font-size-sm` | `--font-size-ui-sm` | `--typography-label-xs-font-size` |
+| `--form-font-size-md` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+| `--form-font-size-lg` | `--font-size-ui-lg` | `--typography-body-lg-font-size` |
+| `--filter-pill-font-size` | `--font-size-ui-sm` | `--typography-label-xs-font-size` |
+| `--grid-font-size` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+| `--grid-header-font-size` | `--font-size-ui-sm` | `--typography-label-xs-font-size` |
+| `--link-column-heading-font-size` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+| `--pagination-font-size` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+
+**Value-neutral.** The ramp was a pure passthrough — every step was exactly one primitive
+with no transformation — so all nine resolve to what they always did.
+
+This was logged as blocked on the tier-3 pass and it was not. The blocker was assumed to be
+"a hook cannot consume a composite", but a hook that carries one property can point at that
+property's token. The tier-3 question — whether a component adopting a composite CLASS
+should keep its per-component hook — is a different question and is still open.
+
+One composite was added to make it fit: **`label-2xs`** at `--font-size-050`, because
+`--form-font-size-xs` has 14 readers in the hub and 3 in cb-fish, and the only thing at 050
+was `eyebrow-sm`, which is uppercase. It breaks the kit's `xs | sm | md | lg` convention by
+one step, deliberately — the alternative was renaming the whole label family down and
+moving `label-xs` out from under 15 call sites that already match it exactly.
+
+Noted, not acted on: `--form-font-size-xs` renders **8–10px**. Every author who hardcoded a
+fallback at those 14 call sites assumed 11–13px. Those fallbacks are dead — the token has
+always been declared — so 8–10px is what the kit has shipped and been reviewed at. Whether
+that is too small is a live design question, kept separate from moving tokens around. This
+is the same trap as the checkbox 2px: a fallback nobody ever saw render is not evidence of
+intent.
+
+`migrations.json` row: `font-size-ui-to-composites`. Deprecated aliases 107 → 111.

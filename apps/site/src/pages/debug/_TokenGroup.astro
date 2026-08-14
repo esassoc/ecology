@@ -47,16 +47,18 @@ const { group, bare = false } = Astro.props;
             <code>{t.resolved}</code>
           </td>
           <td class="c-used">
-            {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 ? (
+            {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 && t.usedByFiles.length === 0 ? (
               <span class="orphan-flag">orphan</span>
             ) : (
               <details class="uses">
                 <summary>
                   {t.usedByTokens.length > 0 && <span class="pill">{t.usedByTokens.length} tok</span>}
                   {t.usedByComponents.length > 0 && <span class="pill">{t.usedByComponents.length} comp</span>}
+                  {t.usedByFiles.length > 0 && <span class="pill">{t.usedByFiles.length} file</span>}
                 </summary>
                 {t.usedByTokens.length > 0 && <p><b>Tokens:</b> {t.usedByTokens.join(', ')}</p>}
                 {t.usedByComponents.length > 0 && <p><b>Components:</b> {t.usedByComponents.join(', ')}</p>}
+                {t.usedByFiles.length > 0 && <p><b>Files:</b> {t.usedByFiles.join(', ')}</p>}
               </details>
             )}
           </td>
@@ -110,16 +112,18 @@ const { group, bare = false } = Astro.props;
               <code>{t.resolved}</code>
             </td>
             <td class="c-used">
-              {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 ? (
+              {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 && t.usedByFiles.length === 0 ? (
                 <span class="orphan-flag">orphan</span>
               ) : (
                 <details class="uses">
                   <summary>
                     {t.usedByTokens.length > 0 && <span class="pill">{t.usedByTokens.length} tok</span>}
                     {t.usedByComponents.length > 0 && <span class="pill">{t.usedByComponents.length} comp</span>}
+                    {t.usedByFiles.length > 0 && <span class="pill">{t.usedByFiles.length} file</span>}
                   </summary>
                   {t.usedByTokens.length > 0 && <p><b>Tokens:</b> {t.usedByTokens.join(', ')}</p>}
                   {t.usedByComponents.length > 0 && <p><b>Components:</b> {t.usedByComponents.join(', ')}</p>}
+                  {t.usedByFiles.length > 0 && <p><b>Files:</b> {t.usedByFiles.join(', ')}</p>}
                 </details>
               )}
             </td>

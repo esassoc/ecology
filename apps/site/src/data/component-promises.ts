@@ -103,8 +103,12 @@ const partOf = (name: string, ns: string): string | null => {
   return seg || null;
 };
 
+/** All three reader kinds. `readElsewhere` below deliberately stays on
+ *  usedByComponents alone — that one slug-matches against the esa-* roster, so
+ *  a file path would silently never be equal and every file read would report
+ *  as "read elsewhere". */
 const isRead = (t: TokenNode | undefined) =>
-  !!t && (t.usedByComponents.length > 0 || t.usedByTokens.length > 0);
+  !!t && (t.usedByComponents.length > 0 || t.usedByTokens.length > 0 || t.usedByFiles.length > 0);
 
 /* ------------------------------------------------------------- the join */
 
