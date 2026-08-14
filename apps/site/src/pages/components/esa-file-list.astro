@@ -2,13 +2,15 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'files', type: '{ name: string, href?: string }[]', default: '[]', description: 'The files to list. Set as a property (an array, not an attribute). A row with an href renders its name as a link.' },
-  { name: 'downloadable', type: 'boolean', default: 'true', description: 'Show a download button on each row (emits download).' },
-  { name: 'removable', type: 'boolean', default: 'false', description: 'Show a remove button on each row; removing drops it from the local files copy and emits remove.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  files: "The files to list. Set as a property (an array, not an attribute). A row with an href renders its name as a link.",
+  downloadable: "Show a download button on each row (emits download).",
+  removable: "Show a remove button on each row; removing drops it from the local files copy and emits remove.",
+};
 
 const events = [
   { name: 'download', type: 'CustomEvent<{ file, index }>', description: 'Fired when a row’s download button is clicked. Composed and bubbles.' },
@@ -43,7 +45,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-file-list" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

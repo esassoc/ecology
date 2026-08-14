@@ -2,7 +2,7 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaIcon from '@esa/ecology/esa-icon.astro';
 
 // The names available in the inlined Lucide lookup (see esa-icon.astro).
@@ -17,11 +17,13 @@ const names = [
   'triangle-alert', 'save', 'circle-question-mark',
 ];
 
-const props = [
-  { name: 'name', type: 'string', description: 'Lucide icon name (kebab-case), e.g. "chevron-down". Resolved against the inlined Lucide lookup; an unknown name renders an empty glyph.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl'", default: "'md'", description: 'Icon size — xs=14, sm=16, md=20, lg=24, xl=28.' },
-  { name: 'label', type: 'string', description: 'Accessible label. When provided the icon becomes role="img"; when omitted the icon is decorative (aria-hidden).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  name: "Lucide icon name (kebab-case), e.g. \"chevron-down\". Resolved against the inlined Lucide lookup; an unknown name renders an empty glyph.",
+  size: "Icon size — xs=14, sm=16, md=20, lg=24, xl=28.",
+  label: "Accessible label. When provided the icon becomes role=\"img\"; when omitted the icon is decorative (aria-hidden).",
+};
 ---
 <ComponentDoc name="Icon" category="Core" slug="esa-icon" type=".astro" status="stable"
   summary="The icon primitive across Ecology. It inlines the Lucide SVGs it needs (no icon dependency), inherits color via <code>currentColor</code>, and maps to five sizes — xs=14, sm=16, md=20, lg=24, xl=28.">
@@ -73,7 +75,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-icon" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

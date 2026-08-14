@@ -26,23 +26,23 @@ const props = [
   summary="The inherited Ecology button, wearing the __SPOKE_NAME__ skin. Primary reflects whatever <code>--color-background-brand</code> this spoke's theme sets; the rest of the palette is inherited."
 >
   <Section id="colors" title="Colors">
-    <Preview code={`<EsaButton color="primary">Save</EsaButton>`}>
-      {colors.map((c) => <EsaButton color={c}>Save</EsaButton>)}
+    <Preview code={`<EsaButton variant="primary">Save</EsaButton>`}>
+      {colors.map((c) => <EsaButton variant={c}>Save</EsaButton>)}
     </Preview>
   </Section>
 
   <Section id="outline" title="Outline">
-    <Preview code={`<EsaButton color="primary" appearance="outline">Save</EsaButton>`}>
-      {colors.map((c) => <EsaButton color={c} appearance="outline">Save</EsaButton>)}
+    <Preview code={`<EsaButton variant="primary" appearance="outline">Save</EsaButton>`}>
+      {colors.map((c) => <EsaButton variant={c} appearance="outline">Save</EsaButton>)}
     </Preview>
   </Section>
 
   <Section id="sizes" title="Sizes">
     <Preview code={`<EsaButton size="xs">Save</EsaButton>`}>
-      <EsaButton color="primary" size="xs">Save</EsaButton>
-      <EsaButton color="primary" size="sm">Save</EsaButton>
-      <EsaButton color="primary" size="md">Save</EsaButton>
-      <EsaButton color="primary" size="lg">Save</EsaButton>
+      <EsaButton variant="primary" size="xs">Save</EsaButton>
+      <EsaButton variant="primary" size="sm">Save</EsaButton>
+      <EsaButton variant="primary" size="md">Save</EsaButton>
+      <EsaButton variant="primary" size="lg">Save</EsaButton>
     </Preview>
   </Section>
 

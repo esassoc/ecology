@@ -3,14 +3,17 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'items', type: 'EsaMenuItem[]', default: '[]', description: 'Menu items, set as a property. Each: { label, icon?, action?, disabled?, divider?, variant? }.' },
-  { name: 'position', type: "'below-start' | 'below-end' | 'above-start' | 'above-end'", default: "'below-start'", description: 'Corner the panel anchors to.' },
-  { name: 'width', type: "'auto' | 'trigger'", default: "'auto'", description: "'trigger' matches the panel min-width to the trigger." },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  items: "Menu items, set as a property. Each: { label, icon?, action?, disabled?, divider?, variant? }.",
+  position: "Corner the panel anchors to.",
+  width: "'trigger' matches the panel min-width to the trigger.",
+  open: "Reflected open state.",
+};
 
 const methods = [
   { name: 'close()', type: 'method', description: 'Closes the menu programmatically.' },
@@ -45,7 +48,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-dropdown-menu" describe={describe} />
     <h3>Methods</h3>
     <PropsTable rows={methods} />
     <Api events={events} />

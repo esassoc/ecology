@@ -39,14 +39,18 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
 
 <style>
   .esa-icon-button {
-    --_ib-size: var(--form-height-md, 40px);
+    --_ib-pad: var(--form-padding-y-md, 0.75rem);
     --_ib-bg-hover: var(--icon-button-bg-hover, color-mix(in srgb, currentColor 14%, transparent));
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--_ib-size);
-    height: var(--_ib-size);
-    padding: 0;
+    /* Square by ratio, not by a height token. There is no text to set the height,
+       so the icon plus this padding IS the size — which is why padding had to be
+       ADDED here rather than re-plumbed: at padding:0 the element would collapse
+       to the bare icon. Recorded for the batched a11y pass: at xs this lands
+       around 32px, under the 44px AAA target though clear of the 24px AA floor. */
+    aspect-ratio: 1;
+    padding: var(--_ib-pad);
     border: 0;
     border-radius: var(--radius-surface, 8px);
     background: transparent;
@@ -56,9 +60,9 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
     -webkit-appearance: none;
     appearance: none;
   }
-  .esa-icon-button--xs { --_ib-size: var(--form-height-xs, 28px); }
-  .esa-icon-button--sm { --_ib-size: var(--form-height-sm, 32px); }
-  .esa-icon-button--lg { --_ib-size: var(--form-height-lg, 48px); }
+  .esa-icon-button--xs { --_ib-pad: var(--form-padding-y-xs, 0.5rem); }
+  .esa-icon-button--sm { --_ib-pad: var(--form-padding-y-sm, 0.625rem); }
+  .esa-icon-button--lg { --_ib-pad: var(--form-padding-y-lg, 1rem); }
 
   .esa-icon-button:hover { background: var(--_ib-bg-hover); }
   .esa-icon-button:focus-visible {

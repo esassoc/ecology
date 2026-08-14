@@ -440,20 +440,41 @@ codemod rather than a flag day.
   raw weight. Adding `--font-weight-ui-*` (or documenting chrome as a composite role of its
   own) would convert most of these. Audit which reads are chrome versus prose before moving
   any — prose reads are the ones that should have been a role · `hub-fix` · **P2**
-- **5 of the 7 layout dimension tokens have no readers** · *Evidence:* `--header-height`,
-  `--footer-height`, `--content-max-width`, `--content-narrow-width`, `--content-wide-width`
-  are read by nothing — not a component, not `layouts.css`, not the site. Only
-  `--sidebar-width` (2 files) and `--sidebar-width-collapsed` (1) are live · *Action:* either
-  wire them into the shell components that clearly want them (`esa-app-shell`, page layouts
-  currently sizing chrome by hand) or delete them. A dimension token nothing reads cannot be
-  re-pointed to any effect, so it is a theming surface that only appears to exist ·
-  `hub-fix` · **P2**
-- **The `--content-*-width` trio is named three different ways** · *Evidence:*
-  `--content-max-width` names the CSS property; `--content-narrow-width` and
-  `--content-wide-width` put a variant where the property word sits, so a reader cannot tell
-  whether they are max-widths or fixed widths (all three are max-widths) · *Action:* settle on
-  one shape — `--content-max-width-{narrow,default,wide}` reads correctly and keeps the family
-  together. Cheap now: nothing reads them · `hub-fix` · **P2**
+- ✅ **5 of the 7 layout dimension tokens had no readers — DELETED 2026-08-14.**
+  `--header-height`, `--footer-height`, `--content-max-width`, `--content-narrow-width`,
+  `--content-wide-width` were read by nothing: no component, no authored partial, not the
+  site, not the spoke template, not cb-fish. Deleted rather than wired, for two reasons.
+  The heights: `esa-app-bar` and `esa-app-shell` set no height at all, and after Change 9
+  a px height is the pattern this kit *removed* — re-adding one for chrome would re-create
+  the defect. The widths: they had already lost to a hardcoded 1556px. `--sidebar-width`
+  (15 readers) and `--sidebar-width-collapsed` (1) stay — those are a real agreement.
+  `migrations.json` row `layout-orphans-removed`.
+- ✅ **The `--content-*-width` trio was named three different ways — MOOT 2026-08-14.**
+  Resolved by deletion rather than by renaming; the three tokens no longer exist. Recorded
+  because the reasoning still applies to any future family: `--content-max-width` named the
+  CSS property while `--content-narrow-width` and `--content-wide-width` put a variant where
+  the property word sits, so a reader could not tell whether they were max-widths or fixed
+  widths. `--content-max-width-{narrow,default,wide}` would have been the right shape.
+- **There is no WIDTH scale, so every width in the kit is a bare literal** ·
+  *Evidence:* the size axis has a height ramp for badges (`--chip-height-*`) and nothing for
+  width. Tier 3 carries **18 width tokens, every one a hardcoded px value**: 160, 200, 240,
+  280, 320, 360, 400, 420, 480, 520, 560, 600, 640. Four of those values are duplicated
+  across unrelated components that never agreed on anything — 280 is both
+  `--dialog-width-xs` and `--dropdown-menu-max-width`; 360 is both `--confirm-dialog-width`
+  and `--dialog-width-sm`; 400 is both `--search-panel-width` and `--side-dialog-width`; 240
+  is both `--nav-dropdown-panel-min-width` and `--tooltip-max-width`. Three components have
+  already invented their OWN t-shirt ramp on top (`--dialog-width-{xs,sm,lg}`,
+  `--side-dialog-width-{sm,lg}`), which is the shape of a scale that should exist one tier
+  up. Separately, `1556px` — the kit's actual content width — is a literal in four places
+  across `esa-container` and `esa-app-bar`, and matches none of the 1200/800/1440 tokens
+  deleted 2026-08-14, which is exactly why those were dead ·
+  *Action:* introduce a tier-2 **width scale** in `semantic/size.json`, which after the
+  layout deletion holds only `chip-height` and has room. The 13 distinct values already
+  cluster on a usable ramp; pick the rungs from what components actually ask for rather than
+  inventing a geometric series, then re-point the 18 tier-3 tokens at it and give the page
+  width a rung so `esa-container` and `esa-app-bar` stop each spelling 1556 twice. Note the
+  Change 9 caveat: a width scale is safe where a height scale was not — a fixed width does
+  not clip growing text, it wraps it · `hub-fix` · **P2**
 - **Motion has no tier-3 surface** · *Evidence:* every other family exposes component tokens;
   motion exposes none, so `esa-sidebar-nav` invented a private `--_sidenav-transition` and a
   spoke cannot re-time anything · *Action:* decide whether motion earns hooks at all — SPEC's
@@ -495,6 +516,63 @@ the easy part; the parsers, audits and gates that consume them are where a renam
 goes wrong, and they fail silently by default. Where it mattered these now assert instead:
 `color-other` must stay empty, `inferred` must stay 0, and a contrast run that cannot resolve
 its pairs exits non-zero.
+
+---
+
+## Source: form-control API audit (2026-08-14)
+Prompted by reading `esa-button-toggle`'s generated API table the way a consumer would.
+The generated tables removed *drift* — a documented prop that no longer exists — but they
+check **names, not meaning**, so a prop can be real in source, rendered in the table, and
+still not do what it says. Every finding below is that shape.
+
+- **A prop can be declared, typed, defaulted, reflected, documented — and read by nothing**
+  · *Evidence:* `esa-button-toggle` `size` (fixed the day before) was inert; the drift guard
+  is structurally blind to it because the name resolves. *Action:* when auditing a component,
+  grep each prop for a READ in `render()`/`static styles`, not just a declaration · `process`
+  · **resolved 2026-08-14**
+- **`hint` vs `helpText` — one concept, two spellings** · *Evidence:* five controls
+  (select, text-field, textarea, combobox, date-picker) named the helper line `helpText` and
+  paired it with `errorText`; `esa-button-toggle` and `esa-input-tag` called it `hint` and had
+  **no error channel at all**. Both rendered the identical `typography-body-sm` span in the
+  identical slot. Failure mode was silence: writing `help-text` on a button-toggle set an
+  unknown attribute Lit ignores — no error, no warning, no text · *Action:* renamed to
+  `helpText` + added `errorText` to both; `migrations.json: form-hint-to-help-text` with a
+  runtime-warning shim · `lego` · **resolved 2026-08-14**
+- **`required` was cosmetic in all 7 controls that offered it** · *Evidence:* `setValidity`
+  appeared **zero** times in the entire kit. `required` drew an asterisk and set
+  `aria-required`, and the form submitted empty anyway — `checkValidity()` returned `true`.
+  The docs said "marks the field required", which a reader reasonably reads as "enforced"
+  · *Action:* every one now reports `valueMissing` through `ElementInternals`, anchored to a
+  focusable node so the browser can place its bubble · `lego` · **resolved 2026-08-14**
+- **A scripted `value` never reached the form in 8 of 12 controls** · *Evidence:* found while
+  verifying the row above — `el.value = 'x'` rendered correctly and submitted `""`. Only the
+  *event handlers* called `setFormValue`; nothing synced on a property change. Worse after
+  the validity fix, which reads `this.value` directly: the control would report VALID while
+  submitting empty. Affected text-field, textarea, date-picker, radio-group, checkbox-group,
+  chip-group, range-slider, color-picker · *Action:* each syncs on `changed.has('value')`
+  · `lego` · **resolved 2026-08-14**
+- **`name` worked everywhere and was documented nowhere** · *Evidence:* doc pages demoed
+  `name="view"` (correctly — form-associated elements get it natively), but only 4 of 16
+  controls declared it, so 12 API tables omitted a real part of the contract. The 4 that DID
+  declare it lacked `reflect`, so `el.name = 'x'` never reached the form, which submits from
+  the content attribute · *Action:* declared on all 16 with `reflect: true` · `lego`
+  · **resolved 2026-08-14**
+- **A codemod left three malformed CSS declarations in `esa-input-tag`** · *Evidence:* the
+  typography migration stripped `font-size:` from `--_chip-font-size: …` and left the bare
+  prefix `--_chip-`, which swallowed the NEXT declaration as its value — so `--_chip-bg` was
+  never declared and every chip lost its tint. Silent: `--_chip-` is a valid custom-property
+  name, so nothing errored · *Action:* repaired; a `grep -E '^\s*--[\w-]+\s*(/\*|\}|$)'` over
+  `src` finds this class of damage and found nothing else · `hub-fix` · **resolved 2026-08-14**
+
+### Root cause (the through-line)
+**Generating the API table proves the docs match the source; it cannot prove the source does
+what the name says.** Every finding here passed the drift guard. The three failure shapes worth
+watching: a prop nothing reads (`size`), a prop that does *part* of its job (`required` drew the
+asterisk but skipped the enforcement), and a prop that works only on the path someone happened
+to test (`value` via click, never via script). Names are now mechanised; **behaviour is still
+checked by reading**. The cheapest instrument found this round was a headless browser asserting
+the contract from the OUTSIDE — set the value, submit the form, compare — which caught the two
+findings no amount of source-reading had.
 
 ---
 

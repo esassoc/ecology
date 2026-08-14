@@ -2,23 +2,25 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import { withBase } from '@esa/docs/base';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
-  { name: 'options', type: '{ label, value, disabled? }[]', default: '[]', description: 'Selectable options. Set as a property (not an attribute).' },
-  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute). No xs — see Sizes.' },
-  { name: 'placeholder', type: 'string', default: "'Select...'", description: 'Placeholder shown when nothing is selected.' },
-  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the control.' },
-  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (renders a * after the label).' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
-  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections.' },
-  { name: 'searchable', type: 'boolean', default: 'true', description: 'Type-to-filter the option list. When false the input is read-only.' },
-  { name: 'chip-mode', type: 'boolean', default: 'false', description: 'In multi-select, render selected values as removable chips.' },
-  { name: 'value', type: 'string | string[]', description: 'Property accessor. Single = string; multiple = string array.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Field label above the control.",
+  options: "Selectable options. Set as a property (not an attribute).",
+  size: "Control size (reflected attribute). No xs — see Sizes.",
+  placeholder: "Placeholder shown when nothing is selected.",
+  "help-text": "Helper text below the control.",
+  "error-text": "Error message; sets the error state when present.",
+  required: "Marks the field required (renders a * after the label).",
+  disabled: "Disables interaction (reflected attribute).",
+  multiple: "Allow multiple selections.",
+  searchable: "Type-to-filter the option list. When false the input is read-only.",
+  "chip-mode": "In multi-select, render selected values as removable chips.",
+  value: "Property accessor. Single = string; multiple = string array.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string | string[] }>', description: 'Fired on selection change. Composed and bubbles. Form value is the string (single) or comma-joined values (multiple).' },
@@ -64,7 +66,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-select" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

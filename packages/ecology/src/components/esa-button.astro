@@ -2,18 +2,20 @@
 // esa-button — presentational (.astro).
 //
 // Variant model aligned to Beacon's UiButton (two independent axes + toggle):
-//   - color:      primary | secondary | danger | success | warning | info | ai | ghost
+//   - variant:    primary | secondary | danger | success | warning | info | ai | ghost
 //   - appearance: fill | outline | dashed | soft
 //   - active:     aria-pressed toggle (selected look)
 //
 // hub-edit-approved: Andy approved in-session (2026-06-22) — (1) add a `soft`
 // appearance (neutral surface bg + darker-gray border + accent-colored text; accent
-// fill on hover) so `color="danger" appearance="soft"` gives GitHub's secondary-danger
+// fill on hover) so `variant="danger" appearance="soft"` gives GitHub's secondary-danger
 // button; (2) redefine `sm` to be content-height with a 6px block padding instead of
 // height-locking to the form scale, since standalone small buttons (not beside inputs)
 // looked squished. Icon-only sm keeps a fixed square.
 //   - size:       xs | sm | md | lg   (shared form size scale)
-//   - icon / iconOnly / loading / disabled / type
+//   - content:    icon (left) / iconRight / iconOnly
+//   - state:      loading / disabled / active
+//   - type
 //
 // `ai` maps to the copper "AI context" tokens. Color sets a private --_accent;
 // appearance decides how that accent renders (solid fill vs bordered).
@@ -26,20 +28,32 @@
 // the inner native button. `class` is deliberately NOT forwarded — it stays on the
 // styled wrapper so a caller can add a class without clobbering .esa-button__native.
 import EsaIcon from './esa-icon.astro';
+// Button text is UI text — the label composite at the control step. The import is
+// the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
-type EsaButtonColor = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost';
+type EsaButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost';
 type EsaButtonAppearance = 'fill' | 'outline' | 'dashed' | 'soft'; // hub-edit-approved: Andy (see header note)
 
 interface Props {
-  color?: EsaButtonColor;
+  variant?: EsaButtonVariant;
   appearance?: EsaButtonAppearance;
   active?: boolean;
   size?: EsaSize;
   disabled?: boolean;
   loading?: boolean;
-  /** Lucide icon name, shown left of the label. */
+  /** Leading Lucide icon name, shown left of the label. */
   icon?: string;
+  /**
+   * Lucide icon name shown to the RIGHT of the label — the affordance that says
+   * where the action goes ("arrow-right") or that it opens something
+   * ("chevron-down"). Independent of `icon`, so a button can carry both.
+   */
+  iconRight?: string;
   /** Icon-only mode (no text). */
   iconOnly?: boolean;
   type?: 'button' | 'submit' | 'reset';
@@ -51,6 +65,8 @@ interface Props {
   rel?: string;
   /** Extra class(es) — applied to the styled wrapper, not the native control. */
   class?: string;
+  /** DEPRECATED — renamed to `variant`. Still honoured; warns at build time. */
+  color?: EsaButtonVariant;
   /**
    * Any other attribute (onclick, id, name, value, form, data-*, aria-*) is forwarded
    * verbatim to the native <button>/<a>. This is what lets plain-JS callers wire a
@@ -59,14 +75,26 @@ interface Props {
   [attr: string]: unknown;
 }
 
+// `color` was renamed to `variant` (migrations.json: button-color-to-variant).
+// Keeping `color` in Props is NOT optional politeness: the index signature would
+// otherwise sweep it into `...rest` and spread it onto the native <button> as a
+// junk attribute, leaving the button silently `primary`. Destructuring it here
+// is what stops that.
+//
+// The default stays on `variant` in the destructuring rather than moving into
+// the fallback chain below, because that is where the generated API table reads
+// defaults from (apps/site/src/data/component-api.ts) — express it any other way
+// and the docs quietly lose the default.
 const {
-  color = 'primary',
+  variant = 'primary',
+  color: deprecatedColor,
   appearance = 'fill',
   active = false,
   size = 'md',
   disabled = false,
   loading = false,
   icon = '',
+  iconRight = '',
   iconOnly = false,
   type = 'button',
   href,
@@ -76,9 +104,22 @@ const {
   ...rest
 } = Astro.props;
 
+// Explicit `variant` always wins, so a spoke mid-migration can pass both without
+// the stale one overriding the fixed one. Tested against Astro.props rather than
+// the binding, which the destructuring default has already filled in.
+const variantWasSet = Astro.props.variant !== undefined;
+if (deprecatedColor && !variantWasSet) {
+  console.warn(
+    `⚠️  esa-button: \`color="${deprecatedColor}"\` is deprecated — renamed to ` +
+      `\`variant="${deprecatedColor}"\`. Run \`node ../ecology/scripts/migrate-tokens.mjs --write\` ` +
+      `in your spoke (migrations.json: button-color-to-variant).`,
+  );
+}
+const resolvedVariant = !variantWasSet && deprecatedColor ? deprecatedColor : variant;
+
 const cls = [
   'esa-button',
-  `esa-button--color-${color}`,
+  `esa-button--variant-${resolvedVariant}`,
   `esa-button--appearance-${appearance}`,
   `esa-button--${size}`,
   active && 'esa-button--active',
@@ -118,7 +159,7 @@ const buttonAttrs = {
 ---
 <span class={cls}>
   {isLink ? (
-    <a class="esa-button__native" {...linkAttrs} {...rest}>
+    <a class={`esa-button__native typography-${LABEL_TYPE[size]}`} {...linkAttrs} {...rest}>
       {loading && <span class="esa-button__spinner" aria-hidden="true" />}
       {icon && !loading && <EsaIcon name={icon} size={size} />}
       {!iconOnly && (
@@ -126,9 +167,10 @@ const buttonAttrs = {
           <slot />
         </span>
       )}
+      {iconRight && !loading && !iconOnly && <EsaIcon name={iconRight} size={size} />}
     </a>
   ) : (
-    <button class="esa-button__native" {...buttonAttrs} {...rest}>
+    <button class={`esa-button__native typography-${LABEL_TYPE[size]}`} {...buttonAttrs} {...rest}>
       {loading && <span class="esa-button__spinner" aria-hidden="true" />}
       {icon && !loading && <EsaIcon name={icon} size={size} />}
       {!iconOnly && (
@@ -136,6 +178,7 @@ const buttonAttrs = {
           <slot />
         </span>
       )}
+      {iconRight && !loading && !iconOnly && <EsaIcon name={iconRight} size={size} />}
     </button>
   )}
 </span>
@@ -143,9 +186,8 @@ const buttonAttrs = {
 <style>
   .esa-button {
     /* Size tokens — md default. */
-    --_btn-height: var(--form-height-md, 40px);
+    --_btn-pad-y: var(--form-padding-y-md, 0.75rem);
     --_btn-padding-x: var(--form-padding-x-md, 16px);
-    --_btn-font-size: var(--form-font-size-md, 14px);
     --_btn-radius: var(--form-radius-md, 6px);
     /* Color tokens — primary default.
        --_accent      = fill / border color (step 9)
@@ -162,15 +204,13 @@ const buttonAttrs = {
   }
 
   /* ---------- Sizes ---------- */
-  .esa-button--xs { --_btn-height: var(--form-height-xs, 28px); --_btn-padding-x: var(--form-padding-x-xs, 8px);  --_btn-font-size: var(--form-font-size-xs, 11px); --_btn-radius: var(--form-radius-xs, 4px); }
-  .esa-button--sm { --_btn-height: var(--form-height-sm, 32px); --_btn-padding-x: var(--form-padding-x-sm, 12px); --_btn-font-size: var(--form-font-size-sm, 12px); --_btn-radius: var(--form-radius-sm, 4px); }
-  .esa-button--lg { --_btn-height: var(--form-height-lg, 48px); --_btn-padding-x: var(--form-padding-x-lg, 20px); --_btn-font-size: var(--form-font-size-lg, 16px); --_btn-radius: var(--form-radius-lg, 8px); }
+  .esa-button--xs { --_btn-pad-y: var(--form-padding-y-xs, 0.5rem); --_btn-padding-x: var(--form-padding-x-xs, 8px);  --_btn-radius: var(--form-radius-xs, 4px); }
+  .esa-button--sm { --_btn-pad-y: var(--form-padding-y-sm, 0.625rem); --_btn-padding-x: var(--form-padding-x-sm, 12px); --_btn-radius: var(--form-radius-sm, 4px); }
+  .esa-button--lg { --_btn-pad-y: var(--form-padding-y-lg, 1rem); --_btn-padding-x: var(--form-padding-x-lg, 20px); --_btn-radius: var(--form-radius-lg, 8px); }
 
   /* sm is NOT height-locked to the form scale — standalone small buttons get relaxed
      vertical padding (6px block) instead of matching input height. Icon-only keeps a
      fixed square so it can't collapse. hub-edit-approved: Andy (see header note). */
-  .esa-button--sm .esa-button__native { height: auto; padding-block: var(--spacing-150, 6px); }
-  .esa-button--sm.esa-button--icon-only .esa-button__native { height: var(--form-height-sm, 32px); padding-block: 0; }
 
   /* ---------- Colors (set the accent, on-fill text, and outline text) ----------
      --_on          = foreground text on a solid fill. Defaults to white (correct for
@@ -179,38 +219,38 @@ const buttonAttrs = {
      --_accent-text = foreground text in outline/dashed contexts. Uses the semantic
                       *-strong token (step 11) — designed for colored text on surfaces.
                       Spokes override via their theme's *-strong tokens, not primitives. */
-  .esa-button--color-primary {
+  .esa-button--variant-primary {
     --_accent-text: var(--color-content-brand);
   }
-  .esa-button--color-secondary {
+  .esa-button--variant-secondary {
     --_accent: var(--color-background-brand-secondary);
     --_accent-hover: var(--color-background-brand-secondary-hover);
     --_on: var(--color-content-on-brand-secondary, var(--color-content-primary));
     --_accent-text: var(--color-content-brand-secondary);
   }
-  .esa-button--color-danger {
+  .esa-button--variant-danger {
     --_accent: var(--color-background-danger);
     --_accent-hover: var(--color-background-danger-hover);
     --_accent-text: var(--color-content-danger);
   }
-  .esa-button--color-success {
+  .esa-button--variant-success {
     --_accent: var(--color-background-success);
     --_accent-hover: var(--color-background-success-hover);
     --_on: var(--color-content-on-success);
     --_accent-text: var(--color-content-success);
   }
-  .esa-button--color-warning {
+  .esa-button--variant-warning {
     --_accent: var(--color-background-warning);
     --_accent-hover: var(--color-background-warning-hover);
     --_on: var(--button-on-warning, var(--color-content-on-warning, #4f3422));
     --_accent-text: var(--color-content-warning);
   }
-  .esa-button--color-info {
+  .esa-button--variant-info {
     --_accent: var(--color-background-info);
     --_accent-hover: var(--color-background-info-hover);
     --_accent-text: var(--color-content-info);
   }
-  .esa-button--color-ai {
+  .esa-button--variant-ai {
     --_accent: var(--color-background-ai);
     --_accent-hover: var(--color-background-ai-hover);
     --_accent-text: var(--color-content-ai);
@@ -238,7 +278,7 @@ const buttonAttrs = {
   .esa-button--appearance-dashed.esa-button--active .esa-button__native { background: var(--_btn-tint-active); }
 
   /* ---------- Soft (neutral chrome + accent text; accent fill on hover) ----------
-     With color="danger" this is GitHub's secondary-danger button: gray surface,
+     With variant="danger" this is GitHub's secondary-danger button: gray surface,
      darker-gray border, red text; hover fills red. hub-edit-approved: Andy (header). */
   /* hub-edit-approved: Andy (see header) — soft bg is a light tint (mix of sunken + surface). */
   .esa-button--appearance-soft .esa-button__native {
@@ -255,15 +295,15 @@ const buttonAttrs = {
   }
 
   /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
-  .esa-button--color-ghost .esa-button__native {
+  .esa-button--variant-ghost .esa-button__native {
     background: transparent;
     color: var(--color-content-primary, #171717);
     border-color: transparent;
   }
-  .esa-button--color-ghost.esa-button--appearance-outline .esa-button__native,
-  .esa-button--color-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border, #e5e5e5); }
-  .esa-button--color-ghost .esa-button__native:hover:not(:disabled),
-  .esa-button--color-ghost.esa-button--active .esa-button__native { background: var(--color-background-sunken, #efefef); }
+  .esa-button--variant-ghost.esa-button--appearance-outline .esa-button__native,
+  .esa-button--variant-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border, #e5e5e5); }
+  .esa-button--variant-ghost .esa-button__native:hover:not(:disabled),
+  .esa-button--variant-ghost.esa-button--active .esa-button__native { background: var(--color-background-sunken, #efefef); }
 
   /* ---------- Native button ---------- */
   .esa-button__native {
@@ -272,14 +312,24 @@ const buttonAttrs = {
     justify-content: center;
     gap: var(--spacing-200, 8px);
     width: 100%;
-    height: var(--_btn-height);
+    /* No height token. `sm` used to be the one step that escaped it — height:auto
+       plus padding-block, added because standalone small buttons "looked squished"
+       (hub-edit-approved). That fix is now how every step works, so the special
+       case is gone rather than generalised. */
+    padding-block: var(--_btn-pad-y);
     padding-inline: var(--_btn-padding-x);
+    line-height: var(--line-height-none, 1);
     border: var(--border-width-default, 1px) solid transparent;
     border-radius: var(--_btn-radius);
-    font-size: var(--_btn-font-size);
-    font-family: var(--font-sans, system-ui, sans-serif);
-    font-weight: var(--font-weight-medium, 500);
-    line-height: var(--line-height-none, 1);
+    /* Type comes from .typography-label-* on this element. Nothing font-related
+       may be declared here: Astro scopes this rule with a [data-astro-cid-*]
+       attribute, which outranks the composite's single-class selector, so a
+       leftover declaration would silently beat the composite rather than
+       layering with it. line-height IS set above, and deliberately: it was deleted
+       here earlier on the grounds that "the button is a fixed-height centred flex
+       box, so leading never reached an edge." There is no fixed height any more,
+       so leading is exactly what reaches the edge — it is the term that decides
+       how tall the button is. */
     text-decoration: none;
     cursor: pointer;
     transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
@@ -293,7 +343,7 @@ const buttonAttrs = {
 
   /* States */
   .esa-button--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-  .esa-button--icon-only .esa-button__native { padding-inline: 0; width: var(--_btn-height); }
+  .esa-button--icon-only .esa-button__native { padding-inline: var(--_btn-pad-y); aspect-ratio: 1; }
 
   /* Label + loading */
   .esa-button__label { white-space: nowrap; }

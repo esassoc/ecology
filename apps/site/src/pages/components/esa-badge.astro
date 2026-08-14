@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import Badge from '@esa/ecology/esa-badge.astro';
 
-const props = [
-  { name: 'value', type: 'string | number', description: 'Text or count shown inside the badge. Ignored in dot mode.' },
-  { name: 'variant', type: "'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'", default: "'primary'", description: 'Background color intent.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Badge height and text size.' },
-  { name: 'dot', type: 'boolean', default: 'false', description: 'Renders a small status dot with no text.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  value: "Text or count shown inside the badge. Ignored in dot mode.",
+  variant: "Background color intent.",
+  size: "Badge height and text size.",
+  dot: "Renders a small status dot with no text.",
+};
 ---
 <ComponentDoc name="Badge" category="Display" slug="esa-badge" type=".astro" status="stable"
   summary="A small pill for counts, statuses, and labels. Six color intents, three sizes, plus a dot mode for compact status indicators.">
@@ -61,7 +63,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-badge" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

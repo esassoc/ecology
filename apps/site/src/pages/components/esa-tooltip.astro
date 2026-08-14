@@ -2,14 +2,16 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'text', type: 'string', default: "''", description: 'Tooltip label. The tooltip does not render when empty.' },
-  { name: 'position', type: "'above' | 'below' | 'left' | 'right'", default: "'above'", description: 'Side the tooltip appears on.' },
-  { name: 'delay', type: 'number', default: '200', description: 'Milliseconds to wait before showing on hover/focus.' },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  text: "Tooltip label. The tooltip does not render when empty.",
+  position: "Side the tooltip appears on.",
+  delay: "Milliseconds to wait before showing on hover/focus.",
+  open: "Reflected open state.",
+};
 ---
 <ComponentDoc name="Tooltip" category="Overlays" slug="esa-tooltip" type="wc" status="stable"
   summary="Hover and focus tooltip. Wrap a trigger in the default slot and set <code>text</code>. It shows after <code>delay</code> ms (default 200) and hides on leave or blur.">
@@ -56,7 +58,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-tooltip" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

@@ -3,13 +3,16 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'heading', type: 'string', description: 'Title shown in the header.' },
-  { name: 'position', type: "'left' | 'right'", default: "'right'", description: 'Edge the drawer slides in from.' },
-  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Panel width — 320 / 400 / 520px.' },
-  { name: 'show-close-button', type: 'boolean', default: 'true', description: 'Render the header close (✕) button.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  heading: "Title shown in the header.",
+  position: "Edge the drawer slides in from.",
+  size: "Panel width — 320 / 400 / 520px.",
+  "show-close-button": "Render the header close (✕) button.",
+};
 const methods = [
   { name: 'show()', type: 'method', description: 'Open the drawer.' },
   { name: 'close()', type: 'method', description: 'Close it (restores focus, emits `close`).' },
@@ -44,7 +47,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-side-dialog" describe={describe} />
     <h3 class="api-sub">Methods</h3>
     <Api props={methods} />
     <Api events={events} />

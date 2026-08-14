@@ -1,4 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** Label / trigger text is UI text (label-*, medium); typed values, options and
+    chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaOption {
   label: string;
@@ -42,6 +48,7 @@ export class EsaSelect extends LitElement {
     errorText: { type: String, attribute: 'error-text' },
     required: { type: Boolean },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     multiple: { type: Boolean },
     searchable: { type: Boolean },
     chipMode: { type: Boolean, attribute: 'chip-mode' },
@@ -64,6 +71,8 @@ export class EsaSelect extends LitElement {
   declare errorText: string;
   declare required: boolean;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare multiple: boolean;
   declare searchable: boolean;
   declare chipMode: boolean;
@@ -151,6 +160,29 @@ export class EsaSelect extends LitElement {
     this.internals.setFormValue(this.multiple ? this._selected.join(',') : (this._selected[0] ?? null));
   }
 
+  updated(): void {
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. Anchored to the
+   * field so the browser can focus it and place its bubble.
+   */
+  private syncValidity(): void {
+    if (!this.required || this._selected.length > 0) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.input') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Select ${this.label}.` : 'Select an option.',
+      anchor,
+    );
+  }
+
   private emit(): void {
     this.syncFormValue();
     this.dispatchEvent(
@@ -214,7 +246,7 @@ export class EsaSelect extends LitElement {
     const selected = this.selectedOptions;
     if (selected.length === 0) return null;
     if (selected.length > 1) {
-      return html`<span class="chip chip--count">
+      return html`<span class="chip chip--count typography-body-sm">
         <span class="chip__label">${selected.length} Options</span>
         <button
           type="button"
@@ -227,7 +259,7 @@ export class EsaSelect extends LitElement {
       </span>`;
     }
     const opt = selected[0];
-    return html`<span class="chip">
+    return html`<span class="chip typography-body-sm">
       <span class="chip__label">${opt.label}</span>
       <button
         type="button"
@@ -291,7 +323,7 @@ export class EsaSelect extends LitElement {
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label">
+          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
               ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
             </label>`
           : null}
@@ -305,7 +337,7 @@ export class EsaSelect extends LitElement {
           >
             ${this.multiple && this.chipMode ? this.renderTags() : null}
             <input
-              class="input"
+              class="input typography-${VALUE_TYPE[this.size]}"
               role="combobox"
               aria-expanded=${this._open}
               aria-haspopup="listbox"
@@ -325,11 +357,11 @@ export class EsaSelect extends LitElement {
           ${this._open
             ? html`<div class="dropdown" role="listbox">
                 ${this.filteredOptions.length === 0
-                  ? html`<div class="option option--empty">No results found</div>`
+                  ? html`<div class="option option--empty typography-${VALUE_TYPE[this.size]}">No results found</div>`
                   : this.filteredOptions.map((option, i) => {
                       const selected = this.isSelected(option.value);
                       return html`<div
-                        class="option ${i === this._active ? 'option--active' : ''} ${selected
+                        class="option typography-${VALUE_TYPE[this.size]} ${i === this._active ? 'option--active' : ''} ${selected
                           ? 'option--selected'
                           : ''} ${option.disabled ? 'option--disabled' : ''}"
                         role="option"
@@ -349,9 +381,9 @@ export class EsaSelect extends LitElement {
         </div>
 
         ${hasError
-          ? html`<span class="field__error">${this.errorText}</span>`
+          ? html`<span class="field__error typography-body-sm">${this.errorText}</span>`
           : this.helpText
-            ? html`<span class="field__help">${this.helpText}</span>`
+            ? html`<span class="field__help typography-body-sm">${this.helpText}</span>`
             : null}
       </div>
     `;
@@ -370,28 +402,24 @@ export class EsaSelect extends LitElement {
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>`;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
+      --_field-padding-y: var(--form-padding-y-md, 0.75rem);
       --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
+      --_field-padding-y: var(--form-padding-y-sm, 0.625rem);
       --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 6px);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
+      --_field-padding-y: var(--form-padding-y-lg, 1rem);
       --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 10px);
     }
 
@@ -401,9 +429,9 @@ export class EsaSelect extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-label-font-size, var(--_field-font-size));
-      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 500));
+      /* Was the last reader of --form-label-font-size and one of two readers of
+         --form-label-font-weight. Both are retired with the rest of the size-only
+         ramp; the composite carries size and weight together. */
       color: var(--form-label-color, #171717);
     }
     .field__required {
@@ -411,11 +439,9 @@ export class EsaSelect extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
 
@@ -437,7 +463,6 @@ export class EsaSelect extends LitElement {
     .input-wrapper--tags {
       flex-wrap: nowrap;
       gap: var(--spacing-100, 4px);
-      min-height: var(--_field-height);
       padding: var(--_field-padding-y) calc(var(--_field-padding-x) + 24px)
         var(--_field-padding-y) var(--_field-padding-x);
       background: var(--form-bg, #fff);
@@ -473,11 +498,8 @@ export class EsaSelect extends LitElement {
     }
     .input {
       width: 100%;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
       padding-inline-end: calc(var(--_field-padding-x) + 24px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -545,8 +567,6 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--color-content-primary, #171717);
       cursor: pointer;
       user-select: none;
@@ -612,9 +632,6 @@ export class EsaSelect extends LitElement {
       background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #3a7c59);
       border-radius: var(--radius-pill, 9999px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--font-size-150, 12px);
-      line-height: var(--line-height-none, 1);
       user-select: none;
     }
     .chip__label {
@@ -652,7 +669,8 @@ export class EsaSelect extends LitElement {
     .field--error .input:focus {
       box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-select')) {

@@ -2,27 +2,29 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import { withBase } from '@esa/docs/base';
 import AppShell from '@esa/ecology/esa-app-shell.astro';
 import Stat from '@esa/ecology/esa-stat.astro';
 import Card from '@esa/ecology/esa-card.astro';
 
-const props = [
-  { name: 'title', type: 'string', default: "'App'", description: 'Wordmark text in the sidenav header. Not the document title.' },
-  { name: 'active', type: 'string', description: 'The `key` of the current nav item. Matching is by key, never by label or href.' },
-  { name: 'items', type: 'AppShellNavItem[]', default: '[]', description: 'Navigation as data: label, key, href, icon, badge, group, children. Serialized into a JSON island the client script hands to esa-sidebar-nav.' },
-  { name: 'userMenu', type: 'AppShellMenuItem[]', default: 'Profile / Settings / Sign out', description: 'Rows in the profile dropdown. `divider: true` inserts a rule; `variant: "danger"` tints a destructive row.' },
-  { name: 'userName', type: 'string', default: "'Account'", description: 'Label on the profile trigger.' },
-  { name: 'searchIndex', type: 'AppShellSearchEntry[]', default: '[]', description: 'Omnibox index (id is a real in-app href, plus title, subtitle, category). Omit or leave empty to drop the search control entirely.' },
-  { name: 'searchPlaceholder', type: 'string', default: "'Search…'", description: 'Placeholder inside the omnibox trigger.' },
-  { name: 'mark', type: 'string', description: 'Raw inline SVG (a full <svg>…</svg>) for the sidenav logo mark, rendered directly into the sidenav header.' },
-  { name: 'brandHref', type: 'string', default: "'/'", description: 'Where the wordmark links.' },
-  { name: 'accent', type: 'boolean', default: 'false', description: 'Adds a faint brand-tinted neutral wash to the bar — a color-mix, not a brand fill.' },
-  { name: 'collapsed', type: 'boolean', default: 'false', description: 'Start with the sidenav collapsed to an icon rail.' },
-  { name: 'id', type: 'string', default: "'esa-shell'", description: 'Stable id base for the nav, menu, and search elements. Required when more than one shell is on a page.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  title: "Wordmark text in the sidenav header. Not the document title.",
+  active: "The `key` of the current nav item. Matching is by key, never by label or href.",
+  items: "Navigation as data: label, key, href, icon, badge, group, children. Serialized into a JSON island the client script hands to esa-sidebar-nav.",
+  userMenu: "Rows in the profile dropdown. `divider: true` inserts a rule; `variant: \"danger\"` tints a destructive row.",
+  userName: "Label on the profile trigger.",
+  searchIndex: "Omnibox index (id is a real in-app href, plus title, subtitle, category). Omit or leave empty to drop the search control entirely.",
+  searchPlaceholder: "Placeholder inside the omnibox trigger.",
+  mark: "Raw inline SVG (a full <svg>…</svg>) for the sidenav logo mark, rendered directly into the sidenav header.",
+  brandHref: "Where the wordmark links.",
+  accent: "Adds a faint brand-tinted neutral wash to the bar — a color-mix, not a brand fill.",
+  collapsed: "Start with the sidenav collapsed to an icon rail.",
+  id: "Stable id base for the nav, menu, and search elements. Required when more than one shell is on a page.",
+};
 
 const slots = [
   { name: 'default', type: 'slot', description: 'Page content. Rendered into <main> — the only region that scrolls.' },
@@ -148,7 +150,7 @@ const searchIndex = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-app-shell" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} nameHeader="Slot" />
     <p style="margin-top: 1rem;">

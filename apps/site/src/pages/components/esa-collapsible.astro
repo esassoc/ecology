@@ -2,17 +2,19 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import Collapsible from '@esa/ecology/esa-collapsible.astro';
 
-const props = [
-  { name: 'title', type: 'string', description: 'Summary label. Required — the row is the control, so it always needs a name.' },
-  { name: 'icon', type: 'string', description: 'Optional leading Lucide icon name (kebab-case), rendered through esa-icon at size sm.' },
-  { name: 'iconPaths', type: 'string', description: "Inner SVG markup for an icon outside esa-icon's registry. Passed straight through." },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Render expanded on load.' },
-  { name: 'flush', type: 'boolean', default: 'false', description: 'Drop the card chrome (border, radius, background) and the horizontal padding — for stacked drawer or sidebar sections separated by the host’s own dividers.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  title: "Summary label. Required — the row is the control, so it always needs a name.",
+  icon: "Optional leading Lucide icon name (kebab-case), rendered through esa-icon at size sm.",
+  iconPaths: "Inner SVG markup for an icon outside esa-icon's registry. Passed straight through.",
+  open: "Render expanded on load.",
+  flush: "Drop the card chrome (border, radius, background) and the horizontal padding — for stacked drawer or sidebar sections separated by the host’s own dividers.",
+};
 
 const slots = [
   { name: 'default', type: 'slot', description: 'The disclosed body. A flex column with a 1rem gap between children.' },
@@ -89,7 +91,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-collapsible" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} nameHeader="Slot" />
   </Section>

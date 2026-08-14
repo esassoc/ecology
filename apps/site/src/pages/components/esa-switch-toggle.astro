@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Text rendered beside the track.' },
-  { name: 'checked', type: 'boolean', default: 'false', description: 'On/off state of the switch.' },
-  { name: 'label-position', type: "'before' | 'after'", default: "'after'", description: 'Whether the label sits before or after the track.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Track and thumb size.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Text rendered beside the track.",
+  checked: "On/off state of the switch.",
+  "label-position": "Whether the label sits before or after the track.",
+  size: "Track and thumb size.",
+  disabled: "Disables interaction.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ checked: boolean }>', description: 'Fired when toggled. Composed and bubbling; detail.checked is the new state.' },
@@ -77,7 +79,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-switch-toggle" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

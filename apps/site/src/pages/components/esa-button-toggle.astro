@@ -2,16 +2,21 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'options', type: '{ value, label, icon?, ariaLabel? }[]', default: '[]', description: 'The segments. Set as a property (an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon), rendered before the label and inheriting currentColor. Omit label for an icon-only segment, but then set ariaLabel for its accessible name.' },
-  { name: 'value', type: 'string', default: "''", description: "Selected option's value. Single-select; bound to the form value." },
-  { name: 'label', type: 'string', default: "''", description: 'The name of the value being chosen — a field name, not an instruction; becomes the radiogroup name.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (adds an asterisk and aria-required).' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables every segment.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  options: "The segments. Set as a property (an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon), rendered before the label and inheriting currentColor. Omit label for an icon-only segment, but then set ariaLabel for its accessible name.",
+  value: "Selected option's value. Single-select; bound to the form value.",
+  label: "Optional visible label above the group; becomes the radiogroup name.",
+  "help-text": "Helper text below the group.",
+  "error-text": "Validation message below the group. Replaces help-text and reddens the track.",
+  size: "Control size (shared form scale).",
+  name: "Form field name — the key this control submits under.",
+  required: "Blocks submission while nothing is selected (valueMissing), and adds an asterisk plus aria-required.",
+  disabled: "Disables every segment.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when the selection changes. Composed and bubbling; detail.value is the newly selected value.' },
@@ -70,10 +75,17 @@ const events = [
   </Section>
 
   <Section id="states" title="States">
+    <p><code>error-text</code> replaces <code>help-text</code> in the slot below the group
+    and reddens the track — the same one-slot precedence <code>esa-select</code> and
+    <code>esa-text-field</code> use, so the two messages never stack.</p>
     <Preview align="start" code={`<esa-button-toggle label="Default"></esa-button-toggle>
+<esa-button-toggle label="With help" help-text="Pick a layout"></esa-button-toggle>
+<esa-button-toggle label="With error" error-text="Choose a layout to continue"></esa-button-toggle>
 <esa-button-toggle label="Disabled" disabled></esa-button-toggle>`}>
       <div class="col">
         <esa-button-toggle label="Default" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle label="With help" help-text="Pick a layout" data-demo="sizes"></esa-button-toggle>
+        <esa-button-toggle label="With error" error-text="Choose a layout to continue" data-demo="sizes"></esa-button-toggle>
         <esa-button-toggle label="Disabled" disabled data-demo="sizes"></esa-button-toggle>
       </div>
     </Preview>
@@ -81,6 +93,10 @@ const events = [
 
   <Section id="form" title="Form participation">
     <p>The control submits its selected <code>value</code> under its <code>name</code>. Submitting logs the <code>view</code> entry.</p>
+    <p>With <code>required</code>, the group reports <code>valueMissing</code> through
+    <code>ElementInternals</code> until something is selected, so the native form
+    refuses to submit and <code>checkValidity()</code> returns <code>false</code> —
+    the asterisk is not the whole of it.</p>
     <Preview align="start" code={`<form>
   <esa-button-toggle name="view" label="View"></esa-button-toggle>
   <button type="submit">Submit</button>
@@ -94,7 +110,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-button-toggle" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

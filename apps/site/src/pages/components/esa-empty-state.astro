@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import EmptyState from '@esa/ecology/esa-empty-state.astro';
 
-const props = [
-  { name: 'title', type: 'string', description: 'Required. The primary heading of the empty state.' },
-  { name: 'description', type: 'string', description: 'Optional supporting line below the title.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Scales icon, text, and padding.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  title: "Required. The primary heading of the empty state.",
+  description: "Optional supporting line below the title.",
+  size: "Scales icon, text, and padding.",
+};
 
 const slots = [
   { name: 'icon', type: 'slot', description: 'Inline SVG, scaled to the size variant.' },
@@ -69,7 +71,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-empty-state" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} />
   </Section>

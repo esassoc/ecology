@@ -150,15 +150,31 @@ console.log(`✓ typography-styles.js emitted (${liveClasses.match(/\.typography
 
 const migrations = JSON.parse(fs.readFileSync('migrations.json', 'utf8')).migrations;
 const shims = [];
+const removedNotes = [];
 for (const m of migrations) {
   if (m.kind !== 'token') continue; // class renames live in src/typography.css
+  // `removed: true` means the token is GONE, not renamed — there is no equivalent
+  // value to alias to. Emitting `--old: var(--new)` here would be worse than
+  // emitting nothing: --control-height-md would silently resolve to a padding
+  // value, so a spoke reading it would get 12px where it expected 40px. The row
+  // still exists so doctor.mjs can warn and the `to` field can point at whatever
+  // replaced the CAPABILITY, which is not the same thing as replacing the value.
+  if (m.removed) {
+    removedNotes.push(`     ${m.pairs.map(([f]) => f).join(', ')} — removed (${m.id}); see ${m.to ?? 'migrations.json'}`);
+    continue;
+  }
   for (const [from, to] of m.pairs) shims.push(`  ${from}: var(${to}); /* deprecated: ${m.id} */`);
 }
 fs.appendFileSync(
   'dist/tokens.css',
   `\n/* DEPRECATED — renamed tokens, kept so spoke source keeps resolving.\n` +
     `   Generated from migrations.json. Run \`node scripts/migrate-tokens.mjs\` in a spoke\n` +
-    `   to move off them, then delete the row here once every spoke is clean. */\n` +
+    `   to move off them, then delete the row here once every spoke is clean.\n` +
+    (removedNotes.length
+      ? `\n   NOT ALIASED — these were REMOVED, not renamed. There is no equivalent value,\n` +
+        `   so no shim is emitted and a spoke still reading them gets nothing:\n${removedNotes.join('\n')}\n`
+      : '') +
+    `*/\n` +
     `:root {\n${shims.join('\n')}\n}\n`,
 );
 

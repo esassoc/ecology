@@ -1,14 +1,16 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const attrs = [
-  { name: 'threshold', type: 'number', default: '300', description: 'Scroll distance (px) before the button fades in.' },
-  { name: 'smooth-scroll', type: 'boolean', default: 'true', description: 'Smooth vs instant scroll-to-top. (Property: smoothScroll.)' },
-  { name: 'scrollTarget', type: 'HTMLElement | null', default: 'null', description: 'JS-only property — element to track instead of window.' },
-  { name: 'visible', type: 'boolean (reflected)', default: 'false', description: 'Reflected attribute set when scrolled past the threshold; drives the fade/translate.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  threshold: "Scroll distance (px) before the button fades in.",
+  "smooth-scroll": "Smooth vs instant scroll-to-top. (Property: smoothScroll.)",
+  scrollTarget: "JS-only property — element to track instead of window.",
+  visible: "Reflected attribute set when scrolled past the threshold; drives the fade/translate.",
+};
 ---
 <ComponentDoc name="Back to Top" category="Display" slug="esa-back-to-top" type="wc" status="stable"
   summary="Floating button that appears once the page is scrolled past a threshold and smooth-scrolls back to the top on click.">
@@ -23,7 +25,7 @@ const attrs = [
 
   <Section id="api" title="API">
     <p>Attributes and properties:</p>
-    <Api props={attrs} />
+    <ApiTable slug="esa-back-to-top" describe={describe} />
     <p style="margin-top: 1rem;">No custom events — clicking the button scrolls the target (or <code>window</code>) to the top directly.</p>
   </Section>
 

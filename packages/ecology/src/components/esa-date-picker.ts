@@ -1,4 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** Label is UI text (medium); the typed date is prose (regular). See
+    the FORMS header in component-tokens.css for the step→rung mapping. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 /**
  * esa-date-picker — form-associated Lit Web Component.
@@ -26,6 +32,7 @@ export class EsaDatePicker extends LitElement {
     min: { type: String },
     max: { type: String },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     /**
      * A constraint on what this field will accept — its format, source, or
      * limit. "As it appears on the permit." "Letters, numbers, hyphens." Never
@@ -43,6 +50,8 @@ export class EsaDatePicker extends LitElement {
   declare min: string;
   declare max: string;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare helpText: string;
   declare errorText: string;
   declare required: boolean;
@@ -70,6 +79,33 @@ export class EsaDatePicker extends LitElement {
     this.internals.setFormValue(this.value || null);
   }
 
+  // A value set from SCRIPT (el.value = '…') has to reach the form too. Only the
+  // input handler used to call setFormValue, so a programmatically filled field
+  // rendered the text and submitted an empty string.
+  updated(changed: Map<string, unknown>): void {
+    if (changed.has('value')) this.internals.setFormValue(this.value || null);
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. `min`/`max` are left
+   * to the native date input inside, which enforces them itself.
+   */
+  private syncValidity(): void {
+    if (!this.required || this.value) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.input') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Enter ${this.label}.` : 'Enter a date.',
+      anchor,
+    );
+  }
+
   private onInput = (event: Event): void => {
     const val = (event.target as HTMLInputElement).value;
     this.value = val;
@@ -84,13 +120,13 @@ export class EsaDatePicker extends LitElement {
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label">
+          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
               ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
             </label>`
           : null}
         <input
           type="date"
-          class="input"
+          class="input typography-${VALUE_TYPE[this.size]}"
           .value=${this.value}
           ?disabled=${this.disabled}
           min=${this.min || ''}
@@ -100,43 +136,37 @@ export class EsaDatePicker extends LitElement {
           @input=${this.onInput}
         />
         ${hasError
-          ? html`<span class="field__error">${this.errorText}</span>`
+          ? html`<span class="field__error typography-body-sm">${this.errorText}</span>`
           : this.helpText
-            ? html`<span class="field__help">${this.helpText}</span>`
+            ? html`<span class="field__help typography-body-sm">${this.helpText}</span>`
             : null}
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
+      --_field-padding-y: var(--form-padding-y-md, 0.75rem);
       --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
+      --_field-padding-y: var(--form-padding-y-xs, 0.5rem);
       --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-height: var(--form-height-xs, 28px);
       --_field-radius: var(--form-radius-xs, 4px);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
+      --_field-padding-y: var(--form-padding-y-sm, 0.625rem);
       --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 6px);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
+      --_field-padding-y: var(--form-padding-y-lg, 1rem);
       --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 10px);
     }
 
@@ -145,10 +175,8 @@ export class EsaDatePicker extends LitElement {
       flex-direction: column;
       gap: var(--spacing-100, 4px);
     }
+    /* Type comes from the composite class on the element. */
     .field__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #171717);
     }
     .field__required {
@@ -156,20 +184,15 @@ export class EsaDatePicker extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, #ef4444);
     }
 
     .input {
       width: 100%;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -204,7 +227,8 @@ export class EsaDatePicker extends LitElement {
     .field--error .input:focus {
       box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-date-picker')) {

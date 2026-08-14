@@ -2,17 +2,19 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'total-items', type: 'number', default: '0', description: 'Total number of items across all pages; drives the range label and page count.' },
-  { name: 'page-size', type: 'number', default: '25', description: 'Items per page. Changing it resets to page 0.' },
-  { name: 'current-page', type: 'number', default: '0', description: 'Active page, zero-based.' },
-  { name: 'page-size-options', type: 'number[]', default: '[10, 25, 50, 100]', description: 'Choices in the page-size selector. Array property — set in JS.' },
-  { name: 'show-page-size-selector', type: 'boolean', default: 'true', description: 'Toggles the "Items per page" selector.' },
-  { name: 'show-first-last-buttons', type: 'boolean', default: 'true', description: 'Toggles the first / last jump buttons.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Dims and disables all controls. Reflected as an attribute.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  "total-items": "Total number of items across all pages; drives the range label and page count.",
+  "page-size": "Items per page. Changing it resets to page 0.",
+  "current-page": "Active page, zero-based.",
+  "page-size-options": "Choices in the page-size selector. Array property — set in JS.",
+  "show-page-size-selector": "Toggles the \"Items per page\" selector.",
+  "show-first-last-buttons": "Toggles the first / last jump buttons.",
+  disabled: "Dims and disables all controls. Reflected as an attribute.",
+};
 
 const events = [
   { name: 'pagechange', type: 'CustomEvent', description: 'Fired when the page changes. detail: { page: number } (zero-based). Bubbles and composed.' },
@@ -66,7 +68,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-pagination" describe={describe} events={events} />
     <p><code>page-size-options</code> is an array property — set it in JS, not as an attribute. The range label is derived as "start – end of total" ("0 of 0" when empty).</p>
   </Section>
 

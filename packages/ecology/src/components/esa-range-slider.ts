@@ -1,4 +1,9 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** Both slots are UI text at medium: the field label, and the numeric readout —
+    a readout is chrome, not something the user typed, so it stays label-*. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
 
 /**
  * esa-range-slider — form-associated Lit Web Component.
@@ -22,6 +27,7 @@ export class EsaRangeSlider extends LitElement {
     label: { type: String },
     showValue: { type: Boolean, attribute: 'show-value' },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     value: { type: Number },
   };
 
@@ -32,6 +38,8 @@ export class EsaRangeSlider extends LitElement {
   declare label: string;
   declare showValue: boolean;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare value: number;
 
   private internals: ElementInternals;
@@ -54,6 +62,13 @@ export class EsaRangeSlider extends LitElement {
     this.internals.setFormValue(String(this.value));
   }
 
+  // A value set from SCRIPT (el.value = 42) has to reach the form too. Only the
+  // input handler used to call setFormValue, so a programmatically positioned
+  // thumb rendered at 42 and submitted the default.
+  willUpdate(changed: Map<string, unknown>): void {
+    if (changed.has('value')) this.internals.setFormValue(String(this.value));
+  }
+
   private get fillPercent(): number {
     if (this.max === this.min) return 0;
     return ((this.value - this.min) / (this.max - this.min)) * 100;
@@ -70,7 +85,7 @@ export class EsaRangeSlider extends LitElement {
 
   render() {
     return html`
-      ${this.label ? html`<label class="label">${this.label}</label>` : null}
+      ${this.label ? html`<label class="label typography-${LABEL_TYPE[this.size]}">${this.label}</label>` : null}
       <div class="row">
         <div class="track-wrapper">
           <input
@@ -89,40 +104,35 @@ export class EsaRangeSlider extends LitElement {
             @input=${this.onInput}
           />
         </div>
-        ${this.showValue ? html`<span class="value">${this.value}</span>` : null}
+        ${this.showValue ? html`<span class="value typography-${LABEL_TYPE[this.size]}">${this.value}</span>` : null}
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
       --_track-height: 6px;
       --_thumb-size: 20px;
-      --_font-size: var(--form-font-size-md, 14px);
     }
     :host([size='xs']) {
       --_track-height: 3px;
       --_thumb-size: 14px;
-      --_font-size: var(--form-font-size-xs, 11px);
     }
     :host([size='sm']) {
       --_track-height: 4px;
       --_thumb-size: 16px;
-      --_font-size: var(--form-font-size-sm, 12px);
     }
     :host([size='lg']) {
       --_track-height: 8px;
       --_thumb-size: 24px;
-      --_font-size: var(--form-font-size-lg, 16px);
     }
 
     .label {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-primary, #171717);
     }
     .row {
@@ -207,13 +217,11 @@ export class EsaRangeSlider extends LitElement {
     .value {
       min-width: 3ch;
       text-align: right;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-primary, #171717);
       font-variant-numeric: tabular-nums;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-range-slider')) {

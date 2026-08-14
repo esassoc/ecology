@@ -3,17 +3,20 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Open imperatively via show().' },
-  { name: 'heading', type: 'string', default: "''", description: 'Title of the confirmation.' },
-  { name: 'message', type: 'string', default: "''", description: 'Supporting body text.' },
-  { name: 'variant', type: "'default' | 'warning' | 'danger'", default: "'default'", description: 'Icon and confirm-button color theme.' },
-  { name: 'confirm-label', type: 'string', default: "'Confirm'", description: 'Label of the confirm button.' },
-  { name: 'cancel-label', type: 'string', default: "'Cancel'", description: 'Label of the cancel button.' },
-  { name: 'show-icon', type: 'boolean', default: 'true', description: 'Renders the variant icon above the heading.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  open: "Reflected attribute that drives visibility. Open imperatively via show().",
+  heading: "Title of the confirmation.",
+  message: "Supporting body text.",
+  variant: "Icon and confirm-button color theme.",
+  "confirm-label": "Label of the confirm button.",
+  "cancel-label": "Label of the cancel button.",
+  "show-icon": "Renders the variant icon above the heading.",
+};
 
 const methods = [
   { name: 'show()', type: 'method', description: 'Opens the dialog and focuses the confirm button.' },
@@ -77,7 +80,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-confirm-dialog" describe={describe} />
     <h3>Methods</h3>
     <PropsTable rows={methods} />
     <Api events={events} />

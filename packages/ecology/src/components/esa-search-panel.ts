@@ -102,6 +102,7 @@ export class EsaSearchPanel extends LitElement {
     results: { type: Array },
     loading: { type: Boolean, reflect: true },
     position: { type: String, reflect: true },
+    name: { type: String, reflect: true },
     hasSearched: { type: Boolean, state: true },
   };
 
@@ -110,6 +111,8 @@ export class EsaSearchPanel extends LitElement {
   declare results: EsaSearchResult[];
   declare loading: boolean;
   declare position: 'right' | 'left';
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare hasSearched: boolean;
 
   private internals: ElementInternals;

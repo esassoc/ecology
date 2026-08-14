@@ -1,4 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** The group heading is UI text (label-*, medium); each option's own text is prose
+    (body-*, regular). See the FORMS header in component-tokens.css for the mapping. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaOption {
   label: string;
@@ -26,6 +32,7 @@ export class EsaRadioGroup extends LitElement {
     label: { type: String },
     size: { type: String, reflect: true },
     orientation: { type: String, reflect: true },
+    name: { type: String, reflect: true },
     value: { type: String },
   };
 
@@ -33,6 +40,8 @@ export class EsaRadioGroup extends LitElement {
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare orientation: 'vertical' | 'horizontal';
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare value: string | null;
 
   private internals: ElementInternals;
@@ -56,6 +65,10 @@ export class EsaRadioGroup extends LitElement {
         this.options = [];
       }
     }
+    // A value set from SCRIPT (el.value = 'x') has to reach the form too. Only
+    // the click handler used to call setFormValue, so a programmatically
+    // selected option rendered as selected and submitted as empty.
+    if (changed.has('value')) this.internals.setFormValue(this.value);
   }
 
   connectedCallback(): void {
@@ -85,7 +98,7 @@ export class EsaRadioGroup extends LitElement {
 
   render() {
     return html`
-      ${this.label ? html`<span class="group-label">${this.label}</span>` : null}
+      ${this.label ? html`<span class="group-label typography-${LABEL_TYPE[this.size]}">${this.label}</span>` : null}
       <div class="items" role="radiogroup" aria-label=${this.label}>
         ${this.options.map((option) => {
           const selected = this.isSelected(option.value);
@@ -105,7 +118,7 @@ export class EsaRadioGroup extends LitElement {
               >
                 <span class="dot"></span>
               </span>
-              <span class="item-label">${option.label}</span>
+              <span class="item-label typography-${VALUE_TYPE[this.size]}">${option.label}</span>
             </label>
           `;
         })}
@@ -113,35 +126,30 @@ export class EsaRadioGroup extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       --_radio-size: 20px;
       --_radio-dot-size: 10px;
-      --_radio-font-size: var(--form-font-size-md, 0.9375rem);
       display: block;
     }
     :host([size='xs']) {
       --_radio-size: 14px;
       --_radio-dot-size: 7px;
-      --_radio-font-size: var(--form-font-size-xs, 0.8125rem);
     }
     :host([size='sm']) {
       --_radio-size: 16px;
       --_radio-dot-size: 8px;
-      --_radio-font-size: var(--form-font-size-sm, 0.875rem);
     }
     :host([size='lg']) {
       --_radio-size: 24px;
       --_radio-dot-size: 12px;
-      --_radio-font-size: var(--form-font-size-lg, 1.125rem);
     }
 
     .group-label {
       display: block;
       margin-bottom: var(--spacing-200, 8px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_radio-font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-primary, #171717);
     }
 
@@ -207,12 +215,10 @@ export class EsaRadioGroup extends LitElement {
     }
 
     .item-label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_radio-font-size);
       color: var(--color-content-primary, #171717);
-      line-height: var(--line-height-tight, 1.3);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-radio-group')) {
