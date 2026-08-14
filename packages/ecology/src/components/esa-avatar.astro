@@ -75,7 +75,7 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     /* Public so initials type can be re-pointed per instance. Each size rule
        below repeats the hook with its own literal, so an override wins whichever
        size is active rather than only at md. */
-    --_avatar-font-size: var(--avatar-font-size, 16px);
+    --_avatar-font-size: var(--avatar-font-size, var(--font-size-200, 0.9375rem));
     --_avatar-radius: var(--avatar-radius, var(--radius-pill, 9999px));
     --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
     --_avatar-text: var(--avatar-text-color, var(--color-content-inverse, #fff));
@@ -98,9 +98,9 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     box-sizing: border-box;
   }
 
-  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size, 9px); }
-  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, 11px); }
-  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, 22px); }
+  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size, var(--font-size-050, 0.625rem)); }
+  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, var(--font-size-100, 0.75rem)); }
+  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, var(--font-size-400, 1.25rem)); }
 
   .esa-avatar--square { --_avatar-radius: var(--radius-surface, 0.5rem); }
 
@@ -110,8 +110,10 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     object-fit: cover;
   }
 
+  /* No line-height here: .esa-avatar is a fixed --_avatar-size box that flex-centres
+     its children, so the line box has nothing to push against. Setting it was
+     defending against leading that could not reach this element. */
   .esa-avatar__initials {
-    line-height: var(--line-height-none, 1);
     letter-spacing: 0.02em;
   }
 </style>

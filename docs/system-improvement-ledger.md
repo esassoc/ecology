@@ -331,6 +331,17 @@ codemod rather than a flag day.
   to composite tokens — preserves the surface but puts components back to per-property
   wiring, which is the thing being removed; (c) keep only the hooks a spoke plausibly
   needs (form controls, data grid) and drop the rest · `hub-fix` · **P1**
+- **12 Lit components hand-roll label markup because they cannot compose `esa-form-field`**
+  · *Evidence:* 14 components render their own `<label>` and the kit carries 23 separate
+  `__label` style blocks. `esa-form-field` already does this job — label row, control slot,
+  hint/error, size variants driving the label size — but it is an `.astro` wrapper, and 12
+  of the 14 are Lit rendering into shadow DOM, where an Astro component cannot wrap their
+  internals. Only `esa-text-field`, `esa-textarea` and the form-section pattern use it ·
+  *Action:* do NOT build an `esa-label` — that would be the 15th label implementation. The
+  fix is giving the Lit half a way to consume the existing one: a shared `CSSResult` (the
+  same mechanism `packages/ecology/src/typography.ts` now uses for composites), or markup
+  the component renders itself from a shared helper. Same shadow-boundary root cause as the
+  typography work, so worth solving once for both · `lego` · **P1**
 - **Typography is assembled from parts at 200+ call sites** · *Evidence:* the composite roles
   exist, but components read the ingredients directly far more than they read a role —
   `--font-sans` 69, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38 ·

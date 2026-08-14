@@ -10,16 +10,16 @@ whose resolved values differ between the two has changed what it draws.
 ```
 166 typography rules across 54 components
 
-  119  sit at a size some role holds
-   60     matched that role on EVERY property
+  119  sit at a size some composite holds
+   60     matched that composite on EVERY property
    59     differed on at least one
-   18  sit at a size NO role holds — hardcoded 13px / 16px / 11px / 12px / 14px
+   18  sit at a size NO composite holds — hardcoded 13px / 16px / 11px / 12px / 14px
    29  set typography without a size
 
-  0 components read any composite role
+  0 components read any composite
 ```
 
-Deltas against the roles that existed, by property:
+Deltas against the composites that existed, by property:
 
 | property | rules that would have changed |
 |---|---|
@@ -29,18 +29,18 @@ Deltas against the roles that existed, by property:
 | letter-spacing | 4 |
 
 The `font-weight` column is the finding: **26 rules rendered `medium` where the nearest
-role said `regular`**, 22 of them at `body-md`'s size. The kit's most common typographic
-job — a UI label at body size — had no role, so 59 rules worked around it.
+composite said `regular`**, 22 of them at `body-md`'s size. The kit's most common typographic
+job — a UI label at body size — had no composite, so 59 rules worked around it.
 
 ## Change 1 — the vocabulary was extended, not the call sites bent
 
-Nine roles added, none changed. The rule applied throughout: **a role is changed when it
+Nine composites added, none changed. The rule applied throughout: **a composite is changed when it
 is wrong, not when something needs a neighbour.** `title` was a live example — every
-dialog title in the kit renders semibold against a role that says medium, and re-pointing
+dialog title in the kit renders semibold against a composite that says medium, and re-pointing
 `title` would have moved every other consumer to satisfy three call sites. `title-strong`
 was added instead.
 
-| role | size | weight | replaces hand-set rules |
+| composite | size | weight | replaces hand-set rules |
 |---|---|---|---|
 | `label-xs` | 100 | medium | *(was `label`)* |
 | `label-sm` | 150 | medium | 4 |
@@ -55,7 +55,7 @@ was added instead.
 `label-*` sizes deliberately share the `body-*` ramp — `label-md` and `body-md` are the
 same size doing different jobs. `eyebrow-md` took `letter-spacing: wide` (0.03em) rather
 than the `wider` its small sibling uses, because all three existing consumers had settled
-on 0.03em independently; the role is new and they are the design.
+on 0.03em independently; the composite is new and they are the design.
 
 Renames carry `migrations.json` rows (`typography-label-sized`,
 `typography-eyebrow-sized`, `typography-label-eyebrow-classes`) and deprecated class
@@ -76,18 +76,22 @@ spoke markup this repo does not control and would be dead weight in every shadow
 
 ## Open — not yet migrated
 
-No component has been changed. 91 rules are ready to adopt a role with no visual change.
+No component has been changed. 91 rules are ready to adopt a composite with no visual change.
 
 Remaining, in order of how much thought each needs:
 
 1. **12 `font-family: inherit` deltas are false.** Inside a shadow root that inherits from
    a host already set to `--font-sans`, `inherit` resolves to DM Sans. The resolver cannot
    follow `inherit`, so it reports a difference that does not exist.
-2. **8 rules set `line-height: 1`** — badges, pills, chips. Text inside a fixed-height
-   control, where line-height is doing layout rather than typography. Either a sanctioned
-   override on top of the role, or a `-tight` variant.
+2. **`line-height: 1` — 17 rules, and the reasoning was backwards.** The first read of this
+   was "line-height is doing layout inside a fixed-height control". It is the opposite:
+   inside a fixed-height control line-height is the one thing that *cannot* matter, because
+   the height is explicit and the text is flex-centred. 1.6 × 13px = 20.8px in a 28px badge
+   never reaches an edge. Ten of the seventeen are inert on those grounds and can take a
+   composite whole. The load-bearing ones are the **auto-height** elements, where the box is
+   content + padding. See Change 4.
 3. **18 rules are off the type scale** — hardcoded `13px`, `16px`, `11px`, `12px`, `14px`,
-   `0.875rem`. No role can match a size no primitive holds. **These are the only places
+   `0.875rem`. No composite can match a size no primitive holds. **These are the only places
    where something must actually change size.**
 4. **Tier-3 typography hooks conflict with adopting a class — DEFERRED to the tier-3 pass.**
    17 hooks in `component-tokens.css` (`--grid-font-size`, `--form-label-font-weight`,
@@ -106,7 +110,85 @@ already renders every one of them decomposed. Duplication, and worse than duplic
 it presented the parts as things to consume, when a component names the composite.
 Removed — the non-colour listing went 122 → 56.
 
-Same pass removed the word **"role"** from the shipped token source. `typography.css`
+Same pass removed the word **"composite"** from the shipped token source. `typography.css`
 retired it deliberately ("it named nothing the vocabulary did not already cover"), and
 four descriptions added earlier that day had reintroduced it. The vocabulary is
 **category · intention · variant · property**.
+
+## Change 4 — three components, so line-height stops being load-bearing
+
+Splitting the 17 `line-height: 1` rules by whether the box has an explicit height:
+
+- **10 inert** — flex-centred with a height (`esa-badge`, `esa-pill`, `esa-kbd`, `esa-icon`,
+  `esa-button__native`, `esa-filter-dropdown` ×2, `esa-filter-pills__chip`,
+  `esa-sidebar-nav` link + badge). These can adopt a composite unchanged.
+- **7 load-bearing** — but four of those turned out to be inner spans whose PARENT is a
+  fixed-size flex box, so they were inert too and the check was only looking one level up.
+  `--_avatar-size` centres the initials; a 16×16 box holds the remove icon.
+
+Acted on:
+
+| | |
+|---|---|
+| `esa-chip-group .chip` | given `height: var(--chip-height-{xs,sm,md,lg})`, `box-sizing: border-box`, padding horizontal only. `--_pad-y` removed. |
+| `esa-chip-group .chip__label` | `line-height` deleted — inert once the parent has a height |
+| `esa-avatar__initials` | `line-height` deleted — parent is a fixed `--_avatar-size` flex box |
+| `esa-filter-pills__remove-icon` | `line-height` deleted — the box is an explicit 16×16 |
+
+The chip height was the real reason, not the line-height: `--chip-height-*` already existed
+at tier 2, `esa-pill` and `esa-filter-pills__chip` already used fixed heights, and a
+padding-sized chip cannot line up on a row with them — which is the stated purpose of the
+shared size scale. Height went from fluid (font + padding, tracking a `clamp()`) to fixed:
+xs 16–18→18, sm 18–20→22, md 24–27→28, lg 30–34→34. Unchanged at desktop for xs and lg.
+
+Deliberately NOT done:
+
+- **`esa-select .chip`** — its padding is `0 4px 0 8px`, zero vertical, so it renders at
+  ~12–14px. The smallest rung is `--chip-height-xs: 18px`; no value on the scale preserves
+  what it draws, and it sits inside a select with its own height budget.
+- **`esa-icon-link`** — `padding: 0`, height *is* its text at 16px. The nearest ramp is
+  `--control-height-*`, starting at 28px. It is a link, not a control; pinning it to a
+  control ramp would import geometry it has no reason to carry.
+- **`esa-app-shell__wordmark`** — its parent `.esa-app-shell__brand` is flex-centred but has
+  no height, so the wordmark's line-height genuinely sets the brand's height. It is also
+  brand furniture at weight 650 and probably should not take a text composite at all.
+
+Typography diff vs the baseline: **3 declarations removed, 0 values changed.**
+
+## Change 5 — the hardcoded sizes came onto the scale
+
+The rule sweep found 15; the real number was **34 literals across 9 components**, because
+three of them carried a whole private four-step type ramp made of magic numbers that no
+rule-level scan can see:
+
+```
+--_badge-font-size     10 / 11 / 13 / 14px      --_empty-title-size  13 / 14 / 16 / 20px
+--_pill-font-size      10 / 11 / 13 / 14px      --_empty-desc-size   11 / 12 / 14 / 16px
+--_progress-font-size  10 / 11 / 13 / 14px      --_avatar-font-size   9 / 11 / 16 / 22px
+```
+
+Each is now the nearest primitive by desktop maximum (050=10, 100=12, 150=14, 200=15,
+400=20). Ramps were kept monotonic, which is why a few land ±1 rather than on the closest
+single value.
+
+Rendered change, all 15 visible rules, at desktop width:
+
+| | |
+|---|---|
+| +1px | badge, pill, progress header, entity-search kbd + scope-count, search-panel category |
+| −1px | avatar, empty-state title, search-panel input |
+| 0 | kbd, entity-search row-action, empty-state description, search-panel result + subtitle |
+
+The larger change is not the pixel: these were **fixed** and are now **fluid**, because every
+`--font-size-*` primitive is a `clamp()`. Badge text now scales with the viewport inside a
+fixed-height badge — smaller on a phone, ±1px of today's value on a desktop.
+
+**This is a half-step, not the finish.** A component reading `--font-size-150` is reading
+tier 1, which SPEC forbids just as much as a literal did. What it buys is that 34 values
+that existed nowhere in the system are now on it, and the composite migration converts them
+once the tier-3 question is settled.
+
+Noticed in passing, not fixed: `esa-avatar`'s four size variants all read the same
+`--avatar-font-size` hook and differ only in their FALLBACK. The fallback fires today
+because the hook is undeclared — but a spoke declaring it collapses all four sizes to one
+value. Same shape as the checkbox/radio 1px→2px finding already in the ledger.

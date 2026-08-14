@@ -457,7 +457,7 @@ export class EsaEntitySearch extends LitElement {
       height: 19px;
       padding: 0 5px;
       font-family: inherit;
-      font-size: 11px;
+      font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-muted, #7c7c7c);
       background: var(--color-background-raised, #fff);
@@ -494,7 +494,7 @@ export class EsaEntitySearch extends LitElement {
       color: var(--entity-search-selected-text, var(--color-content-inverse, #fcfcfc));
     }
     .esa-entity-search__scope-count {
-      font-size: 11px;
+      font-size: var(--font-size-100, 0.75rem);
       font-variant-numeric: tabular-nums;
       opacity: 0.8;
     }
@@ -560,7 +560,7 @@ export class EsaEntitySearch extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-raised, #fff);
       color: var(--color-content-secondary, #525252);
-      font: inherit; font-size: 12px; cursor: pointer;
+      font: inherit; font-size: var(--font-size-100, 0.75rem); cursor: pointer;
     }
     .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #1e5386); color: var(--color-background-brand, #1e5386); }
 

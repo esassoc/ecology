@@ -215,7 +215,7 @@ export class EsaChipGroup extends LitElement {
   static styles = css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
-      --_pad-y: var(--spacing-150, 0.375rem);
+      --_height: var(--chip-height-md, 28px);
       --_pad-x: var(--form-padding-x-md, 0.75rem);
       --_font: var(--form-font-size-md, 0.9375rem);
       --_radius: var(--radius-control, 0.25rem);
@@ -230,9 +230,9 @@ export class EsaChipGroup extends LitElement {
 
       display: inline-flex;
     }
-    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
-    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
-    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_font: var(--form-font-size-lg, 1rem); --_pad-y: var(--spacing-200, 0.5rem); }
+    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); --_height: var(--chip-height-xs, 18px); }
+    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); --_height: var(--chip-height-sm, 22px); }
+    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_font: var(--form-font-size-lg, 1rem); --_height: var(--chip-height-lg, 34px); }
 
     .root {
       display: inline-flex;
@@ -245,7 +245,13 @@ export class EsaChipGroup extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
-      padding: var(--_pad-y) var(--_pad-x);
+      /* Height from the shared chip ramp rather than font + padding: every other chip
+         in the kit (esa-pill, esa-filter-pills) is fixed-height, and a padding-sized
+         one cannot line up with them on a row. It also makes line-height inert here,
+         so this can take a typography composite whole. */
+      height: var(--_height);
+      box-sizing: border-box;
+      padding-inline: var(--_pad-x);
       border-radius: var(--_radius, 0.25rem);
       border: var(--border-width-default, 1px) solid var(--_border);
       background: var(--_bg);
@@ -272,8 +278,6 @@ export class EsaChipGroup extends LitElement {
       outline: none;
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
-
-    .chip__label { line-height: var(--line-height-none, 1); }
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {
