@@ -320,7 +320,21 @@ const TYPE_PROPERTIES = [
   'text-transform',
 ] as const;
 
-export type ValueStyle = 'descriptive' | 'platform convention' | 'role' | '—';
+/**
+ * How the value segment of a name is chosen.
+ *  - `descriptive`         the segment IS the value: --font-weight-350
+ *  - `platform convention` the segment is the CSS keyword: --font-style-italic
+ *  - `scale position`      the segment names a RUNG, and the ramp is ours:
+ *                          --line-height-normal is 1.6 by definition, not a
+ *                          reference to the CSS `normal` keyword (SPEC.md)
+ *  - `role`                the segment names a job — wrong at tier 1
+ */
+export type ValueStyle =
+  | 'descriptive'
+  | 'platform convention'
+  | 'scale position'
+  | 'role'
+  | '—';
 
 export interface TypeRow {
   property: string;
@@ -354,19 +368,19 @@ const TYPE_NOTE: Record<string, { style: ValueStyle; status: TypeRow['status']; 
     note: 'The finite option set, named by the CSS keyword. Was deferred once on the grounds that an unconsumed token is orphan surface — that was a category error: SPEC.md’s “don’t hook everything” rule governs tier-3 THEMING surfaces, where a hook is a promise a spoke can re-skin it. Tier 1 is a vocabulary for the person mapping tier 2, and it had 4 literal readers waiting.',
   },
   'line-height': {
-    style: 'platform convention',
-    status: 'partial',
-    note: 'Unitless, which is correct — it inherits as a ratio rather than a computed length — and `$type: number` rather than `other`, so the set exports as line-height instead of an opaque string. Four rungs: none (1), tight (1.3), normal (1.6), relaxed (1.8). Getting here took a correction. The scale originally missed its own most common values — `1` appeared 16 times as a literal and `1.4` six times, so more than half of every line-height declaration in the kit was bypassing the scale — and the first fix added a rung for each. That was one rung too many: `snug` (1.4) sat 0.1 from `tight` with no job `tight` could not do, so it was folded in and its six sites moved. The general rule this settles: a literal that keeps appearing is evidence the scale has a GAP, not that it needs a new rung at that exact number. Not one literal line-height remains in the kit. Remaining wrinkle: CSS `line-height: normal` is roughly 1.2, and `--line-height-normal` is 1.6.',
+    style: 'scale position',
+    status: 'match',
+    note: 'Unitless, which is correct — it inherits as a ratio rather than a computed length — and `$type: number` rather than `other`, so the set exports as line-height instead of an opaque string. Four rungs: none (1), tight (1.3), normal (1.6), relaxed (1.8). Getting here took a correction. The scale originally missed its own most common values — `1` appeared 16 times as a literal and `1.4` six times, so more than half of every line-height declaration in the kit was bypassing the scale — and the first fix added a rung for each. That was one rung too many: `snug` (1.4) sat 0.1 from `tight` with no job `tight` could not do, so it was folded in and its six sites moved. The general rule this settles: a literal that keeps appearing is evidence the scale has a GAP, not that it needs a new rung at that exact number. Not one literal line-height remains in the kit. `normal` is 1.6 by DEFINITION — it is the default rung of this ramp, not a reference to the CSS `normal` keyword (~1.2). That distinction is settled and should not be re-raised: see the note on scale-position names in SPEC.md.',
   },
   'letter-spacing': {
-    style: 'platform convention',
-    status: 'partial',
-    note: 'Named steps, so this system never hits the negative-value naming problem (no need for a `minus-2` convention — `tight` carries the sign). Same wrinkle as line-height and sharper: CSS `letter-spacing: normal` means 0, while `--letter-spacing-normal` is 0.01em, and 7 of the 11 type roles use it as their default.',
+    style: 'scale position',
+    status: 'match',
+    note: 'Named steps, so this system never hits the negative-value naming problem — no `minus-2` convention needed, `tight` carries the sign. `normal` is 0.01em: the DEFINED default tracking, not a reference to the CSS keyword. Checked rather than assumed — nothing in the kit asks for zero tracking, every literal is a positive value, so 0.01em is genuinely the baseline this system sets.',
   },
   'text-transform': {
     style: 'platform convention',
     status: 'match',
-    note: 'The finite option set. `uppercase` had 5 literal readers (4 components plus `.type-overline`), all now wired. `lowercase` and `capitalize` ship unread — a tier-1 ramp is a palette, not a checklist, and the orphan check excludes primitives for exactly this reason.',
+    note: 'The finite option set. `uppercase` had 5 literal readers (4 components plus the `.typography-eyebrow` composite), all now wired. `lowercase` and `capitalize` ship unread — a tier-1 ramp is a palette, not a checklist, and the orphan check excludes primitives for exactly this reason.',
   },
 };
 
@@ -524,7 +538,7 @@ export const fallbackTally = {
 };
 
 /** The roles that moved to tier 2, so the split is visible as a split. */
-export const typeRoles = semantic
+export const composites = semantic
   .filter((t) => /^--(font-sans|font-mono|font-display|font-weight-[a-z]|font-size-ui-)/.test(t.name))
   .map((t) => ({ name: t.name, value: t.value }));
 
@@ -974,7 +988,7 @@ export const worklist: Fix[] = [
     effort: 'mechanical',
     scope: `${typeGaps.length} properties unnamed, ${typeProperties.filter((r) => r.members.length && r.status !== 'match').length} with a value-name wrinkle`,
     detail:
-      'Adopted `--<css-property>-<value>`. Done: the family and weight ROLES moved to tier 2 (so the spoke contract stopped instructing a primitive re-point); faces are named for the face and weights for the number; `--type-size-*` became `--font-size-*` across 72 files; font-style and text-transform gained the finite option sets and their 9 literal readers were wired; line-height gained a `none` rung and normalised to four (none/tight/normal/relaxed), covering the 22 declarations that were bypassing the scale, and is now `$type: number`; the weight ramp was completed to 100–900 so a spoke on another face has steps to point at. Left: `--line-height-normal` (1.6) and `--letter-spacing-normal` (0.01em) contradict the CSS keywords they borrow, and there is no token for zero tracking. That one is a rename with no functional gain until a tier-2 composite exists.',
+      'Adopted `--<css-property>-<value>`. Done: the family and weight ROLES moved to tier 2 (so the spoke contract stopped instructing a primitive re-point); faces are named for the face and weights for the number; `--type-size-*` became `--font-size-*` across 72 files; font-style and text-transform gained the finite option sets and their 9 literal readers were wired; line-height gained a `none` rung and normalised to four (none/tight/normal/relaxed), covering the 22 declarations that were bypassing the scale, and is now `$type: number`; the weight ramp was completed to 100–900 so a spoke on another face has steps to point at; and line-height normalised to four rungs after a fifth (`snug`) proved to be a value looking for a reason. The `normal` rungs were raised twice as a naming conflict with the CSS keywords and are now settled as a DECISION, not a defect: a scale-position name belongs to this system (SPEC.md). All seven properties conform.',
     done: typeGaps.length === 0 && typeProperties.every((r) => r.status === 'match'),
   },
   {
