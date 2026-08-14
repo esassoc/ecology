@@ -442,7 +442,7 @@ export class EsaInputTag extends LitElement {
     .field__label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #525252);
     }
     .field__required {
@@ -507,7 +507,7 @@ export class EsaInputTag extends LitElement {
       padding: 2px var(--spacing-100, 4px) 2px var(--spacing-200, 8px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_chip-font-size);
-      line-height: 1.4;
+      line-height: var(--line-height-snug, 1.4);
       background: var(--_chip-bg);
       color: var(--_chip-color);
       border-radius: var(--_chip-radius);
@@ -635,7 +635,7 @@ export class EsaInputTag extends LitElement {
     }
     .option--add {
       color: var(--color-primary-strong, #3a7c59);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       border-top: var(--form-border-width, 1px) solid var(--color-border-light, #efefef);
     }
     .option__icon {
@@ -648,7 +648,7 @@ export class EsaInputTag extends LitElement {
       padding: var(--spacing-300, 12px);
       color: var(--color-text-muted, #737373);
       font-size: var(--_field-font-size);
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
       text-align: center;
     }
   `;

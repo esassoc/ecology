@@ -4,11 +4,23 @@
     "dm-mono": { "$value": "'DM Mono', monospace",  "$type": "fontFamily" }
   },
   "font-weight": {
+    "100": { "$value": "100", "$type": "fontWeight" },
+    "200": { "$value": "200", "$type": "fontWeight" },
     "300": { "$value": "300", "$type": "fontWeight" },
     "350": { "$value": "350", "$type": "fontWeight" },
+    "400": { "$value": "400", "$type": "fontWeight", "$description": "The full standard 100–900 ramp is carried here even where the hub face has no use for a step, alongside the three half-steps DM Sans's variable axis does use (350/550/650). A spoke on a different family re-points the tier-2 ROLES onto its own weights — cb-fish's IBM Plex remap needs 400 and 600, and neither existed until this ramp was completed. (Note: the group-level $description slot is taken by semantic/typography.json — Style Dictionary merges group nodes across files and collides on it — which is why this rationale hangs off a leaf.)" },
     "500": { "$value": "500", "$type": "fontWeight" },
     "550": { "$value": "550", "$type": "fontWeight" },
-    "650": { "$value": "650", "$type": "fontWeight" }
+    "600": { "$value": "600", "$type": "fontWeight" },
+    "650": { "$value": "650", "$type": "fontWeight" },
+    "700": { "$value": "700", "$type": "fontWeight" },
+    "800": { "$value": "800", "$type": "fontWeight" },
+    "900": { "$value": "900", "$type": "fontWeight" }
+  },
+  "font-style": {
+    "$description": "The finite option set, so a composite can reference the value rather than spelling the keyword. `italic` has 4 literal uses in the kit today.",
+    "normal": { "$value": "normal", "$type": "other" },
+    "italic": { "$value": "italic", "$type": "other" }
   },
   "font-size": {
     "050":  { "$value": "clamp(0.5rem, 0.44rem + 0.3vw, 0.625rem)",    "$type": "dimension" },
@@ -26,14 +38,24 @@
     "1000": { "$value": "clamp(3rem, 2.6rem + 2vw, 4rem)",             "$type": "dimension" }
   },
   "line-height": {
-    "tight":   { "$value": "1.3", "$type": "other" },
-    "normal":  { "$value": "1.6", "$type": "other" },
-    "relaxed": { "$value": "1.8", "$type": "other" }
+    "$description": "Unitless, so it inherits as a ratio rather than a computed length. `$type: number` (not `other`) so the set can export to Figma as line-height rather than as an opaque string.",
+    "none":    { "$value": "1",   "$type": "number", "$description": "No leading — the box supplies the height. Badges, pills, chips, buttons, kbd, avatars, icons: single-line control labels where any leading would misalign the text in its box. 16 literal uses before this token existed." },
+    "tight":   { "$value": "1.3", "$type": "number" },
+    "snug":    { "$value": "1.4", "$type": "number", "$description": "Between tight and normal. Small helper and label text — field errors, checkbox and radio labels, combobox and input-tag entries. 6 literal uses before this token existed." },
+    "normal":  { "$value": "1.6", "$type": "number" },
+    "relaxed": { "$value": "1.8", "$type": "number" }
   },
   "letter-spacing": {
     "tight":  { "$value": "-0.01em", "$type": "dimension" },
     "normal": { "$value": "0.01em",  "$type": "dimension" },
     "wide":   { "$value": "0.03em",  "$type": "dimension" },
     "wider":  { "$value": "0.06em",  "$type": "dimension" }
+  },
+  "text-transform": {
+    "$description": "The finite option set. `uppercase` has 5 literal uses in the kit today, including the .type-overline role.",
+    "none":       { "$value": "none",       "$type": "other" },
+    "uppercase":  { "$value": "uppercase",  "$type": "other" },
+    "lowercase":  { "$value": "lowercase",  "$type": "other" },
+    "capitalize": { "$value": "capitalize", "$type": "other" }
   }
 }

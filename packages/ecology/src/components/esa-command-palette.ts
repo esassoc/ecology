@@ -296,7 +296,7 @@ export class EsaCommandPalette extends LitElement {
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
       font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
-      text-transform: uppercase;
+      text-transform: var(--text-transform-uppercase, uppercase);
       letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--color-text-muted, #737373);
     }
@@ -329,7 +329,7 @@ export class EsaCommandPalette extends LitElement {
       display: flex;
       flex-direction: column;
     }
-    .esa-command-palette__item-label { font-weight: var(--font-weight-medium, 450); }
+    .esa-command-palette__item-label { font-weight: var(--font-weight-medium, 500); }
     .esa-command-palette__item-desc {
       font-size: var(--font-size-150, 0.875rem);
       color: var(--color-text-muted, #737373);

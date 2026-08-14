@@ -513,8 +513,8 @@ export class EsaEntitySearch extends LitElement {
       justify-content: space-between;
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
       font-size: var(--font-size-100, 0.8125rem);
-      font-weight: var(--font-weight-semibold, 600);
-      text-transform: uppercase;
+      font-weight: var(--font-weight-semibold, 550);
+      text-transform: var(--text-transform-uppercase, uppercase);
       letter-spacing: 0.03em;
       color: var(--color-text-muted, #7c7c7c);
     }

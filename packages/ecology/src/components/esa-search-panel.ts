@@ -355,9 +355,9 @@ export class EsaSearchPanel extends LitElement {
     .category {
       padding: var(--spacing-300, 12px) var(--spacing-200, 8px) var(--spacing-100, 4px);
       font-size: 0.6875rem;
-      font-weight: var(--font-weight-semibold, 600);
-      text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-wide, 0.05em);
+      font-weight: var(--font-weight-semibold, 550);
+      text-transform: var(--text-transform-uppercase, uppercase);
+      letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--color-text-muted, #737373);
     }
 

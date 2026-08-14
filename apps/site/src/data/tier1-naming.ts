@@ -346,17 +346,17 @@ const TYPE_NOTE: Record<string, { style: ValueStyle; status: TypeRow['status']; 
   'font-weight': {
     style: 'descriptive',
     status: 'match',
-    note: 'The raw numbers. These are DM Sans’s optical weights, not universal values, so the role names (light/regular/medium/semibold/bold) had to move to tier 2 — a spoke swapping the face re-points the roles and leaves the numbers alone.',
+    note: 'The raw numbers. These are DM Sans’s optical weights, not universal values, so the role names (light/regular/medium/semibold/bold) live at tier 2 — a spoke swapping the face re-points the roles and leaves the numbers alone. The ramp used to carry only the five steps DM Sans uses, which left cb-fish’s IBM Plex remap (400/500/600) with no 400 or 600 to point at; it now carries the full standard 100–900 plus the three half-steps.',
   },
   'font-style': {
-    style: '—',
-    status: 'absent',
-    note: 'No tokens. Used literally 4 times in the kit (`font-style: italic`). Deliberately not tokenised yet: with no tier-2 composite to consume it, a `--font-style-italic` token would be orphan surface, and SPEC.md is explicit that unclaimed surface is dead surface. It lands when the composite layer does.',
+    style: 'platform convention',
+    status: 'match',
+    note: 'The finite option set, named by the CSS keyword. Was deferred once on the grounds that an unconsumed token is orphan surface — that was a category error: SPEC.md’s “don’t hook everything” rule governs tier-3 THEMING surfaces, where a hook is a promise a spoke can re-skin it. Tier 1 is a vocabulary for the person mapping tier 2, and it had 4 literal readers waiting.',
   },
   'line-height': {
     style: 'platform convention',
     status: 'partial',
-    note: 'Unitless, which is correct — a unitless line-height inherits as a ratio rather than a computed length. The value segment is a named step rather than the number, which is defensible for a three-step scale. The wrinkle: CSS `line-height: normal` is roughly 1.2, and `--line-height-normal` is 1.6.',
+    note: 'Unitless, which is correct — it inherits as a ratio rather than a computed length — and now `$type: number` rather than `other`, so the set exports as line-height instead of an opaque string. The scale used to miss its own most common values: `1` appeared 16 times as a literal and `1.4` six times, more than half of every line-height declaration in the kit bypassing the scale. Both now have rungs (`none`, `snug`) and all 22 sites are wired. Two off-scale singletons were snapped rather than given rungs of their own — esa-select’s chip 1.2 → `none`, matching esa-chip-group and esa-pill, which are the same UI concept; esa-alert-box 1.5 → `normal`, matching `.type-body-small`, which sets the same `--font-size-150`. Both changed rendering slightly, which is why they were held back for a decision rather than folded in with the rest. Not one literal line-height remains in the kit. Remaining wrinkle: CSS `line-height: normal` is roughly 1.2, and `--line-height-normal` is 1.6.',
   },
   'letter-spacing': {
     style: 'platform convention',
@@ -364,9 +364,9 @@ const TYPE_NOTE: Record<string, { style: ValueStyle; status: TypeRow['status']; 
     note: 'Named steps, so this system never hits the negative-value naming problem (no need for a `minus-2` convention — `tight` carries the sign). Same wrinkle as line-height and sharper: CSS `letter-spacing: normal` means 0, while `--letter-spacing-normal` is 0.01em, and 7 of the 11 type roles use it as their default.',
   },
   'text-transform': {
-    style: '—',
-    status: 'absent',
-    note: 'No tokens. Used literally 5 times (4 components plus `.type-overline`). Same reasoning as font-style — it is a finite option set worth naming, but only once something references it.',
+    style: 'platform convention',
+    status: 'match',
+    note: 'The finite option set. `uppercase` had 5 literal readers (4 components plus `.type-overline`), all now wired. `lowercase` and `capitalize` ship unread — a tier-1 ramp is a palette, not a checklist, and the orphan check excludes primitives for exactly this reason.',
   },
 };
 
@@ -425,6 +425,104 @@ export const typeTally = {
     .reduce((n, r) => n + r.members.length, 0),
 };
 
+/* ======================================================================
+ * Fallback drift
+ *
+ * CLAUDE.md requires every private token to carry a literal fallback:
+ * `var(--font-size-200, 0.875rem)`. Nothing checks that the literal agrees with
+ * the token, and for a scale whose steps are named for a RUNG rather than a
+ * value there is nothing for an author to check it against — so they guess, and
+ * they guess differently. This is the concrete cost of ordinal naming, measured.
+ * ================================================================== */
+
+/** A length in px, or null when the string isn't a single length. */
+const toPx = (v: string): number | null => {
+  const s = v.trim();
+  const rem = s.match(/^(-?[\d.]+)rem$/);
+  if (rem) return Number(rem[1]) * 16;
+  const px = s.match(/^(-?[\d.]+)px$/);
+  if (px) return Number(px[1]);
+  const em = s.match(/^(-?[\d.]+)em$/);
+  if (em) return Number(em[1]) * 16;
+  const bare = s.match(/^-?[\d.]+$/);
+  if (bare) return Number(s);
+  return null;
+};
+
+/** Equal as measurements, not as strings. Falls back to exact text. */
+const sameLength = (a: string, b: string): boolean => {
+  const pa = toPx(a);
+  const pb = toPx(b);
+  if (pa !== null && pb !== null) return Math.abs(pa - pb) < 0.01;
+  return a.replace(/\s+/g, '') === b.replace(/\s+/g, '');
+};
+
+export interface FallbackRow {
+  token: string;
+  /** Every distinct literal any read site supplies for this token. */
+  fallbacks: string[];
+  actual: string;
+  files: string[];
+  /** True when the token holds a single value, so a fallback CAN be exactly right. */
+  exact: boolean;
+}
+
+export const fallbackDrift: FallbackRow[] = (() => {
+  const values = new Map(allTokens.map((t) => [t.name, t]));
+  const found = new Map<string, { fbs: Set<string>; files: Set<string> }>();
+  const dirs = ['packages/ecology/src', 'packages/tokens/src', 'apps/site/src'];
+
+  const walk = (dir: string) => {
+    if (!existsSync(dir)) return;
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        walk(p);
+        continue;
+      }
+      if (!/\.(astro|ts|css)$/.test(e.name)) continue;
+      const src = readFileSync(p, 'utf8');
+      // Only single-literal fallbacks — a nested var() fallback is a different
+      // construct and comparing it to a raw value would be meaningless.
+      for (const m of src.matchAll(
+        /var\(\s*(--(?:font-size|font-weight|font-family|line-height|letter-spacing|spacing)-[\w-]+)\s*,\s*([^(),]+?)\s*\)/g,
+      )) {
+        const [, token, fb] = m;
+        const node = values.get(token);
+        if (!node) continue;
+        // `8px` and `0.5rem` are the SAME value — comparing the strings would
+        // report every correctly-written px fallback as drift, which is the
+        // opposite of useful. Normalise to px at the 16px root first.
+        if (sameLength(node.resolved, fb)) continue;
+        if (!found.has(token)) found.set(token, { fbs: new Set(), files: new Set() });
+        found.get(token)!.fbs.add(fb);
+        found.get(token)!.files.add(path.relative(ROOT, p));
+      }
+    }
+  };
+  dirs.forEach((d) => walk(path.join(ROOT, d)));
+
+  return [...found.entries()]
+    .map(([token, { fbs, files }]) => ({
+      token,
+      fallbacks: [...fbs].sort(),
+      actual: values.get(token)!.resolved,
+      files: [...files].sort(),
+      // A clamp() has no single value, so no literal can match it exactly. Every
+      // other token could have been written correctly and wasn't.
+      exact: !values.get(token)!.resolved.includes('clamp('),
+    }))
+    .sort((a, b) => Number(b.exact) - Number(a.exact) || b.fallbacks.length - a.fallbacks.length);
+})();
+
+export const fallbackTally = {
+  tokens: fallbackDrift.length,
+  /** Tokens whose value is a single literal — these are simply wrong. */
+  wrong: fallbackDrift.filter((r) => r.exact).length,
+  /** Tokens with more than one distinct fallback across the kit. */
+  contradictory: fallbackDrift.filter((r) => r.fallbacks.length > 1).length,
+};
+
 /** The roles that moved to tier 2, so the split is visible as a split. */
 export const typeRoles = semantic
   .filter((t) => /^--(font-sans|font-mono|font-display|font-weight-[a-z]|font-size-ui-)/.test(t.name))
@@ -471,8 +569,8 @@ const classify = (steps: string[]): { kind: ScaleKind; ragged: boolean; escapes:
 
 const SCALE_FAMILIES: { family: string; re: RegExp; note: string }[] = [
   { family: '--color-<ramp>-*', re: /^--color-.+-\d{1,2}$/, note: 'Radix’s 12-step scale, where each step has a fixed job (2 = subtle surface, 9 = solid fill, 11 = text on a surface). A bounded, meaning-carrying scale — the strongest naming in the tier.' },
-  { family: '--spacing-*', re: /^--spacing-/, note: 'Padded three-digit ordering, extending to a four-digit top end. Consistent with itself.' },
-  { family: '--font-size-*', re: /^--font-size-/, note: 'Same scale system as spacing, so the two read as one family of measures. Only the category word is wrong.' },
+  { family: '--spacing-*', re: /^--spacing-/, note: 'Padded ordinal, consistent with itself, extending to a four-digit top end. Briefly converted to value-names (`--spacing-16`) and converted back: spacing is a scale you pick a RUNG from, and the ordinal keeps those rungs evenly spaced in the name even though the values behind them are not — 400 to 500 is one step, 1rem to 1.5rem is not. It also leaves room to insert a step without renumbering the rest.' },
+  { family: '--font-size-*', re: /^--font-size-/, note: 'Still a padded ordinal, and now the odd one out — spacing converted to value-names and these could not follow. Every step is a `clamp()` with a min and a max, so there is no single number to put in the name. That is also why the fallback check below finds so many disagreeing literals: nothing tells an author which number this step "is".' },
   { family: '--radius-*', re: /^--radius-/, note: 'Padded numeric plus one named escape hatch (`full`), which is the right way to name a value that is not on the ramp.' },
   { family: '--shadow-*', re: /^--shadow-/, note: 'The one ragged member. `--shadow-50` is the only sub-100 step in the whole system written without padding, so shadows sort wrong in every alphabetical listing while spacing, radius and type sort right.' },
   { family: '--font-weight-*', re: /^--font-weight-/, note: 'Named scale. Correct — weights have established names, and 350/550/650 would be worse.' },
@@ -876,8 +974,17 @@ export const worklist: Fix[] = [
     effort: 'mechanical',
     scope: `${typeGaps.length} properties unnamed, ${typeProperties.filter((r) => r.members.length && r.status !== 'match').length} with a value-name wrinkle`,
     detail:
-      'Adopted `--<css-property>-<value>`. Done: the family and weight ROLES moved to tier 2 (so the spoke contract stopped instructing a primitive re-point), faces are named for the face, weights for the number, and `--type-size-*` became `--font-size-*` across 72 files. Left: font-style and text-transform have no tokens, and `--line-height-normal` / `--letter-spacing-normal` contradict the CSS keywords they borrow. Both remaining items are blocked on the same thing — there is no tier-2 typography composite to consume them.',
+      'Adopted `--<css-property>-<value>`. Done: the family and weight ROLES moved to tier 2 (so the spoke contract stopped instructing a primitive re-point); faces are named for the face and weights for the number; `--type-size-*` became `--font-size-*` across 72 files; font-style and text-transform gained the finite option sets and their 9 literal readers were wired; line-height gained `none` and `snug`, covering the 22 declarations that were bypassing the scale, and is now `$type: number`; the weight ramp was completed to 100–900 so a spoke on another face has steps to point at. Left: `--line-height-normal` (1.6) and `--letter-spacing-normal` (0.01em) contradict the CSS keywords they borrow, and there is no token for zero tracking. That one is a rename with no functional gain until a tier-2 composite exists.',
     done: typeGaps.length === 0 && typeProperties.every((r) => r.status === 'match'),
+  },
+  {
+    rank: 7,
+    title: 'Reconcile var() fallbacks with the tokens they back',
+    effort: 'mechanical',
+    scope: `${fallbackTally.wrong} exact mismatches in scope, ~1,250 system-wide`,
+    detail:
+      'CLAUDE.md mandates a literal fallback on every private token and nothing verifies it matches. The typography ones are fixed (55 sites: weights written as 400/600/700 — the conventional meanings rather than DM Sans’s optical values — plus two line-heights and a letter-spacing). What remains in scope is spacing, and behind it a much larger population the check deliberately does not cover: ~1,250 disagreeing read sites across the whole system, mostly tier-2 colour. That needs its own pass and its own judgment — `var(--font-sans, sans-serif)` is a correct degradation, not drift.',
+    done: fallbackTally.wrong === 0,
   },
   {
     rank: 6,

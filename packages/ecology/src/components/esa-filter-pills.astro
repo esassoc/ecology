@@ -81,7 +81,7 @@ const { filters = [] } = Astro.props;
     border-radius: var(--_pill-radius);
     font-size: var(--_pill-font-size);
     font-family: var(--font-sans, inherit);
-    line-height: 1;
+    line-height: var(--line-height-none, 1);
     white-space: nowrap;
     transition: background var(--transition-fast, 150ms ease);
   }
@@ -91,7 +91,7 @@ const { filters = [] } = Astro.props;
   }
 
   .esa-filter-pills__label {
-    font-weight: var(--font-weight-medium, 450);
+    font-weight: var(--font-weight-medium, 500);
     margin-inline-end: var(--spacing-100, 0.25rem);
     color: var(--filter-pill-label-color, var(--color-text-secondary, #646464));
   }
@@ -129,7 +129,7 @@ const { filters = [] } = Astro.props;
   .esa-filter-pills__remove-icon {
     width: 16px;
     height: 16px;
-    line-height: 1;
+    line-height: var(--line-height-none, 1);
   }
 </style>
 

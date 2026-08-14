@@ -169,7 +169,7 @@ export class EsaCheckbox extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_checkbox-font-size);
       color: var(--color-text-primary, #171717);
-      line-height: 1.4;
+      line-height: var(--line-height-snug, 1.4);
     }
   `;
 }

@@ -80,7 +80,7 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     background: var(--_pill-bg);
     color: var(--_pill-text);
     font-size: var(--_pill-font-size);
-    line-height: 1;
+    line-height: var(--line-height-none, 1);
     white-space: nowrap;
     box-sizing: border-box;
   }
