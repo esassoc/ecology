@@ -750,6 +750,139 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         </tbody>
       </table>
 
+      <h3 class="sub">Colour · the narrower rubric</h3>
+      <p class="cat-note">
+        Colour gets its own shape, and it is stricter in two ways: the property is one of
+        <em>three</em> rather than any CSS property, and <code>disabled</code> sits in the state slot
+        alongside hover and focus. Measured against the {t3.colourTally.total} tier-3 tokens that
+        actually hold a colour — a <code>1px solid …</code> shorthand and an
+        <code>--elevation-*</code> shadow are both excluded, because neither is a name for a colour.
+      </p>
+
+      <div class="grammar">
+        <div>
+          <span class="grammar-label">Rubric</span>
+          <code>{t3.colourGrammars.rubric}</code>
+        </div>
+        <div>
+          <span class="grammar-label">What we ship</span>
+          <code>{t3.colourGrammars.current}</code>
+        </div>
+      </div>
+
+      <div class="tally">
+        <div class="tally-cell t3"><b>{t3.colourTally.total}</b><span>colour tokens</span></div>
+        <div class="tally-cell warn"><b>{t3.colourTally.qualified}</b><span>qualified <code>color-</code></span></div>
+        <div class="tally-cell"><b>{t3.colourTally.background}</b><span>background</span></div>
+        <div class="tally-cell"><b>{t3.colourTally.content}</b><span>content</span></div>
+        <div class="tally-cell"><b>{t3.colourTally.border}</b><span>border</span></div>
+        <div class="tally-cell warn"><b>{t3.colourTally.varianted}</b><span>carry a variant</span></div>
+      </div>
+
+      <table class="findings slots">
+        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.colourSlots.map((s) => (
+            <tr class={`slot-${s.status}`}>
+              <td class="slot-n">{s.n}</td>
+              <td class="slot-name">
+                {s.name}
+                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
+              </td>
+              <td><code class="spec">{s.spec}</code></td>
+              <td>{s.verdict}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h4 class="sub2">The property, in {t3.colourPropVocab.reduce((n, p) => n + p.words.length, 0)} words instead of 3</h4>
+      <table class="findings">
+        <thead><tr><th>Rubric property</th><th>Our words</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.colourPropVocab.map((p) => (
+            <tr>
+              <td><code class="spec">{p.rubric}</code></td>
+              <td>
+                {p.words.map((w) => (
+                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="dim">×{w.count}</span></code>
+                ))}
+              </td>
+              <td class="num">{p.total}</td>
+              <td>{p.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {t3.colourUnnamedProp.length > 0 && (
+        <p class="cat-gap">
+          <b>{t3.colourUnnamedProp.length} colour tokens name no property at all</b> — the value is the
+          only way to know what they paint:
+          {t3.colourUnnamedProp.map((r) => <code class="vocab warnv">{r.name}</code>)}
+        </p>
+      )}
+
+      <h4 class="sub2">The variant slot · {t3.axisUnexposed.length} of {t3.intentionAxis.length} axes unexposed</h4>
+      <p class="cat-note">
+        The rubric&rsquo;s worked example is a button with primary / secondary / tertiary variants, each
+        with its own background and its own states. So the real test is not whether any token carries a
+        variant word — it is whether a component that <em>has</em> a colour-variant axis can be themed
+        along it. <b>Intentions</b> is derived from the component source (which tier-2 roles the file
+        reads); <b>varianted hooks</b> from the token names.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Component</th><th>Variant axis</th><th>Colour hooks</th><th>…varianted</th></tr></thead>
+        <tbody>
+          {t3.intentionAxis.map((a) => (
+            <tr>
+              <td><code>esa-{a.component}</code></td>
+              <td>{a.intentions.map((i) => <code class="vocab">{i}</code>)}</td>
+              <td class="num">{a.hooks}</td>
+              <td class="num">
+                {a.varianted === 0
+                  ? <span class="slot-flag f-absent">none</span>
+                  : a.varianted}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-gap">
+        <b>This is a cost, not a bug.</b> Those components express their variants by reading tier-2
+        intentions directly, which is legal and keeps the surface small — the whole kit&rsquo;s danger
+        moves as one. What it forecloses is the other direction: a spoke cannot make its danger
+        <em>button</em> differ from its danger <em>badge</em>, because there is no hook between them.
+        {t3.colourVariantInverted.length > 0 && (
+          <>
+            {' '}The {t3.colourVariantInverted.length} tokens that do carry a variant put it after the
+            property, which is the rubric&rsquo;s order reversed:
+            {t3.colourVariantInverted.map((r) => <code class="vocab warnv">{r.name}</code>)}
+          </>
+        )}
+      </p>
+
+      <h4 class="sub2">The state slot</h4>
+      <table class="findings">
+        <thead><tr><th>State</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.colourStateVocab.map((s) => (
+            <tr class={s.tokens.length === 0 ? 'row-zero' : undefined}>
+              <td>
+                <code class="vocab st">{s.state}</code>
+                <span class={`slot-flag f-${s.inRubric ? 'match' : 'extra'}`}>
+                  {s.inRubric ? 'rubric' : 'ours'}
+                </span>
+              </td>
+              <td class="num">{s.tokens.length}</td>
+              <td>
+                {s.note && <div class="detail">{s.note}</div>}
+                {s.tokens.map((n) => <code class="vocab">{n}</code>)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       <details class="tok-group" data-group>
         <summary>
           <code class="group-label">Every tier-3 token, parsed into slots</code>
@@ -1835,6 +1968,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     margin: var(--spacing-600, 24px) 0 var(--spacing-250, 10px);
     padding-bottom: var(--spacing-200, 8px);
     border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+  }
+  /* One level under h3.sub — the colour rubric's slots are subsections OF the
+     tier-3 audit, not siblings of it, so they get a quieter rule. */
+  .tokens-debug h4.sub2 {
+    font-size: 0.85rem;
+    margin: var(--spacing-500, 20px) 0 var(--spacing-200, 8px);
+    color: var(--color-content-secondary, #525252);
   }
   /* The two grammars side by side — the whole finding in one glance. */
   .tokens-debug .grammar {

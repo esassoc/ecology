@@ -249,6 +249,64 @@ Privates are internals — never themed, never documented as surface.
 - The component prefix is the element name minus `esa-` (esa-side-dialog →
   `--side-dialog-*`).
 
+### Tier-3 colour naming
+
+Colour has a narrower shape than the rest of tier 3, the same way it does at
+tier 2:
+
+```
+--<component|category|special>-<variant>-color-<property>-<state>
+            │                     │            │            └── hover, focus, pressed,
+            │                     │            │                disabled  (optional)
+            │                     │            └─────────────── background | content | border
+            │                     └──────────────────────────── primary, secondary, tertiary,
+            │                                                   knockout…  (default omitted)
+            └────────────────────────────────────────────────── button, link, table, form,
+                                                                focus-ring
+```
+
+**We do not ship this shape, and the divergence is deliberate in one place and
+outstanding in three.** `/debug/tokens` measures all four slots against the real
+names; the summary:
+
+- **Component slot — matches.** Including both non-component cases: `form` is a
+  category, `focus-ring` a special case.
+- **Property — not qualified.** We write `--card-bg`, not
+  `--card-color-background`. Tier 2 qualifies and tier 3 never followed, so one
+  property is spelled `bg`, one three ways (`color`, `text`, `text-color`), and
+  one two ways (`border-color`, and a bare `border` that holds a colour in two
+  tokens and a `1px solid …` shorthand in a third — the only spelling that costs
+  more than legibility, since a theme can't re-point the shorthand's colour
+  alone).
+- **State — placed correctly, one word missing.** States trail, `default` is
+  omitted. But `active` is in use for *currently selected*, so the rubric's
+  **pressed** state has no name available at tier 3, and one token puts a
+  variant (`error`) in the state slot.
+- **Variant — mostly absent, and this is the substantive gap.** Seven components
+  have a real colour-variant axis (button, badge, pill, alert-box,
+  confirm-dialog, progress-bar, snackbar-item — measured as reading three or
+  more of the four status intentions). **Six of them expose none of it at
+  tier 3**: they read `--color-background-danger` and friends directly, so their
+  variants are themeable only by moving the whole kit's danger. `esa-snackbar-item`
+  is the one exception — and it puts the variant *after* the property
+  (`--snackbar-item-bg-danger`), which is the rubric's order reversed.
+
+**On `disabled`, we disagree with the rubric on purpose.** It puts disabled in
+the state slot, per component. We manage it one tier up as an intention
+(`--color-background-disabled`, `--color-content-disabled`,
+`--color-border-disabled`) and reach for a tier-3 hook only where a component
+genuinely differs — currently once, `--form-bg-disabled`. That de-duplicates:
+one disabled treatment for the kit instead of one per component. Same reasoning
+as the tier-2 note above, where `disabled` is a variant rather than a state.
+
+**What the variant gap actually forecloses.** Reading tier 2 directly is legal
+and keeps the surface small — the whole kit's danger moves as one, which is
+usually what a spoke wants. The cost is the other direction: a spoke cannot make
+its danger *button* differ from its danger *badge*, because there is no hook
+between them. That is the trade to revisit if a spoke asks for it, not a defect
+to fix pre-emptively — per the rule below, a hook is earned by a spoke asking,
+not by a rubric having a slot.
+
 ## When a property earns a hook
 
 A hook exists so a spoke can plausibly re-skin that property **independently
