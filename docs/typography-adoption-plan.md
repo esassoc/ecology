@@ -1,7 +1,9 @@
 # Plan — components adopt typographic composites
 
-**Status:** D1–D3 taken 2026-08-13. Vocabulary and mechanism BUILT; component
-migration parked behind the tier-3 pass. Running record in
+**Status:** D1–D4 taken 2026-08-13/14. **P1 and P2 DONE 2026-08-14** — all 16
+type-carrying components on the control ramp now name composites. P0's inventory
+script (`scripts/type-inventory.mjs`) is what verified it. Remaining: P4 (the audit
+rule) and P5 (`esa-form-field` for the Lit half). Running record in
 `typography-migration-log.md`.
 
 ## The goal
@@ -58,19 +60,27 @@ use, the fix is to change the composite once, not to exempt the call site.
 
 ## What is true today
 
-The composites exist and are complete: 13 composites × 5 properties = 66 tokens, every value a
-`var()`, every composite setting all five properties. **No component reads any of them.**
+The composites exist and are complete: every value a `var()`, every composite setting
+all five properties. **28 live classes** ship into shadow roots via
+`packages/tokens/dist/typography-styles.js`.
 
-Across 66 components:
+The ramp is migrated. `type-inventory.mjs` counted **164 type-declaring rules before,
+104 after** — 60 rules stopped assembling type at the call site, and **zero** of the 16
+ramp components still declares `font-size`, `font-weight` or `font-family` anywhere.
+Nothing outside the ramp changed.
 
-| | declarations |
-|---|---|
-| read a tier-3 hook — correct | 75 |
-| read a tier-1 `--font-size-<num>` — SPEC violation | 100 |
-| read `--font-weight-<word>` | 62 |
-| read `--font-sans` / `--font-mono` | 65 |
-| read `--line-height-<word>` | 33 |
-| read a composite | **0** |
+Four composites were added to close gaps the control ramp exposed, all following D1's
+`label-2xs` precedent (the control ramp runs wider than the prose family, at BOTH ends):
+
+| composite | rung | why |
+|---|---|---|
+| `label-lg` | 300 | the lg step borrowed `body-lg`, whose `relaxed` leading it then overrode |
+| `body-xs` / `body-2xs` | 100 / 050 | the value slot had no prose partner below `body-sm` |
+| `label-2xs-strong` / `label-lg-strong` | 050 / 300 | button-toggle sets semibold at EVERY size |
+| `code-xs` / `code-2xs` | 100 / 050 | colour-picker's hex field is mono and cannot take `body-*` |
+
+The remaining tier-1 typography reads are outside the ramp (the docs site's own chrome
+and the non-control components) — that is what P4's audit rule is for.
 
 Every size in use maps to a composite at an identical value:
 

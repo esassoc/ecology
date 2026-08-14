@@ -2,13 +2,15 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import LoadingSpinner from '@esa/ecology/esa-loading-spinner.astro';
 
-const props = [
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Ring diameter (14 / 20 / 32 / 48px).' },
-  { name: 'color', type: 'string', description: 'Any CSS color value for the rotating arc. Defaults to --color-background-brand.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  size: "Ring diameter (14 / 20 / 32 / 48px).",
+  color: "Any CSS color value for the rotating arc. Defaults to --color-background-brand.",
+};
 ---
 <ComponentDoc name="Loading Spinner" category="Display" slug="esa-loading-spinner" type=".astro" status="stable"
   summary="Rotating ring indicator. Three sizes plus an optional custom color.">
@@ -43,7 +45,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-loading-spinner" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

@@ -1,4 +1,10 @@
 import { LitElement, html, css, nothing } from 'lit';
+import { typography } from '../typography.js';
+
+/** Label / trigger text is UI text (label-*, medium); typed values, options and
+    chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaComboboxOption {
   value: string;
@@ -40,6 +46,7 @@ export class EsaCombobox extends LitElement {
     label: { type: String },
     placeholder: { type: String },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     required: { type: Boolean },
     helpText: { type: String, attribute: 'help-text' },
     errorText: { type: String, attribute: 'error-text' },
@@ -60,6 +67,8 @@ export class EsaCombobox extends LitElement {
   declare label: string;
   declare placeholder: string;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare required: boolean;
   declare helpText: string;
   declare errorText: string;
@@ -168,6 +177,30 @@ export class EsaCombobox extends LitElement {
 
   private syncFormValue(): void {
     this.internals.setFormValue(this.multiple ? this._selected.join(',') : (this._selected[0] ?? null));
+  }
+
+  updated(): void {
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. The anchor differs
+   * by `triggerStyle`, so fall back to the host when neither node is in the tree.
+   */
+  private syncValidity(): void {
+    if (!this.required || this._selected.length > 0) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor =
+      this.renderRoot?.querySelector<HTMLElement>('.input, .trigger--field, .trigger') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Select ${this.label}.` : 'Select an option.',
+      anchor,
+    );
   }
 
   private emitValue(): void {
@@ -329,7 +362,7 @@ export class EsaCombobox extends LitElement {
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label">
+          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
               ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
             </label>`
           : null}
@@ -340,9 +373,9 @@ export class EsaCombobox extends LitElement {
         </div>
 
         ${hasError
-          ? html`<span class="field__error">${this.errorText}</span>`
+          ? html`<span class="field__error typography-body-sm">${this.errorText}</span>`
           : this.helpText
-            ? html`<span class="field__help">${this.helpText}</span>`
+            ? html`<span class="field__help typography-body-sm">${this.helpText}</span>`
             : null}
       </div>
     `;
@@ -353,7 +386,7 @@ export class EsaCombobox extends LitElement {
       ${this.multiple ? this.renderChips() : null}
       <div class="input-wrapper">
         <input
-          class="input"
+          class="input typography-${VALUE_TYPE[this.size]}"
           role="combobox"
           aria-expanded=${this._open}
           aria-haspopup="listbox"
@@ -377,7 +410,7 @@ export class EsaCombobox extends LitElement {
       ${this.multiple && isField ? this.renderChips() : null}
       <button
         type="button"
-        class="trigger ${isField ? 'trigger--field' : 'trigger--text'}"
+        class="trigger typography-${isField ? VALUE_TYPE[this.size] : LABEL_TYPE[this.size]} ${isField ? 'trigger--field' : 'trigger--text'}"
         ?disabled=${this.disabled}
         @click=${() => this.toggleDropdown()}
         @keydown=${this.onKeydown}
@@ -392,7 +425,7 @@ export class EsaCombobox extends LitElement {
     if (this.selectedOptions.length === 0) return nothing;
     return html`<div class="chips">
       ${this.selectedOptions.map(
-        (opt) => html`<span class="chip">
+        (opt) => html`<span class="chip typography-body-sm">
           <span class="chip__label">${opt.label}</span>
           <button
             type="button"
@@ -414,7 +447,7 @@ export class EsaCombobox extends LitElement {
         ? html`<div class="search">
             ${this.searchIcon()}
             <input
-              class="search-input"
+              class="search-input typography-${VALUE_TYPE[this.size]}"
               placeholder="Search..."
               .value=${this._search}
               @input=${this.onSearchInput}
@@ -425,14 +458,14 @@ export class EsaCombobox extends LitElement {
         : null}
 
       ${this.resultsCount !== null
-        ? html`<div class="results-count">Displaying ${opts.length} of ${this.resultsCount} results</div>`
+        ? html`<div class="results-count typography-body-sm">Displaying ${opts.length} of ${this.resultsCount} results</div>`
         : null}
 
       <div class="viewport">
         ${opts.map((option, i) => {
           const selected = this.isSelected(option.value);
           return html`<div
-            class="option ${i === this._active ? 'option--active' : ''} ${selected
+            class="option typography-${VALUE_TYPE[this.size]} ${i === this._active ? 'option--active' : ''} ${selected
               ? 'option--selected'
               : ''} ${option.disabled ? 'option--disabled' : ''}"
             role="option"
@@ -449,10 +482,10 @@ export class EsaCombobox extends LitElement {
       </div>
 
       ${opts.length === 0 && !this.loading
-        ? html`<div class="empty">${this._search ? 'No results found' : 'No options available'}</div>`
+        ? html`<div class="empty typography-${VALUE_TYPE[this.size]}">${this._search ? 'No results found' : 'No options available'}</div>`
         : null}
       ${this.loading && opts.length === 0
-        ? html`<div class="loading"><span class="spinner">${this.spinnerIcon()}</span> Searching...</div>`
+        ? html`<div class="loading typography-${VALUE_TYPE[this.size]}"><span class="spinner">${this.spinnerIcon()}</span> Searching...</div>`
         : null}
     </div>`;
   }
@@ -479,35 +512,29 @@ export class EsaCombobox extends LitElement {
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>`;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
+      --_field-padding-y: var(--form-padding-y-md, 0.75rem);
       --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
+      --_field-padding-y: var(--form-padding-y-xs, 0.5rem);
       --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-height: var(--form-height-xs, 28px);
       --_field-radius: var(--form-radius-xs, 4px);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
+      --_field-padding-y: var(--form-padding-y-sm, 0.625rem);
       --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 6px);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
+      --_field-padding-y: var(--form-padding-y-lg, 1rem);
       --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 10px);
     }
 
@@ -517,9 +544,6 @@ export class EsaCombobox extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #171717);
     }
     .field__required {
@@ -527,11 +551,9 @@ export class EsaCombobox extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
 
@@ -549,11 +571,8 @@ export class EsaCombobox extends LitElement {
     }
     .input {
       width: 100%;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
       padding-inline-end: calc(var(--_field-padding-x) + 24px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -621,9 +640,6 @@ export class EsaCombobox extends LitElement {
       border: none;
       background: none;
       color: var(--color-content-brand, #3a7c59);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
       max-width: 100%;
     }
@@ -651,10 +667,7 @@ export class EsaCombobox extends LitElement {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -730,8 +743,6 @@ export class EsaCombobox extends LitElement {
       border: none;
       background: none;
       outline: none;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
     }
     .search-input::placeholder {
@@ -740,7 +751,6 @@ export class EsaCombobox extends LitElement {
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      font-size: var(--font-size-100, 11px);
       color: var(--color-content-muted, #737373);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
     }
@@ -756,8 +766,6 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--color-content-primary, #171717);
       cursor: pointer;
       user-select: none;
@@ -822,9 +830,6 @@ export class EsaCombobox extends LitElement {
       background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #3a7c59);
       border-radius: var(--radius-pill, 9999px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--font-size-150, 12px);
-      line-height: var(--line-height-tight, 1.3);
       user-select: none;
     }
     .chip__label {
@@ -863,7 +868,6 @@ export class EsaCombobox extends LitElement {
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px);
       color: var(--color-content-muted, #737373);
-      font-size: var(--_field-font-size);
       font-style: var(--font-style-italic, italic);
     }
 
@@ -875,7 +879,8 @@ export class EsaCombobox extends LitElement {
     .field--error .trigger--field:focus-visible {
       box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-combobox')) {

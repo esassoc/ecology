@@ -2,13 +2,15 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import Container from '@esa/ecology/esa-container.astro';
 
-const props = [
-  { name: 'maxWidth', type: 'string', default: "'1556px'", description: "Max content width, as any CSS length. The kit's wide page width by default." },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  maxWidth: "Max content width, as any CSS length. The kit's wide page width by default.",
+};
 
 const slots = [
   { name: 'default', type: 'slot', description: 'The content being constrained.' },
@@ -66,7 +68,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-container" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} nameHeader="Slot" />
   </Section>

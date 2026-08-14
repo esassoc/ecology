@@ -23,7 +23,7 @@
  */
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { tokenPattern, classPattern, findCollapseCollisions } from './lib/token-rename.mjs';
+import { tokenPattern, classPattern, renameProp, findCollapseCollisions } from './lib/token-rename.mjs';
 
 const WRITE = process.argv.includes('--write');
 const CWD = process.cwd();
@@ -56,15 +56,34 @@ for (const f of ['dist/tokens.css', 'src/component-tokens.css']) {
 
 const tokenPairs = [];
 const classPairs = [];
+const propPairs = [];
+const removedRows = [];
 for (const m of migrations) {
+  // A REMOVED token has no equivalent, so rewriting `from` → `to` would put a
+  // wrong value in a spoke's source rather than migrating it. Report it for a
+  // human instead of touching the file.
+  if (m.removed) { removedRows.push(m); continue; }
   for (const [from, to] of m.pairs) {
-    (m.kind === 'token' ? tokenPairs : classPairs).push({ from, to, id: m.id, exact: m.exact !== false });
+    const pair = { from, to, id: m.id, exact: m.exact !== false };
+    if (m.kind === 'token') tokenPairs.push(pair);
+    // A prop is only meaningful on its own component, so it carries the tags it
+    // applies to. Without them the rewrite would be a global find-and-replace —
+    // see lib/token-rename.mjs for what that destroys.
+    else if (m.kind === 'prop') propPairs.push({ ...pair, components: m.components ?? [], module: m.module });
+    else classPairs.push(pair);
   }
 }
 // Longest first: `type-body-small` must be rewritten before `type-body`, or the
 // shorter rule eats its prefix and produces `typography-body-md-small`.
 tokenPairs.sort((a, b) => b.from.length - a.from.length);
 classPairs.sort((a, b) => b.from.length - a.from.length);
+
+const badProp = propPairs.find((p) => !p.components.length);
+if (badProp) {
+  console.error(`✗ migrations.json: prop row "${badProp.id}" has no \`components\`.`);
+  console.error('  A prop rename without a component scope would rewrite every match in the spoke.');
+  process.exit(1);
+}
 
 const SRC = path.join(CWD, 'src');
 if (!existsSync(SRC)) {
@@ -137,6 +156,14 @@ for (const file of files) {
     });
   }
 
+  for (const { from, to, id, components, module: moduleSpec } of propPairs) {
+    // Scoped to the component's own tags — never a bare word. `module` adds
+    // whatever local name THIS file imported the component as.
+    const { text, count } = renameProp(out, { components, from, to, module: moduleSpec });
+    if (count) applied.set(id, (applied.get(id) ?? 0) + count);
+    out = text;
+  }
+
   if (out !== src) {
     touched.add(path.relative(CWD, file));
     if (WRITE) writeFileSync(file, out);
@@ -176,10 +203,35 @@ if (inexact.size) {
     console.log(`      ${id}: ${m.why}`);
   }
 }
+// Removed tokens are never rewritten, so they never appear in `applied`. Scan for
+// them separately — a spoke still reading one is broken RIGHT NOW, with no alias
+// catching it, which is exactly what makes this louder than a rename.
+for (const m of removedRows) {
+  const hits = new Map();
+  for (const file of files) {
+    const src = readFileSync(file, 'utf8');
+    for (const [from] of m.pairs) {
+      const n = (src.match(tokenPattern(from)) ?? []).length;
+      if (n) hits.set(from, (hits.get(from) ?? 0) + n);
+    }
+  }
+  if (!hits.size) continue;
+  console.log(`\n  ✖ REMOVED — ${m.id}. No alias exists; these reads resolve to nothing:`);
+  for (const [t, n] of hits) console.log(`      ${t}  (${n} read${n === 1 ? '' : 's'})`);
+  console.log(`      ${m.why}`);
+  console.log('      Not rewritten automatically — the replacement is not an equivalent value.');
+}
 if (unfixable.size) {
   console.log(`\n  ${unfixable.size} token(s) read here that the hub does not declare and no`);
   console.log('  migration covers. These are already broken and need a decision:');
   for (const [t, fs_] of unfixable) console.log(`      ${t}  (${fs_.size} file${fs_.size === 1 ? '' : 's'})`);
+}
+if (propPairs.length) {
+  console.log('\n  Prop renames are rewritten only inside their own component tags, including');
+  console.log('  whatever local name each file imported the component as. A binding no import');
+  console.log('  statement reveals (re-exported through a barrel, or picked at runtime) is not');
+  console.log('  reached — those still render, because the component accepts the old name, and');
+  console.log('  they say so in your build output. Fix whatever the build warns about after this.');
 }
 if (!WRITE && total) console.log('\n  Re-run with --write to apply. Commit first — this edits in place.');
 if (WRITE) console.log('\n  Done. Rebuild and eyeball the result: the rename alone should change nothing visually.');

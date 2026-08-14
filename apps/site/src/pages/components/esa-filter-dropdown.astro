@@ -3,15 +3,18 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'name', type: 'string', default: "''", description: 'Filter key carried in emitted events.' },
-  { name: 'label', type: 'string', default: "''", description: 'Trigger label; selection appends "label: value".' },
-  { name: 'options', type: '{ label, value, disabled? }[]', default: '[]', description: 'Selectable options (set as a property, not an attribute).' },
-  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections; trigger shows "first +N".' },
-  { name: 'placeholder', type: 'string', default: "''", description: 'Search-input placeholder (defaults to "Search…").' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Trigger height, padding, font size, and radius.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  name: "Filter key carried in emitted events.",
+  label: "Trigger label; selection appends \"label: value\".",
+  options: "Selectable options (set as a property, not an attribute).",
+  multiple: "Allow multiple selections; trigger shows \"first +N\".",
+  placeholder: "Search-input placeholder (defaults to \"Search…\").",
+  size: "Trigger height, padding, font size, and radius.",
+};
 
 const events = [
   { name: 'selection-change', type: '{ value: string | string[] }', description: 'Fires on every selection change. value is a string in single mode, an array in multiple mode.' },
@@ -69,7 +72,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-filter-dropdown" describe={describe} />
   </Section>
 
   <Section id="events" title="Events">

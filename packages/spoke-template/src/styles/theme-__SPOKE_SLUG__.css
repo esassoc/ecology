@@ -70,17 +70,24 @@
   --color-background-ai:       var(--color-blue-9);    /* __FILL__ */
   --color-background-ai-hover: var(--color-blue-10);   /* __FILL__ */
 
-  /* ===== (5) CONTROL SIZING + SHAPE — match this spoke's density =====
-     These are SEMANTIC roles, so re-pointing one moves every component that
-     reads it. The hub defaults to controls xs 28 / sm 32 / md 40 / lg 48, and
-     surface corners at 8px. Re-point if this spoke runs more compact/flatter.
+  /* ===== (5) SIZING + SHAPE — match this spoke's density =====
+     PADDING IS THE DENSITY LEVER. There is no height token: an input, a button or
+     a select is as tall as its padding plus its text. Make these smaller for a
+     tighter spoke, larger for a roomier one — the height follows.
 
-     Never re-point --radius-100/200/… or --spacing-*: those are primitives, and
-     moving one moves everything downstream of it. Move the ROLE. */
-  --control-height-xs: /* __FILL__ */ 24px;
-  --control-height-sm: /* __FILL__ */ 28px;
-  --control-height-md: /* __FILL__ */ 36px;
-  --control-height-lg: /* __FILL__ */ 44px;
+     `--control-height-*` used to live here and was deleted 2026-08-14. A px height
+     could not grow with rem text, so it clipped when a user raised their browser
+     font size or a translation wrapped. If you are porting an older spoke, do NOT
+     translate those values across: the arithmetic is different
+     (height ≈ 2×padding + font-size + border), so 36px of height is roughly 12px
+     of padding, not 36px of it.
+
+     Never re-point --spacing-* itself, or --radius-100/200/…: those are primitives
+     and moving one moves everything downstream. Move the ROLE. */
+  --form-padding-y-xs: /* __FILL__ */ var(--spacing-150);
+  --form-padding-y-sm: /* __FILL__ */ var(--spacing-200);
+  --form-padding-y-md: /* __FILL__ */ var(--spacing-250);
+  --form-padding-y-lg: /* __FILL__ */ var(--spacing-300);
 
   --radius-control: /* __FILL__ small controls, badges, pills */ var(--radius-100);
   --radius-surface: /* __FILL__ inputs, menus, panels — the most-used role */ var(--radius-100);

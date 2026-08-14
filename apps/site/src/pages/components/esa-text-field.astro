@@ -2,19 +2,21 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Visible label rendered above the input.' },
-  { name: 'type', type: "'text' | 'email' | 'password' | 'number' | 'tel' | 'url'", default: "'text'", description: 'Native input type.' },
-  { name: 'value', type: 'string', default: "''", description: 'Current value; mirrored to the form on every input.' },
-  { name: 'placeholder', type: 'string', default: "''", description: 'Placeholder shown when empty.' },
-  { name: 'help-text', type: 'string', default: "''", description: 'Helper text shown below the input.' },
-  { name: 'error-text', type: 'string', default: "''", description: 'Error message; replaces help text and turns the field red when present.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size.' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required and renders an asterisk on the label.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Visible label rendered above the input.",
+  type: "Native input type.",
+  value: "Current value; mirrored to the form on every input.",
+  placeholder: "Placeholder shown when empty.",
+  "help-text": "Helper text shown below the input.",
+  "error-text": "Error message; replaces help text and turns the field red when present.",
+  size: "Control size.",
+  required: "Marks the field required and renders an asterisk on the label.",
+  disabled: "Disables interaction.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired on every input. Composed and bubbling; detail.value is the current string.' },
@@ -77,7 +79,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-text-field" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

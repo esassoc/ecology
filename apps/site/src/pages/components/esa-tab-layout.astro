@@ -2,16 +2,18 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'tabs', type: 'EsaTab[]', default: '[]', description: 'Tab definitions (property, set via JS). Each is { label; icon?; badge?; disabled? }.' },
-  { name: 'active-index', type: 'number', default: '0', description: 'Index of the selected tab.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Tab height and type scale. Reflected as an attribute.' },
-  { name: 'appearance', type: "'underline' | 'segmented'", default: "'underline'", description: 'Tab style (aligned to Beacon): underlined indicator or a segmented control on a sunken track. Reflected as an attribute.' },
-  { name: 'variant', type: "'underline' | 'pill'", default: "'underline'", description: 'Legacy alias for appearance — pill maps to segmented. Prefer appearance.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  tabs: "Tab definitions (property, set via JS). Each is { label; icon?; badge?; disabled? }.",
+  "active-index": "Index of the selected tab.",
+  size: "Tab height and type scale. Reflected as an attribute.",
+  appearance: "Tab style (aligned to Beacon): underlined indicator or a segmented control on a sunken track. Reflected as an attribute.",
+  variant: "Legacy alias for appearance — pill maps to segmented. Prefer appearance.",
+};
 
 const events = [
   { name: 'tabchange', type: 'CustomEvent', description: 'Fired when the active tab changes. detail: { index: number }. Bubbles and composed.' },
@@ -98,7 +100,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-tab-layout" describe={describe} events={events} />
     <p><code>tabs</code> is an array property — set it in JS, not as an attribute. Each <code>EsaTab.icon</code> is a raw inline SVG string.</p>
     <h3>Slots</h3>
     <PropsTable rows={slots} />

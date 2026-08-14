@@ -2,19 +2,21 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'entities', type: 'EsaSearchEntity[]', default: '[]', description: 'The searchable records, set as a property. Each: { id, title, subtitle?, scope, icon?, url?, meta? }. Filtered client-side.' },
-  { name: 'scopes', type: 'EsaSearchScope[]', default: '[]', description: 'Facets to narrow by. Each: { id, label, icon? }. An implicit "All" facet is prepended.' },
-  { name: 'recent', type: 'EsaSearchEntity[]', default: '[]', description: 'Shown when the query is empty and the "All" facet is active.' },
-  { name: 'rowActions', type: 'EsaSearchRowAction[]', default: '[]', description: 'Per-row secondary actions (e.g. Impersonate). Each: { id, label, icon?, scopes? }. scopes restricts which rows show it.' },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-  { name: 'placeholder', type: 'string', default: "'Search…'", description: 'Input placeholder.' },
-  { name: 'allLabel', type: 'string', default: "'All'", description: 'Label for the implicit all-scopes facet.' },
-  { name: 'hotkey', type: "'' | 'mod+k' | 'slash'", default: "''", description: "Built-in open shortcut. 'mod+k' = Cmd/Ctrl+K toggle; 'slash' = '/' opens (ignored while typing in a field)." },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  entities: "The searchable records, set as a property. Each: { id, title, subtitle?, scope, icon?, url?, meta? }. Filtered client-side.",
+  scopes: "Facets to narrow by. Each: { id, label, icon? }. An implicit \"All\" facet is prepended.",
+  recent: "Shown when the query is empty and the \"All\" facet is active.",
+  'row-actions': "Per-row secondary actions (e.g. Impersonate). Each: { id, label, icon?, scopes? }. scopes restricts which rows show it.",
+  open: "Reflected open state.",
+  placeholder: "Input placeholder.",
+  'all-label': "Label for the implicit all-scopes facet.",
+  hotkey: "Built-in open shortcut. 'mod+k' = Cmd/Ctrl+K toggle; 'slash' = '/' opens (ignored while typing in a field).",
+};
 
 const events = [
   { name: 'select', type: '{ entity }', description: 'A row was chosen (click or Enter). The consumer navigates (e.g. to entity.url).' },
@@ -44,7 +46,7 @@ const methods = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-entity-search" describe={describe} events={events} />
     <h3>Methods</h3>
     <PropsTable rows={methods} />
   </Section>

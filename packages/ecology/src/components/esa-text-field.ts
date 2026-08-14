@@ -1,4 +1,21 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/**
+ * The two composites a control needs at each step of the size ramp.
+ *
+ * A control renders TWO text treatments at one size: the label is UI text
+ * (`label-*`, medium) and the value the user typed is prose (`body-*`, regular).
+ * No single composite describes "a form control", which is why this is a map and
+ * not one class — see the FORMS header in component-tokens.css for the full table.
+ *
+ * The letters do not line up: `size="sm"` takes the `-xs` rung, because the control
+ * ramp lands on 050·100·200·300 while the type families walk 050·100·150·200·300.
+ * That offset is spelled out here on purpose rather than hidden behind a token named
+ * for the control step.
+ */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 /**
  * esa-text-field — form-associated Lit Web Component.
@@ -29,6 +46,7 @@ export class EsaTextField extends LitElement {
     errorText: { type: String, attribute: 'error-text' },
     required: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     type: { type: String },
     value: { type: String },
     prefix: { type: String },
@@ -42,6 +60,8 @@ export class EsaTextField extends LitElement {
   declare errorText: string;
   declare required: boolean;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
   declare value: string;
   declare prefix: string;
@@ -70,6 +90,34 @@ export class EsaTextField extends LitElement {
     this.internals.setFormValue(this.value);
   }
 
+  // A value set from SCRIPT (el.value = '…') has to reach the form too. Only the
+  // input handler used to call setFormValue, so a programmatically filled field
+  // rendered the text and submitted an empty string.
+  updated(changed: Map<string, unknown>): void {
+    if (changed.has('value')) this.internals.setFormValue(this.value);
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. Only `valueMissing`
+   * is enforced here; format checking for `type="email"` etc. is the inner
+   * native input's job and is not mirrored onto the host.
+   */
+  private syncValidity(): void {
+    if (!this.required || this.value) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.input') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Enter ${this.label}.` : 'Fill out this field.',
+      anchor,
+    );
+  }
+
   private onInput = (event: Event): void => {
     this.value = (event.target as HTMLInputElement).value;
     this.internals.setFormValue(this.value);
@@ -83,13 +131,13 @@ export class EsaTextField extends LitElement {
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="label" for="input"
+          ? html`<label class="label typography-${LABEL_TYPE[this.size]}" for="input"
               >${this.label}${this.required
                 ? html`<span class="required" aria-label="required">*</span>`
                 : null}</label
             >`
           : null}
-        <div class="control">
+        <div class="control typography-${VALUE_TYPE[this.size]}">
           ${this.prefix
             ? html`<span class="affix affix--prefix" aria-hidden="true">${this.prefix}</span>`
             : null}
@@ -109,49 +157,45 @@ export class EsaTextField extends LitElement {
             : null}
         </div>
         ${hasError
-          ? html`<p class="error">${this.errorText}</p>`
+          ? html`<p class="error typography-body-sm">${this.errorText}</p>`
           : this.helpText
-            ? html`<p class="help">${this.helpText}</p>`
+            ? html`<p class="help typography-body-sm">${this.helpText}</p>`
             : null}
       </div>
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity. It
+     carries the .typography-* composite classes into the shadow root — a global
+     class does not cross the boundary, so the definitions come with us. */
+  static styles = [
+    typography,
+    css`
     :host {
-      --_field-padding-y: var(--form-padding-y-md, 0.5rem);
+      --_field-padding-y: var(--form-padding-y-md, 0.75rem);
       --_field-padding-x: var(--form-padding-x-md, 0.75rem);
-      --_field-font-size: var(--form-font-size-md, 0.9375rem);
-      --_field-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #e5e5e5);
-      --_label-font-size: var(--font-size-200, 0.9375rem);
       display: block;
-      font-family: var(--font-sans, sans-serif);
     }
+    /* Type is NOT set here. The size steps carry geometry only; the text comes
+       from a composite class named in render() (LABEL_TYPE / VALUE_TYPE), so the
+       component says "this text is a label" rather than assembling a size, a
+       weight and a leading at the call site. */
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 0.25rem);
+      --_field-padding-y: var(--form-padding-y-xs, 0.5rem);
       --_field-padding-x: var(--form-padding-x-xs, 0.5rem);
-      --_field-font-size: var(--form-font-size-xs, 0.8125rem);
-      --_field-height: var(--form-height-xs, 28px);
       --_field-radius: var(--form-radius-xs, 0.25rem);
-      --_label-font-size: var(--font-size-050, 0.8125rem);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 0.375rem);
+      --_field-padding-y: var(--form-padding-y-sm, 0.625rem);
       --_field-padding-x: var(--form-padding-x-sm, 0.5rem);
-      --_field-font-size: var(--form-font-size-sm, 0.875rem);
-      --_field-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 0.25rem);
-      --_label-font-size: var(--font-size-150, 0.875rem);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 0.75rem);
+      --_field-padding-y: var(--form-padding-y-lg, 1rem);
       --_field-padding-x: var(--form-padding-x-lg, 1rem);
-      --_field-font-size: var(--form-font-size-lg, 1.125rem);
-      --_field-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 0.5rem);
-      --_label-font-size: var(--font-size-300, 1.125rem);
     }
 
     .field {
@@ -159,10 +203,10 @@ export class EsaTextField extends LitElement {
       flex-direction: column;
     }
 
+    /* Type comes from .typography-label-* on the element. Colour and spacing are
+       not typography and stay here. */
     .label {
       color: var(--form-label-color, #171717);
-      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 500));
-      font-size: var(--form-label-font-size, var(--_label-font-size));
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
@@ -175,12 +219,21 @@ export class EsaTextField extends LitElement {
     .control {
       display: flex;
       align-items: stretch;
-      height: var(--_field-height);
+      /* NO HEIGHT. The box is as tall as the input inside it, which is its line
+         box plus its padding. A px height could not grow with rem text, so it
+         clipped — and this rule used to pair one with overflow:hidden, which is
+         what made the clipping silent. See semantic/size.json.
+
+         line-height 1 is what leaves padding as the only variable: at 1.6 there
+         is a third term (0.6 x font-size of leading) that nobody chose and that
+         grows faster than either input. Everything else — face, size, weight,
+         tracking — still comes from .typography-body-* on this element and
+         inherits to the input and the affixes below. */
+      line-height: var(--line-height-none, 1);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
-      overflow: hidden;
       transition:
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
@@ -201,10 +254,15 @@ export class EsaTextField extends LitElement {
       flex: 1 1 auto;
       min-width: 0;
       width: 100%;
-      height: 100%;
+      /* No height: 100%. It used to resolve against .control's fixed height, which
+         meant this padding was ABSORBED into that height rather than adding to it.
+         With no fixed parent it would compute to auto anyway; removing it makes the
+         padding load-bearing, which is the point. .control is align-items:stretch,
+         so the affixes still match this element's height. */
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      font-family: inherit;
-      font-size: var(--_field-font-size);
+      /* A native control does not inherit type by default — this is what opts it
+         into the composite already resolved on .control. */
+      font: inherit;
       color: var(--form-text-color, #171717);
       background: transparent;
       border: none;
@@ -228,7 +286,6 @@ export class EsaTextField extends LitElement {
       flex: none;
       padding-inline: var(--_field-padding-x);
       color: var(--form-affix-color, var(--color-content-secondary, #737373));
-      font-size: var(--_field-font-size);
       background: var(--form-affix-bg, var(--color-background-sunken, #efefef));
       user-select: none;
       white-space: nowrap;
@@ -249,11 +306,12 @@ export class EsaTextField extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #ef4444);
     }
 
+    /* Type comes from .typography-body-sm — help and error are one size at every
+       control step, so they name the composite directly rather than mapping. */
     .help,
     .error {
       margin: 0;
       margin-block-start: var(--form-help-gap, 4px);
-      font-size: var(--font-size-100, 0.75rem);
     }
     .help {
       color: var(--form-help-color, #737373);
@@ -261,7 +319,8 @@ export class EsaTextField extends LitElement {
     .error {
       color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-text-field')) {

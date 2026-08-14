@@ -2,14 +2,15 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
 
-const props = [
-  { name: 'selection-mode', type: "'none' | 'single'", default: "'none'", description: "'none' is visual grouping only; 'single' acts as a radio-like segmented control with one active child." },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Reflected sizing hint for the group.' },
-  { name: 'value', type: 'string', default: "''", description: "In 'single' mode, the data-value of the currently selected child." },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  "selection-mode": "'none' is visual grouping only; 'single' acts as a radio-like segmented control with one active child.",
+  value: "In 'single' mode, the data-value of the currently selected child.",
+};
 
 const events = [
   { name: 'change', type: "CustomEvent<{ value: string }>", description: "Fired in 'single' mode when the active child changes. Composed and bubbling; detail.value is the selected child's data-value (falling back to its text content)." },
@@ -20,29 +21,31 @@ const events = [
 
   <Section id="preview" title="Preview">
     <Preview code={`<esa-button-group>
-  <EsaButton color="primary">Day</EsaButton>
-  <EsaButton color="primary">Week</EsaButton>
-  <EsaButton color="primary">Month</EsaButton>
+  <EsaButton variant="primary">Day</EsaButton>
+  <EsaButton variant="primary">Week</EsaButton>
+  <EsaButton variant="primary">Month</EsaButton>
 </esa-button-group>`}>
       <esa-button-group>
-        <EsaButton color="primary">Day</EsaButton>
-        <EsaButton color="primary">Week</EsaButton>
-        <EsaButton color="primary">Month</EsaButton>
+        <EsaButton variant="primary">Day</EsaButton>
+        <EsaButton variant="primary">Week</EsaButton>
+        <EsaButton variant="primary">Month</EsaButton>
       </esa-button-group>
     </Preview>
+    <p>The group has no <code>size</code> of its own — set <code>size</code> on each child
+    button, alongside its <code>variant</code>. The group only connects the borders.</p>
   </Section>
 
   <Section id="modes" title="Modes">
     <p><code>selection-mode="none"</code> is the default — buttons are visually connected but each acts independently.</p>
     <Preview code={`<esa-button-group selection-mode="none">
-  <EsaButton color="primary">Day</EsaButton>
-  <EsaButton color="primary">Week</EsaButton>
-  <EsaButton color="primary">Month</EsaButton>
+  <EsaButton variant="primary">Day</EsaButton>
+  <EsaButton variant="primary">Week</EsaButton>
+  <EsaButton variant="primary">Month</EsaButton>
 </esa-button-group>`}>
       <esa-button-group selection-mode="none">
-        <EsaButton color="primary">Day</EsaButton>
-        <EsaButton color="primary">Week</EsaButton>
-        <EsaButton color="primary">Month</EsaButton>
+        <EsaButton variant="primary">Day</EsaButton>
+        <EsaButton variant="primary">Week</EsaButton>
+        <EsaButton variant="primary">Month</EsaButton>
       </esa-button-group>
     </Preview>
 
@@ -64,7 +67,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-button-group" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

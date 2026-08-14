@@ -2,25 +2,27 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'mode', type: "'autocomplete' | 'select'", default: "'select'", description: "'select' = button trigger with in-panel search; 'autocomplete' = input trigger. Reflected." },
-  { name: 'trigger-style', type: "'field' | 'text'", default: "'field'", description: "'field' = bordered control; 'text' = link-like trigger." },
-  { name: 'options', type: '{ value, label, disabled? }[]', default: '[]', description: 'Selectable options. Set as a property.' },
-  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections with removable chips.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
-  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
-  { name: 'placeholder', type: 'string', default: "'Select...'", description: 'Placeholder for the trigger/input.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required.' },
-  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the control.' },
-  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
-  { name: 'loading', type: 'boolean', default: 'false', description: 'Shows a spinner and "Searching..." state.' },
-  { name: 'debounce-ms', type: 'number', default: '300', description: 'Debounce window for the search event.' },
-  { name: 'results-count', type: 'number | null', default: 'null', description: 'When set, renders "Displaying X of Y results".' },
-  { name: 'value', type: 'string | string[]', description: 'Property accessor. Single = string; multiple = string array.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  mode: "'select' = button trigger with in-panel search; 'autocomplete' = input trigger. Reflected.",
+  "trigger-style": "'field' = bordered control; 'text' = link-like trigger.",
+  options: "Selectable options. Set as a property.",
+  multiple: "Allow multiple selections with removable chips.",
+  size: "Control size (reflected attribute).",
+  label: "Field label above the control.",
+  placeholder: "Placeholder for the trigger/input.",
+  disabled: "Disables interaction (reflected attribute).",
+  required: "Marks the field required.",
+  "help-text": "Helper text below the control.",
+  "error-text": "Error message; sets the error state when present.",
+  loading: "Shows a spinner and \"Searching...\" state.",
+  "debounce-ms": "Debounce window for the search event.",
+  "results-count": "When set, renders \"Displaying X of Y results\".",
+  value: "Property accessor. Single = string; multiple = string array.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string | string[] }>', description: 'Fired on selection change. Composed and bubbles.' },
@@ -75,7 +77,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-combobox" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

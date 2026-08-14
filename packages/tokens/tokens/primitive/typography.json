@@ -45,10 +45,12 @@
     "relaxed": { "$value": "1.8", "$type": "number" }
   },
   "letter-spacing": {
-    "tight":  { "$value": "-0.01em", "$type": "dimension" },
-    "normal": { "$value": "0.01em",  "$type": "dimension" },
-    "wide":   { "$value": "0.03em",  "$type": "dimension" },
-    "wider":  { "$value": "0.06em",  "$type": "dimension" }
+    "$description": "`normal` held 0.01em until 2026-08-14, which made the one token in the set whose name promises a specific value the one token that did not hold it. The kit's actual default tracking moved to `default`, where it can be read as a choice; `normal` now means what it says. Every composite reads `default`, so nothing re-rendered — this was a naming correction, not a type change.",
+    "tight":   { "$value": "-0.01em", "$type": "dimension" },
+    "normal":  { "$value": "0",       "$type": "dimension", "$description": "No tracking. The CSS `normal` keyword's value — use it when a face must be left alone, e.g. tabular figures or a mono run where 0.01em would break column alignment." },
+    "default": { "$value": "0.01em",  "$type": "dimension", "$description": "The kit's default tracking, and what 23 of the 28 composites read (the other five are the three `tight` headings and the two eyebrows). DM Sans is set marginally loose on purpose at UI sizes; this is that decision, named so it can be found and changed in one place." },
+    "wide":    { "$value": "0.03em",  "$type": "dimension" },
+    "wider":   { "$value": "0.06em",  "$type": "dimension" }
   },
   "text-transform": {
     "$description": "The finite option set. `uppercase` is read by the .typography-eyebrow composite and by four components.",

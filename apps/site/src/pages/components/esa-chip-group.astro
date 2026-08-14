@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'options', type: 'EsaChipOption[] | string', default: '[]', description: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, brand, amber." },
-  { name: 'value', type: 'string', default: "''", description: 'The selected option value. Exactly one chip is active at a time.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Chip size on the shared form scale.' },
-  { name: 'name', type: 'string', default: "''", description: 'Field name the selected value is submitted under.' },
-  { name: 'label', type: 'string', default: "''", description: 'Accessible label applied to the radiogroup (aria-label).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  options: "Array of {'{ value, label, tone? }'}, or a JSON string of the same when set as an attribute. tone is one of neutral, neutral-strong, brand, amber.",
+  value: "The selected option value. Exactly one chip is active at a time.",
+  size: "Chip size on the shared form scale.",
+  name: "Field name the selected value is submitted under.",
+  label: "Accessible label applied to the radiogroup (aria-label).",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when the selection changes via click or keyboard. Composed and bubbling; detail.value is the newly selected value.' },
@@ -60,7 +62,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-chip-group" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

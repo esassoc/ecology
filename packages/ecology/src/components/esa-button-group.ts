@@ -8,22 +8,28 @@ import { LitElement, html, css } from 'lit';
  *
  * Children are presentational esa-button.astro (plain <button>) projected via a
  * slot; in 'single' mode this element manages aria-pressed/selected on them.
+ *
+ * NO `size` PROP — deliberately. Size belongs on the child buttons, next to
+ * their `variant`, because esa-button.astro bakes its size class at build time:
+ * a group-level size could only be honoured by re-implementing the whole scale
+ * in `::slotted()` rules with `!important`, duplicating esa-button's own sizing
+ * in a second place that would drift. This element previously DECLARED `size`
+ * and never read it — reflected to the DOM, documented, and inert. If a group
+ * really needs to size as a unit, propagate to the children rather than
+ * restyling them from out here.
  */
 export class EsaButtonGroup extends LitElement {
   static properties = {
     selectionMode: { type: String, attribute: 'selection-mode' },
-    size: { type: String, reflect: true },
     value: { type: String },
   };
 
   declare selectionMode: 'none' | 'single';
-  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare value: string;
 
   constructor() {
     super();
     this.selectionMode = 'none';
-    this.size = 'md';
     this.value = '';
   }
 

@@ -1,4 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** Chip text is UI text at the SEMIBOLD tier. It rendered `font-weight: 600` as a
+    raw literal — 600 is not a token weight in this system (semibold is 550), so
+    adopting the composite is a small deliberate weight change, logged in the ledger. */
+const STRONG_TYPE = { xs: 'label-2xs-strong', sm: 'label-xs-strong', md: 'label-md-strong', lg: 'label-lg-strong' } as const;
 
 /** Active-state palette for a chip. Maps to Ecology semantic tokens inside the primitive. */
 export type EsaChipTone = 'neutral' | 'neutral-strong' | 'brand' | 'amber';
@@ -44,7 +50,7 @@ export class EsaChipGroup extends LitElement {
     values: { type: Array },
     multiple: { type: Boolean, reflect: true },
     size: { type: String, reflect: true },
-    name: { type: String },
+    name: { type: String, reflect: true },
     label: { type: String },
   };
 
@@ -54,7 +60,8 @@ export class EsaChipGroup extends LitElement {
   declare values: string[];
   declare multiple: boolean;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
-  declare name: string;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare label: string;
 
   private internals: ElementInternals;
@@ -66,7 +73,6 @@ export class EsaChipGroup extends LitElement {
     this.values = [];
     this.multiple = false;
     this.size = 'md';
-    this.name = '';
     this.label = '';
     this.internals = this.attachInternals();
   }
@@ -86,6 +92,12 @@ export class EsaChipGroup extends LitElement {
       } catch {
         this.values = [];
       }
+    }
+    // A value set from SCRIPT (el.value = 'x') has to reach the form too. Only
+    // the click handler used to call syncFormValue, so a programmatically
+    // selected chip rendered as active and submitted as empty.
+    if (changed.has('value') || changed.has('values') || changed.has('multiple')) {
+      this.syncFormValue();
     }
   }
 
@@ -198,7 +210,7 @@ export class EsaChipGroup extends LitElement {
             <button
               type="button"
               role=${this.multiple ? 'checkbox' : 'radio'}
-              class="chip chip--${option.tone ?? 'neutral'} ${active ? 'chip--active' : ''}"
+              class="chip chip--${option.tone ?? 'neutral'} ${active ? 'chip--active' : ''} typography-${STRONG_TYPE[this.size]}"
               part="chip"
               tabindex=${tabbable ? 0 : -1}
               aria-checked=${active}
@@ -212,12 +224,13 @@ export class EsaChipGroup extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
       --_height: var(--chip-height-md, 28px);
       --_pad-x: var(--form-padding-x-md, 0.75rem);
-      --_font: var(--form-font-size-md, 0.9375rem);
       --_radius: var(--radius-control, 0.25rem);
 
       /* Resting (unselected) chrome. */
@@ -230,9 +243,9 @@ export class EsaChipGroup extends LitElement {
 
       display: inline-flex;
     }
-    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); --_height: var(--chip-height-xs, 18px); }
-    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); --_height: var(--chip-height-sm, 22px); }
-    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_font: var(--form-font-size-lg, 1rem); --_height: var(--chip-height-lg, 34px); }
+    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_height: var(--chip-height-xs, 18px); }
+    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_height: var(--chip-height-sm, 22px); }
+    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_height: var(--chip-height-lg, 34px); }
 
     .root {
       display: inline-flex;
@@ -256,9 +269,6 @@ export class EsaChipGroup extends LitElement {
       border: var(--border-width-default, 1px) solid var(--_border);
       background: var(--_bg);
       color: var(--_color);
-      font: inherit;
-      font-size: var(--_font);
-      font-weight: 600;
       line-height: var(--line-height-none, 1);
       white-space: nowrap;
       cursor: pointer;
@@ -302,7 +312,8 @@ export class EsaChipGroup extends LitElement {
       border-color: var(--color-border-warning, #fde68a);
       color: var(--color-content-warning, #915930);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-chip-group')) {

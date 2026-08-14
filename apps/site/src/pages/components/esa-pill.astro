@@ -2,16 +2,18 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import Pill from '@esa/ecology/esa-pill.astro';
 
-const props = [
-  { name: 'label', type: 'string', description: 'Required. Text shown inside the pill.' },
-  { name: 'variant', type: "'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info'", default: "'default'", description: 'Color intent — drives background, text, and border.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Pill height and text size.' },
-  { name: 'removable', type: 'boolean', default: 'true', description: 'Shows a remove (×) button.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Required. Text shown inside the pill.",
+  variant: "Color intent — drives background, text, and border.",
+  size: "Pill height and text size.",
+  removable: "Shows a remove (×) button.",
+};
 
 const slots = [
   { name: 'icon', type: 'slot', description: 'Leading inline SVG, rendered left of the label.' },
@@ -77,7 +79,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-pill" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} />
     <h3 style="margin-top: 1.5rem;">Events</h3>

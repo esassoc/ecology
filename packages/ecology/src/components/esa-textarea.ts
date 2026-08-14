@@ -1,4 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** The label and value composites at each step of the control ramp. See
+    the FORMS header in component-tokens.css for why the letters do not line up. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 /**
  * esa-textarea — form-associated Lit Web Component.
@@ -23,6 +29,7 @@ export class EsaTextarea extends LitElement {
     errorText: { type: String, attribute: 'error-text' },
     required: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     rows: { type: Number },
     autoResize: { type: Boolean, attribute: 'auto-resize', reflect: true },
     maxRows: { type: Number, attribute: 'max-rows' },
@@ -36,6 +43,8 @@ export class EsaTextarea extends LitElement {
   declare errorText: string;
   declare required: boolean;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare rows: number;
   declare autoResize: boolean;
   declare maxRows: number;
@@ -62,6 +71,31 @@ export class EsaTextarea extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this.internals.setFormValue(this.value);
+  }
+
+  // A value set from SCRIPT (el.value = '…') has to reach the form too. Only the
+  // input handler used to call setFormValue, so a programmatically filled field
+  // rendered the text and submitted an empty string.
+  updated(changed: Map<string, unknown>): void {
+    if (changed.has('value')) this.internals.setFormValue(this.value);
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep.
+   */
+  private syncValidity(): void {
+    if (!this.required || this.value) {
+      this.internals.setValidity({});
+      return;
+    }
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Enter ${this.label}.` : 'Fill out this field.',
+      this.textareaEl ?? undefined,
+    );
   }
 
   private get textareaEl(): HTMLTextAreaElement | null {
@@ -93,7 +127,7 @@ export class EsaTextarea extends LitElement {
     return html`
       <div class="field ${hasError ? 'field--error' : ''} ${this.autoResize ? 'field--auto' : ''}">
         ${this.label
-          ? html`<label class="label" for="input"
+          ? html`<label class="label typography-${LABEL_TYPE[this.size]}" for="input"
               >${this.label}${this.required
                 ? html`<span class="required" aria-label="required">*</span>`
                 : null}</label
@@ -101,7 +135,7 @@ export class EsaTextarea extends LitElement {
           : null}
         <textarea
           id="input"
-          class="input"
+          class="input typography-${VALUE_TYPE[this.size]}"
           .value=${this.value}
           placeholder=${this.placeholder}
           ?disabled=${this.disabled}
@@ -111,45 +145,39 @@ export class EsaTextarea extends LitElement {
           @input=${this.onInput}
         ></textarea>
         ${hasError
-          ? html`<p class="error">${this.errorText}</p>`
+          ? html`<p class="error typography-body-sm">${this.errorText}</p>`
           : this.helpText
-            ? html`<p class="help">${this.helpText}</p>`
+            ? html`<p class="help typography-body-sm">${this.helpText}</p>`
             : null}
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       --_field-padding-y: var(--form-padding-y-md, 0.5rem);
       --_field-padding-x: var(--form-padding-x-md, 0.75rem);
-      --_field-font-size: var(--form-font-size-md, 0.9375rem);
       --_field-radius: var(--form-radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #e5e5e5);
-      --_label-font-size: var(--font-size-200, 0.9375rem);
       display: block;
-      font-family: var(--font-sans, sans-serif);
     }
+    /* Geometry only — type comes from the composite classes named in render(). */
     :host([size='xs']) {
       --_field-padding-y: var(--form-padding-y-xs, 0.25rem);
       --_field-padding-x: var(--form-padding-x-xs, 0.5rem);
-      --_field-font-size: var(--form-font-size-xs, 0.8125rem);
       --_field-radius: var(--form-radius-xs, 0.25rem);
-      --_label-font-size: var(--font-size-050, 0.8125rem);
     }
     :host([size='sm']) {
       --_field-padding-y: var(--form-padding-y-sm, 0.375rem);
       --_field-padding-x: var(--form-padding-x-sm, 0.5rem);
-      --_field-font-size: var(--form-font-size-sm, 0.875rem);
       --_field-radius: var(--form-radius-sm, 0.25rem);
-      --_label-font-size: var(--font-size-150, 0.875rem);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--form-padding-y-lg, 0.75rem);
       --_field-padding-x: var(--form-padding-x-lg, 1rem);
-      --_field-font-size: var(--form-font-size-lg, 1.125rem);
       --_field-radius: var(--form-radius-lg, 0.5rem);
-      --_label-font-size: var(--font-size-300, 1.125rem);
     }
 
     .field {
@@ -159,8 +187,6 @@ export class EsaTextarea extends LitElement {
 
     .label {
       color: var(--form-label-color, #171717);
-      font-weight: var(--font-weight-medium, 500);
-      font-size: var(--_label-font-size);
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
@@ -171,9 +197,12 @@ export class EsaTextarea extends LitElement {
     .input {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      font-family: inherit;
-      font-size: var(--_field-font-size);
-      line-height: var(--form-line-height, 1.6);
+      /* The one element here that KEEPS real leading. --form-line-height is gone —
+         it existed to force 1.6 onto single-line boxes that now use 1 — but a
+         textarea is genuinely multi-line prose, and its rows attribute budgets
+         height off this. body-md/lg lead at relaxed (1.8), which is looser than a
+         field wants, so it reads the normal rung directly. */
+      line-height: var(--typography-body-sm-line-height, 1.6);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -215,11 +244,11 @@ export class EsaTextarea extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--form-error-border-color, #ef4444);
     }
 
+    /* Type comes from .typography-body-sm on the element. */
     .help,
     .error {
       margin: 0;
       margin-block-start: var(--form-help-gap, 4px);
-      font-size: var(--font-size-100, 0.75rem);
     }
     .help {
       color: var(--form-help-color, #737373);
@@ -227,7 +256,8 @@ export class EsaTextarea extends LitElement {
     .error {
       color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-textarea')) {

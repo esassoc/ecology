@@ -25,30 +25,78 @@
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
-     One scale across button/input/icon-button so they line up on a row. */
+     One scale across button/input/icon-button so they line up on a row.
+
+     THERE IS NO --form-font-size-* HERE, AND THAT IS DELIBERATE. It existed
+     until 2026-08-14: a size-only ramp with no weight, leading or face behind
+     it — the same defect D1 of docs/typography-adoption-plan.md deleted
+     `--font-size-ui-*` for, one tier down. 17 components read it, among them
+     button, icon-button, chip-group and button-toggle, which are not forms; the
+     `form` namespace never bounded its readers because those four had nowhere
+     else to get the control ramp.
+
+     The fix was not a tier-2 partner ramp. One was added the same day as
+     `--control-font-size-*` and reverted within the hour — see the note on
+     control-height in semantic/size.json. The fix is that components adopt the
+     COMPOSITE whose job matches the text (D2): a label reads label-*, a value
+     reads body-*. One hook could never have narrowed both, which is the other
+     reason it could not survive. `--form-label-font-weight` and the never-
+     declared `--form-label-font-size` went with it; the composite carries size
+     and weight together, so neither had anything left to say.
+
+     Aliases for all six are in migrations.json, so a spoke READING an old name
+     keeps resolving. A spoke that DECLARED one is not rescued by an alias — that
+     asymmetry is in SPEC.md and is why the rows matter.
+
+     HEIGHT IS GONE ENTIRELY — first --form-height-* on 2026-08-14, then
+     --control-height-* behind it the same day. The first was a pure passthrough
+     that added only a narrowing. The second was the real problem: a px height
+     cannot grow with rem text. Raise your browser font size, swap in a taller
+     face, wrap a translation, and the box cannot follow — and esa-text-field
+     paired it with overflow:hidden, so the excess was cut silently (WCAG 1.4.4).
+
+     Nothing replaced it. An input, a button or a select is now as tall as the
+     padding below plus its own text, and --form-padding-y-* is the density lever
+     a spoke reaches for. That is why each step sits one spacing rung higher than
+     it used to: the padding now CARRIES the height, where before the height
+     carried it and the padding was absorbed into the box.
+
+     Two consequences worth knowing. Heights are fluid, because the type is —
+     roughly 38px on a phone where a wide monitor gets 41px. And a row still
+     aligns, but structurally rather than by decree: siblings on the same step
+     share a padding value and a type rung, so they resolve to the same height.
+     See typography-migration-log.md Change 9.
+
+     WHY --form-radius-* AND --form-padding-* SURVIVE. They are not the same
+     problem, and deleting them by analogy would make the file worse:
+
+       --form-radius-* is NOT a passthrough. It encodes a documented mapping —
+       --radius-control's description says "inputs at xs/sm", --radius-surface's
+       says "inputs at md/lg". Delete it and 13 components each restate that. For
+       type, writing the mapping out per component bought visibility because the
+       hook was hiding the rung offset; here it hides nothing, so the hook is
+       doing honest work.
+
+       --form-padding-* reads --spacing-* directly, and that is CORRECT, not a
+       tier skip. Spacing is one of the two CORE sets (see SPEC.md): universal,
+       shared by every theme, meant to be consumed directly. There is nothing for
+       a semantic layer to intervene in, which is why tier 2 has no spacing layer
+       and why a --control-padding-* role should not be invented. */
   /* size — xs */
-  --form-padding-y-xs: var(--spacing-100);
+  --form-padding-y-xs: var(--spacing-200);
   --form-padding-x-xs: var(--spacing-200);
-  --form-font-size-xs: var(--typography-label-2xs-font-size);
-  --form-height-xs: var(--control-height-xs, 28px);
   --form-radius-xs: var(--radius-control);
   /* size — sm */
-  --form-padding-y-sm: var(--spacing-150);
+  --form-padding-y-sm: var(--spacing-250);
   --form-padding-x-sm: var(--spacing-250);
-  --form-font-size-sm: var(--typography-label-xs-font-size);
-  --form-height-sm: var(--control-height-sm, 32px);
   --form-radius-sm: var(--radius-control);
   /* size — md (default) */
-  --form-padding-y-md: var(--spacing-200);
+  --form-padding-y-md: var(--spacing-300);
   --form-padding-x-md: var(--spacing-300);
-  --form-font-size-md: var(--typography-label-md-font-size);
-  --form-height-md: var(--control-height-md, 40px);
   --form-radius-md: var(--radius-surface);
   /* size — lg */
-  --form-padding-y-lg: var(--spacing-300);
+  --form-padding-y-lg: var(--spacing-400);
   --form-padding-x-lg: var(--spacing-400);
-  --form-font-size-lg: var(--typography-body-lg-font-size);
-  --form-height-lg: var(--control-height-lg, 48px);
   --form-radius-lg: var(--radius-surface);
   /* colors */
   --form-bg: var(--color-background-raised);
@@ -67,12 +115,6 @@
   --form-label-color: var(--color-content-secondary);
   --form-help-color: var(--color-content-muted);
   --form-error-color: var(--color-content-danger);
-  /* Was filed under the esa-select group in the HOOKIFY block, which read as a
-     per-component hook. It is a family token: esa-select and esa-text-field
-     both read it, and any control with a label wants the same weight. Its
-     partner --form-label-font-size is deliberately NOT declared — see the note
-     where it used to sit. */
-  --form-label-font-weight: var(--font-weight-medium, 500);
   /* structure */
   /* Every form edge, including the checkbox box and the radio circle. There was
      briefly a --form-indicator-border-width at --border-width-200, added because both
@@ -86,7 +128,6 @@
      justify a change that came from a bug. It also skipped tier 2 entirely by reading
      --border-width-200 directly, which is the tier violation the audit exists to catch. */
   --form-border-width: var(--border-width-default);
-  --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
 
@@ -461,15 +502,11 @@
   /* esa-range-slider */
   --fill-percent: 0%;
 
-  /* --form-label-font-size is intentionally NOT declared here. It is the
-     umbrella case the header describes: esa-select falls back to
-     --_field-font-size and esa-text-field to --_label-font-size, so there is no
-     one value this could hold without pinning every size to it. It was also
-     declared as `var(--_field-font-size)` — a PRIVATE, which exists only inside
-     a component's shadow root and resolves to nothing at :root, so the
-     declaration was inert and every consumer was already running on its own
-     fallback. Stays ad-hoc; the component pages document it as a hook.
-     --form-label-font-weight moved up to the FORMS section, where it belongs. */
+  /* --form-label-font-size used to be argued about here. It is gone as of
+     2026-08-14 along with the rest of the size-only ramp — a label's size and
+     weight now arrive together as a composite, so the umbrella problem this note
+     described (no single value that could serve every size) stopped existing
+     rather than being solved. See the FORMS header. */
 
   /* esa-header-nav */
   --header-nav-avatar-bg: var(--color-background-brand, #43608a);

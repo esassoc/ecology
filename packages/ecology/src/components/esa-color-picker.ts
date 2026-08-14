@@ -1,4 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/** The label is UI text. The hex field is the one value slot in the kit set in the
+    MONO face — a hex code is tabular, so it reads code-* rather than body-*. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const CODE_TYPE  = { xs: 'code-sm', sm: 'code-sm', md: 'code-md', lg: 'code-lg' } as const;
 
 /**
  * esa-color-picker — form-associated Lit Web Component.
@@ -19,6 +25,7 @@ export class EsaColorPicker extends LitElement {
     size: { type: String, reflect: true },
     swatches: { type: Array },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     showInput: { type: Boolean, attribute: 'show-input' },
     value: { type: String },
   };
@@ -27,6 +34,8 @@ export class EsaColorPicker extends LitElement {
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare swatches: string[];
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare showInput: boolean;
   declare value: string;
 
@@ -46,6 +55,13 @@ export class EsaColorPicker extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this.internals.setFormValue(this.value);
+  }
+
+  // A value set from SCRIPT (el.value = '#ff0000') has to reach the form too.
+  // Only commit() used to call setFormValue, so a programmatically set colour
+  // rendered red and submitted the default black.
+  willUpdate(changed: Map<string, unknown>): void {
+    if (changed.has('value')) this.internals.setFormValue(this.value);
   }
 
   private commit(val: string): void {
@@ -81,7 +97,7 @@ export class EsaColorPicker extends LitElement {
 
   render() {
     return html`
-      ${this.label ? html`<label class="label">${this.label}</label>` : null}
+      ${this.label ? html`<label class="label typography-${LABEL_TYPE[this.size]}">${this.label}</label>` : null}
       <div class="controls">
         <div class="input-row">
           <label class="swatch-input">
@@ -97,7 +113,7 @@ export class EsaColorPicker extends LitElement {
           ${this.showInput
             ? html`<input
                 type="text"
-                class="hex-input"
+                class="hex-input typography-${CODE_TYPE[this.size]}"
                 .value=${this.value}
                 ?disabled=${this.disabled}
                 @change=${this.onHexInput}
@@ -128,37 +144,35 @@ export class EsaColorPicker extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
-      --_preview-size: 40px;
+      --_preview-size: 40px; /* was --control-height-*, now standalone — see note */
       --_swatch-size: 28px;
-      --_font-size: var(--form-font-size-md, 14px);
-      --_height: var(--form-height-md, 40px);
+      --_pad-y: var(--form-padding-y-md, 0.75rem);
       --_radius: var(--form-radius-md, 8px);
       --_padding-x: var(--form-padding-x-md, 12px);
     }
     :host([size='xs']) {
       --_preview-size: 28px;
       --_swatch-size: 20px;
-      --_font-size: var(--form-font-size-xs, 11px);
-      --_height: var(--form-height-xs, 28px);
+      --_pad-y: var(--form-padding-y-xs, 0.5rem);
       --_radius: var(--form-radius-xs, 4px);
       --_padding-x: var(--form-padding-x-xs, 8px);
     }
     :host([size='sm']) {
       --_preview-size: 32px;
       --_swatch-size: 24px;
-      --_font-size: var(--form-font-size-sm, 12px);
-      --_height: var(--form-height-sm, 32px);
+      --_pad-y: var(--form-padding-y-sm, 0.625rem);
       --_radius: var(--form-radius-sm, 6px);
       --_padding-x: var(--form-padding-x-sm, 8px);
     }
     :host([size='lg']) {
       --_preview-size: 48px;
       --_swatch-size: 32px;
-      --_font-size: var(--form-font-size-lg, 16px);
-      --_height: var(--form-height-lg, 48px);
+      --_pad-y: var(--form-padding-y-lg, 1rem);
       --_radius: var(--form-radius-lg, 10px);
       --_padding-x: var(--form-padding-x-lg, 16px);
     }
@@ -166,9 +180,7 @@ export class EsaColorPicker extends LitElement {
     .label {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 500);
+
       color: var(--color-content-primary, #171717);
     }
     .controls {
@@ -215,10 +227,10 @@ export class EsaColorPicker extends LitElement {
 
     .hex-input {
       width: 100px;
-      height: var(--_height);
-      padding: 0 var(--_padding-x);
-      font-family: var(--font-mono, monospace);
-      font-size: var(--_font-size);
+      /* A bare input with no flex centring — at padding:0 and no height token this
+         would collapse straight to its line box. */
+      padding: var(--_pad-y) var(--_padding-x);
+      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
@@ -279,7 +291,8 @@ export class EsaColorPicker extends LitElement {
       opacity: 0.6;
       cursor: not-allowed;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-color-picker')) {

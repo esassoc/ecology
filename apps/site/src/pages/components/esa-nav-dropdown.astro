@@ -2,17 +2,19 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaAppBar from '@esa/ecology/esa-app-bar.astro';
 import EsaNavDropdown from '@esa/ecology/esa-nav-dropdown.astro';
 import EsaLinkColumn from '@esa/ecology/esa-link-column.astro';
 
-const props = [
-  { name: 'label', type: 'string', description: 'Trigger label.' },
-  { name: 'icon', type: 'string', description: 'Leading icon on the trigger.' },
-  { name: 'size', type: "'sm' | 'md'", default: "'md'", description: 'Trigger size (matches esa-icon-link).' },
-  { name: 'align', type: "'start' | 'end'", default: "'start'", description: 'Which edge of the trigger the panel aligns to.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Trigger label.",
+  icon: "Leading icon on the trigger.",
+  size: "Trigger size (matches esa-icon-link).",
+  align: "Which edge of the trigger the panel aligns to.",
+};
 ---
 <ComponentDoc name="Nav Dropdown" category="Navigation" slug="esa-nav-dropdown" type=".astro" status="stable"
   summary="An <a href='/components/esa-icon-link'>Icon Link</a> trigger paired with a floating panel via a native <code>&lt;details&gt;</code> disclosure — zero runtime JS. The panel is slotted, so it holds any menu; the chevron rotates when open. Compose it inside an <a href='/components/esa-app-bar'>App Bar</a> for chrome nav.">
@@ -42,6 +44,6 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-nav-dropdown" describe={describe} />
   </Section>
 </ComponentDoc>

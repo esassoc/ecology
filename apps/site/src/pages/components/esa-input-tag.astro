@@ -2,19 +2,23 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Visible label rendered above the field.' },
-  { name: 'hint', type: 'string', default: "''", description: 'Helper text shown below the field.' },
-  { name: 'placeholder', type: 'string', default: "'Search or add...'", description: 'Placeholder shown when no tokens are selected.' },
-  { name: 'options', type: '{ value, label }[]', default: '[]', description: 'Optional suggestion list. Set as a property. When provided, a chevron toggles a filtered dropdown.' },
-  { name: 'value', type: 'string[]', default: '[]', description: 'Selected tokens. Set/read as a property; mirrored to the form as a comma-joined string.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required and renders an asterisk on the label.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction and hides the remove buttons.' },
-  { name: 'name', type: 'string', default: "''", description: 'Form field name used when the element participates in a form.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Visible label rendered above the field.",
+  "help-text": "Helper text shown below the field.",
+  "error-text": "Validation message below the field. Replaces help-text and reddens the border.",
+  hint: "DEPRECATED — renamed to help-text. Still honoured, and warns in the console.",
+  placeholder: "Placeholder shown when no tokens are selected.",
+  options: "Optional suggestion list. Set as a property. When provided, a chevron toggles a filtered dropdown.",
+  value: "Selected tokens. Set/read as a property; mirrored to the form as a comma-joined string.",
+  size: "Control size (shared form scale).",
+  required: "Blocks submission while no token has been added (valueMissing), and renders an asterisk on the label. A half-typed term that was never committed does not count.",
+  disabled: "Disables interaction and hides the remove buttons.",
+  name: "Form field name — the key this control submits under.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string[] }>', description: 'Fired whenever tokens are added or removed. Composed and bubbling; detail.value is the current array of token values.' },
@@ -50,12 +54,15 @@ const events = [
   </Section>
 
   <Section id="states" title="States">
-    <p>The required asterisk, hint text, and disabled state are attribute-driven. Disabled fields keep their chips but drop the remove buttons.</p>
+    <p>The required asterisk, helper text, and disabled state are attribute-driven. Disabled fields keep their chips but drop the remove buttons.
+    <code>error-text</code> replaces <code>help-text</code> in the slot below the field and reddens the border, so the two never stack.</p>
     <Preview code={`<esa-input-tag label="Required" required placeholder="At least one tag"></esa-input-tag>
-<esa-input-tag label="With hint" hint="Press Enter to add each tag."></esa-input-tag>
+<esa-input-tag label="With help" help-text="Press Enter to add each tag."></esa-input-tag>
+<esa-input-tag label="With error" error-text="Add at least one tag."></esa-input-tag>
 <esa-input-tag label="Disabled" disabled></esa-input-tag>`}>
       <esa-input-tag label="Required" required placeholder="At least one tag"></esa-input-tag>
-      <esa-input-tag label="With hint" hint="Press Enter to add each tag." placeholder="Add a tag"></esa-input-tag>
+      <esa-input-tag label="With help" help-text="Press Enter to add each tag." placeholder="Add a tag"></esa-input-tag>
+      <esa-input-tag label="With error" error-text="Add at least one tag." placeholder="Add a tag"></esa-input-tag>
       <esa-input-tag id="it-disabled" label="Disabled" disabled></esa-input-tag>
     </Preview>
   </Section>
@@ -75,7 +82,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-input-tag" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

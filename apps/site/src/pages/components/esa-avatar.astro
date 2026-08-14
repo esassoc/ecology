@@ -2,17 +2,19 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import Avatar from '@esa/ecology/esa-avatar.astro';
 
-const props = [
-  { name: 'name', type: 'string', default: "''", description: 'Used to derive initials and a deterministic background hue.' },
-  { name: 'initials', type: 'string', description: 'Explicit initials, overriding the first+last derivation from name. For callers that carry their own rule — esa-header-nav takes the first letter of every word capped at two, so "Mary Jane Watson" is MJ there and MW by default here.' },
-  { name: 'src', type: 'string', default: "''", description: 'Image URL. When set, renders the photo instead of initials.' },
-  { name: 'icon', type: 'string', default: "''", description: 'Lucide icon name for an icon fallback (defaults to a user glyph).' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Avatar diameter (20 / 28 / 40 / 56px).' },
-  { name: 'shape', type: "'circle' | 'square'", default: "'circle'", description: 'Fully rounded or rounded-square.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  name: "Used to derive initials and a deterministic background hue.",
+  initials: "Explicit initials, overriding the first+last derivation from name. For callers that carry their own rule — esa-header-nav takes the first letter of every word capped at two, so \"Mary Jane Watson\" is MJ there and MW by default here.",
+  src: "Image URL. When set, renders the photo instead of initials.",
+  icon: "Lucide icon name for an icon fallback (defaults to a user glyph).",
+  size: "Avatar diameter (20 / 28 / 40 / 56px).",
+  shape: "Fully rounded or rounded-square.",
+};
 ---
 <ComponentDoc name="Avatar" category="Display" slug="esa-avatar" type=".astro" status="stable"
   summary="Compact identity marker. Falls back image → initials → user icon, with a deterministic background hue derived from the name.">
@@ -58,7 +60,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-avatar" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

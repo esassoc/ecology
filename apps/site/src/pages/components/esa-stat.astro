@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import Stat from '@esa/ecology/esa-stat.astro';
 
-const props = [
-  { name: 'value', type: 'string | number', description: 'The metric itself — rendered large, in the display face.' },
-  { name: 'label', type: 'string', description: 'What the value counts. Sentence case, readable body size — not an uppercase overline.' },
-  { name: 'sub', type: 'string', description: 'Optional muted caption under the label (a delta, a period, a qualifier).' },
-  { name: 'accent', type: 'boolean', default: 'false', description: 'Tints the value with the brand secondary emphasis. Off by default keeps it primary text.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  value: "The metric itself — rendered large, in the display face.",
+  label: "What the value counts. Sentence case, readable body size — not an uppercase overline.",
+  sub: "Optional muted caption under the label (a delta, a period, a qualifier).",
+  accent: "Tints the value with the brand secondary emphasis. Off by default keeps it primary text.",
+};
 ---
 <ComponentDoc name="Stat" category="Layout & Sections" slug="esa-stat" type=".astro" status="stable"
   summary="A single-metric block: a big display value, a readable label, and an optional muted caption. Replaces the bespoke .stat / .stat__value / .stat__label cluster every prototype re-implements.">
@@ -69,7 +71,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-stat" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

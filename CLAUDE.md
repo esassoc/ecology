@@ -38,6 +38,61 @@ The drift guard in `apps/site/src/data/catalog.ts` only enforces that every
 source file is CATEGORISED; a missing doc page degrades silently to an unlinked
 catalog row, so check both when adding a component.
 
+## Doc pages generate their own API tables
+A component page's **API table is generated from the component source**, not
+authored — `apps/site/src/data/component-api.ts` reads `interface Props` +
+the `Astro.props` destructuring (`.astro`) or `static properties` + `declare` +
+constructor defaults + public get/set accessors (Lit), expands local `type`
+aliases so unions show their real values, and `apps/site/src/components/ApiTable.astro`
+renders it. Pages supply **prose only**, as `const describe = { propName: '…' }`
+keyed by prop name — the *attribute* name for web components (`label-position`,
+not `labelPosition`). A key matching no prop in source is a build-time
+`⚠️ API drift` warning; so is a documented event the component never dispatches.
+Never re-add a hand-written `props` array: through 2026-08-14 they were authored,
+and `esa-button` silently shipped a 4th `appearance` (`soft`) plus `href`/
+`target`/`rel` that the page never mentioned. Only the three `type="reference"`
+pages (`esa-grid`, `esa-map`, `esa-rich-text-editor`) keep hand-written tables —
+they wrap external libraries and have no source file here. Authored `methods`
+and standalone `events` tables still use `@esa/docs/Api.astro` directly.
+**Stale prose is still possible** — the guard checks names, not meaning.
+Express a prop's default in the `Astro.props` destructuring (`variant = 'primary'`),
+never in a fallback chain below it — the extractor reads defaults from the
+destructuring, so any other form silently drops the default from the docs.
+
+## Renaming a component prop
+`migrations.json` now has a third `kind` alongside `token` and `class`: **`prop`**,
+which MUST carry `components` (the tags it applies to) and SHOULD carry `module`
+(the import specifier). A prop name means nothing on its own — `color` was a
+button prop, `esa-loading-spinner`'s genuine CSS-colour prop, AND the commonest
+declaration in any stylesheet, so the rewrite is tag-scoped via `renameProp` in
+`scripts/lib/token-rename.mjs` (tested there — the spinner case is the regression
+test). `module` makes it also resolve **aliased imports** per file: `import Button
+from '@esa/ecology/esa-button.astro'` renders `<Button …>`, which a fixed tag list
+cannot see, and hard-coding `Button` would hit any spoke component sharing the
+name. Reading the binding from the file's own imports gets both. Omit `module`
+and a spoke with an aliased import gets a **false all-clear** from `/update-tokens`
+AND `doctor` — the hub's own esa-page-header page was exactly that case.
+
+A prop rename needs **both halves**:
+1. the `prop` row, so `/update-tokens` rewrites spoke source; and
+2. the component keeping the old name in `Props` and warning at build time.
+
+Half 2 is not politeness. `esa-button` has an index signature, so a dropped
+`color` would be swept into `...rest` and spread onto the native `<button>` as a
+junk attribute — the button would render `primary` with no error anywhere. It also
+covers what no static scan can reach: a binding re-exported through a barrel file
+or chosen at runtime. Unlike a token row, NO alias is emitted into `tokens.css`;
+`build.js` skips non-`token` kinds. A prop that was never released needs NO row and
+no shim — `esa-button`'s `iconRight` shipped under that name from the start.
+
+Done so far, both 2026-08-14: `button-color-to-variant` (every other component
+already called this axis `variant`) and `icon-link-trailing-to-icon-right`.
+The naming test both settled on: **what would someone type WITHOUT reading the
+docs?** Nobody guesses `trailing`, and it didn't read as a pair with `icon`.
+`iconRight` is physical rather than logical on purpose — there is no RTL anywhere
+in this repo (no `dir`, no i18n, no locale), so `trailing` was defending a case
+that doesn't exist, and if RTL ever arrives the fix is one row here plus a shim.
+
 ## Component buckets
 - **Presentational → `.astro`.** Golden pattern: `packages/ecology/src/components/esa-badge.astro`.
 - **Interactive → Lit Web Component (`.ts`).** Golden pattern: `esa-switch-toggle.ts`.

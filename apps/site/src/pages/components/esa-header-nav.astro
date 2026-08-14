@@ -2,7 +2,7 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import EsaHeaderNav from '@esa/ecology/esa-header-nav.astro';
 
@@ -22,10 +22,12 @@ const items = [
 
 const user = { name: 'Jordan Rivers', email: 'jordan@esassoc.com' };
 
-const props = [
-  { name: 'items', type: 'EsaHeaderNavItem[]', default: '[]', description: 'Primary nav links. Each is { label; href?; icon?; children? }; an item with children renders a dropdown.' },
-  { name: 'user', type: 'EsaHeaderNavUser', description: 'Optional signed-in user { name; email?; avatarUrl?; initials? }. When present, renders the avatar + user menu.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  items: "Primary nav links. Each is { label; href?; icon?; children? }; an item with children renders a dropdown.",
+  user: "Optional signed-in user { name; email?; avatarUrl?; initials? }. When present, renders the avatar + user menu.",
+};
 
 const slots = [
   { name: 'brand', type: 'slot', description: 'Left-aligned logo / wordmark area.' },
@@ -62,7 +64,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-header-nav" describe={describe} />
     <h3>Slots</h3>
     <PropsTable rows={slots} />
     <p>Nav dropdowns and the user menu are native details/summary disclosures (via esa-nav-dropdown) — no JavaScript required.</p>

@@ -35,9 +35,18 @@ all new components follow.
    called `normal` because it is this system's default, not because CSS has a
    keyword spelled the same way. `--line-height-normal` is **1.6 by definition**;
    CSS `line-height: normal` (~1.2) is a different thing and the token has never
-   claimed to be it. Same for `--letter-spacing-normal: 0.01em`. Nobody reading
+   claimed to be it. Nobody reading
    `var(--line-height-normal)` is asking for the keyword — the `var()` says they
    want the token. (Tailwind's `leading-normal` is 1.5 for exactly this reason.)
+
+   `--letter-spacing-normal` used to sit beside it here, at `0.01em`. It is **`0`
+   as of 2026-08-14** and no longer illustrates the point: the rung now happens to
+   equal the CSS keyword. That was not a retreat from the principle — it was that
+   the kit's real default tracking had nowhere to live, so the one token in the
+   set whose name promises a specific value was the one holding something else.
+   The 0.01em moved to `--letter-spacing-default`, which every composite reads.
+   A rung and a keyword agreeing is fine; being *obliged* to agree is what this
+   section rejects.
 
    This does **not** relax the rule for value names. Where a token's value *is*
    a CSS keyword — `--text-transform-uppercase`, `--font-style-italic` — the
@@ -52,14 +61,49 @@ all new components follow.
    - colour — `--color-background-brand`, `--color-background-raised`, `--color-content-secondary`
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
    - size — `--control-height-{xs,sm,md,lg}`, `--chip-height-*`
-   - UI type — `--font-size-ui-{xs,sm,md,lg}` (chrome, not prose — prose uses
-     the typography composites in `src/typography.css`)
+   - type — the **composites**, `--typography-<intention>[-<size>]-<property>`,
+     plus the faces (`--font-sans | -mono | -display`) and named weights they are
+     assembled from. There is no separate chrome ramp. A `--font-size-ui-*` set
+     existed until 2026-08-14 on the theory that interface text was a different
+     kind of thing from prose; it was deleted because a size-only scale running
+     parallel to the composites is what lets a component pick a size without
+     adopting a composite. Controls now name the same composites everything else
+     does — see `docs/typography-adoption-plan.md` D1–D3 and the control-step
+     mapping in `semantic/size.json`.
    - elevation — `--elevation-1…6`
-   - layout — `--sidebar-width`, `--header-height`, `--content-max-width`
+   - layout — `--sidebar-width`, `--sidebar-width-collapsed`. This category is
+     nearly empty on purpose: `--header-height`, `--footer-height` and the
+     `--content-*-width` trio were deleted 2026-08-14 with zero readers between
+     them. A dimension token nothing reads cannot be re-pointed to any effect, so
+     it is a theming surface that only appears to exist. The sidebar pair stays
+     because it is a real agreement — the rail, the content offset and the
+     collapse transition must land on the same number.
 
-   **Components read this tier, never a primitive.** A component reaching past
-   it (`border-radius: var(--radius-200)`) is the bug that forces a theme to
-   move a primitive, because the semantic layer no longer covers the property.
+   **Components read this tier, never a primitive — except the CORE set.** A
+   component reaching past it (`border-radius: var(--radius-200)`) is the bug
+   that forces a theme to move a primitive, because the semantic layer no longer
+   covers the property.
+
+   **The exception is not a loophole, it is a named set.** Two tier-1 groups are
+   *universal* — shared by every theme, exportable, and meant to be consumed
+   directly by components in both design and code:
+
+   - **spacing** (`--spacing-*`) — every theme follows the same grid. Density is
+     not a branding axis.
+   - **the neutral palette** (`--color-gray-*`, `--color-black-a*`,
+     `--color-white-a*`) — the greyscale the UI is built on.
+
+   A theme re-points brand ramps; it never re-points these. So there is nothing
+   for a semantic layer to intervene in, and inserting one would be indirection
+   with no theme behind it — which is why `spacing` has **no tier-2 layer at all**
+   and why `--form-padding-x-lg: var(--spacing-400)` is correct rather than
+   tolerated. The set is defined in `apps/site/src/data/token-graph.ts`
+   (`CORE_SETS`) and rendered as "Tier 1 · Core / universal" on `/debug/tokens`;
+   that definition is the authority, not this list.
+
+   Read the rule as: **a component reaching past tier 2 for something a theme
+   would want to re-point is the bug.** Core tokens are exactly the tokens no
+   theme re-points.
 
    Most semantic tokens alias a primitive. **Dimension roles are allowed to
    define instead** — there is no tier-1 ramp behind a control height or a

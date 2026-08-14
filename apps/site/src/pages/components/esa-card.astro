@@ -2,18 +2,20 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import Card from '@esa/ecology/esa-card.astro';
 
-const props = [
-  { name: 'title', type: 'string', description: 'Header title. Presence (or a header/actions slot) renders the header band.' },
-  { name: 'subtitle', type: 'string', description: 'Secondary line under the title.' },
-  { name: 'icon', type: 'string', description: 'Lucide icon name shown left of the title.' },
-  { name: 'variant', type: "'default' | 'outlined' | 'elevated' | 'filled'", default: "'default'", description: 'Surface treatment: bordered, shadowed, or sunken.' },
-  { name: 'headerVariant', type: "'default' | 'primary' | 'muted'", default: "'default'", description: 'Header band tint.' },
-  { name: 'padding', type: "'none' | 'compact' | 'default' | 'spacious'", default: "'default'", description: 'Body and header padding scale.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  title: "Header title. Presence (or a header/actions slot) renders the header band.",
+  subtitle: "Secondary line under the title.",
+  icon: "Lucide icon name shown left of the title.",
+  variant: "Surface treatment: bordered, shadowed, or sunken.",
+  headerVariant: "Header band tint.",
+  padding: "Body and header padding scale.",
+};
 
 const slots = [
   { name: 'default', type: 'slot', description: 'Card body content.' },
@@ -89,7 +91,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-card" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} />
   </Section>

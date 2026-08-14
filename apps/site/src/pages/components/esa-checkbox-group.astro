@@ -2,7 +2,7 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
 const options = JSON.stringify([
   { label: 'Air quality', value: 'air' },
@@ -11,14 +11,16 @@ const options = JSON.stringify([
   { label: 'Noise (unavailable)', value: 'noise', disabled: true },
 ]);
 
-const props = [
-  { name: 'options', type: 'EsaOption[] | string', default: '[]', description: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute." },
-  { name: 'value', type: 'string[]', default: '[]', description: 'Selected option values.' },
-  { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
-  { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
-  { name: 'name', type: 'string', default: "''", description: 'Field name each selected value is submitted under.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  options: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute.",
+  value: "Selected option values.",
+  label: "Group label rendered above the options.",
+  orientation: "Stacking direction of the options.",
+  size: "Box and label size.",
+  name: "Field name each selected value is submitted under.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string[] }>', description: 'Fired when any option is toggled. Composed and bubbling; detail.value is the current selection array.' },
@@ -73,7 +75,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-checkbox-group" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

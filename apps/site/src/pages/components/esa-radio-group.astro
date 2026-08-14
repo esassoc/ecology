@@ -2,7 +2,7 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
 const options = JSON.stringify([
   { label: 'Low', value: 'low' },
@@ -11,13 +11,15 @@ const options = JSON.stringify([
   { label: 'Critical (locked)', value: 'critical', disabled: true },
 ]);
 
-const props = [
-  { name: 'options', type: 'EsaOption[] | string', default: '[]', description: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute." },
-  { name: 'value', type: 'string | null', default: 'null', description: 'The single selected option value.' },
-  { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
-  { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Circle and label size.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  options: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute.",
+  value: "The single selected option value.",
+  label: "Group label rendered above the options.",
+  orientation: "Stacking direction of the options.",
+  size: "Circle and label size.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when a new option is selected. Composed and bubbling; detail.value is the chosen string.' },
@@ -72,7 +74,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-radio-group" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

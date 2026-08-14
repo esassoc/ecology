@@ -145,6 +145,26 @@ for (const file of targets) {
       else if (px < 16 && !allowed) add('warning', 'font-below-base', file, ln, `font-size ${fm[0]} (~${px}px) — OK only for dense/meta text`);
     }
 
+    // (c2) Typography must come from a COMPOSITE, not be assembled at the call site.
+    //      D2 of docs/typography-adoption-plan.md: a component names the role
+    //      (`class="typography-label-md"`) rather than listing a family, a size, a
+    //      weight, a leading and a tracking. Referencing the five property tokens
+    //      separately is the same problem in a better disguise — it lets a call site
+    //      take four of the five and invent the fifth, which is how the vocabulary
+    //      stops meaning anything. This check exists because the 100 tier-1 reads
+    //      that made the P2 migration necessary accumulated precisely because
+    //      nothing ever objected.
+    //
+    //      Flags a raw size/weight/face, NOT a --typography-*-<prop> read: pulling one
+    //      property off a composite is legitimate in the rare spot that genuinely needs
+    //      it (a tier-3 hook narrowing one axis), and the composite is still the source.
+    const typeAssembly = text.match(
+      /(font-size|font-weight|font-family)\s*:\s*(?!.*--typography-)[^;]*var\(\s*--(font-size-|font-weight-|font-sans|font-mono|font-display|form-font-size)/i,
+    );
+    if (typeAssembly)
+      add('warning', 'type-not-composite', file, ln,
+        `${typeAssembly[1]} assembled from a raw token — name a composite instead (class="typography-<intention>-<size>")`);
+
     // (d) Component-first: no hand-rolled form primitives in .astro.
     const pm = text.match(/<(input|select|textarea)\b/i);
     if (pm && isAstro)
