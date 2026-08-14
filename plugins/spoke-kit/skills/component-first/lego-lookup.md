@@ -47,13 +47,19 @@ Gap is declarative: `data-gap="none|xs|sm|md|lg|xl"` on the element (or override
 cat node_modules/@esa/tokens/layouts.css   # full set + per-primitive knobs
 ```
 
-**Typography roles** (`@esa/tokens/type-roles.css`) — style text with role classes, **never
+**Typography composites** (`@esa/tokens/typography.css`) — style text with a composite class, **never
 raw `--font-size-*` in pages** (that's a smell — see design-principles). Roles:
-`.type-display`, `.type-page-title`, `.type-section-title`, `.type-card-title`, `.type-body`,
-`.type-body-large`, `.type-body-small`, `.type-label`, `.type-caption`, `.type-overline`,
-`.type-code`.
+`.typography-display`, `.typography-heading-lg`, `.typography-heading-md`, `.typography-title`,
+`.typography-body-lg`, `.typography-body-md`, `.typography-body-sm`, `.typography-label`, `.typography-meta`,
+`.typography-eyebrow`, `.typography-code`.
+
+Naming is `.type-<intention>[-<size>]`: the intention is the job the text does,
+the size variant appears only where an intention has more than one. The older
+names (`.type-page-title`, `.type-card-title`, `.type-body`, `.type-caption`,
+`.type-overline`, …) still work as deprecated aliases with identical output —
+use the new ones in new code.
 ```bash
-cat node_modules/@esa/tokens/type-roles.css
+cat node_modules/@esa/tokens/typography.css
 ```
 
 **Mid-tier legos** — composed patterns above the atom level; prefer them over assembling raw parts:
@@ -106,7 +112,7 @@ primitives / words are rejected.
 3. **BUILD a new `<spoke>-*` component** — compose primitives + legos *inside* it. Then
    the page just references it.
 
-A primitive (`.stack`/`.grid`/`.repel`/`.center`/…) and a type role are the page **spine**
+A primitive (`.stack`/`.grid`/`.repel`/`.center`/…) and a typography composite are the page **spine**
 and live **inside** components — they are *never themselves* a section resolver.
 
 **Write the manifest FIRST**, before any code — outline the sections, resolve each, decide

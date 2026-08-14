@@ -1,6 +1,6 @@
 ---
 name: design-principles
-description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), neutral house chrome (value-layered off-white surfaces, never a brand fill), type-roles-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
+description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), neutral house chrome (value-layered off-white surfaces, never a brand fill), typography-composites-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
 ---
 
 # Design Principles (canonical)
@@ -104,12 +104,12 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   text. Each brand theme designates its families, including a document/serif
   voice for legal or quoted content (Beacon's is Besley) — use the theme's
   designated faces; don't hardcode a system-wide default.
-- **Type roles, not raw sizes.** Style text with the role classes in
-  `@esa/tokens/type-roles.css` (`.type-page-title`, `.type-section-title`,
-  `.type-card-title`, `.type-body`, `.type-label`, `.type-caption`, …) — they
+- **Typography composites, not raw sizes.** Style text with the composite classes in
+  `@esa/tokens/typography.css` (`.typography-heading-lg`, `.typography-heading-md`,
+  `.typography-title`, `.typography-body-md`, `.typography-label`, `.typography-meta`, …) — they
   bundle size + weight + line-height + family per role. **Raw `--font-size-*`
   in page CSS is a smell** (it scatters ad-hoc 200/250/300 sizes and drifts
-  from the scale). Don't default body text oversized — `.type-body` is the
+  from the scale). Don't default body text oversized — `.typography-body-md` is the
   baseline.
 - **Compress the content, stabilize the frame.** Data-dense surfaces compress
   *moderately* (the 14px dense floor above — don't overshoot into cramped);

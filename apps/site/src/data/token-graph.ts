@@ -374,9 +374,8 @@ const PRIMITIVE_CATEGORIES: {
   {
     label: 'Typography',
     note:
-      'The individual values available for font-family, font-size, font-weight, font-style, line-height, letter-spacing, and text-transform. Every one is named `--<css-property>-<value>` — the property it sets plus the value it holds — so the name reads as the declaration it ends up in. These are meant to be combined into COMPOSITE tokens at tier 2: a type role names one family + size + weight + line-height together, so components reference the role rather than assembling four primitives at the call site.',
-    gap:
-      'Two divergences remain. (1) There are still no text-transform or font-style primitives, and both are used literally in the kit — 5 `text-transform: uppercase`, 4 `font-style: italic`. They are deliberately NOT tokenised yet: with no tier-2 composite to consume them they would be orphan surface, which SPEC.md warns against. (2) There is no tier-2 typography COMPOSITE. The composite job is done by src/type-roles.css, which ships CSS utility CLASSES rather than tokens, so a type role cannot be referenced by a token, re-pointed by a theme, or exported to Figma the way a composite token could. What HAS been fixed: every tier-1 typography token now follows one shape, --<css-property>-<value>, and the family/weight ROLES moved to tier 2 where a spoke may legally re-point them.',
+      'The individual values available for font-family, font-size, font-weight, font-style, line-height, letter-spacing, and text-transform. Every one is named `--<css-property>-<value>` — the property it sets plus the value it holds — so the name reads as the declaration it ends up in. They are combined into COMPOSITE tokens at tier 2 (`--typography-<intention>[-<size>]-<property>`), which src/typography.css assembles into the `.type-*` classes. Components and spokes reference a role; nothing outside this tier assembles primitives at the call site.',
+    gap: undefined,
     match: (n) => /^--(font-|line-height-|letter-spacing-|text-transform-|font-style-)/.test(n),
     // Order matters and is fragile: every key here is a prefix of `--font-`, so
     // the most specific has to be claimed first. `--font-family-dm-sans` and

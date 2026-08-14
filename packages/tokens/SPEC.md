@@ -30,6 +30,20 @@ all new components follow.
      evenly spaced in the name regardless of the values behind them, and it
      leaves room to insert a step without renumbering everything after it.
 
+   **A scale-position name is ours, not CSS's.** In a named ramp — `none`,
+   `tight`, `normal`, `relaxed` — the words name *rungs*, and the middle rung is
+   called `normal` because it is this system's default, not because CSS has a
+   keyword spelled the same way. `--line-height-normal` is **1.6 by definition**;
+   CSS `line-height: normal` (~1.2) is a different thing and the token has never
+   claimed to be it. Same for `--letter-spacing-normal: 0.01em`. Nobody reading
+   `var(--line-height-normal)` is asking for the keyword — the `var()` says they
+   want the token. (Tailwind's `leading-normal` is 1.5 for exactly this reason.)
+
+   This does **not** relax the rule for value names. Where a token's value *is*
+   a CSS keyword — `--text-transform-uppercase`, `--font-style-italic` — the
+   name must be that keyword. The distinction is whether the last segment names
+   a position on a ramp or the value itself.
+
    **Primitives never move** — not in the hub, not in a theme.
 2. **Semantic** (`tokens/semantic/*.json` → compiled) — intent, referencing
    primitives. A spoke's brand identity lives here: re-point a semantic token
@@ -39,7 +53,7 @@ all new components follow.
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
    - size — `--control-height-{xs,sm,md,lg}`, `--chip-height-*`
    - UI type — `--font-size-ui-{xs,sm,md,lg}` (chrome, not prose — prose uses
-     the type-roles in `src/type-roles.css`)
+     the typography composites in `src/typography.css`)
    - elevation — `--elevation-1…6`
    - layout — `--sidebar-width`, `--header-height`, `--content-max-width`
 

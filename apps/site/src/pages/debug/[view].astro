@@ -327,13 +327,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
       <p class="cat-note">
         Typography is the interesting one: the intention vocabulary <em>already exists</em>, just as
-        CSS classes in <code>type-roles.css</code> rather than tokens. Because they are classes, Figma
+        CSS classes in <code>typography.css</code> rather than tokens. Because they are classes, Figma
         can&rsquo;t consume them and a spoke can&rsquo;t re-point them by overriding a token.
       </p>
       <table class="findings">
         <thead><tr><th>Rubric intention</th><th>Current</th><th></th></tr></thead>
         <tbody>
-          {t2.typeRoleMapping.map((m) => (
+          {t2.compositeMapping.map((m) => (
             <tr>
               <td><code>{m.rubric}</code></td>
               <td><code>{m.current}</code></td>
@@ -343,8 +343,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         </tbody>
       </table>
       <p class="cat-note">
-        All {t2.typeRoleClasses.length} classes as shipped:
-        {t2.typeRoleClasses.map((c) => <code class="vocab">.{c}</code>)}
+        All {t2.compositeClasses.length} classes as shipped:
+        {t2.compositeClasses.map((c) => <code class="vocab">.{c}</code>)}
       </p>
 
       <h3 class="sub">The non-colour tier-2 tokens</h3>
@@ -992,14 +992,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <b>The split that made it work.</b> The rule that tier-1 names describe values is what forced
         the roles out. <code>--font-sans</code> names a classification, not a face, and
         <code>--font-weight-regular: 350</code> names a job, not a weight — yet
-        <code>type-roles.css</code> documented both as the surface a spoke re-points, which made the
+        <code>typography.css</code> documented both as the surface a spoke re-points, which made the
         shipped type contract an instruction to re-point a primitive. These are the roles, now at
         tier 2 with their names unchanged, so no reader had to move:
       </p>
       <table class="findings">
         <thead><tr><th>Tier-2 role</th><th>Points at</th></tr></thead>
         <tbody>
-          {t1.typeRoles.map((r) => (
+          {t1.composites.map((r) => (
             <tr>
               <td><code>{r.name}</code></td>
               <td><code class="vocab">{r.value}</code></td>
@@ -1345,24 +1345,35 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         </details>
       ))}
 
-      <h3 class="sub">Typography · grouped by intention</h3>
+      <h3 class="sub">Typography · composites, grouped by intention</h3>
       <p class="cat-note">
-        There are <b>zero</b> tier-2 typography <em>tokens</em>. The layer exists as the composable
-        classes in <code>type-roles.css</code> — composites of the tier-1 typography primitives, in
-        exactly the shape the rubric describes for tier 2, just not expressed as tokens. Because they
-        are classes, Figma can&rsquo;t consume them and a spoke can&rsquo;t re-point them by overriding
-        a token. All {t2.typeCoverage.roles} roles are shown: {t2.typeCoverage.placed} across the six
-        intentions, {t2.typeCoverage.outliers} outside them.
+        This section used to open by saying there were <b>zero</b> tier-2 typography tokens — that the
+        layer existed only as classes in <code>typography.css</code>, so Figma couldn&rsquo;t consume
+        it and a spoke couldn&rsquo;t re-point it. That gap is closed. Every cell below now names a
+        real tier-2 token, and the class is nothing but the assembly of them.
       </p>
       <p class="cat-note">
-        The six property columns are fixed, so an unset property is visible as a hole rather than an
-        absence. Two of the six are opt-in by design — <code>font-family</code> unset means
-        &ldquo;the body face&rdquo; and <code>text-transform</code> unset means <code>none</code> — so
-        those read <span class="dim">unset</span> quietly. The other four must be pinned for the role
-        to be a complete composite; missing one is marked <span class="req">required</span>.
+        The matrix is the composite and its parts in one view: the row is the role, each column is one
+        property, and each cell shows the <code>--typography-*</code> token that supplies it plus what
+        that token resolves to. {t2.typeCoverage.placed} composites across {t2.typeIntentions.length} intentions, grouped by
+        the intention DERIVED from each name rather than by an authored list. The six property columns are fixed, so an unset
+        property would read as a hole rather than an absence — there are none left: every composite now
+        pins all five (six for <code>eyebrow</code>), so no composite inherits a type property from
+        whatever it happens to sit inside.
       </p>
+      {t2.deprecatedAliases.length > 0 && (
+        <p class="cat-gap">
+          <b>Not counted above:</b> {t2.deprecatedAliases.length} deprecated aliases —
+          {' '}{t2.deprecatedAliases.map((c) => <code class="vocab">.{c}</code>)} — the pre-composite
+          names, kept because spoke markup lives outside this repo and deleting a selector would
+          silently unstyle live pages rather than fail loudly. Each resolves through the identical
+          tokens as its replacement, so they cannot drift. They are parsed separately rather than
+          filtered out, because a count of 19 roles where only 11 place into an intention reads as
+          unaccounted-for composites instead of aliases doing their job.
+        </p>
+      )}
 
-      {[...t2.typeIntentions, { label: 'Outside the six', definition: t2.typeOutliers.note, roles: t2.typeOutliers.roles, note: undefined }].map((intent) => (
+      {t2.typeIntentions.map((intent) => (
         <details class="tok-category prop type" data-group open>
           <summary>
             <span class="cat-label">{intent.label}</span>
@@ -1377,7 +1388,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
             <table class="tok-table type-table">
               <thead>
                 <tr>
-                  <th>Role</th>
+                  <th>Composite</th>
                   {t2.TYPE_PROPS.map((p) => <th>{p}</th>)}
                 </tr>
               </thead>

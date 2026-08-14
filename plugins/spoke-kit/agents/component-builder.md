@@ -1,6 +1,6 @@
 ---
 name: component-builder
-description: Use this agent to BUILD one new `<spoke>-*` section component in an @esa/ecology spoke, in parallel with sibling builders. The planner (e.g. /new-prototype) resolves a page's manifest, then spawns ONE component-builder per NEW section component — each owns a single file, so they run concurrently with no write conflict. Pre-loaded with the Ecology→Beacon→bcn- lookup order, the golden component patterns, and the token discipline. It composes legos + layout primitives + type roles INSIDE its component, never reinvents a primitive, never writes the page, never runs a build (siblings would race the shared cache). It returns a compact wiring summary the planner uses to assemble the page. Spawn it with a spec: the component name, its purpose, the props/slots to expose, which legos/primitives to compose, and a reference component to pattern-match.
+description: Use this agent to BUILD one new `<spoke>-*` section component in an @esa/ecology spoke, in parallel with sibling builders. The planner (e.g. /new-prototype) resolves a page's manifest, then spawns ONE component-builder per NEW section component — each owns a single file, so they run concurrently with no write conflict. Pre-loaded with the Ecology→Beacon→bcn- lookup order, the golden component patterns, and the token discipline. It composes legos + layout primitives + typography composites INSIDE its component, never reinvents a primitive, never writes the page, never runs a build (siblings would race the shared cache). It returns a compact wiring summary the planner uses to assemble the page. Spawn it with a spec: the component name, its purpose, the props/slots to expose, which legos/primitives to compose, and a reference component to pattern-match.
 tools: Read, Write, Edit, Bash, Grep, Glob, Skill
 model: opus
 color: purple
@@ -22,7 +22,7 @@ Return a compact **wiring summary**, nothing else:
 
 - `component`: the name + file path you wrote
 - `props`: the `Props` interface (names + types) and any named slots
-- `composed`: the legos / layout primitives / type roles you used inside it
+- `composed`: the legos / layout primitives / typography composites you used inside it
 - `escape`: any `bcn-lego-checked:` justification, if you genuinely had to go bespoke
 - `legoGap`: any missing lego or token hook you had to work around — a `/request-lego`
   candidate (or `null`)
@@ -40,8 +40,8 @@ When you need any UI inside your component, walk these in order, stop at the fir
    before using it.
 2. **Composition layer** — `@esa/tokens/layouts.css` primitives (`.stack` `.cluster`
    `.repel` `.grid` `.sidebar` `.switcher` `.frame` `.reel` `.center`; gap via
-   `data-gap="xs|sm|md|lg|xl"`) and `@esa/tokens/type-roles.css` roles (`.type-page-title`
-   `.type-card-title` `.type-body` `.type-label` …). Use these instead of bespoke flex/grid
+   `data-gap="xs|sm|md|lg|xl"`) and `@esa/tokens/typography.css` composites (`.typography-heading-lg`
+   `.typography-title` `.typography-body-md` `.typography-label` …). Use these instead of bespoke flex/grid
    or raw `--font-size-*`.
 3. **Beacon `ui-*`** (optional, if `~/Dev/Beacon` is cloned) — port faithfully.
 4. **Only then** bespoke, with an honest `<!-- bcn-lego-checked: … -->` reason naming what

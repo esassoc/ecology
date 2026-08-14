@@ -1,0 +1,237 @@
+/*
+ * Ecology — Typography COMPOSITE tokens, as CSS classes.
+ *
+ * CSS has no composite custom property, so a composite is expressed as a class.
+ * The class carries the SAME name as the tokens it assembles:
+ *
+ *   .typography-body-sm  <-  --typography-body-sm-font-size, -font-weight, …
+ *
+ * Naming is `<category>-<intention>[-<variant>]`. Category is `typography`;
+ * intention is the job the text does; the t-shirt variant appears only where an
+ * intention has more than one size.
+ *
+ * The word "role" is gone. It came from this repo, not from the model these
+ * names follow, and it named nothing the vocabulary did not already cover:
+ * a token has a CATEGORY, an INTENTION, an optional VARIANT and a PROPERTY.
+ * The old file name (`type-roles.css`) and class prefix (`.type-*`) are kept
+ * only as the deprecated aliases below.
+ *
+ * Every value below is a var(): no size, no weight, no literal. Re-point
+ * `--typography-heading-lg-font-size` and every large heading moves.
+ *
+ * COMPLETENESS: every composite sets all five properties. One left unset would
+ * inherit from whatever it sits inside, making the composite a partial
+ * definition whose rendering depends on context.
+ *
+ * THE TYPE CONTRACT (for spokes): a brand swaps two faces —
+ *   1. --font-sans      the body face  (default 'DM Sans')
+ *   2. --font-display   the headline face (defaults to the body face; display
+ *                       and heading-lg/md read it, so setting it gets distinct
+ *                       headlines for free).
+ * Both are TIER 2, as are the named weights. Weight VALUES are typeface-bound —
+ * the hub's numbers are DM Sans's optical weights — so a spoke overriding
+ * --font-sans also re-points --font-weight-* to its own face's weights. All
+ * tier-2 overrides; no primitive moves.
+ *
+ * RESPONSIVE: no mobile/tablet/desktop variants, because every --font-size-*
+ * primitive is a clamp() that scales with the viewport.
+ */
+
+
+.typography-display {
+  font-family: var(--typography-display-font-family);
+  font-size: var(--typography-display-font-size);
+  font-weight: var(--typography-display-font-weight);
+  line-height: var(--typography-display-line-height);
+  letter-spacing: var(--typography-display-letter-spacing);
+}
+
+.typography-heading-lg {
+  font-family: var(--typography-heading-lg-font-family);
+  font-size: var(--typography-heading-lg-font-size);
+  font-weight: var(--typography-heading-lg-font-weight);
+  line-height: var(--typography-heading-lg-line-height);
+  letter-spacing: var(--typography-heading-lg-letter-spacing);
+}
+
+.typography-heading-md {
+  font-family: var(--typography-heading-md-font-family);
+  font-size: var(--typography-heading-md-font-size);
+  font-weight: var(--typography-heading-md-font-weight);
+  line-height: var(--typography-heading-md-line-height);
+  letter-spacing: var(--typography-heading-md-letter-spacing);
+}
+
+.typography-title {
+  font-family: var(--typography-title-font-family);
+  font-size: var(--typography-title-font-size);
+  font-weight: var(--typography-title-font-weight);
+  line-height: var(--typography-title-line-height);
+  letter-spacing: var(--typography-title-letter-spacing);
+}
+
+.typography-body-lg {
+  font-family: var(--typography-body-lg-font-family);
+  font-size: var(--typography-body-lg-font-size);
+  font-weight: var(--typography-body-lg-font-weight);
+  line-height: var(--typography-body-lg-line-height);
+  letter-spacing: var(--typography-body-lg-letter-spacing);
+}
+
+.typography-body-md {
+  font-family: var(--typography-body-md-font-family);
+  font-size: var(--typography-body-md-font-size);
+  font-weight: var(--typography-body-md-font-weight);
+  line-height: var(--typography-body-md-line-height);
+  letter-spacing: var(--typography-body-md-letter-spacing);
+}
+
+.typography-body-sm {
+  font-family: var(--typography-body-sm-font-family);
+  font-size: var(--typography-body-sm-font-size);
+  font-weight: var(--typography-body-sm-font-weight);
+  line-height: var(--typography-body-sm-line-height);
+  letter-spacing: var(--typography-body-sm-letter-spacing);
+}
+
+.typography-label {
+  font-family: var(--typography-label-font-family);
+  font-size: var(--typography-label-font-size);
+  font-weight: var(--typography-label-font-weight);
+  line-height: var(--typography-label-line-height);
+  letter-spacing: var(--typography-label-letter-spacing);
+}
+
+.typography-meta {
+  font-family: var(--typography-meta-font-family);
+  font-size: var(--typography-meta-font-size);
+  font-weight: var(--typography-meta-font-weight);
+  line-height: var(--typography-meta-line-height);
+  letter-spacing: var(--typography-meta-letter-spacing);
+}
+
+.typography-eyebrow {
+  font-family: var(--typography-eyebrow-font-family);
+  font-size: var(--typography-eyebrow-font-size);
+  font-weight: var(--typography-eyebrow-font-weight);
+  line-height: var(--typography-eyebrow-line-height);
+  letter-spacing: var(--typography-eyebrow-letter-spacing);
+  text-transform: var(--typography-eyebrow-text-transform);
+}
+
+.typography-code {
+  font-family: var(--typography-code-font-family);
+  font-size: var(--typography-code-font-size);
+  font-weight: var(--typography-code-font-weight);
+  line-height: var(--typography-code-line-height);
+  letter-spacing: var(--typography-code-letter-spacing);
+}
+
+/* ---------------------------------------------------------------------------
+ * DEPRECATED — the shipped `.type-*` class names.
+ *
+ * Kept because spoke markup lives outside this repo: removing a selector would
+ * silently unstyle live pages rather than fail loudly. Each is an exact alias of
+ * its composite — same tokens, same output — so migrating is a find-and-replace
+ * with no visual diff. Remove once the spokes have migrated.
+ * ------------------------------------------------------------------------ */
+
+/* -> .typography-display */
+.type-display {
+  font-family: var(--typography-display-font-family);
+  font-size: var(--typography-display-font-size);
+  font-weight: var(--typography-display-font-weight);
+  line-height: var(--typography-display-line-height);
+  letter-spacing: var(--typography-display-letter-spacing);
+}
+
+/* -> .typography-heading-lg */
+.type-page-title {
+  font-family: var(--typography-heading-lg-font-family);
+  font-size: var(--typography-heading-lg-font-size);
+  font-weight: var(--typography-heading-lg-font-weight);
+  line-height: var(--typography-heading-lg-line-height);
+  letter-spacing: var(--typography-heading-lg-letter-spacing);
+}
+
+/* -> .typography-heading-md */
+.type-section-title {
+  font-family: var(--typography-heading-md-font-family);
+  font-size: var(--typography-heading-md-font-size);
+  font-weight: var(--typography-heading-md-font-weight);
+  line-height: var(--typography-heading-md-line-height);
+  letter-spacing: var(--typography-heading-md-letter-spacing);
+}
+
+/* -> .typography-title */
+.type-card-title {
+  font-family: var(--typography-title-font-family);
+  font-size: var(--typography-title-font-size);
+  font-weight: var(--typography-title-font-weight);
+  line-height: var(--typography-title-line-height);
+  letter-spacing: var(--typography-title-letter-spacing);
+}
+
+/* -> .typography-body-lg */
+.type-body-large {
+  font-family: var(--typography-body-lg-font-family);
+  font-size: var(--typography-body-lg-font-size);
+  font-weight: var(--typography-body-lg-font-weight);
+  line-height: var(--typography-body-lg-line-height);
+  letter-spacing: var(--typography-body-lg-letter-spacing);
+}
+
+/* -> .typography-body-md */
+.type-body {
+  font-family: var(--typography-body-md-font-family);
+  font-size: var(--typography-body-md-font-size);
+  font-weight: var(--typography-body-md-font-weight);
+  line-height: var(--typography-body-md-line-height);
+  letter-spacing: var(--typography-body-md-letter-spacing);
+}
+
+/* -> .typography-body-sm */
+.type-body-small {
+  font-family: var(--typography-body-sm-font-family);
+  font-size: var(--typography-body-sm-font-size);
+  font-weight: var(--typography-body-sm-font-weight);
+  line-height: var(--typography-body-sm-line-height);
+  letter-spacing: var(--typography-body-sm-letter-spacing);
+}
+
+/* -> .typography-label */
+.type-label {
+  font-family: var(--typography-label-font-family);
+  font-size: var(--typography-label-font-size);
+  font-weight: var(--typography-label-font-weight);
+  line-height: var(--typography-label-line-height);
+  letter-spacing: var(--typography-label-letter-spacing);
+}
+
+/* -> .typography-meta */
+.type-caption {
+  font-family: var(--typography-meta-font-family);
+  font-size: var(--typography-meta-font-size);
+  font-weight: var(--typography-meta-font-weight);
+  line-height: var(--typography-meta-line-height);
+  letter-spacing: var(--typography-meta-letter-spacing);
+}
+
+/* -> .typography-eyebrow */
+.type-overline {
+  font-family: var(--typography-eyebrow-font-family);
+  font-size: var(--typography-eyebrow-font-size);
+  font-weight: var(--typography-eyebrow-font-weight);
+  line-height: var(--typography-eyebrow-line-height);
+  letter-spacing: var(--typography-eyebrow-letter-spacing);
+  text-transform: var(--typography-eyebrow-text-transform);
+}
+
+/* -> .typography-code */
+.type-code {
+  font-family: var(--typography-code-font-family);
+  font-size: var(--typography-code-font-size);
+  font-weight: var(--typography-code-font-weight);
+  line-height: var(--typography-code-line-height);
+  letter-spacing: var(--typography-code-letter-spacing);
+}

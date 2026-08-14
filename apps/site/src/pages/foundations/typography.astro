@@ -2,10 +2,18 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+// The REAL composite stylesheet, so this page demonstrates the shipped artifact
+// rather than a copy of it. It used to carry local copies of every role, which
+// had already drifted — none of them set font-family, so the specimen was
+// showing something the class does not actually do.
+import '@esa/tokens/typography.css';
 
 const families = [
-  { token: '--font-sans', value: "'DM Sans', sans-serif", role: 'UI, body, headings' },
-  { token: '--font-mono', value: "'DM Mono', monospace", role: 'Code, tabular data, tokens' },
+  { token: '--font-sans', value: "'DM Sans', sans-serif", usedFor: 'UI, body, headings' },
+  { token: '--font-mono', value: "'DM Mono', monospace", usedFor: 'Code, tabular data, tokens' },
 ];
 
 const scale = [
@@ -27,42 +35,94 @@ const scale = [
 const weights = [
   { token: '--font-weight-light', value: 300, label: 'Light' },
   { token: '--font-weight-regular', value: 350, label: 'Regular' },
-  { token: '--font-weight-medium', value: 450, label: 'Medium' },
+  { token: '--font-weight-medium', value: 500, label: 'Medium' },
   { token: '--font-weight-semibold', value: 550, label: 'Semibold' },
   { token: '--font-weight-bold', value: 650, label: 'Bold' },
 ];
 
 const lineHeights = [
-  { token: '--line-height-tight', value: '1.3', role: 'Headings, dense titles' },
-  { token: '--line-height-normal', value: '1.6', role: 'UI text, labels' },
-  { token: '--line-height-relaxed', value: '1.8', role: 'Long-form body copy' },
+  { token: '--line-height-none', value: '1', usedFor: 'Single-line control labels — the box supplies the height' },
+  { token: '--line-height-tight', value: '1.3', usedFor: 'Headings, dense titles, helper text' },
+  { token: '--line-height-normal', value: '1.6', usedFor: 'UI text, labels' },
+  { token: '--line-height-relaxed', value: '1.8', usedFor: 'Long-form body copy' },
 ];
 
 const letterSpacing = [
-  { token: '--letter-spacing-tight', value: '-0.01em', role: 'Large headings' },
-  { token: '--letter-spacing-normal', value: '0.01em', role: 'Body and UI' },
-  { token: '--letter-spacing-wide', value: '0.03em', role: 'Small caps emphasis' },
-  { token: '--letter-spacing-wider', value: '0.06em', role: 'Overlines, all-caps labels' },
+  { token: '--letter-spacing-tight', value: '-0.01em', usedFor: 'Large headings' },
+  { token: '--letter-spacing-normal', value: '0.01em', usedFor: 'Body and UI' },
+  { token: '--letter-spacing-wide', value: '0.03em', usedFor: 'Small caps emphasis' },
+  { token: '--letter-spacing-wider', value: '0.06em', usedFor: 'Overlines, all-caps labels' },
 ];
 
-const roles = [
-  { cls: 'type-display', token: '.type-display', note: 'size-800 · bold · tight' },
-  { cls: 'type-page-title', token: '.type-page-title', note: 'size-600 · semibold · tight' },
-  { cls: 'type-section-title', token: '.type-section-title', note: 'size-500 · semibold · tight' },
-  { cls: 'type-card-title', token: '.type-card-title', note: 'size-400 · medium · normal' },
-  { cls: 'type-body-large', token: '.type-body-large', note: 'size-300 · regular · relaxed' },
-  { cls: 'type-body', token: '.type-body', note: 'size-200 · regular · relaxed' },
-  { cls: 'type-body-small', token: '.type-body-small', note: 'size-150 · regular · normal' },
-  { cls: 'type-label', token: '.type-label', note: 'size-100 · medium · normal' },
-  { cls: 'type-caption', token: '.type-caption', note: 'size-100 · regular · normal' },
-  { cls: 'type-overline', token: '.type-overline', note: 'size-050 · semibold · uppercase' },
-  { cls: 'type-code', token: '.type-code', note: 'mono · size-100' },
+/* ---------------------------------------------------------------------------
+ * The tier-2 composite tokens, read from the COMPILED output rather than typed
+ * here, so this table cannot drift from what actually ships. Same build-time
+ * pattern theming.ts uses for the per-component "Theming surface" tables.
+ * ------------------------------------------------------------------------ */
+const TOKENS_CSS = readFileSync(
+  path.join(fileURLToPath(new URL('../../../../../packages/tokens/dist/tokens.css', import.meta.url))),
+  'utf8',
+);
+
+const declared = new Map<string, string>();
+for (const m of TOKENS_CSS.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
+  if (!declared.has(m[1])) declared.set(m[1], m[2].trim());
+}
+
+/** Walk a var() chain to the terminal literal. */
+const resolveToken = (name: string, depth = 0): string => {
+  const v = declared.get(name);
+  if (v == null || depth > 10) return v ?? '—';
+  const ref = v.match(/^var\(\s*(--[\w-]+)\s*\)$/);
+  return ref ? resolveToken(ref[1], depth + 1) : v;
+};
+
+/** The tier-1 token a composite part points at, if it points at one. */
+const pointsAt = (name: string): string | null =>
+  declared.get(name)?.match(/^var\(\s*(--[\w-]+)\s*\)$/)?.[1] ?? null;
+
+// Fixed order so every composite reads down the same columns; one that does not
+// set a property shows nothing rather than silently reordering the list.
+const TYPE_PROPS = [
+  'font-family',
+  'font-size',
+  'font-weight',
+  'line-height',
+  'letter-spacing',
+  'text-transform',
+] as const;
+
+/** The individual tier-2 tokens that make up one composite. */
+const partsOf = (intention: string) =>
+  TYPE_PROPS.map((prop) => `--typography-${intention}-${prop}`)
+    .filter((t) => declared.has(t))
+    .map((token) => ({
+      token,
+      prop: token.replace(`--typography-${intention}-`, ''),
+      pointsAt: pointsAt(token),
+      resolved: resolveToken(token),
+    }));
+
+// `was` is the pre-composite class name, kept as a deprecated alias in
+// typography.css. Rendered so a spoke can find its migration in one place.
+const composites = [
+  { cls: 'typography-display',    token: '--typography-display-*',    note: 'size-800 · bold · tight',        was: null },
+  { cls: 'typography-heading-lg', token: '--typography-heading-lg-*', note: 'size-600 · semibold · tight',    was: '.type-page-title' },
+  { cls: 'typography-heading-md', token: '--typography-heading-md-*', note: 'size-500 · semibold · tight',    was: '.type-section-title' },
+  { cls: 'typography-title', token: '--typography-title-*', note: 'size-400 · medium · normal',     was: '.type-card-title' },
+  { cls: 'typography-body-lg',    token: '--typography-body-lg-*',    note: 'size-300 · regular · relaxed',   was: '.type-body-large' },
+  { cls: 'typography-body-md',    token: '--typography-body-md-*',    note: 'size-200 · regular · relaxed',   was: '.type-body' },
+  { cls: 'typography-body-sm',    token: '--typography-body-sm-*',    note: 'size-150 · regular · normal',    was: '.type-body-small' },
+  { cls: 'typography-label',      token: '--typography-label-*',      note: 'size-100 · medium · normal',     was: null },
+  { cls: 'typography-meta',       token: '--typography-meta-*',       note: 'size-100 · regular · normal',    was: '.type-caption' },
+  { cls: 'typography-eyebrow',  token: '--typography-eyebrow-*',  note: 'size-050 · semibold · uppercase', was: '.type-overline' },
+  { cls: 'typography-code',       token: '--typography-code-*',       note: 'mono · size-100',                was: null },
 ];
 ---
 <DocsLayout title="Typography — Ecology" activeHref="/foundations/typography">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Typography</span></nav>
   <h1>Typography</h1>
-  <p class="lede">One <strong>fluid type scale</strong> that interpolates between a small-screen min and a large-screen max, two font families, and a set of <strong>semantic type roles</strong> that compose size, weight, line-height and tracking into one class.</p>
+  <p class="lede">One <strong>fluid type scale</strong> that interpolates between a small-screen min and a large-screen max, two font families, and and a set of <strong>composite tokens</strong> that bundle family, size, weight, line-height and tracking under one name.</p>
 
   <Section id="families" title="Font families">
     <p>DM Sans carries the entire UI. DM Mono is reserved for code, tokens and tabular figures.</p>
@@ -73,7 +133,7 @@ const roles = [
           <div class="family__meta">
             <code>{f.token}</code>
             <span class="family__value">{f.value}</span>
-            <span class="family__role">{f.role}</span>
+            <span class="family__role">{f.usedFor}</span>
           </div>
         </div>
       ))}
@@ -118,7 +178,7 @@ const roles = [
           <div class="lh__meta">
             <code>{l.token}</code>
             <span class="lh__value">{l.value}</span>
-            <span class="lh__role">{l.role}</span>
+            <span class="lh__role">{l.usedFor}</span>
           </div>
         </div>
       ))}
@@ -133,24 +193,64 @@ const roles = [
           <div class="ls__meta">
             <code>{l.token}</code>
             <span class="ls__value">{l.value}</span>
-            <span class="ls__role">{l.role}</span>
+            <span class="ls__role">{l.usedFor}</span>
           </div>
         </div>
       ))}
     </div>
   </Section>
 
-  <Section id="roles" title="Type roles">
-    <p>Utility classes that bundle the four type properties together. Components reference these instead of hand-tuning sizes — change a role once, it updates everywhere.</p>
+  <Section id="composites" title="Composites">
+    <p>
+      A composite bundles the five tier-2 <code>--typography-*</code> tokens for one intention, and
+      ships as a class because CSS has no composite custom property. The class carries the same name
+      as its tokens — <code>.typography-body-sm</code> assembles
+      <code>--typography-body-sm-*</code>. Nothing here restates a size or a
+      weight — every value is a <code>var()</code>, so re-pointing
+      <code>--typography-heading-lg-font-size</code> moves every large heading without touching
+      the class.
+    </p>
+    <p>
+      Names are <code>typography-&lt;intention&gt;[-&lt;variant&gt;]</code>: category, then the job the
+      text does, then a t-shirt size where an intention has more than one. Where a composite lists a
+      former name, that class still works as a deprecated alias — same tokens, same output — so
+      migrating is a find-and-replace with no visual change.
+    </p>
+    <p>
+      Open a composite to see the individual tokens it bundles. Note that <code>font-size</code>,
+      <code>line-height</code> and <code>letter-spacing</code> point straight at a tier-1 value,
+      while <code>font-family</code> and <code>font-weight</code> point at another <em>tier-2</em>
+      role first (<code>--font-display</code>, <code>--font-weight-semibold</code>). That extra hop
+      is deliberate: those two are the surface a spoke re-points when it swaps typeface, and a face
+      change has to move every role at once rather than role by role.
+    </p>
     <div class="roles">
-      {roles.map((r) => (
-        <div class="role">
-          <div class={`role__sample ${r.cls}`}>The quick brown fox</div>
-          <div class="role__meta">
-            <code>{r.token}</code>
-            <span>{r.note}</span>
-          </div>
-        </div>
+      {composites.map((r) => (
+        <details class="role">
+          <summary class="role__head">
+            <div class={`role__sample ${r.cls}`}>The quick brown fox</div>
+            <div class="role__meta">
+              <code>.{r.cls}</code>
+              <span>{r.note}</span>
+              <span class="role__token">{r.token}</span>
+              {r.was && <span class="role__was">was <code>{r.was}</code></span>}
+            </div>
+          </summary>
+          <table class="parts">
+            <thead>
+              <tr><th>Tier-2 token</th><th>Points at</th><th>Resolves to</th></tr>
+            </thead>
+            <tbody>
+              {partsOf(r.cls.replace('type-', '')).map((p) => (
+                <tr>
+                  <td><code>{p.token}</code></td>
+                  <td>{p.pointsAt ? <code class="parts__ref">{p.pointsAt}</code> : <span class="parts__dim">—</span>}</td>
+                  <td class="parts__val">{p.resolved}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
       ))}
     </div>
   </Section>
@@ -198,25 +298,30 @@ const roles = [
   .ls__role { font-size: 13px; color: var(--color-text-muted, #737373); }
 
   .roles { display: flex; flex-direction: column; }
-  .role { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-400, 1rem) 0; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  .role { padding: var(--spacing-400, 1rem) 0; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  /* The summary IS the specimen row; the marker sits outside it so the sample
+     keeps its own baseline alignment. */
+  .role__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); cursor: pointer; list-style: none; }
+  .role__head::-webkit-details-marker { display: none; }
+  .role__head::after { content: 'tokens \25BE'; flex: none; font-size: 11px; color: var(--color-text-muted, #737373); letter-spacing: var(--letter-spacing-wide, 0.03em); }
+  .role[open] .role__head::after { content: 'tokens \25B4'; }
+  .parts { width: 100%; border-collapse: collapse; margin-top: var(--spacing-300, 0.75rem); }
+  .parts th { text-align: left; font-size: 11px; font-weight: var(--font-weight-semibold, 550); color: var(--color-text-muted, #737373); text-transform: var(--text-transform-uppercase, uppercase); letter-spacing: var(--letter-spacing-wider, 0.06em); padding: 4px 8px; border-bottom: 1px solid var(--color-border-light, #efefef); }
+  .parts td { padding: 4px 8px; font-size: 12px; border-bottom: 1px solid var(--color-border-light, #efefef); vertical-align: top; }
+  .parts tr:last-child td { border-bottom: none; }
+  .parts code { font-family: var(--font-mono, monospace); font-size: 11.5px; }
+  .parts__ref { color: var(--color-text-secondary, #525252); }
+  .parts__val { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--color-text-muted, #737373); word-break: break-word; }
+  .parts__dim { color: var(--color-text-muted, #737373); }
   .role:last-child { border-bottom: none; }
   .role__sample { color: var(--color-text-primary, #171717); min-width: 0; flex: 1; }
 
-  /* Local copies of the semantic type-role utilities (type-roles.css isn't loaded globally on the site). */
-  .role__sample.type-display { font-size: var(--font-size-800); font-weight: var(--font-weight-bold, 650); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-  .role__sample.type-page-title { font-size: var(--font-size-600); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-  .role__sample.type-section-title { font-size: var(--font-size-500); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-tight, 1.3); letter-spacing: var(--letter-spacing-tight, -0.01em); }
-  .role__sample.type-card-title { font-size: var(--font-size-400); font-weight: var(--font-weight-medium, 500); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-body-large { font-size: var(--font-size-300); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-body { font-size: var(--font-size-200); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-relaxed, 1.8); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-body-small { font-size: var(--font-size-150); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-label { font-size: var(--font-size-100); font-weight: var(--font-weight-medium, 500); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-caption { font-size: var(--font-size-100); font-weight: var(--font-weight-regular, 350); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-normal, 0.01em); }
-  .role__sample.type-overline { font-size: var(--font-size-050); font-weight: var(--font-weight-semibold, 550); line-height: var(--line-height-normal, 1.6); letter-spacing: var(--letter-spacing-wider, 0.06em); text-transform: uppercase; }
-  .role__sample.type-code { font-family: var(--font-mono, monospace); font-size: var(--font-size-100); line-height: var(--line-height-normal, 1.6); }
   .role__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
   .role__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-text-primary, #171717); }
   .role__meta span { font-size: 12.5px; color: var(--color-text-muted, #737373); }
+  .role__meta .role__token { font-family: var(--font-mono, monospace); font-size: 11.5px; }
+  .role__meta .role__was { font-size: 11.5px; font-style: var(--font-style-italic, italic); }
+  .role__meta .role__was code { font-size: 11.5px; color: var(--color-text-muted, #737373); }
 
   @media (max-width: 640px) {
     .lh__row { grid-template-columns: 1fr; }
