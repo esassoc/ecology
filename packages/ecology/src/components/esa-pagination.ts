@@ -160,13 +160,13 @@ export class EsaPagination extends LitElement {
 
   static styles = css`
     :host {
-      --_pagination-bg: var(--pagination-bg, var(--color-surface, #ffffff));
+      --_pagination-bg: var(--pagination-bg, var(--color-background-raised, #ffffff));
       --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
-      --_pagination-text-color: var(--pagination-text-color, var(--color-text-secondary, #525252));
+      --_pagination-text-color: var(--pagination-text-color, var(--color-content-secondary, #525252));
       --_pagination-font-size: var(--pagination-font-size, var(--font-size-200, 14px));
-      --_pagination-button-color: var(--pagination-button-color, var(--color-text-primary, #171717));
-      --_pagination-button-disabled-color: var(--color-disabled-text, #bdbdbd);
-      --_pagination-button-hover-bg: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
+      --_pagination-button-color: var(--pagination-button-color, var(--color-content-primary, #171717));
+      --_pagination-button-disabled-color: var(--color-content-disabled, #bdbdbd);
+      --_pagination-button-hover-bg: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
       --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
       --_pagination-padding-y: var(--pagination-padding-y, var(--spacing-200, 8px));
 

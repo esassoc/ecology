@@ -243,13 +243,13 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-radius: var(--radius-surface, 8px);
       --_sidenav-item-color: var(--sidenav-link-text, #525252);
       --_sidenav-item-color-hover: var(--sidenav-link-text-hover, var(--sidenav-link-text, #525252));
-      --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-primary-strong, #3a7c59));
+      --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-content-brand, #3a7c59));
       --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
-      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-surface-sunken, #efefef));
-      --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-primary-subtle, #f3f8fb));
+      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-background-sunken, #efefef));
+      --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-background-brand-subtle, #f3f8fb));
       --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--font-weight-semibold, 550));
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
-      --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-primary, #43608a));
+      --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-background-brand, #43608a));
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
       --_sidenav-section-spacing: var(--sidenav-section-spacing, var(--spacing-300, 12px));
       --_sidenav-section-margin-top: var(--sidenav-section-margin-top, 0);
@@ -418,8 +418,8 @@ export class EsaSidebarNav extends LitElement {
       height: 20px;
       padding: 0 6px;
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-primary, #43608a);
-      color: var(--color-text-inverse, #ffffff);
+      background: var(--color-background-brand, #43608a);
+      color: var(--color-content-inverse, #ffffff);
       font-size: var(--font-size-100, 11px);
       font-weight: var(--font-weight-semibold, 550);
       line-height: var(--line-height-none, 1);

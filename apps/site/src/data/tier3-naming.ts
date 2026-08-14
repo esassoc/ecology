@@ -597,7 +597,7 @@ export const stateVocab = (() => {
         : s === 'visited'
           ? 'Nothing. No link component exposes a visited hook.'
           : s === 'disabled'
-            ? 'Exactly one, and it is the rubric’s own model: tier 2 manages disabled as a variant (--color-disabled-bg), tier 3 reaches for it only where a component needs its own.'
+            ? 'Exactly one, and it is the rubric’s own model: tier 2 manages disabled at the intention level (--color-background-disabled, --color-content-disabled, --color-border-disabled), tier 3 reaches for it only where a component needs its own.'
             : s === 'focus'
               ? 'One, and that is the right number: the rubric says a focus token should hold only what differs from the global ring, and the global ring is --focus-ring-color / -width. This one is the input’s border, which genuinely does differ.'
               : '',

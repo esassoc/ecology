@@ -41,9 +41,18 @@ const otherTokens = semantic.filter((t) => !t.name.startsWith('--color-'));
 /* ------------------------------------------------------ the name parser */
 
 /** Rubric surface -> every word this system actually uses for it. */
+// The vocabulary is now one word per property — that IS the fix this audit measured
+// the need for. `surface`/`bg` and `text` are kept only so the deprecated aliases in
+// dist/tokens.css still parse into a property rather than showing up as unclassified.
+//
+// `overlay` maps to background because that is the property it lands on. It is the
+// system's one deliberate synonym: the translucent washes sit OVER a background
+// rather than being one, and naming them `background-*` would collide with the
+// opaque neutrals already holding those names. Documented in SPEC.md, so the parser
+// should read them as DECLARED rather than counting them against the worklist.
 const SURFACE_VOCAB: Record<'background' | 'content' | 'border', string[]> = {
-  background: ['background', 'surface', 'bg'],
-  content: ['text'],
+  background: ['background', 'surface', 'bg', 'overlay'],
+  content: ['content', 'text'],
   border: ['border'],
 };
 const SURFACE_LOOKUP = new Map<string, 'background' | 'content' | 'border'>();
@@ -86,15 +95,16 @@ const parseColor = (name: string): Tier2Row => {
 
   const surfaceIdx = parts.findIndex((p) => SURFACE_LOOKUP.has(p));
 
-  // `-strong` and `-on-fill` are surfaces wearing a variant costume — but ONLY
-  // where no surface word is present. In `--color-border-strong` the surface is
-  // named and `strong` is a genuine variant (a heavier border), so the guard on
-  // surfaceIdx is what keeps this from over-counting.
+  // `-strong` and `-on-fill` were surfaces wearing a variant costume: both marked a
+  // CONTENT colour with no content word in the name. They are gone — `-strong`
+  // became `--color-content-*` and `-on-fill` became `--color-content-on-*` — so
+  // this fires on nothing in the current set and `variantAsSurface` reads 0.
   //
-  // Overlays are the second exception: in `--color-hover-overlay-strong`,
-  // `strong` is an INTENSITY (a heavier wash), not a content colour. `overlay`,
-  // `scrim` and `backdrop` all name a background outright — they just don't use
-  // one of the rubric's three words for it.
+  // The check stays because it is a regression guard, not a historical note: a new
+  // token that encodes its surface as a variant would be flagged the same way. Two
+  // guards keep it honest. surfaceIdx: in `--color-border-strong` the surface IS
+  // named and `strong` is a genuine variant (a heavier border). isOverlay: in a
+  // wash, `strong` is an INTENSITY, not a content colour.
   if (surfaceIdx === -1 && !isOverlay(name)) {
     const rest = parts.join('-');
     if (rest.endsWith('-on-fill')) {
@@ -122,7 +132,9 @@ const parseColor = (name: string): Tier2Row => {
     if (order === 'inverted') flags.push('variant before surface — inverted vs rubric');
   }
 
-  if (surfaceWord && surfaceWord !== surface) {
+  // `overlay` is the one sanctioned synonym (see SURFACE_VOCAB), so it is not a
+  // spelling defect. Everything else that diverges from the rubric word still is.
+  if (surfaceWord && surfaceWord !== surface && surfaceWord !== 'overlay') {
     flags.push(`surface spelled "${surfaceWord}" where the rubric says "${surface}"`);
   }
 
@@ -167,7 +179,7 @@ export const prefixCollision = {
   semantic: colorTokens.length,
   example: {
     primitive: byTier('primitive').find((t) => /^--color-grass-\d+$/.test(t.name))?.name ?? '--color-grass-9',
-    semantic: '--color-primary',
+    semantic: '--color-background-brand',
   },
 };
 
@@ -248,17 +260,17 @@ export interface VocabRow {
 }
 
 export const variantVocab: VocabRow[] = [
-  { rubric: 'brand', current: 'primary, secondary', status: 'renamed', note: 'Same concept, different word. `secondary` is a second brand ramp rather than a separate intention.' },
-  { rubric: 'subtle', current: 'subtle', status: 'match', note: 'Exact match, and used consistently: primary-subtle, ai-subtle, info/success/warning/danger-subtle.' },
+  { rubric: 'brand', current: 'brand', status: 'match', note: 'Now an exact match. It was `primary`, which meant two different things at once — the brand hue, and the most prominent of a set (`--color-text-primary`). Property-first naming collapsed those into one slot, so the hue took `brand` and `primary` was left to mean prominence only. `secondary` survives as a brand VARIANT (`--color-background-brand-secondary`), a second fill rather than a separate intention.' },
+  { rubric: 'subtle', current: 'subtle', status: 'match', note: 'Exact match, and used consistently: background-brand-subtle, background-ai-subtle, background-{info,success,warning,danger}-subtle.' },
   { rubric: 'utility-error', current: 'danger', status: 'renamed', note: 'No `utility-` grouping prefix, and error is spelled danger.' },
   { rubric: 'utility-success', current: 'success', status: 'renamed', note: 'Concept 1:1. Tier 1 used to group these as `--color-status-*`, giving the family a third name one tier down; those aliases have been deleted and these roles now point straight at their ramp steps.' },
   { rubric: 'utility-warning', current: 'warning', status: 'renamed', note: 'As above.' },
   { rubric: 'utility-information', current: 'info', status: 'renamed', note: 'Abbreviated.' },
-  { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed as a variant, not a state, which is the de-duplication the rubric recommends. Only the slot order is inverted (`--color-disabled-bg`).' },
+  { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed at the intention level, not as a state, which is the de-duplication the rubric recommends. The slot order used to be inverted (`--color-disabled-bg`); it now reads `--color-background-disabled` like everything else.' },
   { rubric: 'sizes lg / md / sm', current: '--control-height-*, --chip-height-*, --font-size-ui-*', status: 'match', note: 'The size axis used to skip tier 2 entirely. It now has three ramps: control height, chip height, and the chrome text size that tracks them. Tier 3 narrows them per family (`--form-height-md` → `--control-height-md`). Padding is still tier 1 by design — spacing is a measure, not an intent.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
-  { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; they just need a home in the variant vocabulary.' },
-  { rubric: '—', current: 'link, inverse, elevated, sunken, muted, light, strong', status: 'extra', note: 'Ad-hoc variant words with no rubric equivalent. `strong` is the notable one — it is really a surface (content), not a variant.' },
+  { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; the rubric explicitly expects teams to add their own. `ai` earns its place by never colliding with brand or status; `accent` has thin surface area and is worth watching.' },
+  { rubric: '—', current: 'link, inverse, raised, floating, sunken, muted, subtle', status: 'extra', note: 'Variant words with no rubric equivalent, all describing prominence or elevation. `strong` used to head this list and was the worst offender — it marked step-11 tokens that are TEXT on a surface, so it read like a bolder fill and got used as one. Those are now `--color-content-*` and the word is gone from colour entirely.' },
 ];
 
 /* --------------------------------- typography: the vocabulary that exists */
@@ -352,7 +364,8 @@ const inferSurface = (name: string): 'background' | 'content' => {
   const body = name.replace(/^--color-/, '');
   // Washes and scrims are backgrounds regardless of any `-strong` intensity.
   if (isOverlay(name)) return 'background';
-  if (body.endsWith('-on-fill')) return 'content';
+  // `-on-*` and the old `-on-fill` both mark a foreground FOR a fill.
+  if (/(^|-)on-/.test(body) || body.endsWith('-on-fill')) return 'content';
   if (body.endsWith('-strong')) return 'content';
   return 'background';
 };
@@ -360,21 +373,37 @@ const inferSurface = (name: string): 'background' | 'content' => {
 const inferReason = (name: string): string => {
   const body = name.replace(/^--color-/, '');
   if (isOverlay(name)) return 'a wash or scrim — a background named after its effect, not its surface';
-  if (body.endsWith('-on-fill')) return 'foreground text sitting on that fill (step 12)';
+  if (/(^|-)on-/.test(body) || body.endsWith('-on-fill')) return 'foreground text sitting on that fill';
   if (body.endsWith('-strong')) return 'Radix step 11 — coloured text on a surface';
   if (body.endsWith('-subtle')) return 'Radix step 2 — subtle tinted surface';
   return 'Radix step 9/10 — the solid fill';
 };
 
-/** Variant family, used to sub-group within a property. */
+/**
+ * Intention family, used to sub-group within a property.
+ *
+ * The property word has to come off first. Every tier-2 colour name now LEADS with
+ * `background`/`content`/`border`/`overlay`, so matching the intention against the
+ * raw name finds nothing and every token lands in the `neutral` default — which is
+ * how this read "38 neutral backgrounds" after the property-first rename.
+ *
+ * `on-` comes off too: `--color-content-on-brand` belongs to brand, not to a family
+ * of its own. It is the foreground FOR that intention.
+ */
 const familyOf = (name: string): string => {
-  const b = name.replace(/^--color-/, '');
+  const b = name
+    .replace(/^--color-/, '')
+    .replace(/^(background|content|border|overlay)(-|$)/, '')
+    .replace(/^on-/, '');
+  // Nothing left means the name was just its property — `--color-background`,
+  // `--color-border`. Those are the neutral defaults for their property.
+  if (!b) return 'neutral';
   if (b.startsWith('disabled')) return 'disabled';
-  if (b.startsWith('primary') || b.startsWith('secondary')) return 'brand';
+  if (b.startsWith('brand')) return 'brand';
   if (b.startsWith('accent')) return 'accent';
   if (b.startsWith('ai')) return 'ai';
-  if (/^(info|success|warning|danger)\b/.test(b)) return 'utility';
-  if (b.startsWith('text-link')) return 'link';
+  if (/^(info|success|warning|danger)(-|$)/.test(b)) return 'utility';
+  if (b.startsWith('link')) return 'link';
   return 'neutral';
 };
 
@@ -411,11 +440,11 @@ export interface PropertyGroup {
 
 const PROPERTY_NOTES: Record<'background' | 'content' | 'border', string> = {
   background:
-    'Used exclusively for background colour. The largest property and the least well named — every bare intent token (--color-primary, --color-danger, every -subtle) is a background whose name never says so.',
+    'Fills and surfaces. Still the largest property, and it used to be the worst named — every bare intent token (--color-primary, --color-danger, and every -subtle) was a background whose name never said so. All of them now lead with `background`.',
   content:
-    'Used exclusively for text and icon colours. Spelled `text` here, which the rubric allows as a split of content — but there is no `icon` counterpart, so icon colour has no independent hook at tier 2.',
+    'Text, icons and SVG strokes. Spelled `content`, not `text`: icons and strokes were already reading these tokens, so the narrower word described the members inaccurately.',
   border:
-    'Used exclusively for border and outline colours. The best-named of the three: every member spells `border`, and it is the only property with no inferred members.',
+    'Strokes and dividers. Was already the best-named of the three — every member spelled `border` — and it stayed that way; the only change was `-light` to `-subtle`, since lightness does not invert sensibly in a dark theme but prominence does.',
 };
 
 export const propertyGroups: PropertyGroup[] = (['background', 'content', 'border'] as const).map(
@@ -510,8 +539,23 @@ export const REQUIRED_TYPE_PROPS = [
 
 export interface RoleProp {
   property: string;
-  /** The token the role reads, e.g. --font-size-800. Null when unset. */
+  /** The token the role reads, e.g. --typography-heading-md-font-size. Null when unset. */
   ref: string | null;
+  /** Tier of `ref` — 'semantic' is the intended shape; 'primitive' means the
+   *  composite skips the tier-2 hop and a spoke has nothing to re-point. */
+  refTier: string | null;
+  /**
+   * What `ref` maps to, hop by hop, down to the tier-1 token — the typography
+   * equivalent of the colour rows' tier-1 column: the value alone says WHAT
+   * renders, the primitive says WHICH step of the scale it came from. Empty
+   * when `ref` is already tier 1 or bottoms out in a literal.
+   *
+   * The whole chain rather than just the primitive, because the intermediate
+   * hop is the interesting one: `--typography-display-font-family` reaches
+   * `--font-family-dm-sans` THROUGH `--font-display`, and `--font-display` is
+   * the token a spoke re-points. Collapsing to the primitive hides it.
+   */
+  chain: { ref: string; tier: string }[];
   /** Second token in a `var(a, var(b))` chain — the fallback face. */
   fallbackRef: string | null;
   /** Terminal value, or the literal where the role writes one directly. */
@@ -528,6 +572,19 @@ export interface Composite {
 }
 
 const nodeByName = new Map(allTokens.map((t) => [t.name, t]));
+
+/**
+ * The token hops behind a tier-2 typography token, terminal raw value dropped
+ * (the value already has its own column). A token that is itself tier 1 has
+ * nothing behind it and returns empty.
+ */
+const chainBehind = (ref: string): { ref: string; tier: string }[] => {
+  const node = nodeByName.get(ref);
+  if (!node || node.tier === 'primitive') return [];
+  return node.lineage
+    .filter((l) => l.kind !== 'raw')
+    .map((l) => ({ ref: l.ref, tier: l.kind }));
+};
 
 /**
  * The stylesheet carries the CURRENT roles and, below a DEPRECATED banner, the
@@ -566,12 +623,22 @@ const parseTypeRoles = (css: string): Composite[] => {
       // face is visible rather than collapsed into the primary.
       const refs = [...value.matchAll(/var\(\s*(--[a-zA-Z][a-zA-Z0-9-]*)/g)].map((m) => m[1]);
       if (refs.length === 0) {
-        props[property] = { property, ref: null, fallbackRef: null, resolved: value, literal: true };
+        props[property] = {
+          property,
+          ref: null,
+          refTier: null,
+          chain: [],
+          fallbackRef: null,
+          resolved: value,
+          literal: true,
+        };
         continue;
       }
       props[property] = {
         property,
         ref: refs[0],
+        refTier: nodeByName.get(refs[0])?.tier ?? null,
+        chain: chainBehind(refs[0]),
         fallbackRef: refs[1] ?? null,
         resolved: nodeByName.get(refs[0])?.resolved ?? null,
         literal: false,
@@ -684,312 +751,17 @@ export const typeCoverage = {
   incomplete: allRoles
     .filter((r) => r.missing.length > 0)
     .map((r) => ({ className: r.className, missing: r.missing })),
-  /** Composites that opt into the display face — the surface a spoke re-points. */
+  /** Composites that opt into the display face — the surface a spoke re-points.
+   *  Matched anywhere in the chain, not just at the hook: since the composite
+   *  refactor a role reads `--typography-<role>-font-family`, so a test against
+   *  `--font-display` directly matches nothing. */
   displayFace: allRoles
-    .filter((r) => r.props['font-family']?.ref === '--font-display')
+    .filter((r) => {
+      const ff = r.props['font-family'];
+      return ff?.ref === '--font-display' || !!ff?.chain.some((l) => l.ref === '--font-display');
+    })
     .map((r) => r.className),
 };
-
-/* =========================================================================
- * Distance to the reference tier-2 typography model.
- *
- * A worked example of the target SHAPE, supplied for calibration — NOT to be
- * built, and its px values are not targets. 22 composites named
- * <intention>-<size>[-mobile], each declaring all six properties, every value a
- * reference (no literals anywhere), and each -mobile variant aliasing its
- * desktop sibling for the properties that don't change.
- *
- * Everything here compares STRUCTURE: which roles exist, which slots the names
- * carry, whether a composite is complete, whether a mobile/desktop pair is
- * expressible. The reference's numbers are carried only to show the shape of a
- * role (that it pins a size, that a -mobile sibling changes some properties and
- * inherits others) — never to measure our scale against.
- * ====================================================================== */
-
-export interface ReferenceRole {
-  name: string;
-  intention: string;
-  size: string;
-  mobile: boolean;
-  fontSize: string;
-  lineHeight: string;
-  weight: string;
-  letterSpacing: string;
-  transform: string;
-  /** Properties this role aliases from its desktop sibling rather than a primitive. */
-  aliases: string[];
-}
-
-const R = (
-  name: string, intention: string, size: string, mobile: boolean,
-  fontSize: string, lineHeight: string, weight: string, letterSpacing: string,
-  transform: string, aliases: string[] = [],
-): ReferenceRole => ({ name, intention, size, mobile, fontSize, lineHeight, weight, letterSpacing, transform, aliases });
-
-export const REFERENCE_ROLES: ReferenceRole[] = [
-  R('display-default', 'Display', 'default', false, '100', '110', '700', 'minus-2', 'none'),
-  R('display-default-mobile', 'Display', 'default', true, '48', '56', '700', 'minus-1-half', 'none', ['font-family', 'font-weight', 'text-transform']),
-  R('display-sm', 'Display', 'sm', false, '40', '48', '400', 'minus-1-half', 'none'),
-  R('display-sm-mobile', 'Display', 'sm', true, '32', '40', '400', 'minus-1', 'none', ['font-family', 'font-weight']),
-  R('headline-lg', 'Headline', 'lg', false, '48', '56', '700', 'half', 'none'),
-  R('headline-lg-mobile', 'Headline', 'lg', true, '40', '48', '700', 'half', 'none', ['font-family', 'font-weight']),
-  R('headline-default', 'Headline', 'default', false, '40', '48', '700', 'half', 'none'),
-  R('headline-default-mobile', 'Headline', 'default', true, '32', '40', '700', 'half', 'none', ['font-family', 'font-weight', 'text-transform']),
-  R('headline-sm', 'Headline', 'sm', false, '32', '40', '700', 'half', 'none'),
-  R('headline-sm-mobile', 'Headline', 'sm', true, '28', '36', '700', 'half', 'none', ['font-family', 'font-weight']),
-  R('title-lg', 'Title', 'lg', false, '32', '40', '700', 'minus-1', 'none'),
-  R('title-lg-mobile', 'Title', 'lg', true, '28', '36', '700', 'minus-half', 'none', ['font-family', 'font-weight']),
-  R('title-default', 'Title', 'default', false, '28', '36', '700', 'minus-half', 'none'),
-  R('title-sm', 'Title', 'sm', false, '24', '32', '700', 'minus-half', 'none'),
-  R('label-lg', 'Label', 'lg', false, '20', '28', '700', '0', 'none'),
-  R('label-default', 'Label', 'default', false, '16', '24', '700', '0', 'none'),
-  R('label-sm', 'Label', 'sm', false, '14', '20', '700', '0', 'none'),
-  R('body-lg', 'Body', 'lg', false, '20', '28', '400', '0', 'none'),
-  R('body-default', 'Body', 'default', false, '16', '24', '400', '0', 'none'),
-  R('body-sm', 'Body', 'sm', false, '14', '20', '400', '0', 'none'),
-  R('meta-default', 'Meta', 'default', false, '14', '20', '700', '2', 'uppercase'),
-  R('meta-sm', 'Meta', 'sm', false, '12', '16', '700', '2', 'uppercase'),
-];
-
-/**
- * Our nearest equivalent for each DESKTOP reference role. Judgment, matched on
- * intention + relative size within the intention, not on px — our sizes are
- * fluid ranges, so an exact match doesn't exist to claim.
- */
-const EQUIVALENT: Record<string, string | null> = {
-  'display-default': 'typography-display',
-  'display-sm': null,
-  'headline-lg': null,
-  'headline-default': 'typography-heading-lg',
-  'headline-sm': null,
-  'title-lg': 'typography-heading-md',
-  'title-default': 'typography-title',
-  'title-sm': null,
-  'label-lg': null,
-  'label-default': 'typography-label',
-  'label-sm': null,
-  'body-lg': 'typography-body-lg',
-  'body-default': 'typography-body-md',
-  'body-sm': 'typography-body-sm',
-  'meta-default': 'typography-eyebrow',
-  'meta-sm': null,
-};
-
-/**
- * A clamp() already carries the two discrete values the reference model names
- * explicitly: the min IS the mobile size and the max IS the desktop size. So the
- * -mobile pair is not missing from our system, it is unextracted — a build-time
- * transform away, not a re-authoring.
- *
- * Returns px at a 16px root. `null` for a non-clamp value.
- */
-export const clampBounds = (value: string | null | undefined): { min: number; max: number } | null => {
-  if (!value) return null;
-  const m = value.match(/clamp\(\s*([\d.]+)rem\s*,[^,]*,\s*([\d.]+)rem\s*\)/);
-  if (!m) return null;
-  return { min: Number(m[1]) * 16, max: Number(m[2]) * 16 };
-};
-
-/**
- * Walk a composite's tier-2 property token down to the PRIMITIVE it lands on.
- *
- * A composite now reads `--typography-display-font-size`, which is a restatement
- * of the composite's own name — reporting it answers nothing the role name did
- * not already say. The question worth asking is which rung of the shared scale
- * the role sits on, and that is one hop further down. Before the composite
- * refactor the class referenced `--font-size-800` directly, so a single-level
- * read used to be right; it silently stopped being right when the tier-2 layer
- * was inserted.
- */
-const primitiveBehind = (ref: string | null | undefined, prefix: string): string | null => {
-  if (!ref) return null;
-  if (ref.startsWith(prefix)) return ref;
-  return nodeByName.get(ref)?.lineage.find((l) => l.ref.startsWith(prefix))?.ref ?? null;
-};
-
-export interface CoverageCell {
-  reference: ReferenceRole;
-  ours: string | null;
-  /** Our role's own tier-2 font-size token — the composite's private surface. */
-  oursToken: string | null;
-  /** The rung of the shared size scale that token lands on. The informative one. */
-  oursStep: string | null;
-  /** The px pair the clamp already encodes: min = mobile, max = desktop. */
-  oursBounds: { min: number; max: number } | null;
-  mobile: ReferenceRole | null;
-}
-
-export const coverageByIntention = ['Display', 'Headline', 'Title', 'Label', 'Body', 'Meta'].map(
-  (intention) => {
-    const desktop = REFERENCE_ROLES.filter((r) => r.intention === intention && !r.mobile);
-    return {
-      intention,
-      cells: desktop.map((reference): CoverageCell => {
-        const ours = EQUIVALENT[reference.name] ?? null;
-        const role = ours ? roleByName.get(ours) : undefined;
-        const ref = role?.props['font-size']?.ref ?? null;
-        return {
-          reference,
-          ours,
-          oursToken: ref,
-          oursStep: primitiveBehind(ref, '--font-size-'),
-          oursBounds: clampBounds(ref ? nodeByName.get(ref)?.resolved : null),
-          mobile: REFERENCE_ROLES.find((r) => r.mobile && r.name === `${reference.name}-mobile`) ?? null,
-        };
-      }),
-    };
-  },
-);
-
-const desktopRefs = REFERENCE_ROLES.filter((r) => !r.mobile);
-const mobileRefs = REFERENCE_ROLES.filter((r) => r.mobile);
-
-export const referenceGap = {
-  refTotal: REFERENCE_ROLES.length,
-  refDesktop: desktopRefs.length,
-  refMobile: mobileRefs.length,
-  covered: desktopRefs.filter((r) => EQUIVALENT[r.name]).length,
-  missing: desktopRefs.filter((r) => !EQUIVALENT[r.name]).map((r) => r.name),
-  /** Ours with no slot in the reference model. */
-  extra: allRoles
-    .map((r) => r.className)
-    .filter((c) => !Object.values(EQUIVALENT).includes(c)),
-};
-
-export interface StructuralGap {
-  dimension: string;
-  reference: string;
-  ours: string;
-  verdict: 'gap' | 'divergence' | 'match';
-  detail: string;
-}
-
-/* -------------------------------------------------------------------------
- * Counts the prose below used to state as literals. Every one of them was
- * wrong within two commits of being typed — "11 classes" survived the split of
- * `.typography-code` into three, "heading-lg/md/sm" survived `heading-sm`
- * becoming its own `title` intention, and the text-transform row went on
- * reporting an open gap after the primitives landed. Derive them, so the table
- * cannot claim something the tokens contradict.
- * ---------------------------------------------------------------------- */
-
-const typographyTokens = allTokens.filter((t) => t.name.startsWith('--typography-'));
-const textTransformPrimitives = allTokens.filter((t) => t.name.startsWith('--text-transform-'));
-
-/** Distinct line-height rungs the composites actually reach for. */
-const lineHeightRungs = [
-  ...new Set(
-    allRoles
-      .map((r) => primitiveBehind(r.props['line-height']?.ref, '--line-height-'))
-      .filter((n): n is string => n !== null),
-  ),
-];
-
-/** Intentions carrying a full lg/md/sm range vs. the ones that ship one size. */
-const fullSizeAxis = typeIntentions.filter((i) => i.roles.length >= 3).map((i) => i.label);
-const singleSizeAxis = typeIntentions.filter((i) => i.roles.length === 1).map((i) => i.label);
-
-/** Composites reading the `uppercase` primitive rather than a literal. */
-const transformRoles = allRoles.filter((r) => r.props['text-transform']);
-const transformLiterals = transformRoles.filter((r) => r.props['text-transform']!.literal);
-
-const list = (xs: string[]) =>
-  xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
-
-/**
- * `divergence` is not a softer word for `gap`. A gap is something the reference
- * has and we lack. A divergence is a different decision with its own rationale
- * already written down in this repo — closing it would be a trade, not a fix.
- */
-export const structuralGaps: StructuralGap[] = [
-  {
-    dimension: 'Expressed as',
-    reference: '22 tokens in JSON',
-    ours: `${typographyTokens.length} tokens + ${allRoles.length} classes`,
-    verdict: 'match',
-    detail:
-      `CLOSED. This was the largest single gap and the one everything else sat on: the composite structure was right but expressed only as CSS classes, which Figma cannot consume, a spoke cannot re-point through the token layer, and no other platform compiles. The ${typographyTokens.length} tier-2 \`--typography-*\` tokens now hold the values; the classes are the assembly layer on top, because CSS has no composite custom property. A class contains no size and no weight — only var()s.`,
-  },
-  {
-    dimension: 'Naming',
-    reference: '<intention>-<size>[-mobile]',
-    ours: '<intention>[-<size>]',
-    verdict: 'match',
-    detail:
-      'CLOSED. Names used to describe the PLACE (`page-title`, `card-title`, `caption`); they now name the intention, with a t-shirt size where an intention has more than one. The one deliberate difference: the size slot is omitted rather than defaulted for single-size intentions, so it is `--typography-label-font-size`, not `-label-default-`. The old names survive as deprecated class aliases only.',
-  },
-  {
-    dimension: 'Size axis',
-    reference: 'lg / default / sm per intention',
-    ours: `three sizes for ${fullSizeAxis.length} of ${typeIntentions.length} intentions`,
-    verdict: 'gap',
-    detail:
-      `Narrowed, not closed. ${list(fullSizeAxis.map((s) => `\`${s}\``))} carry a full three-step range; ${list(singleSizeAxis.map((s) => `\`${s}\``))} ship a single size each. Note that \`heading\` is NOT one of the three-step intentions: the smallest step split off into its own \`title\` intention once it turned out to change the typeface as well as the size, so the "no smaller headline to reach for" complaint is answered by a different intention rather than by a third size. Whether the single-size intentions are a gap or a correct reading of demand is a design question, not a naming one: nothing in the kit has asked for a \`label-sm\`.`,
-  },
-  {
-    dimension: 'Responsive',
-    reference: '6 explicit -mobile roles',
-    ours: 'fluid clamp() in the primitive',
-    verdict: 'divergence',
-    detail:
-      'We ship zero -mobile roles because every --font-size-* is a clamp() that interpolates continuously with the viewport. Their model steps at a breakpoint; ours never steps. Critically, the discrete pair is NOT lost: clamp(min, fluid, max) already encodes the mobile floor and the desktop ceiling as real values — --font-size-800 is 32px…44px, which is exactly a display-default-mobile / display-default pair. Exporting to Figma is a build-time extraction of the two bounds, not a re-authoring. The one thing genuinely absent is the ability to set a mobile value INDEPENDENTLY of the desktop one; ours are tied together by the interpolation.',
-  },
-  {
-    dimension: 'line-height',
-    reference: 'absolute px, one per role',
-    ours: `unitless ratio, ${lineHeightRungs.length} shared values`,
-    verdict: 'divergence',
-    detail:
-      `Forced by the choice above: a fixed px line-height cannot pair with a fluid font-size. Theirs pins an exact line-height per role, so every role owns its own value; ours composes a ratio that holds at any interpolated size, so a handful of values serve every role. Theirs gives per-role control, ours gives automatic consistency. ${lineHeightRungs.length} rungs (${list(lineHeightRungs.map((n) => n.replace('--line-height-', '')))}) serve all ${allRoles.length} composites.`,
-  },
-  {
-    dimension: 'font-weight',
-    reference: 'named by value — 400, 700',
-    ours: 'named by role — regular … bold',
-    verdict: 'divergence',
-    detail:
-      'Deliberate, and documented in typography.css: weights are typeface-bound, so the hub ships DM Sans optical weights (350/450/550/650) behind stable role names. A spoke swapping the face remaps the numbers and every role follows. Value-named weights would break at exactly that point.',
-  },
-  {
-    dimension: 'font-family',
-    reference: 'one face — helvetica',
-    ours: '--font-sans / --font-display / --font-mono',
-    verdict: 'divergence',
-    detail:
-      'We are ahead here: --font-display exists as a re-point seam so a spoke gets distinct headlines by setting one token. The reference model has no such seam — every role hardcodes the same face reference.',
-  },
-  {
-    dimension: 'text-transform',
-    reference: 'a referenced primitive, set on all 22',
-    ours:
-      textTransformPrimitives.length === 0
-        ? 'no primitive exists'
-        : `${textTransformPrimitives.length} primitives, read by ${transformRoles.length} of ${allRoles.length}`,
-    verdict: transformLiterals.length === 0 && textTransformPrimitives.length > 0 ? 'match' : 'gap',
-    detail:
-      textTransformPrimitives.length === 0
-        ? 'There is no --text-transform-* token at any tier, so a role that transforms its text has to write the keyword as a literal. Their model has text-transform.none/uppercase as real primitives, which is what lets all 22 roles declare the property rather than inherit it.'
-        : `CLOSED. ${list(textTransformPrimitives.map((t) => `\`${t.name.replace('--text-transform-', '')}\``))} now exist as primitives, and ${list(transformRoles.map((r) => `\`.${r.className}\``))} reach them through a tier-2 hook rather than writing the keyword literally — this was the last raw value in any of our composites. The remaining difference is one of coverage, not of vocabulary: the reference sets the property on every role, we set it only where a role actually transforms, and everything else inherits \`none\`.`,
-  },
-  {
-    dimension: 'Completeness',
-    reference: 'all 6 properties on all 22',
-    ours: `${REQUIRED_TYPE_PROPS.length} required on ${allRoles.length - typeCoverage.incomplete.length} of ${allRoles.length}`,
-    verdict: typeCoverage.incomplete.length === 0 ? 'match' : 'gap',
-    detail:
-      typeCoverage.incomplete.length === 0
-        ? `CLOSED. All ${allRoles.length} composites pin every required property (${list(REQUIRED_TYPE_PROPS.map((p) => `\`${p}\``))}), so no role inherits one and none renders differently depending on what it sits inside. The only property left unset is text-transform, and only on the roles that do not transform.`
-        : `${allRoles.length - typeCoverage.incomplete.length} of ${allRoles.length} composites pin every required property. The rest — ${list(typeCoverage.incomplete.map((r) => `\`.${r.className}\``))} — leave one to inheritance, which is what makes them non-exportable as complete composites.`,
-  },
-  {
-    dimension: 'Sibling aliasing',
-    reference: '-mobile aliases its desktop sibling',
-    ours: 'n/a — no variants to alias',
-    verdict: 'gap',
-    detail:
-      'The reference re-declares only what changes and references the sibling for the rest ({typography.display-default.font-family}), so a weight change propagates to the mobile variant automatically. This is a tier-2 → tier-2 reference, which nothing in our token layer does today. Worth noting the reference applies it unevenly: display-default-mobile aliases text-transform, display-sm-mobile re-declares it.',
-  },
-];
 
 /** The de facto grammar, written as a rule, next to the rubric's. */
 export const grammars = {

@@ -34,7 +34,20 @@
  * tier-2 overrides; no primitive moves.
  *
  * RESPONSIVE: no mobile/tablet/desktop variants, because every --font-size-*
- * primitive is a clamp() that scales with the viewport.
+ * primitive is a clamp() that scales with the viewport. A model that ships
+ * explicit `-mobile` composites steps at a breakpoint; this one never steps.
+ * The discrete pair is NOT lost — clamp(min, fluid, max) already encodes the
+ * mobile floor and the desktop ceiling as real values, so exporting the two to
+ * a design tool is a build-time extraction of the bounds, not a re-authoring.
+ * What the approach genuinely gives up is setting a mobile value INDEPENDENTLY
+ * of its desktop sibling: the interpolation ties them together, so a mobile
+ * variant that changes tracking without changing size cannot be expressed.
+ *
+ * LINE-HEIGHT is a unitless ratio, not px, and a handful of rungs serve every
+ * composite. This follows from the choice above — a fixed px line-height cannot
+ * pair with a fluid font-size. Pinning px per composite would buy per-composite
+ * control; a ratio that holds at any interpolated size buys consistency, which
+ * is the better trade when the size itself is a range rather than a number.
  */
 
 

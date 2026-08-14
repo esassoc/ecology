@@ -174,7 +174,7 @@ export class EsaTextarea extends LitElement {
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
       margin-inline-start: 2px;
     }
 
@@ -235,7 +235,7 @@ export class EsaTextarea extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
+      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
   `;
 }

@@ -152,7 +152,7 @@ export class EsaDatePicker extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
@@ -202,7 +202,7 @@ export class EsaDatePicker extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
+      box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
     }
   `;
 }

@@ -407,7 +407,7 @@ export class EsaSelect extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
@@ -416,7 +416,7 @@ export class EsaSelect extends LitElement {
     }
     .field__error {
       font-size: var(--font-size-150, 12px);
-      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
+      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
 
     .container {
@@ -512,7 +512,7 @@ export class EsaSelect extends LitElement {
       top: 50%;
       transform: translateY(-50%);
       display: inline-flex;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
     }
@@ -533,7 +533,7 @@ export class EsaSelect extends LitElement {
       margin-top: var(--spacing-100, 4px);
       max-height: 256px;
       overflow-y: auto;
-      background: var(--color-surface, #fff);
+      background: var(--color-background-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
@@ -547,21 +547,21 @@ export class EsaSelect extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .option:hover,
     .option--active {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
     }
     .option--selected {
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #3a7c59);
     }
     .option--disabled {
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #a3a3a3);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -569,7 +569,7 @@ export class EsaSelect extends LitElement {
       background: transparent;
     }
     .option--empty {
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       cursor: default;
       font-style: var(--font-style-italic, italic);
     }
@@ -588,7 +588,7 @@ export class EsaSelect extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #3a7c59);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -609,8 +609,8 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-050, 2px);
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #3a7c59);
       border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--font-size-150, 12px);
@@ -629,7 +629,7 @@ export class EsaSelect extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #3a7c59);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -639,7 +639,7 @@ export class EsaSelect extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
+      background: var(--color-overlay-hover-strong, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -650,7 +650,7 @@ export class EsaSelect extends LitElement {
       --_field-border-color: var(--form-border-color-error, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
+      box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
     }
   `;
 }

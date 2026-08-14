@@ -1,7 +1,7 @@
 ---
 // esa-loading-spinner — presentational (.astro).
 // Faithful translation of the Angular esa-loading-spinner: xs/sm/md/lg sizes
-// and an optional custom color (CSS value, defaults to --color-primary).
+// and an optional custom color (CSS value, defaults to --color-background-brand).
 // Angular host classes + [style.--_spinner-color] → class list + inline style.
 interface Props {
   size?: 'xs' | 'sm' | 'md' | 'lg';
@@ -20,7 +20,7 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
   .esa-loading-spinner {
     --_spinner-size: 32px;
     --_spinner-border-width: 3px;
-    --_spinner-color: var(--loading-spinner-color, var(--color-primary, #43608a));
+    --_spinner-color: var(--loading-spinner-color, var(--color-background-brand, #43608a));
 
     display: inline-flex;
     align-items: center;
@@ -34,7 +34,7 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
   .esa-loading-spinner__ring {
     width: var(--_spinner-size);
     height: var(--_spinner-size);
-    border: var(--_spinner-border-width) solid var(--loading-spinner-track-color, var(--color-border-light, #efefef));
+    border: var(--_spinner-border-width) solid var(--loading-spinner-track-color, var(--color-border-subtle, #efefef));
     border-top-color: var(--_spinner-color);
     border-radius: var(--radius-pill, 9999px);
     animation: esa-spinner-rotate 0.75s linear infinite;

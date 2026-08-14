@@ -77,7 +77,7 @@ const firstSegment = (name: string) => name.replace(/^--/, '').split('-')[0];
 
 const STRADDLE_COST: Record<string, string> = {
   color:
-    'The big one. A raw ramp step and a brand intent are spelled the same way, so `--color-gray-3` and `--color-surface` are indistinguishable in a diff. SPEC.md calls reaching past tier 2 “the bug”; nothing in the name announces that you just did it.',
+    'The big one. A raw ramp step and a semantic role are spelled the same way, so `--color-gray-3` and `--color-background-sunken` are indistinguishable in a diff. SPEC.md calls reaching past tier 2 “the bug”; nothing in the name announces that you just did it.',
   radius:
     '`--radius-200` (a ramp step) and `--radius-surface` (a role) differ only by whether the last segment is a number. This is the exact violation SPEC.md uses as its worked example — `border-radius: var(--radius-200)` — and the name gives a reviewer nothing to catch it with.',
   font:

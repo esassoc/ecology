@@ -95,8 +95,8 @@ export class EsaTooltip extends LitElement {
     .esa-tooltip {
       position: absolute;
       z-index: var(--z-tooltip, 600);
-      background: var(--tooltip-bg, var(--color-surface-inverse));
-      color: var(--tooltip-color, var(--color-text-inverse, #ffffff));
+      background: var(--tooltip-bg, var(--color-background-inverse));
+      color: var(--tooltip-color, var(--color-content-inverse, #ffffff));
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--tooltip-radius, var(--radius-control, 0.25rem));
       font-family: var(--font-sans, 'DM Sans', sans-serif);
@@ -138,7 +138,7 @@ export class EsaTooltip extends LitElement {
       position: absolute;
       width: 8px;
       height: 8px;
-      background: var(--tooltip-bg, var(--color-surface-inverse));
+      background: var(--tooltip-bg, var(--color-background-inverse));
       transform: rotate(45deg);
     }
     .esa-tooltip--above .esa-tooltip__arrow {

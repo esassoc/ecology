@@ -124,13 +124,13 @@ export class EsaFileList extends LitElement {
         var(--file-list-row-padding-x, var(--spacing-300, 12px));
       border: var(--form-border-width, 1px) solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-control, 4px);
-      background: var(--color-surface, #fff);
+      background: var(--color-background-raised, #fff);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--font-size-150, 12px);
     }
     .file__icon {
       display: inline-flex;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
     }
     .file__icon svg {
       width: 16px;
@@ -141,11 +141,11 @@ export class EsaFileList extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       text-decoration: none;
     }
     a.file__name {
-      color: var(--color-link, var(--color-primary, #43608a));
+      color: var(--color-link, var(--color-background-brand, #43608a));
     }
     a.file__name:hover {
       text-decoration: underline;
@@ -164,7 +164,7 @@ export class EsaFileList extends LitElement {
       padding: 0;
       border: 0;
       background: transparent;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       border-radius: var(--radius-control, 4px);
       cursor: pointer;
       flex-shrink: 0;
@@ -177,11 +177,11 @@ export class EsaFileList extends LitElement {
       height: 15px;
     }
     .file__btn:hover {
-      background: var(--color-surface-sunken, #efefef);
-      color: var(--color-text-primary, #171717);
+      background: var(--color-background-sunken, #efefef);
+      color: var(--color-content-primary, #171717);
     }
     .file__btn--remove:hover {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
     }
     .file__btn:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

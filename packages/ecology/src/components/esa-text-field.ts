@@ -176,7 +176,7 @@ export class EsaTextField extends LitElement {
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
       margin-inline-start: 2px;
     }
 
@@ -237,9 +237,9 @@ export class EsaTextField extends LitElement {
       align-items: center;
       flex: none;
       padding-inline: var(--_field-padding-x);
-      color: var(--form-affix-color, var(--color-text-secondary, #737373));
+      color: var(--form-affix-color, var(--color-content-secondary, #737373));
       font-size: var(--_field-font-size);
-      background: var(--form-affix-bg, var(--color-surface-sunken, #efefef));
+      background: var(--form-affix-bg, var(--color-background-sunken, #efefef));
       user-select: none;
       white-space: nowrap;
     }
@@ -269,7 +269,7 @@ export class EsaTextField extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
+      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
   `;
 }
