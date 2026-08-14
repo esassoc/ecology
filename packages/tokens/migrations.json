@@ -2,7 +2,7 @@
   "$schema": "./migrations.schema.md",
   "$comment": [
     "The renames this package has made, as DATA. Three things read this file, which is",
-    "the point — the hub declares a rename once and everything else follows:",
+    "the point \u2014 the hub declares a rename once and everything else follows:",
     "",
     "  1. build.js       emits a deprecated alias for every `token` entry, so spoke source",
     "                    keeps resolving the moment the rename lands.",
@@ -10,7 +10,7 @@
     "  3. doctor.mjs     warns a spoke that it is still on deprecated names.",
     "",
     "WHY THIS EXISTS: spokes consume this package through a `file:` symlink, so a rename",
-    "here reaches every spoke on their next dev tick — there is no publish step to absorb",
+    "here reaches every spoke on their next dev tick \u2014 there is no publish step to absorb",
     "it, and a bare `var(--old-name)` does not fall back, it drops the whole declaration.",
     "A rename used to be tribal knowledge in one person's head. Now it is a row here.",
     "",
@@ -94,7 +94,7 @@
       "id": "status-colors-to-semantic",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead — that is the one it is allowed to override.",
+      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead \u2014 that is the one it is allowed to override.",
       "pairs": [
         [
           "--color-status-info",
@@ -223,7 +223,7 @@
       "id": "color-tier2-property-first",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things — the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one.",
+      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things \u2014 the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted \u2014 identical defaults do not make a themeable token redundant, and a spoke had already separated both.",
       "pairs": [
         [
           "--color-primary-bg-hover",
@@ -243,7 +243,7 @@
         ],
         [
           "--color-primary-active",
-          "--color-background-brand-hover"
+          "--color-background-brand-active"
         ],
         [
           "--color-primary-border",
@@ -335,7 +335,7 @@
         ],
         [
           "--color-text-tertiary",
-          "--color-content-secondary"
+          "--color-content-tertiary"
         ],
         [
           "--color-text-muted",

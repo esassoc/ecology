@@ -106,7 +106,7 @@ const cls = [
 
     display: block;
     background: var(--_card-bg);
-    border: 1px solid var(--_card-border);
+    border: var(--border-width-default, 1px) solid var(--_card-border);
     border-radius: var(--_card-radius);
     overflow: hidden;
   }
@@ -146,7 +146,7 @@ const cls = [
     padding: var(--spacing-400, 1rem) var(--_card-padding);
     background: var(--_card-header-bg);
     color: var(--_card-header-color);
-    border-bottom: 1px solid var(--_card-header-border);
+    border-bottom: var(--border-width-default, 1px) solid var(--_card-header-border);
     min-height: 56px;
   }
 
@@ -197,7 +197,7 @@ const cls = [
 
   .esa-card__footer {
     padding: var(--spacing-300, 0.75rem) var(--_card-padding);
-    border-top: 1px solid var(--_card-header-border);
+    border-top: var(--border-width-default, 1px) solid var(--_card-header-border);
     background: var(--card-footer-bg, var(--color-background-sunken, #efefef));
   }
 </style>

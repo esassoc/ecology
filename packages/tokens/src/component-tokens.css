@@ -67,7 +67,13 @@
   --form-help-color: var(--color-content-muted);
   --form-error-color: var(--color-content-danger);
   /* structure */
-  --form-border-width: 1px;
+  --form-border-width: var(--border-width-default);
+  /* The checkbox box and radio circle, which read heavier than a text field at the
+     same width — a 14px indicator with a hairline edge reads as unfilled rather than
+     as a control. Split from --form-border-width because both components asked for
+     2px via a fallback that could never fire: --form-border-width has always been
+     declared here, so the fallback was dead and they silently rendered 1px. */
+  --form-indicator-border-width: var(--border-width-200);
   --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);

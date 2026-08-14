@@ -236,7 +236,7 @@ export class EsaDialog extends LitElement {
       gap: var(--spacing-300, 0.75rem);
       padding: var(--_dialog-padding);
       background: var(--_dialog-header-bg);
-      border-bottom: 1px solid var(--_dialog-header-border);
+      border-bottom: var(--border-width-default, 1px) solid var(--_dialog-header-border);
       flex-shrink: 0;
     }
     .esa-dialog__title {
@@ -273,7 +273,7 @@ export class EsaDialog extends LitElement {
     .esa-dialog__footer {
       padding: var(--spacing-300, 0.75rem) var(--_dialog-padding);
       background: var(--_dialog-footer-bg);
-      border-top: 1px solid var(--_dialog-header-border);
+      border-top: var(--border-width-default, 1px) solid var(--_dialog-header-border);
       display: flex;
       justify-content: flex-end;
       gap: var(--spacing-200, 0.5rem);

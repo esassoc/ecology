@@ -421,7 +421,7 @@ export class EsaEntitySearch extends LitElement {
       max-width: calc(100vw - 2rem);
       max-height: var(--entity-search-max-height, 70vh);
       background: var(--entity-search-bg, var(--color-background-floating, #ffffff));
-      border: 1px solid var(--entity-search-border-color, var(--color-border, #dcdcdc));
+      border: var(--border-width-default, 1px) solid var(--entity-search-border-color, var(--color-border, #dcdcdc));
       border-radius: var(--entity-search-radius, var(--radius-overlay, 0.75rem));
       box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
@@ -441,7 +441,7 @@ export class EsaEntitySearch extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
     }
     .esa-entity-search__search-icon { color: var(--color-content-muted, #7c7c7c); flex-shrink: 0; }
     .esa-entity-search__input {
@@ -466,7 +466,7 @@ export class EsaEntitySearch extends LitElement {
       font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-muted, #7c7c7c);
       background: var(--color-background-raised, #fff);
-      border: 1px solid var(--color-border, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border, #dcdcdc);
       border-bottom-width: 2px;
       border-radius: 4px;
     }
@@ -476,14 +476,14 @@ export class EsaEntitySearch extends LitElement {
       flex-wrap: wrap;
       gap: var(--spacing-150, 0.375rem);
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
     }
     .esa-entity-search__scope {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
       padding: 4px var(--spacing-250, 0.625rem);
-      border: 1px solid var(--color-border, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border, #dcdcdc);
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-raised, #fff);
       color: var(--color-content-secondary, #525252);
@@ -561,7 +561,7 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__row-action {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 8px;
-      border: 1px solid var(--color-border, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border, #dcdcdc);
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-raised, #fff);
       color: var(--color-content-secondary, #525252);
@@ -580,7 +580,7 @@ export class EsaEntitySearch extends LitElement {
       display: flex;
       gap: var(--spacing-400, 1rem);
       padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
-      border-top: 1px solid var(--color-border-subtle, #efefef);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
       font-size: var(--font-size-100, 0.8125rem);
       color: var(--color-content-muted, #7c7c7c);
     }

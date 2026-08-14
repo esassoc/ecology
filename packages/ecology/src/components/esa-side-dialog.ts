@@ -184,7 +184,7 @@ export class EsaSideDialog extends LitElement {
       justify-content: space-between;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem);
-      border-bottom: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5));
+      border-bottom: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border, #e5e5e5));
       flex: none;
     }
     .title { margin: 0; font-size: var(--font-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 550); color: var(--side-dialog-color, var(--color-content-primary, #171717)); }
@@ -195,7 +195,7 @@ export class EsaSideDialog extends LitElement {
     }
     .close:hover { background: var(--color-background-sunken, #efefef); color: var(--color-content-primary, #171717); }
     .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-content-secondary, #525252)); }
-    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5)); }
+    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border, #e5e5e5)); }
     .footer:not(:has(*)) { display: none; }
 
     @keyframes fade { from { opacity: 0; } }

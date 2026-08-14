@@ -304,7 +304,7 @@ export class EsaSearchPanel extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-      border-bottom: 1px solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
     }
 
     .search-box {

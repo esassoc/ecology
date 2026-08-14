@@ -126,6 +126,87 @@ browser-stacking OOM, (d) high token cost. Fix the composition layer and all fou
 
 ---
 
+## Source: the token-refinement sessions (2026-08-13)
+
+Tier-1 and tier-2 tokens re-audited against the EightShapes naming taxonomy and the
+tier-1/tier-2 typography course material, then renamed. Typography went composite
+(`.typography-<intention>-<size>`); colour went property-first
+(`--color-<property>-<intention>-<variant>-<state>`). Two live spokes consume this hub
+through `file:` symlinks, so every rename shipped with a compatibility alias and a
+codemod rather than a flag day.
+
+### Progress
+- ✅ **Migration system** — `packages/tokens/migrations.json` is the single source of
+  truth. `build.js` generates the deprecated aliases from it, `scripts/migrate-tokens.mjs`
+  rewrites a spoke, `scripts/doctor.mjs` warns, `/update-tokens` wraps the workflow.
+  A rename is declared once and everything follows.
+- ✅ **Tier-2 colour property-first** — 72 tokens, 72 declaring their property.
+  `primary`→`brand` (it meant the brand hue AND "most prominent" at once);
+  step-11 `-strong`→`content-*` (they read as bolder fills and were used as such).
+- ✅ **`--color-border-focus` derives from the brand** instead of pinning `{color.grass.8}`.
+  It could not be reached by any theme — cb-fish re-pointed to navy and kept green focus
+  rings while its links went navy correctly. Same defect removed from `docs-dark.css`.
+- ✅ **`DocsShell` styles `:focus-visible`** — the shell had *no* focus styling, so every
+  chrome link fell back to the browser's blue ring, on the site that demonstrates the system.
+- ✅ **`check-contrast.mjs` was reporting on nothing** — the P3 `@media` block redeclared
+  every primitive as `color(display-p3 …)`, so it resolved 0/22 pairs and still exited 0
+  with "All text pairs pass AA". Now strips at-rules, resolves 29/29, and refuses to report
+  a pass when most pairs fail to resolve.
+- ✅ **Codemod guards**, both found by breaking something first: a missing regex lookbehind
+  rewrote BEM selectors (`.esa-button--color-primary` ends in the token name verbatim), and
+  many-to-one renames silently dropped a value when a spoke declared both sides. Both now
+  covered by `scripts/lib/token-rename.test.mjs`.
+
+### Still open
+- **Contrast, as ONE batched pass** · *Evidence:* `check-contrast.mjs --hub` reports 7 AA
+  failures sharing a root cause — Radix step-9 fills are built for ~3:1 with white, not the
+  4.5:1 body text needs, so `content-on-brand` on `background-brand` is 2.95:1 and the focus
+  ring is 2.95:1 against a raised surface (WCAG 1.4.11 wants 3:1) · *Action:* decide the brand
+  ramp once; fixing one in isolation means re-deciding it repeatedly. **Deliberately deferred —
+  do not fix piecemeal** · `hub-fix` · **P0**
+- **Selected is indistinguishable from hover in `esa-button`** · *Evidence:*
+  `esa-button.astro:225-226` — `:hover` and `.esa-button--active` both resolve to
+  `--_accent-hover`, so an `aria-pressed` toggle looks identical to a hovered button and
+  reverts to resting-looking when the mouse leaves · *Action:* give selected its own value
+  (`--color-background-brand-active` is the hook, but it defaults to grass-10, same as hover);
+  audit whether other components confuse the two — dropdown/palette/entity-search already use
+  `background-sunken` for selected, so this may be 1–2 components · `hub-fix` · **P1**
+- **`-active` is ambiguous** · *Evidence:* this codebase uses "active" for *selected/current*
+  (43 BEM modifiers, `aria-pressed`, `aria-current`) while `:active` means *pressed* · *Action:*
+  if the item above is built on, rename the token `-selected`; decide before spokes adopt it ·
+  `hub-fix` · **P2**
+- **Press feedback barely exists** · *Evidence:* 35 components style `:hover`, one styles
+  `:active` (a `scale(0.95)`, not colour) · *Action:* likely fine — many systems skip mouse-down
+  feedback. Logged so it is a decision, not an oversight · `hub-fix` · **P3**
+- **Republish `spoke-kit`** · *Evidence:* source 1.14.0, installed 1.8.1; spoke sessions still
+  teach retired token names · *Action:* merge to `main` (the marketplace tracks the default
+  branch — a feature branch publishes nothing), then on each machine run BOTH
+  `claude plugin marketplace update ecology` AND `claude plugin update spoke-kit@ecology`,
+  then restart · `process` · **P0**
+- **Run `/update-tokens` in both spokes** · *Evidence:* cb-fish 1,706 replacements/115 files,
+  air-exchange 280/12; both dry-run clean · *Action:* one commit per repo, separate from
+  feature work. Needs authorisation — separate repos · `process` · **P1**
+- **Tokens the spokes read that nothing declares** · *Evidence:* 7 in cb-fish
+  (`--color-gold-50/900`, `--color-gray-50`, `--color-green-700`, `--spacing-50`,
+  `--easing-out`, `--gap`), 6 in air-exchange · *Action:* these are **broken today** — the
+  declaration drops. Each needs a human decision; the codemod deliberately refuses to guess ·
+  `hub-fix` · **P1**
+- **Deferred from the tier-1 audit** · the namespace/tier prefix straddle (a ramp step and a
+  semantic role are both `--color-*`, indistinguishable in a diff), the `--radius-200`/`-300`
+  duplicate, and ~1,250 fallback-literal mismatches (mostly tier-2 colour) · `hub-fix` · **P2**
+
+### Root cause (the through-line)
+**A rename is only half-done when the tokens move.** Every failure this session was in code
+that *reads names* and kept running against the old shape — `familyOf` filed all 38
+backgrounds under "neutral", `semanticGroupKey` collapsed 60 of 70 into `color-other`, and the
+contrast script resolved nothing while printing a pass. None raised an error. The tokens were
+the easy part; the parsers, audits and gates that consume them are where a rename actually
+goes wrong, and they fail silently by default. Where it mattered these now assert instead:
+`color-other` must stay empty, `inferred` must stay 0, and a contrast run that cannot resolve
+its pairs exits non-zero.
+
+---
+
 ## Process proposal
 1. **`/design-qa` emits findings here** (extend it to run the composition analysis: bespoke-
    class/style-line counts, repeated-pattern + missing-lego detection, visual review).

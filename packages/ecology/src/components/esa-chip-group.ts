@@ -247,7 +247,7 @@ export class EsaChipGroup extends LitElement {
       gap: var(--spacing-100, 0.25rem);
       padding: var(--_pad-y) var(--_pad-x);
       border-radius: var(--_radius, 0.25rem);
-      border: 1px solid var(--_border);
+      border: var(--border-width-default, 1px) solid var(--_border);
       background: var(--_bg);
       color: var(--_color);
       font: inherit;

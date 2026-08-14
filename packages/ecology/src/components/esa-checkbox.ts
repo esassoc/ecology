@@ -139,7 +139,10 @@ export class EsaCheckbox extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      /* The size token is authoritative: without this, re-pointing the indicator
+         border width would resize the control instead of thickening its edge. */
+      box-sizing: border-box;
+      border: var(--form-indicator-border-width, 2px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--form-bg, #fff);
       color: var(--color-content-inverse, #fff);

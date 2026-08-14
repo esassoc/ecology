@@ -141,6 +141,31 @@ focus ring **at runtime**. Flattened to a hex, it could not.
    defining one, unreachable by every theme, and it stayed green in a navy spoke
    for months without a single error.
 
+### A token earns its slot by naming a role, not by holding a distinct value
+
+Two tier-2 tokens with the **same default value are not redundant**. Tier 2 is the
+layer whose entire job is being re-pointed, so the question is whether the *role* is
+real, not whether this palette happens to distinguish it.
+
+`--color-background-raised` and `--color-background-floating` are both gray-1. They
+stay two tokens because a card and a dialog are different jobs, and a theme with an
+elevation story will separate them.
+
+This was learned the hard way. `--color-background-brand-active` and
+`--color-content-tertiary` were briefly deleted for holding their sibling's value —
+and cb-fish had already separated both, running a three-step navy press sequence and
+a four-step grey ramp. Merging them would have silently overwritten two of its
+colours. `scripts/migrate-tokens.mjs` now refuses to apply any rename that collapses
+two declared names with different values, for exactly this reason.
+
+The inverse is not licence to invent tokens. "Some theme might need it" would justify
+almost anything. The test is whether someone can point at the role: `active` is a real
+interaction state; `brand-subtle-hover-inverse` is a combination nobody has named.
+
+**Declaring a role is not delivering it.** 34 of 35 components style `:hover` and one
+styles `:active` — the pressed role exists in tokens and barely exists in the UI. A
+token with no readers is a promise outstanding, not proof the role is wrong.
+
 **Every intention that has a solid fill also declares its foreground**, as
 `--color-content-on-<intention>`. This is not symmetry for its own sake: five of
 them were missing, components hardcoded `#fff` in the gap, and on the bright Radix

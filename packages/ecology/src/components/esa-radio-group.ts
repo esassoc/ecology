@@ -175,7 +175,10 @@ export class EsaRadioGroup extends LitElement {
       width: var(--_radio-size);
       height: var(--_radio-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      /* The size token is authoritative: without this, re-pointing the indicator
+         border width would resize the control instead of thickening its edge. */
+      box-sizing: border-box;
+      border: var(--form-indicator-border-width, 2px) solid var(--form-border-color, #d4d4d4);
       border-radius: 50%;
       background: var(--form-bg, #fff);
       transition:
