@@ -135,7 +135,7 @@ export class EsaDropdownMenu extends LitElement {
     .esa-dropdown-menu__panel {
       position: absolute;
       z-index: var(--z-dropdown, 50);
-      background: var(--dropdown-menu-bg, var(--color-surface-elevated, #ffffff));
+      background: var(--dropdown-menu-bg, var(--color-background-floating, #ffffff));
       border: 1px solid var(--dropdown-menu-border-color, var(--color-border, #e5e5e5));
       border-radius: var(--dropdown-menu-radius, var(--radius-surface, 0.5rem));
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
@@ -168,7 +168,7 @@ export class EsaDropdownMenu extends LitElement {
       border: none;
       border-radius: var(--radius-control, 0.25rem);
       background: transparent;
-      color: var(--dropdown-menu-item-color, var(--color-text-primary, #171717));
+      color: var(--dropdown-menu-item-color, var(--color-content-primary, #171717));
       font-family: inherit;
       font-size: var(--font-size-200, 0.9375rem);
       cursor: pointer;
@@ -176,15 +176,15 @@ export class EsaDropdownMenu extends LitElement {
       transition: background 100ms ease;
     }
     .esa-dropdown-menu__item:hover:not(:disabled) {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
     }
     .esa-dropdown-menu__item:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
     }
-    .esa-dropdown-menu__item--danger { color: var(--color-danger-strong, #ce2c31); }
+    .esa-dropdown-menu__item--danger { color: var(--color-content-danger, #ce2c31); }
     .esa-dropdown-menu__item--danger:hover:not(:disabled) {
-      background: var(--color-danger-subtle, #fef2f2);
+      background: var(--color-background-danger-subtle, #fef2f2);
     }
     .esa-dropdown-menu__item--disabled {
       opacity: 0.5;
@@ -202,7 +202,7 @@ export class EsaDropdownMenu extends LitElement {
 
     .esa-dropdown-menu__divider {
       height: 1px;
-      background: var(--color-border-light, #efefef);
+      background: var(--color-border-subtle, #efefef);
       margin: var(--spacing-100, 0.25rem) 0;
     }
   `;

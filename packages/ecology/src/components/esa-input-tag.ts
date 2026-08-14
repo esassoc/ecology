@@ -395,8 +395,8 @@ export class EsaInputTag extends LitElement {
       --_chip-font-size: var(--font-size-150, 12px);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
-      --_chip-bg: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      --_chip-color: var(--color-primary-strong, #3a7c59);
+      --_chip-bg: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      --_chip-color: var(--color-content-brand, #3a7c59);
       --_chip-radius: var(--radius-pill, 9999px);
     }
     :host([size='xs']) {
@@ -436,7 +436,7 @@ export class EsaInputTag extends LitElement {
       color: var(--form-label-color, #525252);
     }
     .field__required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__hint {
@@ -516,7 +516,7 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #3a7c59);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -526,7 +526,7 @@ export class EsaInputTag extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.06));
+      background: var(--color-overlay-hover-strong, rgba(0, 0, 0, 0.06));
     }
     .chip__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -549,7 +549,7 @@ export class EsaInputTag extends LitElement {
     }
     .input:disabled {
       cursor: not-allowed;
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #a3a3a3);
     }
 
     .toggle {
@@ -560,11 +560,11 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       background: transparent;
       border: none;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       cursor: pointer;
     }
     .toggle:hover:not(:disabled) {
-      color: var(--color-text-secondary, #525252);
+      color: var(--color-content-secondary, #525252);
     }
     .toggle:disabled {
       cursor: not-allowed;
@@ -590,7 +590,7 @@ export class EsaInputTag extends LitElement {
       max-height: 252px;
       overflow-y: auto;
       overscroll-behavior: contain;
-      background: var(--color-surface, #fff);
+      background: var(--color-background-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
@@ -606,7 +606,7 @@ export class EsaInputTag extends LitElement {
       border: none;
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       text-align: left;
       cursor: pointer;
       box-sizing: border-box;
@@ -614,7 +614,7 @@ export class EsaInputTag extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
     }
     .option__label {
       flex: 1;
@@ -624,9 +624,9 @@ export class EsaInputTag extends LitElement {
       white-space: nowrap;
     }
     .option--add {
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #3a7c59);
       font-weight: var(--font-weight-medium, 500);
-      border-top: var(--form-border-width, 1px) solid var(--color-border-light, #efefef);
+      border-top: var(--form-border-width, 1px) solid var(--color-border-subtle, #efefef);
     }
     .option__icon {
       width: var(--icon-size-sm, 16px);
@@ -636,7 +636,7 @@ export class EsaInputTag extends LitElement {
 
     .empty {
       padding: var(--spacing-300, 12px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       font-size: var(--_field-font-size);
       font-style: var(--font-style-italic, italic);
       text-align: center;

@@ -25,15 +25,15 @@ const { rows, nameHeader = 'Prop' } = Astro.props;
   .props { border: 1px solid var(--color-border, #dcdcdc); border-radius: 12px; overflow: hidden; margin-bottom: var(--spacing-300, 0.75rem); }
   table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
   thead th {
-    text-align: left; font-weight: 600; color: var(--color-text-secondary, #525252);
+    text-align: left; font-weight: 600; color: var(--color-content-secondary, #525252);
     font-size: 13px; padding: 10px var(--spacing-400, 1rem);
-    background: var(--color-surface-sunken, #f3f7fc);
+    background: var(--color-background-sunken, #f3f7fc);
     border-bottom: 1px solid var(--color-border, #dcdcdc);
   }
-  tbody td { padding: 11px var(--spacing-400, 1rem); border-bottom: 1px solid var(--color-border-light, #efefef); vertical-align: top; color: var(--color-text-secondary, #525252); }
+  tbody td { padding: 11px var(--spacing-400, 1rem); border-bottom: 1px solid var(--color-border-subtle, #efefef); vertical-align: top; color: var(--color-content-secondary, #525252); }
   tbody tr:last-child td { border-bottom: 0; }
-  td code { font-family: var(--font-mono, monospace); font-size: 13px; background: var(--color-surface-sunken, #f3f7fc); padding: 1px 6px; border-radius: 5px; color: var(--color-text-primary, #171717); }
-  td code.type { background: none; padding: 0; color: var(--color-primary, #1e5386); }
-  td code.def { background: none; padding: 0; color: var(--color-text-muted, #7c7c7c); }
-  .dash { color: var(--color-text-muted, #7c7c7c); }
+  td code { font-family: var(--font-mono, monospace); font-size: 13px; background: var(--color-background-sunken, #f3f7fc); padding: 1px 6px; border-radius: 5px; color: var(--color-content-primary, #171717); }
+  td code.type { background: none; padding: 0; color: var(--color-background-brand, #1e5386); }
+  td code.def { background: none; padding: 0; color: var(--color-content-muted, #7c7c7c); }
+  .dash { color: var(--color-content-muted, #7c7c7c); }
 </style>

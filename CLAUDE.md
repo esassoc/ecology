@@ -22,7 +22,7 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
 
 ## Token tiers (3-tier)
 1. **Primitive** — raw values → `--color-teal-9`, `--spacing-400`
-2. **Semantic** — intent, references primitives → `--color-primary`
+2. **Semantic** — intent, references primitives → `--color-background-brand`
 3. **Component** — per-component theming surface → `--form-border-color`, `--sidenav-bg`
 
 **Theming = override the semantic and/or component layer** under a `[data-theme="x"]`

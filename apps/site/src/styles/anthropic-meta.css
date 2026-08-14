@@ -60,7 +60,7 @@
 
 .app .article h1 { letter-spacing: -0.015em; }
 .app .article h2 { letter-spacing: -0.01em; border-bottom-color: var(--color-border); }
-.app .article .lede { color: var(--color-text-secondary); }
+.app .article .lede { color: var(--color-content-secondary); }
 .app .brand b { font-size: 17px; letter-spacing: -0.01em; }
 
 .app code,
@@ -69,39 +69,39 @@
 .app .search kbd { font-family: var(--meta-mono); }
 
 /* ---- Warm palette (light only — dark mode keeps docs-dark.css) ---- */
-html[data-scheme='light'] body { background: var(--color-background); color: var(--color-text-primary); }
+html[data-scheme='light'] body { background: var(--color-background); color: var(--color-content-primary); }
 html[data-scheme='light'] .sidebar,
 html[data-scheme='light'] .brand,
 html[data-scheme='light'] .topbar { background: var(--color-background); border-color: var(--color-border); }
 html[data-scheme='light'] .topbar { background: color-mix(in srgb, var(--color-background) 82%, transparent); }
 html[data-scheme='light'] .sidebar { border-right-color: var(--color-border); }
 
-html[data-scheme='light'] .nav-group > h4 { color: var(--color-text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-html[data-scheme='light'] .nav-link { color: var(--color-text-secondary); border-radius: 4px; }
-html[data-scheme='light'] .nav-link:hover { background: color-mix(in srgb, var(--color-text-primary) 4%, transparent); color: var(--color-text-primary); }
-html[data-scheme='light'] .nav-link[aria-current='page'] { background: color-mix(in srgb, var(--color-text-primary) 6%, transparent); color: var(--color-text-primary); font-weight: 500; }
-html[data-scheme='light'] .nav-link .tag { border-color: var(--color-border); color: var(--color-text-muted); }
+html[data-scheme='light'] .nav-group > h4 { color: var(--color-content-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+html[data-scheme='light'] .nav-link { color: var(--color-content-secondary); border-radius: 4px; }
+html[data-scheme='light'] .nav-link:hover { background: color-mix(in srgb, var(--color-content-primary) 4%, transparent); color: var(--color-content-primary); }
+html[data-scheme='light'] .nav-link[aria-current='page'] { background: color-mix(in srgb, var(--color-content-primary) 6%, transparent); color: var(--color-content-primary); font-weight: 500; }
+html[data-scheme='light'] .nav-link .tag { border-color: var(--color-border); color: var(--color-content-muted); }
 
-html[data-scheme='light'] .brand .ver { color: var(--color-text-muted); }
+html[data-scheme='light'] .brand .ver { color: var(--color-content-muted); }
 
 html[data-scheme='light'] .article h1,
 html[data-scheme='light'] .article h2,
-html[data-scheme='light'] .article h3 { color: var(--color-text-primary); }
-html[data-scheme='light'] .article p { color: var(--color-text-secondary); }
+html[data-scheme='light'] .article h3 { color: var(--color-content-primary); }
+html[data-scheme='light'] .article p { color: var(--color-content-secondary); }
 /* Inline code only — see the `:not(pre) >` note in DocsShell: an untagged ```
    fence has no per-token inline color, so a dark color here would render it
    invisible against Shiki's dark block background. */
-html[data-scheme='light'] .article :not(pre) > code { background: color-mix(in srgb, var(--color-text-primary) 5%, transparent); color: var(--color-text-primary); }
+html[data-scheme='light'] .article :not(pre) > code { background: color-mix(in srgb, var(--color-content-primary) 5%, transparent); color: var(--color-content-primary); }
 
-html[data-scheme='light'] .search { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-muted); }
+html[data-scheme='light'] .search { background: var(--color-background-raised); border-color: var(--color-border); color: var(--color-content-muted); }
 html[data-scheme='light'] .topbar-action,
 html[data-scheme='light'] .icon-btn,
-html[data-scheme='light'] .scheme-toggle { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-secondary); }
+html[data-scheme='light'] .scheme-toggle { background: var(--color-background-raised); border-color: var(--color-border); color: var(--color-content-secondary); }
 
 html[data-scheme='light'] .toc a:hover,
-html[data-scheme='light'] .toc a.active { color: var(--color-text-primary); border-color: var(--color-primary); }
+html[data-scheme='light'] .toc a.active { color: var(--color-content-primary); border-color: var(--color-background-brand); }
 
-.app .article h2 { color: var(--color-text-primary); }
+.app .article h2 { color: var(--color-content-primary); }
 
 /* ---- Keep component specimens true: previews use the SYSTEM font, not the serif ---- */
 .app .preview__canvas,

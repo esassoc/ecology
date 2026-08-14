@@ -13,7 +13,7 @@ const props = [
     type: "'surface' | 'brand' | 'brand-strong'",
     default: "'surface'",
     description:
-      "Color context. surface → --color-surface/text-primary; brand → --color-primary/text-inverse; brand-strong → --color-surface-inverse/text-inverse. Children inherit the text color.",
+      "Color context. surface → --color-background-raised/text-primary; brand → --color-background-brand/text-inverse; brand-strong → --color-background-inverse/text-inverse. Children inherit the text color.",
   },
   {
     name: "contained",
@@ -67,8 +67,8 @@ const tokens = [
   <Section id="tones" title="Tones">
     <p>
       Each tone maps to ecology semantic tokens; a spoke re-themes by
-      re-pointing those tokens (e.g. <code>--color-primary</code>, <code
-        >--color-surface-inverse</code
+      re-pointing those tokens (e.g. <code>--color-background-brand</code>, <code
+        >--color-background-inverse</code
       >) — never by touching this component.
     </p>
     <Preview

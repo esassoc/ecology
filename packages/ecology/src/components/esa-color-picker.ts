@@ -169,7 +169,7 @@ export class EsaColorPicker extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
     }
     .controls {
       display: flex;
@@ -261,8 +261,8 @@ export class EsaColorPicker extends LitElement {
       transform: scale(1.1);
     }
     .swatch--selected {
-      border-color: var(--color-primary, #43608a);
-      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
+      border-color: var(--color-background-brand, #43608a);
+      box-shadow: 0 0 0 1px var(--color-background-brand, #43608a);
     }
     .swatch:focus-visible {
       outline: none;

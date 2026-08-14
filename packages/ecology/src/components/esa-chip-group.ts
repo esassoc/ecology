@@ -221,12 +221,12 @@ export class EsaChipGroup extends LitElement {
       --_radius: var(--radius-control, 0.25rem);
 
       /* Resting (unselected) chrome. */
-      --_bg: var(--color-surface, #fff);
+      --_bg: var(--color-background-raised, #fff);
       --_border: var(--color-border, #e5e5e5);
-      --_color: var(--color-text-secondary, #525252);
-      --_bg-hover: var(--color-surface-sunken, #f5f5f5);
+      --_color: var(--color-content-secondary, #525252);
+      --_bg-hover: var(--color-background-sunken, #f5f5f5);
       --_border-hover: var(--color-border-strong, #d4d4d4);
-      --_color-hover: var(--color-text-primary, #171717);
+      --_color-hover: var(--color-content-primary, #171717);
 
       display: inline-flex;
     }
@@ -277,26 +277,26 @@ export class EsaChipGroup extends LitElement {
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
       border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-tertiary, #404040);
+      color: var(--color-content-secondary, #404040);
     }
     .chip--active.chip--neutral-strong {
       background: var(--color-border, #e5e5e5);
       border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
     }
     /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
        default is brand blue, a forest-green theme goes forest. */
     .chip--active.chip--brand {
-      background: var(--color-primary-subtle, #f3f8fb);
-      border-color: var(--color-primary-border, #cfe2ee);
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-background-brand-subtle, #f3f8fb);
+      border-color: var(--color-border-brand, #cfe2ee);
+      color: var(--color-content-brand, #3a7c59);
     }
     .chip--active.chip--amber {
-      background: var(--color-warning-subtle, #fffbeb);
-      border-color: var(--color-warning-border, #fde68a);
-      color: var(--color-warning-strong, #915930);
+      background: var(--color-background-warning-subtle, #fffbeb);
+      border-color: var(--color-border-warning, #fde68a);
+      color: var(--color-content-warning, #915930);
     }
   `;
 }

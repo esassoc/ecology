@@ -23,6 +23,7 @@
  */
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { tokenPattern, classPattern, findCollapseCollisions } from './lib/token-rename.mjs';
 
 const WRITE = process.argv.includes('--write');
 const CWD = process.cwd();
@@ -85,15 +86,41 @@ const applied = new Map();   // id -> count
 const touched = new Set();
 const inexact = new Set();
 
+/* ---------------------------------------------- refuse to lose a value silently
+ * Checked BEFORE anything is written. A collapse collision cannot be auto-resolved:
+ * only a human knows which of the two values this spoke actually wants. Writing a
+ * partial migration here would be worse than writing none, so nothing is written
+ * until they are gone. */
+const collisions = [];
+for (const file of files) {
+  const found = findCollapseCollisions(readFileSync(file, 'utf8'), tokenPairs);
+  if (found.length) collisions.push({ file: path.relative(CWD, file), found });
+}
+if (collisions.length) {
+  console.error(`\n✗ ${collisions.length} file(s) declare BOTH sides of a rename that collapses two names into one.`);
+  console.error('  Rewriting them would emit the same property twice, the later one would win,');
+  console.error('  and the earlier value would be gone with no error. Nothing has been changed.\n');
+  for (const { file, found } of collisions) {
+    console.error(`  ${file}`);
+    for (const { to, froms } of found) {
+      console.error(`    these collapse to ${to}:`);
+      for (const f of froms) console.error(`      ${f.name}: ${f.value};`);
+    }
+  }
+  console.error('\n  The hub merged these because they held the SAME value there. This spoke gave');
+  console.error('  them different ones, so the distinction is real here and only you can settle it.');
+  console.error('  Decide which value survives, delete the other declaration, then re-run.');
+  process.exit(1);
+}
+
 for (const file of files) {
   const src = readFileSync(file, 'utf8');
   let out = src;
 
   for (const { from, to, id, exact } of tokenPairs) {
-    // Token names appear inside var() and in declarations. A trailing boundary
-    // stops `--type-size-100` from matching inside `--type-size-1000`.
-    const re = new RegExp(`${from.replace(/[-]/g, '\\-')}(?![\\w-])`, 'g');
-    out = out.replace(re, () => {
+    // Both boundaries matter — see lib/token-rename.mjs for why the LEADING one is
+    // the load-bearing half (BEM modifier classes end in the token name verbatim).
+    out = out.replace(tokenPattern(from), () => {
       applied.set(id, (applied.get(id) ?? 0) + 1);
       if (!exact) inexact.add(id);
       return to;
@@ -101,11 +128,9 @@ for (const file of files) {
   }
 
   for (const { from, to, id, exact } of classPairs) {
-    // Class names are bare words in class="" / class:list / clsx. Require a
-    // non-name character either side so `type-body` never matches inside
-    // `type-body-small` or a spoke's own `cbf-type-body`.
-    const re = new RegExp(`(?<![\\w-])${from.replace(/[-]/g, '\\-')}(?![\\w-])`, 'g');
-    out = out.replace(re, () => {
+    // Bare words in class="" / class:list / clsx. Same boundary rule, so `type-body`
+    // never matches inside `type-body-small` or a spoke's own `cbf-type-body`.
+    out = out.replace(classPattern(from), () => {
       applied.set(id, (applied.get(id) ?? 0) + 1);
       if (!exact) inexact.add(id);
       return to;

@@ -49,7 +49,7 @@ all new components follow.
    primitives. A spoke's brand identity lives here: re-point a semantic token
    and the intent re-skins everywhere it's used. Every category gets a layer
    here, not just colour:
-   - colour — `--color-primary`, `--color-surface`, `--color-text-secondary`
+   - colour — `--color-background-brand`, `--color-background-raised`, `--color-content-secondary`
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
    - size — `--control-height-{xs,sm,md,lg}`, `--chip-height-*`
    - UI type — `--font-size-ui-{xs,sm,md,lg}` (chrome, not prose — prose uses
@@ -65,9 +65,91 @@ all new components follow.
    define instead** — there is no tier-1 ramp behind a control height or a
    layout width, so tier 2 is where that value legitimately lives. The debug
    page lists these separately from colour hardcodes for exactly this reason.
+
+### Tier-2 colour naming
+
+Colour is the largest and most-read part of this tier, so it has a fixed shape:
+
+```
+--color-<property>-<intention>-<variant>-<state>
+            │           │          │        └── hover, active, focus  (optional)
+            │           │          └─────────── subtle, muted, strong, secondary (optional)
+            │           └────────────────────── brand, info, success, warning,
+            │                                   danger, accent, ai, disabled (optional)
+            └────────────────────────────────── background | content | border
+```
+
+**The property is never optional.** It is the thing that makes a name guessable:
+a danger border is `--color-border-danger`. Not `--color-danger-border`, and not
+`--color-danger` — that one is a background, and it says so.
+
+- **`background`** — fills and surfaces. Page canvas, cards, solid button fills.
+- **`content`** — text, icons and SVG strokes. Anything sitting *on* a background.
+  `content` rather than `text` because icons read these too.
+- **`border`** — strokes and dividers.
+- **`overlay`** is a deliberate fourth property for the translucent washes
+  (`--color-overlay-hover`, `--color-overlay-backdrop`). They sit *over* a
+  background rather than being one, and naming them `background-*` would collide
+  with the opaque neutrals already holding those names.
+
+**Neutral is the default intention and carries no intention word.**
+`--color-background` is the page; `--color-content-primary` is body text. Every
+non-neutral names its intention: `--color-background-brand`.
+
+**Two rules that exist because they were once broken:**
+
+1. **The brand intention is `brand`, not `primary`.** `primary` meant two
+   different things at once — the brand hue, and the most prominent of a set
+   (`--color-text-primary`). Under property-first naming those collapse into the
+   same slot and `--color-background-primary` becomes unreadable: brand fill, or
+   the main page background? `brand` for the hue, `primary` only for prominence.
+
+2. **A step-11 colour is `content-*`, never `-strong`.** The old
+   `--color-danger-strong` sounded like a bolder fill and was used as one; it is
+   Radix step 11, which is *text on a surface*. `--color-content-danger` cannot be
+   misread that way.
+
+### Defining vs deriving — when tier 2 may point at tier 2
+
+A tier-2 token does one of two jobs, and which one decides what it may reference:
+
+- **Defining** a colour identity → references a **primitive**.
+  `--color-background-brand: {color.grass.9}` is where "brand" becomes a value.
+- **Deriving** from an identity it does not own → references **another tier-2
+  token**. `--color-border-focus: {color.background-brand}`.
+
+This is not a loophole in "components read tier 2, never a primitive" — it is what
+makes theming work. `build.js` compiles with `outputReferences: true`, so the
+reference survives into the CSS as a live `var()`:
+
+```css
+--color-border-focus: var(--color-background-brand);
+```
+
+A spoke overriding `--color-background-brand` in its `[data-theme]` block moves the
+focus ring **at runtime**. Flattened to a hex, it could not.
+
+**Two rules keep this from sprawling:**
+
+1. **Depth 1.** A derived token points at a *defining* token, never at another
+   derived one. Chains make a spoke's one-line override travel somewhere nobody
+   can trace back.
+2. **Ask whose identity it is.** A focus ring has no colour of its own — it *is*
+   the brand, so it derives. A danger border is not the brand; it defines danger,
+   so it references a primitive. Getting this backwards is how
+   `--color-border-focus: {color.grass.8}` shipped: a derived token written as a
+   defining one, unreachable by every theme, and it stayed green in a navy spoke
+   for months without a single error.
+
+**Every intention that has a solid fill also declares its foreground**, as
+`--color-content-on-<intention>`. This is not symmetry for its own sake: five of
+them were missing, components hardcoded `#fff` in the gap, and on the bright Radix
+ramps (lime, yellow, amber, sky, mint) white fails contrast on step 9.
+`scripts/check-contrast.mjs` checks each of these pairs, so a spoke that re-points
+a fill without re-pointing its foreground gets told.
 3. **Component** (`src/component-tokens.css`, authored) — the per-component
    (or per-group) theming surface, defaulting to semantic references:
-   `--card-bg: var(--color-surface)`. A spoke uses this tier to diverge ONE
+   `--card-bg: var(--color-background-raised)`. A spoke uses this tier to diverge ONE
    component from the semantic default without forking it.
 
 Inside components, **private `--_*` tokens** consume the public tiers, always
@@ -112,10 +194,10 @@ Adding a hook NEVER changes rendered output:
 
 ```css
 /* component-tokens.css (authored default = the old semantic chain) */
---card-bg: var(--color-surface);
+--card-bg: var(--color-background-raised);
 
 /* inside the component: hook spliced ABOVE the old chain, old fallback kept */
---_card-bg: var(--card-bg, var(--color-surface, #fff));
+--_card-bg: var(--card-bg, var(--color-background-raised, #fff));
 ```
 
 Spokes already shipping are untouched by construction: every new token's
@@ -169,7 +251,7 @@ directly.
 ```css
 [data-theme="cb-fish"] {
   /* tier 2 — the brand: everything 'primary' becomes navy */
-  --color-primary: #1e5386;
+  --color-background-brand: #1e5386;
   /* tier 2 — shape and size are roles too: flatter corners, tighter controls */
   --radius-surface: 4px;
   --control-height-md: 36px;

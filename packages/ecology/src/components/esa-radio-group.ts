@@ -142,7 +142,7 @@ export class EsaRadioGroup extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_radio-font-size);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
     }
 
     .items {
@@ -183,7 +183,7 @@ export class EsaRadioGroup extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .circle--selected {
-      border-color: var(--color-primary, #43608a);
+      border-color: var(--color-background-brand, #43608a);
     }
     .circle:focus-visible {
       outline: none;
@@ -200,13 +200,13 @@ export class EsaRadioGroup extends LitElement {
       transition: background var(--transition-fast, 150ms ease);
     }
     .circle--selected .dot {
-      background: var(--color-primary, #43608a);
+      background: var(--color-background-brand, #43608a);
     }
 
     .item-label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_radio-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       line-height: var(--line-height-tight, 1.3);
     }
   `;

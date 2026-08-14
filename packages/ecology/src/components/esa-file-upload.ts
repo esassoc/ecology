@@ -251,7 +251,7 @@ export class EsaFileUpload extends LitElement {
       background: var(--form-bg, #fff);
       cursor: pointer;
       text-align: center;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       transition:
         border-color var(--transition-fast, 150ms ease),
         background var(--transition-fast, 150ms ease),
@@ -259,7 +259,7 @@ export class EsaFileUpload extends LitElement {
     }
     .zone:hover {
       border-color: var(--form-border-color-focus, #43608a);
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
     }
     .zone:focus-visible {
       outline: none;
@@ -268,9 +268,9 @@ export class EsaFileUpload extends LitElement {
     }
 
     :host([dragging]) .zone {
-      border-color: var(--color-primary, #43608a);
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #2a7e3b);
+      border-color: var(--color-background-brand, #43608a);
+      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #2a7e3b);
     }
     :host([disabled]) .zone {
       opacity: 0.6;
@@ -285,28 +285,28 @@ export class EsaFileUpload extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-font-size-md, 14px);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
     }
     .zone__hint {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
     }
     .browse {
-      color: var(--color-primary-strong, #2a7e3b);
+      color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .zone__limit {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--font-size-100, 11px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
     }
 
     .error {
       margin-top: var(--spacing-100, 4px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
     }
 
     .files {
@@ -322,15 +322,15 @@ export class EsaFileUpload extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
       border-radius: var(--form-radius-sm, 6px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
     }
     .file__name {
       flex: 1;
       font-family: var(--font-sans, sans-serif);
       font-size: var(--form-font-size-sm, 12px);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -338,7 +338,7 @@ export class EsaFileUpload extends LitElement {
     .file__size {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--font-size-100, 11px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       white-space: nowrap;
     }
     .file__remove {
@@ -350,7 +350,7 @@ export class EsaFileUpload extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       border-radius: 50%;
       cursor: pointer;
       flex-shrink: 0;
@@ -358,7 +358,7 @@ export class EsaFileUpload extends LitElement {
     }
     .file__remove:hover {
       background: var(--color-border, #e5e5e5);
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
     }
     .file__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

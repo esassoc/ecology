@@ -22,14 +22,14 @@ import { Content as Onboarding } from '../../../../../ONBOARDING.md';
      see is a link they won't click, so put the affordance back. Scoped to the
      markdown container so page chrome elsewhere is untouched. */
   .onboarding :global(a) {
-    color: var(--color-primary-strong, #2a7e3b);
+    color: var(--color-content-brand, #2a7e3b);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
   .onboarding :global(a:hover) { text-decoration-thickness: 2px; }
   .onboarding :global(hr) { border: none; border-top: 1px solid var(--color-border, #e5e5e5); margin: var(--spacing-700, 2rem) 0; }
   .onboarding :global(pre) {
-    background: var(--color-surface-sunken, #f5f5f5);
+    background: var(--color-background-sunken, #f5f5f5);
     border: 1px solid var(--color-border, #e5e5e5);
     border-radius: 8px;
     padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
@@ -44,10 +44,10 @@ import { Content as Onboarding } from '../../../../../ONBOARDING.md';
   .onboarding :global(blockquote) {
     margin: var(--spacing-400, 1rem) 0;
     padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    background: var(--color-surface-sunken, #f5f5f5);
+    background: var(--color-background-sunken, #f5f5f5);
     border: 1px solid var(--color-border, #e5e5e5);
     border-radius: 8px;
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-content-secondary, #525252);
   }
   .onboarding :global(blockquote > :last-child) { margin-bottom: 0; }
 
@@ -67,23 +67,23 @@ import { Content as Onboarding } from '../../../../../ONBOARDING.md';
     font-weight: 600;
     font-size: 15px;
     padding: 10px var(--spacing-400, 1rem);
-    color: var(--color-text-secondary, #525252);
-    background: var(--color-surface-sunken, #f3f7fc);
+    color: var(--color-content-secondary, #525252);
+    background: var(--color-background-sunken, #f3f7fc);
     border-bottom: 1px solid var(--color-border, #dcdcdc);
   }
   .onboarding :global(tbody td) {
     padding: 11px var(--spacing-400, 1rem);
-    border-bottom: 1px solid var(--color-border-light, #efefef);
+    border-bottom: 1px solid var(--color-border-subtle, #efefef);
     vertical-align: top;
   }
   .onboarding :global(tbody tr:last-child td) { border-bottom: 0; }
   .onboarding :global(td code), .onboarding :global(li code), .onboarding :global(p code) {
     font-family: var(--font-mono, monospace);
     font-size: 14.5px;
-    background: var(--color-surface-sunken, #f3f7fc);
+    background: var(--color-background-sunken, #f3f7fc);
     padding: 1px 6px;
     border-radius: 5px;
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
   }
   /* color: inherit keeps an untagged ``` fence legible even if a consumer's own
      stylesheet reintroduces a dark color for `code`. */

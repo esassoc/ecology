@@ -197,7 +197,7 @@ const COLOR_RE = /^(#|rgb|hsl|oklch|color\(|color-mix\()/i;
 const PURE_VAR = /^var\(\s*--[a-zA-Z][a-zA-Z0-9-]*\s*(,[\s\S]*)?\)$/;
 
 /**
- * A value that WRAPS a reference — `color-mix(in srgb, var(--color-primary) 8%,
+ * A value that WRAPS a reference — `color-mix(in srgb, var(--color-background-brand) 8%,
  * transparent)`. Walking to the terminal here throws the wrapper away and
  * reports the solid brand colour, so a 8% wash rendered as a swatch came out as
  * a solid block. Substitute into the expression instead, which is both accurate
@@ -298,12 +298,15 @@ const naturalCompare = (a: string, b: string) => {
 /**
  * Colors sub-group by ramp: --color-grass-9 -> "grass", --color-gray-a3 ->
  * "gray-a". Everything that is NOT a stepped ramp collapses into one bucket —
- * status and the overlay washes are single tokens, and keying them the same way
- * as a ramp produced 13 groups of one, which is noise rather than structure.
+ * the overlay washes are single tokens, and keying them the same way as a ramp
+ * produced 13 groups of one, which is noise rather than structure.
+ *
+ * There was also a `status-` branch here, for the `--color-status-*` tier-1
+ * aliases. Those were deleted (see the Core note below) — tier 1 holds only ramps
+ * and washes now, so the branch had nothing left to match.
  */
 const primitiveGroupKey = (name: string) => {
   const body = name.replace(/^--color-/, '');
-  if (body.startsWith('status-')) return 'status (fixed, not a ramp)';
   const parts = body.split('-');
   const step = parts.at(-1) ?? '';
   if (!/^a?\d+$/.test(step)) return 'overlays + washes';
@@ -313,12 +316,25 @@ const primitiveGroupKey = (name: string) => {
   return parts.join('-') + (step.startsWith('a') ? '-a' : '');
 };
 
-/** Semantics group by role family: --color-text-primary -> "color-text". */
+/**
+ * Semantic colours group by PROPERTY: --color-content-primary -> "color-content".
+ *
+ * This used to list intentions (`text`, `surface`, `primary`, `secondary`, `status`)
+ * and match them at parts[1]. Once tier-2 colour went property-first every one of
+ * those words moved out of that slot, so 60 of 70 tokens fell through to
+ * `color-other` and the grouping quietly stopped grouping. Matching the property is
+ * both correct now and stable: the property slot is the one part of a tier-2 colour
+ * name that is guaranteed present.
+ *
+ * `color-other` should now always be empty — every tier-2 colour name carries its
+ * property. A group appearing there means a token was added without one, which is
+ * exactly the thing worth seeing on this page.
+ */
 const semanticGroupKey = (name: string) => {
   const parts = name.slice(2).split('-');
   if (parts[0] !== 'color') return parts[0];
-  const FAMILIES = ['text', 'surface', 'border', 'primary', 'secondary', 'accent', 'ai', 'status', 'disabled'];
-  return FAMILIES.includes(parts[1]) ? `color-${parts[1]}` : 'color-other';
+  const PROPERTIES = ['background', 'content', 'border', 'overlay'];
+  return PROPERTIES.includes(parts[1]) ? `color-${parts[1]}` : 'color-other';
 };
 
 /** Component tokens group by their component prefix: --card-bg -> "card". */

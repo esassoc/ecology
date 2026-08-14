@@ -88,13 +88,13 @@ Reassigned semantic tokens (what components should read):
 
 | Raw value | Token | Notes |
 |-----------|-------|-------|
-| `#1e5386` (navy) | `--color-primary` | also `--cbf-blue-700` |
-| `#2770b2` | `--color-secondary` | also `--cbf-blue-600` |
-| `#f3f7fc` (blue-50) | `--color-primary-subtle` / `--color-surface-sunken` | also `--cbf-blue-50` |
-| `#c6dcf1` (blue-200) | `--color-primary-border` | also `--cbf-blue-200` |
-| `#13273e` (blue-950) | `--color-surface-inverse` | also `--cbf-blue-950` |
+| `#1e5386` (navy) | `--color-background-brand` | also `--cbf-blue-700` |
+| `#2770b2` | `--color-background-brand-secondary` | also `--cbf-blue-600` |
+| `#f3f7fc` (blue-50) | `--color-background-brand-subtle` / `--color-background-sunken` | also `--cbf-blue-50` |
+| `#c6dcf1` (blue-200) | `--color-border-brand` | also `--cbf-blue-200` |
+| `#13273e` (blue-950) | `--color-background-inverse` | also `--cbf-blue-950` |
 | `#dcdcdc` | `--color-border` | |
-| `#7c7c7c` | `--color-text-muted` | |
+| `#7c7c7c` | `--color-content-muted` | |
 | neutral grays | `--color-gray-*` | confirm exact step via grep |
 | IBM Plex Sans | `--font-sans` | |
 | IBM Plex Sans Condensed | `--font-display` | |
@@ -130,12 +130,12 @@ But `BaseLayout.astro` requested `IBM+Plex+Sans+Condensed:wght@400;600`. Fix: ad
 ### Should-fix: hardcoded value with a token
 ```css
 /* BEFORE */ .pill { background: #f3f7fc; border: 1px solid #c6dcf1; }
-/* AFTER  */ .pill { background: var(--color-primary-subtle);
-                     border: 1px solid var(--color-primary-border); }
+/* AFTER  */ .pill { background: var(--color-background-brand-subtle);
+                     border: 1px solid var(--color-border-brand); }
 ```
 
 ### Should-fix: promote recurring chrome
-`#13273e` appears in two components. Don't inline it twice — it's already `--cbf-blue-950` feeding `--color-surface-inverse`. Re-point usage to `var(--color-surface-inverse)`.
+`#13273e` appears in two components. Don't inline it twice — it's already `--cbf-blue-950` feeding `--color-background-inverse`. Re-point usage to `var(--color-background-inverse)`.
 
 ### Should-fix: DRY render logic
 Command-palette results and `/search` page both render result rows. Extract to `omni-render.ts`; both surfaces import it. Per-surface visual differences go in a CSS scope boundary (`.cbf-search-surface ...` global block), not forked markup.

@@ -220,7 +220,7 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.5));
+      background: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
       z-index: var(--z-modal-backdrop, 300);
     }
 
@@ -232,7 +232,7 @@ export class EsaCommandPalette extends LitElement {
       width: var(--command-palette-width, 560px);
       max-width: calc(100vw - 2rem);
       max-height: var(--command-palette-max-height, 440px);
-      background: var(--command-palette-bg, var(--color-surface-elevated, #ffffff));
+      background: var(--command-palette-bg, var(--color-background-floating, #ffffff));
       border: 1px solid var(--command-palette-border-color, var(--color-border, #e5e5e5));
       border-radius: var(--command-palette-radius, var(--radius-overlay, 0.75rem));
       box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
@@ -253,10 +253,10 @@ export class EsaCommandPalette extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      border-bottom: 1px solid var(--color-border-subtle, #efefef);
     }
     .esa-command-palette__search-icon {
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       flex-shrink: 0;
     }
     .esa-command-palette__input {
@@ -264,11 +264,11 @@ export class EsaCommandPalette extends LitElement {
       border: none;
       outline: none;
       font-size: var(--font-size-300, 1rem);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       background: transparent;
       font-family: inherit;
     }
-    .esa-command-palette__input::placeholder { color: var(--color-text-muted, #737373); }
+    .esa-command-palette__input::placeholder { color: var(--color-content-muted, #737373); }
 
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
@@ -277,8 +277,8 @@ export class EsaCommandPalette extends LitElement {
       border-radius: var(--radius-control, 0.25rem);
       font-size: var(--font-size-100, 0.75rem);
       font-family: inherit;
-      color: var(--color-text-muted, #737373);
-      background: var(--color-surface-sunken, #efefef);
+      color: var(--color-content-muted, #737373);
+      background: var(--color-background-sunken, #efefef);
     }
 
     .esa-command-palette__results {
@@ -291,7 +291,7 @@ export class EsaCommandPalette extends LitElement {
       font-weight: var(--font-weight-semibold, 550);
       text-transform: var(--text-transform-uppercase, uppercase);
       letter-spacing: var(--letter-spacing-wide, 0.03em);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
     }
 
     .esa-command-palette__item {
@@ -303,14 +303,14 @@ export class EsaCommandPalette extends LitElement {
       border: none;
       border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       font-size: var(--font-size-200, 0.9375rem);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-surface-sunken, #efefef)); }
+    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-background-sunken, #efefef)); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -325,13 +325,13 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__item-label { font-weight: var(--font-weight-medium, 500); }
     .esa-command-palette__item-desc {
       font-size: var(--font-size-150, 0.875rem);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
     }
 
     .esa-command-palette__empty {
       padding: var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-muted, #737373);
       font-size: var(--font-size-200, 0.9375rem);
     }
   `;

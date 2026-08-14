@@ -11,7 +11,7 @@ import EsaButton from '@esa/ecology/esa-button.astro';
 const colors = ['primary', 'secondary', 'danger', 'success', 'warning', 'info'] as const;
 
 const props = [
-  { name: 'color', type: "'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost'", default: "'primary'", description: 'Semantic color role. Primary comes from --color-primary, which this spoke re-points in its theme.' },
+  { name: 'color', type: "'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost'", default: "'primary'", description: 'Semantic color role. Primary comes from --color-background-brand, which this spoke re-points in its theme.' },
   { name: 'appearance', type: "'fill' | 'outline'", default: "'fill'", description: 'Solid or outlined.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size.' },
   { name: 'disabled', type: 'boolean', default: 'false', description: 'Non-interactive state.' },
@@ -23,7 +23,7 @@ const props = [
   category="Actions"
   slug="esa-button"
   type=".astro"
-  summary="The inherited Ecology button, wearing the __SPOKE_NAME__ skin. Primary reflects whatever <code>--color-primary</code> this spoke's theme sets; the rest of the palette is inherited."
+  summary="The inherited Ecology button, wearing the __SPOKE_NAME__ skin. Primary reflects whatever <code>--color-background-brand</code> this spoke's theme sets; the rest of the palette is inherited."
 >
   <Section id="colors" title="Colors">
     <Preview code={`<EsaButton color="primary">Save</EsaButton>`}>

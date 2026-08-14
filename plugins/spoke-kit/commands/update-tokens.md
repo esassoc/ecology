@@ -37,6 +37,21 @@ spoke stops depending on them.
      dropping today. They are not this command's job to guess at; list them and
      say so.
 
+   **It may refuse to run.** If it exits with a *collapse collision*, this spoke
+   declares BOTH sides of a rename that merges two names into one — and gave them
+   different values. The hub merged them because they were identical THERE; here
+   the distinction is real. Rewriting both would emit the same property twice and
+   silently drop the first value.
+
+   Nothing is written in that state. Resolve it before anything else:
+   - Show the person both declarations and their values.
+   - Ask which one this spoke actually wants. Do NOT pick for them — the whole
+     reason the tool stopped is that only they know.
+   - Delete the losing declaration from the theme file, then re-run the dry run.
+
+   A spoke that declares both sides with the SAME value is not a collision and
+   will not stop — the merge loses nothing there.
+
 3. **Apply** — only after the person has seen the dry run and said go:
    `node ../ecology/scripts/migrate-tokens.mjs --write`
 
