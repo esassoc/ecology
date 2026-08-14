@@ -469,7 +469,7 @@ export class EsaSelect extends LitElement {
       box-shadow: none;
     }
     .field--error .input-wrapper--tags {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .input {
       width: 100%;
@@ -647,7 +647,7 @@ export class EsaSelect extends LitElement {
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .field--error .input:focus {
       box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));

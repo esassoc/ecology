@@ -29,25 +29,25 @@
   /* size — xs */
   --form-padding-y-xs: var(--spacing-100);
   --form-padding-x-xs: var(--spacing-200);
-  --form-font-size-xs: var(--font-size-ui-xs);
+  --form-font-size-xs: var(--typography-label-2xs-font-size);
   --form-height-xs: var(--control-height-xs, 28px);
   --form-radius-xs: var(--radius-control);
   /* size — sm */
   --form-padding-y-sm: var(--spacing-150);
   --form-padding-x-sm: var(--spacing-250);
-  --form-font-size-sm: var(--font-size-ui-sm);
+  --form-font-size-sm: var(--typography-label-xs-font-size);
   --form-height-sm: var(--control-height-sm, 32px);
   --form-radius-sm: var(--radius-control);
   /* size — md (default) */
   --form-padding-y-md: var(--spacing-200);
   --form-padding-x-md: var(--spacing-300);
-  --form-font-size-md: var(--font-size-ui-md);
+  --form-font-size-md: var(--typography-label-md-font-size);
   --form-height-md: var(--control-height-md, 40px);
   --form-radius-md: var(--radius-surface);
   /* size — lg */
   --form-padding-y-lg: var(--spacing-300);
   --form-padding-x-lg: var(--spacing-400);
-  --form-font-size-lg: var(--font-size-ui-lg);
+  --form-font-size-lg: var(--typography-body-lg-font-size);
   --form-height-lg: var(--control-height-lg, 48px);
   --form-radius-lg: var(--radius-surface);
   /* colors */
@@ -60,20 +60,29 @@
   --focus-ring-color: var(--color-border-focus);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
-  --form-border-color-error: var(--color-background-danger);
+  /* `error` is a validation VARIANT, not an interaction state — it does not sit
+     with hover/focus/pressed, and it was the one token in the file with a
+     variant in the trailing state slot. Now variant-first, which also pairs it
+     with --form-error-color below: one error treatment, two properties. */
+  --form-error-border-color: var(--color-background-danger);
   --form-text-color: var(--color-content-primary);
   --form-placeholder-color: var(--color-content-muted);
   --form-label-color: var(--color-content-secondary);
   --form-help-color: var(--color-content-muted);
   --form-error-color: var(--color-content-danger);
   /* structure */
+  /* Every form edge, including the checkbox box and the radio circle. There was
+     briefly a --form-indicator-border-width at --border-width-200, added because both
+     components asked for 2px via `var(--form-border-width, 2px)` — but that fallback
+     could never fire (this token has always been declared), so the kit shipped, was
+     reviewed and was signed off at 1px for its whole life. The 2px was an intent
+     living in dead code that nobody ever saw rendered.
+
+     Removed rather than promoted. Keeping it would have meant adding an `emphasis`
+     role at tier 2 to point it at — a role tier 2 deliberately does not have — to
+     justify a change that came from a bug. It also skipped tier 2 entirely by reading
+     --border-width-200 directly, which is the tier violation the audit exists to catch. */
   --form-border-width: var(--border-width-default);
-  /* The checkbox box and radio circle, which read heavier than a text field at the
-     same width — a 14px indicator with a hairline edge reads as unfilled rather than
-     as a control. Split from --form-border-width because both components asked for
-     2px via a fallback that could never fire: --form-border-width has always been
-     declared here, so the fallback was dead and they silently rendered 1px. */
-  --form-indicator-border-width: var(--border-width-200);
   --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
@@ -87,7 +96,13 @@
      declared value was describing padding no spoke could have been seeing. */
   --filter-container-padding: 0;
   --filter-dropdown-bg: var(--color-background-raised);
-  --filter-dropdown-border: 1px solid var(--color-border);
+  /* Was `--filter-dropdown-border: 1px solid …` — a whole shorthand behind a
+     name spelled exactly like the two bare `border` tokens that held a plain
+     colour. A theme could not re-point this one's colour without restating the
+     width and style it had no reason to care about. Now a colour, like every
+     other border hook in the file, with the component composing the shorthand
+     from --border-width-default. Value-neutral: that role is 1px. */
+  --filter-dropdown-border-color: var(--color-border);
   --filter-dropdown-radius: var(--radius-surface);
   --filter-dropdown-shadow: var(--elevation-4);
   --filter-dropdown-min-width: 200px;
@@ -109,7 +124,7 @@
   --filter-pill-label-color: var(--color-content-secondary);
   --filter-pill-text: var(--color-content-brand);
   --filter-pill-radius: var(--radius-pill);
-  --filter-pill-font-size: var(--font-size-ui-sm);
+  --filter-pill-font-size: var(--typography-label-xs-font-size);
   --filter-pill-remove-color: var(--color-content-secondary);
   --filter-pill-remove-color-hover: var(--color-content-danger);
   --filter-clear-color: var(--color-content-muted);
@@ -127,11 +142,11 @@
   --grid-radius: var(--radius-surface);
   --grid-shadow: var(--elevation-3);
   --grid-font-family: var(--font-sans);
-  --grid-font-size: var(--font-size-ui-md);
+  --grid-font-size: var(--typography-label-md-font-size);
   --grid-header-bg: var(--color-background);
   --grid-header-color: var(--color-content-primary);
   --grid-header-weight: var(--font-weight-semibold);
-  --grid-header-font-size: var(--font-size-ui-sm);
+  --grid-header-font-size: var(--typography-label-xs-font-size);
   --grid-header-border-color: var(--color-border);
   --grid-row-bg: var(--color-background-raised);
   --grid-row-bg-hover: var(--color-background-sunken);
@@ -162,7 +177,7 @@
      their INERT value (0 / same-as-resting) so they stay zero-regression and
      opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
   --sidenav-bg: var(--color-background-sunken);
-  --sidenav-border: var(--color-border-subtle);
+  --sidenav-border-color: var(--color-border-subtle);
   /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
      --sidenav-item-padding-y, which nothing could ever have read. */
   --sidenav-item-height: 40px;
@@ -227,7 +242,7 @@
      not text-secondary). Do not trust them as a record of the shipped look —
      read esa-app-shell.astro. If this is ever wired, reconcile there first. */
   --topbar-bg: var(--color-background-sunken);
-  --topbar-border: var(--color-border-subtle);
+  --topbar-border-color: var(--color-border-subtle);
   --topbar-shadow: none;
   --topbar-icon-color: var(--color-content-secondary);
   --topbar-icon-color-hover: var(--color-background-brand);
@@ -439,7 +454,7 @@
   --kbd-radius: var(--radius-control, 4px);
 
   /* esa-link-column */
-  --link-column-heading-font-size: var(--font-size-ui-md, 1rem);
+  --link-column-heading-font-size: var(--typography-label-md-font-size);
   --link-column-item-font-size: var(--font-size-150, 0.875rem);
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
@@ -463,7 +478,7 @@
   --pagination-bg: var(--color-background-raised, #ffffff);
   --pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
   --pagination-button-color: var(--color-content-primary, #171717);
-  --pagination-font-size: var(--font-size-ui-md, 14px);
+  --pagination-font-size: var(--typography-label-md-font-size);
   --pagination-padding-x: var(--spacing-400, 16px);
   --pagination-padding-y: var(--spacing-200, 8px);
   --pagination-text-color: var(--color-content-secondary, #525252);
@@ -518,11 +533,15 @@
   /* esa-snackbar-container */
   --snackbar-container-max-width: 420px;
 
-  /* esa-snackbar-item */
-  --snackbar-item-bg-danger: var(--color-content-danger);
-  --snackbar-item-bg-info: var(--color-content-info);
-  --snackbar-item-bg-success: var(--color-content-success);
-  --snackbar-item-bg-warning: var(--color-content-warning);
+  /* esa-snackbar-item — the ONE component whose tier-3 surface exposes its
+     colour-variant axis (six others read tier-2 intentions directly and cannot
+     be diverged from the rest of the kit; see SPEC.md, tier-3 colour naming).
+     Variant sits BEFORE the property, matching --app-bar-brand-bg; these four
+     were the only tokens in the file with it the other way round. */
+  --snackbar-item-danger-bg: var(--color-content-danger);
+  --snackbar-item-info-bg: var(--color-content-info);
+  --snackbar-item-success-bg: var(--color-content-success);
+  --snackbar-item-warning-bg: var(--color-content-warning);
   --snackbar-item-color: var(--color-content-inverse, #ffffff);
   --snackbar-item-radius: var(--radius-surface, 0.5rem);
 

@@ -13,13 +13,6 @@
     "semibold": { "$value": "{font-weight.550}", "$type": "fontWeight" },
     "bold":     { "$value": "{font-weight.650}", "$type": "fontWeight" }
   },
-  "font-size-ui": {
-    "$description": "Text inside interface furniture — control labels, table headers, pills, pagination. Deliberately aligned step-for-step with --control-height-*, so a component rendered at size `md` reads --font-size-ui-md. Prose uses the `typography-*` composites below; this ramp is for chrome, not content.",
-    "xs": { "$value": "{font-size.050}", "$type": "dimension" },
-    "sm": { "$value": "{font-size.100}", "$type": "dimension" },
-    "md": { "$value": "{font-size.200}", "$type": "dimension" },
-    "lg": { "$value": "{font-size.300}", "$type": "dimension" }
-  },
 
   "typography": {
     "$description": "The COMPOSITE layer: <intention>[-<size>]-<property>. An intention is the job the text does (display, heading, body, label, meta, code); the size variant is t-shirt and appears ONLY where an intention has more than one — a bare `--typography-label-font-size` is not an inconsistency, it is an intention with one size. Every composite sets all five properties rather than letting any inherit, so a composite is a complete definition rather than a partial one that depends on what it happens to sit inside. These are what src/typography.css assembles into classes; components and spokes use the class, and a spoke re-points these tokens to move a composite without forking the class. NOTE ON RESPONSIVENESS: the rubric puts a screen-size slot here (mobile/tablet/desktop) for the composites that need to shrink on small screens. This system has no such slot because it does not need one — every `--font-size-*` primitive is a `clamp()` that scales continuously with the viewport, so a composite is responsive by construction rather than by breakpoint-keyed variants.",
@@ -65,6 +58,12 @@
     "body-sm-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
     "body-sm-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
     "body-sm-letter-spacing": { "$value": "{letter-spacing.normal}", "$type": "dimension" },
+
+    "label-2xs-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The smallest UI text — the xs form-control step. Sits one below `label-xs` because the control ramp descends further than the prose family does: `--control-height-xs` is 28px and its text is font-size-050, a size no prose intention has any use for.\n\nBreaks the kit's `xs | sm | md | lg` convention by one step, deliberately. The alternative was renaming the whole label family down, which would move `label-xs` out from under 15 call sites that already match it exactly. NOTE: this renders 8–10px. Every author who hardcoded a fallback at these call sites assumed 11–13px, but those fallbacks are dead (the token has always been declared), so 8–10px is what the kit has actually shipped and been reviewed at. Whether it is too small is a live question — and a design decision, not something to change while moving tokens around." },
+    "label-2xs-font-size":      { "$value": "{font-size.050}",         "$type": "dimension" },
+    "label-2xs-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
+    "label-2xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
+    "label-2xs-letter-spacing": { "$value": "{letter-spacing.normal}", "$type": "dimension" },
 
     "label-xs-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "UI TEXT — the label family. Was a single `label` intention at one size and one weight, which is why 59 rules across the component kit worked around it: prose only ever needed one weight, so `label` shipped with one. The kit runs UI text at MEDIUM and SEMIBOLD across three sizes, and now says so.\n\nThe sizes deliberately share the `body-*` ramp (xs=100 is body's step below, sm=150 = body-sm, md=200 = body-md). Same size, different weight, different job — a table header and a paragraph can sit at the same size without being the same intention." },
     "label-xs-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },

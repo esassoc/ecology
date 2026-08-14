@@ -20,7 +20,12 @@ function watchTokenSources() {
     path.join(ROOT, 'packages', 'tokens', 'dist'),
     path.join(ROOT, 'packages', 'tokens', 'src'),
     path.join(ROOT, 'packages', 'tokens', 'tokens'),
-    path.join(ROOT, 'packages', 'ecology', 'src', 'components'),
+    // Must stay in step with SCAN_ROOTS in token-graph.ts — a root that is
+    // scanned but not watched serves stale analysis, which is the failure this
+    // plugin exists to prevent.
+    path.join(ROOT, 'packages', 'ecology', 'src'),
+    path.join(ROOT, 'packages', 'docs', 'src'),
+    path.join(ROOT, 'packages', 'spoke-template', 'src'),
   ];
   const READERS = [
     'token-graph.ts',

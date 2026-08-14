@@ -39,7 +39,7 @@ the vocabulary of the design, not a mirror of the component list.
 
 | | |
 |---|---|
-| **D1** | `--font-size-ui-*` is **killed.** It is a size-only scale running parallel to the composites, and it is the shortcut that let components pick a size without adopting a composite. Its 9 tier-3 hook consumers re-point at composite tokens. |
+| **D1** | `--font-size-ui-*` is **killed — DONE 2026-08-14.** It is a size-only scale running parallel to the composites, and it is the shortcut that let components pick a size without adopting a composite. Its 9 tier-3 hook consumers now point at the composite whose job matches: form control text at `label-*`, the large step at `body-lg`. Value-neutral — the ramp was a pure passthrough. Needed one new composite, `label-2xs` at `--font-size-050`, because the control ramp descends below where the prose family goes. |
 | **D2** | Components reference the **composite as a unit** — `typography-label` — never its five property tokens. |
 | **D3** | Kit-specific typographic needs are **tier-3 hooks**, not new tier-2 composites. |
 | **D4** | **No `esa-label`.** The kit already has this component: `esa-form-field` (label row + control slot + hint/error, size variants driving the label size). The gap is adoption, not absence — 12 of the 14 label-rendering components are Lit and cannot compose an `.astro` wrapper around their shadow internals, so they each reimplemented it. Building `esa-label` would make a 15th. Logged in the ledger. |
@@ -95,9 +95,9 @@ else moves.
 is one typographic decision reviewed once. Every batch reports its deltas — "these 4
 call sites get 50 weight units lighter" — rather than claiming neutrality.
 
-**P3 · Kill `--font-size-ui-*`.** Re-point its 9 tier-3 hooks at composites, delete the
-tokens, add the `migrations.json` row so spokes get an alias rather than a silent
-drop.
+**P3 · Kill `--font-size-ui-*`** — ✅ DONE 2026-08-14, ahead of the rest. It did not need
+the tier-3 decision after all: the hooks stay, they just point at a composite's size
+token instead of a parallel ramp. `migrations.json` row `font-size-ui-to-composites`.
 
 **P4 · Close the door.** Delete `_inject-styles.ts` (0 importers, hardcoded literals,
 dead). Add an audit rule that fails when a component reads a tier-1 typography token

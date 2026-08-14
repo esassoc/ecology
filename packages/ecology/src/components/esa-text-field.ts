@@ -253,10 +253,10 @@ export class EsaTextField extends LitElement {
     }
 
     .field--error .control {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .field--error .control:focus-within {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-border-color-error, #ef4444);
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #ef4444);
     }
 
     .help,

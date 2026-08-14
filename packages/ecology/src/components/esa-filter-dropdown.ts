@@ -420,7 +420,8 @@ export class EsaFilterDropdown extends LitElement {
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
       background: var(--filter-dropdown-bg, var(--color-background-raised, #fff));
-      border: var(--filter-dropdown-border, 1px solid var(--color-border, #e5e5e5));
+      border: var(--border-width-default, 1px) solid
+        var(--filter-dropdown-border-color, var(--color-border, #e5e5e5));
       border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
       box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
       overflow: hidden;

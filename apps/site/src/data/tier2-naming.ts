@@ -214,7 +214,7 @@ export const categoryRows: CategoryRow[] = [
   {
     category: 'typography',
     count: t2Count(/^--font-size-ui-/),
-    how: 'Three sets. `--typography-<role>[-<size>]-<property>` are the composite PROSE roles (66 tokens); `--font-{sans,mono,display}` and `--font-weight-*` are the faces and weights they are assembled from; `--font-size-ui-{xs,sm,md,lg}` is chrome text, aligned step-for-step with `--control-height-*` and referenced by no composite. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.',
+    how: `Three sets. \`--typography-<intention>[-<size>]-<property>\` are the composite PROSE tokens (${semantic.filter((t) => t.name.startsWith('--typography-')).length} of them — derived, because this said 66 for long enough to outlive being true); \`--font-{sans,mono,display}\` and \`--font-weight-*\` are the faces and weights they are assembled from; \`--font-size-ui-{xs,sm,md,lg}\` is chrome text, aligned step-for-step with \`--control-height-*\` and referenced by no composite. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.`,
   },
   {
     category: 'spacing',

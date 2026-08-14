@@ -219,10 +219,10 @@ export class EsaTextarea extends LitElement {
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-border-color-error, #ef4444);
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-error-border-color, #ef4444);
     }
 
     .help,

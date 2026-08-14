@@ -104,10 +104,10 @@ export class EsaSnackbarItem extends LitElement {
       to { transform: translateX(0); opacity: 1; }
     }
 
-    .esa-snackbar--success { background: var(--snackbar-item-bg-success, var(--color-content-success)); }
-    .esa-snackbar--warning { background: var(--snackbar-item-bg-warning, var(--color-content-warning)); }
-    .esa-snackbar--danger { background: var(--snackbar-item-bg-danger, var(--color-content-danger)); }
-    .esa-snackbar--info { background: var(--snackbar-item-bg-info, var(--color-content-info)); }
+    .esa-snackbar--success { background: var(--snackbar-item-success-bg, var(--color-content-success)); }
+    .esa-snackbar--warning { background: var(--snackbar-item-warning-bg, var(--color-content-warning)); }
+    .esa-snackbar--danger { background: var(--snackbar-item-danger-bg, var(--color-content-danger)); }
+    .esa-snackbar--info { background: var(--snackbar-item-info-bg, var(--color-content-info)); }
 
     .esa-snackbar__icon {
       flex-shrink: 0;

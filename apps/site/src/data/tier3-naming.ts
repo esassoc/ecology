@@ -184,7 +184,9 @@ const PSEUDO_STATE: Record<string, string> = {
 const SIZE_SHORT = ['xs', 'sm', 'md', 'lg', 'xl'];
 const SIZE_LONG = ['small', 'medium', 'large'];
 const SIZE_WORDS = new Set([...SIZE_SHORT, ...SIZE_LONG]);
-/** Semantic variants that trail the property, e.g. --snackbar-item-bg-danger. */
+/** Semantic variants, wherever they sit. Kept as a peel-from-the-end list because
+ *  the parser has to handle both orders — --app-bar-brand-bg puts the variant
+ *  first, and until the snackbar rename the same word could trail instead. */
 const VARIANT_WORDS = new Set(['danger', 'info', 'success', 'warning', 'primary', 'secondary', 'strong', 'inverse']);
 
 /* -------------------------------------------------------------- the parse */
@@ -305,6 +307,10 @@ const parse = (d: RawDecl): Tier3Row => {
     state,
     part,
     isColor: node?.isColor ?? false,
+    // COMPONENTS only, deliberately — not usedByFiles. `reach` is what separates
+    // a genuine category namespace (form, read by many components) from a
+    // component that happens to be named oddly, and that discrimination only
+    // works if the unit stays "components". Do not widen this to hasReader().
     reach: node?.usedByComponents.length ?? 0,
     flags,
   };
@@ -726,7 +732,7 @@ export const colourPropVocab: PropVocabRow[] = [
       return [...m.entries()].map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count);
     })(),
     total: colourRows.filter((r) => r.prop === 'color-border').length,
-    note: 'Two spellings, and unlike the other two this one is not merely cosmetic. A bare `border` holds a colour in --sidenav-border and --topbar-border, and a whole `1px solid …` shorthand in --filter-dropdown-border — which is why that third token is missing from this count: it holds no colour, so a theme cannot re-point its colour at all without restating width and style. Same word, two value types, and only the name says they are the same thing.',
+    note: 'One spelling now, and this is the property that was fixed rather than recorded. `border` used to be a second spelling here, and unlike `bg`-vs-`background` it was not merely cosmetic: --sidenav-border and --topbar-border held a plain colour while --filter-dropdown-border held a whole `1px solid …` shorthand, so two of the three were re-pointable and the third was not — a theme could not touch its colour without restating a width and style it had no reason to care about. All three are now -border-color holding a colour, with esa-filter-dropdown composing the shorthand from --border-width-default. If a second word ever reappears in this row, check the VALUES before assuming it is cosmetic.',
   },
 ];
 
@@ -818,8 +824,11 @@ export const axisUnexposed = intentionAxis.filter((a) => a.varianted === 0);
 
 /**
  * Variant words that trail the property instead of preceding it. The rubric puts
- * the variant FIRST (`button-primary-color-background`); every one of ours puts
- * it last (`--snackbar-item-bg-danger`). Derived by position in the string.
+ * the variant FIRST (`button-primary-color-background`), and so does this system
+ * (`--app-bar-brand-bg`, `--snackbar-item-danger-bg`). Derived by position in the
+ * string, so it stays a live check rather than a claim: five tokens used to fail
+ * it — esa-snackbar-item's four variant hooks and --form-border-color-error —
+ * and if a sixth appears, this is where it shows up.
  */
 export const colourVariantRows = colourRows.filter((r) => r.variant);
 export const colourVariantInverted = colourVariantRows.filter(
