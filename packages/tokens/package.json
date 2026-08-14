@@ -9,12 +9,14 @@
     "./typography.css": "./src/typography.css",
     "./type-roles.css": "./src/typography.css",
     "./layouts.css": "./src/layouts.css",
-    "./component-tokens.css": "./src/component-tokens.css"
+    "./component-tokens.css": "./src/component-tokens.css",
+    "./migrations.json": "./migrations.json"
   },
   "files": [
     "dist",
     "src",
-    "tokens"
+    "tokens",
+    "migrations.json"
   ],
   "scripts": {
     "build": "node build.js"

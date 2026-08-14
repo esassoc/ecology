@@ -79,7 +79,10 @@ SessionStart hook (`check-hub-state` — warns spoke sessions when this checkout
 is dirty/off-main, since the `file:` symlinks serve hub WIP live into spokes;
 `/ship`'s hub gate blocks deploying it, escape `ship-wip-approved:`), and commands:
 `/spoke-init` (scaffold a spoke), plus the non-dev workflow verbs `/new-prototype`,
-`/design-qa`, `/ship`, `/request-lego`. Spokes **never copy** these files — their
+`/design-qa`, `/ship`, `/request-lego`, `/update-tokens` (migrate a spoke off
+deprecated token/class names after a hub rename — driven by
+`packages/tokens/migrations.json`, which `build.js` also reads to emit the
+compatibility aliases, so a rename is declared once and everything follows). Spokes **never copy** these files — their
 checked-in `.claude/settings.json` declares the marketplace (github `esassoc/ecology`)
 and enables `spoke-kit@ecology`; anyone opening a spoke gets the install prompt.
 Teammate setup: `ONBOARDING.md` (repo root) + `scripts/doctor.mjs` (spokes run it

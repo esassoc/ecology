@@ -1486,7 +1486,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <thead>
           <tr>
             <th>Reference role</th><th>-mobile sibling</th>
-            <th>Our equivalent</th><th>size token</th><th>mobile/desktop pair</th>
+            <th>Our equivalent</th><th>size step</th><th>mobile/desktop pair</th>
           </tr>
         </thead>
         <tbody>
@@ -1504,7 +1504,15 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                     )}
                   </td>
                   <td>{c.ours ? <code>.{c.ours}</code> : <span class="req">none</span>}</td>
-                  <td>{c.oursToken ? <code class="vocab">{c.oursToken}</code> : <span class="dim">—</span>}</td>
+                  <td>
+                    {c.oursStep ? (
+                      <code class="vocab">{c.oursStep}</code>
+                    ) : c.oursToken ? (
+                      <span class="req">no scale step</span>
+                    ) : (
+                      <span class="dim">—</span>
+                    )}
+                  </td>
                   <td>
                     {c.oursBounds ? (
                       <span class="pair">encoded in the clamp</span>
