@@ -525,12 +525,16 @@ export class EsaInputTag extends LitElement {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .container--disabled {
       cursor: not-allowed;
-      /* Was a fill (--form-bg-disabled, then --color-background-disabled). Fields
-         are transparent as of 2026-08-15, so the state is carried the way the rest
-         of the kit already carried it — dimming, not a heavier box. */
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
     }
     /* Hover/focus/open each re-point --_field-border-color at higher specificity
        than a bare ".field--error .container" selector, so the error state has to

@@ -137,7 +137,12 @@
 
      SO EVERY STATE IS A BORDER STATE — rest --form-border-color, hover
      --form-border-color-hover, focus --form-border-color-focus plus the ring,
-     error --form-error-border-color, disabled opacity + --color-content-disabled.
+     error --form-error-border-color. DISABLED IS THE ONE EXCEPTION and it is a fill:
+     tier 2 ships a complete disabled triple (--color-background-disabled,
+     --color-border-disabled, --color-content-disabled) and a field reads all three.
+     That break from the container IS the signal — the field stops matching what
+     holds it precisely because it is no longer editable. Do not substitute an
+     `opacity` hack here; two of those three tokens sat unread while the kit did.
      That is also what finally spread --form-border-color-hover across the family:
      it had existed for this since the beginning and was wired into exactly ONE
      component (esa-input-tag), which was the model for the rest.

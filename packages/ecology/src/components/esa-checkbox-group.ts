@@ -217,6 +217,18 @@ export class EsaCheckboxGroup extends LitElement {
       background: var(--color-background-brand, #43608a);
       border-color: var(--color-background-brand, #43608a);
     }
+
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    /* Unchecked only — see esa-checkbox for why. */
+    .item--disabled .box:not(.box--checked) {
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+    }
     .box:focus-visible {
       outline: none;
       border-color: var(--form-border-color-focus, #43608a);

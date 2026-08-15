@@ -275,13 +275,18 @@ export class EsaFileUpload extends LitElement {
       background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #2a7e3b);
     }
-    :host([disabled]) .zone {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    :host([disabled]) .zone,
     :host([disabled]) .zone:hover {
-      border-color: var(--form-border-color, #d4d4d4);
-      background: var(--color-background-field, transparent);
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
+      cursor: not-allowed;
     }
 
     .zone__label {

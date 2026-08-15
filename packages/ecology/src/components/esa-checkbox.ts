@@ -178,6 +178,20 @@ export class EsaCheckbox extends LitElement {
       border-color: var(--color-background-brand, #43608a);
     }
 
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    /* Scoped to the UNCHECKED box on purpose: a checked box is a brand fill, and
+       painting grey over it would erase the check. The wrapper's opacity above is
+       what dims the checked case. */
+    :host([disabled]:not([checked]):not([indeterminate])) .box {
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+    }
+
     /* Type comes from .typography-body-* on the element — including its leading.
        This used to pin line-height to tight (1.3) while every other label in the
        kit led at 1.6; that was a local special case, not a decision, and choice
