@@ -76,19 +76,29 @@ const iconPath = ICON_PATHS[variant];
   )}
 </div>
 
-{dismissable && (
-  <script>
-    document.querySelectorAll('[data-esa-alert-dismiss]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const box = (btn as HTMLElement).closest('.esa-alert-box') as HTMLElement | null;
-        if (box) {
-          box.style.display = 'none';
-          box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
-        }
-      });
-    });
-  </script>
-)}
+{/* NOT wrapped in `dismissable` any more. With per-button wiring the condition was
+    honest — no dismiss buttons on this page, nothing to wire. With a DELEGATED
+    listener it reintroduces the bug it is meant to fix at one remove: the whole
+    point is to catch alerts inserted at runtime, and a page whose server-rendered
+    alerts are all non-dismissable would ship no listener at all, so a dismissable
+    one injected later would still be dead. The listener is a few lines and inert
+    until something matches. */}
+<script>
+  // DELEGATED, not per-button. This was
+  // `document.querySelectorAll('[data-esa-alert-dismiss]').forEach(btn => …)`,
+  // which runs once at load and therefore only wires alerts present in the
+  // initial HTML. An alert box is the canonical inject-at-runtime component —
+  // the dismiss button on anything rendered afterwards did nothing, silently.
+  document.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest?.('[data-esa-alert-dismiss]');
+    if (!btn) return;
+    const box = btn.closest('.esa-alert-box') as HTMLElement | null;
+    if (box) {
+      box.style.display = 'none';
+      box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
+    }
+  });
+</script>
 
 <style>
   .esa-alert-box {

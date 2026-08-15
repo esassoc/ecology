@@ -17,7 +17,7 @@ const describe = {
 };
 ---
 <ComponentDoc name="Icon Link" category="Core" slug="esa-icon-link" type=".astro" status="stable"
-  summary="The atomic nav/menu link — <strong>[icon] label [iconRight affordance]</strong>. Inherits <code>currentColor</code>, so it sits on any surface without knowing the brand; the containing bar or menu sets the color context. The single most-composed brick in app chrome.">
+  summary="<strong>⚠ DEPRECATED (2026-08-14).</strong> Folded into <a href='/components/esa-button'>esa-button</a> as <code>&lt;EsaButton variant=&quot;chrome&quot;&gt;</code> — this is now a shim that forwards and warns at build time. Migrate with <code>node ../ecology/scripts/migrate-tokens.mjs --write</code> (migrations.json: <code>icon-link-to-button-chrome</code>). The atomic nav/menu link — <strong>[icon] label [iconRight affordance]</strong>. Inherits <code>currentColor</code>, so it sits on any surface without knowing the brand; the containing bar or menu sets the color context. The single most-composed brick in app chrome.">
 
   <Section id="preview" title="Preview">
     <Preview code={`<EsaIconLink icon="trees" iconRight="chevron-down">Mitigation work</EsaIconLink>`}>

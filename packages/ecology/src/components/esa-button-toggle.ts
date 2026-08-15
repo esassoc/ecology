@@ -362,7 +362,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option--selected {
-      background: var(--form-bg, #fff);
+      background: var(--color-background-raised, #fcfcfc);
       color: var(--color-content-brand, #2a7e3b);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
@@ -373,7 +373,7 @@ export class EsaButtonToggle extends LitElement {
       background: transparent;
     }
     .option--selected:disabled {
-      background: var(--form-bg, #fff);
+      background: var(--color-background-raised, #fcfcfc);
       color: var(--color-content-disabled, #a3a3a3);
     }
 

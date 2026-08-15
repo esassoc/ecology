@@ -519,7 +519,7 @@ export class EsaInputTag extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -536,7 +536,7 @@ export class EsaInputTag extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .container--disabled {
-      background: var(--form-bg-disabled, #efefef);
+      background: var(--color-background-disabled, #fcfcfc);
       cursor: not-allowed;
     }
     /* Hover/focus/open each re-point --_field-border-color at higher specificity

@@ -214,7 +214,7 @@ export class EsaTextarea extends LitElement {
          field wants, so it reads the normal rung directly. */
       line-height: var(--typography-body-sm-line-height, 1.6);
       color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -227,9 +227,11 @@ export class EsaTextarea extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
-    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    /* Step 4 to the field's step 3 — the pair --color-background-hover was
+       written for. Until 2026-08-14 this read --form-bg-hover, which defaulted to
+       --form-bg's own value, so the hover rendered nothing at all. */
     .input:hover:not(:disabled) {
-      background: var(--form-bg-hover, var(--form-bg, #fff));
+      background: var(--color-background-hover, #e8e8e8);
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
@@ -237,7 +239,7 @@ export class EsaTextarea extends LitElement {
         var(--focus-ring-color);
     }
     .input:disabled {
-      background: var(--form-bg-disabled, #efefef);
+      background: var(--color-background-disabled, #fcfcfc);
       opacity: 0.5;
       cursor: not-allowed;
     }

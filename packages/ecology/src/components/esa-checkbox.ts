@@ -154,7 +154,7 @@ export class EsaCheckbox extends LitElement {
       box-sizing: border-box;
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       color: var(--color-content-inverse, #fff);
       transition:
         background var(--transition-fast, 150ms ease),

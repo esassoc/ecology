@@ -194,7 +194,7 @@ export class EsaDatePicker extends LitElement {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
       color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -208,7 +208,7 @@ export class EsaDatePicker extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
-      background: var(--form-bg-disabled, #efefef);
+      background: var(--color-background-disabled, #fcfcfc);
       opacity: 0.6;
       cursor: not-allowed;
     }

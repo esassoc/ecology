@@ -4,6 +4,7 @@ import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
+import EsaAppBar from '@esa/ecology/esa-app-bar.astro';
 
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
@@ -14,7 +15,10 @@ const describe = {
   size: "Control size (shared form scale).",
   icon: "Leading Lucide icon name, rendered left of the label.",
   iconRight: "Lucide icon shown to the right of the label — the affordance (`arrow-right`, `chevron-down`). Independent of `icon`; a button may carry both.",
-  iconOnly: "Square icon-only button with no text. Uses `icon` and ignores `iconRight`.",
+  iconOnly: "Square icon-only button with no text. Uses `icon` and ignores `iconRight`. Requires `label`.",
+  label: "Accessible name. Required with `iconOnly` — there is no text for a screen reader otherwise. Also sets `title`, giving the hover tooltip icon-only chrome needs.",
+  current: "Marks the current item in a navigation set (`aria-current`). Distinct from `active`, which is a toggle's pressed state (`aria-pressed`) — a nav link announced as a depressed toggle is worse than an unlabelled one.",
+  tag: "Override the rendered element. `href` already picks `<a>` vs `<button>`; this covers the case inference cannot reach — `summary`, the disclosure trigger inside `<details>`.",
   loading: "Shows a spinner; label is held in place but hidden.",
   disabled: "Disables interaction.",
   type: "Native button type.",
@@ -96,12 +100,12 @@ const describe = {
 <EsaButton iconRight="arrow-right">Continue</EsaButton>
 <EsaButton appearance="outline" iconRight="chevron-down">Export</EsaButton>
 <EsaButton icon="download" iconRight="chevron-down">Download</EsaButton>
-<EsaButton iconOnly icon="plus" aria-label="Add" />`}>
+<EsaButton iconOnly icon="plus" label="Add" />`}>
       <EsaButton icon="plus">Leading</EsaButton>
       <EsaButton iconRight="arrow-right">Continue</EsaButton>
       <EsaButton appearance="outline" iconRight="chevron-down">Export</EsaButton>
       <EsaButton icon="download" iconRight="chevron-down">Download</EsaButton>
-      <EsaButton iconOnly icon="plus" />
+      <EsaButton iconOnly icon="plus" label="Add" />
     </Preview>
   </Section>
 
@@ -118,6 +122,36 @@ const describe = {
     </Preview>
   </Section>
 
+  <Section id="chrome" title="Chrome — buttons that live on an app bar">
+    <p>Every other variant <em>owns</em> a color. That is exactly what makes them unusable
+    on chrome: <code>ghost</code> resolves its text to <code>--color-content-primary</code>,
+    which is <code>--color-gray-12</code> — the same token <code>--color-background-inverse</code>
+    paints a dark app bar with. Gray-12 on gray-12 is a contrast ratio of 1:1.</p>
+    <p><code>chrome</code> takes its color <em>from</em> context instead, so the containing
+    <a href="/components/esa-app-bar">App Bar</a> decides it and the same markup works on a
+    dark bar and a light one. The hover scrim and focus ring derive from
+    <code>currentColor</code> for the same reason. This variant absorbed
+    <code>esa-icon-button</code> (with <code>iconOnly</code>) and <code>esa-icon-link</code>
+    (with a label) — both are deprecated shims now.</p>
+    <Preview code={`<EsaAppBar tone="brand-strong">
+  <EsaButton variant="chrome" icon="trees" iconRight="chevron-down">Mitigation work</EsaButton>
+  <EsaButton variant="chrome" current href="/reporting" icon="trending-up">Reporting</EsaButton>
+  <EsaButton slot="end" variant="chrome" iconOnly icon="search" label="Search" />
+</EsaAppBar>`}>
+      <div style="width:100%">
+        <EsaAppBar tone="brand-strong">
+          <EsaButton variant="chrome" icon="trees" iconRight="chevron-down">Mitigation work</EsaButton>
+          <EsaButton variant="chrome" current href="/reporting" icon="trending-up">Reporting</EsaButton>
+          <EsaButton slot="end" variant="chrome" iconOnly icon="search" label="Search" />
+        </EsaAppBar>
+        <EsaAppBar tone="surface">
+          <EsaButton variant="chrome" icon="trees" iconRight="chevron-down">Same markup, light bar</EsaButton>
+          <EsaButton slot="end" variant="chrome" iconOnly icon="search" label="Search" />
+        </EsaAppBar>
+      </div>
+    </Preview>
+  </Section>
+
   <Section id="api" title="API">
     <ApiTable slug="esa-button" describe={describe} />
   </Section>
@@ -126,7 +160,14 @@ const describe = {
     <ul class="a11y">
       <li>Renders a native <code>&lt;button&gt;</code> — keyboard and screen-reader behavior come for free.</li>
       <li>Visible focus ring via <code>--focus-ring-*</code> tokens (2px, offset).</li>
-      <li><code>active</code> sets <code>aria-pressed</code>; <code>iconOnly</code> buttons require an <code>aria-label</code>.</li>
+      <li><code>active</code> sets <code>aria-pressed</code> (a toggle); <code>current</code> sets
+      <code>aria-current</code> (a nav position). They are separate props because they are
+      separate claims.</li>
+      <li><code>iconOnly</code> requires <code>label</code>. This is checked at build time and
+      warns rather than failing the type — the label is a slot, so a boolean flag cannot make a
+      sibling prop mandatory. Passing <code>aria-label</code> directly also satisfies it.</li>
+      <li><code>variant="chrome"</code> derives its focus ring from <code>currentColor</code>
+      rather than <code>--focus-ring-color</code>, so the ring stays visible on a dark app bar.</li>
       <li><code>loading</code> keeps the label in the DOM (visually hidden) so width doesn't jump and the name persists.</li>
       <li><code>warning</code> fill uses dark text for contrast on the amber background.</li>
     </ul>

@@ -18,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Resolves against THIS script's path, not the spoke's cwd — spokes run the
 // hub's copy directly as `../ecology/scripts/doctor.mjs`.
-import { renameProp } from './lib/token-rename.mjs';
+import { renameProp, renameComponent, declPattern } from './lib/token-rename.mjs';
 
 const HUB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CWD = process.cwd();
@@ -166,12 +166,25 @@ if (isSpoke) {
   const manifest = path.join(CWD, 'node_modules', '@esa', 'tokens', 'migrations.json');
   if (existsSync(manifest)) {
     const { migrations } = readJson(manifest) ?? { migrations: [] };
-    const names = migrations.flatMap((m) =>
-      m.pairs.map(([from]) => ({ from, kind: m.kind, components: m.components ?? [], module: m.module })),
-    );
+    // A `component` row carries no `pairs` — it is a whole-tag rename, not a
+    // (from, to) swap — so it is collected separately. Reading `m.pairs` on one
+    // would throw and take the entire doctor run down with it.
+    const componentRows = migrations.filter((m) => m.kind === 'component');
+    const names = migrations
+      .filter((m) => Array.isArray(m.pairs))
+      .flatMap((m) =>
+        m.pairs.map(([from]) => ({ from, kind: m.kind, components: m.components ?? [], module: m.module })),
+      );
     const srcDir = path.join(CWD, 'src');
     let hits = 0;
     const seen = new Set();
+    // Declarations are counted apart from reads, because the reassuring sentence
+    // below ("they still render, via compatibility aliases") is TRUE of a read and
+    // FALSE of a declaration. An alias rescues `var(--old)`; it cannot rescue
+    // `--old: value` — nothing reads that name any more, so the spoke keeps its
+    // theme file and silently loses its theme. Reporting both under one number
+    // describes the dangerous case with the wording written for the safe one.
+    const declaredDeprecated = new Set();
     const walk = (d) => {
       for (const e of readdirSync(d, { withFileTypes: true })) {
         const fp = path.join(d, e.name);
@@ -188,12 +201,24 @@ if (isSpoke) {
                 ? new RegExp(`${from}(?![\\w-])`, 'g')
                 : new RegExp(`(?<![\\w-])${from}(?![\\w-])`, 'g')) ?? []).length;
           if (n) { hits += n; seen.add(kind === 'prop' ? `${from}=` : from); }
+          if (kind === 'token' && declPattern(from).test(src)) declaredDeprecated.add(from);
+        }
+        // A removed component is reached the same way a prop is — through the
+        // file's own imports, so an aliased `<IconButton>` counts too.
+        for (const m of componentRows) {
+          const { count } = renameComponent(src, m);
+          if (count) { hits += count; seen.add(`<${m.from}>`); }
         }
       }
     };
     if (existsSync(srcDir)) walk(srcDir);
     warn(`no deprecated @esa/tokens names in src/`, hits === 0,
-      `${hits} use(s) of ${seen.size} deprecated name(s) — they still render, via compatibility aliases the hub will eventually drop. Preview the fix: \`node ../ecology/scripts/migrate-tokens.mjs\`, then re-run with --write.`);
+      `${hits} use(s) of ${seen.size} deprecated name(s) — reads still render, via compatibility aliases the hub will eventually drop. Preview the fix: \`node ../ecology/scripts/migrate-tokens.mjs\`, then re-run with --write.`);
+
+    // Louder, and separate, because this one is not "will break later" — it is
+    // already wrong, and silently.
+    warn(`no deprecated names DECLARED in src/`, declaredDeprecated.size === 0,
+      `${declaredDeprecated.size} deprecated name(s) are declared here, not just read: ${[...declaredDeprecated].slice(0, 6).join(', ')}${declaredDeprecated.size > 6 ? `, +${declaredDeprecated.size - 6} more` : ''}. An alias rescues a READ; it cannot rescue a DECLARATION — nothing reads these names any more, so each override is ALREADY INERT and this spoke is rendering the hub default with no error to say so. \`node ../ecology/scripts/migrate-tokens.mjs --write\` renames the declarations, which is what makes them count again.`);
   }
 }
 

@@ -93,11 +93,18 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
 <script>
   // Forward clicks as a bubbling, composed event so a parent esa-filter-container
   // can clear filters — keeps this file presentational and service-free.
-  document.querySelectorAll('[data-esa-filter-clear]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      btn.dispatchEvent(
-        new CustomEvent('esa-filter-clear', { bubbles: true, composed: true })
-      );
-    });
+  //
+  // DELEGATED, not per-button. This was
+  // `document.querySelectorAll('[data-esa-filter-clear]').forEach(btn => …)`,
+  // which runs once at load. The component's own header says the surrounding
+  // container should "toggle it at runtime" via `hidden` — and doing exactly that
+  // re-rendered the button into a state where clicking it emitted nothing, with
+  // no error. One listener on the document survives any number of re-renders.
+  document.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest?.('[data-esa-filter-clear]');
+    if (!btn) return;
+    btn.dispatchEvent(
+      new CustomEvent('esa-filter-clear', { bubbles: true, composed: true })
+    );
   });
 </script>

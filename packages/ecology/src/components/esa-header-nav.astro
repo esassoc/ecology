@@ -20,7 +20,7 @@
 // cbf-public-nav, or the App Bar specimen). This component is the batteries-included
 // shortcut for the common brand · nav · user shape.
 import EsaAppBar from './esa-app-bar.astro';
-import EsaIconLink from './esa-icon-link.astro';
+import EsaButton from './esa-button.astro';
 import EsaNavDropdown from './esa-nav-dropdown.astro';
 import EsaIcon from './esa-icon.astro';
 import EsaAvatar from './esa-avatar.astro';
@@ -73,7 +73,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
         </ul>
       </EsaNavDropdown>
     ) : (
-      <EsaIconLink href={item.href} icon={item.icon}>{item.label}</EsaIconLink>
+      <EsaButton variant="chrome" href={item.href} icon={item.icon}>{item.label}</EsaButton>
     )
   )}
 

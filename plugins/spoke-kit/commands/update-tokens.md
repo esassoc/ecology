@@ -36,6 +36,21 @@ spoke stops depending on them.
      declare and no migration covers. These are already broken — the property is
      dropping today. They are not this command's job to guess at; list them and
      say so.
+   - **`✖ NOT REWRITTEN — replacement is itself gone`**: the hub renamed a name and
+     then DELETED the destination, so renaming onto it would swap one dead name for
+     another. The tool leaves these alone and prints the chain. Do not try to
+     hand-apply the rename — the destination does not exist. Say what the reads are
+     resolving to today (nothing; the literal fallback at each call site is what
+     they are seeing) and that the fix is a decision about the CAPABILITY, usually a
+     different CSS property rather than a new token. If they need it back, that is
+     `/request-lego`.
+   - **`⚠ declared here, not just read`**: the spoke DECLARES a deprecated name.
+     Lead with this one — it is not "will break later", it is **already wrong**. An
+     alias rescues `var(--old)`; it cannot rescue `--old: value`, because components
+     read the new name and this file sets the old one. Every listed override is
+     inert right now and the spoke is rendering the hub default with nothing to say
+     so. Theme files are all declarations, so this is usually where a spoke's brand
+     has quietly stopped applying.
 
    **It may refuse to run.** If it exits with a *collapse collision*, this spoke
    declares BOTH sides of a rename that merges two names into one — and gave them

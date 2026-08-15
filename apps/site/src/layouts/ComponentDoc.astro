@@ -79,7 +79,7 @@ const sharedHooks = hooks.filter((h) => h.scope !== 'exclusive');
       <h3 class="ts-h">Shared tokens it reads</h3>
       <p class="ts-sub">
         Owned by a family or by the semantic layer. Still overridable — but scope the
-        override (<code>{'esa-foo { --form-bg: … }'}</code>) unless you mean to move
+        override (<code>{'esa-foo { --form-border-color: … }'}</code>) unless you mean to move
         everything that reads it. <strong>Reach</strong> says what else that is.
       </p>
       <ThemingTable hooks={sharedHooks} mode="shared" />

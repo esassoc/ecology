@@ -45,20 +45,38 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
   )}
 </span>
 
-{removable && (
-  <script>
-    document.querySelectorAll('[data-esa-pill-remove]').forEach((btn) => {
-      btn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const pill = (btn as HTMLElement).closest('.esa-pill') as HTMLElement | null;
-        if (pill) {
-          pill.dispatchEvent(new CustomEvent('removed', { bubbles: true }));
-          pill.remove();
-        }
-      });
-    });
-  </script>
-)}
+{/* NOT gated on `removable`, for the same reason esa-alert-box is not: a delegated
+    listener exists precisely to catch pills rendered after load, so gating it on a
+    BUILD-TIME prop reintroduces the bug at one remove — a page whose server-rendered
+    pills are all non-removable would ship no listener, and a removable pill injected
+    later would still have a dead X. */}
+<script>
+  // DELEGATED, not per-button. This used to be
+  // `document.querySelectorAll('[data-esa-pill-remove]').forEach(btn => …)`,
+  // which runs once at load, so any pill rendered afterwards had a dead X and
+  // said nothing about it.
+  //
+  // CAPTURE phase, deliberately. The per-button version called
+  // stopPropagation() so that removing a pill inside a clickable row did not
+  // also activate the row. Delegating on the bubble phase would lose that — by
+  // the time document sees the click, every ancestor already has. Listening in
+  // capture puts this ahead of all of them, so stopPropagation() still means
+  // what it meant.
+  document.addEventListener(
+    'click',
+    (event) => {
+      const btn = (event.target as HTMLElement).closest?.('[data-esa-pill-remove]');
+      if (!btn) return;
+      event.stopPropagation();
+      const pill = btn.closest('.esa-pill') as HTMLElement | null;
+      if (pill) {
+        pill.dispatchEvent(new CustomEvent('removed', { bubbles: true }));
+        pill.remove();
+      }
+    },
+    true,
+  );
+</script>
 
 <style>
   .esa-pill {
