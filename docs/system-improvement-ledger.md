@@ -367,12 +367,41 @@ codemod rather than a flag day.
   `--color-background-disabled` gray-2 → **gray-1** (forced — it is pinned one step lighter
   than the field, and gray-2 would have made disabled and resting identical, the exact
   collision the day before had just resolved). Net stack: canvas/raised/floating gray-1,
-  field gray-2, wells gray-3, hover gray-4. **Two consequences to weigh, both recorded not
-  litigated:** (a) the field's separation drops 1.11 → **1.03**, so the border is now doing
-  nearly all the work of describing a field's edge — this is a flat, quiet treatment by
-  choice; (b) the canvas now EQUALS `--color-background-raised`, which undoes the documented
-  deliberate inversion, so a card separates by its 1px border alone — `esa-card--elevated`
-  has no border and leans entirely on `--elevation-2`, a 4% shadow · `hub-fix` · **done**
+  field gray-2, wells gray-3, hover gray-4. The field's separation dropped 1.11 → **1.03**,
+  which is what led to the entry below. **One consequence that outlived it:** the canvas now
+  EQUALS `--color-background-raised`, undoing the documented deliberate inversion, so a card
+  separates by its 1px border alone — `esa-card--elevated` has no border and leans entirely
+  on `--elevation-2`, a 4% shadow · `hub-fix` · **done**
+- ✅ **Fields have no fill at all — `--color-background-field: transparent`** · *Evidence:*
+  three greys were tried in two days (`background-raised`, gray-3, gray-2) and every one
+  measured between **1.00 and 1.11** against the surface it sat on, while `--color-border`
+  reaches 1.53. The fill was never carrying the affordance. Worse, each fixed grey was right
+  on the canvas and **inverted on a sunken surface** — a field in a filled card, a well or
+  the sidenav rail rendered *lighter* than its own container. A `--color-gray-a-*` alpha wash
+  was considered and rejected: it adapts, but black-alpha darkens an already-dark surface, so
+  it still needs a dark-scheme counterpart · *Action:* transparent — a field is the colour of
+  whatever contains it, correct in every container and both schemes with no override
+  anywhere. **Every field state is now a border state:** rest `--form-border-color`, hover
+  `--form-border-color-hover`, focus `--form-border-color-focus` + ring, error
+  `--form-error-border-color`, disabled `opacity` + `--color-content-disabled`. This is also
+  what finally spread `--form-border-color-hover` across the family — it had existed for
+  exactly this and was wired into **one** component (`esa-input-tag`), logged as a defect the
+  day before and fixed as a by-product. `--color-background-disabled` went back to gray-3
+  with zero consumers. **The trap, worth keeping:** the declaration is *written*, not
+  omitted — dropping `background` gives a native element the UA's own paint (`field` ≈ white
+  on `<input>/<textarea>/<select>`, `ButtonFace` ≈ #efefef on `<button>`), and 6 of the 15
+  field surfaces are native, so omitting would have rendered a transparent wrapper beside a
+  white textarea beside a grey trigger, in a colour no theme can reach · `hub-fix` · **done**
+- ✅ **A live dark-mode regression, found and closed by the same change** · *Evidence:*
+  promoting `--form-bg` to `--color-background-field` moved fields onto a token
+  `apps/site/src/styles/docs-dark.css` has never heard of, so in dark mode fields rendered
+  **#f9f9f9 on a #111111 page**. The old name worked only because it pointed at
+  `--color-background-raised`, which the dark theme *does* override. `--color-background-hover`
+  (newly wired) had the same problem · *Action:* closed by transparency — a field with no
+  fill needs no dark counterpart. **The guard-shaped hole is still open, though:** a new
+  tier-2 surface role can be added with no dark override and every gate stays green. The
+  snapshot guard checks that names do not *vanish*; nothing checks that a surface role
+  declared on `:root` has a `[data-scheme='dark']` counterpart · `hub-fix` · **P1**
 - ✅ **The rule that produced it: a tier-3 token maps to ONE component** · *Evidence:* applied
   mechanically across all 311 tier-3 declarations, **23 violate** and 248 are compliant. They
   fall into three sets: `--form-*` (18 tokens, 18 reader components, five of which are not
@@ -768,3 +797,79 @@ findings were all one layer below the API, in the parts nothing generates.
   COMPONENT should be discoverable from the component, not only from its tokens — a
   pointer in the component header would have cost one line and saved the detour.
   *Priority:* medium.
+
+## Source: spacing inventory after the height removal (2026-08-15)
+Asked which components moved most when fixed heights were deleted and vertical
+padding went up one rung. Eight did, all form controls; the biggest were
+`esa-date-picker` (+20px at lg), then `esa-select` / `esa-combobox` / `esa-input-tag`
+(+18px), because each stacks an inner control inside a bordered wrapper and pays the
+new padding twice. The inventory itself was routine — the finding was what it exposed.
+
+- **A size-keyed lookup that answers for a size the stylesheet has no block for is a
+  silent hybrid, not an error** · *Evidence:* `esa-select` deliberately stops at `sm`
+  (a select is a click target with a popup; below `sm` the trigger and chevron fall
+  under a comfortable tap size — the reasoning is on `declare size` and it is sound).
+  But `LABEL_TYPE`/`VALUE_TYPE` still carried `xs` entries. So `size="xs"` shrank the
+  TEXT while the padding stayed at the `:host` default (md): 42px, **taller than the
+  component's own `sm` at 41.2px**. The ramp inverted at the bottom end. Nothing
+  errored — the type already said `'sm' | 'md' | 'lg'`, so the generated API table was
+  honest the whole time; the runtime was the liar, and only the untyped attribute path
+  (plain markup, any non-TS consumer) could reach it. *Action:* clamp out-of-range
+  sizes to the floor in `willUpdate` and warn once, rather than adding an `xs` block —
+  `size` reflects, so assigning it fixes the attribute selector and the typography
+  lookup together, and it makes the documented floor real instead of merely stated.
+  Removed the orphan `xs` keys from both maps. *Sink:* a size map and a size
+  stylesheet are two halves of one contract; a key in one and not the other should be
+  checkable. Swept all 13 size-aware components — `esa-select` was the only mismatch.
+  *Priority:* medium.
+
+- **Removing a fixed height does not create bugs so much as publish them**
+  · *Evidence:* the inversion above existed before 2026-08-14 and was invisible, because
+  a fixed `height: 40px` rendered `size="xs"` at 40px — wrong, but monotonic. Making the
+  box content-driven turned a wrong constant into a visibly wrong ORDER. *Action:* none
+  beyond the fix. *Sink:* when a system stops declaring a dimension and starts deriving
+  it, expect a wave of pre-existing errors to become visible at once; budget for that
+  rather than reading each as a regression. *Priority:* low — but it is the lens for
+  the rest of the height removal.
+
+## Source: row alignment after the height removal (2026-08-15)
+Prompted by "the select sizes are still different than they were before". Two causes,
+only one of them a bug — and the proposed fix (point the component at a smaller
+spacing rung) was the one that had to be argued down with measurements.
+
+- **When a box stops being a declared height and becomes content + padding, LEADING
+  becomes the term that sets its height** · *Evidence:* `component-tokens.css` states
+  that siblings "share a padding value and a type rung, so they resolve to the same
+  height". Measured at md they did not — the spread was **14px** (button 41 …
+  date-picker 55). Padding was identical (24px) across all of them; the whole
+  difference was line-height: 15px on the four components that restated
+  `--line-height-none`, 27px on the four that let the body-* composite's relaxed
+  leading through. `typography-migration-log.md` had already written this down —
+  "the load-bearing ones are the auto-height elements" — and `esa-button` had been
+  fixed for it; `esa-select`, `esa-combobox`, `esa-date-picker` and `esa-input-tag`
+  were missed. *Action:* restate `line-height: var(--line-height-none, 1)` on each
+  field box. Spread at md 14px → **5px**; the four field components now agree exactly
+  (46px). *Sink:* on a SINGLE-LINE control leading has no typographic job — there is
+  one line and the space around it is invisible — so restating it costs nothing and
+  is not a typography regression. `esa-textarea` is the one that must keep it.
+  *Priority:* high — it was breaking the row-alignment guarantee the token file makes.
+
+- **Do not cancel a fluid quantity with a static one** · *Evidence:* the alternative
+  proposed was to give the taller components a smaller `--spacing-*` rung so the
+  totals matched. Measured, the gap between select and button is **not constant**:
+  12.0px at 1600px wide, 11.2 at 768, 9.8 at 375 — because leading is
+  `1.8 × font-size` and font-size is `clamp()`, while a padding rung is a fixed rem.
+  A static offset therefore lands correctly at exactly one viewport. Worse, a spoke
+  re-pointing `--typography-body-md-line-height` (a legitimate tier-2 move) would
+  break it by ~9px with nothing to say so, and the padding value would no longer mean
+  padding — the same unexplainable per-control indirection `--form-padding-*` was
+  deleted for the day before. *Action:* fixed the cause instead. *Sink:* the test for
+  "compensate vs fix" is whether the quantity being cancelled can move independently.
+  If it is fluid or themeable, compensation is a bug with a delay on it.
+  *Priority:* medium — this is the reasoning, not a change.
+
+- **Residual, NOT fixed:** a native `<input>` field lands ~5px taller than a flex
+  `<button>`/`<div>` trigger on the same step (md: text-field/select/input-tag 46,
+  date-picker 45, combobox 42, button 41) because an input has intrinsic content
+  sizing the others do not. CLAUDE.md's "one scale across button/input/icon so they
+  line up on a row" is therefore still approximate. Open.

@@ -388,10 +388,16 @@ the form surface. It is worth knowing what that revealed: it was the ONLY
 consumer of `--color-background-disabled` in the whole kit, so the intention
 token existed to serve exactly one hook wrapping it. That is also why
 `--color-background-disabled` could be re-pointed twice inside two days at zero
-blast radius: gray-3 → gray-2 → gray-1. It does not pick its own step. It is
-pinned one lighter than `--color-background-field`, because a disabled field the
-same colour as a resting one says nothing — so when the field surface moved, it
-moved. A role with one consumer is a role you can still change your mind about.
+blast radius: gray-3 → gray-2 → gray-1, and then back to gray-3 with **no
+consumers at all** once fields went transparent and stopped needing a disabled
+fill. It never picked its own step — it was pinned one lighter than
+`--color-background-field`, because a disabled field the same colour as a
+resting one says nothing, so every time the field moved, it moved.
+
+That chase is the lesson, not the values. **A role whose value is derived from
+another role's value is not a role, it is a calculation.** The kit's other
+disabled states never had this problem because they cue with `opacity` and
+`content-disabled` rather than a fill — which is what fields do now too.
 
 **Renaming a tier-3 token is riskier than renaming one at tier 1 or 2, and the
 machinery does not say so.** `build.js` emits `--old: var(--new)` for every row

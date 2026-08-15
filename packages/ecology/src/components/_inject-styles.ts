@@ -10,7 +10,7 @@ export function injectStyles(): void {
     .esa-field__input, .esa-field__select, .esa-field__textarea {
       width:100%; padding:.5rem .75rem; border: var(--border-width-default, 1px) solid var(--form-border-color,#e5e5e5);
       border-radius:.25rem; font-family:inherit; font-size:.9375rem;
-      color:var(--form-text-color,#171717); background:var(--color-background-field,#f9f9f9);
+      color:var(--form-text-color,#171717); background:var(--color-background-field,transparent);
       transition:border-color .12s,box-shadow .12s; outline:none; box-sizing:border-box;
     }
     .esa-field__input:focus, .esa-field__select:focus, .esa-field__textarea:focus {
