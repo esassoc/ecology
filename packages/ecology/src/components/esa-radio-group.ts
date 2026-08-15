@@ -214,6 +214,19 @@ export class EsaRadioGroup extends LitElement {
       background: var(--color-background-brand, #43608a);
     }
 
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    /* The dot is a CHILD here, not a fill on the circle, so unlike the checkbox
+       this can paint every disabled circle without erasing the selection. */
+    .item--disabled .circle {
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+    }
+
     .item-label {
       color: var(--color-content-primary, #171717);
     }

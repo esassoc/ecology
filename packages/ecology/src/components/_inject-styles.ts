@@ -18,6 +18,10 @@ export function injectStyles(): void {
       box-shadow:0 0 0 3px var(--color-background-brand-subtle,rgba(0,88,98,.08));
     }
     .esa-field__input::placeholder, .esa-field__textarea::placeholder { color:var(--form-placeholder-color,#737373); }
+    .esa-field__input:disabled, .esa-field__select:disabled, .esa-field__textarea:disabled {
+      background:var(--color-background-disabled,#f0f0f0); border-color:var(--color-border-disabled,#d9d9d9);
+      color:var(--color-content-disabled,#8d8d8d); cursor:not-allowed;
+    }
     .esa-field__input--error, .esa-field__select--error, .esa-field__textarea--error { border-color:var(--form-error-border-color,#ef4444); }
     .esa-field__error { font-size:.8125rem; color:var(--form-error-color,#ef4444); }
     .esa-field__select { appearance:none; padding-right:2rem; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right .75rem center; }
