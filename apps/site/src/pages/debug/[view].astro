@@ -1758,7 +1758,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                 <div class="table-scroll">
                   <table class="tok-table">
                     <thead>
-                      <tr><th>Variant</th><th>Property</th><th>Token</th><th>Wired to</th><th>Resolves to</th><th>Used by</th></tr>
+                      <tr><th>Variant</th><th>Property</th><th>Token</th><th>References</th><th>Resolves to</th><th>Used by</th></tr>
                     </thead>
                     <tbody>
                       {g.variants.map((v) => v.rows.map((r, i) => {
@@ -1779,24 +1779,30 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                                   — so the consumer question can only be answered here,
                                   against the CLASS a component actually applies. */}
                               <span class="composite-edges">
-                                {v.usedBy.components.length === 0 && v.usedBy.files.length === 0 ? (
-                                  <span class="orphan-flag">orphan</span>
-                                ) : (
+                                {/* THE question this cell exists to answer: which
+                                    components apply this composite. Spelled out
+                                    rather than collapsed behind a count — a list of
+                                    component names is the useful artefact, and for
+                                    26 of 28 composites that list is EMPTY, which is
+                                    a finding you should not have to click to see. */}
+                                <span class="used-by-comp">
+                                  <span class="wired-label">used by components</span>
+                                  {v.usedBy.components.length > 0 ? (
+                                    v.usedBy.components.map((c) => <code class="comp-chip">{c}</code>)
+                                  ) : (
+                                    <span class="pill none">none</span>
+                                  )}
+                                </span>
+                                {v.usedBy.files.length > 0 && (
                                   <details class="uses">
-                                    <summary>
-                                      {v.usedBy.components.length > 0
-                                        ? <span class="pill">{v.usedBy.components.length} comp</span>
-                                        : <span class="pill none">0 comp</span>}
-                                      {v.usedBy.files.length > 0 && <span class="pill">{v.usedBy.files.length} file</span>}
-                                    </summary>
-                                    {v.usedBy.components.length > 0 && <p><b>Components:</b> {v.usedBy.components.join(', ')}</p>}
-                                    {v.usedBy.files.length > 0 && <p><b>Files:</b> {v.usedBy.files.join(', ')}</p>}
+                                    <summary><span class="pill">{v.usedBy.files.length} file</span></summary>
+                                    <p><b>Files:</b> {v.usedBy.files.join(', ')}</p>
                                   </details>
                                 )}
-                                {v.wiredTo.length > 0 && (
+                                {v.assemblesFrom.length > 0 && (
                                   <span class="wired-ing">
-                                    <span class="wired-label">wired to</span>
-                                    {v.wiredTo.map((w) => (
+                                    <span class="wired-label">assembles from</span>
+                                    {v.assemblesFrom.map((w) => (
                                       <code title={w.name}>
                                         {w.property}: <b>{w.variant}</b>
                                       </code>
@@ -1815,17 +1821,17 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                               reaches past the ingredients straight into a primitive,
                               which is legitimate for size/leading/tracking (there is
                               no ingredient layer for those) and worth seeing. */}
-                          <td class="c-wired">
-                            {r.wiredTo ? (
+                          <td class="c-refs">
+                            {r.references ? (
                               <>
-                                <code class="vocab">{r.wiredTo}</code>
-                                {r.wiredTo === r.tier1 && <span class="fb">via tier 1</span>}
+                                <code class="vocab">{r.references}</code>
+                                {r.references === r.tier1 && <span class="fb">via tier 1</span>}
                               </>
                             ) : <span class="dim">literal</span>}
                           </td>
                           <td class="c-value">
-                            {r.tier1 && r.tier1 !== r.wiredTo && <code>{r.tier1}</code>}
-                            <span class="dim">{r.tier1 && r.tier1 !== r.wiredTo ? ' · ' : ''}{r.resolved}</span>
+                            {r.tier1 && r.tier1 !== r.references && <code>{r.tier1}</code>}
+                            <span class="dim">{r.tier1 && r.tier1 !== r.references ? ' · ' : ''}{r.resolved}</span>
                           </td>
                           <td class="c-used">
                             {node && node.usedByTokens.length === 0 && node.usedByComponents.length === 0 && node.usedByFiles.length === 0 ? (
@@ -1868,7 +1874,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                 </summary>
                 <div class="table-scroll">
                   <table class="tok-table">
-                    <thead><tr><th>Variant</th><th>Token</th><th>Wired to</th><th>Resolves to</th><th>Used by</th></tr></thead>
+                    <thead><tr><th>Variant</th><th>Token</th><th>References</th><th>Resolves to</th><th>Used by</th></tr></thead>
                     <tbody>
                       {g.rows.map((r) => {
                         const node = t2.semanticNodes.get(r.name);
@@ -1876,12 +1882,12 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                         <tr data-token={r.name}>
                           <td><code class="vocab">{r.variant}</code></td>
                           <td class="c-name"><code>{r.name}</code></td>
-                          <td class="c-wired">
-                            {r.wiredTo ? <code class="vocab">{r.wiredTo}</code> : <span class="dim">literal</span>}
+                          <td class="c-refs">
+                            {r.references ? <code class="vocab">{r.references}</code> : <span class="dim">literal</span>}
                           </td>
                           <td class="c-value">
-                            {r.tier1 && r.tier1 !== r.wiredTo && <code>{r.tier1}</code>}
-                            <span class="dim">{r.tier1 && r.tier1 !== r.wiredTo ? ' · ' : ''}{r.resolved}</span>
+                            {r.tier1 && r.tier1 !== r.references && <code>{r.tier1}</code>}
+                            <span class="dim">{r.tier1 && r.tier1 !== r.references ? ' · ' : ''}{r.resolved}</span>
                           </td>
                           {/* The count that matters most on this table. These are the
                               most directly-read tokens in the system, and that IS the
