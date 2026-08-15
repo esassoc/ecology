@@ -183,8 +183,12 @@ export class EsaDatePicker extends LitElement {
     .input {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
+      /* Leading is load-bearing on a content-sized box — see the long note in
+         esa-select's .input. Single line, so the composite's relaxed leading only
+         adds height. */
+      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
-      background: var(--color-background-field, #f9f9f9);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -198,7 +202,6 @@ export class EsaDatePicker extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
-      background: var(--color-background-disabled, #fcfcfc);
       opacity: 0.6;
       cursor: not-allowed;
     }

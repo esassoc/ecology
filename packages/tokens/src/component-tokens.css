@@ -124,29 +124,43 @@
      --color-background-disabled, read directly (migrations.json:
      form-bg-to-background-field).
 
-     Unlike the padding and height deletions this is NOT value-neutral, and that
-     was the point. --form-bg pointed at --color-background-raised, the CARD
-     surface — so a field sitting on a card rendered at contrast 1.00 against it,
-     invisible but for a border that itself only reaches 1.53. Fields are now on
-     --color-background-field, one step in from the canvas. (It landed on gray-3
-     on 2026-08-14 and moved to gray-2 the next day, when --color-background
-     itself moved to gray-1 — the token encodes "one step in from the page", not
-     an absolute step, so the pair moves together.)
+     A FIELD HAS NO FILL. --color-background-field is `transparent`: a field is
+     the colour of whatever contains it. Three greys were tried first and all
+     three were wrong. --form-bg pointed at --color-background-raised, the CARD
+     surface, so a field on a card rendered at contrast 1.00 against it; gray-3
+     and then gray-2 got that to 1.11 and 1.03. THE FILL WAS NEVER DOING THE
+     WORK — the border always was, and it only reaches 1.53 itself. Worse, every
+     fixed grey was right on the canvas and INVERTED on a sunken well, a filled
+     card or the sidenav rail, where the field rendered LIGHTER than its own
+     container. Transparent is the only value correct in all of them, in both
+     colour schemes, with no override anywhere.
+
+     SO EVERY STATE IS A BORDER STATE — rest --form-border-color, hover
+     --form-border-color-hover, focus --form-border-color-focus plus the ring,
+     error --form-error-border-color, disabled opacity + --color-content-disabled.
+     That is also what finally spread --form-border-color-hover across the family:
+     it had existed for this since the beginning and was wired into exactly ONE
+     component (esa-input-tag), which was the model for the rest.
+
+     IT IS WRITTEN, NOT OMITTED, and that is not fussiness. Dropping the
+     `background` declaration does NOT give transparency on a native element: the
+     UA stylesheet paints <input>/<textarea>/<select> with `field` (about white)
+     and <button> with `ButtonFace` (about #efefef). Six of the fifteen field
+     surfaces here are native, so omitting would render a transparent wrapper
+     beside a white textarea beside a grey combobox trigger — varying by browser,
+     in a colour no theme can reach and no audit can see.
 
      --form-bg-hover is the clearest case for why the promotion was the right
      shape rather than a rename. It pointed at --color-background-raised, the
      SAME value as --form-bg, so the kit shipped a hover hook that rendered
-     nothing; meanwhile --color-background-hover (step 4, "the neutral
-     counterpart to background-brand-muted-hover") sat at tier 2 with ZERO
-     readers in the entire kit. The role for the missing hover already existed.
+     nothing for its whole life.
 
      One reader did NOT follow, and it is the reason a blind substitution would
      have been wrong: esa-button-toggle's `.option--selected` read --form-bg to
      lift the chosen segment out of a --color-background-sunken track. It is a
-     raised chip, not a field. On the field surface it would have all but merged
-     with the track it sits in (gray-2 on gray-3 is contrast 1.07) and the
-     selection would have stopped reading. It takes --color-background-raised
-     now, which is what it always meant. */
+     raised chip, not a field — transparent would have erased the selection
+     outright. It takes --color-background-raised now, which is what it always
+     meant. */
   --form-border-color: var(--color-border);
   --form-border-color-hover: var(--color-border-strong);
   --form-border-color-focus: var(--color-border-focus);

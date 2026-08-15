@@ -204,7 +204,7 @@ export class EsaTextarea extends LitElement {
          field wants, so it reads the normal rung directly. */
       line-height: var(--typography-body-sm-line-height, 1.6);
       color: var(--form-text-color, #171717);
-      background: var(--color-background-field, #f9f9f9);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -217,11 +217,12 @@ export class EsaTextarea extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
-    /* Step 4 to the field's step 3 — the pair --color-background-hover was
-       written for. Until 2026-08-14 this read --form-bg-hover, which defaulted to
-       --form-bg's own value, so the hover rendered nothing at all. */
+    /* Hover moves the BORDER, not the fill — the field is transparent in every
+       state so that it is the colour of whatever contains it.
+       --form-border-color-hover already existed for exactly this and was wired
+       into one component; it is the family treatment now. */
     .input:hover:not(:disabled) {
-      background: var(--color-background-hover, #e8e8e8);
+      --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
@@ -229,7 +230,6 @@ export class EsaTextarea extends LitElement {
         var(--focus-ring-color);
     }
     .input:disabled {
-      background: var(--color-background-disabled, #fcfcfc);
       opacity: 0.5;
       cursor: not-allowed;
     }

@@ -232,7 +232,7 @@ export class EsaColorPicker extends LitElement {
       padding: var(--_pad-y) var(--_padding-x);
       line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
-      background: var(--color-background-field, #f9f9f9);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_radius);
       outline: none;
@@ -246,7 +246,6 @@ export class EsaColorPicker extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .hex-input:disabled {
-      background: var(--color-background-disabled, #fcfcfc);
       opacity: 0.6;
       cursor: not-allowed;
     }

@@ -51,20 +51,17 @@
   --color-border-strong:  var(--__SCOPE__-gray-300);
   --color-background:     var(--__SCOPE__-gray-50);
   --color-background-sunken: var(--__SCOPE__-gray-100);
-  /* The surface of an editable field — the ONE line that tints every input,
-     textarea, select, combobox, checkbox box and radio circle without touching
-     cards, wells or the rail.
+  /* The surface of an editable field. THE HUB DEFAULT IS `transparent` — a field
+     is the colour of whatever contains it, so it is correct on a card, in a
+     dialog, on a sunken well and on a tinted panel without anyone choosing a
+     value. Every field state is carried by the BORDER, not a fill.
 
-     WHAT IT ENCODES IS "ONE STEP IN FROM THE CANVAS", not an absolute step. In
-     the hub that is gray-1 canvas -> gray-2 field. Do NOT point it at your card
-     surface: that was the hub's own mistake until 2026-08-14, and it rendered
-     fields at contrast 1.00 against a card — invisible but for their border.
-
-     This ramp is coarser than the hub's, so the default below lands on the same
-     rung as `sunken` where the hub keeps them one apart. If your fields read as
-     wells rather than fields, that is why — add a rung between gray-50 and
-     gray-100 in section 7 and point this at it. */
-  --color-background-field: var(--__SCOPE__-gray-100);
+     Uncomment ONLY for a filled/Material house style. Three fixed greys were
+     tried in the hub before transparent and each was right on the canvas and
+     INVERTED on a sunken surface, where the field rendered lighter than its own
+     container. If you set this, check your fields on every surface they land on,
+     not just the page. */
+  /* --color-background-field: var(--__SCOPE__-gray-100); */
 
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so

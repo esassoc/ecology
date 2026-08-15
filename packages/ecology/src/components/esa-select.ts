@@ -2,9 +2,15 @@ import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
 
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
-    chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
-const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
-const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
+    chips are prose (body-*, regular). See the FORMS header in component-tokens.css.
+
+    NO `xs` KEY, unlike the other form controls. It was here, and it was the whole
+    bug: the map answered for a size the stylesheet had no block for, so `size="xs"`
+    got xs text in md padding instead of failing. Sizes are clamped to the supported
+    set in willUpdate now, so these maps are never asked for a key they lack — and if
+    one is ever added back here it must come with a `:host([size='…'])` block. */
+const LABEL_TYPE = { sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaOption {
   label: string;
@@ -97,6 +103,42 @@ export class EsaSelect extends LitElement {
     this._open = false;
     this._active = -1;
     this.internals = this.attachInternals();
+  }
+
+  /** The sizes this component actually implements. `xs` is excluded by decision — see `declare size`. */
+  private static readonly SIZES = ['sm', 'md', 'lg'];
+  private warnedSize = false;
+
+  /**
+   * Clamp an out-of-range `size` to the floor BEFORE render.
+   *
+   * The type says `'sm' | 'md' | 'lg'`, but the attribute path is untyped — plain
+   * markup, a spoke's template, any non-TS consumer can write `size="xs"`. That
+   * used to produce a hybrid rather than an error: `LABEL_TYPE`/`VALUE_TYPE` had
+   * `xs` entries so the TEXT shrank, while the stylesheet had no
+   * `:host([size='xs'])` block so the PADDING stayed at the `:host` default (md).
+   * The result was 42px — taller than this component's own `sm` at 41.2px, i.e. the
+   * ramp inverted at the bottom end. The fixed-height ramp hid it; removing heights
+   * on 2026-08-14 made the box content-driven and it surfaced.
+   *
+   * Clamping here rather than adding an xs block is deliberate: `sm` is the floor
+   * for the reason given on `declare size`, and this makes the floor real instead of
+   * merely documented. `size` reflects, so assigning it fixes the attribute selector
+   * and the typography lookup in one move.
+   */
+  willUpdate(): void {
+    if (!EsaSelect.SIZES.includes(this.size)) {
+      const bad = this.size;
+      this.size = 'sm';
+      if (!this.warnedSize) {
+        this.warnedSize = true;
+        console.warn(
+          `⚠️  esa-select: size="${bad}" is not supported — clamped to "sm". A select is a ` +
+            `click target with a popup; below sm the trigger and chevron fall under a comfortable ` +
+            `tap size, and the option list does not shrink with it. Use esa-text-field if you need xs.`,
+        );
+      }
+    }
   }
 
   connectedCallback(): void {
@@ -402,6 +444,9 @@ export class EsaSelect extends LitElement {
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
+    /* No :host([size='xs']) — see the note on "declare size". "sm" is the floor by
+       decision, and an out-of-range size is clamped to it before it reaches here.
+       (No backticks in this comment: one would close the css tagged template.) */
     :host([size='sm']) {
       --_field-padding-y: var(--spacing-250, 0.625rem);
       --_field-padding-x: var(--spacing-250, 0.625rem);
@@ -455,7 +500,7 @@ export class EsaSelect extends LitElement {
       gap: var(--spacing-100, 4px);
       padding: var(--_field-padding-y) calc(var(--_field-padding-x) + 24px)
         var(--_field-padding-y) var(--_field-padding-x);
-      background: var(--color-background-field, #f9f9f9);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -490,8 +535,21 @@ export class EsaSelect extends LitElement {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
       padding-inline-end: calc(var(--_field-padding-x) + 24px);
+      /* The box is content + padding since heights were removed (2026-08-14), so
+         LEADING IS NOW LOAD-BEARING — it is the term that decides how tall a field
+         is. On a single-line control leading has no typographic job: there is one
+         line, and the space above and below it is invisible. Letting the body-*
+         composite's relaxed leading through added 12px here at md and made this
+         field 7px taller than esa-text-field on the same step, breaking the row
+         alignment component-tokens.css promises. Restated, not compensated for with
+         a smaller padding rung: leading scales with the fluid type (27px at 1600,
+         22px at 375) and is re-pointable by a theme, so a static padding offset
+         would cancel it at exactly one viewport. Same line esa-button,
+         esa-text-field, esa-button-toggle and esa-color-picker already carry.
+         esa-textarea deliberately does NOT — it is genuinely multi-line. */
+      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
-      background: var(--color-background-field, #f9f9f9);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -504,18 +562,18 @@ export class EsaSelect extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
-    /* Step 4 to the field's step 3 — the pair --color-background-hover was
-       written for. Until 2026-08-14 this read --form-bg-hover, which defaulted to
-       --form-bg's own value, so the hover rendered nothing at all. */
+    /* Hover moves the BORDER, not the fill — the field is transparent in every
+       state so that it is the colour of whatever contains it.
+       --form-border-color-hover already existed for exactly this and was wired
+       into one component; it is the family treatment now. */
     .input:hover:not(:disabled) {
-      background: var(--color-background-hover, #e8e8e8);
+      --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .input:disabled {
-      background: var(--color-background-disabled, #fcfcfc);
       opacity: 0.6;
       cursor: not-allowed;
     }

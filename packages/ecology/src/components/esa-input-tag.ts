@@ -509,7 +509,7 @@ export class EsaInputTag extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      background: var(--color-background-field, #f9f9f9);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -526,8 +526,11 @@ export class EsaInputTag extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .container--disabled {
-      background: var(--color-background-disabled, #fcfcfc);
       cursor: not-allowed;
+      /* Was a fill (--form-bg-disabled, then --color-background-disabled). Fields
+         are transparent as of 2026-08-15, so the state is carried the way the rest
+         of the kit already carried it — dimming, not a heavier box. */
+      opacity: 0.6;
     }
     /* Hover/focus/open each re-point --_field-border-color at higher specificity
        than a bare ".field--error .container" selector, so the error state has to
@@ -605,6 +608,10 @@ export class EsaInputTag extends LitElement {
       flex: 1;
       min-width: 80px;
       padding: 0;
+      /* Leading is load-bearing on a content-sized box — see the long note in
+         esa-select's .input. Single line, so the composite's relaxed leading only
+         adds height. */
+      line-height: var(--line-height-none, 1);
       background: transparent;
       border: none;
       outline: none;
