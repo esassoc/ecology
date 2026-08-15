@@ -21,6 +21,22 @@ interface EsaOption {
 /**
  * esa-select — form-associated Lit Web Component.
  *
+ * SELECT vs COMBOBOX — the distinction, so nobody has to re-derive it:
+ *
+ *   esa-select    displays a list of options to pick from, opened by a BUTTON.
+ *                 No text entry. Long lists are reachable by TYPEAHEAD (type
+ *                 "c","a" → jump to the first "Ca…"), the way a native <select>
+ *                 works.
+ *   esa-combobox  an autocomplete INPUT with a list of suggestions. You type, it
+ *                 filters, and it can fetch remotely (debounced `search` event,
+ *                 `loading`, `resultsCount`).
+ *
+ * If the user types into it, it is a combobox. If they pick from what you gave
+ * them, it is a select. Until 2026-08-15 both components had this backwards at
+ * their defaults — `searchable` defaulted TRUE here, and esa-combobox defaulted to
+ * a button trigger — so each was rendering the other's control. See
+ * docs/system-improvement-ledger.md.
+ *
  * Faithful translation of the Angular esa-select:
  *   - signal inputs                    → Lit reactive properties
  *   - ControlValueAccessor (NG_VALUE)  → form-associated element + ElementInternals
@@ -80,6 +96,12 @@ export class EsaSelect extends LitElement {
   /** Form field name — the key this control submits under. */
   declare name: string | undefined;
   declare multiple: boolean;
+  /**
+   * DEPRECATED (2026-08-15) — a select opens a list from a BUTTON; a type-to-filter
+   * field is an autocomplete, i.e. `esa-combobox`. Still honoured, warns once.
+   * Defaulted to TRUE until this date, which is why every existing call site was
+   * silently rendering an autocomplete. Typeahead replaces the common use.
+   */
   declare searchable: boolean;
   declare chipMode: boolean;
   private declare _search: string;
@@ -106,7 +128,7 @@ export class EsaSelect extends LitElement {
     this.required = false;
     this.disabled = false;
     this.multiple = false;
-    this.searchable = true;
+    this.searchable = false;
     this.chipMode = false;
     this._search = '';
     this._selected = [];
@@ -118,6 +140,7 @@ export class EsaSelect extends LitElement {
   /** The sizes this component actually implements. `xs` is excluded by decision — see `declare size`. */
   private static readonly SIZES = ['sm', 'md', 'lg'];
   private warnedSize = false;
+  private warnedSearchable = false;
 
   /**
    * Clamp an out-of-range `size` to the floor BEFORE render.
@@ -160,6 +183,7 @@ export class EsaSelect extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener('click', this.onDocClick);
+    clearTimeout(this._typeaheadTimer);
   }
 
   // --- Public value accessor (mirrors writeValue) ---
@@ -357,8 +381,113 @@ export class EsaSelect extends LitElement {
       case 'Tab':
         this._open = false;
         break;
+      default:
+        this.onTypeahead(event);
+        break;
     }
   };
+
+  /**
+   * Native-style typeahead: type "c","a" and jump to the first "Ca…" option.
+   *
+   * This is how a real <select> lets you reach an option in a long list, and it is
+   * why dropping `searchable` does not make this control worse — it replaces a text
+   * FIELD (which is what made this a combobox) with a keyboard behaviour that needs
+   * no field at all. It does NOT filter: the list is unchanged, only the active
+   * option moves. Filtering as you type is esa-combobox's job.
+   *
+   * The 500ms reset is the platform convention — long enough to type a couple of
+   * characters, short enough that a pause starts a fresh search rather than
+   * appending to a stale buffer.
+   */
+  private _typeahead = '';
+  private _typeaheadTimer?: ReturnType<typeof setTimeout>;
+
+  private onTypeahead(event: KeyboardEvent): void {
+    // Single printable characters only — modifier combos are shortcuts, not typing.
+    if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return;
+    // The deprecated `searchable` path owns the keyboard: it has a real text input,
+    // and stealing its keystrokes here would break filtering.
+    if (this.searchable) return;
+    event.preventDefault();
+
+    this._typeahead += event.key.toLowerCase();
+    clearTimeout(this._typeaheadTimer);
+    this._typeaheadTimer = setTimeout(() => { this._typeahead = ''; }, 500);
+
+    const i = this.options.findIndex(
+      (o) => !o.disabled && o.label.toLowerCase().startsWith(this._typeahead),
+    );
+    if (i < 0) return;
+    if (!this._open) this.openDropdown();
+    this._active = i;
+  }
+
+
+  /**
+   * The trigger. A select is "a list of options, opened by a BUTTON" — that is the
+   * whole distinction from esa-combobox, which is an autocomplete input with
+   * suggestions. Until 2026-08-15 this rendered an <input> with
+   * `?readonly=${!this.searchable}` and `searchable` defaulted to TRUE, so the
+   * default select was an editable autocomplete: esa-combobox's job, under this
+   * component's name. Nothing in the hub or in cb-fish-design ever set the prop —
+   * every call site was taking that default.
+   *
+   * `role="combobox"` stays and is correct: WAI-ARIA's SELECT-ONLY COMBOBOX pattern
+   * puts it on a non-editable element. `aria-autocomplete="list"` is gone, because
+   * there is no autocomplete here any more.
+   */
+  private renderTrigger() {
+    const shown = this.multiple
+      ? this.selectedOptions.map((o) => o.label).join(', ')
+      : this.displayValue;
+    const isPlaceholder = !shown;
+    return html`<button
+      type="button"
+      class="input input--trigger typography-${VALUE_TYPE[this.size]} ${isPlaceholder ? 'input--placeholder' : ''}"
+      role="combobox"
+      aria-expanded=${this._open}
+      aria-haspopup="listbox"
+      ?disabled=${this.disabled}
+      @keydown=${this.onKeydown}
+    >
+      ${this.multiple && this.chipMode && this.selectedOptions.length
+        ? ''
+        : shown || this.placeholder}
+    </button>`;
+  }
+
+  /**
+   * DEPRECATED path — `searchable`. Kept verbatim so a spoke upgrading the hub sees
+   * no visual change; cb-fish-design has 38 call sites all relying on the old
+   * default. Warns once, then behaves exactly as before. Removed once spokes have
+   * migrated (migrations.json: select-searchable-to-combobox).
+   */
+  private renderSearchableInput() {
+    if (!this.warnedSearchable) {
+      this.warnedSearchable = true;
+      console.warn(
+        `⚠️  esa-select: \`searchable\` is deprecated — a select is a list opened by a ` +
+          `BUTTON. A type-to-filter field is an autocomplete, which is \`esa-combobox\`. ` +
+          `Either drop \`searchable\` (the list is still reachable by typeahead) or switch ` +
+          `to <esa-combobox>. (migrations.json: select-searchable-to-combobox)`,
+      );
+    }
+    return html`<input
+      class="input typography-${VALUE_TYPE[this.size]}"
+      role="combobox"
+      aria-expanded=${this._open}
+      aria-haspopup="listbox"
+      aria-autocomplete="list"
+      placeholder=${this.multiple && this.chipMode && this.selectedOptions.length
+        ? ''
+        : this.placeholder}
+      .value=${this.inputValue}
+      ?disabled=${this.disabled}
+      @input=${this.onSearchInput}
+      @keydown=${this.onKeydown}
+    />`;
+  }
 
   render() {
     const hasError = !!this.errorText;
@@ -378,21 +507,7 @@ export class EsaSelect extends LitElement {
             @click=${() => this.toggleDropdown()}
           >
             ${this.multiple && this.chipMode ? this.renderTags() : null}
-            <input
-              class="input typography-${VALUE_TYPE[this.size]}"
-              role="combobox"
-              aria-expanded=${this._open}
-              aria-haspopup="listbox"
-              aria-autocomplete="list"
-              placeholder=${this.multiple && this.chipMode && this.selectedOptions.length
-                ? ''
-                : this.placeholder}
-              .value=${this.inputValue}
-              ?disabled=${this.disabled}
-              ?readonly=${!this.searchable}
-              @input=${this.onSearchInput}
-              @keydown=${this.onKeydown}
-            />
+            ${this.searchable ? this.renderSearchableInput() : this.renderTrigger()}
             <span class="arrow ${this._open ? 'arrow--open' : ''}">${this.chevronIcon()}</span>
           </div>
 
@@ -572,6 +687,27 @@ export class EsaSelect extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
+
+    /* The default trigger is a BUTTON, not an input — a select opens a list, it does
+       not accept typing. A button brings UA styles an input does not: centred text,
+       its own font, and a min-width. Restate them so the two trigger paths (button,
+       and the deprecated searchable input) are visually identical. */
+    .input--trigger {
+      display: block;
+      text-align: start;
+      font: inherit;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    /* ::placeholder cannot apply to a button — there is no placeholder attribute,
+       only fallback text — so the muted colour is a class instead. */
+    .input--placeholder {
+      color: var(--form-placeholder-color, #737373);
+    }
     /* Hover moves the BORDER, not the fill — the field is transparent in every
        state so that it is the colour of whatever contains it.
        --form-border-color-hover already existed for exactly this and was wired
@@ -608,7 +744,7 @@ export class EsaSelect extends LitElement {
       top: 50%;
       transform: translateY(-50%);
       display: inline-flex;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
     }
@@ -629,7 +765,7 @@ export class EsaSelect extends LitElement {
       margin-top: var(--spacing-100, 4px);
       max-height: 256px;
       overflow-y: auto;
-      background: var(--color-background-raised, #fff);
+      background: var(--color-background-elevation-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
@@ -641,14 +777,14 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
     }
     .option--selected {
       background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
@@ -663,7 +799,7 @@ export class EsaSelect extends LitElement {
       background: transparent;
     }
     .option--empty {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       cursor: default;
       font-style: var(--font-style-italic, italic);
     }

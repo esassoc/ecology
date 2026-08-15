@@ -647,11 +647,11 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       background: transparent;
       border: none;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       cursor: pointer;
     }
     .toggle:hover:not(:disabled) {
-      color: var(--color-content-secondary, #525252);
+      color: var(--color-content-default-secondary, #525252);
     }
     .toggle:disabled {
       cursor: not-allowed;
@@ -677,7 +677,7 @@ export class EsaInputTag extends LitElement {
       max-height: 252px;
       overflow-y: auto;
       overscroll-behavior: contain;
-      background: var(--color-background-raised, #fff);
+      background: var(--color-background-elevation-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
@@ -691,7 +691,7 @@ export class EsaInputTag extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: transparent;
       border: none;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       text-align: left;
       cursor: pointer;
       box-sizing: border-box;
@@ -699,7 +699,7 @@ export class EsaInputTag extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
     }
     .option__label {
       flex: 1;
@@ -710,7 +710,7 @@ export class EsaInputTag extends LitElement {
     }
     .option--add {
       color: var(--color-content-brand, #3a7c59);
-      border-top: var(--form-border-width, 1px) solid var(--color-border-subtle, #efefef);
+      border-top: var(--form-border-width, 1px) solid var(--color-border-default-subtle, #efefef);
     }
     .option__icon {
       width: var(--icon-size-sm, 16px);
@@ -720,7 +720,7 @@ export class EsaInputTag extends LitElement {
 
     .empty {
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }

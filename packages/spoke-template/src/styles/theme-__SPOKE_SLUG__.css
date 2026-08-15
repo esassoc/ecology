@@ -42,15 +42,15 @@
   /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
      Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
      what warms or cools the entire UI vs the hub default. */
-  --color-content-primary:   var(--__SCOPE__-gray-900);
-  --color-content-secondary: var(--__SCOPE__-gray-700);
-  --color-content-secondary:  var(--__SCOPE__-gray-600);
-  --color-content-muted:     var(--__SCOPE__-gray-500);
-  --color-border:         var(--__SCOPE__-gray-200);
-  --color-border-subtle:   var(--__SCOPE__-gray-100);
-  --color-border-strong:  var(--__SCOPE__-gray-300);
-  --color-background:     var(--__SCOPE__-gray-50);
-  --color-background-sunken: var(--__SCOPE__-gray-100);
+  --color-content-default:   var(--__SCOPE__-gray-900);
+  --color-content-default-secondary: var(--__SCOPE__-gray-700);
+  --color-content-default-secondary:  var(--__SCOPE__-gray-600);
+  --color-content-default-muted:     var(--__SCOPE__-gray-500);
+  --color-border-default:         var(--__SCOPE__-gray-200);
+  --color-border-default-subtle:   var(--__SCOPE__-gray-100);
+  --color-border-default-strong:  var(--__SCOPE__-gray-300);
+  --color-background-default:     var(--__SCOPE__-gray-50);
+  --color-background-elevation-sunken: var(--__SCOPE__-gray-100);
   /* The surface of an editable field. THE HUB DEFAULT IS `transparent` — a field
      is the colour of whatever contains it, so it is correct on a card, in a
      dialog, on a sunken well and on a tinted panel without anyone choosing a
@@ -66,10 +66,10 @@
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so
      components pick them up. Leave a token out to keep the hub default. */
-  --font-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
-  --font-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
+  --typography-font-family-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
+  --typography-font-family-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
   /* Optional decorative/display voice — components reach for these explicitly. */
-  --font-display:    /* __FILL__ (or remove to inherit --font-sans) */ var(--font-sans);
+  --typography-font-family-display:    /* __FILL__ (or remove to inherit --typography-font-family-sans) */ var(--typography-font-family-sans);
   --font-decorative: /* __FILL__ (optional serif) */ 'Besley', serif;
 
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====

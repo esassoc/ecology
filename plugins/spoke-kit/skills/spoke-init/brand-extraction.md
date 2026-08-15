@@ -40,11 +40,11 @@ the hub at every step.
 
 ### (b) Neutral / gray chain
 Define `--<scope>-gray-*` (section 7), re-point the whole neutral chain
-(`--color-text-*`, `--color-border*`, `--color-background`, `--color-background-sunken`)
+(`--color-text-*`, `--color-border-default*`, `--color-background-default`, `--color-background-elevation-sunken`)
 onto it in section (2). This is what warms or cools the entire UI vs the hub.
 
 ### (c) Fonts
-Set `--font-sans` / `--font-mono` / `--font-display` / `--font-decorative` to the
+Set `--typography-font-family-sans` / `--typography-font-family-mono` / `--typography-font-family-display` / `--font-decorative` to the
 faces loaded via `__FONT_LINKS__`. Leave a token out to inherit the hub default.
 
 ### (d) Feedback + AI — the sneaky one

@@ -93,9 +93,9 @@ export class EsaSnackbarItem extends LitElement {
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-radius: var(--snackbar-item-radius, var(--radius-surface, 0.5rem));
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      background: var(--color-background-inverse);
-      color: var(--snackbar-item-color, var(--color-content-inverse, #ffffff));
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      background: var(--color-background-default-knockout);
+      color: var(--snackbar-item-color, var(--color-content-default-knockout, #ffffff));
+      font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
       font-size: var(--font-size-200, 0.9375rem);
       animation: esa-snackbar-enter var(--animation-overlay-enter, 250ms ease-out);
     }
@@ -120,11 +120,19 @@ export class EsaSnackbarItem extends LitElement {
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: none;
       border-radius: var(--radius-control, 0.25rem);
+      /* THE WHITE ALPHA IS CORRECT HERE AND SHOULD NOT BECOME A TOKEN.
+         This button sits on FIVE different grounds — the knocked-out default
+         plus the success, warning, danger and info fills below — and an alpha
+         is the only value that lifts off all of them. A solid knocked-out grey
+         would be right on one and wrong on four (a grey chip on a green bar).
+         Checked when --color-background-elevation-raised-knockout was proposed;
+         that token was dropped partly because this, its most obvious reader,
+         did not want it. */
       background: rgba(255, 255, 255, 0.2);
       color: inherit;
       font-family: inherit;
       font-size: var(--font-size-150, 0.875rem);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
       cursor: pointer;
     }
     .esa-snackbar__action:hover { background: rgba(255, 255, 255, 0.3); }

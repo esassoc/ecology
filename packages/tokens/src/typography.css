@@ -10,6 +10,14 @@
  * intention is the job the text does; the t-shirt variant appears only where an
  * intention has more than one size.
  *
+ * THE TOKEN NAMESPACE HAS TWO SLOT ORDERS and a class only ever mirrors one of
+ * them. The composites a class assembles are `<intention>-<variant>-<property>`
+ * (--typography-label-md-strong-font-size). The INGREDIENTS they are built from
+ * are `<property>-<variant>` (--typography-font-family-sans), which is the house
+ * grammar colour also uses. There is no class for an ingredient — a face or a
+ * weight on its own is not a composite, which is exactly why reaching for one
+ * directly is the adoption debt the composites exist to retire.
+ *
  * The word "role" is gone. It came from this repo, not from the model these
  * names follow, and it named nothing the vocabulary did not already cover:
  * a token has a CATEGORY, an INTENTION, an optional VARIANT and a PROPERTY.
@@ -24,14 +32,22 @@
  * definition whose rendering depends on context.
  *
  * THE TYPE CONTRACT (for spokes): a brand swaps two faces —
- *   1. --font-sans      the body face  (default 'DM Sans')
- *   2. --font-display   the headline face (defaults to the body face; display
- *                       and heading-lg/md read it, so setting it gets distinct
- *                       headlines for free).
+ *   1. --typography-font-family-sans     the body face (default 'DM Sans')
+ *   2. --typography-font-family-display  the headline face (defaults to the body
+ *                                        face; display and heading-lg/md read
+ *                                        it, so setting it gets distinct
+ *                                        headlines for free).
  * Both are TIER 2, as are the named weights. Weight VALUES are typeface-bound —
  * the hub's numbers are DM Sans's optical weights — so a spoke overriding
- * --font-sans also re-points --font-weight-* to its own face's weights. All
- * tier-2 overrides; no primitive moves.
+ * --typography-font-family-sans also re-points --typography-font-weight-* to its
+ * own face's matching weights. All tier-2 overrides; no primitive moves.
+ *
+ * THESE WERE `--font-sans` / `--font-display` / `--font-weight-*` UNTIL
+ * 2026-08-15. The old names still resolve (deprecated aliases, emitted from
+ * migrations.json), but an alias only rescues a READ. This contract is a list of
+ * things a spoke DECLARES, and a declaration of a renamed token is inert — it
+ * parses, passes every gate and applies nothing. Every spoke must run
+ * `/update-tokens`; see the `font-ingredients-to-typography-namespace` row.
  *
  * RESPONSIVE: no mobile/tablet/desktop variants, because every --font-size-*
  * primitive is a clamp() that scales with the viewport. A model that ships

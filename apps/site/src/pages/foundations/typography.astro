@@ -12,8 +12,8 @@ import { fileURLToPath } from 'node:url';
 import '@esa/tokens/typography.css';
 
 const families = [
-  { token: '--font-sans', value: "'DM Sans', sans-serif", usedFor: 'UI, body, headings' },
-  { token: '--font-mono', value: "'DM Mono', monospace", usedFor: 'Code, tabular data, tokens' },
+  { token: '--typography-font-family-sans', value: "'DM Sans', sans-serif", usedFor: 'UI, body, headings' },
+  { token: '--typography-font-family-mono', value: "'DM Mono', monospace", usedFor: 'Code, tabular data, tokens' },
 ];
 
 const scale = [
@@ -33,11 +33,11 @@ const scale = [
 ];
 
 const weights = [
-  { token: '--font-weight-light', value: 300, label: 'Light' },
-  { token: '--font-weight-regular', value: 350, label: 'Regular' },
-  { token: '--font-weight-medium', value: 500, label: 'Medium' },
-  { token: '--font-weight-semibold', value: 550, label: 'Semibold' },
-  { token: '--font-weight-bold', value: 650, label: 'Bold' },
+  { token: '--typography-font-weight-light', value: 300, label: 'Light' },
+  { token: '--typography-font-weight-regular', value: 350, label: 'Regular' },
+  { token: '--typography-font-weight-medium', value: 500, label: 'Medium' },
+  { token: '--typography-font-weight-semibold', value: 550, label: 'Semibold' },
+  { token: '--typography-font-weight-bold', value: 650, label: 'Bold' },
 ];
 
 const lineHeights = [
@@ -236,7 +236,7 @@ const composites = [
       Open a composite to see the individual tokens it bundles. Note that <code>font-size</code>,
       <code>line-height</code> and <code>letter-spacing</code> point straight at a tier-1 value,
       while <code>font-family</code> and <code>font-weight</code> point at another <em>tier-2</em>
-      role first (<code>--font-display</code>, <code>--font-weight-semibold</code>). That extra hop
+      role first (<code>--typography-font-family-display</code>, <code>--typography-font-weight-semibold</code>). That extra hop
       is deliberate: those two are the surface a spoke re-points when it swaps typeface, and a face
       change has to move every role at once rather than role by role.
     </p>
@@ -274,70 +274,70 @@ const composites = [
 
 <style>
   .families { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--spacing-400, 1rem); }
-  .family { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
-  .family__sample { font-size: 32px; color: var(--color-content-primary, #171717); margin-bottom: var(--spacing-300, 0.75rem); }
+  .family { border: 1px solid var(--color-border-default, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .family__sample { font-size: 32px; color: var(--color-content-default, #171717); margin-bottom: var(--spacing-300, 0.75rem); }
   .family__meta { display: flex; flex-direction: column; gap: 3px; }
-  .family__meta code { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-content-primary, #171717); }
-  .family__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); }
-  .family__role { font-size: 13px; color: var(--color-content-muted, #737373); }
+  .family__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 13px; color: var(--color-content-default, #171717); }
+  .family__value { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default-secondary, #525252); }
+  .family__role { font-size: 13px; color: var(--color-content-default-muted, #737373); }
 
   .scale { display: flex; flex-direction: column; }
-  .scale__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-300, 0.75rem) 0; border-bottom: 1px solid var(--color-border-subtle, #efefef); }
+  .scale__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-300, 0.75rem) 0; border-bottom: 1px solid var(--color-border-default-subtle, #efefef); }
   .scale__row:last-child { border-bottom: none; }
-  .scale__sample { color: var(--color-content-primary, #171717); line-height: 1.2; min-width: 0; flex: 1; }
+  .scale__sample { color: var(--color-content-default, #171717); line-height: 1.2; min-width: 0; flex: 1; }
   .scale__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
-  .scale__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
-  .scale__range { font-size: 12.5px; color: var(--color-content-muted, #737373); }
+  .scale__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
+  .scale__range { font-size: 12.5px; color: var(--color-content-default-muted, #737373); }
 
   .weights { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--spacing-300, 0.75rem); }
-  .weight { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
-  .weight__sample { font-size: 28px; color: var(--color-content-primary, #171717); margin-bottom: var(--spacing-250, 0.625rem); }
+  .weight { border: 1px solid var(--color-border-default, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .weight__sample { font-size: 28px; color: var(--color-content-default, #171717); margin-bottom: var(--spacing-250, 0.625rem); }
   .weight__meta { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-200, 0.5rem); }
-  .weight__meta code { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--color-content-primary, #171717); }
-  .weight__meta span { font-size: 13px; color: var(--color-content-muted, #737373); }
+  .weight__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12px; color: var(--color-content-default, #171717); }
+  .weight__meta span { font-size: 13px; color: var(--color-content-default-muted, #737373); }
 
   .lh { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); }
-  .lh__row { display: grid; grid-template-columns: 1fr 220px; gap: var(--spacing-400, 1rem); align-items: start; border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
-  .lh__sample { font-size: 16px; color: var(--color-content-primary, #171717); margin: 0; max-width: 56ch; }
+  .lh__row { display: grid; grid-template-columns: 1fr 220px; gap: var(--spacing-400, 1rem); align-items: start; border: 1px solid var(--color-border-default, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .lh__sample { font-size: 16px; color: var(--color-content-default, #171717); margin: 0; max-width: 56ch; }
   .lh__meta { display: flex; flex-direction: column; gap: 2px; }
-  .lh__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
-  .lh__value { font-size: 13px; color: var(--color-content-secondary, #525252); }
-  .lh__role { font-size: 13px; color: var(--color-content-muted, #737373); }
+  .lh__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
+  .lh__value { font-size: 13px; color: var(--color-content-default-secondary, #525252); }
+  .lh__role { font-size: 13px; color: var(--color-content-default-muted, #737373); }
 
   .ls { display: flex; flex-direction: column; }
-  .ls__row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-300, 0.75rem) 0; border-bottom: 1px solid var(--color-border-subtle, #efefef); }
+  .ls__row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-400, 1rem); padding: var(--spacing-300, 0.75rem) 0; border-bottom: 1px solid var(--color-border-default-subtle, #efefef); }
   .ls__row:last-child { border-bottom: none; }
-  .ls__sample { font-size: 18px; color: var(--color-content-primary, #171717); }
+  .ls__sample { font-size: 18px; color: var(--color-content-default, #171717); }
   .ls__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
-  .ls__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
-  .ls__value { font-size: 13px; color: var(--color-content-secondary, #525252); }
-  .ls__role { font-size: 13px; color: var(--color-content-muted, #737373); }
+  .ls__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
+  .ls__value { font-size: 13px; color: var(--color-content-default-secondary, #525252); }
+  .ls__role { font-size: 13px; color: var(--color-content-default-muted, #737373); }
 
   .roles { display: flex; flex-direction: column; }
-  .role { padding: var(--spacing-400, 1rem) 0; border-bottom: 1px solid var(--color-border-subtle, #efefef); }
+  .role { padding: var(--spacing-400, 1rem) 0; border-bottom: 1px solid var(--color-border-default-subtle, #efefef); }
   /* The summary IS the specimen row; the marker sits outside it so the sample
      keeps its own baseline alignment. */
   .role__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-400, 1rem); cursor: pointer; list-style: none; }
   .role__head::-webkit-details-marker { display: none; }
-  .role__head::after { content: 'tokens \25BE'; flex: none; font-size: 11px; color: var(--color-content-muted, #737373); letter-spacing: var(--letter-spacing-wide, 0.03em); }
+  .role__head::after { content: 'tokens \25BE'; flex: none; font-size: 11px; color: var(--color-content-default-muted, #737373); letter-spacing: var(--letter-spacing-wide, 0.03em); }
   .role[open] .role__head::after { content: 'tokens \25B4'; }
   .parts { width: 100%; border-collapse: collapse; margin-top: var(--spacing-300, 0.75rem); }
-  .parts th { text-align: left; font-size: 11px; font-weight: var(--font-weight-semibold, 550); color: var(--color-content-muted, #737373); text-transform: var(--text-transform-uppercase, uppercase); letter-spacing: var(--letter-spacing-wider, 0.06em); padding: 4px 8px; border-bottom: 1px solid var(--color-border-subtle, #efefef); }
-  .parts td { padding: 4px 8px; font-size: 12px; border-bottom: 1px solid var(--color-border-subtle, #efefef); vertical-align: top; }
+  .parts th { text-align: left; font-size: 11px; font-weight: var(--typography-font-weight-semibold, 550); color: var(--color-content-default-muted, #737373); text-transform: var(--text-transform-uppercase, uppercase); letter-spacing: var(--letter-spacing-wider, 0.06em); padding: 4px 8px; border-bottom: 1px solid var(--color-border-default-subtle, #efefef); }
+  .parts td { padding: 4px 8px; font-size: 12px; border-bottom: 1px solid var(--color-border-default-subtle, #efefef); vertical-align: top; }
   .parts tr:last-child td { border-bottom: none; }
-  .parts code { font-family: var(--font-mono, monospace); font-size: 11.5px; }
-  .parts__ref { color: var(--color-content-secondary, #525252); }
-  .parts__val { font-family: var(--font-mono, monospace); font-size: 11px; color: var(--color-content-muted, #737373); word-break: break-word; }
-  .parts__dim { color: var(--color-content-muted, #737373); }
+  .parts code { font-family: var(--typography-font-family-mono, monospace); font-size: 11.5px; }
+  .parts__ref { color: var(--color-content-default-secondary, #525252); }
+  .parts__val { font-family: var(--typography-font-family-mono, monospace); font-size: 11px; color: var(--color-content-default-muted, #737373); word-break: break-word; }
+  .parts__dim { color: var(--color-content-default-muted, #737373); }
   .role:last-child { border-bottom: none; }
-  .role__sample { color: var(--color-content-primary, #171717); min-width: 0; flex: 1; }
+  .role__sample { color: var(--color-content-default, #171717); min-width: 0; flex: 1; }
 
   .role__meta { display: flex; flex-direction: column; gap: 2px; text-align: right; flex: none; }
-  .role__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
-  .role__meta span { font-size: 12.5px; color: var(--color-content-muted, #737373); }
-  .role__meta .role__token { font-family: var(--font-mono, monospace); font-size: 11.5px; }
+  .role__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
+  .role__meta span { font-size: 12.5px; color: var(--color-content-default-muted, #737373); }
+  .role__meta .role__token { font-family: var(--typography-font-family-mono, monospace); font-size: 11.5px; }
   .role__meta .role__was { font-size: 11.5px; font-style: var(--font-style-italic, italic); }
-  .role__meta .role__was code { font-size: 11.5px; color: var(--color-content-muted, #737373); }
+  .role__meta .role__was code { font-size: 11.5px; color: var(--color-content-default-muted, #737373); }
 
   @media (max-width: 640px) {
     .lh__row { grid-template-columns: 1fr; }

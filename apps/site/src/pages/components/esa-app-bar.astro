@@ -10,7 +10,7 @@ import EsaIconButton from "@esa/ecology/esa-icon-button.astro";
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
-  tone: "Color context. surface → --color-background-raised/text-primary; brand → --color-background-brand/text-inverse; brand-strong → --color-background-inverse/text-inverse. Children inherit the text color.",
+  tone: "Color context. surface → --color-background-elevation-raised/text-primary; brand → --color-background-brand/text-inverse; brand-strong → --color-background-default-knockout/text-inverse. Children inherit the text color.",
   contained: "Constrain the inner row to maxWidth and center it.",
   maxWidth: "Inner row max-width when contained.",
   as: "Semantic host element.",
@@ -49,7 +49,7 @@ const tokens = [
     <p>
       Each tone maps to ecology semantic tokens; a spoke re-themes by
       re-pointing those tokens (e.g. <code>--color-background-brand</code>, <code
-        >--color-background-inverse</code
+        >--color-background-default-knockout</code
       >) — never by touching this component.
     </p>
     <Preview

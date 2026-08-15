@@ -16,6 +16,7 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import Section from '@esa/docs/Section.astro';
 import TokenGroupTable from './_TokenGroup.astro';
+import PropertyLevel from './_PropertyLevel.astro';
 import ComponentsView from './_ComponentsView.astro';
 import type { TokenGroup } from '../../data/token-graph';
 
@@ -1140,11 +1141,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <p class="resolved">
           <span class="slot-flag f-match">resolved</span>
           The check returns zero. It found 14: the 12 <code>--color-status-*</code> tokens plus
-          <code>--font-display</code> and <code>--font-family-primary</code>. The status family turned
+          <code>--typography-font-family-display</code> and <code>--font-family-primary</code>. The status family turned
           out not to need moving at all — the tier-2 roles already existed and merely detoured through
           it, so they were repointed straight at their ramp steps and the block deleted.
           <code>--font-family-primary</code> went with it (zero readers);
-          <code>--font-display</code> moved to <code>semantic/typography.json</code> keeping its name,
+          <code>--typography-font-family-display</code> moved to <code>semantic/typography.json</code> keeping its name,
           so every reader was untouched.
         </p>
       )}
@@ -1225,8 +1226,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
       <p class="cat-gap">
         <b>The split that made it work.</b> The rule that tier-1 names describe values is what forced
-        the roles out. <code>--font-sans</code> names a classification, not a face, and
-        <code>--font-weight-regular: 350</code> names a job, not a weight — yet
+        the roles out. <code>--typography-font-family-sans</code> names a classification, not a face, and
+        <code>--typography-font-weight-regular: 350</code> names a job, not a weight — yet
         <code>typography.css</code> documented both as the surface a spoke re-points, which made the
         shipped type contract an instruction to re-point a primitive. These are the roles, now at
         tier 2 with their names unchanged, so no reader had to move:
@@ -1301,11 +1302,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <b>This check is scoped, and the scope hides something.</b> It looks only at the tier-1
         measure tokens. Run the same comparison across <em>every</em> token and it returns roughly
         <b> 1,250</b> disagreeing read sites in ~110 files — overwhelmingly colour
-        (<code>--color-content-primary</code> is <code>#202020</code> and is written as
+        (<code>--color-content-default</code> is <code>#202020</code> and is written as
         <code>#171717</code> in 118 places; <code>--color-background-brand</code> is grass and is written as a
         navy left over from another brand in 72). That is a real finding and it is <em>not</em> being
         fixed here: it is mostly tier-2 colour, it needs its own pass, and a blind rewrite would be
-        wrong in at least one class of case — <code>var(--font-sans, sans-serif)</code> is a
+        wrong in at least one class of case — <code>var(--typography-font-family-sans, sans-serif)</code> is a
         deliberate generic-family degradation, not a failed restatement of the token, and
         &ldquo;correcting&rdquo; it would name a face that by definition isn&rsquo;t loading.
       </p>
@@ -1502,6 +1503,54 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     <Section id="semantic" title="Tier 2 · Semantic">
       <p>{TIER_NOTE.semantic}</p>
       <p class="cat-note">
+        Grouped by <b>category</b> first &mdash; the word each name leads with &mdash; then, inside
+        colour, by the property it lands on. This tree used to open on
+        <code>background</code>/<code>content</code>/<code>border</code> with every non-colour family
+        listed after them, which made one category&rsquo;s properties peers of whole categories and
+        left <code>color</code> with no heading at all. The rubric&rsquo;s slot 3 above already asks
+        which categories exist; this is the same question answered as a tree.
+      </p>
+      <p class="cat-note">
+        Category here is the NAMESPACE, not the rubric&rsquo;s taxonomy: the rubric files border
+        colours and border widths together under <code>border</code>, which is true but cannot be a
+        tree &mdash; <code>--color-border-danger</code> would need to be in two places. One token,
+        one node.{' '}
+        <b>{t2.categoryCoverage.grouped}</b> of <b>{t2.categoryCoverage.total}</b> tier-2 tokens are
+        filed below.
+      </p>
+      {t2.categoryCoverage.missing.length > 0 && (
+        <p class="cat-gap">
+          <b>{t2.categoryCoverage.missing.length} tokens are in no category</b> and therefore render
+          nowhere on this page: {t2.categoryCoverage.missing.map((n) => <code class="vocab">{n}</code>)}.
+          The tree is built from two independently-assembled halves (colour, and the non-colour
+          families), so it can stop being a partition without any count on the page looking wrong.
+          That is what this line exists to catch.
+        </p>
+      )}
+
+      {t2.semanticCategories.map((cat) => (
+        <details class="tok-category cat" data-group open={cat.kind === 'color'}>
+          <summary>
+            <span class="cat-label">{cat.label}</span>
+            <span class="summary-right">
+              {/* The catch-all is empty in the healthy case, so it carries no verdict —
+                  a chip there would read as a finding about tokens that do not exist. */}
+              {cat.kind === 'family' && !cat.isUnclassified && cat.property === 'last' && (
+                <span class="gap-flag">property last</span>
+              )}
+              {cat.kind === 'family' && !cat.isUnclassified && cat.property === 'none' && (
+                <span class="gap-flag">no property slot</span>
+              )}
+              <span class={cat.isUnclassified && cat.count === 0 ? 'group-count none' : 'group-count'}>
+                {cat.count}
+              </span>
+            </span>
+          </summary>
+          <p class="cat-note">{cat.note}</p>
+
+          {cat.kind === 'color' && (
+          <div class="cat-body">
+      <p class="cat-note">
         Colour tokens map tier 1 to specific colour roles in the default (vanilla) theme, grouped here
         by <b>property</b> — the surface the colour lands on — then by variant family within each.
         {t2.surfaceImplied === 0 ? (
@@ -1536,29 +1585,87 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           </p>
           <div class="cat-body">
             {prop.families.map((fam) => (
-              <details class="tok-group" data-group>
+              <details class={fam.isUnclassified && fam.rows.length === 0 ? 'tok-group is-empty' : 'tok-group'} data-group>
                 <summary>
                   <code class="group-label">{fam.label}</code>
-                  <span class="summary-right"><span class="group-count">{fam.rows.length}</span></span>
+                  <span class="summary-right">
+                    <span class={fam.isUnclassified && fam.rows.length === 0 ? 'group-count none' : 'group-count'}>
+                      {fam.rows.length}
+                    </span>
+                  </span>
                 </summary>
+                {fam.label === 'default' && (
+                  <p class="cat-note">
+                    <b>The tokens say this word now.</b> Ten of them were named without it &mdash;{' '}
+                    <code>--color-background</code>, <code>--color-border</code>,{' '}
+                    <code>--color-content-primary</code>, <code>--color-border-subtle</code> and the
+                    rest &mdash; until 2026-08-15, relying on a convention of intention-by-omission
+                    that only reads if you already know it. See <code>bare-property-to-default</code>
+                    {' '}and <code>missing-intention-to-default</code> in{' '}
+                    <code>migrations.json</code>. Everything here is the DEFAULT intention: the token
+                    itself, its prominence variants and its states.
+                  </p>
+                )}
+                {fam.isUnclassified && (
+                  <p class="cat-note">
+                    Nothing should be here, and that emptiness is the claim: every tier-2 colour name
+                    fills slot 2 with a real intention. This grouping is
+                    {' '}<code>property &gt; intention &gt; variant &gt; state</code>, and the label
+                    on every group above is slot 2 alone. Earlier versions collapsed intention and
+                    variant into one axis, which cannot be done &mdash; so each one had to invent an
+                    umbrella (<code>neutral</code>, then <code>default</code>-as-a-bucket, then{' '}
+                    <code>utility</code>) to stand in for the slot that had been deleted. Anything
+                    whose slot 2 is not an intention lands here instead of being absorbed.
+                  </p>
+                )}
+                {/* Scrolls inside its own box. Six columns of token names and
+                    resolution chains do not fit a narrow viewport, and without this
+                    the widest row pushed the whole page sideways. */}
+                <div class="table-scroll">
                 <table class="tok-table">
                   <thead>
-                    <tr><th>Token</th><th>Property</th><th>Variant</th><th>State</th><th>Resolves to</th><th>Used by</th></tr>
+                    {/* The four slots, in grammar order, then the value. `Property`
+                        used to sit here and said the same word as the group heading
+                        above — while `intention`, the slot the grouping keys on, had
+                        no column at all. */}
+                    <tr><th>Token</th><th>Intention</th><th>Variant</th><th>Knockout</th><th>State</th><th>Resolves to</th><th>Used by</th></tr>
                   </thead>
                   <tbody>
                     {fam.rows.map((r) => {
                       const node = t2.semanticNodes.get(r.name);
                       return (
                         <tr data-token={r.name} title={node?.description ?? undefined}>
-                          <td class="c-name"><code>{r.name}</code></td>
+                          <td class="c-name">
+                            <code>{r.name}</code>
+                            {/* One intention by NAME, another by VALUE. Not moved to the
+                                other family: the name is not wrong, it is derived —
+                                see --color-border-default-focus. */}
+                            {r.derivedFrom && (
+                              <span
+                                class="derived"
+                                title={`The name says ${r.intention ?? 'no intention'}, but the value chains through the ${r.derivedFrom} intention — so a spoke re-pointing ${r.derivedFrom} moves this too.`}
+                              >via {r.derivedFrom}</span>
+                            )}
+                          </td>
                           <td>
-                            {r.declared ? (
-                              <code class="vocab">{r.word}</code>
+                            {r.intention ? (
+                              <>
+                                {r.on && <span class="on-prefix" title="Relational: the foreground colour for that intention's fill. The grammar has no slot for it.">on</span>}
+                                <code class="vocab">{r.intention}</code>
+                              </>
                             ) : (
-                              <span class="inf" title={r.reason ?? undefined}>inferred</span>
+                              <span class="inf" title="Slot 2 is empty — the name carries a variant or a state with no intention in front of it.">not filled</span>
                             )}
                           </td>
                           <td>{r.variant ? <code class="vocab">{r.variant}</code> : <span class="dim">—</span>}</td>
+                          {/* Its own column, not folded into Variant: the variant slot is
+                              often already taken (`raised`), and joining them would give
+                              the fused `raised-knockout` — the same defect as collapsing
+                              intention into variant. A dash here on a neutral chrome role
+                              is the audit: that role has no knocked-out counterpart, so a
+                              component rendering it inside an inverted region falls back
+                              to a value built for the opposite ground. */}
+                          <td>{r.knockout ? <code class="vocab ko" title="This role against the REVERSE of the theme's ground. Not `the dark value` — a dark-default theme re-points this to a light one.">knockout</code> : <span class="dim">—</span>}</td>
                           <td>{r.state ? <code class="vocab st">{r.state}</code> : <span class="dim">—</span>}</td>
                           <td class="c-value">
                             {node?.isColor && <span class="swatch" style={`background:${node.resolved}`} />}
@@ -1586,13 +1693,226 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                     })}
                   </tbody>
                 </table>
+                </div>
               </details>
             ))}
           </div>
         </details>
       ))}
+          </div>
+          )}
 
-      <h3 class="sub">Typography · composites, grouped by intention</h3>
+          {cat.kind === 'typography' && (
+          <div class="cat-body">
+            <h3 class="sub">The slots · intention &gt; variant &gt; property</h3>
+            <p class="cat-note">
+              The same decomposition the colour tree above uses, on the other half of tier 2. Colour is
+              {' '}<code>property &gt; intention &gt; variant &gt; state</code> and roots its tree on the
+              property, so its three groups are background/content/border. Typography is
+              {' '}<code>intention &gt; variant &gt; property</code> and roots on the
+              {' '}<b>intention</b>. Same rule — a tree roots on slot 1 — applied to a different slot 1,
+              which is what makes these two categories readable as one system rather than two habits.
+            </p>
+            <p class="cat-note">
+              <b>{t2.typeSlotCoverage.total}</b> composite tokens · <b>{t2.typeSlotCoverage.intentions}</b> intentions ·
+              {' '}<b>{t2.typeSlotCoverage.variants}</b> variants.
+              {t2.typeSlotCoverage.unparsed.length === 0 ? (
+                <> Every one parses into all three slots.</>
+              ) : (
+                <span class="req"> {t2.typeSlotCoverage.unparsed.length} do not parse: {t2.typeSlotCoverage.unparsed.join(', ')}</span>
+              )}
+              {' '}The matrix further down answers a different question — <em>is a composite complete?</em> —
+              and its unit is the CLASS. This one&rsquo;s unit is the TOKEN, so it is the view that can
+              show a name whose slots do not fill.
+            </p>
+            <p class="cat-gap">
+              <b>Composite adoption: {t2.compositeAdoption.usedByComponent} of {t2.compositeAdoption.total}</b> composites are
+              applied by a component in the kit ({t2.compositeAdoption.byComponent.map((c) => <code class="vocab">.{c}</code>)}).
+              {' '}{t2.compositeAdoption.orphan} are applied nowhere at all.
+              {' '}<b>Read the `comp` pill, not the `file` one.</b> A `file` hit is usually this
+              documentation rendering a specimen of the composite, which is not evidence that anything
+              depends on it — that is exactly why the two are counted separately rather than summed.
+              The per-property `Used by` column to the right cannot show any of this: it reports
+              {' '}<code>typography.css</code> on all {t2.typeSlotCoverage.total} rows, because a component
+              applies the CLASS and never reads the tokens.
+            </p>
+
+            {t2.typographyGroups.map((g) => (
+              <details class={g.isUnclassified && g.total === 0 ? 'tok-group is-empty' : 'tok-group'} data-group>
+                <summary>
+                  <code class="group-label">{g.label}</code>
+                  <span class="summary-right">
+                    <span class={g.isUnclassified && g.total === 0 ? 'group-count none' : 'group-count'}>
+                      {g.total}
+                    </span>
+                  </span>
+                </summary>
+                {g.isUnclassified && (
+                  <p class="cat-note">
+                    Nothing should be here, and the emptiness is the claim — every composite name
+                    fills slot 1 with a real intention. Anything whose first word is not one lands
+                    here instead of being absorbed into a neighbour, exactly as
+                    {' '}<code>no intention in slot 2</code> works for colour.
+                  </p>
+                )}
+                <div class="table-scroll">
+                  <table class="tok-table">
+                    <thead>
+                      <tr><th>Variant</th><th>Property</th><th>Token</th><th>Wired to</th><th>Resolves to</th><th>Used by</th></tr>
+                    </thead>
+                    <tbody>
+                      {g.variants.map((v) => v.rows.map((r, i) => {
+                        const node = t2.semanticNodes.get(r.name);
+                        return (
+                        <tr data-token={r.name}>
+                          {i === 0 && (
+                            <td rowspan={v.rows.length} class="c-variant">
+                              {v.label ? <code class="vocab">{v.label}</code> : <span class="dim">—</span>}
+                              <span class="fb">
+                                {v.classShipped
+                                  ? <>.{v.className}</>
+                                  : <span class="req">no class ships this</span>}
+                              </span>
+                              {/* THE COMPOSITE's own edges. The per-property rows to
+                                  the right report `typography.css` and nothing else —
+                                  assembling them into a class is that file's whole job
+                                  — so the consumer question can only be answered here,
+                                  against the CLASS a component actually applies. */}
+                              <span class="composite-edges">
+                                {v.usedBy.components.length === 0 && v.usedBy.files.length === 0 ? (
+                                  <span class="orphan-flag">orphan</span>
+                                ) : (
+                                  <details class="uses">
+                                    <summary>
+                                      {v.usedBy.components.length > 0
+                                        ? <span class="pill">{v.usedBy.components.length} comp</span>
+                                        : <span class="pill none">0 comp</span>}
+                                      {v.usedBy.files.length > 0 && <span class="pill">{v.usedBy.files.length} file</span>}
+                                    </summary>
+                                    {v.usedBy.components.length > 0 && <p><b>Components:</b> {v.usedBy.components.join(', ')}</p>}
+                                    {v.usedBy.files.length > 0 && <p><b>Files:</b> {v.usedBy.files.join(', ')}</p>}
+                                  </details>
+                                )}
+                                {v.wiredTo.length > 0 && (
+                                  <span class="wired-ing">
+                                    <span class="wired-label">wired to</span>
+                                    {v.wiredTo.map((w) => (
+                                      <code title={w.name}>
+                                        {w.property}: <b>{w.variant}</b>
+                                      </code>
+                                    ))}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                          )}
+                          <td><code class="vocab">{r.property}</code></td>
+                          <td class="c-name"><code>{r.name}</code></td>
+                          {/* The FIRST hop. For a composite this is normally an
+                              ingredient — the edge a spoke re-points to swap a face
+                              — so it is shown rather than collapsed into the tier-1
+                              terminal beside it. `via tier 1` marks a composite that
+                              reaches past the ingredients straight into a primitive,
+                              which is legitimate for size/leading/tracking (there is
+                              no ingredient layer for those) and worth seeing. */}
+                          <td class="c-wired">
+                            {r.wiredTo ? (
+                              <>
+                                <code class="vocab">{r.wiredTo}</code>
+                                {r.wiredTo === r.tier1 && <span class="fb">via tier 1</span>}
+                              </>
+                            ) : <span class="dim">literal</span>}
+                          </td>
+                          <td class="c-value">
+                            {r.tier1 && r.tier1 !== r.wiredTo && <code>{r.tier1}</code>}
+                            <span class="dim">{r.tier1 && r.tier1 !== r.wiredTo ? ' · ' : ''}{r.resolved}</span>
+                          </td>
+                          <td class="c-used">
+                            {node && node.usedByTokens.length === 0 && node.usedByComponents.length === 0 && node.usedByFiles.length === 0 ? (
+                              <span class="orphan-flag">orphan</span>
+                            ) : (
+                              <details class="uses">
+                                <summary>
+                                  {node && node.usedByTokens.length > 0 && <span class="pill">{node.usedByTokens.length} tok</span>}
+                                  {node && node.usedByComponents.length > 0 && <span class="pill">{node.usedByComponents.length} comp</span>}
+                                  {node && node.usedByFiles.length > 0 && <span class="pill">{node.usedByFiles.length} file</span>}
+                                </summary>
+                                {node && node.usedByTokens.length > 0 && <p><b>Tokens:</b> {node.usedByTokens.join(', ')}</p>}
+                                {node && node.usedByComponents.length > 0 && <p><b>Components:</b> {node.usedByComponents.join(', ')}</p>}
+                                {node && node.usedByFiles.length > 0 && <p><b>Files:</b> {node.usedByFiles.join(', ')}</p>}
+                              </details>
+                            )}
+                          </td>
+                        </tr>
+                        );
+                      }))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ))}
+
+            <h3 class="sub">Ingredients · property &gt; variant</h3>
+            <p class="cat-note">
+              The faces and weights the composites are assembled from. Their shape is
+              {' '}<code>property &gt; variant</code> — <b>colour&rsquo;s</b> shape, not the composites&rsquo; —
+              because an ingredient has no intention slot: <code>sans</code> is not a job text does.
+              That is why they are a separate tree rather than a ninth intention, and why the
+              namespace carries two slot orders on purpose.
+            </p>
+            {t2.typographyIngredients.map((g) => (
+              <details class="tok-group" data-group>
+                <summary>
+                  <code class="group-label">{g.label}</code>
+                  <span class="summary-right"><span class="group-count">{g.rows.length}</span></span>
+                </summary>
+                <div class="table-scroll">
+                  <table class="tok-table">
+                    <thead><tr><th>Variant</th><th>Token</th><th>Wired to</th><th>Resolves to</th><th>Used by</th></tr></thead>
+                    <tbody>
+                      {g.rows.map((r) => {
+                        const node = t2.semanticNodes.get(r.name);
+                        return (
+                        <tr data-token={r.name}>
+                          <td><code class="vocab">{r.variant}</code></td>
+                          <td class="c-name"><code>{r.name}</code></td>
+                          <td class="c-wired">
+                            {r.wiredTo ? <code class="vocab">{r.wiredTo}</code> : <span class="dim">literal</span>}
+                          </td>
+                          <td class="c-value">
+                            {r.tier1 && r.tier1 !== r.wiredTo && <code>{r.tier1}</code>}
+                            <span class="dim">{r.tier1 && r.tier1 !== r.wiredTo ? ' · ' : ''}{r.resolved}</span>
+                          </td>
+                          {/* The count that matters most on this table. These are the
+                              most directly-read tokens in the system, and that IS the
+                              adoption debt the composites exist to retire — a high
+                              `comp` number here is the size of that job. */}
+                          <td class="c-used">
+                            {node && node.usedByTokens.length === 0 && node.usedByComponents.length === 0 && node.usedByFiles.length === 0 ? (
+                              <span class="orphan-flag">orphan</span>
+                            ) : (
+                              <details class="uses">
+                                <summary>
+                                  {node && node.usedByTokens.length > 0 && <span class="pill">{node.usedByTokens.length} tok</span>}
+                                  {node && node.usedByComponents.length > 0 && <span class="pill">{node.usedByComponents.length} comp</span>}
+                                  {node && node.usedByFiles.length > 0 && <span class="pill">{node.usedByFiles.length} file</span>}
+                                </summary>
+                                {node && node.usedByTokens.length > 0 && <p><b>Tokens:</b> {node.usedByTokens.join(', ')}</p>}
+                                {node && node.usedByComponents.length > 0 && <p><b>Components:</b> {node.usedByComponents.join(', ')}</p>}
+                                {node && node.usedByFiles.length > 0 && <p><b>Files:</b> {node.usedByFiles.join(', ')}</p>}
+                              </details>
+                            )}
+                          </td>
+                        </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ))}
+
+            <h3 class="sub">Composites, grouped by intention</h3>
       <p class="cat-note">
         This section used to open by saying there were <b>zero</b> tier-2 typography tokens — that the
         layer existed only as classes in <code>typography.css</code>, so Figma couldn&rsquo;t consume
@@ -1711,23 +2031,16 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           it sits inside — the exact failure a composite exists to prevent.
         </p>
       )}
+            <h3 class="sub">Faces &amp; weights &mdash; the ingredients, by property</h3>
+            <PropertyLevel props={cat.properties ?? []} />
+          </div>
+          )}
 
-      {t2.nonColorGroups.map((g) => (
-        <details class="tok-category" data-group>
-          <summary>
-            <span class="cat-label">{g.label}</span>
-            <span class="summary-right">
-              {/* The catch-all is empty in the healthy case, so it carries no verdict —
-                  a chip there would read as a finding about tokens that do not exist. */}
-              {!g.isUnclassified && g.property === 'last' && <span class="gap-flag">property last</span>}
-              {!g.isUnclassified && g.property === 'none' && <span class="gap-flag">no property slot</span>}
-              <span class={g.isUnclassified && g.tokens.length === 0 ? 'group-count none' : 'group-count'}>
-                {g.tokens.length}
-              </span>
-            </span>
-          </summary>
-          <p class="cat-note">{g.note}</p>
-          <TokenGroupTable group={{ label: g.label, tokens: g.tokens }} bare />
+          {cat.kind === 'family' && (
+            <div class="cat-body">
+              <PropertyLevel props={cat.properties ?? []} />
+            </div>
+          )}
         </details>
       ))}
     </Section>
@@ -1814,7 +2127,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .dev-banner {
     border: 1px dashed var(--color-content-warning, #ab6400);
     background: var(--color-background-warning-subtle, #fffbeb);
-    color: var(--color-content-primary, #111);
+    color: var(--color-content-default, #111);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-200, 6px);
     font-size: 0.9rem;
@@ -1828,12 +2141,12 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .tally-cell {
     flex: 1 1 8rem;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border: 1px solid var(--color-border, #d4d4d4);
+    border: 1px solid var(--color-border-default, #d4d4d4);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-background-raised, #fff);
+    background: var(--color-background-elevation-raised, #fff);
   }
   .tokens-debug .tally-cell b { display: block; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-secondary, #666); }
+  .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-default-secondary, #666); }
   .tokens-debug .tally-cell.t3 { border-left: 3px solid var(--color-background-ai, #b45309); }
   .tokens-debug .tally-cell.t2 { border-left: 3px solid var(--color-background-brand, #16a34a); }
   .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-content-info, #0d74ce); }
@@ -1847,24 +2160,24 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     align-items: center;
     gap: var(--spacing-300, 12px);
     padding: var(--spacing-300, 12px) 0;
-    background: var(--color-background, #fafafa);
+    background: var(--color-background-default, #fafafa);
   }
   .tokens-debug #tok-filter {
     flex: 1;
     padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
     font: inherit;
     font-size: 0.9rem;
-    border: 1px solid var(--color-border, #d4d4d4);
+    border: 1px solid var(--color-border-default, #d4d4d4);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-background-raised, #fff);
+    background: var(--color-background-elevation-raised, #fff);
     color: inherit;
   }
-  .tokens-debug .filter-count { font-size: 0.8rem; color: var(--color-content-secondary, #666); white-space: nowrap; }
+  .tokens-debug .filter-count { font-size: 0.8rem; color: var(--color-content-default-secondary, #666); white-space: nowrap; }
   .tokens-debug details.check, .tokens-debug details.tok-group {
-    border: 1px solid var(--color-border-subtle, #e5e5e5);
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
     border-radius: var(--radius-200, 6px);
     margin-bottom: var(--spacing-250, 10px);
-    background: var(--color-background-raised, #fff);
+    background: var(--color-background-elevation-raised, #fff);
   }
   .tokens-debug details.check > summary, .tokens-debug details.tok-group > summary {
     display: flex;
@@ -1885,21 +2198,21 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug details.check.warn > summary { color: var(--color-content-warning, #ab6400); }
   .tokens-debug .check-count, .tokens-debug .group-count {
     font-variant-numeric: tabular-nums;
-    background: var(--color-background-sunken, #f0f0f0);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
     border-radius: var(--radius-full, 999px);
     padding: 1px 8px;
     font-size: 0.75rem;
   }
-  .tokens-debug .check-note, .tokens-debug .empty { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); font-size: 0.85rem; color: var(--color-content-secondary, #666); margin: 0; }
+  .tokens-debug .check-note, .tokens-debug .empty { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); font-size: 0.85rem; color: var(--color-content-default-secondary, #666); margin: 0; }
   .tokens-debug .group-label { font-size: 0.85rem; }
 
   /* Tier-1 categories: an outer level above the per-ramp groups. Visually
      heavier than a group so the two levels don't read as one flat list. */
   .tokens-debug details.tok-category {
-    border: 1px solid var(--color-border, #d4d4d4);
+    border: 1px solid var(--color-border-default, #d4d4d4);
     border-radius: var(--radius-200, 6px);
     margin-bottom: var(--spacing-300, 12px);
-    background: var(--color-background-raised, #fff);
+    background: var(--color-background-elevation-raised, #fff);
   }
   .tokens-debug details.tok-category > summary {
     display: flex;
@@ -1915,7 +2228,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
     font-size: 0.82rem;
     line-height: 1.5;
-    color: var(--color-content-secondary, #666);
+    color: var(--color-content-default-secondary, #666);
     max-width: 68ch;
   }
   .tokens-debug .summary-right { display: flex; align-items: center; gap: var(--spacing-200, 8px); }
@@ -1946,8 +2259,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .cat-adoption {
     margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
     padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
-    border-left: 3px solid var(--color-border-strong, #b9b9b9);
-    background: var(--color-background-sunken, #f5f5f5);
+    border-left: 3px solid var(--color-border-default-strong, #b9b9b9);
+    background: var(--color-background-elevation-sunken, #f5f5f5);
     border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
     font-size: 0.82rem;
     line-height: 1.55;
@@ -1959,11 +2272,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     gap: var(--spacing-150, 6px);
     margin-bottom: var(--spacing-400, 16px);
     padding: var(--spacing-300, 12px);
-    border: 1px dashed var(--color-border, #dcdcdc);
+    border: 1px dashed var(--color-border-default, #dcdcdc);
     border-radius: var(--radius-200, 8px);
     font-size: 0.8rem;
     line-height: 1.5;
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
     max-width: 72ch;
   }
   .tokens-debug .core-wrap { margin-bottom: var(--spacing-400, 16px); }
@@ -1992,17 +2305,100 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .group-count.none {
     background: transparent;
-    border: 1px dashed var(--color-border, #d4d4d4);
-    color: var(--color-content-muted, #999);
+    border: 1px dashed var(--color-border-default, #d4d4d4);
+    color: var(--color-content-default-muted, #999);
     font-style: italic;
   }
   .tokens-debug .cat-body { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
-  .tokens-debug .cat-body details.tok-group { background: var(--color-background-sunken, #fafafa); }
+  .tokens-debug .cat-body details.tok-group { background: var(--color-background-elevation-sunken, #fafafa); }
+  /* Wide content scrolls inside its own box; the page body never scrolls sideways.
+     A token table is six columns of names and resolution chains, and at three levels
+     of nesting the available width is already reduced — so the widest single row was
+     pushing the whole document wider than the viewport. min-width keeps the columns
+     legible rather than letting them crush to fit. */
+  .tokens-debug .table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  /* 52rem, not 46 — the Knockout column was added on 2026-08-15. If a column is
+     ever added again, raise this too: the min-width is what keeps the table
+     scrolling inside its own box instead of widening the document. */
+  .tokens-debug .table-scroll > table.tok-table { min-width: 52rem; }
+
   .tokens-debug table.findings, .tokens-debug table.tok-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.8rem;
     table-layout: auto;
+  }
+  /* A long token name is one unbreakable string. Without this it sets the column's
+     minimum width and no amount of container sizing can shrink it. */
+  .tokens-debug table.tok-table .c-name code { word-break: break-word; }
+  /* The variant cell spans its properties (rowspan), so it needs to align to the
+     top of the run rather than centre itself against five rows, and it needs a
+     rule on the right or the span reads as an accidental gap in the table. */
+  .tokens-debug table.tok-table .c-variant {
+    vertical-align: top;
+    white-space: nowrap;
+    border-inline-end: 1px solid var(--color-border-default-subtle, #d9d9d9);
+  }
+  .tokens-debug table.tok-table .c-variant .fb {
+    display: block;
+    margin-block-start: 2px;
+    font-size: 0.68rem;
+    color: var(--color-content-default-muted, #8d8d8d);
+  }
+  .tokens-debug .c-variant .composite-edges {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-block-start: 6px;
+  }
+  /* A zero here is the finding, not an absence — it has to read as a value rather
+     than disappear into the muted text around it. */
+  .tokens-debug .pill.none {
+    opacity: 1;
+    color: var(--color-content-danger, #b4392f);
+    border-color: currentColor;
+  }
+  .tokens-debug .c-variant .wired-ing {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .tokens-debug .c-variant .wired-label {
+    flex-basis: 100%;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-content-default-muted, #8d8d8d);
+  }
+  /* Each chip carries its own property word, so two of them cannot read as one
+     string the way the earlier `family-sans` / `weight-regular` pair did. */
+  .tokens-debug .c-variant .wired-ing code {
+    font-size: 0.62rem;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background: var(--color-background-elevation-sunken, #f2f2f2);
+    border: 1px solid var(--color-border-default-subtle, #e4e4e4);
+    color: var(--color-content-default-muted, #8d8d8d);
+  }
+  .tokens-debug .c-variant .wired-ing code b {
+    font-weight: 600;
+    color: var(--color-content-default, #1c1c1c);
+  }
+  .tokens-debug .on-prefix {
+    display: inline-block;
+    margin-inline-end: 4px;
+    padding: 0 4px;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-content-default-muted, #8d8d8d);
+    border: 1px dashed var(--color-border-default-subtle, #d9d9d9);
+    border-radius: var(--radius-100, 4px);
+    cursor: help;
   }
   .tokens-debug table.findings th, .tokens-debug table.tok-table th {
     text-align: left;
@@ -2010,47 +2406,47 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--color-content-secondary, #666);
+    color: var(--color-content-default-secondary, #666);
     padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-    border-top: 1px solid var(--color-border-subtle, #e5e5e5);
-    border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+    border-top: 1px solid var(--color-border-default-subtle, #e5e5e5);
+    border-bottom: 1px solid var(--color-border-default-subtle, #e5e5e5);
   }
   .tokens-debug table.findings td, .tokens-debug table.tok-table td {
     padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-    border-bottom: 1px solid var(--color-border-subtle, #f0f0f0);
+    border-bottom: 1px solid var(--color-border-default-subtle, #f0f0f0);
     vertical-align: top;
   }
-  .tokens-debug code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.95em; }
-  .tokens-debug .dim { color: var(--color-content-muted, #999); }
-  .tokens-debug .has-note { color: var(--color-content-muted, #999); margin-left: 2px; }
+  .tokens-debug code { font-family: var(--typography-font-family-mono, ui-monospace, monospace); font-size: 0.95em; }
+  .tokens-debug .dim { color: var(--color-content-default-muted, #999); }
+  .tokens-debug .has-note { color: var(--color-content-default-muted, #999); margin-left: 2px; }
   .tokens-debug .c-chain { line-height: 1.9; }
   .tokens-debug .chip {
     display: inline-block;
     padding: 1px 6px;
     border-radius: var(--radius-100, 4px);
-    font-family: var(--font-mono, monospace);
+    font-family: var(--typography-font-family-mono, monospace);
     font-size: 0.72rem;
     border: 1px solid transparent;
   }
   .tokens-debug .k-component { background: var(--color-background-ai-subtle, #fff7ed); border-color: var(--color-background-ai, #b45309); }
   .tokens-debug .k-semantic { background: var(--color-background-brand-subtle, #f0fdf4); border-color: var(--color-border-brand, #86efac); }
   .tokens-debug .k-primitive { background: var(--color-background-info-subtle, #eff6ff); border-color: var(--color-border-info, #93c5fd); }
-  .tokens-debug .k-raw { background: var(--color-background-sunken, #f4f4f4); border-color: var(--color-border, #d4d4d4); }
+  .tokens-debug .k-raw { background: var(--color-background-elevation-sunken, #f4f4f4); border-color: var(--color-border-default, #d4d4d4); }
   .tokens-debug .k-unknown { background: var(--color-background-danger-subtle, #fef2f2); border-color: var(--color-background-danger, #dc2626); }
-  .tokens-debug .arrow { color: var(--color-content-muted, #999); margin: 0 4px; }
+  .tokens-debug .arrow { color: var(--color-content-default-muted, #999); margin: 0 4px; }
   .tokens-debug .c-value { white-space: nowrap; }
   .tokens-debug .swatch {
     display: inline-block;
     width: 14px; height: 14px;
     border-radius: 3px;
-    border: 1px solid var(--color-border, #d4d4d4);
+    border: 1px solid var(--color-border-default, #d4d4d4);
     vertical-align: -2px;
     margin-right: 6px;
   }
   .tokens-debug .uses > summary { cursor: pointer; display: flex; gap: 4px; }
   .tokens-debug .uses p { margin: 6px 0 0; font-size: 0.75rem; word-break: break-word; }
   .tokens-debug .pill {
-    background: var(--color-background-sunken, #f0f0f0);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
     font-size: 0.7rem;
@@ -2063,14 +2459,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.95rem;
     margin: var(--spacing-600, 24px) 0 var(--spacing-250, 10px);
     padding-bottom: var(--spacing-200, 8px);
-    border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+    border-bottom: 1px solid var(--color-border-default-subtle, #e5e5e5);
   }
   /* One level under h3.sub — the colour rubric's slots are subsections OF the
      tier-3 audit, not siblings of it, so they get a quieter rule. */
   .tokens-debug h4.sub2 {
     font-size: 0.85rem;
     margin: var(--spacing-500, 20px) 0 var(--spacing-200, 8px);
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
   }
   /* The two grammars side by side — the whole finding in one glance. */
   .tokens-debug .grammar {
@@ -2081,25 +2477,25 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .grammar > div {
     padding: var(--spacing-300, 12px);
-    border: 1px solid var(--color-border-subtle, #e5e5e5);
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-background-sunken, #fafafa);
+    background: var(--color-background-elevation-sunken, #fafafa);
   }
   .tokens-debug .grammar-label {
     display: block;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--color-content-secondary, #666);
+    color: var(--color-content-default-secondary, #666);
     margin-bottom: var(--spacing-200, 8px);
   }
   .tokens-debug .grammar code { display: block; font-size: 0.78rem; line-height: 1.7; word-break: break-word; }
   .tokens-debug .grammar > div:first-child code { color: var(--color-content-success, #2a7e3b); }
   .tokens-debug .grammar > div:last-child code { color: var(--color-content-warning, #a35200); }
 
-  .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-content-muted, #999); width: 1.5rem; }
+  .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-content-default-muted, #999); width: 1.5rem; }
   .tokens-debug .slots .slot-name { font-weight: 600; white-space: nowrap; }
-  .tokens-debug code.spec { font-size: 0.72rem; color: var(--color-content-secondary, #666); }
+  .tokens-debug code.spec { font-size: 0.72rem; color: var(--color-content-default-secondary, #666); }
   .tokens-debug .slot-flag {
     display: inline-block;
     margin-left: var(--spacing-200, 8px);
@@ -2127,13 +2523,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border-color: var(--color-border-success, #a7e8a7);
   }
   .tokens-debug .f-extra {
-    color: var(--color-content-secondary, #666);
-    background: var(--color-background-sunken, #f4f4f4);
-    border-color: var(--color-border, #d4d4d4);
+    color: var(--color-content-default-secondary, #666);
+    background: var(--color-background-elevation-sunken, #f4f4f4);
+    border-color: var(--color-border-default, #d4d4d4);
   }
   .tokens-debug tr.slot-absent td { background: var(--color-background-danger-subtle, #fef2f2); }
   .tokens-debug tr.slot-match td { background: var(--color-background-success-subtle, #f0fdf4); }
-  .tokens-debug tr.row-zero code { color: var(--color-content-muted, #999); }
+  .tokens-debug tr.row-zero code { color: var(--color-content-default-muted, #999); }
 
   .tokens-debug code.vocab {
     display: inline-block;
@@ -2141,10 +2537,16 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 1px 6px;
     font-size: 0.72rem;
     border-radius: var(--radius-100, 4px);
-    background: var(--color-background-sunken, #f4f4f4);
-    border: 1px solid var(--color-border-subtle, #e5e5e5);
+    background: var(--color-background-elevation-sunken, #f4f4f4);
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
   }
   .tokens-debug code.vocab.st { background: var(--color-background-info-subtle, #eff6ff); border-color: var(--color-border-info, #93c5fd); }
+  /* Knocked out, literally — the chip renders as its own subject. */
+  .tokens-debug code.vocab.ko {
+    background: var(--color-background-default-knockout, #202020);
+    border-color: var(--color-background-default-knockout, #202020);
+    color: var(--color-content-default-knockout, #fcfcfc);
+  }
   .tokens-debug code.vocab.warnv { background: var(--color-background-warning-subtle, #fffbeb); border-color: var(--color-border-warning, #fcd34d); }
 
   .tokens-debug .ord {
@@ -2155,20 +2557,58 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .o-rubric { color: var(--color-content-success, #2a7e3b); }
   .tokens-debug .o-inverted { color: var(--color-content-danger, #c62a2f); font-weight: 600; }
-  .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-content-muted, #999); }
-  .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-content-secondary, #666); max-width: 30ch; }
+  .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-content-default-muted, #999); }
+  .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-content-default-secondary, #666); max-width: 30ch; }
   .tokens-debug table.parse .notes div + div { margin-top: 3px; }
   .tokens-debug .num { font-variant-numeric: tabular-nums; }
 
-  /* Tier-2 grouped by property. The property level is the loudest thing on the
-     section, because "which surface does this colour land on" is the question
-     the grouping exists to answer. */
+  /* Tier-2 CATEGORY level — the outermost node, and the one that answers "what
+     kind of token is this" before anything else. Prose-cased and heavier than the
+     property beneath it, so the two levels are told apart at a glance rather than
+     by counting indents. */
+  .tokens-debug details.tok-category.cat > summary .cat-label {
+    font-size: 1.02rem;
+    letter-spacing: -0.01em;
+  }
+  .tokens-debug details.tok-category.cat { border-width: 2px; }
+
+  /* A neutral-by-name token whose VALUE comes from another intention. Quiet, and
+     next to the name rather than the value column, because the disagreement is
+     between those two things and the name is the half that looks fine alone. */
+  .tokens-debug .derived {
+    margin-inline-start: var(--spacing-150, 6px);
+    font-size: 0.65rem;
+    color: var(--color-content-default-secondary, #666);
+    border: 1px solid var(--color-border-default, #d4d4d4);
+    border-radius: var(--radius-100, 4px);
+    padding: 0 4px;
+    cursor: help;
+    white-space: nowrap;
+  }
+
+  /* Tier-2 grouped by property, one level in. The property level answers "which
+     declaration does this land in" — for colour, the surface. Mono-cased because
+     these are literal CSS property names. */
   .tokens-debug details.tok-category.prop > summary .cat-label {
     text-transform: lowercase;
-    font-family: var(--font-mono, ui-monospace, monospace);
+    font-family: var(--typography-font-family-mono, ui-monospace, monospace);
     font-size: 0.9rem;
   }
   .tokens-debug details.tok-category.prop { border-left: 3px solid var(--color-background-brand, #16a34a); }
+  /* Nested inside a category: drop the box so the property reads as a CHILD of the
+     category rather than a second card of equal weight. The left rule is the only
+     chrome it needs at this depth. */
+  .tokens-debug .cat-body details.tok-category.prop {
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 0;
+    background: transparent;
+    margin-bottom: var(--spacing-200, 8px);
+  }
+  /* .cat-note carries its own inset for the flat case; inside a .cat-body that is
+     already inset it doubles up and the prose drifts right at every level. */
+  .tokens-debug .cat-body > .cat-note { padding-inline: 0; }
   /* `inferred` marks a token whose property the NAME does not carry — the thing
      this grouping is meant to make visible, so it stays legible, not decorative. */
   .tokens-debug .inf {
@@ -2184,14 +2624,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug table.type-table { min-width: 60rem; }
   .tokens-debug table.type-table td { white-space: nowrap; }
   .tokens-debug table.type-table .resolved { display: block; font-size: 0.68rem; margin-top: 2px; }
-  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-content-muted, #999); margin-top: 2px; }
+  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-content-default-muted, #999); margin-top: 2px; }
   /* The tier-1 token behind the hook. Same shape as the colour rows' tier-1
      column — the value alone says what renders, this says which step of the
      scale it came from. */
   .tokens-debug table.type-table .t1 {
     display: block;
     font-size: 0.68rem;
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
     margin-top: 2px;
   }
   .tokens-debug table.type-table .t1 .arrow { margin: 0 3px 0 0; }
@@ -2212,7 +2652,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     background: repeating-linear-gradient(
       45deg,
       transparent, transparent 4px,
-      var(--color-background-sunken, #f4f4f4) 4px, var(--color-background-sunken, #f4f4f4) 8px
+      var(--color-background-elevation-sunken, #f4f4f4) 4px, var(--color-background-elevation-sunken, #f4f4f4) 8px
     );
     font-size: 0.7rem;
     font-style: italic;
@@ -2243,8 +2683,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border: 1px solid transparent;
   }
   .tokens-debug .pk-part {
-    color: var(--color-content-secondary, #525252);
-    border-color: var(--color-border, #e5e5e5);
+    color: var(--color-content-default-secondary, #525252);
+    border-color: var(--color-border-default, #e5e5e5);
   }
   .tokens-debug .pk-variant,
   .tokens-debug .pk-state {
@@ -2255,7 +2695,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
   /* ---------------------------------------------- tier-1 naming audit */
   .tokens-debug .alias-list { display: block; margin: var(--spacing-200, 8px) 0; }
-  .tokens-debug .rank { width: 1.5rem; color: var(--color-content-muted, #999); }
+  .tokens-debug .rank { width: 1.5rem; color: var(--color-content-default-muted, #999); }
   /* A finding whose check now returns zero. Deliberately keeps the finding text
      above it — the record of what was wrong is the useful part. */
   .tokens-debug .resolved {

@@ -142,7 +142,7 @@ const prefOf = (role) => (PREFERENCE.indexOf(role) === -1 ? 999 : PREFERENCE.ind
 
 /**
  * font-size is the DISCRIMINATOR. Without gating on it, a rule that sets only
- * `font-family: var(--font-sans)` matches all 13 roles equally and gets filed under
+ * `font-family: var(--typography-font-family-sans)` matches all 13 roles equally and gets filed under
  * whichever happens to be first — which put 73 rules under `display` and `title`,
  * two roles no component should ever want.
  *

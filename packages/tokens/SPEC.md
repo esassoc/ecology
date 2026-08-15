@@ -13,7 +13,7 @@ all new components follow.
    names the face; `--font-weight-350` names the weight. The uncomfortable
    literalness is the point — nothing consumes these directly, so a name that
    says exactly what the value *is* makes the tier-2 mapping legible. A tier-1
-   token named for a role (`--font-sans`, `--color-status-success`) reads as
+   token named for a role (`--typography-font-family-sans`, `--color-status-success`) reads as
    themeable and isn't, which is how a theme ends up re-pointing a primitive.
 
    Three scale conventions are in play. Which one a category uses depends on
@@ -58,7 +58,7 @@ all new components follow.
    primitives. A spoke's brand identity lives here: re-point a semantic token
    and the intent re-skins everywhere it's used. Every category gets a layer
    here, not just colour:
-   - colour — `--color-background-brand`, `--color-background-raised`, `--color-content-secondary`
+   - colour — `--color-background-brand`, `--color-background-elevation-raised`, `--color-content-default-secondary`
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
    - size — `--chip-height-*`, and only that. `--control-height-{xs,sm,md,lg}` was
      deleted on 2026-08-14: a px height cannot grow with rem text, so it clipped.
@@ -66,7 +66,7 @@ all new components follow.
      padding is `--spacing-*` read directly — so this category has no ramp for them
      at any tier. See `tokens/semantic/size.json`.
    - type — the **composites**, `--typography-<intention>[-<size>]-<property>`,
-     plus the faces (`--font-sans | -mono | -display`) and named weights they are
+     plus the faces (`--typography-font-family-sans | -mono | -display`) and named weights they are
      assembled from. There is no separate chrome ramp. A `--font-size-ui-*` set
      existed until 2026-08-14 on the theory that interface text was a different
      kind of thing from prose; it was deleted because a size-only scale running
@@ -145,7 +145,7 @@ a danger border is `--color-border-danger`. Not `--color-danger-border`, and not
   with the opaque neutrals already holding those names.
 
 **Neutral is the default intention and carries no intention word.**
-`--color-background` is the page; `--color-content-primary` is body text. Every
+`--color-background` is the page; `--color-content-default` is body text. Every
 non-neutral names its intention: `--color-background-brand`.
 
 **Two rules that exist because they were once broken:**
@@ -168,14 +168,14 @@ A tier-2 token does one of two jobs, and which one decides what it may reference
 - **Defining** a colour identity → references a **primitive**.
   `--color-background-brand: {color.grass.9}` is where "brand" becomes a value.
 - **Deriving** from an identity it does not own → references **another tier-2
-  token**. `--color-border-focus: {color.background-brand}`.
+  token**. `--color-border-default-focus: {color.background-brand}`.
 
 This is not a loophole in "components read tier 2, never a primitive" — it is what
 makes theming work. `build.js` compiles with `outputReferences: true`, so the
 reference survives into the CSS as a live `var()`:
 
 ```css
---color-border-focus: var(--color-background-brand);
+--color-border-default-focus: var(--color-background-brand);
 ```
 
 A spoke overriding `--color-background-brand` in its `[data-theme]` block moves the
@@ -189,7 +189,7 @@ focus ring **at runtime**. Flattened to a hex, it could not.
 2. **Ask whose identity it is.** A focus ring has no colour of its own — it *is*
    the brand, so it derives. A danger border is not the brand; it defines danger,
    so it references a primitive. Getting this backwards is how
-   `--color-border-focus: {color.grass.8}` shipped: a derived token written as a
+   `--color-border-default-focus: {color.grass.8}` shipped: a derived token written as a
    defining one, unreachable by every theme, and it stayed green in a navy spoke
    for months without a single error.
 
@@ -199,12 +199,12 @@ Two tier-2 tokens with the **same default value are not redundant**. Tier 2 is t
 layer whose entire job is being re-pointed, so the question is whether the *role* is
 real, not whether this palette happens to distinguish it.
 
-`--color-background-raised` and `--color-background-floating` are both gray-1. They
+`--color-background-elevation-raised` and `--color-background-elevation-floating` are both gray-1. They
 stay two tokens because a card and a dialog are different jobs, and a theme with an
 elevation story will separate them.
 
 This was learned the hard way. `--color-background-brand-active` and
-`--color-content-tertiary` were briefly deleted for holding their sibling's value —
+`--color-content-default-tertiary` were briefly deleted for holding their sibling's value —
 and cb-fish had already separated both, running a three-step navy press sequence and
 a four-step grey ramp. Merging them would have silently overwritten two of its
 colours. `scripts/migrate-tokens.mjs` now refuses to apply any rename that collapses
@@ -281,7 +281,7 @@ spacing token is prefixed `--foundations-`.
 
 3. **Component** (`src/component-tokens.css`, authored) — the per-component
    (or per-group) theming surface, defaulting to semantic references:
-   `--card-bg: var(--color-background-raised)`. A spoke uses this tier to diverge ONE
+   `--card-bg: var(--color-background-elevation-raised)`. A spoke uses this tier to diverge ONE
    component from the semantic default without forking it.
 
 Inside components, **private `--_*` tokens** consume the public tiers, always
@@ -465,10 +465,10 @@ Adding a hook NEVER changes rendered output:
 
 ```css
 /* component-tokens.css (authored default = the old semantic chain) */
---card-bg: var(--color-background-raised);
+--card-bg: var(--color-background-elevation-raised);
 
 /* inside the component: hook spliced ABOVE the old chain, old fallback kept */
---_card-bg: var(--card-bg, var(--color-background-raised, #fff));
+--_card-bg: var(--card-bg, var(--color-background-elevation-raised, #fff));
 ```
 
 Spokes already shipping are untouched by construction: every new token's

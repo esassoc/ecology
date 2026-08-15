@@ -130,17 +130,17 @@ export class EsaTabLayout extends LitElement {
     :host {
       --_tab-height: var(--tab-layout-height-md, 44px);
       --_tab-font-size: var(--font-size-200, 0.875rem);
-      --_tab-color: var(--tab-layout-color, var(--color-content-secondary, #525252));
+      --_tab-color: var(--tab-layout-color, var(--color-content-default-secondary, #525252));
       --_tab-color-active: var(--tab-layout-color-active, var(--color-background-brand, #43608a));
-      --_tab-color-hover: var(--color-content-primary, #171717);
+      --_tab-color-hover: var(--color-content-default, #171717);
       --_tab-indicator-color: var(--tab-layout-indicator-color, var(--color-background-brand, #43608a));
       --_tab-indicator-height: 2px;
-      --_tab-bg-hover: var(--color-background-sunken, #efefef);
+      --_tab-bg-hover: var(--color-background-elevation-sunken, #efefef);
       --_tab-gap: var(--spacing-100, 4px);
       --_tab-padding-x: var(--spacing-400, 16px);
-      --_tab-border: var(--tab-layout-border-color, var(--color-border, #e5e5e5));
+      --_tab-border: var(--tab-layout-border-color, var(--color-border-default, #e5e5e5));
       --_tab-badge-bg: var(--color-background-brand, #43608a);
-      --_tab-badge-color: var(--color-content-inverse, #ffffff);
+      --_tab-badge-color: var(--color-content-default-knockout, #ffffff);
 
       display: block;
     }
@@ -189,7 +189,7 @@ export class EsaTabLayout extends LitElement {
       color: var(--_tab-color-hover);
       background: var(--_tab-bg-hover);
     }
-    .tab--active { color: var(--_tab-color-active); font-weight: var(--font-weight-medium, 500); }
+    .tab--active { color: var(--_tab-color-active); font-weight: var(--typography-font-weight-medium, 500); }
     .tab--active::after {
       content: '';
       position: absolute;
@@ -217,7 +217,7 @@ export class EsaTabLayout extends LitElement {
       height: 20px;
       padding-inline: var(--spacing-150, 6px);
       font-size: var(--font-size-100, 0.6875rem);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);
       border-radius: var(--radius-pill, 9999px);
@@ -229,8 +229,8 @@ export class EsaTabLayout extends LitElement {
     :host([variant='pill']) .tabs {
       align-self: flex-start;
       border-bottom: none;
-      background: var(--color-background-sunken, #efefef);
-      border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      background: var(--color-background-elevation-sunken, #efefef);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-surface, 8px);
       padding: var(--spacing-050, 2px);
       gap: var(--spacing-050, 2px);
@@ -239,7 +239,7 @@ export class EsaTabLayout extends LitElement {
     :host([variant='pill']) .tab { border-radius: var(--radius-control, 4px); }
     :host([appearance='segmented']) .tab--active,
     :host([variant='pill']) .tab--active {
-      background: var(--color-background-raised, #ffffff);
+      background: var(--color-background-elevation-raised, #ffffff);
       box-shadow: var(--elevation-1, 0 1px 2px rgba(0, 0, 0, 0.06));
     }
     :host([appearance='segmented']) .tab--active::after,

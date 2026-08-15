@@ -170,6 +170,7 @@ if (isSpoke) {
     // (from, to) swap — so it is collected separately. Reading `m.pairs` on one
     // would throw and take the entire doctor run down with it.
     const componentRows = migrations.filter((m) => m.kind === 'component');
+    const deprecatedPropRows = migrations.filter((m) => Array.isArray(m.deprecatedProps));
     const names = migrations
       .filter((m) => Array.isArray(m.pairs))
       .flatMap((m) =>
@@ -208,6 +209,17 @@ if (isSpoke) {
         for (const m of componentRows) {
           const { count } = renameComponent(src, m);
           if (count) { hits += count; seen.add(`<${m.from}>`); }
+        }
+        // DEPRECATED-BUT-NOT-RENAMED props. These rows carry no `pairs`, because
+        // there is no mechanical rewrite — the replacement is a different component
+        // and which call sites need it is a human judgement. They still have to be
+        // FOUND, though, so scan them the same tag-scoped way (to === from, so the
+        // rewrite is a no-op and only the count matters).
+        for (const m of deprecatedPropRows) {
+          for (const prop of m.deprecatedProps) {
+            const n = renameProp(src, { components: m.components ?? [], from: prop, to: prop, module: m.module }).count;
+            if (n) { hits += n; seen.add(`${prop}=`); }
+          }
         }
       }
     };

@@ -112,7 +112,7 @@
       "pairs": [
         [
           "--shadow-50",
-          "--shadow-050"
+          "--elevation-1"
         ]
       ]
     },
@@ -212,7 +212,7 @@
       "pairs": [
         [
           "--font-family-primary",
-          "--font-sans"
+          "--typography-font-family-sans"
         ]
       ]
     },
@@ -357,27 +357,27 @@
         ],
         [
           "--color-surface-inverse-hover",
-          "--color-background-inverse-hover"
+          "--color-background-default-knockout-hover"
         ],
         [
           "--color-surface-inverse",
-          "--color-background-inverse"
+          "--color-background-default-knockout"
         ],
         [
           "--color-surface-elevated",
-          "--color-background-floating"
+          "--color-background-elevation-floating"
         ],
         [
           "--color-surface-sunken",
-          "--color-background-sunken"
+          "--color-background-elevation-sunken"
         ],
         [
           "--color-surface-hover",
-          "--color-background-hover"
+          "--color-background-default-hover"
         ],
         [
           "--color-surface",
-          "--color-background-raised"
+          "--color-background-elevation-raised"
         ],
         [
           "--color-disabled-bg",
@@ -385,23 +385,23 @@
         ],
         [
           "--color-text-primary",
-          "--color-content-primary"
+          "--color-content-default"
         ],
         [
           "--color-text-secondary",
-          "--color-content-secondary"
+          "--color-content-default-secondary"
         ],
         [
           "--color-text-tertiary",
-          "--color-content-tertiary"
+          "--color-content-default-tertiary"
         ],
         [
           "--color-text-muted",
-          "--color-content-muted"
+          "--color-content-default-muted"
         ],
         [
           "--color-text-inverse",
-          "--color-content-inverse"
+          "--color-content-default-knockout"
         ],
         [
           "--color-text-link-hover",
@@ -417,7 +417,7 @@
         ],
         [
           "--color-border-light",
-          "--color-border-subtle"
+          "--color-border-default-subtle"
         ],
         [
           "--color-disabled-border",
@@ -839,7 +839,7 @@
         ],
         [
           "--form-bg-hover",
-          "--color-background-hover"
+          "--color-background-default-hover"
         ],
         [
           "--form-bg-disabled",
@@ -970,6 +970,176 @@
         "weight"
       ],
       "why": "Same fold as icon-button, minus `iconOnly`. Two mappings are NOT one-to-one and are why this cannot be a plain tag swap. (1) `active` meant \"this is the current nav item\" and emitted aria-current; on esa-button `active` means \"this toggle is pressed\" and emits aria-pressed. Those are different claims — a nav link announced as a depressed toggle is worse for a screen-reader user than an unlabelled one — so button grew a separate `current` prop and this maps onto it. (2) `weight` is DROPPED, not remapped: esa-button takes its type from the typography-label-* composites, which own font-weight, and declaring it on the element would silently beat the composite (Astro's [data-astro-cid-*] scoping outranks a single-class selector). An audit found `weight` passed ZERO times anywhere in the hub. The codemod REPORTS a dropped prop rather than deleting it — a human decides that call site. VISUAL CHANGE, unlike the icon-button row: nav items go from bare text (16px tall at md, 14px at sm) to 46px/38px boxes, and md type goes 16px -> 15px. Those old heights were under the 24px AA touch-target floor; the new ones clear 44px AAA."
+    },
+    {
+      "id": "select-searchable-to-combobox",
+      "kind": "prop",
+      "since": "2026-08-15",
+      "components": [
+        "esa-select"
+      ],
+      "module": "@esa/ecology/esa-select.astro",
+      "pairs": [],
+      "why": "NO REWRITE PAIRS ON PURPOSE — this row exists so `doctor` and /update-tokens can NAME the affected files, not rewrite them. `searchable` defaulted to TRUE, so every existing <esa-select> is rendering an editable autocomplete: a codemod cannot know whether each call site wanted a filter or merely took the default. That is a human judgement per site. A select is a list opened by a BUTTON; a type-to-filter field is an autocomplete, i.e. esa-combobox. Most sites need NOTHING — dropping `searchable` leaves typeahead, which covers the common case. Sites over a genuinely long list (cb-fish-design's locality schedule is the example) should become <esa-combobox>. The component keeps `searchable` working and warns at runtime; that warning, not this row, is what reaches a binding no static scan can see.",
+      "deprecatedProps": [
+        "searchable"
+      ]
+    },
+    {
+      "id": "combobox-mode-select-to-select",
+      "kind": "prop",
+      "since": "2026-08-15",
+      "components": [
+        "esa-combobox"
+      ],
+      "module": "@esa/ecology/esa-combobox.astro",
+      "pairs": [],
+      "why": "Also no rewrite pairs. `mode=\"select\"` renders a button trigger over a fixed list — that is <esa-select>. The correct migration is a COMPONENT swap conditional on an attribute VALUE, which `renameComponent` cannot express (it matches on tag alone). Building that predicate was scoped and DROPPED: measured across every spoke, it would rewrite 4 call sites in one repo, against ~150 lines plus tests. A warning that names the file is the better tool at that size. `triggerStyle` is deprecated with it — it is read at exactly one site, inside renderSelect, so it only ever styled that button.",
+      "deprecatedProps": [
+        "mode",
+        "triggerStyle"
+      ]
+    },
+    {
+      "id": "bare-property-to-default",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background",
+          "--color-background-default"
+        ],
+        [
+          "--color-border",
+          "--color-border-default"
+        ]
+      ],
+      "why": "SPELLING OUT THE INTENTION THAT WAS OMITTED. `--color-background` and `--color-border` were the only two tier-2 colour tokens carrying NO variant word at all. The convention was intention-by-omission — a token with no intention word IS the default — and every other token in the set names its intention (`-brand`, `-danger`, `-ai`, `-link`, `-disabled`).\n\nWHY THE CONVENTION LOST. It only reads if you already know it. `--color-background-raised` and `--color-background` look like a pair where one is more specific than the other, when in fact they are siblings — the default surface and the raised surface. Naming the default `-default` makes them read as the peers they are, and makes the slot-5 variant position present in EVERY name rather than present in all but two. The debug tree is what surfaced it: grouping colour by intention produced a group that no token was named after, which meant the grouping had to invent a word (`neutral`) to describe the absence of one. A group label the token set cannot supply is a naming gap, not a rendering choice.\n\nVALUE-IDENTICAL. Both keep their exact values (`--color-gray-1` and `--color-gray-7`) and every reference chain behind them is untouched. Nothing renders differently.\n\nTHE DECLARATION HALF IS THE RISK, as always. An alias rescues `var(--color-background)`; it can never rescue `--color-background: <value>`. A spoke theme file is nothing BUT declarations, and these two are among the most likely tokens for a spoke to re-point — they are the page canvas and the default hairline, the first two lines of any re-skin. A spoke that does not run `/update-tokens` keeps a theme file that parses, passes every gate, and silently stops applying its canvas and border colours. Both hub theme files (`apps/site/src/styles/docs-dark.css`) and the spoke template were updated in the same commit; spoke repos were NOT touched and must migrate themselves.\n\nSCOPE, so nothing is over-rewritten: this renames the BARE names only. `--color-background-raised`, `--color-background-sunken`, `--color-border-strong` and the rest already carry a variant word and are unchanged. A codemod matching on prefix rather than on the whole token name would corrupt all of them."
+    },
+    {
+      "id": "missing-intention-to-default",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-hover",
+          "--color-background-default-hover"
+        ],
+        [
+          "--color-content-primary",
+          "--color-content-default"
+        ],
+        [
+          "--color-content-secondary",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--color-content-tertiary",
+          "--color-content-default-tertiary"
+        ],
+        [
+          "--color-content-muted",
+          "--color-content-default-muted"
+        ],
+        [
+          "--color-border-subtle",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--color-border-strong",
+          "--color-border-default-strong"
+        ],
+        [
+          "--color-border-focus",
+          "--color-border-default-focus"
+        ]
+      ],
+      "why": "THE SECOND HALF OF bare-property-to-default, and the reason that row was not enough on its own.\n\nA TIER-2 COLOUR NAME HAS FOUR SLOTS: property > intention > variant > state. --color-background-brand-muted-hover fills all four. The first row spelled out the intention on the two tokens that had NOTHING after the property. These eight are the same omission one slot to the right: they carry a VARIANT or a STATE with the intention still unsaid. --color-border-subtle is the DEFAULT border, made subtle; --color-background-hover is the DEFAULT background, hovered. Nothing named the default, so slot 2 sat empty and slot 3 or 4 moved up into it.\n\nWHY THAT MATTERS MORE THAN TIDINESS. A name whose slots have shifted cannot be parsed, only recognised — you have to already know that `subtle` in --color-border-subtle is a variant while `brand` in --color-border-brand is an intention, because their positions are identical. That ambiguity is what made every attempt to GROUP these tokens invent an umbrella word (`neutral`, then `utility`) to stand in for the missing slot. With slot 2 always filled, the grouping falls straight out of the names and needs no vocabulary the token set does not ship.\n\n--color-content-primary BECAME --color-content-default, not --color-content-default-primary. `primary` was never a variant of the default text colour, it WAS the default text colour, wearing a prominence word because the set had no other way to say `first`. Its three siblings did become variants: secondary, tertiary and muted are genuine degrees of a single intention, and they now say which intention they are degrees OF.\n\nVALUE-IDENTICAL, all eight. Only names moved.\n\nDECLARATIONS ARE THE RISK, and this row carries more of them than any before it: 13 in the hub across the dark theme, the spoke template and the docs package, versus 558 reads. An alias rescues a read and never a declaration, and --color-content-primary / --color-content-secondary / --color-border-subtle are exactly the tokens a spoke re-points first — they are the text ramp and the hairline. A spoke that skips /update-tokens keeps a theme file that parses, passes every gate and applies nothing.\n\nWHOLE-NAME MATCHING IS MANDATORY HERE. --color-content-secondary and --color-content-brand-secondary differ only by the intention between them, and --color-background-hover sits beside --color-background-brand-hover. A codemod matching on prefix corrupts the siblings it is not meant to touch.\n\nNOTED IN PASSING: --color-content-tertiary had ZERO readers in the hub at the time of the rename. It was carried across rather than deleted because the ramp reads as incomplete without it, but it has never been used."
+    },
+    {
+      "id": "surface-to-elevation",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-raised",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--color-background-floating",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--color-background-sunken",
+          "--color-background-elevation-sunken"
+        ]
+      ],
+      "why": "NAMING THE AXIS THESE THREE ALREADY SHARED. `raised`, `floating` and `sunken` are not three intentions — they are three points on ONE axis, elevation, and the tier-2 grammar (property > intention > variant > state) was spending its intention slot on the variant. Nothing in the names said they belonged together, so nothing said that re-pointing one without the others leaves a surface ramp with a step missing.\n\nTHE EVIDENCE WAS ALREADY IN THE REPO. `--elevation-*` — the SHADOW ramp — describes its own rungs with these exact words: `--elevation-3` is \"Raised card — a surface sitting above the page but still part of it\", `--elevation-4` is \"Anchored or transient floating surfaces — dropdowns, popovers, menus\". The system has had an elevation axis all along and has been spelling it `raised`/`floating` at both ends; the colour half just never said so. A card is `--color-background-elevation-raised` + `--elevation-3`, and now the two ramps read as the pair they are instead of the pairing being folklore.\n\nTWO FAMILIES NOW SAY \"elevation\" — this colour set and the shadow set. That is deliberate, not an oversight. There is no literal collision (`--color-background-elevation-*` vs `--elevation-*`), and the shared word is the point: they are one concept expressed as value and as shadow.\n\nWHAT DID NOT JOIN, and why each stayed out. `--color-background-default` is the reference PLANE, not a departure from it — sunken is below IT and raised is above IT, so it sits at position 0 on the axis and takes no elevation word; naming a departure is useful, naming the thing it departs from is not. `--color-background-field` is `transparent` and deliberately takes no step at all. `--color-background-inverse` is gray-12, a HUE flip rather than a lift. A regroup like this fails by over-reaching; these three are the tokens it would have swept up.\n\nVALUE-IDENTICAL. gray-1, gray-1, gray-3 respectively, and every reference chain behind them is untouched. Nothing renders differently.\n\nFLOATING DOES NOT DERIVE FROM RAISED, and this was considered and rejected rather than overlooked. When `floating` looked like a VARIANT of `raised` (both gray-1 in light, one step apart in dark) the natural fix was `background-floating: {color.background-raised}`, so a spoke re-pointing the card surface got dialogs for free. Under the elevation reading they are SIBLINGS on one ramp, and siblings each own their own step — `background-brand-subtle` does not derive from `background-brand`. The shared namespace does that job instead, weakly but honestly: a spoke re-pointing `--color-background-elevation-raised` has the other two rungs sitting beside it under the same prefix. If the light theme ever separates them by value the sibling reading is what survives; a derivation would have had to be undone.\n\nTHE DECLARATION HALF, as always, is the risk. An alias rescues `var(--old)`; it can NEVER rescue `--old: <value>`. Eight declarations existed in the hub at rename time and all were updated in the same commit. SUNKEN CARRIED FIVE OF THEM and is the one to watch: `apps/site/src/styles/themes.css` declares it in BOTH the beacon and qanat themes, `docs-dark.css` declares it, `foundations/color.astro` demos it, and — the one with a future — `packages/spoke-template/src/styles/theme-__SPOKE_SLUG__.css` seeds it into every scaffolded spoke. Any spoke scaffolded BEFORE this date has an inert declaration in its theme file and silently loses its well colour until it runs /update-tokens.\n\nSPOKE EXPOSURE WAS ZERO AT RENAME TIME, verified rather than assumed: cb-fish-design and air-exchange-tool both exist on disk and neither reads NOR declares any of the three. That is unusual for a surface token and is the reason this rename was cheap — contrast `bare-property-to-default`, which hit both spokes on the declaration side.\n\nSCOPE — WHOLE-NAME MATCHING IS MANDATORY. None of the three has a suffixed sibling today (there is no `--color-background-raised-hover`), which is exactly the condition under which a lazy prefix codemod passes its own tests and then corrupts the first sibling anyone adds. Match the whole token name with a boundary, not a prefix."
+    },
+    {
+      "id": "font-ingredients-to-typography-namespace",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--font-sans",
+          "--typography-font-family-sans"
+        ],
+        [
+          "--font-mono",
+          "--typography-font-family-mono"
+        ],
+        [
+          "--font-display",
+          "--typography-font-family-display"
+        ],
+        [
+          "--font-weight-light",
+          "--typography-font-weight-light"
+        ],
+        [
+          "--font-weight-regular",
+          "--typography-font-weight-regular"
+        ],
+        [
+          "--font-weight-medium",
+          "--typography-font-weight-medium"
+        ],
+        [
+          "--font-weight-semibold",
+          "--typography-font-weight-semibold"
+        ],
+        [
+          "--font-weight-bold",
+          "--typography-font-weight-bold"
+        ]
+      ],
+      "why": "TIER-2 TYPOGRAPHY WAS TWO SETS UNDER TWO PREFIXES, and only one of them said what it was. The composites announce their category (`--typography-label-md-font-size`); the faces and weights they are ASSEMBLED FROM did not (`--font-sans`, `--font-weight-medium`). Same tier, same file, same job, two vocabularies — so nothing in a name told you that re-pointing `--font-sans` moves every composite that reads it.\n\nTHE COLLISION THIS FIXES IS THE REAL REASON, and it was invisible in the JSON. Tier-1 `primitive/typography.json` declares a `font-weight` group (100…900). Tier-2 `semantic/typography.json` declared a `font-weight` group TOO (light…bold). Style Dictionary MERGES groups across files, so `--font-weight-500` and `--font-weight-medium` came out of one namespace as siblings, with nothing in either name marking which tier it belongs to. That is not cosmetic: a spoke MUST re-point `medium` when it swaps its body face (the weight numbers are typeface-bound — 350/500/550/650 are DM Sans's optical weights) and MUST NEVER touch `500`. The names gave it no way to tell them apart, and the tier-1/tier-2 boundary is the one thing the whole three-tier contract rests on. `--font-family-dm-sans` stays where it is; it is a primitive and does not move.\n\n`--font-sans` NAMED THE FACE, NOT THE PROPERTY. It reads as a family only because nothing else could plausibly consume it — the name never says `font-family`, it says `sans`, which is a classification. Spelling the property makes it parse instead of being recognised, and it is the same correction the tier-1 audit already applied when `--type-size-*` became `--font-size-*`.\n\nTHIS NAMESPACE NOW HAS TWO SLOT ORDERS, DELIBERATELY. Composites are intention > variant > property (`--typography-label-md-strong-font-size`) so a composite's five properties sort as one block — the whole point of a composite is that its parts stay together. Ingredients have no intention slot at all, so the property leads: `--typography-font-family-sans` is property > variant, which is exactly the colour grammar (`--color-background-brand`). The colour order is the rule; the composites are the documented exception, and they earn it. Anyone reading a `--typography-*` name resolves the ambiguity the same way every time: if slot 2 is a CSS property, it is an ingredient; otherwise it is an intention.\n\nVALUE-IDENTICAL, all eight. Only names moved; every reference chain behind them is untouched and nothing renders differently.\n\nDECLARATIONS ARE THE RISK, AND THIS ROW CARRIES THE WORST EXPOSURE OF ANY YET. An alias rescues `var(--old)` and can NEVER rescue `--old: value` — and these are not incidental tokens, they are THE SPOKE OVERRIDE SURFACE. The type contract written at the top of `src/typography.css` instructs every spoke in so many words to set `--font-sans`, `--font-display` and the named `--font-weight-*`; `packages/spoke-template/src/styles/` seeds them into every scaffolded spoke. A spoke that skips `/update-tokens` keeps a theme file that parses, passes every gate, and applies none of its brand typography — the exact failure shape recorded against `bare-property-to-default`, but on the one surface a spoke is most certain to have touched. Every spoke must run the codemod; the alias only buys time for the reads.\n\nSCOPE — WHOLE-NAME MATCHING IS MANDATORY, and this set is unusually easy to get wrong. `--font-sans` sits one character from `--font-size-*`, `--font-mono` from `--font-family-dm-mono`, and `--font-weight-medium` from `--font-weight-500` — a prefix codemod on `--font-` would sweep the entire tier-1 typography family into a namespace it must never enter. `exact` is set explicitly here rather than left to its default for that reason."
+    },
+    {
+      "id": "inverse-to-knockout",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-inverse",
+          "--color-background-default-knockout"
+        ],
+        [
+          "--color-background-inverse-hover",
+          "--color-background-default-knockout-hover"
+        ],
+        [
+          "--color-content-inverse",
+          "--color-content-default-knockout"
+        ]
+      ],
+      "why": "GENERALISING A MECHANISM THAT ALREADY WORKED, FOR ONE ROLE ONLY. `inverse` was never \"the dark surface\" — the dark scheme re-points it to gray-dark-12, which is near-WHITE. It has always meant \"the opposite of whatever ground this theme sits on\", and it has always flipped correctly with the theme. That is a KNOCKOUT, and it was locked into the intention slot where exactly one background and one content role could have it.\n\nWHAT THAT COST, and it is the reason for the change: a knocked-out region could set its background and its text and nothing else. There was no `--color-border-inverse`, no secondary or muted text on an inverted ground, no inverted raised surface. So a dark app bar in a light theme got its two colours right and then every hairline and every muted label inside it fell back to LIGHT-theme values — on a near-black ground. Moving the word into the variant slot lets any role take it; five roles that a knocked-out region genuinely needs are added alongside this row.\n\nWHY `knockout` AND NOT `inverse`. Two names for one concept is the defect this whole audit removed elsewhere, so only one word survives. `inverse` reads as an instruction to invert a colour and collides with `filter: invert()`; `knockout` is the print term for reversing type out of a ground, which is the actual behaviour. It also stays honest for a spoke whose DEFAULT is dark: `light`/`dark` would have named the absolute value and lied on such a theme, while `knockout` names the relationship to whatever the theme already is.\n\nVALUE-IDENTICAL. gray-12, gray-11 and gray-1 respectively, and the dark-scheme counterparts move with the names. Nothing renders differently; the five NEW roles are additions, not changes.\n\nSEVENTY-SIX READERS, the largest colour rename in this file so far, and heavily concentrated: 11 in component-tokens.css (tier-3 hooks), then esa-tooltip, esa-popover, esa-confirm-dialog and esa-app-bar with 3 each. `--color-content-inverse` alone has 62 — it is the text colour of every filled badge, button and snackbar, so a missed read is a white-on-white or black-on-black label rather than a subtle shift.\n\nTHE DECLARATION HALF: the dark scheme (apps/site/src/styles/docs-dark.css) declares all three and was updated with them. A spoke that re-points inverse in its own theme file gets NO alias rescue and silently loses its inverted chrome until it runs /update-tokens.\n\nSCOPE: whole-name matching. `--color-background-inverse` is a strict prefix of `--color-background-inverse-hover`, so a prefix codemod rewrites the hover token into `--color-background-default-knockout-hover-hover`. Match the whole name with a boundary."
     }
   ]
 }

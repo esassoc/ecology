@@ -150,7 +150,7 @@ export class EsaRadioGroup extends LitElement {
     .group-label {
       display: block;
       margin-bottom: var(--spacing-200, 8px);
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
 
     .items {
@@ -228,7 +228,7 @@ export class EsaRadioGroup extends LitElement {
     }
 
     .item-label {
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
   `,
   ];

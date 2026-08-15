@@ -368,6 +368,41 @@ test('no migrations.json row renames onto a destination the hub cannot resolve',
   assert.deepEqual(broken, []);
 });
 
+test('no migrations.json row renames onto a destination that is itself deprecated', async () => {
+  // The two-hop trap. A row whose `to` is some OTHER row's `from` still resolves —
+  // the alias block chains, so nothing renders wrong — which is exactly why it goes
+  // unnoticed. What it costs is a spoke: /update-tokens rewrites onto the middle
+  // name, reports success, and the spoke is still on a deprecated token. It needs a
+  // second run nobody knows to make, and `doctor` will keep flagging it.
+  //
+  // This accumulated silently. Twelve chains existed when the guard was written on
+  // 2026-08-15, nine of them created by the two colour renames earlier that same day
+  // — the author of those rows (and of this test) did not notice either time.
+  //
+  // The fix is always to point `to` at the FINAL name, not the intermediate one.
+  // `removed: true` rows are exempt on both sides: their destination is dead data.
+  const { readFileSync } = await import('node:fs');
+  const url = new URL('../../packages/tokens/migrations.json', import.meta.url);
+  const { migrations } = JSON.parse(readFileSync(url, 'utf8'));
+
+  const deprecated = new Map(); // from -> the row that deprecates it
+  for (const m of migrations) {
+    if (m.kind !== 'token' || m.removed) continue;
+    for (const [from] of m.pairs) deprecated.set(from, m.id);
+  }
+
+  const chains = [];
+  for (const m of migrations) {
+    if (m.kind !== 'token' || m.removed) continue;
+    for (const [from, to] of m.pairs) {
+      if (deprecated.has(to)) {
+        chains.push(`${m.id}: ${from} → ${to}, but ${to} is itself deprecated by ${deprecated.get(to)}`);
+      }
+    }
+  }
+  assert.deepEqual(chains, []);
+});
+
 test('parseDeclarations ignores token names quoted inside comments', () => {
   // component-tokens.css documents itself in prose that quotes token names with a
   // colon after them. Matching inside the comment gave --color-border a value made

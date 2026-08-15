@@ -420,15 +420,15 @@ export class EsaEntitySearch extends LitElement {
       width: var(--entity-search-width, 600px);
       max-width: calc(100vw - 2rem);
       max-height: var(--entity-search-max-height, 70vh);
-      background: var(--entity-search-bg, var(--color-background-floating, #ffffff));
-      border: var(--border-width-default, 1px) solid var(--entity-search-border-color, var(--color-border, #dcdcdc));
+      background: var(--entity-search-bg, var(--color-background-elevation-floating, #ffffff));
+      border: var(--border-width-default, 1px) solid var(--entity-search-border-color, var(--color-border-default, #dcdcdc));
       border-radius: var(--entity-search-radius, var(--radius-overlay, 0.75rem));
       box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      font-family: var(--font-sans, sans-serif);
+      font-family: var(--typography-font-family-sans, sans-serif);
       animation: esa-entity-enter var(--animation-enter, 150ms ease-out);
     }
     @keyframes esa-entity-enter {
@@ -441,19 +441,19 @@ export class EsaEntitySearch extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
     }
-    .esa-entity-search__search-icon { color: var(--color-content-muted, #7c7c7c); flex-shrink: 0; }
+    .esa-entity-search__search-icon { color: var(--color-content-default-muted, #7c7c7c); flex-shrink: 0; }
     .esa-entity-search__input {
       flex: 1;
       border: none;
       outline: none;
       font-size: var(--font-size-300, 1.0625rem);
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       background: transparent;
       font-family: inherit;
     }
-    .esa-entity-search__input::placeholder { color: var(--color-content-muted, #7c7c7c); }
+    .esa-entity-search__input::placeholder { color: var(--color-content-default-muted, #7c7c7c); }
     .esa-entity-search__kbd, .esa-entity-search__footer kbd {
       display: inline-flex;
       align-items: center;
@@ -463,10 +463,10 @@ export class EsaEntitySearch extends LitElement {
       padding: 0 5px;
       font-family: inherit;
       font-size: var(--font-size-100, 0.75rem);
-      font-weight: var(--font-weight-medium, 500);
-      color: var(--color-content-muted, #7c7c7c);
-      background: var(--color-background-raised, #fff);
-      border: var(--border-width-default, 1px) solid var(--color-border, #dcdcdc);
+      font-weight: var(--typography-font-weight-medium, 500);
+      color: var(--color-content-default-muted, #7c7c7c);
+      background: var(--color-background-elevation-raised, #fff);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
       border-bottom-width: 2px;
       border-radius: 4px;
     }
@@ -476,27 +476,27 @@ export class EsaEntitySearch extends LitElement {
       flex-wrap: wrap;
       gap: var(--spacing-150, 0.375rem);
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
     }
     .esa-entity-search__scope {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
       padding: 4px var(--spacing-250, 0.625rem);
-      border: var(--border-width-default, 1px) solid var(--color-border, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-raised, #fff);
-      color: var(--color-content-secondary, #525252);
+      background: var(--color-background-elevation-raised, #fff);
+      color: var(--color-content-default-secondary, #525252);
       font: inherit;
       font-size: var(--font-size-100, 0.875rem);
       cursor: pointer;
       transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
     }
-    .esa-entity-search__scope:hover { border-color: var(--color-border-brand, #c6dcf1); color: var(--color-content-primary, #171717); }
+    .esa-entity-search__scope:hover { border-color: var(--color-border-brand, #c6dcf1); color: var(--color-content-default, #171717); }
     .esa-entity-search__scope--active {
       background: var(--color-background-brand, #1e5386);
       border-color: var(--color-background-brand, #1e5386);
-      color: var(--entity-search-selected-text, var(--color-content-inverse, #fcfcfc));
+      color: var(--entity-search-selected-text, var(--color-content-default-knockout, #fcfcfc));
     }
     .esa-entity-search__scope-count {
       font-size: var(--font-size-100, 0.75rem);
@@ -513,10 +513,10 @@ export class EsaEntitySearch extends LitElement {
       justify-content: space-between;
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
       font-size: var(--font-size-100, 0.8125rem);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
       text-transform: var(--text-transform-uppercase, uppercase);
       letter-spacing: 0.03em;
-      color: var(--color-content-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #7c7c7c);
     }
     .esa-entity-search__group-count { font-variant-numeric: tabular-nums; }
 
@@ -529,24 +529,24 @@ export class EsaEntitySearch extends LitElement {
       border: none;
       border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-entity-search__row--active { background: var(--entity-search-row-bg-active, var(--color-background-sunken, #f3f7fc)); }
-    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-muted, #7c7c7c); }
+    .esa-entity-search__row--active { background: var(--entity-search-row-bg-active, var(--color-background-elevation-sunken, #f3f7fc)); }
+    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-default-muted, #7c7c7c); }
     .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-content-brand, #2a7e3b); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .esa-entity-search__row-title {
       font-size: var(--font-size-200, 0.9375rem);
-      font-weight: var(--font-weight-medium, 500);
+      font-weight: var(--typography-font-weight-medium, 500);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-subtitle {
       font-size: var(--font-size-100, 0.8125rem);
-      color: var(--color-content-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #7c7c7c);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-title mark, .esa-entity-search__row-subtitle mark {
@@ -554,17 +554,17 @@ export class EsaEntitySearch extends LitElement {
       color: inherit;
       border-radius: 2px;
     }
-    .esa-entity-search__row-meta { flex-shrink: 0; font-size: var(--font-size-100, 0.8125rem); color: var(--color-content-muted, #7c7c7c); font-variant-numeric: tabular-nums; }
+    .esa-entity-search__row-meta { flex-shrink: 0; font-size: var(--font-size-100, 0.8125rem); color: var(--color-content-default-muted, #7c7c7c); font-variant-numeric: tabular-nums; }
     .esa-entity-search__row-actions { flex-shrink: 0; display: inline-flex; gap: var(--spacing-100, 0.25rem); opacity: 0; }
     .esa-entity-search__row:hover .esa-entity-search__row-actions,
     .esa-entity-search__row--active .esa-entity-search__row-actions { opacity: 1; }
     .esa-entity-search__row-action {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 8px;
-      border: var(--border-width-default, 1px) solid var(--color-border, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-raised, #fff);
-      color: var(--color-content-secondary, #525252);
+      background: var(--color-background-elevation-raised, #fff);
+      color: var(--color-content-default-secondary, #525252);
       font: inherit; font-size: var(--font-size-100, 0.75rem); cursor: pointer;
     }
     .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #1e5386); color: var(--color-background-brand, #1e5386); }
@@ -572,7 +572,7 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__empty {
       padding: var(--spacing-700, 3rem) var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-content-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #7c7c7c);
       font-size: var(--font-size-200, 0.9375rem);
     }
 
@@ -580,9 +580,9 @@ export class EsaEntitySearch extends LitElement {
       display: flex;
       gap: var(--spacing-400, 1rem);
       padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
-      border-top: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
       font-size: var(--font-size-100, 0.8125rem);
-      color: var(--color-content-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #7c7c7c);
     }
     .esa-entity-search__footer span { display: inline-flex; align-items: center; gap: 4px; }
   `;

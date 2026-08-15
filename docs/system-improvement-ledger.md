@@ -150,7 +150,7 @@ codemod rather than a flag day.
 - ✅ **Tier-2 colour property-first** — 72 tokens, 72 declaring their property.
   `primary`→`brand` (it meant the brand hue AND "most prominent" at once);
   step-11 `-strong`→`content-*` (they read as bolder fills and were used as such).
-- ✅ **`--color-border-focus` derives from the brand** instead of pinning `{color.grass.8}`.
+- ✅ **`--color-border-default-focus` derives from the brand** instead of pinning `{color.grass.8}`.
   It could not be reached by any theme — cb-fish re-pointed to navy and kept green focus
   rings while its links went navy correctly. Same defect removed from `docs-dark.css`.
 - ✅ **`DocsShell` styles `:focus-visible`** — the shell had *no* focus styling, so every
@@ -349,14 +349,14 @@ codemod rather than a flag day.
   visibly deeper (`0 4px 20px -4px / 0.06` → `0 6px 24px -6px / 0.07`); the FAB is lighter.
 
 - ✅ **The field surface was the card surface, and fields were invisible on cards** ·
-  *Evidence:* `--form-bg` pointed at `--color-background-raised` — gray-1, the same value a
+  *Evidence:* `--form-bg` pointed at `--color-background-elevation-raised` — gray-1, the same value a
   card paints — so an input inside a card rendered at **contrast 1.00** against it. The
   entire affordance rested on a border that itself only reaches 1.53. `--form-bg-hover`
   pointed at the same value again, so the kit shipped a hover hook that rendered nothing,
-  while `--color-background-hover` (step 4, "the neutral counterpart to
+  while `--color-background-default-hover` (step 4, "the neutral counterpart to
   `background-brand-muted-hover`") sat at tier 2 with **zero readers anywhere in the kit** ·
   *Action:* promoted to a new tier-2 role `--color-background-field`. NOT folded into
-  `--color-background-sunken`: sunken is read by 24 components and 10 hooks, which would
+  `--color-background-elevation-sunken`: sunken is read by 24 components and 10 hooks, which would
   rebuild the coupling this removed. 29 substitutions across 13 components;
   `migrations.json: form-bg-to-background-field`, `exact: false` — the first deliberately
   non-value-neutral surface change in the file · `hub-fix` · **done**
@@ -369,7 +369,7 @@ codemod rather than a flag day.
   collision the day before had just resolved). Net stack: canvas/raised/floating gray-1,
   field gray-2, wells gray-3, hover gray-4. The field's separation dropped 1.11 → **1.03**,
   which is what led to the entry below. **One consequence that outlived it:** the canvas now
-  EQUALS `--color-background-raised`, undoing the documented deliberate inversion, so a card
+  EQUALS `--color-background-elevation-raised`, undoing the documented deliberate inversion, so a card
   separates by its 1px border alone — `esa-card--elevated` has no border and leans entirely
   on `--elevation-2`, a 4% shadow · `hub-fix` · **done**
 - ✅ **Fields have no fill at all — `--color-background-field: transparent`** · *Evidence:*
@@ -396,7 +396,7 @@ codemod rather than a flag day.
   promoting `--form-bg` to `--color-background-field` moved fields onto a token
   `apps/site/src/styles/docs-dark.css` has never heard of, so in dark mode fields rendered
   **#f9f9f9 on a #111111 page**. The old name worked only because it pointed at
-  `--color-background-raised`, which the dark theme *does* override. `--color-background-hover`
+  `--color-background-elevation-raised`, which the dark theme *does* override. `--color-background-default-hover`
   (newly wired) had the same problem · *Action:* closed by transparency — a field with no
   fill needs no dark counterpart. **The guard-shaped hole is still open, though:** a new
   tier-2 surface role can be added with no dark override and every gate stays green. The
@@ -416,7 +416,7 @@ codemod rather than a flag day.
 - **`--focus-ring-*` is the most-violating set in the file and the cheapest to fix** ·
   *Evidence:* 3 tokens read by 31 components — a system-wide accessibility affordance living
   in the per-component tier. All three are already thin aliases over tier 2
-  (`--color-border-focus`, `--border-width-focus`) · *Action:* a **file move, not a rename** —
+  (`--color-border-default-focus`, `--border-width-focus`) · *Action:* a **file move, not a rename** —
   same names, declared in `tokens/semantic/` instead of `component-tokens.css`. Nothing
   resolves differently, no migration row, zero spoke impact. `--focus-ring-offset: 2px` is
   the one with no tier-2 home (there is no 2px on the 4px spacing grid) · `hub-fix` · **P2**
@@ -873,3 +873,62 @@ spacing rung) was the one that had to be argued down with measurements.
   date-picker 45, combobox 42, button 41) because an input has intrinsic content
   sizing the others do not. CLAUDE.md's "one scale across button/input/icon so they
   line up on a row" is therefore still approximate. Open.
+
+## Source: esa-select / esa-combobox realignment (2026-08-15)
+Started as "audit the next component's API props". The dead-prop vein was exhausted
+(0 across all 64), so the signal used was prop OVERLAP — and it found the two
+components sharing 10 identically-named props across 1,622 lines.
+
+- **Two components can each be implementing the other one, and every check still
+  passes** · *Evidence:* measured in the browser, `esa-select` default rendered
+  `<input role="combobox">` (an autocomplete) and `esa-combobox` default rendered
+  `<button>` (a button-triggered list). Exactly inverted against the standard
+  definitions — select = list opened by a button, combobox = autocomplete input with
+  suggestions. Nothing caught it: the generated API tables were faithful, no prop was
+  dead, no drift warning fired, and both doc pages were internally consistent. The
+  giveaways were only visible by comparing the pair — `esa-select` shipping
+  `searchable = true`, `esa-combobox` shipping `mode = 'select'`, and the combobox
+  specimen page demoing `mode="select"` 12 times against `autocomplete` twice.
+  *Action:* flipped both defaults; select's trigger is a `<button>` with native-style
+  typeahead; `searchable`, `mode` and `triggerStyle` are deprecated shims that still
+  work and warn once. *Sink:* the audit lens that works on a single component (is the
+  table faithful? are the props read?) cannot see this class at all. Overlap between
+  SIBLINGS is a separate scan and it is the one that found this. *Priority:* high.
+
+- **A deprecation shim protects explicit opt-ins; it does not protect a DEFAULT**
+  · *Evidence:* the shims were chosen specifically to give spokes zero visual change
+  on upgrade. They do not. cb-fish-design has **71** `<esa-select>` with no
+  `searchable` attribute and **4** `<esa-combobox>` with no `mode` — 75 call sites
+  relying on the old defaults, none of which the shim reaches, all of which change
+  appearance the moment the hub's `file:` symlink serves the new default. The
+  `searchable` scan confirms it from the other side: it matches **zero** files,
+  because the affected sites set nothing. *Action:* surfaced before shipping, and
+  the flip was kept deliberately (decided 2026-08-15): a select rendering an
+  autocomplete was the defect, so the 71 sites moving to button+typeahead is the fix
+  landing, not a regression — and one of the 4 combobox sites (cb-fish's locality
+  picker, "hundreds of localities") is actively corrected by it. The rejected
+  alternative was a two-step: warn on default-reliance now, flip in a later release.
+  *Sink:* "deprecate the prop" and "change the default" are different migrations with
+  different blast radii, and only the first is served by a shim. Say which one is
+  happening, and state the call-site count before promising "no visual change".
+  *Priority:* high.
+
+- **Scoping a codemod is part of the design, not a formality** · *Evidence:* the first
+  plan extended `renameComponent` with an attribute-value predicate so
+  `<esa-combobox mode="select">` could be rewritten to `<esa-select>`. Measured across
+  every spoke on the machine, that predicate would have rewritten **4 call sites in
+  one repo**, for ~150 lines plus tests. *Action:* dropped; the rows carry
+  `deprecatedProps` and no `pairs`, so `doctor` NAMES the affected files and a human
+  decides. Verified against cb-fish: the scan finds `mode=` in exactly the 5 real
+  files and correctly ignores that repo's unrelated `mode="decimal"` / `"modal"` /
+  `"page"` on other components — the tag-scoping in `renameProp` doing its job.
+  *Sink:* count the call sites before building the tool. *Priority:* medium.
+
+- **A migrations row with no `pairs` is invisible unless something reads it**
+  · *Evidence:* the two rows were first written with `pairs: []` and a `why`,
+  described as "for discoverability". They contributed **zero** names to `doctor`,
+  which builds its scan list from `pairs` — so the rows would have reported nothing,
+  silently, while looking like coverage. *Action:* added a `deprecatedProps` field and
+  taught `doctor.mjs` to scan it tag-scoped via `renameProp` with `to === from`, so
+  the rewrite is a no-op and only the count matters. *Sink:* every new row shape needs
+  a reader; check the consumer, not the manifest. *Priority:* medium.

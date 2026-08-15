@@ -4,7 +4,7 @@
 // Replaces the bespoke .stat / .stat__value / .stat__label / .stat__sub cluster
 // every prototype re-implements.
 //
-// Value uses --font-display at a large-but-tasteful role (NOT the giant
+// Value uses --typography-font-family-display at a large-but-tasteful role (NOT the giant
 // display/900 roles). Label is a readable body role (sentence case, secondary
 // color) — NOT an uppercase, micro, letter-spaced overline. Sub carries a
 // supporting datum, not a caption.
@@ -32,14 +32,14 @@ const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ')
 
 <style>
   .esa-stat {
-    --_stat-value-color: var(--stat-value-color, var(--color-content-primary, #171717));
-    --_stat-value-font: var(--stat-value-font, var(--font-display, var(--font-sans, 'DM Sans', sans-serif)));
+    --_stat-value-color: var(--stat-value-color, var(--color-content-default, #171717));
+    --_stat-value-font: var(--stat-value-font, var(--typography-font-family-display, var(--typography-font-family-sans, 'DM Sans', sans-serif)));
     --_stat-value-size: var(--stat-value-size, var(--font-size-700, 2.25rem));
-    --_stat-value-weight: var(--stat-value-weight, var(--font-weight-bold, 650));
-    --_stat-label-color: var(--stat-label-color, var(--color-content-secondary, #525252));
+    --_stat-value-weight: var(--stat-value-weight, var(--typography-font-weight-bold, 650));
+    --_stat-label-color: var(--stat-label-color, var(--color-content-default-secondary, #525252));
     --_stat-label-size: var(--stat-label-size, var(--font-size-200, 0.9375rem));
-    --_stat-label-weight: var(--stat-label-weight, var(--font-weight-medium, 500));
-    --_stat-sub-color: var(--stat-sub-color, var(--color-content-muted, #737373));
+    --_stat-label-weight: var(--stat-label-weight, var(--typography-font-weight-medium, 500));
+    --_stat-sub-color: var(--stat-sub-color, var(--color-content-default-muted, #737373));
     --_stat-sub-size: var(--stat-sub-size, var(--font-size-150, 0.875rem));
     --_stat-accent-color: var(--stat-accent-color, var(--color-content-brand-secondary, #3a7c59));
     --_stat-gap: var(--stat-gap, var(--spacing-050, 0.125rem));
@@ -72,7 +72,7 @@ const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ')
 
   .esa-stat__sub {
     font-size: var(--_stat-sub-size);
-    font-weight: var(--font-weight-regular, 350);
+    font-weight: var(--typography-font-weight-regular, 350);
     line-height: var(--line-height-normal, 1.6);
     color: var(--_stat-sub-color);
   }
