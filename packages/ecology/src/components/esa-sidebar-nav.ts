@@ -245,9 +245,9 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-color-hover: var(--sidenav-link-text-hover, var(--sidenav-link-text, #525252));
       --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-content-brand, #3a7c59));
       --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
-      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-background-sunken, #efefef));
+      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-background-elevation-sunken, #efefef));
       --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-background-brand-subtle, #f3f8fb));
-      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--font-weight-semibold, 550));
+      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--typography-font-weight-semibold, 550));
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
       --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-background-brand, #43608a));
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
@@ -342,7 +342,7 @@ export class EsaSidebarNav extends LitElement {
     .group-label {
       display: block;
       font-size: var(--font-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
       text-transform: var(--text-transform-uppercase, uppercase);
       letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--_sidenav-group-color);
@@ -367,7 +367,7 @@ export class EsaSidebarNav extends LitElement {
       color: var(--_sidenav-item-color);
       font-family: inherit;
       font-size: var(--font-size-200, 14px);
-      font-weight: var(--font-weight-medium, 500);
+      font-weight: var(--typography-font-weight-medium, 500);
       line-height: var(--line-height-none, 1);
       text-decoration: none;
       cursor: pointer;
@@ -419,9 +419,9 @@ export class EsaSidebarNav extends LitElement {
       padding: 0 6px;
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-brand, #43608a);
-      color: var(--color-content-inverse, #ffffff);
+      color: var(--color-content-default-knockout, #ffffff);
       font-size: var(--font-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
       line-height: var(--line-height-none, 1);
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }

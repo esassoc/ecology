@@ -296,11 +296,11 @@ export class EsaFilterDropdown extends LitElement {
       --_filter-padding-x: var(--spacing-400, 1rem);
       --_filter-font-size: var(--font-size-200, 0.9375rem);
       --_filter-radius: var(--radius-surface, 0.5rem);
-      --_filter-bg: var(--color-background-raised, #fff);
+      --_filter-bg: var(--color-background-elevation-raised, #fff);
       --_filter-bg-active: var(--color-background-brand-subtle, #f3f8fb);
-      --_filter-text: var(--color-content-primary, #171717);
+      --_filter-text: var(--color-content-default, #171717);
       --_filter-text-active: var(--color-background-brand, #43608a);
-      --_filter-border: var(--color-border, #e5e5e5);
+      --_filter-border: var(--color-border-default, #e5e5e5);
       --_filter-border-active: var(--color-background-brand, #43608a);
     }
 
@@ -339,9 +339,9 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--_filter-radius);
       background: var(--_filter-bg);
       color: var(--_filter-text);
-      font-family: var(--font-sans, inherit);
+      font-family: var(--typography-font-family-sans, inherit);
       font-size: var(--_filter-font-size);
-      font-weight: var(--font-weight-medium, 500);
+      font-weight: var(--typography-font-weight-medium, 500);
       line-height: var(--line-height-none, 1);
       cursor: pointer;
       white-space: nowrap;
@@ -363,7 +363,7 @@ export class EsaFilterDropdown extends LitElement {
       background: var(--_filter-bg-active);
       border-color: var(--_filter-border-active);
       color: var(--_filter-text-active);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
     }
     /* Open (panel showing) but nothing selected yet → just lift the border. */
     .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
@@ -385,9 +385,9 @@ export class EsaFilterDropdown extends LitElement {
       padding-inline: 0.3rem;
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-brand, #43608a);
-      color: var(--color-content-inverse, #fff);
+      color: var(--color-content-default-knockout, #fff);
       font-size: var(--font-size-100, 0.75rem);
-      font-weight: var(--font-weight-semibold, 550);
+      font-weight: var(--typography-font-weight-semibold, 550);
       line-height: var(--line-height-none, 1);
     }
 
@@ -419,9 +419,9 @@ export class EsaFilterDropdown extends LitElement {
       z-index: var(--z-dropdown, 50);
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
-      background: var(--filter-dropdown-bg, var(--color-background-raised, #fff));
+      background: var(--filter-dropdown-bg, var(--color-background-elevation-raised, #fff));
       border: var(--border-width-default, 1px) solid
-        var(--filter-dropdown-border-color, var(--color-border, #e5e5e5));
+        var(--filter-dropdown-border-color, var(--color-border-default, #e5e5e5));
       border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
       box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
       overflow: hidden;
@@ -431,18 +431,18 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__search {
       padding: var(--spacing-200, 0.5rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
     .esa-filter-dropdown__search-input {
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-control, 0.25rem);
-      font-family: var(--font-sans, inherit);
+      font-family: var(--typography-font-family-sans, inherit);
       font-size: var(--_filter-font-size);
-      background: var(--color-background-raised, #fff);
-      color: var(--color-content-primary, #171717);
+      background: var(--color-background-elevation-raised, #fff);
+      color: var(--color-content-default, #171717);
       outline: none;
     }
     .esa-filter-dropdown__search-input:focus {
@@ -462,15 +462,15 @@ export class EsaFilterDropdown extends LitElement {
       gap: var(--spacing-200, 0.5rem);
       padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
       font-size: var(--_filter-font-size);
-      font-family: var(--font-sans, inherit);
-      color: var(--color-content-primary, #171717);
+      font-family: var(--typography-font-family-sans, inherit);
+      color: var(--color-content-default, #171717);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-background-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f4f4f5);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
@@ -497,7 +497,7 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }
@@ -506,24 +506,24 @@ export class EsaFilterDropdown extends LitElement {
       display: flex;
       justify-content: flex-end;
       padding: var(--spacing-200, 0.5rem);
-      border-top: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
     .esa-filter-dropdown__clear-link {
       background: none;
       border: none;
       color: var(--color-content-brand, #2a7e3b);
-      font-family: var(--font-sans, inherit);
+      font-family: var(--typography-font-family-sans, inherit);
       font-size: var(--font-size-150, 0.875rem);
-      font-weight: var(--font-weight-medium, 500);
+      font-weight: var(--typography-font-weight-medium, 500);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--radius-control, 0.25rem);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
-      background: var(--color-background-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f4f4f5);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-content-muted, #a3a3a3);
+      color: var(--color-content-default-muted, #a3a3a3);
       cursor: not-allowed;
     }
   `;

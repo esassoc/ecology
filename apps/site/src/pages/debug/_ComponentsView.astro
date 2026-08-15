@@ -408,15 +408,15 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   .promises-debug .dev-banner {
     border: 1px dashed var(--color-content-warning, #ab6400);
     background: var(--color-background-warning-subtle, #fffbeb);
-    color: var(--color-content-primary, #111);
+    color: var(--color-content-default, #111);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-surface, 6px);
     font-size: 0.9rem;
   }
   .promises-debug .why {
-    border-left: 2px solid var(--color-border, #d4d4d4);
+    border-left: 2px solid var(--color-border-default, #d4d4d4);
     padding-left: var(--spacing-400, 16px);
-    color: var(--color-content-secondary, #666);
+    color: var(--color-content-default-secondary, #666);
     font-size: 0.9rem;
   }
   .promises-debug .tally {
@@ -428,12 +428,12 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   .promises-debug .tally-cell {
     flex: 1 1 8rem;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border: 1px solid var(--color-border, #d4d4d4);
+    border: 1px solid var(--color-border-default, #d4d4d4);
     border-radius: var(--radius-surface, 6px);
-    background: var(--color-background-raised, #fff);
+    background: var(--color-background-elevation-raised, #fff);
   }
   .promises-debug .tally-cell b { display: block; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .promises-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-secondary, #666); }
+  .promises-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-default-secondary, #666); }
   .promises-debug .tally-cell.ok { border-left: 3px solid var(--color-content-success, #5c7c2f); }
   .promises-debug .tally-cell.warn { border-left: 3px solid var(--color-content-warning, #ab6400); }
   .promises-debug .tally-cell.bad { border-left: 3px solid var(--color-content-danger, #ce2c31); }
@@ -444,11 +444,11 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     grid-template-columns: 10rem 1fr;
     gap: var(--spacing-300, 12px);
     padding: var(--spacing-250, 10px) 0;
-    border-top: 1px solid var(--color-border-subtle, #e5e5e5);
+    border-top: 1px solid var(--color-border-default-subtle, #e5e5e5);
   }
   .promises-debug .kind-row dt { margin: 0; }
-  .promises-debug .kind-row dd { margin: 0; font-size: 0.875rem; color: var(--color-content-secondary, #666); }
-  .promises-debug .kind-n { font-variant-numeric: tabular-nums; color: var(--color-content-muted, #888); font-size: 0.8rem; }
+  .promises-debug .kind-row dd { margin: 0; font-size: 0.875rem; color: var(--color-content-default-secondary, #666); }
+  .promises-debug .kind-n { font-variant-numeric: tabular-nums; color: var(--color-content-default-muted, #888); font-size: 0.8rem; }
 
   .promises-debug .kind-flag {
     display: inline-block;
@@ -463,10 +463,10 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   .promises-debug .kind-flag.k-no-component { background: var(--color-background-danger-subtle, #ffefef); color: var(--color-content-danger, #ce2c31); }
   .promises-debug .kind-flag.k-missing-part { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
   .promises-debug .kind-flag.k-unwired { background: var(--color-background-info-subtle, #eff6ff); color: var(--color-content-info, #0d74ce); }
-  .promises-debug .kind-flag.k-elsewhere { background: var(--color-background-sunken, #f0f0f0); color: var(--color-content-secondary, #666); }
-  .promises-debug .kind-flag.k-exempt { background: var(--color-background-sunken, #f0f0f0); color: var(--color-content-secondary, #666); }
+  .promises-debug .kind-flag.k-elsewhere { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default-secondary, #666); }
+  .promises-debug .kind-flag.k-exempt { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default-secondary, #666); }
   .promises-debug .kind-flag.n-open { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
-  .promises-debug .kind-flag.n-accepted { background: var(--color-background-sunken, #f0f0f0); color: var(--color-content-secondary, #666); }
+  .promises-debug .kind-flag.n-accepted { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default-secondary, #666); }
   .promises-debug .kind-flag.n-resolved { background: var(--color-background-success-subtle, #f3fbf0); color: var(--color-content-success, #5c7c2f); }
   /* Sharing: `group-surface` is the healthy one, so it reads as success — the
      other two are the ones to look at. */
@@ -478,10 +478,10 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   .promises-debug table.exemptions td:last-child { font-size: 0.8rem; }
 
   .promises-debug details.ns {
-    border: 1px solid var(--color-border-subtle, #e5e5e5);
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
     border-radius: var(--radius-surface, 6px);
     margin-bottom: var(--spacing-250, 10px);
-    background: var(--color-background-raised, #fff);
+    background: var(--color-background-elevation-raised, #fff);
   }
   .promises-debug details.ns > summary {
     display: flex;
@@ -494,17 +494,17 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     /* Generous target: the whole summary row is clickable, not just the marker. */
   }
   .promises-debug .ns-name { display: inline-flex; align-items: center; gap: var(--spacing-250, 10px); flex-wrap: wrap; }
-  .promises-debug .ns-slug { font-size: 0.8rem; color: var(--color-content-secondary, #666); }
+  .promises-debug .ns-slug { font-size: 0.8rem; color: var(--color-content-default-secondary, #666); }
   .promises-debug .ns-slug.none { color: var(--color-content-danger, #ce2c31); }
-  .promises-debug .ns-type { font-size: 0.7rem; color: var(--color-content-muted, #888); }
+  .promises-debug .ns-type { font-size: 0.7rem; color: var(--color-content-default-muted, #888); }
   .promises-debug .summary-right { display: inline-flex; align-items: center; gap: var(--spacing-250, 10px); }
-  .promises-debug .ns-count { font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--color-content-secondary, #666); }
+  .promises-debug .ns-count { font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--color-content-default-secondary, #666); }
   .promises-debug .bar {
     display: inline-block;
     width: 6rem;
     height: 6px;
     border-radius: 3px;
-    background: var(--color-background-sunken, #f0f0f0);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
     overflow: hidden;
   }
   .promises-debug .bar i { display: block; height: 100%; background: var(--color-content-success, #5c7c2f); }
@@ -517,7 +517,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     flex-wrap: wrap;
     margin: var(--spacing-250, 10px) 0;
   }
-  .promises-debug .part-n { font-size: 0.8rem; color: var(--color-content-secondary, #666); }
+  .promises-debug .part-n { font-size: 0.8rem; color: var(--color-content-default-secondary, #666); }
   .promises-debug .part-n.pad { padding: 0 var(--spacing-300, 12px); }
 
   .promises-debug table.findings { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -525,17 +525,17 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     text-align: left;
     font-weight: 550;
     font-size: 0.75rem;
-    color: var(--color-content-secondary, #666);
-    border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+    color: var(--color-content-default-secondary, #666);
+    border-bottom: 1px solid var(--color-border-default-subtle, #e5e5e5);
     padding: var(--spacing-150, 6px) var(--spacing-200, 8px);
   }
   .promises-debug table.findings td {
     padding: var(--spacing-150, 6px) var(--spacing-200, 8px);
-    border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+    border-bottom: 1px solid var(--color-border-default-subtle, #e5e5e5);
     vertical-align: top;
   }
-  .promises-debug .dim { color: var(--color-content-muted, #888); }
-  .promises-debug .empty { color: var(--color-content-secondary, #666); font-size: 0.9rem; }
+  .promises-debug .dim { color: var(--color-content-default-muted, #888); }
+  .promises-debug .empty { color: var(--color-content-default-secondary, #666); font-size: 0.9rem; }
 
   .promises-debug .clean-list {
     display: flex;
@@ -550,7 +550,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     align-items: baseline;
     gap: var(--spacing-150, 6px);
     padding: 2px 8px;
-    border: 1px solid var(--color-border-subtle, #e5e5e5);
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
     border-radius: var(--radius-control, 4px);
     font-size: 0.8rem;
   }

@@ -64,7 +64,7 @@ const showHeader = !!label || showValue;
   .esa-progress-bar {
     --_progress-height: var(--progress-bar-height-md, 8px);
     --_progress-radius: var(--progress-bar-radius, var(--radius-pill, 9999px));
-    --_progress-track-bg: var(--progress-bar-track-bg, var(--color-background-sunken, #efefef));
+    --_progress-track-bg: var(--progress-bar-track-bg, var(--color-background-elevation-sunken, #efefef));
     --_progress-fill-bg: var(--progress-bar-fill-bg, var(--color-background-brand, #43608a));
     --_progress-font-size: var(--font-size-150, 0.875rem);
 
@@ -81,12 +81,12 @@ const showHeader = !!label || showValue;
   }
 
   .esa-progress-bar__label {
-    color: var(--color-content-primary, #171717);
+    color: var(--color-content-default, #171717);
     font-weight: 500;
   }
 
   .esa-progress-bar__value {
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
     font-variant-numeric: tabular-nums;
   }
 

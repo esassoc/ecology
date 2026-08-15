@@ -181,7 +181,7 @@ export class EsaColorPicker extends LitElement {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
 
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
     .controls {
       display: flex;

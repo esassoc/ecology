@@ -17,12 +17,24 @@ type EsaComboboxTriggerStyle = 'field' | 'text';
 /**
  * esa-combobox — form-associated Lit Web Component.
  *
+ * COMBOBOX vs SELECT — the distinction, so nobody has to re-derive it:
+ *
+ *   esa-combobox  an autocomplete INPUT with a list of suggestions. You type, it
+ *                 filters, and it can fetch remotely (debounced `search` event,
+ *                 `loading`, `resultsCount`).
+ *   esa-select    displays a list of options to pick from, opened by a BUTTON. No
+ *                 text entry; long lists are reachable by typeahead.
+ *
+ * If the user types into it, it is a combobox. If they pick from what you gave
+ * them, it is a select. Until 2026-08-15 both had this backwards at their defaults.
+ * See docs/system-improvement-ledger.md.
+ *
  * Faithful translation of the Angular esa-combobox:
  *   - signal inputs                    → Lit reactive properties
  *   - ControlValueAccessor (NG_VALUE)  → form-associated element + ElementInternals
  *   - host size class                  → reflected `size` attribute + :host() selectors
- *   - two modes: 'autocomplete' (input trigger) / 'select' (button trigger w/ in-panel search)
- *   - two trigger styles: 'field' (bordered) / 'text' (link-like)
+ *   - `mode` / `triggerStyle` are DEPRECATED (see below) — the select-mode button
+ *     trigger they produce is esa-select's control, not this one's
  *   - multi-select chips, search filter + match highlight, loading spinner, results count
  *   - debounced `search` event, `change` event on selection — same key logic
  *
@@ -59,7 +71,18 @@ export class EsaCombobox extends LitElement {
     _active: { state: true },
   };
 
+  /**
+   * DEPRECATED (2026-08-15) — `mode="select"` renders a BUTTON trigger, which is
+   * esa-select's job. A combobox is an autocomplete input with suggestions. Still
+   * honoured, warns once. This DEFAULTED to 'select' until now, so the default
+   * combobox was a select — and this component's own doc page demoed `mode="select"`
+   * 12 times against `autocomplete` twice.
+   */
   declare mode: EsaComboboxMode;
+  /**
+   * DEPRECATED (2026-08-15) — read at exactly one site, inside `renderSelect()`, so
+   * it only ever styled the button trigger. It dies with `mode="select"`.
+   */
   declare triggerStyle: EsaComboboxTriggerStyle;
   declare options: EsaComboboxOption[];
   declare multiple: boolean;
@@ -81,6 +104,7 @@ export class EsaCombobox extends LitElement {
   private declare _active: number;
   private _suppressNextOpen = false;
 
+  private warnedMode = false;
   private internals: ElementInternals;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
   private lastEmittedSearch = '';
@@ -91,7 +115,7 @@ export class EsaCombobox extends LitElement {
 
   constructor() {
     super();
-    this.mode = 'select';
+    this.mode = 'autocomplete';
     this.triggerStyle = 'field';
     this.options = [];
     this.multiple = false;
@@ -404,7 +428,23 @@ export class EsaCombobox extends LitElement {
     `;
   }
 
+  /**
+   * DEPRECATED path — `mode="select"`. A button trigger over a fixed option list is
+   * esa-select, not a combobox. Kept verbatim so spokes see no visual change on
+   * upgrade (cb-fish-design has 4 call sites on this path), warns once, and is
+   * removed after they migrate (migrations.json: combobox-mode-select-to-select).
+   */
   private renderSelect() {
+    if (!this.warnedMode) {
+      this.warnedMode = true;
+      console.warn(
+        `⚠️  esa-combobox: \`mode="select"\` is deprecated — a button trigger over a ` +
+          `fixed list is <esa-select>. A combobox is an autocomplete input with ` +
+          `suggestions. Switch to <esa-select>, or drop \`mode\` to get the ` +
+          `autocomplete input this component is for. ` +
+          `(migrations.json: combobox-mode-select-to-select)`,
+      );
+    }
     const isField = this.triggerStyle === 'field';
     return html`
       ${this.multiple && isField ? this.renderChips() : null}
@@ -609,7 +649,7 @@ export class EsaCombobox extends LitElement {
 
     .spinner {
       display: inline-flex;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       animation: esa-cb-spin var(--animation-spin, 750ms linear infinite);
     }
     .spinner svg {
@@ -714,7 +754,7 @@ export class EsaCombobox extends LitElement {
 
     .arrow {
       display: inline-flex;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
       flex-shrink: 0;
@@ -734,7 +774,7 @@ export class EsaCombobox extends LitElement {
       right: 0;
       z-index: var(--z-dropdown, 50);
       margin-top: var(--spacing-100, 4px);
-      background: var(--color-background-raised, #fff);
+      background: var(--color-background-elevation-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
@@ -746,12 +786,12 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
     .search__icon {
       width: var(--icon-size-sm, 16px);
       height: var(--icon-size-sm, 16px);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       flex-shrink: 0;
     }
     .search-input {
@@ -767,8 +807,8 @@ export class EsaCombobox extends LitElement {
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      color: var(--color-content-muted, #737373);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-subtle, #efefef);
+      color: var(--color-content-default-muted, #737373);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
     }
 
     .viewport {
@@ -782,7 +822,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
@@ -790,7 +830,7 @@ export class EsaCombobox extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
     }
     .option--selected {
       background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
@@ -883,7 +923,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       font-style: var(--font-style-italic, italic);
     }
 

@@ -155,7 +155,7 @@ export class EsaCheckbox extends LitElement {
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--color-background-field, transparent);
-      color: var(--color-content-inverse, #fff);
+      color: var(--color-content-default-knockout, #fff);
       transition:
         background var(--transition-fast, 150ms ease),
         border-color var(--transition-fast, 150ms ease),
@@ -197,7 +197,7 @@ export class EsaCheckbox extends LitElement {
        kit led at 1.6; that was a local special case, not a decision, and choice
        labels now read like the rest. */
     .label {
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
   `,
   ];

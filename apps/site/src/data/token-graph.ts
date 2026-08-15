@@ -514,7 +514,7 @@ const primitiveGroupKey = (name: string) => {
 };
 
 /**
- * Semantic colours group by PROPERTY: --color-content-primary -> "color-content".
+ * Semantic colours group by PROPERTY: --color-content-default -> "color-content".
  *
  * This used to list intentions (`text`, `surface`, `primary`, `secondary`, `status`)
  * and match them at parts[1]. Once tier-2 colour went property-first every one of

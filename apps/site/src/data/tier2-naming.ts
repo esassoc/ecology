@@ -15,7 +15,7 @@
  * Consumed only by /debug/tokens, which is excluded from production builds.
  * Delete alongside token-graph.ts when the refinement work is done.
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { allTokens, byTier } from './token-graph';
@@ -36,17 +36,41 @@ export interface RubricSlot {
 
 const semantic = byTier('semantic');
 const colorTokens = semantic.filter((t) => t.name.startsWith('--color-'));
+
+/**
+ * THE `--typography-` NAMESPACE HOLDS TWO SLOT ORDERS, and almost every predicate
+ * in this file needs to know which one it is looking at:
+ *
+ *   INGREDIENT  property > variant             --typography-font-family-sans
+ *   COMPOSITE   intention > variant > property --typography-label-md-strong-font-size
+ *
+ * Before 2026-08-15 the ingredients were `--font-*`, so `startsWith('--typography-')`
+ * WAS "is a composite" and the two ideas never had to be separated. The
+ * `font-ingredients-to-typography-namespace` rename folded them into one namespace,
+ * and every one of those checks would now silently swallow the eight ingredients —
+ * counting them as composites, decomposing them by an intention they do not have.
+ * Hence one discriminator, used everywhere, rather than the prefix test inline.
+ *
+ * The test is mechanical and matches the rule the token file documents: if slot 2 is
+ * a CSS property, it is an ingredient; otherwise it is an intention.
+ */
+const isTypeIngredient = (name: string) => /^--typography-font-(family|weight)-/.test(name);
+const isTypeComposite = (name: string) =>
+  name.startsWith('--typography-') && !isTypeIngredient(name);
+
 /**
  * Everything in tier 2 that is not a colour, grouped into explicit families by
  * `nonColorGroups` below — never rendered as one undifferentiated list.
  *
- * `--typography-*` is excluded. Those are the composites' individual properties, and
- * the typography section already renders every one of them decomposed by intention.
- * Listing them a second time as a flat group of 66 is duplication, and it invites
- * reading them as things to consume — a component names the composite, not its parts.
+ * The typography COMPOSITES are excluded. Those are the composites' individual
+ * properties, and the typography section already renders every one of them
+ * decomposed by intention. Listing them a second time as a flat group of 142 is
+ * duplication, and it invites reading them as things to consume — a component names
+ * the composite, not its parts. The INGREDIENTS stay in, because they genuinely are
+ * a family a reader consumes directly; `nonColorGroups` matches them below.
  */
 const allNonColor = semantic.filter(
-  (t) => !t.name.startsWith('--color-') && !t.name.startsWith('--typography-'),
+  (t) => !t.name.startsWith('--color-') && !isTypeComposite(t.name),
 );
 
 /* ------------------------------------------------------ the name parser */
@@ -113,7 +137,7 @@ const parseColor = (name: string): Tier2Row => {
   //
   // The check stays because it is a regression guard, not a historical note: a new
   // token that encodes its surface as a variant would be flagged the same way. Two
-  // guards keep it honest. surfaceIdx: in `--color-border-strong` the surface IS
+  // guards keep it honest. surfaceIdx: in `--color-border-default-strong` the surface IS
   // named and `strong` is a genuine variant (a heavier border). isOverlay: in a
   // wash, `strong` is an INTENSITY, not a content colour.
   if (surfaceIdx === -1 && !isOverlay(name)) {
@@ -213,8 +237,8 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'typography',
-    count: t2Count(/^--typography-|^--font-/),
-    how: `Two sets now, not three. \`--typography-<intention>[-<size>]-<property>\` are the COMPOSITES (${semantic.filter((t) => t.name.startsWith('--typography-')).length} of them — derived, because this said 66 for long enough to outlive being true); \`--font-{sans,mono,display}\` and \`--font-weight-*\` are the faces and weights they are assembled from. The third set, \`--font-size-ui-{xs,sm,md,lg}\`, was deleted on 2026-08-14 (D1 of docs/typography-adoption-plan.md): a size-only ramp parallel to the composites is the shortcut that lets a component pick a size without adopting a composite. A tier-2 replacement was proposed and rejected the same day for being the same construct renamed — the size-step→composite mapping lives in the FORMS header of component-tokens.css instead, as documentation rather than as a token. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.`,
+    count: t2Count(/^--typography-/),
+    how: `Two sets now, not three, and since 2026-08-15 ONE NAMESPACE with two slot orders. \`--typography-<intention>[-<size>]-<property>\` are the COMPOSITES (${semantic.filter((t) => isTypeComposite(t.name)).length} of them — derived, because this said 66 for long enough to outlive being true); \`--typography-font-family-{sans,mono,display}\` and \`--typography-font-weight-*\` are the faces and weights they are assembled from, and those lead with the PROPERTY because an ingredient has no intention slot to lead with. They were \`--font-*\` until \`font-ingredients-to-typography-namespace\`, a prefix that said neither the category nor the property, and whose weight half collided with the tier-1 \`--font-weight-*\` group it was merged into. The third set, \`--font-size-ui-{xs,sm,md,lg}\`, was deleted on 2026-08-14 (D1 of docs/typography-adoption-plan.md): a size-only ramp parallel to the composites is the shortcut that lets a component pick a size without adopting a composite. A tier-2 replacement was proposed and rejected the same day for being the same construct renamed — the size-step→composite mapping lives in the FORMS header of component-tokens.css instead, as documentation rather than as a token. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.`,
   },
   {
     category: 'spacing',
@@ -289,7 +313,7 @@ export const variantVocab: VocabRow[] = [
   { rubric: 'sizes lg / md / sm', current: '--chip-height-*', status: 'partial', note: 'One ramp left, and it is the exception. The size axis briefly had three: a text ramp (`--font-size-ui-*`, deleted 2026-08-14, then a proposed `--control-font-size-*` reverted the same day — both were size-only scales running parallel to the composites), and a height ramp for inputs and buttons (`--control-height-*`, deleted the same day). A px height cannot grow with rem text, so it clipped; those elements are now as tall as their padding plus their text. The padding hook that briefly inherited the density job (`--form-padding-{y,x}-*`) was deleted hours later for being a flat passthrough — sixteen names for four spacing rungs, identical on both axes — so there is no size lever left at any tier for inputs and buttons. `--chip-height-*` stays fixed because a badge is a shape more than a box of text — see its description. Padding is tier 1 by design: spacing is a measure, not an intent, and it is CORE, so components read it directly.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
   { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; the rubric explicitly expects teams to add their own. `ai` earns its place by never colliding with brand or status; `accent` has thin surface area and is worth watching.' },
-  { rubric: '—', current: 'link, inverse, raised, floating, sunken, muted, subtle', status: 'extra', note: 'Variant words with no rubric equivalent, all describing prominence or elevation. `strong` used to head this list and was the worst offender — it marked step-11 tokens that are TEXT on a surface, so it read like a bolder fill and got used as one. Those are now `--color-content-*` and the word is gone from colour entirely.' },
+  { rubric: '—', current: 'link, inverse, raised, floating, sunken, muted, subtle', status: 'extra', note: 'Variant words with no rubric equivalent, all describing prominence or elevation. `raised`, `floating` and `sunken` sat in the INTENTION slot until 2026-08-15, which is what kept three rungs of one axis reading as three unrelated roles; they are variants of `elevation` now. `strong` used to head this list and was the worst offender — it marked step-11 tokens that are TEXT on a surface, so it read like a bolder fill and got used as one. Those are now `--color-content-*` and the word is gone from colour entirely.' },
 ];
 
 /* --------------------------------- typography: the vocabulary that exists */
@@ -399,34 +423,199 @@ const inferReason = (name: string): string => {
 };
 
 /**
- * Intention family, used to sub-group within a property.
+ * The label for a name whose slot 2 is NOT an intention.
  *
- * The property word has to come off first. Every tier-2 colour name now LEADS with
- * `background`/`content`/`border`/`overlay`, so matching the intention against the
- * raw name finds nothing and every token lands in the `neutral` default — which is
- * how this read "38 neutral backgrounds" after the property-first rename.
- *
- * `on-` comes off too: `--color-content-on-brand` belongs to brand, not to a family
- * of its own. It is the foreground FOR that intention.
+ * It renders even when empty, and empty is the healthy state — it asserts that
+ * every tier-2 colour name fills the intention slot. Three earlier versions of
+ * this grouping had no such slot and so had to invent an umbrella word to absorb
+ * the leftovers; a bucket defined by exclusion always looks full and correct,
+ * which is exactly why it must be named for the question rather than for a
+ * fabricated answer.
  */
-const familyOf = (name: string): string => {
-  const b = name
-    .replace(/^--color-/, '')
-    .replace(/^(background|content|border|overlay)(-|$)/, '')
-    .replace(/^on-/, '');
-  // Nothing left means the name was just its property — `--color-background`,
-  // `--color-border`. Those are the neutral defaults for their property.
-  if (!b) return 'neutral';
-  if (b.startsWith('disabled')) return 'disabled';
-  if (b.startsWith('brand')) return 'brand';
-  if (b.startsWith('accent')) return 'accent';
-  if (b.startsWith('ai')) return 'ai';
-  if (/^(info|success|warning|danger)(-|$)/.test(b)) return 'utility';
-  if (b.startsWith('link')) return 'link';
-  return 'neutral';
+const UNSLOTTED = 'no intention in slot 2';
+
+/**
+ * The INTENTION slot — slot 2 of four.
+ *
+ * A tier-2 colour name is `property > intention > variant > state`, and this
+ * returns slot 2 alone. That distinction is the whole fix. Collapsing intention
+ * and variant into one "family" is what forced every earlier version of this
+ * grouping to invent an umbrella word — `neutral`, then `default`-as-a-bucket,
+ * then `utility` — because a single axis cannot hold two slots and the extra word
+ * was standing in for the one that had been deleted. Every label this returns is
+ * now a word some token actually carries.
+ *
+ * `on-` comes off first: `--color-content-on-brand` is text placed ON a brand
+ * fill, so its intention is `brand`. The prefix is relational and has no slot in
+ * the grammar at all — see ON_PREFIX below.
+ */
+const INTENTIONS = new Set([
+  // the surface roles — what the colour is FOR, not how prominent.
+  //
+  // `elevation` is ONE intention with three variants (`raised`, `floating`,
+  // `sunken`), not three intentions. They are three points on one axis, and
+  // spending the intention slot on the variant is what stopped anything from
+  // saying they belonged together — renamed 2026-08-15, see the
+  // `surface-to-elevation` row in migrations.json.
+  //
+  // `default` deliberately stays OUTSIDE that family: it is the reference plane
+  // the other three are measured from (sunken is below IT, raised above IT), so
+  // it sits at position 0 and takes no elevation word. `field` is transparent and
+  // takes no step at all. Both are exactly the tokens an over-reaching regroup
+  // would have swept in.
+  //
+  // `inverse` WAS here and is gone as of 2026-08-15. It never named an intention
+  // — it named a RELATIONSHIP (this role against the reverse of the theme's
+  // ground), which is why the dark scheme re-pointed it to a near-WHITE value.
+  // A relationship that any role can stand in is a variant, not an intention, and
+  // holding it here is what limited it to one background and one content role.
+  // It is the `knockout` slot now; see `inverse-to-knockout` in migrations.json.
+  'default', 'elevation', 'field',
+  // brand and its neighbours
+  'brand', 'accent', 'ai', 'link',
+  // feedback. NOT collapsed under an invented `utility` heading: no token is
+  // named `utility`, and that is the same defect as `neutral` was.
+  'info', 'success', 'warning', 'danger',
+  // a state raised to the intention level, deliberately — see SPEC.md
+  'disabled',
+  // the two overlay washes that DO name what they are for. Their four siblings
+  // (--color-overlay-hover, -hover-strong, -hover-heavy, -active) name only a
+  // state and stay in UNSLOTTED, which is the correct place for them until they
+  // are given one.
+  'backdrop', 'scrim',
+]);
+
+/**
+ * The full four-slot split: property > intention > variant > state.
+ *
+ * `familyOf` returns slot 2 only, because that is what the grouping keys on.
+ * This returns all four, because the TABLE needs to show them separately — and
+ * showing them separately is the check on the whole scheme: a name whose slots
+ * cannot be filled is a name that has to be recognised rather than read.
+ *
+ * `on-` has no slot. It is relational — `--color-content-on-brand` is text placed
+ * ON a brand fill, not a variant of brand — so it is captured on its own and
+ * rendered beside the intention rather than folded into it. Without that,
+ * `--color-content-brand` and `--color-content-on-brand` parse identically.
+ */
+export interface Slots {
+  property: string | null;
+  on: boolean;
+  intention: string | null;
+  variant: string | null;
+  /**
+   * The knockout variant: this role rendered against the REVERSE of whatever
+   * ground the theme sits on. Its own slot rather than part of `variant`,
+   * because the variant slot is frequently already occupied —
+   * `--color-background-elevation-raised-knockout` has `raised` there, and
+   * joining them gives the fused `raised-knockout`, which is the same defect
+   * that collapsing intention into variant produced before the four slots were
+   * separated. It sits BETWEEN variant and state:
+   *   property > intention > variant > knockout > state
+   * so `--color-background-default-knockout-hover` parses cleanly.
+   */
+  knockout: boolean;
+  state: string | null;
+}
+
+export const slotsOf = (name: string): Slots => {
+  const parts = name.replace(/^--color-/, '').split('-');
+  const property = SURFACE_LOOKUP.has(parts[0]) ? parts.shift()! : null;
+  const on = parts[0] === 'on';
+  if (on) parts.shift();
+  // State comes off the end first, then knockout — that is the declared order.
+  const state = STATE_WORDS.has(parts[parts.length - 1]) ? parts.pop()! : null;
+  const knockout = parts[parts.length - 1] === 'knockout';
+  if (knockout) parts.pop();
+  const intention = INTENTIONS.has(parts[0]) ? parts.shift()! : null;
+  return { property, on, intention, variant: parts.length ? parts.join('-') : null, knockout, state };
 };
 
-const FAMILY_ORDER = ['neutral', 'brand', 'accent', 'ai', 'utility', 'link', 'disabled'];
+const familyOf = (name: string): string => {
+  const words = name
+    .replace(/^--color-/, '')
+    .replace(/^(background|content|border|overlay)(-|$)/, '')
+    .replace(/^on-/, '')
+    .split('-')
+    .filter(Boolean);
+  if (!words.length) return UNSLOTTED;
+  return INTENTIONS.has(words[0]) ? words[0] : UNSLOTTED;
+};
+
+/**
+ * Does a token's VALUE agree with the family its NAME puts it in?
+ *
+ * `--color-border-default-focus` names no intention — it is the border, in the focus state —
+ * and resolves to `--color-background-brand`, deliberately, so a spoke re-pointing
+ * its brand moves the focus ring with it. That is correct and it is also worth
+ * seeing: a brand swatch sitting in the `default` group otherwise reads as a bug in
+ * the grouping. So the disagreement is flagged rather than resolved by moving the
+ * token, because the name is not wrong — it is derived.
+ */
+const INTENTION_IN_VALUE = /--color-(?:background|content|border)-(brand|accent|ai|info|success|warning|danger)/;
+
+const derivedFrom = (name: string): string | null => {
+  const node = semantic.find((t) => t.name === name);
+  if (!node) return null;
+  for (const link of node.lineage) {
+    const hit = INTENTION_IN_VALUE.exec(link.ref);
+    if (hit) return hit[1];
+  }
+  return null;
+};
+
+/**
+ * `unclassified` is last and renders EVEN WHEN EMPTY — the whole point of making
+ * the `default` group an explicit match. An empty group here is the assertion that every
+ * tier-2 colour name is accounted for; a populated one is a name nobody has
+ * decided about yet.
+ */
+/**
+ * Reading order: the default and its surface roles first (what a page is made
+ * of), then brand, then feedback, then disabled. `UNSLOTTED` is last and renders
+ * EVEN WHEN EMPTY — it holds any name whose slot 2 is not an intention, which is
+ * the hole a fabricated umbrella used to fill silently.
+ */
+const FAMILY_ORDER = [
+  'default', 'elevation', 'field',
+  'brand', 'accent', 'ai', 'link',
+  'info', 'success', 'warning', 'danger',
+  'disabled',
+  'backdrop', 'scrim',
+  UNSLOTTED,
+];
+
+/**
+ * FAMILY_ORDER is a hand-written list and `families` is built by mapping over it,
+ * so an intention present in INTENTIONS but absent here produces NO GROUP and its
+ * tokens disappear from the tree with every count on the page still adding up.
+ * That happened the moment `backdrop` and `scrim` were added to INTENTIONS — two
+ * tokens silently stopped rendering. The two lists have to agree, so say so.
+ */
+const ORDER_GAPS = [...INTENTIONS].filter((i) => !FAMILY_ORDER.includes(i));
+if (ORDER_GAPS.length) {
+  throw new Error(
+    `tier2-naming: ${ORDER_GAPS.join(', ')} in INTENTIONS but missing from FAMILY_ORDER — ` +
+      `those tokens would render nowhere. Add them to FAMILY_ORDER.`,
+  );
+}
+
+/**
+ * And the other direction, which the first guard cannot see. A word left in
+ * FAMILY_ORDER after it stops being an intention renders an EMPTY group — less
+ * destructive than a vanished token, but it puts a heading on the page that the
+ * token set no longer supports, which is the exact defect (`neutral`, `utility`)
+ * this whole grouping was rebuilt to remove. Live risk: `raised`/`floating`/
+ * `sunken` moved from the intention slot to the variant slot on 2026-08-15 and
+ * had to come out of BOTH lists.
+ */
+const ORDER_STALE = FAMILY_ORDER.filter((f) => f !== UNSLOTTED && !INTENTIONS.has(f));
+if (ORDER_STALE.length) {
+  throw new Error(
+    `tier2-naming: ${ORDER_STALE.join(', ')} in FAMILY_ORDER but not an intention — ` +
+      `that renders an empty group labelled with a word no token carries. Remove it.`,
+  );
+}
 
 export interface PropertyRow {
   name: string;
@@ -439,11 +628,25 @@ export interface PropertyRow {
   reason: string | null;
   state: string | null;
   variant: string | null;
+  /** Slot 2, split out for the table. Null means the name never fills it. */
+  intention: string | null;
+  /** The relational `on-` prefix, which the grammar has no slot for. */
+  on: boolean;
+  /** The knockout variant — this role against the reverse of the theme's ground. */
+  knockout: boolean;
+  /**
+   * Set when the name carries NO intention but the value chains through one —
+   * intention — `--color-border-default-focus` resolving to `--color-background-brand`.
+   * Holds the intention it derives from.
+   */
+  derivedFrom: string | null;
 }
 
 export interface PropertyFamily {
   label: string;
   rows: PropertyRow[];
+  /** Renders even when empty — the catch-all, so a new name cannot hide. */
+  isUnclassified?: boolean;
 }
 
 export interface PropertyGroup {
@@ -476,14 +679,26 @@ export const propertyGroups: PropertyGroup[] = (['background', 'content', 'borde
         declared: r.surfaceWord !== null,
         word: r.surfaceWord,
         reason: r.surfaceWord ? null : inferReason(r.name),
-        state: r.state,
-        variant: r.variant,
+        state: slotsOf(r.name).state,
+        variant: slotsOf(r.name).variant,
+        intention: slotsOf(r.name).intention,
+        on: slotsOf(r.name).on,
+        knockout: slotsOf(r.name).knockout,
+        // Flag whenever the value chains through a DIFFERENT intention than the
+        // name declares — not just for the unslotted. `--color-border-default-focus`
+        // says `default` and resolves to brand; that is deliberate and worth seeing,
+        // and it stopped being visible the moment the token got a real slot-2 word.
+        derivedFrom: (() => {
+          const via = derivedFrom(r.name);
+          return via && via !== familyOf(r.name) ? via : null;
+        })(),
       }));
 
     const families: PropertyFamily[] = FAMILY_ORDER.map((label) => ({
       label,
       rows: rows.filter((r) => r.family === label),
-    })).filter((f) => f.rows.length > 0);
+      isUnclassified: label === UNSLOTTED,
+    })).filter((f) => f.rows.length > 0 || f.isUnclassified);
 
     return {
       label: prop,
@@ -541,9 +756,9 @@ const NON_COLOR_FAMILIES: {
 }[] = [
   {
     label: 'typography — faces & weights',
-    match: /^--font-/,
+    match: /^--typography-font-(family|weight)-/,
     property: 'first',
-    note: 'semantic/typography.json — the INGREDIENT layer the composites are assembled from, within the same tier. `--typography-display-font-family` resolves to `--font-display`; `--typography-display-font-weight` to `--font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (`--font-sans` 69 reads, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38). Those direct reads are the very thing the component migration is closing — a component reaching for a weight without a composite is how the vocabulary stops meaning anything (D2), and the count above is the size of that job, not a justification for it. `--font-display` is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to `--font-sans` so the slot exists for a spoke to swap in a distinct headline face.',
+    note: 'semantic/typography.json — the INGREDIENT layer the composites are assembled from, within the same tier and now within the same NAMESPACE. `--typography-display-font-family` resolves to `--typography-font-family-display`; `--typography-display-font-weight` to `--typography-font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (~70 reads each for the sans and mono faces, ~45 for `medium`, ~38 for `semibold`). Those direct reads are the very thing the component migration is closing — a component reaching for a weight without a composite is how the vocabulary stops meaning anything (D2), and the count above is the size of that job, not a justification for it. The display face is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to the sans face so the slot exists for a spoke to swap in a distinct headline face.\n\nTHIS FAMILY IS WHY THE `property: first` COLUMN IS NOT A CONTRADICTION. These eight lead with the property (`font-family`, `font-weight`) exactly like `--color-background-*` does; the COMPOSITES next door lead with the intention and put the property last. One namespace, two orders, both deliberate — an ingredient has no intention slot to lead with. Renamed from `--font-*` on 2026-08-15 (`font-ingredients-to-typography-namespace`), which also broke a genuine tier collision: the old tier-2 `--font-weight-medium` and the tier-1 `--font-weight-500` came out of one merged Style Dictionary group with nothing in either name marking the tier a spoke is allowed to touch.',
   },
   {
     label: 'border-radius',
@@ -616,6 +831,190 @@ export const nonColorGroups: {
 })();
 
 /* =========================================================================
+ * Tier 2, grouped by CATEGORY first.
+ *
+ * The tree used to open on `background` / `content` / `border` — the PROPERTY —
+ * with every non-colour family listed after them as a flat sibling list. That
+ * made a property of one category a peer of whole categories: `background` sat
+ * beside `z-index`, and `color` never appeared as a heading at all even though
+ * it is the thing 100% of those three groups have in common.
+ *
+ * The rubric already had the right first cut and the page ignored it. Slot 3 of
+ * the naming audit (`categoryRows`) asks WHICH CATEGORIES EXIST at tier 2 —
+ * colour, typography, spacing, radius, box-shadow, animation — and a token's
+ * name states its category first (`--color-…`, `--typography-…`, `--radius-…`).
+ * So the tree now reads the way the names do: category, then property, then
+ * variant family.
+ *
+ * The category IS the namespace, deliberately, rather than the rubric's
+ * conceptual grouping. `categoryRows` files border colours and border widths
+ * together under `border`, which is true as taxonomy and useless as a tree —
+ * `--color-border-danger` would have to live in two places at once. One token,
+ * one node, keyed on what the name leads with.
+ * ====================================================================== */
+
+export type SemanticCategoryKind = 'color' | 'typography' | 'family';
+
+export interface CategoryProperty {
+  /** The CSS property these tokens land in, spelled as CSS spells it. */
+  label: string;
+  /** Does the NAME carry the property, or is it read off the family? */
+  declared: boolean;
+  /** Why it counts as declared, or what supplies it when it does not. */
+  reason: string;
+  tokens: typeof otherTokens;
+}
+
+export interface SemanticCategory {
+  label: string;
+  note: string;
+  /** Every tier-2 token filed under this category, composites included. */
+  count: number;
+  /** Which body renderer the page uses — the three have different shapes. */
+  kind: SemanticCategoryKind;
+  /** Where the CSS property sits in the name. Not asked of `color`. */
+  property?: PropertyPosition;
+  /** Flat token list. On `typography` this is the faces/weights half only. */
+  tokens?: typeof otherTokens;
+  /**
+   * The category split by CSS property — the same second level `color` gets from
+   * `propertyGroups`. Most categories resolve to ONE property, and that is worth
+   * rendering rather than hiding: a category with one property is a finished
+   * category, and the page can say so instead of leaving the reader to count.
+   */
+  properties?: CategoryProperty[];
+  isUnclassified?: boolean;
+}
+
+/**
+ * Name pattern -> the CSS property it lands in.
+ *
+ * Ordered, first match wins, and every entry states whether the NAME carries the
+ * property. That second field is the whole point: `--radius-card` says its
+ * property (abbreviated), `--elevation-2` does not, and both facts are already
+ * asserted elsewhere on this page as a per-FAMILY chip. Deriving them per token
+ * means the chip and the tree cannot disagree.
+ */
+const PROPERTY_OF: { match: RegExp; label: string; declared: boolean; reason: string }[] = [
+  { match: /^--radius-/, label: 'border-radius', declared: true, reason: 'the property, abbreviated to `radius` — the one abbreviation in the system, and unambiguous because no other CSS property shortens to it' },
+  { match: /^--border-width-/, label: 'border-width', declared: true, reason: 'spelled in full' },
+  { match: /^--elevation-/, label: 'box-shadow', declared: false, reason: 'named for the SCALE (elevation) rather than the property; the variant is a step number rather than an intention. Every component reads it, so the name is the debt, not the layer' },
+  { match: /^--transition-/, label: 'transition', declared: true, reason: 'spelled in full — and separate from `animation` because they are not interchangeable: `infinite` cannot appear in a transition' },
+  { match: /^--animation-/, label: 'animation', declared: true, reason: 'spelled in full' },
+  { match: /^--z-/, label: 'z-index', declared: true, reason: 'the property, abbreviated to `z`' },
+  { match: /^--typography-font-weight-/, label: 'font-weight', declared: true, reason: 'spelled in full' },
+  { match: /^--typography-font-family-/, label: 'font-family', declared: true, reason: 'spelled in full — as of 2026-08-15. This row read `declared: false` for as long as the token was `--font-sans`, whose second slot is a CLASSIFICATION (sans) standing where the property belongs: it read as a family only because nothing else could plausibly consume it. `font-ingredients-to-typography-namespace` put the property in the name, so the audit no longer has to infer it' },
+  { match: /height$|height-/, label: 'height', declared: true, reason: 'property last rather than first — the shape colour had before it was flipped' },
+  { match: /width$|width-/, label: 'width', declared: true, reason: 'property last rather than first' },
+  { match: /^--touch-target-/, label: 'min-width / min-height', declared: false, reason: 'a CONCEPT with no single property behind it — the WCAG 2.5.5 floor, which a component applies to whichever dimension it controls' },
+];
+
+/** Split a token list by the CSS property each lands in. */
+const byProperty = (tokens: typeof otherTokens): CategoryProperty[] => {
+  const out: CategoryProperty[] = [];
+  for (const t of tokens) {
+    const hit = PROPERTY_OF.find((p) => p.match.test(t.name));
+    const label = hit?.label ?? 'unknown';
+    let bucket = out.find((b) => b.label === label);
+    if (!bucket) {
+      bucket = {
+        label,
+        declared: hit?.declared ?? false,
+        reason: hit?.reason ?? 'no rule matches this name — add one to PROPERTY_OF',
+        tokens: [],
+      };
+      out.push(bucket);
+    }
+    bucket.tokens.push(t);
+  }
+  return out;
+};
+
+const CATEGORY_NOTES = {
+  color:
+    'Every `--color-*` role. Nested by the PROPERTY the colour lands on — background, content, border — then by variant family, because a colour role is only meaningful as a pair of the two: `danger` alone does not say whether it fills a box or writes a word. This is the one category where the property level earns its own tier of nesting; the rest name their property and stop.',
+  typography:
+    'Both halves of the type layer, which are one category and were rendered as two unrelated blocks. The COMPOSITES (`--typography-<intention>[-<size>]-<property>`) are what a component reads; the FACES AND WEIGHTS (`--typography-font-{family,weight}-*`) are the ingredients they are assembled from, and are also the most directly-read tokens in the system — which is the adoption debt the composites exist to retire, not a second way of doing the same thing. As of 2026-08-15 they are also one NAMESPACE: the ingredients were `--font-*`, which made "two unrelated blocks" true of the names as well as the rendering.',
+} as const;
+
+/**
+ * The top level of the tier-2 tree. Order is deliberate: the two categories with
+ * internal structure first, the flat families after, `unclassified` last so a
+ * new family lands at the bottom where it reads as an unanswered question.
+ */
+export const semanticCategories: SemanticCategory[] = (() => {
+  const FACES = 'typography — faces & weights';
+  const faces = nonColorGroups.find((g) => g.label === FACES);
+  const composites = semantic.filter((t) => isTypeComposite(t.name));
+
+  const flat = nonColorGroups.filter((g) => g.label !== FACES && !g.isUnclassified);
+  const unclassified = nonColorGroups.find((g) => g.isUnclassified);
+
+  return [
+    {
+      kind: 'color',
+      label: 'color',
+      note: CATEGORY_NOTES.color,
+      count: colorTokens.length,
+    },
+    {
+      kind: 'typography',
+      label: 'typography',
+      note: CATEGORY_NOTES.typography,
+      count: composites.length + (faces?.tokens.length ?? 0),
+      property: faces?.property ?? 'first',
+      tokens: faces?.tokens ?? [],
+      properties: byProperty(faces?.tokens ?? []),
+    },
+    ...flat.map((g) => ({
+      kind: 'family' as const,
+      label: g.label,
+      note: g.note,
+      count: g.tokens.length,
+      property: g.property,
+      tokens: g.tokens,
+      properties: byProperty(g.tokens),
+    })),
+    ...(unclassified
+      ? [
+          {
+            kind: 'family' as const,
+            label: unclassified.label,
+            note: unclassified.note,
+            count: unclassified.tokens.length,
+            property: unclassified.property,
+            tokens: unclassified.tokens,
+            isUnclassified: true,
+          },
+        ]
+      : []),
+  ];
+})();
+
+/**
+ * Does the tree account for every tier-2 token?
+ *
+ * A grouped view can only be trusted if it is a PARTITION, and this one is
+ * assembled from two independently-built halves (`colorTokens` and
+ * `nonColorGroups`). If they ever stop covering `semantic` between them the tree
+ * would quietly render fewer tokens than the system ships, and every count on the
+ * page would still add up — to the wrong total. So the page prints this.
+ */
+export const categoryCoverage = (() => {
+  const seen = new Set<string>();
+  for (const t of colorTokens) seen.add(t.name);
+  for (const g of nonColorGroups) for (const t of g.tokens) seen.add(t.name);
+  // The composites are deliberately absent from `allNonColor` (see its note) but
+  // the typography category DOES render every one, decomposed by intention. They
+  // are filed; they just arrive by a different renderer. The INGREDIENTS are not
+  // added here — they arrive through `nonColorGroups` above like any other family,
+  // and adding them twice would be harmless only because this is a Set.
+  for (const t of semantic) if (isTypeComposite(t.name)) seen.add(t.name);
+  const missing = semantic.filter((t) => !seen.has(t.name)).map((t) => t.name);
+  return { grouped: seen.size, total: semantic.length, missing };
+})();
+
+/* =========================================================================
  * Tier 2 TYPOGRAPHY, grouped by intention.
  *
  * Tier-2 typography is now tokenised: 66 `--typography-<role>[-<size>]-<property>`
@@ -658,6 +1057,453 @@ export const REQUIRED_TYPE_PROPS = [
   'letter-spacing',
 ] as const;
 
+/* ======================================================================
+ * Typography, decomposed into SLOTS — the exact analogue of `propertyGroups`
+ * ==================================================================== */
+
+/**
+ * WHY THIS EXISTS BESIDE THE MATRIX BELOW.
+ *
+ * The matrix renders a composite as a ROW OF CSS CLASSES with the six properties
+ * as fixed columns. That answers "is this composite complete?" — and it is the
+ * only question it can answer, because its unit is the class, not the token. It
+ * cannot show that `label-md-strong` and `label-2xs-strong` are one intention at
+ * two variants, and it cannot show a name whose slots do not parse, because it
+ * never parses them.
+ *
+ * Colour has been decomposed into slots for a while (`slotsOf` → `propertyGroups`)
+ * and that decomposition is what makes its whole scheme checkable: a name whose
+ * slots cannot be filled is a name that has to be RECOGNISED rather than read, and
+ * the tree puts those in front of you instead of absorbing them. Typography had no
+ * equivalent, so the same class of defect was invisible here.
+ *
+ * THE TREE ROOTS ON THE FIRST SLOT, in both categories. Colour is
+ * `property > intention > variant > state`, so it roots on the property and its
+ * three groups are background/content/border. Typography is
+ * `intention > variant > property`, so it roots on the INTENTION and its groups
+ * are display/heading/title/body/label/meta/eyebrow/code. Same rule, different
+ * first slot — not two conventions.
+ *
+ * The INGREDIENTS are excluded and get their own group: their shape is
+ * `property > variant`, which is colour's shape, not this one. Folding them in
+ * would put `font-family` in a slot the composites use for an intention.
+ */
+const TYPE_INTENTIONS = new Set([
+  'display', 'heading', 'title', 'body', 'label', 'meta', 'eyebrow', 'code',
+]);
+
+/** Longest-match first, so `font-family` never parses as `font` + `family`. */
+const TYPE_PROP_SUFFIXES = [
+  'letter-spacing', 'text-transform', 'font-family', 'font-weight', 'line-height', 'font-size',
+];
+
+export interface TypeSlots {
+  intention: string | null;
+  variant: string | null;
+  property: string | null;
+}
+
+/**
+ * `--typography-label-md-strong-font-size` → intention `label`, variant
+ * `md-strong`, property `font-size`.
+ *
+ * Same three moves as `slotsOf`: take the property off the END (it is the last
+ * slot here, not the first), take the intention off the FRONT, and whatever is
+ * left in the middle is the variant. A null intention means slot 1 is not a word
+ * this system uses as an intention — which is exactly what the unclassified group
+ * is there to surface.
+ */
+export const typeSlotsOf = (name: string): TypeSlots => {
+  const bare = name.replace(/^--typography-/, '');
+  const property = TYPE_PROP_SUFFIXES.find((p) => bare.endsWith(`-${p}`)) ?? null;
+  const rest = property ? bare.slice(0, -(property.length + 1)) : bare;
+  const parts = rest.split('-').filter(Boolean);
+  const intention = TYPE_INTENTIONS.has(parts[0]) ? parts.shift()! : null;
+  return { intention, variant: parts.length ? parts.join('-') : null, property };
+};
+
+/** The size ramp, smallest first — the order variants render in. */
+const SIZE_RUNGS = ['2xs', 'xs', 'sm', 'md', 'lg'];
+
+const TYPE_UNSLOTTED = 'no intention in slot 1';
+
+/**
+ * Reading order: the prose ramp top-down, then the UI ramp, then the specialist
+ * treatments. `TYPE_UNSLOTTED` is last and renders EVEN WHEN EMPTY, for the same
+ * reason colour's does — an empty group is the assertion that every composite
+ * name fills slot 1; a populated one is a name nobody has decided about yet.
+ */
+const TYPE_INTENTION_ORDER = [
+  'display', 'heading', 'title', 'body', 'label', 'meta', 'eyebrow', 'code', TYPE_UNSLOTTED,
+];
+
+/* The same pair of guards colour carries, and for the same reason: the order list
+ * is hand-written and the intention set is not, so a word in one and not the other
+ * either deletes tokens from the tree silently or puts an empty heading on the
+ * page. Colour learned this when `backdrop`/`scrim` were added to INTENTIONS and
+ * two tokens stopped rendering with every count still adding up. */
+const TYPE_ORDER_GAPS = [...TYPE_INTENTIONS].filter((i) => !TYPE_INTENTION_ORDER.includes(i));
+if (TYPE_ORDER_GAPS.length) {
+  throw new Error(
+    `tier2-naming: ${TYPE_ORDER_GAPS.join(', ')} in TYPE_INTENTIONS but missing from ` +
+      `TYPE_INTENTION_ORDER — those composites would render nowhere.`,
+  );
+}
+const TYPE_ORDER_STALE = TYPE_INTENTION_ORDER.filter(
+  (f) => f !== TYPE_UNSLOTTED && !TYPE_INTENTIONS.has(f),
+);
+if (TYPE_ORDER_STALE.length) {
+  throw new Error(
+    `tier2-naming: ${TYPE_ORDER_STALE.join(', ')} in TYPE_INTENTION_ORDER but not an intention — ` +
+      `that renders an empty group labelled with a word no token carries.`,
+  );
+}
+
+/**
+ * The tier-1 token a chain lands on — the LAST link whose kind is `primitive`.
+ *
+ * Not `lineage.at(-1)`: the terminal link of any resolved chain has kind `raw` and
+ * its `ref` is the literal value, so taking the last link renders the value in the
+ * token column and prints it twice beside itself. The first version of this tree
+ * did exactly that.
+ */
+const tier1Of = (t: { lineage?: { ref: string; kind: string }[] }): string | null => {
+  const prims = (t.lineage ?? []).filter((l) => l.kind === 'primitive');
+  return prims.length ? prims[prims.length - 1].ref : null;
+};
+
+/* ---------------------------------------- who APPLIES a composite class */
+
+/**
+ * WHY THIS SCAN EXISTS, when `usedByComponents` already ships on every token.
+ *
+ * Because at the composite layer that field is noise. Every one of the 142
+ * composite property tokens has exactly ONE reader — `typography.css` — since
+ * assembling them into a class is the entire job of that file. A "Used by" column
+ * fed from the token graph therefore prints `1 file` on all 142 rows and answers
+ * nothing.
+ *
+ * A COMPONENT DOES NOT READ THE TOKENS. It applies the CLASS. So the real
+ * consumer edge for a composite is a markup one, and nothing was measuring it —
+ * `token-graph.ts` scans for `var(--x)` and a class name is not a var().
+ *
+ * MATCHING IS WHOLE-CLASS AND LONGEST-FIRST, which is the whole difficulty. The
+ * shipped names nest (`typography-label-md` is a prefix of
+ * `typography-label-md-strong`) and they also appear inside TOKEN names
+ * (`--typography-label-md-strong-font-size`). A naive `includes()` counts a
+ * token declaration as a usage and credits `label-md` for every `label-md-strong`
+ * on the page. Sorting the alternation longest-first and refusing a `-` or word
+ * character on either side gets all three cases right: the long class wins, the
+ * short one does not match inside it, and neither matches inside a token name
+ * because a `-font-size` follows.
+ */
+const COMPOSITE_USE_ROOTS: { rel: string; kind: 'component' | 'file'; why: string }[] = [
+  {
+    rel: 'packages/ecology/src',
+    kind: 'component',
+    why: 'The component kit — the only usage that proves a composite is load-bearing for a spoke.',
+  },
+  {
+    rel: 'packages/docs/src',
+    kind: 'file',
+    why: '@esa/docs, the shared doc chrome every spoke renders.',
+  },
+  {
+    rel: 'packages/spoke-template/src',
+    kind: 'file',
+    why: 'Copied wholesale into every new spoke, so a class it applies ships everywhere.',
+  },
+  {
+    rel: 'apps/site/src',
+    kind: 'file',
+    why: 'INCLUDED HERE, unlike in token-graph.ts, and the divergence is deliberate. That file exempts this tree because the manual is not a CONSUMER of tokens — it would de-orphan tokens by styling itself. A class is different: the site is where most real markup in this repo lives, and it is the only place several composites are exercised at all. Counted, but rendered as `file` rather than `component`, so a doc page is never mistaken for proof that the kit depends on a composite.',
+  },
+];
+
+/**
+ * The audit machinery itself, which must never count as a consumer.
+ *
+ * These files NAME the composite classes as data — this module builds the regex
+ * out of them, and the debug page prints them as prose — so a scan that includes
+ * them credits every composite with a usage it invented, and `.typography-display`
+ * reads as adopted because the page describing it mentions it. token-graph.ts
+ * exempts `apps/site/src` wholesale for exactly this failure ("this debug page
+ * would de-orphan --color-background-ai-subtle by styling ITSELF"); the class scan
+ * needs the site for its real markup, so it exempts the machinery instead of the
+ * whole tree.
+ */
+const COMPOSITE_USE_EXEMPT = [
+  'apps/site/src/data/tier2-naming.ts',
+  'apps/site/src/data/token-graph.ts',
+  'apps/site/src/pages/debug',
+];
+
+const COMPONENTS_DIR = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
+
+const walkFiles = (dir: string): string[] => {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const abs = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walkFiles(abs));
+    else if (/\.(astro|ts|tsx|css|html)$/.test(entry.name)) out.push(abs);
+  }
+  return out;
+};
+
+export interface CompositeUse {
+  components: string[];
+  files: string[];
+}
+
+/** className (without the dot) -> who applies it. */
+export const compositeUsage: Map<string, CompositeUse> = (() => {
+  const known = [...new Set(compositeClasses)].sort((a, b) => b.length - a.length);
+  const map = new Map<string, CompositeUse>();
+  for (const c of known) map.set(c, { components: [], files: [] });
+  if (!known.length) return map;
+
+  const RE = new RegExp(`(?<![\\w-])(${known.join('|')})(?![\\w-])`, 'g');
+
+  for (const root of COMPOSITE_USE_ROOTS) {
+    for (const abs of walkFiles(path.join(ROOT, root.rel))) {
+      const rel = path.relative(ROOT, abs).split(path.sep).join('/');
+      // typography.css DEFINES these classes; a definition is not a usage.
+      if (rel === 'packages/tokens/src/typography.css') continue;
+      if (COMPOSITE_USE_EXEMPT.some((e) => rel === e || rel.startsWith(`${e}/`))) continue;
+      const src = readFileSync(abs, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
+      const inComponentDir = path.dirname(abs) === COMPONENTS_DIR;
+      const slug =
+        root.kind === 'component' && inComponentDir && /\.(astro|ts)$/.test(abs)
+          ? path.basename(abs).replace(/\.(astro|ts)$/, '')
+          : null;
+
+      for (const m of src.matchAll(RE)) {
+        const hit = map.get(m[1]);
+        if (!hit) continue;
+        if (slug) { if (!hit.components.includes(slug)) hit.components.push(slug); }
+        else if (!hit.files.includes(rel)) hit.files.push(rel);
+      }
+    }
+  }
+  for (const v of map.values()) { v.components.sort(); v.files.sort(); }
+  return map;
+})();
+
+export interface TypePropRow {
+  name: string;
+  property: string | null;
+  /**
+   * The token this one directly references — the FIRST hop, not the last.
+   *
+   * This is the column that makes the ingredient layer visible, and it is the one
+   * worth reading first: `--typography-label-md-font-weight` references
+   * `--typography-font-weight-medium`, NOT `--font-weight-500`. Showing only the
+   * tier-1 terminal (as the first version of this tree did) collapses that hop and
+   * makes every composite look like it reaches past the ingredients straight into
+   * the primitives — which is the opposite of how the layer works, and would hide
+   * the exact edge a spoke re-points when it swaps a typeface.
+   *
+   * NOT named for the "wired to" relation, which is what it was first called. In
+   * this system that phrase means the REVERSE edge — who CONSUMES a token — so
+   * using it for a forward reference pointed the arrow the wrong way. The consumer
+   * edge keeps the name the rest of the repo gives it (`usedBy`); this direction
+   * is `references`.
+   */
+  references: string | null;
+  /** The tier-1 token it lands on, and the value there. */
+  resolved: string | null;
+  tier1: string | null;
+}
+
+/** One VARIANT of an intention — `label` + `md-strong`. The composite lives here. */
+export interface TypeVariant {
+  /** The variant word, or null for an intention with a single unmodified form. */
+  label: string | null;
+  /** The composite these properties assemble into, e.g. `.typography-label-md-strong`. */
+  className: string;
+  /** True when typography.css actually ships that class. */
+  classShipped: boolean;
+  /**
+   * Who APPLIES the class — the composite's real consumer edge. Not derivable
+   * from the token graph: a component applies the class, it does not read the
+   * five tokens, so every one of those tokens reports `typography.css` and
+   * nothing else. See `compositeUsage`.
+   */
+  usedBy: CompositeUse;
+  /**
+   * The INGREDIENTS this composite is built out of, deduped across its properties.
+   * Excludes the primitives it goes to directly for size, leading and tracking,
+   * because those are not a spoke's override surface.
+   *
+   * `assemblesFrom` corrects two things at once. It was called `wiredTo`, which in
+   * this system means the CONSUMER edge — the opposite direction from this. And
+   * the set is FILTERED (56 of 142 real edges), so it needed a name that reads as
+   * a summary rather than the whole truth. `typography.css` already calls a class
+   * "nothing but the assembly of" its tokens; this borrows that word.
+   *
+   * Split into property + variant rather than shipped as a bare token name. The
+   * first version rendered these by stripping `--typography-font-` off the front,
+   * which produced `family-sans` — a label that exists nowhere in the system, is
+   * not greppable, and reads as one word when two chips sit side by side. The
+   * ingredient names ARE `property > variant`, so the two slots are what a reader
+   * needs; giving the template the parts means it never has to invent a name.
+   */
+  assemblesFrom: { name: string; property: string; variant: string }[];
+  rows: TypePropRow[];
+}
+
+export interface TypeIntentionGroup {
+  label: string;
+  variants: TypeVariant[];
+  total: number;
+  /** Distinct properties covered across every variant. */
+  properties: string[];
+  isUnclassified?: boolean;
+}
+
+export const typographyGroups: TypeIntentionGroup[] = (() => {
+  const composites = semantic.filter((t) => isTypeComposite(t.name));
+  // `compositeClasses` only (declared above at parse time). NOT the deprecated
+  // aliases: those are defined further down the file — a temporal dead zone at
+  // module init — and they are the wrong set anyway, since an alias is by
+  // definition not the composite's own class.
+  const shipped = new Set(compositeClasses);
+
+  return TYPE_INTENTION_ORDER.map((label) => {
+    const mine = composites.filter(
+      (t) => (typeSlotsOf(t.name).intention ?? TYPE_UNSLOTTED) === label,
+    );
+
+    // Order variants along the RAMP, not alphabetically. This has to be explicit:
+    // `semantic` arrives already sorted by name, so taking first-seen order gives
+    // `2xs, lg, md, sm, xs` — a size ramp shuffled into nonsense, which is worse
+    // than useless because it still looks deliberate. Weight tier first (the base
+    // ramp, then `-strong`), then the size rung within it, mirroring how the token
+    // file itself groups `label`.
+    const seen: string[] = [];
+    for (const t of mine) {
+      const v = typeSlotsOf(t.name).variant ?? '';
+      if (!seen.includes(v)) seen.push(v);
+    }
+    seen.sort((a, b) => {
+      const split = (v: string) => {
+        const parts = v.split('-');
+        const size = SIZE_RUNGS.indexOf(parts[0]);
+        return size === -1
+          ? { tier: v ? 1 : 0, size: -1, raw: v } // a non-size variant, e.g. `strong`
+          : { tier: parts.length > 1 ? 1 : 0, size, raw: v };
+      };
+      const [x, y] = [split(a), split(b)];
+      return x.tier - y.tier || x.size - y.size || x.raw.localeCompare(y.raw);
+    });
+
+    const variants: TypeVariant[] = seen.map((v) => {
+      const rows = mine
+        .filter((t) => (typeSlotsOf(t.name).variant ?? '') === v)
+        .map((t) => ({
+          name: t.name,
+          property: typeSlotsOf(t.name).property,
+          references: t.lineage?.length ? t.lineage[0].ref : null,
+          resolved: t.resolved ?? null,
+          tier1: tier1Of(t),
+        }));
+      const className = `typography-${[label, v].filter(Boolean).join('-')}`;
+      return {
+        label: v || null,
+        className,
+        classShipped: shipped.has(className),
+        usedBy: compositeUsage.get(className) ?? { components: [], files: [] },
+        assemblesFrom: [...new Set(rows.map((r) => r.references).filter((w): w is string =>
+          !!w && w.startsWith('--typography-font-')))]
+          .sort()
+          .map((name) => {
+            const m = /^--typography-(font-family|font-weight)-(.+)$/.exec(name)!;
+            return { name, property: m[1], variant: m[2] };
+          }),
+        rows,
+      };
+    });
+
+    return {
+      label,
+      variants,
+      total: mine.length,
+      properties: [...new Set(mine.map((t) => typeSlotsOf(t.name).property).filter(Boolean))] as string[],
+      isUnclassified: label === TYPE_UNSLOTTED,
+    };
+  }).filter((g) => g.total > 0 || g.isUnclassified);
+})();
+
+/**
+ * The INGREDIENTS as their own group, shaped `property > variant` — which is
+ * colour's shape. Kept separate from the tree above rather than made a ninth
+ * intention, because `font-family` is not a job text does.
+ */
+/**
+ * How many composites anything in the KIT actually applies.
+ *
+ * Counted off `usedBy.components` alone. A `files` hit is almost always this
+ * debug site or a foundations page rendering a specimen, and a specimen is not a
+ * dependant — summing the two would report near-total adoption for a layer that
+ * components have barely started using, which is the opposite of the truth.
+ */
+export const compositeAdoption = (() => {
+  const all = typographyGroups.flatMap((g) => g.variants);
+  const byComponent = all.filter((v) => v.usedBy.components.length > 0);
+  return {
+    total: all.length,
+    usedByComponent: byComponent.length,
+    byComponent: byComponent.map((v) => v.className),
+    orphan: all.filter((v) => !v.usedBy.components.length && !v.usedBy.files.length).length,
+  };
+})();
+
+export interface TypeIngredientGroup {
+  label: string;
+  rows: {
+    name: string;
+    variant: string;
+    references: string | null;
+    resolved: string | null;
+    tier1: string | null;
+  }[];
+}
+
+export const typographyIngredients: TypeIngredientGroup[] = (['font-family', 'font-weight'] as const).map(
+  (prop) => ({
+    label: prop,
+    rows: semantic
+      .filter((t) => t.name.startsWith(`--typography-${prop}-`))
+      .map((t) => ({
+        name: t.name,
+        variant: t.name.replace(`--typography-${prop}-`, ''),
+        references: t.lineage?.length ? t.lineage[0].ref : null,
+        resolved: t.resolved ?? null,
+        tier1: tier1Of(t),
+      })),
+  }),
+);
+
+/**
+ * Every composite name parses into all three slots — the claim the tree makes.
+ * Printed rather than assumed, exactly like colour's `categoryCoverage`.
+ */
+export const typeSlotCoverage = (() => {
+  const composites = semantic.filter((t) => isTypeComposite(t.name));
+  const unparsed = composites.filter((t) => {
+    const s = typeSlotsOf(t.name);
+    return !s.intention || !s.property;
+  });
+  return {
+    total: composites.length,
+    intentions: typographyGroups.filter((g) => !g.isUnclassified).length,
+    variants: typographyGroups.reduce((n, g) => n + g.variants.length, 0),
+    unparsed: unparsed.map((t) => t.name),
+  };
+})();
+
 export interface RoleProp {
   property: string;
   /** The token the role reads, e.g. --typography-heading-md-font-size. Null when unset. */
@@ -673,7 +1519,7 @@ export interface RoleProp {
    *
    * The whole chain rather than just the primitive, because the intermediate
    * hop is the interesting one: `--typography-display-font-family` reaches
-   * `--font-family-dm-sans` THROUGH `--font-display`, and `--font-display` is
+   * `--font-family-dm-sans` THROUGH `--typography-font-family-display`, and that is
    * the token a spoke re-points. Collapsing to the primitive hides it.
    */
   chain: { ref: string; tier: string }[];
@@ -740,8 +1586,9 @@ const parseTypeRoles = (css: string): Composite[] => {
       if (!(TYPE_PROPS as readonly string[]).includes(property)) continue;
       const value = rawValue.trim();
 
-      // `var(--font-display, var(--font-sans))` — capture both so the fallback
-      // face is visible rather than collapsed into the primary.
+      // `var(--typography-font-family-display, var(--typography-font-family-sans))`
+      // — capture both so the fallback face is visible rather than collapsed
+      // into the primary.
       const refs = [...value.matchAll(/var\(\s*(--[a-zA-Z][a-zA-Z0-9-]*)/g)].map((m) => m[1]);
       if (refs.length === 0) {
         props[property] = {
@@ -875,11 +1722,19 @@ export const typeCoverage = {
   /** Composites that opt into the display face — the surface a spoke re-points.
    *  Matched anywhere in the chain, not just at the hook: since the composite
    *  refactor a role reads `--typography-<role>-font-family`, so a test against
-   *  `--font-display` directly matches nothing. */
+   *  the face token directly matches nothing.
+   *
+   *  The OLD name is matched too. `--font-display` is still a live deprecated
+   *  alias in dist/tokens.css, so a spoke — or a hub file mid-migration — can
+   *  legitimately still resolve through it; dropping it here would report
+   *  "nothing uses the display face" rather than a stale name, which is the
+   *  quiet-wrong-answer this whole audit exists to prevent. */
   displayFace: allRoles
     .filter((r) => {
       const ff = r.props['font-family'];
-      return ff?.ref === '--font-display' || !!ff?.chain.some((l) => l.ref === '--font-display');
+      const isDisplay = (ref: string | null | undefined) =>
+        ref === '--typography-font-family-display' || ref === '--font-display';
+      return isDisplay(ff?.ref) || !!ff?.chain.some((l) => isDisplay(l.ref));
     })
     .map((r) => r.className),
 };

@@ -34,7 +34,7 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
   .esa-loading-spinner__ring {
     width: var(--_spinner-size);
     height: var(--_spinner-size);
-    border: var(--_spinner-border-width) solid var(--loading-spinner-track-color, var(--color-border-subtle, #efefef));
+    border: var(--_spinner-border-width) solid var(--loading-spinner-track-color, var(--color-border-default-subtle, #efefef));
     border-top-color: var(--_spinner-color);
     border-radius: var(--radius-pill, 9999px);
     animation: esa-spinner-rotate var(--animation-spin, 750ms linear infinite);

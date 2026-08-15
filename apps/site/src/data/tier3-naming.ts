@@ -683,7 +683,7 @@ export const stateNotTrailing = rows.filter(
  *
  * Everything below is scoped to the tokens that actually hold a colour, which
  * is `isColor` from the graph — anchored at the start of the RESOLVED value, so
- * a `1px solid var(--color-border)` shorthand and an `--elevation-*` shadow are
+ * a `1px solid var(--color-border-default)` shorthand and an `--elevation-*` shadow are
  * both correctly excluded. That exclusion is the point: this section is about
  * names for colours, and a token whose value is a shorthand is a different
  * finding (see `borderSplit`).

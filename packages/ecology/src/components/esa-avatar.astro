@@ -78,7 +78,7 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     --_avatar-font-size: var(--avatar-font-size, var(--font-size-200, 0.9375rem));
     --_avatar-radius: var(--avatar-radius, var(--radius-pill, 9999px));
     --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
-    --_avatar-text: var(--avatar-text-color, var(--color-content-inverse, #fff));
+    --_avatar-text: var(--avatar-text-color, var(--color-content-default-knockout, #fff));
 
     display: inline-flex;
     align-items: center;
@@ -91,7 +91,7 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     font-size: var(--_avatar-font-size);
     /* Was a raw 600. The token is 550, which is what every other component's
        semibold resolves to — the literal was quietly heavier than the system. */
-    font-weight: var(--font-weight-semibold, 550);
+    font-weight: var(--typography-font-weight-semibold, 550);
     overflow: hidden;
     flex-shrink: 0;
     user-select: none;

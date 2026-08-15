@@ -142,22 +142,22 @@ transition: transform var(--duration-500) var(--easing-emphasized);`}</code></pr
 
 <style>
   .tok-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: var(--spacing-500, 1.5rem); }
-  .tok-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); font-weight: 600; color: var(--color-content-secondary, #525252); border-bottom: 1px solid var(--color-border, #dcdcdc); }
-  .tok-table td { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); color: var(--color-content-muted, #737373); border-bottom: 1px solid var(--color-border-subtle, #e8e8e8); }
-  .tok-table td:first-child code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); white-space: nowrap; }
-  .tok-table__val { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); white-space: nowrap; }
+  .tok-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); font-weight: 600; color: var(--color-content-default-secondary, #525252); border-bottom: 1px solid var(--color-border-default, #dcdcdc); }
+  .tok-table td { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); color: var(--color-content-default-muted, #737373); border-bottom: 1px solid var(--color-border-default-subtle, #e8e8e8); }
+  .tok-table td:first-child code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); white-space: nowrap; }
+  .tok-table__val { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default-secondary, #525252); white-space: nowrap; }
 
   /* Easing demos: identical distance and duration, so the curve is the only variable. */
   .easings { display: flex; flex-direction: column; gap: var(--spacing-300, 0.75rem); }
   .ease {
     display: grid; grid-template-columns: minmax(140px, 1fr) minmax(220px, 300px);
     gap: var(--spacing-400, 1rem); align-items: center;
-    border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px;
+    border: 1px solid var(--color-border-default, #e5e5e5); border-radius: 10px;
     padding: var(--spacing-300, 0.75rem); cursor: pointer;
   }
   .ease__track {
     position: relative; height: 32px; border-radius: var(--radius-300, 0.5rem);
-    background: var(--color-background-sunken, #f5f5f5); overflow: hidden;
+    background: var(--color-background-elevation-sunken, #f5f5f5); overflow: hidden;
   }
   .ease__dot {
     position: absolute; top: 6px; left: 6px;
@@ -172,17 +172,17 @@ transition: transform var(--duration-500) var(--easing-emphasized);`}</code></pr
   .ease--linear     .ease__dot { transition-timing-function: var(--easing-linear, linear); }
   .ease:hover .ease__dot { transform: translateX(calc(100% - 32px)); left: calc(100% - 26px); background: var(--color-background-accent, #f9a134); }
   .ease__meta { display: flex; flex-direction: column; gap: 2px; }
-  .ease__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
-  .ease__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); }
-  .ease__role { font-size: 12.5px; color: var(--color-content-muted, #737373); }
+  .ease__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
+  .ease__value { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default-secondary, #525252); }
+  .ease__role { font-size: 12.5px; color: var(--color-content-default-muted, #737373); }
 
   .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-400, 1rem); }
-  .swatch { border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
+  .swatch { border: 1px solid var(--color-border-default, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem); }
   .swatch__demo {
     position: relative;
     height: 72px;
     border-radius: var(--radius-300, 0.5rem);
-    background: var(--color-background-sunken, #f5f5f5);
+    background: var(--color-background-elevation-sunken, #f5f5f5);
     display: flex; align-items: center;
     padding: 0 var(--spacing-300, 0.75rem);
     margin-bottom: var(--spacing-300, 0.75rem);
@@ -196,7 +196,7 @@ transition: transform var(--duration-500) var(--easing-emphasized);`}</code></pr
   }
   .swatch__hint {
     margin-left: auto;
-    font-size: 13px; color: var(--color-content-muted, #737373);
+    font-size: 13px; color: var(--color-content-default-muted, #737373);
     transition: opacity var(--transition-fast, 150ms ease);
   }
   /* Each demo applies its own token to the animated thumb + background. */
@@ -207,18 +207,18 @@ transition: transform var(--duration-500) var(--easing-emphasized);`}</code></pr
   .swatch__demo:hover .swatch__hint { opacity: 0; }
 
   .swatch__meta { display: flex; flex-direction: column; gap: 2px; }
-  .swatch__meta code { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-primary, #171717); }
-  .swatch__value { font-family: var(--font-mono, monospace); font-size: 12.5px; color: var(--color-content-secondary, #525252); }
-  .swatch__role { font-size: 12.5px; color: var(--color-content-muted, #737373); }
+  .swatch__meta code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
+  .swatch__value { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default-secondary, #525252); }
+  .swatch__role { font-size: 12.5px; color: var(--color-content-default-muted, #737373); }
 
   .aside {
     border-left: 3px solid var(--color-border-brand, #cde3cd);
     padding-left: var(--spacing-400, 1rem);
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
   }
 
-  .snippet { background: var(--color-background-sunken, #f5f5f5); border: 1px solid var(--color-border, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
-  .snippet code { font-family: var(--font-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-content-primary, #171717); }
+  .snippet { background: var(--color-background-elevation-sunken, #f5f5f5); border: 1px solid var(--color-border-default, #e5e5e5); border-radius: 10px; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); overflow-x: auto; }
+  .snippet code { font-family: var(--typography-font-family-mono, monospace); font-size: 13.5px; line-height: 1.7; color: var(--color-content-default, #171717); }
 
   /* The demos on this page animate on purpose, so they opt out by hand. */
   @media (prefers-reduced-motion: reduce) {

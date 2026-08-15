@@ -7,6 +7,7 @@ import ApiTable from '../../components/ApiTable.astro';
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
+  name: "Form field name — the key this control submits under.",
   open: "Reflected attribute that drives visibility. Toggle by setting the property.",
   placeholder: "Input placeholder text.",
   results: "Results to render, set as a property. Each: { id, title, subtitle?, icon?, category? }. Same-category items are grouped.",
@@ -103,12 +104,12 @@ const events = [
   .trigger {
     padding: 0.5rem 1rem;
     border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-strong, #d4d4d4);
+    border: 1px solid var(--color-border-default-strong, #d4d4d4);
     background: var(--color-background-brand, #43608a);
-    color: var(--color-content-inverse, #fff);
+    color: var(--color-content-default-knockout, #fff);
     font-family: inherit;
     font-size: var(--font-size-200, 0.9375rem);
     cursor: pointer;
   }
-  .result { color: var(--color-content-muted, #737373); min-height: 1.5em; width: 100%; }
+  .result { color: var(--color-content-default-muted, #737373); min-height: 1.5em; width: 100%; }
 </style>

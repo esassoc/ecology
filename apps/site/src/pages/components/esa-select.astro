@@ -17,7 +17,8 @@ const describe = {
   required: "Marks the field required (renders a * after the label).",
   disabled: "Disables interaction (reflected attribute).",
   multiple: "Allow multiple selections.",
-  searchable: "Type-to-filter the option list. When false the input is read-only.",
+  searchable: "DEPRECATED — a type-to-filter field is an autocomplete, which is <a href='/components/esa-combobox'>esa-combobox</a>. Still honoured; warns at runtime. Typeahead replaces the common use.",
+  name: "Form field name — the key this control submits under.",
   "chip-mode": "In multi-select, render selected values as removable chips.",
   value: "Property accessor. Single = string; multiple = string array.",
 };
@@ -27,12 +28,30 @@ const events = [
 ];
 ---
 <ComponentDoc name="Select" category="Forms" slug="esa-select" type="wc" status="stable"
-  summary="Form-associated searchable select with single/multi-select, chips, and full keyboard navigation. A Lit Web Component migrated from the Angular <code>esa-select</code>.">
+  summary="A list of options to pick from, opened by a <strong>button</strong>. No text entry — long lists are reachable by typeahead. Form-associated, with single/multi-select, chips and full keyboard navigation.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>`}>
-      <esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>
+    <Preview code={`<esa-select label="Fruit" placeholder="Choose a fruit"></esa-select>`}>
+      <esa-select label="Fruit" placeholder="Choose a fruit"></esa-select>
     </Preview>
+  </Section>
+
+  <Section id="which" title="Select or Combobox?">
+    <p><strong>If the user picks from what you gave them, it is a Select. If they type
+    into it, it is a <a href={withBase('/components/esa-combobox')}>Combobox</a>.</strong></p>
+    <ul class="a11y">
+      <li><strong>Select</strong> — a button opens a list. Reach a distant option by
+      <em>typeahead</em>: type <code>c</code>, <code>a</code> and it jumps to the first
+      “Ca…” option, the way a native <code>&lt;select&gt;</code> does. The list is never
+      filtered.</li>
+      <li><strong>Combobox</strong> — an input with suggestions. It filters as you type
+      and can fetch remotely (debounced <code>search</code> event, <code>loading</code>,
+      <code>results-count</code>).</li>
+    </ul>
+    <p>Until 2026-08-15 both components had this backwards: <code>searchable</code>
+    defaulted to <em>on</em> here, so every select rendered an editable autocomplete,
+    while Combobox defaulted to a button trigger. Both defaults are now correct and the
+    old props are deprecated shims that still work and warn.</p>
   </Section>
 
   <Section id="sizes" title="Sizes">

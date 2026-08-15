@@ -90,14 +90,14 @@ Reassigned semantic tokens (what components should read):
 |-----------|-------|-------|
 | `#1e5386` (navy) | `--color-background-brand` | also `--cbf-blue-700` |
 | `#2770b2` | `--color-background-brand-secondary` | also `--cbf-blue-600` |
-| `#f3f7fc` (blue-50) | `--color-background-brand-subtle` / `--color-background-sunken` | also `--cbf-blue-50` |
+| `#f3f7fc` (blue-50) | `--color-background-brand-subtle` / `--color-background-elevation-sunken` | also `--cbf-blue-50` |
 | `#c6dcf1` (blue-200) | `--color-border-brand` | also `--cbf-blue-200` |
-| `#13273e` (blue-950) | `--color-background-inverse` | also `--cbf-blue-950` |
-| `#dcdcdc` | `--color-border` | |
-| `#7c7c7c` | `--color-content-muted` | |
+| `#13273e` (blue-950) | `--color-background-default-knockout` | also `--cbf-blue-950` |
+| `#dcdcdc` | `--color-border-default` | |
+| `#7c7c7c` | `--color-content-default-muted` | |
 | neutral grays | `--color-gray-*` | confirm exact step via grep |
-| IBM Plex Sans | `--font-sans` | |
-| IBM Plex Sans Condensed | `--font-display` | |
+| IBM Plex Sans | `--typography-font-family-sans` | |
+| IBM Plex Sans Condensed | `--typography-font-family-display` | |
 | `4px` radius | `--radius-100` | |
 | `8px` radius | `--radius-200` | |
 | spacing steps | `--spacing-*` | `40px`→`--spacing-650`, `64px`→`--spacing-800` |
@@ -122,7 +122,7 @@ Reassigned semantic tokens (what components should read):
 
 ### Must-fix: font weight not loaded
 ```css
-/* component overrides --font-sans to IBM Plex Sans Condensed, then: */
+/* component overrides --typography-font-family-sans to IBM Plex Sans Condensed, then: */
 .stat { font-weight: 500; }
 ```
 But `BaseLayout.astro` requested `IBM+Plex+Sans+Condensed:wght@400;600`. Fix: add `500` to the link (`wght@400;500;600`) or change to a loaded weight. Faux-bolding is invisible in code review — only the grep cross-check catches it.
@@ -135,7 +135,7 @@ But `BaseLayout.astro` requested `IBM+Plex+Sans+Condensed:wght@400;600`. Fix: ad
 ```
 
 ### Should-fix: promote recurring chrome
-`#13273e` appears in two components. Don't inline it twice — it's already `--cbf-blue-950` feeding `--color-background-inverse`. Re-point usage to `var(--color-background-inverse)`.
+`#13273e` appears in two components. Don't inline it twice — it's already `--cbf-blue-950` feeding `--color-background-default-knockout`. Re-point usage to `var(--color-background-default-knockout)`.
 
 ### Should-fix: DRY render logic
 Command-palette results and `/search` page both render result rows. Extract to `omni-render.ts`; both surfaces import it. Per-surface visual differences go in a CSS scope boundary (`.cbf-search-surface ...` global block), not forked markup.

@@ -149,11 +149,11 @@ the first spoke):
    *semantic* token that consumes it (`--color-border`, `--color-text-muted`) — do
    **not** override the primitive (`--color-gray-3`). Primitives are the shared
    floor; moving them breaks the contract for every component.
-2. **The type contract is a matched set.** A brand swaps two faces — `--font-sans`
-   (body) and `--font-display` (headlines; defaults to sans, read by the display/
+2. **The type contract is a matched set.** A brand swaps two faces — `--typography-font-family-sans`
+   (body) and `--typography-font-family-display` (headlines; defaults to sans, read by the display/
    title type-roles). Font-**weight** values are typeface-bound: the hub's
    `--font-weight-*` match DM Sans's optical weights, so a spoke that overrides
-   `--font-sans` must also set `--font-weight-*` to its face's matching weights.
+   `--typography-font-family-sans` must also set `--font-weight-*` to its face's matching weights.
    (cb-fish remaps DM Sans 350/450/550/650 → IBM Plex 400/500/600.)
 
 Brand-tinted surfaces use the `--color-primary-subtle` / `--color-primary-border`

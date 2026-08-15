@@ -327,7 +327,7 @@ export class EsaButtonToggle extends LitElement {
       max-width: 100%;
       gap: 2px;
       padding: 2px;
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
     }
@@ -346,7 +346,7 @@ export class EsaButtonToggle extends LitElement {
          it — the compensation has nothing left to compensate for. */
       padding: var(--_pad-y) var(--_padding-x);
       line-height: var(--line-height-none, 1);
-      color: var(--color-content-secondary, #525252);
+      color: var(--color-content-default-secondary, #525252);
       background: transparent;
       border: 0;
       border-radius: calc(var(--_radius) - 2px);
@@ -366,7 +366,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:hover:not(:disabled):not(.option--selected) {
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       background: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
     }
 
@@ -378,7 +378,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option--selected {
-      background: var(--color-background-raised, #fcfcfc);
+      background: var(--color-background-elevation-raised, #fcfcfc);
       color: var(--color-content-brand, #2a7e3b);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
@@ -389,7 +389,7 @@ export class EsaButtonToggle extends LitElement {
       background: transparent;
     }
     .option--selected:disabled {
-      background: var(--color-background-raised, #fcfcfc);
+      background: var(--color-background-elevation-raised, #fcfcfc);
       color: var(--color-content-disabled, #a3a3a3);
     }
 

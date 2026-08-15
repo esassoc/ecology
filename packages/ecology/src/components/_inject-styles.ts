@@ -4,8 +4,8 @@ export function injectStyles(): void {
   const s = document.createElement('style');
   s.id = STYLE_ID;
   s.textContent = `
-    .esa-field { display:flex; flex-direction:column; gap:.375rem; font-family:var(--font-sans,system-ui); }
-    .esa-field__label { font-size:.875rem; font-weight:600; color:var(--form-label-color,var(--color-content-secondary,#525252)); }
+    .esa-field { display:flex; flex-direction:column; gap:.375rem; font-family:var(--typography-font-family-sans,system-ui); }
+    .esa-field__label { font-size:.875rem; font-weight:600; color:var(--form-label-color,var(--color-content-default-secondary,#525252)); }
     .esa-field__req { color:var(--color-content-danger,#ce2c31); }
     .esa-field__input, .esa-field__select, .esa-field__textarea {
       width:100%; padding:.5rem .75rem; border: var(--border-width-default, 1px) solid var(--form-border-color,#e5e5e5);

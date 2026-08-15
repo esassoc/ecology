@@ -3,13 +3,15 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
+import { withBase } from '@esa/docs/base';
 
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
-  mode: "'select' = button trigger with in-panel search; 'autocomplete' = input trigger. Reflected.",
-  "trigger-style": "'field' = bordered control; 'text' = link-like trigger.",
+  mode: "DEPRECATED — 'select' renders a button trigger over a fixed list, which is <a href='/components/esa-select'>esa-select</a>. Still honoured; warns at runtime.",
+  "trigger-style": "DEPRECATED — only ever styled the mode='select' button trigger, so it goes with it.",
   options: "Selectable options. Set as a property.",
+  name: "Form field name — the key this control submits under.",
   multiple: "Allow multiple selections with removable chips.",
   size: "Control size (reflected attribute).",
   label: "Field label above the control.",
@@ -30,23 +32,29 @@ const events = [
 ];
 ---
 <ComponentDoc name="Combobox" category="Forms" slug="esa-combobox" type="wc" status="stable"
-  summary="Form-associated combobox with two modes, two trigger styles, multi-select chips, match highlighting, debounced search, and loading/empty/count states. A Lit Web Component migrated from the Angular <code>esa-combobox</code>.">
+  summary="An autocomplete <strong>input</strong> with a list of suggestions. Filters as you type, highlights matches, and supports remote data through a debounced <code>search</code> event with loading and result-count states.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<esa-combobox label="State" mode="select" placeholder="Pick a state"></esa-combobox>`}>
-      <esa-combobox label="State" mode="select" placeholder="Pick a state"></esa-combobox>
+    <Preview code={`<esa-combobox label="State" placeholder="Pick a state"></esa-combobox>`}>
+      <esa-combobox label="State" placeholder="Pick a state"></esa-combobox>
     </Preview>
   </Section>
 
-  <Section id="modes" title="Modes">
-    <p><code>select</code> uses a button trigger with in-panel search; <code>autocomplete</code> uses an input trigger. The <code>text</code> trigger style swaps the bordered field for a link-like control.</p>
-    <Preview code={`<esa-combobox label="Select mode" mode="select" placeholder="Pick a state"></esa-combobox>
-<esa-combobox label="Autocomplete mode" mode="autocomplete" placeholder="Type to search"></esa-combobox>
-<esa-combobox mode="select" trigger-style="text" placeholder="Filter by state"></esa-combobox>`}>
-      <esa-combobox label="Select mode" mode="select" placeholder="Pick a state"></esa-combobox>
-      <esa-combobox label="Autocomplete mode" mode="autocomplete" placeholder="Type to search"></esa-combobox>
-      <esa-combobox mode="select" trigger-style="text" placeholder="Filter by state"></esa-combobox>
-    </Preview>
+  <Section id="which" title="Combobox or Select?">
+    <p><strong>If the user types into it, it is a Combobox. If they pick from what you
+    gave them, it is a <a href={withBase('/components/esa-select')}>Select</a>.</strong></p>
+    <ul class="a11y">
+      <li><strong>Combobox</strong> — an input with suggestions. Filters as you type,
+      highlights the match, and can fetch remotely: debounced <code>search</code>,
+      <code>loading</code>, <code>results-count</code>.</li>
+      <li><strong>Select</strong> — a button opens a list, no text entry. Distant
+      options are reached by typeahead.</li>
+    </ul>
+    <p><code>mode</code> and <code>trigger-style</code> are <strong>deprecated</strong>.
+    <code>mode="select"</code> rendered a button trigger over a fixed list — that is a
+    Select, under this component's name — and it was the <em>default</em> until
+    2026-08-15, so the default combobox was a select. Both still work and warn at
+    runtime; <code>trigger-style</code> only ever styled that button trigger.</p>
   </Section>
 
   <Section id="sizes" title="Sizes">
@@ -63,14 +71,14 @@ const events = [
 
   <Section id="states" title="States">
     <p>Multi-select renders chips. Loading, results-count, error, and disabled states are attribute-driven.</p>
-    <Preview code={`<esa-combobox label="States visited" mode="select" multiple placeholder="Add states"></esa-combobox>
-<esa-combobox label="With results count" mode="select" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
-<esa-combobox label="Loading" mode="select" loading></esa-combobox>
+    <Preview code={`<esa-combobox label="States visited" multiple placeholder="Add states"></esa-combobox>
+<esa-combobox label="With results count" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
+<esa-combobox label="Loading" loading></esa-combobox>
 <esa-combobox label="Error" error-text="Selection required"></esa-combobox>
 <esa-combobox label="Disabled" disabled></esa-combobox>`}>
-      <esa-combobox label="States visited" mode="select" multiple placeholder="Add states"></esa-combobox>
-      <esa-combobox label="With results count" mode="select" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
-      <esa-combobox label="Loading" mode="select" loading></esa-combobox>
+      <esa-combobox label="States visited" multiple placeholder="Add states"></esa-combobox>
+      <esa-combobox label="With results count" results-count="50" help-text="Shows 'Displaying X of Y results'"></esa-combobox>
+      <esa-combobox label="Loading" loading></esa-combobox>
       <esa-combobox label="Error" error-text="Selection required"></esa-combobox>
       <esa-combobox label="Disabled" disabled></esa-combobox>
     </Preview>

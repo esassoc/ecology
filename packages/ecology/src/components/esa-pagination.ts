@@ -160,11 +160,11 @@ export class EsaPagination extends LitElement {
 
   static styles = css`
     :host {
-      --_pagination-bg: var(--pagination-bg, var(--color-background-raised, #ffffff));
-      --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
-      --_pagination-text-color: var(--pagination-text-color, var(--color-content-secondary, #525252));
+      --_pagination-bg: var(--pagination-bg, var(--color-background-elevation-raised, #ffffff));
+      --_pagination-border-color: var(--pagination-border-color, var(--color-border-default, rgba(0, 0, 0, 0.12)));
+      --_pagination-text-color: var(--pagination-text-color, var(--color-content-default-secondary, #525252));
       --_pagination-font-size: var(--pagination-font-size, var(--font-size-200, 14px));
-      --_pagination-button-color: var(--pagination-button-color, var(--color-content-primary, #171717));
+      --_pagination-button-color: var(--pagination-button-color, var(--color-content-default, #171717));
       --_pagination-button-disabled-color: var(--color-content-disabled, #bdbdbd);
       --_pagination-button-hover-bg: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
       --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
@@ -182,7 +182,7 @@ export class EsaPagination extends LitElement {
       padding: var(--_pagination-padding-y) var(--_pagination-padding-x);
       background: var(--_pagination-bg);
       border-top: var(--border-width-default, 1px) solid var(--_pagination-border-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
       font-size: var(--_pagination-font-size);
       color: var(--_pagination-text-color);
     }
@@ -200,7 +200,7 @@ export class EsaPagination extends LitElement {
       border-radius: var(--radius-control, 4px);
       background: var(--_pagination-bg);
       color: var(--_pagination-text-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
+      font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
       font-size: var(--_pagination-font-size);
       cursor: pointer;
       appearance: auto;

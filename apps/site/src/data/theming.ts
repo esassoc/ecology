@@ -110,7 +110,7 @@ const isPrimitive = (t: string) => primitiveSrc.has(t);
 // --- Declared ownership ----------------------------------------------------
 // WHICH COMPONENT IS A TIER-3 TOKEN FOR? Not inferable from the component's
 // source — a source scan only sees what a component READS, and reading
-// `--color-content-primary` is tier-2 working correctly, not a leak. Ownership
+// `--color-content-default` is tier-2 working correctly, not a leak. Ownership
 // is AUTHORED, in component-tokens.css: the HOOKIFY block groups declarations
 // under `/* esa-badge */` comments, and the older top block groups them under
 // `/* ===== FORMS ===== */` family headers. We read those markers rather than
@@ -149,8 +149,8 @@ const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
 
 // --- Lineage resolution ----------------------------------------------------
 // Map every declared token → its right-hand value, across the component partial
-// (--dialog-bg: var(--color-background-floating, #fff)) and the compiled base
-// (--color-background-floating: var(--color-gray-1); --color-gray-1: #fcfcfc).
+// (--dialog-bg: var(--color-background-elevation-floating, #fff)) and the compiled base
+// (--color-background-elevation-floating: var(--color-gray-1); --color-gray-1: #fcfcfc).
 // With outputReferences on, the base CSS preserves the var() chain, so we can
 // walk it to the raw value.
 const parseDefs = (css: string): Map<string, string> => {

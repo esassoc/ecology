@@ -234,12 +234,12 @@ export class EsaChipGroup extends LitElement {
       --_radius: var(--radius-control, 0.25rem);
 
       /* Resting (unselected) chrome. */
-      --_bg: var(--color-background-raised, #fff);
-      --_border: var(--color-border, #e5e5e5);
-      --_color: var(--color-content-secondary, #525252);
-      --_bg-hover: var(--color-background-sunken, #f5f5f5);
-      --_border-hover: var(--color-border-strong, #d4d4d4);
-      --_color-hover: var(--color-content-primary, #171717);
+      --_bg: var(--color-background-elevation-raised, #fff);
+      --_border: var(--color-border-default, #e5e5e5);
+      --_color: var(--color-content-default-secondary, #525252);
+      --_bg-hover: var(--color-background-elevation-sunken, #f5f5f5);
+      --_border-hover: var(--color-border-default-strong, #d4d4d4);
+      --_color-hover: var(--color-content-default, #171717);
 
       display: inline-flex;
     }
@@ -296,14 +296,14 @@ export class EsaChipGroup extends LitElement {
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {
-      background: var(--color-background-sunken, #efefef);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-content-secondary, #404040);
+      background: var(--color-background-elevation-sunken, #efefef);
+      border-color: var(--color-border-default-strong, #d4d4d4);
+      color: var(--color-content-default-secondary, #404040);
     }
     .chip--active.chip--neutral-strong {
-      background: var(--color-border, #e5e5e5);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-content-primary, #171717);
+      background: var(--color-border-default, #e5e5e5);
+      border-color: var(--color-border-default-strong, #d4d4d4);
+      color: var(--color-content-default, #171717);
     }
     /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
        default is brand blue, a forest-green theme goes forest. */

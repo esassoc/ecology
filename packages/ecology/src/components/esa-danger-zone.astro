@@ -28,7 +28,7 @@ const headingId = `esa-danger-zone-heading-${++nextId}`;
     --_dz-bg: var(--danger-zone-bg, var(--color-background-danger-subtle, #fef2f2));
     --_dz-border: var(--danger-zone-border-color, var(--color-border-danger, #fecaca));
     --_dz-heading-color: var(--danger-zone-heading-color, var(--color-content-danger));
-    --_dz-description-color: var(--danger-zone-description-color, var(--color-content-secondary, #525252));
+    --_dz-description-color: var(--danger-zone-description-color, var(--color-content-default-secondary, #525252));
     --_dz-radius: var(--danger-zone-radius, var(--radius-surface, 0.5rem));
     --_dz-padding: var(--danger-zone-padding, var(--spacing-300, 0.75rem));
     --_dz-gap: var(--spacing-200, 0.5rem);
@@ -44,7 +44,7 @@ const headingId = `esa-danger-zone-heading-${++nextId}`;
 
   .esa-danger-zone__heading {
     margin: 0;
-    font-family: var(--font-sans, 'DM Sans', sans-serif);
+    font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
     font-size: var(--font-size-250, 1.0625rem);
     font-weight: 600;
     color: var(--_dz-heading-color);

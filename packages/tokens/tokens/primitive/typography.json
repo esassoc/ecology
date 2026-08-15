@@ -1,6 +1,6 @@
 {
   "font-family": {
-    "dm-sans": { "$value": "'DM Sans', sans-serif", "$type": "fontFamily", "$description": "Named for the FACE, not for the job it does. `--font-sans` (tier 2) is the token that points here — a spoke swapping to a serif re-points that, and this token keeps meaning what it says." },
+    "dm-sans": { "$value": "'DM Sans', sans-serif", "$type": "fontFamily", "$description": "Named for the FACE, not for the job it does. `--typography-font-family-sans` (tier 2) is the token that points here — a spoke swapping to a serif re-points that, and this token keeps meaning what it says." },
     "dm-mono": { "$value": "'DM Mono', monospace",  "$type": "fontFamily" }
   },
   "font-weight": {

@@ -299,8 +299,8 @@ export class EsaTextField extends LitElement {
       align-items: center;
       flex: none;
       padding-inline: var(--_field-padding-x);
-      color: var(--form-affix-color, var(--color-content-secondary, #737373));
-      background: var(--form-affix-bg, var(--color-background-sunken, #efefef));
+      color: var(--form-affix-color, var(--color-content-default-secondary, #737373));
+      background: var(--form-affix-bg, var(--color-background-elevation-sunken, #efefef));
       user-select: none;
       white-space: nowrap;
     }

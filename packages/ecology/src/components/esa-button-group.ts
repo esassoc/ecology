@@ -76,7 +76,7 @@ export class EsaButtonGroup extends LitElement {
   static styles = css`
     :host {
       --_group-radius: var(--form-radius-md, var(--radius-surface, 8px));
-      --_group-border: var(--color-border, #e5e5e5);
+      --_group-border: var(--color-border-default, #e5e5e5);
       display: inline-flex;
       align-items: stretch;
       border-radius: var(--_group-radius);

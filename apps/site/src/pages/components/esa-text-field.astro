@@ -7,6 +7,7 @@ import ApiTable from '../../components/ApiTable.astro';
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
+  name: "Form field name — the key this control submits under.",
   label: "Visible label rendered above the input.",
   type: "Native input type.",
   value: "Current value; mirrored to the form on every input.",
@@ -102,10 +103,10 @@ const events = [
     border: 0;
     border-radius: var(--radius-200, 0.5rem);
     background: var(--color-background-brand, #43608a);
-    color: var(--color-content-inverse, #fff);
+    color: var(--color-content-default-knockout, #fff);
     cursor: pointer;
   }
-  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-content-secondary, #525252); }
+  .demo-out { font-family: var(--typography-font-family-mono, monospace); font-size: 14px; color: var(--color-content-default-secondary, #525252); }
 </style>
 
 <script>

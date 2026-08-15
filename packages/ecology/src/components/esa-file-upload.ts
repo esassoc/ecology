@@ -255,7 +255,7 @@ export class EsaFileUpload extends LitElement {
       background: var(--color-background-field, transparent);
       cursor: pointer;
       text-align: center;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       transition:
         border-color var(--transition-fast, 150ms ease),
         background var(--transition-fast, 150ms ease),
@@ -290,17 +290,17 @@ export class EsaFileUpload extends LitElement {
     }
 
     .zone__label {
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
     .zone__hint {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
     .browse {
       color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .zone__limit {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
 
     .error {
@@ -321,19 +321,19 @@ export class EsaFileUpload extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
       border-radius: var(--form-radius-sm, 6px);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
     .file__name {
       flex: 1;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .file__size {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       white-space: nowrap;
     }
     .file__remove {
@@ -345,14 +345,14 @@ export class EsaFileUpload extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       border-radius: 50%;
       cursor: pointer;
       flex-shrink: 0;
       transition: background var(--transition-fast, 150ms ease);
     }
     .file__remove:hover {
-      background: var(--color-border, #e5e5e5);
+      background: var(--color-border-default, #e5e5e5);
       color: var(--color-content-danger, #ce2c31);
     }
     .file__remove:focus-visible {
