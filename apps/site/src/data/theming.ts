@@ -30,9 +30,13 @@ export interface ThemingHook {
    * BLAST RADIUS — the question `tier` can't answer: if I re-point this, what
    * else moves? Tier says which file declares a token; scope says how many
    * components read it. They are NOT the same axis, and conflating them
-   * misleads: every tier-3 token `esa-text-field` reads is a `--form-*`
-   * shared by 16 other controls, so a "component tier" badge there reads as
-   * "your private hook" when it is nothing of the kind.
+   * misleads: nearly every tier-3 token `esa-text-field` reads is a `--form-*`
+   * shared by a dozen other inputs and buttons, so a "component tier" badge
+   * there reads as "your private hook" when it is nothing of the kind.
+   *
+   * The surface hooks left that family on 2026-08-14 — `--form-bg` became the
+   * tier-2 `--color-background-field` — so those rows now correctly show
+   * `system` instead. The badge was never wrong about them; the tier was.
    *
    * exclusive = this is the only component that reads it — turn it freely.
    * shared    = a tier-3 token a FAMILY of components reads (see `alsoReadBy`).
@@ -41,7 +45,7 @@ export interface ThemingHook {
   scope: 'exclusive' | 'shared' | 'system';
   /** Other components reading this token — populated only when scope=shared. */
   alsoReadBy: string[];
-  /** Group surface a shared token belongs to, e.g. `--form-bg` → `forms`. */
+  /** Group surface a shared token belongs to, e.g. `--form-border-color` → `forms`. */
   family: string | null;
   /**
    * The component that OWNS a shared token, when another one declared it —

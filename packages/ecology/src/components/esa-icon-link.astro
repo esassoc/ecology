@@ -1,15 +1,29 @@
 ---
-// esa-icon-link — presentational (.astro).
+// esa-icon-link — DEPRECATED (2026-08-14). Now a shim over esa-button.
 //
-// The atomic nav / menu link: [icon] label [iconRight affordance].
-// INHERITS currentColor, so it sits on any surface (dark chrome or light
-// content) without knowing the brand — the containing esa-app-bar / menu sets
-// the color context. Renders <a> when `href` is given, otherwise a <button>
-// (e.g. a dropdown trigger). Spacing + size come from ecology tokens only; the
-// component carries zero brand values.
+// Folded into `<EsaButton variant="chrome">`. This component shared SIX prop names
+// and meanings with esa-button already (href, icon, iconRight, size, active, type)
+// and had independently been through its own rename churn (trailing → iconRight,
+// mirroring button's own color → variant). See docs/button-consolidation-plan.md.
 //
-// Golden-pattern siblings: esa-button (color×appearance), esa-icon (glyphs).
-import EsaIcon from './esa-icon.astro';
+// Two mappings are not one-to-one, and are the reason this shim is not a pass-through:
+//
+//   active → current   `active` meant "this is the current nav item" here and emitted
+//                      aria-current. On button `active` means "this toggle is pressed"
+//                      and emits aria-pressed. Those are different claims — a nav link
+//                      announced as a depressed toggle is worse than an unlabelled one
+//                      — so button grew a separate `current` prop and this maps onto it.
+//
+//   weight → dropped   button takes type from the typography-label-* composites and
+//                      forbids declaring font-weight (Astro's [data-astro-cid-*]
+//                      scoping outranks the composite's single-class selector, so a
+//                      stray declaration wins silently instead of layering). An audit
+//                      found `weight` passed ZERO times anywhere, so it is dropped
+//                      rather than reconstructed. Passing it now warns.
+//
+// It is REMOVED once spokes have run /update-tokens
+// (migrations.json: icon-link-to-button-chrome).
+import EsaButton from './esa-button.astro';
 
 type EsaIconLinkSize = 'sm' | 'md';
 
@@ -24,13 +38,15 @@ interface Props {
   trailing?: string;
   /** sm = 14px (sub-bars), md = 16px (primary bars). */
   size?: EsaIconLinkSize;
-  /** Selected / current state. */
+  /** Selected / current state. Maps to esa-button's `current` (aria-current). */
   active?: boolean;
+  /** DEPRECATED — no longer honoured; type comes from the label composite. */
   weight?: 'regular' | 'medium' | 'semibold';
   /** Native button type when rendered as <button>. */
   type?: 'button' | 'submit' | 'reset';
-  /** Override the element. 'summary' makes it a disclosure trigger inside <details> (see esa-nav-dropdown). */
+  /** Override the element. 'summary' makes it a disclosure trigger inside <details>. */
   tag?: 'a' | 'button' | 'summary';
+  [attr: string]: unknown;
 }
 
 const {
@@ -40,83 +56,34 @@ const {
   trailing: deprecatedTrailing,
   size = 'md',
   active = false,
-  weight = 'medium',
+  weight,
   type = 'button',
   tag,
+  ...rest
 } = Astro.props;
 
-// `trailing` was renamed to `iconRight` (migrations.json: icon-link-trailing-to-icon-right).
-// `trailing` names the concept only if you already know the term; `iconRight` pairs
-// visibly with `icon` and needs no vocabulary. Explicit `iconRight` wins, so a spoke
-// mid-migration can pass both without the stale one overriding the fixed one.
-if (deprecatedTrailing && !iconRight) {
-  console.warn(
-    `⚠️  esa-icon-link: \`trailing="${deprecatedTrailing}"\` is deprecated — renamed to ` +
-      `\`iconRight="${deprecatedTrailing}"\`. Run \`node ../ecology/scripts/migrate-tokens.mjs --write\` ` +
-      `in your spoke (migrations.json: icon-link-trailing-to-icon-right).`,
-  );
-}
 const resolvedIconRight = iconRight ?? deprecatedTrailing;
 
-const Tag = tag ?? (href ? 'a' : 'button');
-// esa-icon scale: xs=14, sm=16 — pair to the link size.
-const iconSize = size === 'sm' ? 'xs' : 'sm';
-const cls = [
-  'esa-icon-link',
-  `esa-icon-link--${size}`,
-  `esa-icon-link--${weight}`,
-  active && 'is-active',
-]
-  .filter(Boolean)
-  .join(' ');
+console.warn(
+  `⚠️  esa-icon-link is deprecated — replaced by \`<EsaButton variant="chrome" />\`. ` +
+    `Run \`node ../ecology/scripts/migrate-tokens.mjs --write\` in your spoke ` +
+    `(migrations.json: icon-link-to-button-chrome).`,
+);
+if (weight) {
+  console.warn(
+    `⚠️  esa-icon-link: \`weight="${weight}"\` is no longer honoured. esa-button takes its ` +
+      `type from the typography-label-* composites, which own font-weight. Remove the prop.`,
+  );
+}
 ---
-<Tag
-  class={cls}
-  href={Tag === 'a' ? href : undefined}
-  type={Tag === 'button' ? type : undefined}
-  aria-current={active ? 'true' : undefined}
->
-  {icon && <EsaIcon name={icon} size={iconSize} />}
-  <span class="esa-icon-link__label"><slot /></span>
-  {resolvedIconRight && <EsaIcon name={resolvedIconRight} size={iconSize} />}
-</Tag>
-
-<style>
-  .esa-icon-link {
-    --_il-font: var(--icon-link-font-size-md, var(--font-size-200, 0.9375rem)); /* md = 16px */
-    display: inline-flex;
-    align-items: center;
-    gap: var(--icon-link-gap, var(--spacing-150, 6px));
-    padding: 0;
-    margin: 0;
-    border: 0;
-    background: none;
-    color: inherit; /* currentColor — the bar/menu sets the context */
-    font-family: var(--font-sans, system-ui, sans-serif);
-    font-size: var(--_il-font);
-    font-weight: var(--font-weight-medium, 500);
-    line-height: var(--line-height-none, 1);
-    text-decoration: none;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .esa-icon-link--sm { --_il-font: var(--icon-link-font-size-sm, var(--font-size-150, 0.875rem)); } /* 14px */
-
-  .esa-icon-link--regular  { font-weight: var(--font-weight-regular, 350); }
-  .esa-icon-link--medium   { font-weight: var(--font-weight-medium, 500); }
-  .esa-icon-link--semibold { font-weight: var(--font-weight-semibold, 550); }
-
-  .esa-icon-link:hover { text-decoration: underline; }
-  .esa-icon-link:focus-visible {
-    outline: var(--focus-ring-width) solid currentColor;
-    outline-offset: var(--focus-ring-offset, 2px);
-    border-radius: var(--radius-control, 4px);
-  }
-  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold, 550); }
-
-  .esa-icon-link__label { display: inline-block; }
-
-  /* When used as a <details> trigger (tag="summary"): drop the disclosure marker. */
-  summary.esa-icon-link { list-style: none; }
-  summary.esa-icon-link::-webkit-details-marker { display: none; }
-</style>
+<EsaButton
+  variant="chrome"
+  href={href}
+  icon={icon}
+  iconRight={resolvedIconRight}
+  size={size}
+  current={active}
+  type={type}
+  tag={tag}
+  {...rest}
+><slot /></EsaButton>

@@ -1,7 +1,38 @@
 # Consolidating esa-icon-button + esa-icon-link into esa-button
 
-**Status:** decided — §2 resolved, ready to build
+**Status:** phases 1–4 landed and verified. Phase 5 (deletion) BLOCKED on spokes.
 **Date:** 2026-08-14
+
+## Build status
+
+| Phase | State | Notes |
+|---|---|---|
+| 1 · `variant="chrome"` on esa-button | **done** | + `current`, `label`, `tag="summary"`; 15/15 behavioural asserts |
+| 2 · convert call sites | **done** | 4 components converted; site demos ride the shims |
+| 3 · deprecate old components | **done** | both are forwarding shims that warn; doc pages banner-ed |
+| 4 · migration machinery | **done** | new `kind: "component"` + `renameComponent()` + 10 tests |
+| 5 · delete the shims | **BLOCKED** | must not land until spokes have run `/update-tokens` |
+
+A **fifth collision** surfaced during phase 1 that §2 missed: `esa-button` hardcoded
+`role="button"` on every `<a>`. Correct for "a link styled as a page action"; wrong
+for chrome, whose entire purpose is nav links — it announces a real link as a button
+and drops link semantics. Chrome links now omit it.
+
+Measured deltas (browser, tokens loaded):
+
+| | icon-button → chrome iconOnly | icon-link md → chrome md | icon-link sm → chrome sm |
+|---|---|---|---|
+| height | 44 → 46 | 16 → **46** | 14 → **38** |
+| icon | 20 → 20 | 16 → **20** | 14 → **16** |
+| font | — | 16 → 15 | 14 → **12** |
+
+`esa-icon-button` converts essentially lossless (the 2px is button's transparent
+border). `esa-icon-link` changes materially — and note those old 16px/14px nav
+targets were under the 24px AA floor, where the new 46px/38px clear 44px AAA.
+
+The gray-12 collision is no longer an argument, it is a measurement: on a
+`tone="brand-strong"` bar, `ghost` computes to `rgb(23,23,23)` on `rgb(23,23,23)`
+— 1:1. Chrome computes white, 17.93:1.
 
 ## Decisions (2026-08-14)
 

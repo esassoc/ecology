@@ -1,14 +1,20 @@
 ---
-// esa-icon-button — presentational (.astro).
+// esa-icon-button — DEPRECATED (2026-08-14). Now a shim over esa-button.
 //
-// Icon-only action for toolbars and chrome (search, close, overflow, etc.).
-// Lightweight + transparent and INHERITS currentColor, so it lives happily on a
-// dark app bar or a light surface. Square footprint on the shared form size
-// scale. This is the chrome-grade counterpart to esa-button's heavier `iconOnly`
-// mode (which carries a solid color + fixed 40px box).
+// Folded into `<EsaButton variant="chrome" iconOnly>`. The only thing this component
+// carried that button could not was "take your color FROM context instead of owning
+// one" — which is now the `chrome` variant. Keeping a second file for that meant
+// maintaining a parallel API (six props already spelled the same as button's) for
+// three CSS declarations. See docs/button-consolidation-plan.md.
 //
-// `label` is REQUIRED — an icon-only control needs an accessible name.
-import EsaIcon from './esa-icon.astro';
+// This shim exists so spokes do not break at the rename. It forwards everything and
+// warns at build time. It is REMOVED once spokes have run /update-tokens
+// (migrations.json: icon-button-to-button-chrome).
+//
+// One thing genuinely lost: `label` was REQUIRED here, enforced by the type system.
+// On button it can only be a build-time warning, because the label is a slot and a
+// boolean flag cannot make a sibling prop mandatory. See the warning in esa-button.
+import EsaButton from './esa-button.astro';
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -21,58 +27,15 @@ interface Props {
   href?: string;
   size?: EsaSize;
   type?: 'button' | 'submit' | 'reset';
+  [attr: string]: unknown;
 }
 
-const { icon, label, href, size = 'md', type = 'button' } = Astro.props;
-const Tag = href ? 'a' : 'button';
-const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
+const { icon, label, href, size = 'md', type = 'button', ...rest } = Astro.props;
+
+console.warn(
+  `⚠️  esa-icon-button is deprecated — replaced by \`<EsaButton variant="chrome" iconOnly ` +
+    `icon="${icon}" label="${label}" />\`. Run \`node ../ecology/scripts/migrate-tokens.mjs --write\` ` +
+    `in your spoke (migrations.json: icon-button-to-button-chrome).`,
+);
 ---
-<Tag
-  class={cls}
-  href={href}
-  type={href ? undefined : type}
-  aria-label={label}
-  title={label}
->
-  <EsaIcon name={icon} size={size} />
-</Tag>
-
-<style>
-  .esa-icon-button {
-    /* ONE value spends on all four sides. It names the same spacing rung a text
-       button's padding-inline does, so the two still agree on a row — but that
-       agreement used to be carried by --form-padding-y-* and -x-* being equal
-       tokens, and since 2026-08-14 it is carried only by both sites naming
-       --spacing-300. If the axes ever need to diverge, this is a site that will
-       not follow on its own. */
-    --_ib-pad: var(--spacing-300, 0.75rem);
-    --_ib-bg-hover: var(--icon-button-bg-hover, color-mix(in srgb, currentColor 14%, transparent));
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    /* Square by ratio, not by a height token. There is no text to set the height,
-       so the icon plus this padding IS the size — which is why padding had to be
-       ADDED here rather than re-plumbed: at padding:0 the element would collapse
-       to the bare icon. Recorded for the batched a11y pass: at xs this lands
-       around 32px, under the 44px AAA target though clear of the 24px AA floor. */
-    aspect-ratio: 1;
-    padding: var(--_ib-pad);
-    border: 0;
-    border-radius: var(--radius-surface, 8px);
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    transition: background var(--transition-fast, 150ms ease);
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .esa-icon-button--xs { --_ib-pad: var(--spacing-200, 0.5rem); }
-  .esa-icon-button--sm { --_ib-pad: var(--spacing-250, 0.625rem); }
-  .esa-icon-button--lg { --_ib-pad: var(--spacing-400, 1rem); }
-
-  .esa-icon-button:hover { background: var(--_ib-bg-hover); }
-  .esa-icon-button:focus-visible {
-    outline: var(--focus-ring-width) solid currentColor;
-    outline-offset: var(--focus-ring-offset, 2px);
-  }
-</style>
+<EsaButton variant="chrome" iconOnly icon={icon} label={label} href={href} size={size} type={type} {...rest} />

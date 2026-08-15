@@ -291,13 +291,30 @@ Privates are internals — never themed, never documented as surface.
 ## Tier-3 naming
 
 - **Shared group surfaces** for things that must align across components:
-  `--form-radius-sm`, `--form-bg`, `--form-border-color-focus` — one scale so
-  inputs, selects, and buttons line up on a row. Prefer extending a group
-  surface over duplicating the same knob per component. A group surface still has
-  to earn its place: `--form-height-*` and `--form-padding-*` were both examples
-  here until 2026-08-14, and both were deleted for being passthroughs that added a
-  name and nothing else. `--form-radius-*` survives because it encodes a real
+  `--form-radius-sm`, `--form-border-color-focus` — one scale so inputs, selects,
+  and buttons line up on a row. Prefer extending a group surface over duplicating
+  the same knob per component.
+
+  **This is the category to be most suspicious of, and the count says so.** Five
+  of its members were deleted or moved on 2026-08-14 alone: `--form-height-*`,
+  `--form-padding-*` and `--form-font-size-*` for being passthroughs that added a
+  name and nothing else, and `--form-bg{,-hover,-disabled}` for a different
+  reason — see below. `--form-radius-*` survives because it encodes a real
   mapping (xs/sm → `--radius-control`, md/lg → `--radius-surface`).
+
+  **The test that separates a group surface from a mis-tiered role: does the
+  namespace bound its readers?** A tier-3 hook exists so a spoke can re-skin ONE
+  component. `--form-bg` was read by thirteen, five of which are not forms, and
+  `_inject-styles` is not even a component. A surface that many components share
+  is an INTENT, and intents belong at tier 2 — it is now
+  `--color-background-field`. Fanning it out to per-component hooks instead was
+  measured and rejected: 162 names, with `esa-text-field` alone carrying 18 form
+  hooks, against the 5–9 guidance below.
+
+  Applied across the file, that test leaves exactly three multi-reader sets:
+  `--form-*` (18 tokens), `--focus-ring-*` (3, read by 31 components) and
+  `--loading-spinner-*` (2, where the honest fix is composition). 248 of 311
+  tier-3 tokens are read by exactly one component, which is the shape to hold to.
 - **Per-component surfaces**: `--<component>-<part?>-<property>` —
   `--card-bg`, `--card-border-color`, `--dialog-width`, `--badge-radius`,
   `--sidenav-item-color`. Size-variant knobs take the size suffix last:
@@ -362,9 +379,19 @@ real names; the summary:
 the state slot, per component. We manage it one tier up as an intention
 (`--color-background-disabled`, `--color-content-disabled`,
 `--color-border-disabled`) and reach for a tier-3 hook only where a component
-genuinely differs — currently once, `--form-bg-disabled`. That de-duplicates:
-one disabled treatment for the kit instead of one per component. Same reasoning
-as the tier-2 note above, where `disabled` is a variant rather than a state.
+genuinely differs — **currently nowhere**. That de-duplicates: one disabled
+treatment for the kit instead of one per component. Same reasoning as the tier-2
+note above, where `disabled` is a variant rather than a state.
+
+The last exception, `--form-bg-disabled`, went on 2026-08-14 with the rest of
+the form surface. It is worth knowing what that revealed: it was the ONLY
+consumer of `--color-background-disabled` in the whole kit, so the intention
+token existed to serve exactly one hook wrapping it. That is also why
+`--color-background-disabled` could be re-pointed twice inside two days at zero
+blast radius: gray-3 → gray-2 → gray-1. It does not pick its own step. It is
+pinned one lighter than `--color-background-field`, because a disabled field the
+same colour as a resting one says nothing — so when the field surface moved, it
+moved. A role with one consumer is a role you can still change your mind about.
 
 **Renaming a tier-3 token is riskier than renaming one at tier 1 or 2, and the
 machinery does not say so.** `build.js` emits `--old: var(--new)` for every row

@@ -20,11 +20,13 @@ const { filters = [] } = Astro.props;
 ---
 {filters.length > 0 && (
   <div class="esa-filter-pills">
+    {/* The chip carries NO aria-label. It used to be `${label}: ${displayValue}` — a
+        verbatim copy of the text already inside it, on a <span> whose implicit role is
+        `generic`, which ARIA prohibits naming. Chromium computes it anyway, so this was
+        not inert; it was a duplicate name only some browsers expose, free to drift out
+        of sync with the visible text. The visible text IS the accessible text. */}
     {filters.map((filter) => (
-      <span
-        class="esa-filter-pills__chip"
-        aria-label={`${filter.label}: ${filter.displayValue}`}
-      >
+      <span class="esa-filter-pills__chip">
         <span class="esa-filter-pills__label">{filter.label}:</span>
         <span class="esa-filter-pills__value">{filter.displayValue}</span>
         <button
@@ -136,18 +138,27 @@ const { filters = [] } = Astro.props;
 <script>
   // Forward each remove click as a bubbling, composed event with the filter
   // identity, so a parent esa-filter-container can drop that value from state.
-  document.querySelectorAll('[data-esa-filter-remove]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      btn.dispatchEvent(
-        new CustomEvent('esa-filter-remove', {
-          detail: {
-            name: btn.getAttribute('data-name'),
-            value: btn.getAttribute('data-value'),
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    });
+  //
+  // DELEGATED, not per-button. This used to be
+  // `document.querySelectorAll('[data-esa-filter-remove]').forEach(btn => …)`,
+  // which runs once at load and therefore only ever wires the chips present in
+  // the initial HTML. That defeats the whole reason this component exists as its
+  // own chip rather than composing esa-pill: the remove is CONTROLLED — it emits
+  // { name, value } and a parent updates filter state — so the very next render
+  // of that parent produced chips whose X did nothing, with no error. One
+  // listener on the document survives any number of re-renders.
+  document.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest?.('[data-esa-filter-remove]');
+    if (!btn) return;
+    btn.dispatchEvent(
+      new CustomEvent('esa-filter-remove', {
+        detail: {
+          name: btn.getAttribute('data-name'),
+          value: btn.getAttribute('data-value'),
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
   });
 </script>

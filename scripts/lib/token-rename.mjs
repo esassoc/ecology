@@ -111,6 +111,90 @@ export function renameProp(src, { components, from, to, module: moduleSpec }) {
 }
 
 /**
+ * Rename a whole COMPONENT — the shape a prop rename cannot express.
+ *
+ * `esa-icon-button` did not lose a prop, it stopped existing: it is now
+ * `<esa-button variant="chrome" iconOnly>`. That needs four things a `prop` row
+ * has no room for — a new tag name, added props, renamed props, and a rewritten
+ * import specifier.
+ *
+ * TAG vs BINDING. Two spellings reach the same component and they are rewritten
+ * differently:
+ *
+ *   <esa-icon-button>   the custom element — renamed outright to <esa-button>.
+ *   <IconButton>        a default import — the NAME IS LEFT ALONE and the import
+ *                       specifier is repointed instead. Renaming the binding would
+ *                       mean rewriting every reference to it in the file, and the
+ *                       binding is the spoke's own word, not ours. Repointing the
+ *                       import is the minimal correct edit.
+ *
+ * This is also why `fromModule` is not optional here, unlike on `renameProp`.
+ * Without it an aliased import is invisible and the spoke gets a false all-clear
+ * from both /update-tokens and doctor — the failure CLAUDE.md records having
+ * already happened once.
+ *
+ * DROPPED PROPS ARE NOT REWRITTEN, only reported. A prop with nowhere to go is a
+ * judgement call about that call site (`weight` on esa-icon-link had no
+ * destination — button takes its weight from the type composite). Deleting it
+ * silently would change rendering with no trace; the caller surfaces the list.
+ *
+ * Under-application is the designed failure mode, as in renameProp: an attribute
+ * value containing a literal `>` truncates the tag match, leaving that tag alone
+ * rather than half-rewritten.
+ *
+ * @returns { text, count, dropped: [{ tag, prop }] }
+ */
+export function renameComponent(
+  src,
+  { from, to, fromModule, toModule, addProps = {}, renameProps = {}, dropProps = [] },
+) {
+  const bindings = fromModule ? importedAs(src, fromModule) : [];
+  const tagNames = [...new Set([from, ...bindings])];
+  if (!tagNames.length) return { text: src, count: 0, dropped: [] };
+
+  const added = Object.entries(addProps)
+    .map(([k, v]) => (v === true ? ` ${k}` : ` ${k}="${v}"`))
+    .join('');
+
+  const openingTag = new RegExp(`<(${tagNames.map(esc).join('|')})(?![\\w-])([^>]*)(/?)>`, 'g');
+  let count = 0;
+  const dropped = [];
+
+  let text = src.replace(openingTag, (_m, tagName, attrs, selfClose) => {
+    count++;
+    // Custom element → new element name. A local binding keeps its name; its
+    // import is repointed below.
+    const newTag = tagName === from ? to : tagName;
+    let a = attrs;
+    for (const [oldProp, newProp] of Object.entries(renameProps)) {
+      a = a.replace(new RegExp(`(?<![\\w-])${esc(oldProp)}(?=[\\s=/]|$)`, 'g'), newProp);
+    }
+    for (const prop of dropProps) {
+      if (new RegExp(`(?<![\\w-])${esc(prop)}(?=[\\s=/]|$)`).test(a)) dropped.push({ tag: tagName, prop });
+    }
+    // Only add a prop the call site has not already set itself.
+    const toAdd = Object.entries(addProps)
+      .filter(([k]) => !new RegExp(`(?<![\\w-])${esc(k)}(?=[\\s=/]|$)`).test(a))
+      .map(([k, v]) => (v === true ? ` ${k}` : ` ${k}="${v}"`))
+      .join('');
+    return `<${newTag}${toAdd}${a}${selfClose}>`;
+  });
+
+  // Closing tags — only the custom-element spelling moves.
+  text = text.replace(new RegExp(`</${esc(from)}(?![\\w-])\\s*>`, 'g'), `</${to}>`);
+
+  // Repoint the import specifier, which is what makes an aliased binding correct.
+  if (fromModule && toModule) {
+    const base = escRe(fromModule.split('/').pop());
+    text = text.replace(
+      new RegExp(`(import\\s+[A-Za-z_$][\\w$]*\\s+from\\s*['"])((?:[^'"]*/)?)${base}(['"])`, 'g'),
+      (_m, head, dir, tail) => `${head}${dir}${toModule.split('/').pop()}${tail}`,
+    );
+  }
+  return { text, count, dropped };
+}
+
+/**
  * Find MANY-TO-ONE renames that would collide inside a single file.
  *
  * Some renames collapse two old names into one — `--color-text-secondary` and
@@ -153,6 +237,85 @@ export function findCollapseCollisions(src, pairs) {
     collisions.push({ to, froms: declared });
   }
   return collisions;
+}
+
+/**
+ * Matches a spoke DECLARING a token (`--foo: value`), not reading one.
+ *
+ * The distinction is the whole of SPEC.md's alias asymmetry, and it is the
+ * difference between "safe for now" and "already silently broken":
+ *
+ *   var(--old-name)     a READ    — the deprecated alias rescues it; it renders.
+ *   --old-name: <value> a DECLARE — nothing reads that name any more, so the
+ *                                   override is INERT. No error, no warning, and
+ *                                   the component quietly uses the hub default.
+ *
+ * Reporting both under one count (which is what `doctor` did until 2026-08-14)
+ * describes the dangerous case with the sentence written for the safe one.
+ *
+ * The lookbehind is the same BEM guard `tokenPattern` needs — `.btn--color-primary`
+ * followed by a `:` pseudo-class must not read as a declaration.
+ */
+export const declPattern = (name) => new RegExp(`(?<![\\w-])${esc(name)}(?![\\w-])\\s*:`, 'g');
+
+/** Matches a spoke READING a token — `var(--foo)` or `var(--foo, fallback)`. */
+export const readPattern = (name) => new RegExp(`var\\(\\s*${esc(name)}(?![\\w-])`, 'g');
+
+/**
+ * Parse `--name: value;` declarations out of CSS into a Map, first-wins.
+ *
+ * COMMENTS ARE STRIPPED FIRST, and that is the whole reason this is a function
+ * rather than one inline regex. `component-tokens.css` documents itself heavily,
+ * and its prose quotes token names with colons after them:
+ *
+ *     Was `--filter-dropdown-border: 1px solid …` — a whole shorthand behind a
+ *
+ * A naive `(--[\w-]+)\s*:\s*([^;]+);` matches that, and because `[^;]+` happily
+ * spans newlines it then eats the REAL declaration that follows. Two ways to be
+ * wrong at once: a token gets a value made of prose, and a genuinely declared
+ * token reads as undeclared. Both were live before this was factored out.
+ */
+export function parseDeclarations(css, into = new Map()) {
+  const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const m of clean.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
+    if (!into.has(m[1])) into.set(m[1], m[2].trim());
+  }
+  return into;
+}
+
+/**
+ * Follow a token to a terminal literal through the hub's own declarations.
+ *
+ * Returns `null` when it resolves, or the CHAIN that dead-ends when it does not:
+ * `['--form-height-md', '--control-height-md']` means the first is declared, points
+ * at the second, and the second is declared nowhere — so the property drops.
+ *
+ * This exists because a rename's DESTINATION can be deleted by a later change on the
+ * same day. `--form-height-md` → `--control-height-md` is a legitimate row; the
+ * destination was then removed with `removed: true`, which emits no alias. Renaming a
+ * spoke onto it "succeeds" and leaves the spoke reading a name that resolves to
+ * nothing. Checking that `to` is *declared* is not enough — `--form-height-md` IS
+ * declared, as an alias pointing at the dead name. The chain has to be walked.
+ *
+ * A `var()` with a fallback still renders, so it counts as resolved: the fallback is
+ * a value, even if it is a stale one.
+ *
+ * @param name  token to resolve
+ * @param decls Map of name -> raw declared value
+ */
+export function unresolvedChain(name, decls, seen = []) {
+  const chain = [...seen, name];
+  if (seen.length > 12) return chain;              // cycle or absurd depth
+  const value = decls.get(name);
+  if (value === undefined) return chain;           // declared nowhere — dead end
+  const refs = [...value.matchAll(/var\(\s*(--[\w-]+)\s*(,?)/g)];
+  if (!refs.length) return null;                   // terminal literal
+  for (const [, ref, comma] of refs) {
+    if (comma) continue;                           // has a fallback — still renders
+    const bad = unresolvedChain(ref, decls, chain);
+    if (bad) return bad;
+  }
+  return null;
 }
 
 /**

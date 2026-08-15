@@ -26,7 +26,22 @@
     "A rename used to be tribal knowledge in one person's head. Now it is a row here.",
     "",
     "ADDING A RENAME: add the entry in the same commit as the rename. If you rename",
-    "without adding a row, the alias is not emitted and spokes break silently."
+    "without adding a row, the alias is not emitted and spokes break silently.",
+    "",
+    "YOU CANNOT FORGET ANY MORE, and that is new as of 2026-08-14. token-names.json",
+    "is a committed baseline of every name this package ships; `npm test` fails when",
+    "one disappears from it without a row here. Everything in this system used to",
+    "start from the assumption that the row exists — the alias, the codemod, doctor's",
+    "warnings — and nothing checked that assumption. Order of operations: add the row",
+    "FIRST (it is what emits the alias, or the removed note), then",
+    "`npm run tokens:snapshot` to accept the new set.",
+    "",
+    "A ROW'S DESTINATION IS ALSO CHECKED. `to` must resolve to a real value through",
+    "the hub's own declarations — not merely be declared, since an alias pointing at",
+    "a deleted token is itself declared and still resolves to nothing. This is not",
+    "hypothetical: form-height-to-control-height renamed onto --control-height-*,",
+    "which was deleted hours later, and the codemod happily rewrote two spokes onto",
+    "a dead name while reporting success."
   ],
   "migrations": [
     {
@@ -747,24 +762,27 @@
     {
       "id": "form-height-to-control-height",
       "kind": "token",
+      "removed": true,
+      "exact": false,
       "since": "2026-08-14",
-      "why": "--form-height-* was a pure passthrough to --control-height-* at all four steps — same value, one extra name. What it added was a NARROWING, and that narrowing is a footgun rather than a feature: --control-height exists so inputs, buttons, selects and icon buttons line up on a row, and a spoke using --form-height-* to resize its form controls alone would break precisely that invariant. It also never bounded its readers — esa-button, esa-icon-button, esa-button-toggle and esa-chip-group read it and are not forms, the same complaint that retired --form-font-size-* the same day. Value-neutral: every pair below resolves to the identical px. CORRECTION, same day: this row originally read 'NOTE that --form-radius-* and --form-padding-* deliberately DO NOT follow: radius encodes a real xs/sm→control, md/lg→surface mapping, and padding has no tier-2 role behind it at all.' Half of that stands and half had the reason backwards. --form-radius-* does not follow, for exactly the mapping reason given. --form-padding-* DID follow, hours later, under form-padding-to-spacing — 'no tier-2 role behind it' was never an argument for keeping the hook. Having nothing behind it is precisely what made it a flat passthrough: sixteen names for four numbers, identical on both axes. See the FORMS header in component-tokens.css.",
+      "to": "nothing. This row briefly renamed to --control-height-*, which was deleted hours later — so the rename pointed at a name declared nowhere. Height is gone entirely; padding carries it, and there is no padding token either.",
+      "why": "--form-height-* was a pure passthrough to --control-height-* at all four steps — same value, one extra name. What it added was a NARROWING, and that narrowing is a footgun rather than a feature: --control-height exists so inputs, buttons, selects and icon buttons line up on a row, and a spoke using --form-height-* to resize its form controls alone would break precisely that invariant. It also never bounded its readers — esa-button, esa-icon-button, esa-button-toggle and esa-chip-group read it and are not forms, the same complaint that retired --form-font-size-* the same day. Value-neutral: every pair below resolves to the identical px. SUPERSEDED THE SAME DAY, and this row now carries removed:true. It originally renamed to --control-height-*, which was itself deleted hours later with no alias — so the rename wrote spokes onto a name declared NOWHERE, and the codemod reported success while doing it. Two spokes hit exactly that: cb-fish read --form-height-* at 11 sites and air-exchange declared all four in its theme. The alias build.js used to emit for this row (--form-height-md: var(--control-height-md)) resolved to nothing, which is worse than emitting nothing at all — it looked like a working shim. There is no successor name: an input is as tall as its padding plus its text, and after form-padding-to-spacing the padding is --spacing-* read directly. A spoke still setting a height here should delete the declaration and let the control size itself; if it needs a shorter control, that is a /request-lego. Also note the original text of this row asserted that --form-radius-* and --form-padding-* deliberately did NOT follow. Half of that stands: radius encodes a real xs/sm-to-control, md/lg-to-surface mapping and survives. --form-padding-* DID follow, hours later, under form-padding-to-spacing — 'no tier-2 role behind it' was never an argument for keeping a hook. Having nothing behind it is precisely what made it a flat passthrough: sixteen names for four numbers, identical on both axes.",
       "pairs": [
         [
           "--form-height-xs",
-          "--control-height-xs"
+          ""
         ],
         [
           "--form-height-sm",
-          "--control-height-sm"
+          ""
         ],
         [
           "--form-height-md",
-          "--control-height-md"
+          ""
         ],
         [
           "--form-height-lg",
-          "--control-height-lg"
+          ""
         ]
       ]
     },
@@ -805,6 +823,27 @@
         [
           "--form-padding-x-lg",
           "--spacing-400"
+        ]
+      ]
+    },
+    {
+      "id": "form-bg-to-background-field",
+      "kind": "token",
+      "since": "2026-08-14",
+      "exact": false,
+      "why": "THE FIRST TIER-3 -> TIER-2 PROMOTION IN THIS FILE, and the first surface change that is deliberately NOT value-neutral. --form-bg was read by 13 components, --form-bg-disabled by 7, --form-bg-hover by 3. A surface thirteen components share is an INTENT, and intents live at tier 2; a tier-3 hook exists so a spoke can re-skin ONE component. Nothing about the values was wrong with the tier — the NAME was: `form` never bounded its readers, the same complaint that retired --form-font-size-*, --form-height-* and --form-padding-* earlier the same day.\n\nWHAT CHANGES ON SCREEN, because an alias cannot hide this one. --form-bg pointed at --color-background-raised, which is the CARD surface (gray-1). A field sitting on a card therefore rendered at contrast 1.00 against it — literally invisible but for a border that itself only reaches 1.53. --color-background-field is now gray-2, one step in from the canvas. Every text input, textarea, select, combobox, date picker, colour picker hex field, tag container, checkbox box, radio circle and file dropzone goes #fcfcfc -> #f9f9f9. IT LANDED ON gray-3 FIRST (2026-08-14) and moved to gray-2 the next day when --color-background itself moved gray-2 -> gray-1: what the field token encodes is 'one step in from the page', not an absolute step, so the two move together. Be honest about what that separation is — gray-2 on gray-1 is contrast 1.03, against 1.11 at gray-3. This is a deliberately quiet, flat treatment that puts MORE weight on the border, not less. If fields read as absent rather than quiet in your spoke, move --color-background-field, not --color-border.\n\nNOT --color-background-sunken, though the value is identical today. Sunken is read by 24 components and 10 tier-3 hooks (pill backgrounds, progress tracks, the sidenav rail, card footers); folding fields into it rebuilds exactly the coupling this promotion removes.\n\n--form-bg-hover IS THE CLEAREST CASE FOR THE WHOLE MOVE. It pointed at --color-background-raised — the SAME value as --form-bg — so the kit shipped a hover hook that rendered nothing, while --color-background-hover (step 4, 'the neutral counterpart to background-brand-muted-hover') sat at tier 2 with ZERO readers anywhere in the kit. The role for the missing hover already existed and no one was pointing at it. SCOPE NOTE for a spoke that DECLARED --form-bg-hover: --color-background-hover is a broader role than the one you were setting. No spoke declares it today and nothing else reads it, so there is no leak now — but if you want a field-only hover, say so and the hub will mint --color-background-field-hover rather than have you narrow a shared role.\n\nREAD THIS EVEN IF YOU NEVER TOUCHED THESE NAMES: --color-background-disabled MOVED TWICE, gray-3 -> gray-2 -> gray-1. It does not pick its own step: it is pinned one lighter than --color-background-field, because a disabled field the same colour as a resting one says nothing. It now equals the canvas, so a disabled field flattens INTO the page rather than becoming a heavier box, and it gives the best disabled-text contrast of any candidate step (3.24 against --color-content-disabled). The fill is not carrying the state alone — --color-border-disabled softens the edge and --color-content-disabled mutes the text at the same time. The move was free in the hub because that role had exactly ONE consumer, the old --form-bg-disabled, but a spoke reading --color-background-disabled for anything of its own will see it lighten.\n\nONE READER DID NOT FOLLOW, and it is why a blind find-and-replace would have been wrong: esa-button-toggle's `.option--selected` read --form-bg to lift the chosen segment OUT of a --color-background-sunken track. That is a raised chip, not a field. On step 3 it would have become the same colour as the track it sits in and the selection would have vanished. It reads --color-background-raised now, which is what it always meant. If your spoke has a segmented control of its own built on --form-bg, check it for the same thing.\n\nACCESSIBILITY, recorded not fixed: 1.11 is an improvement on 1.00 but still far below the 3.0 non-text AA threshold, so the border stays load-bearing for a field's edge. Batched pass, not this commit.\n\nONE MORE TOKEN MOVED WITH THESE, and it is not in the pairs below because its NAME did not change: --color-background itself went gray-2 -> gray-1 on 2026-08-15. That undoes a deliberate inversion — the page canvas used to sit one step DARKER than --color-background-raised so cards read as lifted by value alone. Canvas, raised and floating are all gray-1 now, so a card separates by its 1px border and nothing else. esa-card's default and outlined variants carry that border; esa-card--elevated does NOT and leans entirely on --elevation-2, a 4% shadow. If your spoke re-points --color-background, check that variant.",
+      "pairs": [
+        [
+          "--form-bg",
+          "--color-background-field"
+        ],
+        [
+          "--form-bg-hover",
+          "--color-background-hover"
+        ],
+        [
+          "--form-bg-disabled",
+          "--color-background-disabled"
         ]
       ]
     },
@@ -898,6 +937,39 @@
           ""
         ]
       ]
+    },
+    {
+      "id": "icon-button-to-button-chrome",
+      "kind": "component",
+      "since": "2026-08-14",
+      "from": "esa-icon-button",
+      "to": "esa-button",
+      "fromModule": "@esa/ecology/esa-icon-button.astro",
+      "toModule": "@esa/ecology/esa-button.astro",
+      "addProps": {
+        "variant": "chrome",
+        "iconOnly": true
+      },
+      "why": "FIRST `component` ROW IN THIS FILE. esa-icon-button did not lose a prop, it stopped existing: the one thing it did that esa-button could not was take its colour FROM the surrounding context instead of owning one, and that is now `variant=\"chrome\"`. What was left was a parallel API — six prop names already spelled identically to button's — kept alive for three CSS declarations. Measured: the conversion is near-lossless (44x44 -> 46x46, the 2px being button's transparent border; icon size and padding identical). NOTE `iconOnly` is what distinguishes this from the icon-link row — both land on the same component and the same variant, and only the presence of a text label separates them. GENUINELY LOST: `label` was REQUIRED here in the type system; on esa-button it can only be a build-time warning, because the label is a slot and a boolean flag cannot make a sibling prop mandatory. See docs/button-consolidation-plan.md."
+    },
+    {
+      "id": "icon-link-to-button-chrome",
+      "kind": "component",
+      "since": "2026-08-14",
+      "from": "esa-icon-link",
+      "to": "esa-button",
+      "fromModule": "@esa/ecology/esa-icon-link.astro",
+      "toModule": "@esa/ecology/esa-button.astro",
+      "addProps": {
+        "variant": "chrome"
+      },
+      "renameProps": {
+        "active": "current"
+      },
+      "dropProps": [
+        "weight"
+      ],
+      "why": "Same fold as icon-button, minus `iconOnly`. Two mappings are NOT one-to-one and are why this cannot be a plain tag swap. (1) `active` meant \"this is the current nav item\" and emitted aria-current; on esa-button `active` means \"this toggle is pressed\" and emits aria-pressed. Those are different claims — a nav link announced as a depressed toggle is worse for a screen-reader user than an unlabelled one — so button grew a separate `current` prop and this maps onto it. (2) `weight` is DROPPED, not remapped: esa-button takes its type from the typography-label-* composites, which own font-weight, and declaring it on the element would silently beat the composite (Astro's [data-astro-cid-*] scoping outranks a single-class selector). An audit found `weight` passed ZERO times anywhere in the hub. The codemod REPORTS a dropped prop rather than deleting it — a human decides that call site. VISUAL CHANGE, unlike the icon-button row: nav items go from bare text (16px tall at md, 14px at sm) to 46px/38px boxes, and md type goes 16px -> 15px. Those old heights were under the 24px AA touch-target floor; the new ones clear 44px AAA."
     }
   ]
 }

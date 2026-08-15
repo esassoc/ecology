@@ -51,6 +51,20 @@
   --color-border-strong:  var(--__SCOPE__-gray-300);
   --color-background:     var(--__SCOPE__-gray-50);
   --color-background-sunken: var(--__SCOPE__-gray-100);
+  /* The surface of an editable field — the ONE line that tints every input,
+     textarea, select, combobox, checkbox box and radio circle without touching
+     cards, wells or the rail.
+
+     WHAT IT ENCODES IS "ONE STEP IN FROM THE CANVAS", not an absolute step. In
+     the hub that is gray-1 canvas -> gray-2 field. Do NOT point it at your card
+     surface: that was the hub's own mistake until 2026-08-14, and it rendered
+     fields at contrast 1.00 against a card — invisible but for their border.
+
+     This ramp is coarser than the hub's, so the default below lands on the same
+     rung as `sunken` where the hub keeps them one apart. If your fields read as
+     wells rather than fields, that is why — add a rung between gray-50 and
+     gray-100 in section 7 and point this at it. */
+  --color-background-field: var(--__SCOPE__-gray-100);
 
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so

@@ -348,7 +348,77 @@ codemod rather than a flag day.
   inline fallback, or the hooks would have re-asserted the old value. Dropdowns are now
   visibly deeper (`0 4px 20px -4px / 0.06` → `0 6px 24px -6px / 0.07`); the FAB is lighter.
 
+- ✅ **The field surface was the card surface, and fields were invisible on cards** ·
+  *Evidence:* `--form-bg` pointed at `--color-background-raised` — gray-1, the same value a
+  card paints — so an input inside a card rendered at **contrast 1.00** against it. The
+  entire affordance rested on a border that itself only reaches 1.53. `--form-bg-hover`
+  pointed at the same value again, so the kit shipped a hover hook that rendered nothing,
+  while `--color-background-hover` (step 4, "the neutral counterpart to
+  `background-brand-muted-hover`") sat at tier 2 with **zero readers anywhere in the kit** ·
+  *Action:* promoted to a new tier-2 role `--color-background-field`. NOT folded into
+  `--color-background-sunken`: sunken is read by 24 components and 10 hooks, which would
+  rebuild the coupling this removed. 29 substitutions across 13 components;
+  `migrations.json: form-bg-to-background-field`, `exact: false` — the first deliberately
+  non-value-neutral surface change in the file · `hub-fix` · **done**
+- ✅ **The whole neutral surface stack re-seated a day later (2026-08-15)** · *Evidence:* the
+  field surface first landed on gray-3 (1.11 on a card, 1.08 on the canvas). Andy's call was
+  that the canvas belongs at gray-1 and the field at gray-2 · *Action:* `--color-background`
+  gray-2 → **gray-1**, `--color-background-field` gray-3 → **gray-2**, and
+  `--color-background-disabled` gray-2 → **gray-1** (forced — it is pinned one step lighter
+  than the field, and gray-2 would have made disabled and resting identical, the exact
+  collision the day before had just resolved). Net stack: canvas/raised/floating gray-1,
+  field gray-2, wells gray-3, hover gray-4. **Two consequences to weigh, both recorded not
+  litigated:** (a) the field's separation drops 1.11 → **1.03**, so the border is now doing
+  nearly all the work of describing a field's edge — this is a flat, quiet treatment by
+  choice; (b) the canvas now EQUALS `--color-background-raised`, which undoes the documented
+  deliberate inversion, so a card separates by its 1px border alone — `esa-card--elevated`
+  has no border and leans entirely on `--elevation-2`, a 4% shadow · `hub-fix` · **done**
+- ✅ **The rule that produced it: a tier-3 token maps to ONE component** · *Evidence:* applied
+  mechanically across all 311 tier-3 declarations, **23 violate** and 248 are compliant. They
+  fall into three sets: `--form-*` (18 tokens, 18 reader components, five of which are not
+  forms and one of which — `_inject-styles` — is not a component), `--focus-ring-*` (3, read
+  by 31) and `--loading-spinner-*` (2). Fanning `--form-*` out to per-component hooks was
+  measured and rejected at **162 names**, against SPEC's own 5–9-per-component guidance ·
+  *Action:* rule recorded in SPEC.md's tier-3 naming section as the test that separates a
+  legitimate group surface from a mis-tiered role. The surface hooks are the first set moved;
+  focus-ring and loading-spinner remain · `hub-fix` · **partly done**
+
 ### Still open
+- **`--focus-ring-*` is the most-violating set in the file and the cheapest to fix** ·
+  *Evidence:* 3 tokens read by 31 components — a system-wide accessibility affordance living
+  in the per-component tier. All three are already thin aliases over tier 2
+  (`--color-border-focus`, `--border-width-focus`) · *Action:* a **file move, not a rename** —
+  same names, declared in `tokens/semantic/` instead of `component-tokens.css`. Nothing
+  resolves differently, no migration row, zero spoke impact. `--focus-ring-offset: 2px` is
+  the one with no tier-2 home (there is no 2px on the 4px spacing grid) · `hub-fix` · **P2**
+- **`esa-loading-overlay` hand-rolls a spinner and reads `esa-loading-spinner`'s tokens** ·
+  *Evidence:* `esa-loading-overlay.astro:58-63` reads `--loading-spinner-track-color` and
+  `--loading-spinner-color` with a comment saying it does so "so both retint together" ·
+  *Action:* the fix is composition — render `<esa-loading-spinner>` — not token surgery.
+  Same shape as the accepted `--filter-pill-*` duplication, but without that one's
+  justification (there is no behavioural difference here, only duplicated CSS) · `lego` · **P2**
+- **`--form-affix-{bg,color,border-color}` are read but never declared** · *Evidence:*
+  `esa-text-field.ts:288-299` reads all three with literal fallbacks; no file declares them ·
+  *Action:* they are absent from `token-names.json`, so the snapshot guard does not cover
+  them; `doctor` and the codemod cannot see them; and they never appear on the generated
+  Theming surface table. A spoke can set them and they work, but nothing says they exist.
+  Declare them in `component-tokens.css` or fold them into privates · `hub-fix` · **P2**
+- **Two hooks promise a family treatment and deliver one component** · *Evidence:*
+  `--form-border-color-hover` is read by esa-input-tag alone, out of the 13 components that
+  read `--form-border-color`; `--form-bg-hover` was read by 3 of 13 before it moved ·
+  *Action:* wire them across the family or drop them. A spoke that sets one today gets a
+  partial result and no error · `hub-fix` · **P2**
+- **`--form-error-border-color` does not track `--color-border-danger`** · *Evidence:* it
+  points at `--color-background-**danger**` (red-9, a fill role) rather than
+  `--color-border-danger` (red-6), which exists. Visually defensible — red-6 is a very faint
+  error outline — but the consequence is that a spoke re-pointing its danger border, as
+  air-exchange does, does not move its error borders · *Action:* decide and document, either
+  way · `hub-fix` · **P2**
+- **Style Dictionary reports 2 token collisions on every build** · *Evidence:* "Token
+  collisions detected (2)" with no detail even under `--verbose`. Confirmed **pre-existing**
+  by rebuilding against `HEAD`'s `color.json` · *Action:* find them — a collision means two
+  tokens compiling to one CSS name, and whichever wins is decided by emission order rather
+  than intent · `hub-fix` · **P2**
 - **`layouts.css` shadows a semantic token name at a different value** · *Evidence:*
   `packages/tokens/src/layouts.css:83` declares `--sidebar-width: 18rem` on `.sidebar` as a
   per-primitive knob, while `dist/tokens.css:380` ships a semantic `--sidebar-width: 280px`
@@ -482,6 +552,38 @@ codemod rather than a flag day.
   components not coordinating, which a scale would paper over rather than resolve. Note the
   Change 9 caveat if a ramp is ever revisited: a fixed width is safe where a fixed height was
   not — it does not clip growing text, it wraps it · `hub-fix` · **P2**
+- **A chained rename whose destination was deleted gives a spoke a FALSE ALL-CLEAR** ·
+  *Evidence:* `--form-height-md` renames to `--control-height-md` (row
+  `form-height-to-control-height`), and `--control-height-md` was deleted the same day with
+  `removed: true`, so it is declared **zero** times in `dist/tokens.css`. `migrate-tokens.mjs`
+  scans `removedRows` only for the removed token's OWN names (`:208`), so a spoke reading
+  `--form-height-*` triggers nothing; the row then rewrites it INTO the dead name and reports
+  success. It is not caught by `unfixable` either, because a migration does cover it. Live in
+  two spokes right now: cb-fish reads it 12× (already falling through to hardcoded `32px` /
+  `28px` fallbacks — the exact fixed-height clipping Change 9 removed) and air-exchange
+  *declares* it 4× in `theme-smaqmd.css` with `__FILL__` markers still in place ·
+  *Action:* resolve every row's destination against `dist/tokens.css` before rewriting.
+  If a `to` does not resolve — directly or through another alias — refuse to rewrite into it
+  and report the chain. Nothing should ever rename a spoke onto a name the hub does not
+  declare · `hub-fix` · **P1**
+- **`doctor` tells a spoke its DECLARATIONS are safe, and they are not** · *Evidence:* the
+  deprecated-names check (`doctor.mjs:~197`) counts every occurrence and reports them all as
+  "they still render, via compatibility aliases the hub will eventually drop." That sentence
+  is true for a read (`var(--foo)`) and **false for a declaration** (`--foo: value`), where
+  the alias rescues nothing and the override is silently inert — the asymmetry SPEC.md
+  states and the tooling does not implement. air-exchange's four `--form-height-*` lines are
+  exactly this case: dead overrides, reported under the reassuring sentence. The most
+  dangerous class is described with the wording meant for the safest one ·
+  *Action:* split reads from declarations in both `doctor.mjs` and `migrate-tokens.mjs` and
+  give them different sentences; a declaration of a deprecated name should outrank a read ·
+  `hub-fix` · **P1**
+- **cb-fish reads dead `--form-height-*` at 12 sites** · *Evidence:* deferred deliberately
+  2026-08-14 rather than fixed, since the hub does not migrate spokes for them. The reads
+  resolve to nothing and fall through to literal `32px`/`28px`/`24px` fallbacks, which is
+  the fixed-px-height pattern Change 9 deleted from the hub. Files: `map-sow.css` (4),
+  `cbf-msow-toolbar.astro` (3), `cbf-lib-cost-table.astro` (2), plus 3 singles ·
+  *Action:* the spoke's own call, once the two tooling fixes above stop it getting a false
+  all-clear. The hub's job is the tools, not the edit · `spoke` · **P2**
 - **`theming.ts` calls every primitive read "moves the whole system", including the CORE
   sets it is safe to read** · *Evidence:* `apps/site/src/data/theming.ts` maps tier
   `primitive` → scope `system`, warning that re-pointing it moves everything. That is right
@@ -602,3 +704,67 @@ findings no amount of source-reading had.
 2. **`learning-engine` consumes this ledger** and lands entries as the right artifact
    (skill / lego / workflow), checking each off.
 3. **Re-run a spoke build** to measure: fewer iterations, fewer bespoke classes, lower cost.
+
+## Source: esa-filter-pills audit (2026-08-14)
+Ran the two-layer check (is the table faithful? are the props the right ones?) on
+`esa-filter-pills`. The table was faithful and the props were defensible — the
+findings were all one layer below the API, in the parts nothing generates.
+
+- **A one-shot `querySelectorAll` at load is a listener bug, not a wiring style**
+  · *Evidence:* both `esa-filter-pills` and `esa-pill` wired remove buttons with
+  `document.querySelectorAll(...).forEach(btn => btn.addEventListener(...))` inside a
+  component `<script>`. That runs once, so only the chips in the initial HTML are live.
+  Verified in-browser: a chip appended after load fired nothing. It is worst exactly
+  where the component is most justified — `component-tokens.css` defends
+  `esa-filter-pills` existing separately *because* its remove is CONTROLLED (emits
+  `{name, value}`, parent owns state), and the very next parent render produced chips
+  whose X was dead, silently. *Action:* delegate on `document`. Where the original
+  called `stopPropagation()` (`esa-pill`, so removing a pill inside a clickable row
+  does not activate the row), delegate in the **capture** phase — on bubble the
+  ancestors have already seen the click and the call means nothing. *Sink:* fixed in all four —
+  `esa-filter-pills`, `esa-pill`, `esa-alert-box`, `esa-filter-clear-button`. A repo
+  sweep now finds no remaining instances (`esa-app-shell` matches the grep but wires
+  page-level shell islands, which are not re-inserted). *Priority:* was high —
+  `esa-alert-box` is the canonical inserted-at-runtime component and its dismiss
+  button was dead on anything rendered after load.
+
+- **A raw literal equal to a token's value is a divergence waiting to happen**
+  · *Evidence:* `esa-filter-pills` hardcodes `--_pill-height: 28px` while `esa-pill`
+  reads `--pill-height-md` for the identical number, and no `--filter-pill-height`
+  exists. A spoke re-pointing pill height moves pills and leaves filter pills behind.
+  *Action:* a `--filter-pill-height` hook was added and then **reverted on request
+  (2026-08-14)** — recorded as an open observation, not a fix. *Sink:* if it is taken
+  up later, note that CLAUDE.md's tier-3 rule ("a tier-3 token maps to ONE component")
+  argues against pointing it at `--pill-height-md` and for the shared `--chip-height-md`
+  rung. *Priority:* open — deliberately not actioned.
+
+- **`aria-label` on a `role=generic` element is not inert, which is worse than if it were**
+  · *Evidence:* the chip `<span>` carried `aria-label="${label}: ${displayValue}"`,
+  a verbatim copy of its own visible text. ARIA prohibits naming `generic`, so the
+  expectation was that it did nothing — but Chromium computes it (measured:
+  `"Status: Open"`). So it was a duplicate accessible name that only some browsers
+  expose and that is free to drift from the visible text. *Action:* removed; the
+  visible text is the accessible text. *Sink:* worth a rule — an `aria-label` that
+  restates visible text is a defect regardless of whether the role permits it.
+  *Priority:* low.
+
+- **Gating a delegated listener on a build-time prop reintroduces the bug it fixes**
+  · *Evidence:* `esa-pill` and `esa-alert-box` wrapped their `<script>` in
+  `{removable && …}` / `{dismissable && …}`. That was honest for PER-BUTTON wiring —
+  no buttons on this page, nothing to wire. It is not honest for a DELEGATED listener,
+  whose entire purpose is elements that do not exist yet: a page whose server-rendered
+  alerts are all non-dismissable ships no listener at all, so a dismissable one
+  injected later is still dead. *Action:* both scripts ungated; they are a few lines
+  and inert until something matches. *Sink:* whenever a per-element handler becomes a
+  delegated one, check what the emission of the script itself is conditional on.
+  *Priority:* medium — a silent partial fix reads as a complete one.
+
+- **A decision recorded in the token file is evidence, and it is not where anyone looks**
+  · *Evidence:* the whole audit started from "`esa-filter-pills` duplicates
+  `esa-pill` + `esa-pillbox`" — which is true, already considered, and explicitly
+  accepted in a 14-line comment at `component-tokens.css:197` ("do not re-open without
+  new evidence"), with reasoning that holds. It was found only by grepping the token
+  surface. *Action:* none for the components. *Sink:* architectural decisions about a
+  COMPONENT should be discoverable from the component, not only from its tokens — a
+  pointer in the component header would have cost one line and saved the detour.
+  *Priority:* medium.

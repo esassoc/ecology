@@ -252,7 +252,7 @@ export class EsaFileUpload extends LitElement {
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
       border: 2px dashed var(--form-border-color, #d4d4d4);
       border-radius: var(--form-radius-md, 8px);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       cursor: pointer;
       text-align: center;
       color: var(--color-content-muted, #737373);
@@ -263,7 +263,7 @@ export class EsaFileUpload extends LitElement {
     }
     .zone:hover {
       border-color: var(--form-border-color-focus, #43608a);
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-hover, #e8e8e8);
     }
     .zone:focus-visible {
       outline: none;
@@ -282,7 +282,7 @@ export class EsaFileUpload extends LitElement {
     }
     :host([disabled]) .zone:hover {
       border-color: var(--form-border-color, #d4d4d4);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
     }
 
     .zone__label {

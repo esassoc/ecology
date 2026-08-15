@@ -21,6 +21,7 @@ export const guide: NavGroup = {
     { label: 'How it works', href: '/guide' },
     { label: 'Setup', href: '/guide/setup' },
     { label: 'Claude toolkit', href: '/guide/toolkit' },
+    { label: 'Keeping current', href: '/guide/updating' },
   ],
 };
 

@@ -230,7 +230,7 @@ export class EsaTextField extends LitElement {
          tracking — still comes from .typography-body-* on this element and
          inherits to the input and the affixes below. */
       line-height: var(--line-height-none, 1);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -238,16 +238,18 @@ export class EsaTextField extends LitElement {
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
-    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    /* Step 4 to the field's step 3 — the pair --color-background-hover was
+       written for. Until 2026-08-14 this read --form-bg-hover, which defaulted to
+       --form-bg's own value, so the hover rendered nothing at all. */
     .control:hover:not(:has(.input:disabled)) {
-      background: var(--form-bg-hover, var(--form-bg, #fff));
+      background: var(--color-background-hover, #e8e8e8);
     }
     .control:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
     .control:has(.input:disabled) {
-      background: var(--form-bg-disabled, #efefef);
+      background: var(--color-background-disabled, #fcfcfc);
     }
 
     .input {

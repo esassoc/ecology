@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Ecology — the framework-agnostic design system hub (tokens + specs + Astro specimens).",
+  "description": "Ecology \u2014 the framework-agnostic design system hub (tokens + specs + Astro specimens).",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -11,6 +11,8 @@
   "scripts": {
     "test": "node --test 'scripts/**/*.test.mjs'",
     "build:tokens": "npm run build --workspace=@esa/tokens",
+    "tokens:snapshot": "node scripts/snapshot-tokens.mjs --write",
+    "tokens:check": "node scripts/snapshot-tokens.mjs",
     "dev": "npm run build:tokens && npm run dev --workspace=@esa/site",
     "build": "npm run build:tokens && npm run build --workspace=@esa/site",
     "preview": "npm run preview --workspace=@esa/site",

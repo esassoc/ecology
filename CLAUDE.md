@@ -25,6 +25,24 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
 2. **Semantic** — intent, references primitives → `--color-background-brand`
 3. **Component** — per-component theming surface → `--form-border-color`, `--sidenav-bg`
 
+**A tier-3 token maps to ONE component.** That is what makes it an override —
+the whole point of the tier is that a spoke can re-skin one component without
+moving the system. A token many components read is an INTENT, and intents live
+at tier 2. Applied across all 311 tier-3 declarations on 2026-08-14: **23
+violate, 248 are compliant.** The violators are `--form-*` (18 tokens, 18
+readers — five of them not forms, and `_inject-styles` is not even a component),
+`--focus-ring-*` (3, read by 31) and `--loading-spinner-*` (2).
+
+Do NOT reach for "fan it out to per-component hooks" as the fix. That was
+measured for `--form-*` and comes to **162 names**, against SPEC.md's own
+5–9-per-component guidance. Promotion to tier 2 is usually the answer, because
+the thing you have is a role wearing a component's name.
+
+SPEC.md's **"shared group surfaces"** category is the exception that licensed
+all of this, and it is the category to be most suspicious of: five of its
+members were deleted or moved on 2026-08-14 alone. It survives only where the
+namespace genuinely bounds its readers.
+
 **Theming = override the semantic and/or component layer** under a `[data-theme="x"]`
 scope. Primitives never move; component internals are never touched.
 The full contract — naming, when a property earns a tier-3 hook, the
@@ -59,6 +77,33 @@ Express a prop's default in the `Astro.props` destructuring (`variant = 'primary
 never in a fallback chain below it — the extractor reads defaults from the
 destructuring, so any other form silently drops the default from the docs.
 
+## Renaming or deleting a token — the row is enforced, not remembered
+`packages/tokens/token-names.json` is a **committed baseline** of every name the
+package ships (1,068). `npm test` fails when one disappears without a
+`migrations.json` row. Order matters: **add the row first** — that is what emits
+the alias or the removed note — then `npm run tokens:snapshot` to accept the new
+set. `npm run tokens:check` runs the same guard on its own.
+
+This closed the hole every other part of the system sat on top of. The alias, the
+codemod and `doctor`'s warnings all start from the row; nothing checked the row
+was written. Rename without one and no alias is emitted, the codemod has nothing
+to rewrite, doctor reports nothing, and every spoke reading the old name loses the
+property outright — `var(--gone)` does not fall back, it drops the declaration.
+
+A row's **destination** is checked too: `to` must resolve to a real value through
+the hub's own declarations, not merely be declared. An alias pointing at a deleted
+token is itself declared and still resolves to nothing —
+`form-height-to-control-height` renamed onto `--control-height-*`, which was
+deleted hours later, and the codemod rewrote two spokes onto the dead name while
+reporting success. `migrate-tokens.mjs` now drops such pairs rather than aborting,
+so one bad row cannot block a spoke's other 1,900 valid rewrites.
+
+**Reads and declarations are counted separately** everywhere, because an alias
+rescues `var(--old)` and can never rescue `--old: value`. A spoke's theme file is
+nothing but declarations, which is why "our brand stopped applying" is the shape
+this failure takes. Both spokes were silently in it: cb-fish had 23 inert
+declarations, air-exchange 24 including `--color-primary`.
+
 ## Renaming a component prop
 `migrations.json` now has a third `kind` alongside `token` and `class`: **`prop`**,
 which MUST carry `components` (the tags it applies to) and SHOULD carry `module`
@@ -92,6 +137,35 @@ docs?** Nobody guesses `trailing`, and it didn't read as a pair with `icon`.
 `iconRight` is physical rather than logical on purpose — there is no RTL anywhere
 in this repo (no `dir`, no i18n, no locale), so `trailing` was defending a case
 that doesn't exist, and if RTL ever arrives the fix is one row here plus a shim.
+
+## Removing a component (`kind: "component"`)
+The fourth `kind`, added 2026-08-14. A component rename is NOT a prop rename: it
+carries a new tag name, added props, renamed props and a repointed import
+specifier together, so it has **no `pairs` key**. Anything iterating `m.pairs`
+must guard — `build.js` and `migrate-tokens.mjs` already skip by kind, but
+`doctor.mjs` and one test in `token-rename.test.mjs` did not and threw on the
+first such row. `renameComponent` in `scripts/lib/token-rename.mjs` does the
+rewrite (tested there).
+
+Two rules that are not obvious:
+- **A custom element is renamed; a local binding is NOT.** `<esa-icon-button>` →
+  `<esa-button>`, but `import IconButton from '…/esa-icon-button.astro'` keeps the
+  name `IconButton` and gets its *import specifier* repointed. Renaming the binding
+  would mean rewriting every reference in the file, and the binding is the spoke's
+  word, not ours. `fromModule` is therefore REQUIRED here (it is optional on
+  `prop`) — without it an aliased import is invisible and the spoke gets the same
+  false all-clear this file warns about above.
+- **A dropped prop is reported, never deleted.** `weight` on `esa-icon-link` had no
+  destination (button takes weight from the type composite). Silently removing it
+  would change rendering with no trace, so the codemod leaves it and prints the call
+  site for a human.
+
+Done so far, both 2026-08-14: `icon-button-to-button-chrome` and
+`icon-link-to-button-chrome` — both folding into `esa-button variant="chrome"`, the
+variant that takes its color FROM context rather than owning one. Three components
+became one; see `docs/button-consolidation-plan.md` for the measured deltas and the
+`aria-current` vs `aria-pressed` split that made `current` a separate prop.
+**The shims must not be deleted until spokes have run `/update-tokens`.**
 
 ## Component buckets
 - **Presentational → `.astro`.** Golden pattern: `packages/ecology/src/components/esa-badge.astro`.

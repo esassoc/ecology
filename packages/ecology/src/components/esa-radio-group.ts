@@ -188,7 +188,7 @@ export class EsaRadioGroup extends LitElement {
       box-sizing: border-box;
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: 50%;
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, #f9f9f9);
       transition:
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
