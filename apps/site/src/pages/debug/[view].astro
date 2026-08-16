@@ -157,7 +157,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       {[
         { id: 'scancov', label: 'Shipped surfaces nobody scans', rows: scanCoverageGaps, note: 'A .css file @esa/tokens exports that no scan root covers and no exemption names. Every token it reads will report as an ORPHAN, and orphan on this page reads as “delete it”. Derived from the package’s own exports map rather than a hand-kept list, so adding a partial without rostering it turns this red on the next build. Third occurrence of this class — see the SCAN_ROOTS comment in token-graph.ts.', severity: 'bad' },
         { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
-        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead — which is what both shipped themes now do, re-skinning shape through --radius-surface rather than --radius-200.', severity: 'bad' },
+        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead — which is what both shipped themes now do, re-skinning shape through --radius-md rather than --radius-200.', severity: 'bad' },
         { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
         { id: 'hardcode', label: 'Semantic colour hardcodes', rows: semanticHardcodes, note: 'A tier-2 COLOUR terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer, off the palette and unconstrained by it.', severity: 'warn' },
@@ -248,7 +248,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <em>source directory</em> because no regex on the name can do it (<code>theming.ts</code> still
         tries the regex route). Two further costs have since been paid off. Both themes used to
         re-point <code>--radius-200</code>, a primitive — invisible, because nothing in the name
-        announces which tier you are editing; they now re-point <code>--radius-surface</code>, the
+        announces which tier you are editing; they now re-point <code>--radius-md</code>, the
         tier-2 role. And <code>--focus-ring-color</code> was once declared in both
         <code>tokens/primitive/effect.json</code> and <code>src/component-tokens.css</code>, with
         tier 3 loading last and winning; the tier-1 block was removed, so the ring lives only at
@@ -448,8 +448,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-note">
         The shape of the gap is the mirror image of tier 2. There, everything left of
         <em>variant</em> was missing. Here slot 3 is solid and slots 4–5 are inverted: we write
-        <code>--form-radius-md</code> where the rubric writes
-        <code>--eco-component-form-md-radius</code>. Same information, opposite order.
+        <code>--button-radius-md</code> where the rubric writes
+        <code>--eco-component-button-md-radius</code>. Same information, opposite order.
       </p>
 
       <h3 class="sub">Slot by slot</h3>
@@ -652,10 +652,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <div class="tally-cell"><b>{t3.variantRows.length}</b><span>semantic variants</span></div>
       </div>
       <p class="cat-note">
-        The size axis that tier 2 skips entirely lands here instead, on
+        The size axis tier 2 carries for shape alone (<code>--radius-xs/sm/md/lg</code>, the
+        documented exception) and skips everywhere else lands here instead, on
         {t3.sizeRows.scales.length} separate per-component scales — every one of them with the size
         trailing the property. <code>default</code> is correctly omitted throughout: there is no
-        <code>--form-radius-default</code>, the unsuffixed name <em>is</em> the default.
+        <code>--button-radius-default</code>, the unsuffixed name <em>is</em> the default.
       </p>
       <table class="findings">
         <thead><tr><th>Dialect</th><th>Tokens</th><th>Where</th></tr></thead>

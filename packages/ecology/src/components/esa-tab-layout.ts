@@ -221,7 +221,7 @@ export class EsaTabLayout extends LitElement {
     .tab:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
-      border-radius: var(--radius-control, 4px);
+      border-radius: var(--radius-sm, 0.25rem);
     }
 
     .icon { display: inline-flex; }
@@ -248,12 +248,12 @@ export class EsaTabLayout extends LitElement {
       border-bottom: none;
       background: var(--color-background-elevation-sunken, #efefef);
       border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
-      border-radius: var(--radius-surface, 8px);
+      border-radius: var(--radius-md, 0.5rem);
       padding: var(--spacing-050, 2px);
       gap: var(--spacing-050, 2px);
     }
     :host([appearance='segmented']) .tab,
-    :host([variant='pill']) .tab { border-radius: var(--radius-control, 4px); }
+    :host([variant='pill']) .tab { border-radius: var(--radius-sm, 0.25rem); }
     :host([appearance='segmented']) .tab--active,
     :host([variant='pill']) .tab--active {
       background: var(--color-background-elevation-raised, #ffffff);

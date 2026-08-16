@@ -135,7 +135,7 @@ export class EsaPopover extends LitElement {
       --_popover-bg: var(--popover-bg, var(--color-background-elevation-raised, #ffffff));
       --_popover-border: var(--popover-border-color, var(--color-border-default, #e5e5e5));
       --_popover-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      --_popover-radius: var(--popover-radius, var(--radius-surface, 0.5rem));
+      --_popover-radius: var(--popover-radius, var(--radius-md, 0.5rem));
       --_popover-padding: var(--spacing-300, 0.75rem);
       --_popover-arrow-size: 8px;
       --_popover-color: var(--popover-color, var(--color-content-default, #171717));

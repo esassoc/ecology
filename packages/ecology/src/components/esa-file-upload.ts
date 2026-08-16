@@ -251,7 +251,7 @@ export class EsaFileUpload extends LitElement {
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
       border: 2px dashed var(--form-border-color, #d4d4d4);
-      border-radius: var(--form-radius-md, 8px);
+      border-radius: var(--radius-md, 0.5rem);
       background: var(--color-background-field, transparent);
       cursor: pointer;
       text-align: center;
@@ -322,7 +322,7 @@ export class EsaFileUpload extends LitElement {
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: var(--color-background-elevation-sunken, #efefef);
-      border-radius: var(--form-radius-sm, 6px);
+      border-radius: var(--radius-sm, 0.25rem);
       color: var(--color-content-default-muted, #737373);
     }
     .file__name {

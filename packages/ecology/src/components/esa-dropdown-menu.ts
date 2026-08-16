@@ -142,7 +142,7 @@ export class EsaDropdownMenu extends LitElement {
       z-index: var(--z-dropdown, 50);
       background: var(--dropdown-menu-bg, var(--color-background-elevation-floating, #ffffff));
       border: var(--border-width-default, 1px) solid var(--dropdown-menu-border-color, var(--color-border-default, #e5e5e5));
-      border-radius: var(--dropdown-menu-radius, var(--radius-surface, 0.5rem));
+      border-radius: var(--dropdown-menu-radius, var(--radius-md, 0.5rem));
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       min-width: var(--dropdown-menu-min-width, 160px);
       max-width: var(--dropdown-menu-max-width, 280px);
@@ -171,7 +171,7 @@ export class EsaDropdownMenu extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
       border: none;
-      border-radius: var(--radius-control, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
       background: transparent;
       color: var(--dropdown-menu-item-color, var(--color-content-default, #171717));
       /* UA reset, not a type role — a native button does not inherit the face. */

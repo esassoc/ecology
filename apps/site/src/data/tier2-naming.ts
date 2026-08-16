@@ -766,9 +766,9 @@ export const semanticNodes = new Map(semantic.map((t) => [t.name, t]));
  * This used to be two groups: `--elevation-*`, and a second holding everything
  * else under the heading "width / height". Everything else was 107 tokens across
  * twelve unrelated families — 66 typography composites, 12 font tokens, 7
- * z-indexes, 5 radius roles — of which EIGHT were actually a width or a height.
+ * z-indexes, 5 radius steps — of which EIGHT were actually a width or a height.
  * All 107 also carried a hardcoded `no property slot` chip, which is false for
- * most of them (`--z-dropdown`, `--radius-card` and `--font-weight-medium` all
+ * most of them (`--z-dropdown`, `--radius-md` and `--font-weight-medium` all
  * lead with their property).
  *
  * The failure is the bucket being defined by exclusion (`!startsWith('--color-')`)
@@ -945,7 +945,7 @@ export interface SemanticCategory {
  * Name pattern -> the CSS property it lands in.
  *
  * Ordered, first match wins, and every entry states whether the NAME carries the
- * property. That second field is the whole point: `--radius-card` says its
+ * property. That second field is the whole point: `--radius-md` says its
  * property (abbreviated), `--elevation-2` does not, and both facts are already
  * asserted elsewhere on this page as a per-FAMILY chip. Deriving them per token
  * means the chip and the tree cannot disagree.

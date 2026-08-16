@@ -212,7 +212,7 @@ export class EsaConfirmDialog extends LitElement {
       width: var(--confirm-dialog-width, 360px);
       max-width: calc(100vw - 2rem);
       background: var(--confirm-dialog-bg, var(--color-background-elevation-floating, #ffffff));
-      border-radius: var(--confirm-dialog-radius, var(--radius-overlay, 0.75rem));
+      border-radius: var(--confirm-dialog-radius, var(--radius-lg, 0.75rem));
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
@@ -246,7 +246,7 @@ export class EsaConfirmDialog extends LitElement {
       height: 32px;
       padding: 0;
       border: none;
-      border-radius: var(--radius-surface, 0.5rem);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
       color: var(--color-content-default-muted, #737373);
       cursor: pointer;
@@ -310,7 +310,7 @@ export class EsaConfirmDialog extends LitElement {
 
     .esa-confirm-dialog__btn {
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-radius: var(--radius-surface, 0.5rem);
+      border-radius: var(--radius-md, 0.5rem);
       cursor: pointer;
       border: var(--border-width-default, 1px) solid transparent;
       transition: background var(--transition-fast, 150ms ease);

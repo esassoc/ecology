@@ -155,23 +155,23 @@ export class EsaDatePicker extends LitElement {
       display: block;
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
-      --_field-radius: var(--form-radius-md, 8px);
+      --_field-radius: var(--radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #d4d4d4);
     }
     :host([size='xs']) {
       --_field-padding-y: var(--spacing-200, 0.5rem);
       --_field-padding-x: var(--spacing-200, 0.5rem);
-      --_field-radius: var(--form-radius-xs, 4px);
+      --_field-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='sm']) {
       --_field-padding-y: var(--spacing-250, 0.625rem);
       --_field-padding-x: var(--spacing-250, 0.625rem);
-      --_field-radius: var(--form-radius-sm, 6px);
+      --_field-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--spacing-400, 1rem);
       --_field-padding-x: var(--spacing-400, 1rem);
-      --_field-radius: var(--form-radius-lg, 10px);
+      --_field-radius: var(--radius-md, 0.5rem);
     }
 
     .field {

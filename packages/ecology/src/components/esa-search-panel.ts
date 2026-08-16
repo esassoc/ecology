@@ -343,7 +343,7 @@ export class EsaSearchPanel extends LitElement {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: var(--radius-surface, 8px);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
       color: var(--color-content-default-secondary, #525252);
       cursor: pointer;
@@ -371,7 +371,7 @@ export class EsaSearchPanel extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       border: none;
-      border-radius: var(--radius-surface, 8px);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
       color: var(--color-content-default, #171717);
       font-family: inherit;

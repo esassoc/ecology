@@ -273,7 +273,7 @@ export class EsaButtonToggle extends LitElement {
       gap: var(--spacing-100, 4px);
       --_pad-y: var(--spacing-300, 0.75rem);
       --_padding-x: var(--spacing-300, 0.75rem);
-      --_radius: var(--form-radius-md, 8px);
+      --_radius: var(--radius-md, 0.5rem);
       --_border-width: var(--form-border-width, 1px);
       --_border-color: var(--form-border-color, #d4d4d4);
       --_icon-size: 18px;
@@ -281,19 +281,19 @@ export class EsaButtonToggle extends LitElement {
     :host([size='xs']) {
       --_pad-y: var(--spacing-200, 0.5rem);
       --_padding-x: var(--spacing-200, 0.5rem);
-      --_radius: var(--form-radius-xs, 4px);
+      --_radius: var(--radius-sm, 0.25rem);
       --_icon-size: 14px;
     }
     :host([size='sm']) {
       --_pad-y: var(--spacing-250, 0.625rem);
       --_padding-x: var(--spacing-250, 0.625rem);
-      --_radius: var(--form-radius-sm, 6px);
+      --_radius: var(--radius-sm, 0.25rem);
       --_icon-size: 16px;
     }
     :host([size='lg']) {
       --_pad-y: var(--spacing-400, 1rem);
       --_padding-x: var(--spacing-400, 1rem);
-      --_radius: var(--form-radius-lg, 10px);
+      --_radius: var(--radius-md, 0.5rem);
       --_icon-size: 20px;
     }
 

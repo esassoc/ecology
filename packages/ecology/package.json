@@ -15,6 +15,7 @@
     "lit": "^3.2.0"
   },
   "peerDependencies": {
+    "@esa/tokens": "^0.1.0",
     "astro": "^5.0.0"
   }
 }

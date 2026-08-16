@@ -59,7 +59,33 @@ all new components follow.
    and the intent re-skins everywhere it's used. Every category gets a layer
    here, not just colour:
    - colour — `--color-background-brand`, `--color-background-elevation-raised`, `--color-content-default-secondary`
-   - shape — `--radius-control | -surface | -card | -overlay | -pill`
+   - shape — `--radius-{xs,sm,md,lg}`, plus `--radius-pill`.
+
+     **This category is a documented exception to "intent, not size", and it is
+     the only one.** Radius carried roles until 2026-08-16 —
+     `--radius-control | -surface | -card | -overlay` — and they asserted
+     distinctions they did not deliver: `--radius-200` and `--radius-300` are the
+     same `0.5rem`, so `-surface` and `-card` were one number wearing two names.
+     Both shipped themes re-pointed exactly one of the five, which produced a live
+     defect rather than a dormant one — in qanat a dropdown sat at 10px while the
+     card behind it stayed 8px, because `--radius-card` pointed at the primitive
+     that did not move.
+
+     **The precedent is spacing.** Spacing has no semantic layer at all (see the
+     CORE sets below): it is a scale, consumed directly, and nobody invented
+     `--spacing-card-gap`. Colour earns roles because `danger` cannot be derived
+     from a number; a corner can. What radius has that spacing does not is that
+     themes *do* move it and primitives never move — so radius needs a themeable
+     layer. It did not need a *role* layer.
+
+     `--radius-pill` is NOT a step and keeps its name: `full` is taken at tier 1,
+     and a squared-off brand re-points pill to `--radius-sm` without touching the
+     ramp. Migration: `radius-roles-to-scale`.
+
+     **Do not read this as licence to flatten another category.** The test it
+     passes is narrow — every role in the set resolved to a value already
+     identified by its position on a ramp, and no theme ever used the roles to
+     separate readers. Colour fails that test on the first clause.
    - size — `--chip-height-*`, and only that. `--control-height-{xs,sm,md,lg}` was
      deleted on 2026-08-14: a px height cannot grow with rem text, so it clipped.
      Inputs and buttons are now as tall as their padding plus their text, and that
@@ -329,16 +355,32 @@ Privates are internals — never themed, never documented as surface.
 ## Tier-3 naming
 
 - **Shared group surfaces** for things that must align across components:
-  `--form-radius-sm`, `--form-border-color-focus` — one scale so inputs, selects,
-  and buttons line up on a row. Prefer extending a group surface over duplicating
-  the same knob per component.
+  `--form-border-color-focus` — one scale so inputs, selects, and buttons line up
+  on a row. Prefer extending a group surface over duplicating the same knob per
+  component.
 
-  **This is the category to be most suspicious of, and the count says so.** Five
-  of its members were deleted or moved on 2026-08-14 alone: `--form-height-*`,
+  **This is the category to be most suspicious of, and the count says so.** Six
+  of its members are gone. Five went on 2026-08-14: `--form-height-*`,
   `--form-padding-*` and `--form-font-size-*` for being passthroughs that added a
   name and nothing else, and `--form-bg{,-hover,-disabled}` for a different
-  reason — see below. `--form-radius-*` survives because it encodes a real
-  mapping (xs/sm → `--radius-control`, md/lg → `--radius-surface`).
+  reason — see below.
+
+  `--form-radius-*` was held back that day as the one member that looked like it
+  was doing work: it encoded a mapping (xs/sm → the small corner, md/lg → the
+  default one) that 13 components would otherwise each restate. **It went on
+  2026-08-16 anyway, and how it failed is the useful part.** The 13 already
+  restated the mapping, one line per size — the hook only changed the spelling.
+  What it really did was hide the mapping: four names carried two values, and of
+  49 read sites, thirteen carried literal fallbacks describing a 4/6/8/10 ramp
+  that the tokens never produced. Seven components rendered 2px off their own
+  fallback whenever `component-tokens.css` was absent, for months, unnoticed —
+  by the hook that existed to make the mapping visible.
+
+  **A hook that "documents a relationship" is the hardest case to judge, because
+  the claim is unfalsifiable until you check the read sites.** Check them. If the
+  readers disagree with the token about what it resolves to, the hook was
+  documenting nothing. The replacement was a size axis at tier 2 (see shape,
+  above) — which is where the ramp had been trying to live all along.
 
   **The test that separates a group surface from a mis-tiered role: does the
   namespace bound its readers?** A tier-3 hook exists so a spoke can re-skin ONE
@@ -589,9 +631,9 @@ directly.
      `--control-height-md: 36px` beside the radius; that token was deleted on
      2026-08-14 and the padding hook that briefly replaced it went the same day.
      A theme cannot make its inputs tighter — see tokens/semantic/size.json. */
-  --radius-surface: 4px;
+  --radius-md: 4px;
   /* tier 3 — ONE component diverges from those defaults */
-  --card-radius: var(--radius-control);
+  --card-radius: var(--radius-sm);
 }
 ```
 

@@ -427,7 +427,7 @@ export class EsaEntitySearch extends LitElement {
       max-height: var(--entity-search-max-height, 70vh);
       background: var(--entity-search-bg, var(--color-background-elevation-floating, #ffffff));
       border: var(--border-width-default, 1px) solid var(--entity-search-border-color, var(--color-border-default, #dcdcdc));
-      border-radius: var(--entity-search-radius, var(--radius-overlay, 0.75rem));
+      border-radius: var(--entity-search-radius, var(--radius-lg, 0.75rem));
       box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
@@ -521,7 +521,7 @@ export class EsaEntitySearch extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
       border: none;
-      border-radius: var(--radius-surface, 0.5rem);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
       color: var(--color-content-default, #171717);
       font-family: inherit;

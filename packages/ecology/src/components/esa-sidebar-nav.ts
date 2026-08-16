@@ -251,7 +251,7 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-icon-gap: var(--sidenav-icon-gap, var(--spacing-200, 8px));
       --_sidenav-icon-size: var(--sidenav-icon-size, 18px);
       --_sidenav-icon-size-collapsed: var(--sidenav-icon-size-collapsed, 18px);
-      --_sidenav-item-radius: var(--radius-surface, 8px);
+      --_sidenav-item-radius: var(--radius-md, 0.5rem);
       --_sidenav-item-color: var(--sidenav-link-text, #525252);
       --_sidenav-item-color-hover: var(--sidenav-link-text-hover, var(--sidenav-link-text, #525252));
       --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-content-brand, #3a7c59));
