@@ -36,6 +36,31 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
       run `node ../ecology/scripts/check-contrast.mjs`. AA text failures are
       Must-fix; warnings get listed with the affected pair in plain words
       ("white text on the warning color is hard to read").
+   3. **Verbal restraint** — `node ../ecology/scripts/check-verbal-restraint.mjs`
+      (same args convention: no args scans the spoke, or pass the scope's files).
+      Greps every human-visible string against the canonical corpus behind
+      design-principles § Verbal restraint. **ERRORS are Must-fix**, same weight
+      as a banned visual pattern.
+      - If it reports `"skipped": true`, the corpus is not installed on this
+        machine. Say so in one line and **check the strings yourself** against
+        design-principles § Verbal restraint — a skip is a missing tool, never a
+        pass.
+      - It only catches what a regex can express. For the rest — editorial
+        captions, taglines, chips restating the table beneath them, synthesis —
+        sweep the surface's strings yourself and classify each OF the page or
+        ABOUT it. The ABOUT count must be zero.
+   4. **Prose-shaped props** — `node ../ecology/scripts/check-prose-props.mjs`,
+      when the scope includes any component that declares props. Everything it
+      returns is a **warning and never a blocker**: it reads prop NAMES, and it
+      cannot tell `caption` on a figure (correct) from `caption` on a stat card
+      (a flourish slot).
+      - `prose-prop-genre` — the name names a kind of prose. Worth acting on.
+      - `prose-prop-contested` — a real datum reading, but a measured flourish
+        rate. Confirm, do not assume.
+      - The usual fix is the **doc comment, not the prop**. A slot documented by
+        register ("muted meta") gets data; a slot documented by type size gets
+        prose. That is the whole finding of the 2026-08-16 audit, and rewriting a
+        doc comment breaks nothing.
 
    Report findings **by severity** (Must-fix first, then Should-fix, then
    judgment calls), translating each rule into plain words.
