@@ -11,3 +11,9 @@ dist/
 
 # Client-adjacent material (mining reports quote internal sessions) — never committed
 /docs/private/
+
+# Generated Storybook stories — written by scripts/generate-stories.ts from the
+# component sources on every `npm run storybook`. Never edit or commit these;
+# a committed copy could go stale against the component it was generated from.
+apps/storybook/src/generated/
+apps/storybook-astro/src/generated/
