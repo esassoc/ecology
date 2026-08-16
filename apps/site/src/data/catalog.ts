@@ -66,6 +66,7 @@ const CATEGORIES: CategorySpec[] = [
     ['esa-text-field', 'Text Field'], ['esa-textarea', 'Textarea'], ['esa-select', 'Select'],
     ['esa-combobox', 'Combobox'], ['esa-input-tag', 'Input Tag'], ['esa-checkbox', 'Checkbox'], ['esa-checkbox-group', 'Checkbox Group'],
     ['esa-radio-group', 'Radio Group'], ['esa-switch-toggle', 'Switch Toggle'], ['esa-form-field', 'Form Field'], ['esa-field-error', 'Field Error'],
+    ['esa-error-summary', 'Error Summary'],
     ['esa-date-picker', 'Date Picker'], ['esa-color-picker', 'Color Picker'], ['esa-range-slider', 'Range Slider'],
     ['esa-file-upload', 'File Upload'], ['esa-file-list', 'File List'],
   ] },

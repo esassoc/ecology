@@ -71,7 +71,7 @@ export class EsaSnackbarItem extends LitElement {
           : null}
         ${this.dismissable
           ? html`
-              <button class="esa-snackbar__close" @click=${this.dismiss} aria-label="Dismiss">
+              <button class="esa-snackbar__close" @click=${this.dismiss} aria-label="Dismiss notification">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             `
@@ -116,6 +116,10 @@ export class EsaSnackbarItem extends LitElement {
       /* One word ("Undo"). microcopy has no leading, so wrapping would collide. */
       white-space: nowrap;
       flex-shrink: 0;
+      /* Same target-size reasoning as the close button below: a short word like
+         "Undo" produces a box only as tall as its own line, which lands under the
+         24px minimum. The min-height sets the floor without padding the label. */
+      min-height: 32px;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: none;
       border-radius: var(--radius-sm, 0.25rem);
@@ -140,8 +144,13 @@ export class EsaSnackbarItem extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
+      /* 32px, not the 24px this was. 24 is the exact floor of SC 2.5.8 Target Size
+         (Minimum, AA) — passing a criterion with zero margin is not the same as
+         being usable, and this is the control someone reaches for in a hurry, on a
+         box that may be about to disappear. The glyph stays 16px; only the hit area
+         grows, so the toast does not get taller. */
+      width: 32px;
+      height: 32px;
       border: none;
       border-radius: var(--radius-sm, 0.25rem);
       background: transparent;
@@ -152,6 +161,19 @@ export class EsaSnackbarItem extends LitElement {
     .esa-snackbar__close:hover {
       opacity: 1;
       background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Both buttons were keyboard-invisible: :hover only, no focus style at all
+       (SC 2.4.7 Focus Visible, AA). The ring is white rather than
+       --focus-ring-color because these sit on FIVE different fills — the
+       knocked-out default plus success/warning/danger/info — and the brand-blue
+       ring disappears against at least one of them. Same reasoning as the alpha
+       backgrounds above, and the same reason this is not a token. */
+    .esa-snackbar__action:focus-visible,
+    .esa-snackbar__close:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid #ffffff;
+      outline-offset: var(--focus-ring-offset, 2px);
+      opacity: 1;
     }
   `,
   ];

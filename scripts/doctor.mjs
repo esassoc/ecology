@@ -171,10 +171,18 @@ if (isSpoke) {
     // would throw and take the entire doctor run down with it.
     const componentRows = migrations.filter((m) => m.kind === 'component');
     const deprecatedPropRows = migrations.filter((m) => Array.isArray(m.deprecatedProps));
+    // `removed` is carried through because the two cases need OPPOSITE wording.
+    // A renamed name still resolves — build.js emits `--old: var(--new)` — so a
+    // read of it is "will break later". A REMOVED name has no alias by design
+    // (build.js emits only a comment), so a read of it resolves to nothing
+    // TODAY. Reporting both under the reassuring sentence below is how a fatal
+    // condition gets described with the wording written for the safe one.
     const names = migrations
       .filter((m) => Array.isArray(m.pairs))
       .flatMap((m) =>
-        m.pairs.map(([from]) => ({ from, kind: m.kind, components: m.components ?? [], module: m.module })),
+        m.pairs.map(([from]) => ({
+          from, kind: m.kind, components: m.components ?? [], module: m.module, removed: !!m.removed,
+        })),
       );
     const srcDir = path.join(CWD, 'src');
     let hits = 0;
@@ -186,13 +194,17 @@ if (isSpoke) {
     // theme file and silently loses its theme. Reporting both under one number
     // describes the dangerous case with the wording written for the safe one.
     const declaredDeprecated = new Set();
+    // Removed names are tracked apart from renamed ones on BOTH axes — read and
+    // declared — because only the renamed half has an alias behind it.
+    const removedRead = new Set();
+    const declaredRemoved = new Set();
     const walk = (d) => {
       for (const e of readdirSync(d, { withFileTypes: true })) {
         const fp = path.join(d, e.name);
         if (e.isDirectory()) { walk(fp); continue; }
         if (!/\.(astro|ts|tsx|js|mjs|css|scss|svelte|vue)$/.test(e.name)) continue;
         const src = readFileSync(fp, 'utf8');
-        for (const { from, kind, components, module: moduleSpec } of names) {
+        for (const { from, kind, components, module: moduleSpec, removed } of names) {
           // A prop has to be counted INSIDE its component's tag. Counting `color`
           // as a bare word would flag every CSS `color:` declaration in the spoke
           // and bury the real finding under hundreds of false positives.
@@ -201,8 +213,13 @@ if (isSpoke) {
             : (src.match(kind === 'token'
                 ? new RegExp(`${from}(?![\\w-])`, 'g')
                 : new RegExp(`(?<![\\w-])${from}(?![\\w-])`, 'g')) ?? []).length;
-          if (n) { hits += n; seen.add(kind === 'prop' ? `${from}=` : from); }
-          if (kind === 'token' && declPattern(from).test(src)) declaredDeprecated.add(from);
+          if (n) {
+            if (removed) removedRead.add(from);
+            else { hits += n; seen.add(kind === 'prop' ? `${from}=` : from); }
+          }
+          if (kind === 'token' && declPattern(from).test(src)) {
+            (removed ? declaredRemoved : declaredDeprecated).add(from);
+          }
         }
         // A removed component is reached the same way a prop is — through the
         // file's own imports, so an aliased `<IconButton>` counts too.
@@ -224,13 +241,23 @@ if (isSpoke) {
       }
     };
     if (existsSync(srcDir)) walk(srcDir);
+    // RENAMED names, read. The only genuinely non-fatal case in this block: an
+    // alias in dist/tokens.css keeps them resolving until the hub drops it.
     warn(`no deprecated @esa/tokens names in src/`, hits === 0,
       `${hits} use(s) of ${seen.size} deprecated name(s) — reads still render, via compatibility aliases the hub will eventually drop. Preview the fix: \`node ../ecology/scripts/migrate-tokens.mjs\`, then re-run with --write.`);
 
-    // Louder, and separate, because this one is not "will break later" — it is
-    // already wrong, and silently.
-    warn(`no deprecated names DECLARED in src/`, declaredDeprecated.size === 0,
-      `${declaredDeprecated.size} deprecated name(s) are declared here, not just read: ${[...declaredDeprecated].slice(0, 6).join(', ')}${declaredDeprecated.size > 6 ? `, +${declaredDeprecated.size - 6} more` : ''}. An alias rescues a READ; it cannot rescue a DECLARATION — nothing reads these names any more, so each override is ALREADY INERT and this spoke is rendering the hub default with no error to say so. \`node ../ecology/scripts/migrate-tokens.mjs --write\` renames the declarations, which is what makes them count again.`);
+    // REMOVED names, read. No alias exists by design, so `var(--gone)` does not
+    // fall back — it drops the declaration outright. Broken NOW, not later.
+    check(`no REMOVED @esa/tokens names read in src/`, removedRead.size === 0,
+      `${removedRead.size} removed name(s) are read here: ${[...removedRead].slice(0, 6).join(', ')}${removedRead.size > 6 ? `, +${removedRead.size - 6} more` : ''}. These have NO compatibility alias — the hub deleted them deliberately, so \`var(--name)\` resolves to nothing and the property is dropped with no error. \`node ../ecology/scripts/migrate-tokens.mjs\` prints each call site and what to read instead; the fix is a human edit, not a rewrite.`);
+
+    // DECLARED, either kind. Promoted from warn() to check() as part of the
+    // tier-3 reduction: tier 3 is the surface a spoke DECLARES, so a bulk
+    // removal there lands here and nowhere else. An inert override is not a
+    // warning — it is this spoke silently rendering the hub default.
+    const declaredAll = [...declaredDeprecated, ...declaredRemoved];
+    check(`no deprecated names DECLARED in src/`, declaredAll.length === 0,
+      `${declaredAll.length} deprecated name(s) are declared here, not just read: ${declaredAll.slice(0, 6).join(', ')}${declaredAll.length > 6 ? `, +${declaredAll.length - 6} more` : ''}. An alias rescues a READ; it cannot rescue a DECLARATION — nothing reads these names any more, so each override is ALREADY INERT and this spoke is rendering the hub default with no error to say so.${declaredDeprecated.size ? ` \`node ../ecology/scripts/migrate-tokens.mjs --write\` renames the ${declaredDeprecated.size} that have a destination.` : ''}${declaredRemoved.size ? ` The ${declaredRemoved.size} REMOVED one(s) have no destination — delete the override, or re-point the tier-2 role it aliased (which moves every component reading that role, so check that is what you want).` : ''}`);
   }
 }
 

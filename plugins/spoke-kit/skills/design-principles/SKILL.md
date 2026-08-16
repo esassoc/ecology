@@ -46,6 +46,33 @@ A styling change in a spoke is a **token re-point until proven otherwise**:
    to note, not an error to revert. Inventing a custom property that exists
    nowhere is still always a bug.
 
+## The focus ring
+
+Focus is the one visual state you never get to remove, and this skill owns how it
+LOOKS (the `accessibility` skill owns whether it is present at all — check-a11y
+blocks removal at write time). Full reference: `/foundations/focus` on the hub site.
+
+- **It is two bands, and that is not decoration.** A brand band (`--focus-ring-color`,
+  which chains off `--color-background-brand`) with a near-black halo outside it
+  (`--focus-ring-halo`). Re-point your brand and the inner band follows; the halo
+  deliberately does not.
+- **Never "fix" the ring by re-pointing the halo to your brand.** The halo is the
+  band that carries the 3:1 contrast obligation, and a brand colour is chosen for
+  brand reasons — it can land anywhere on the luminance scale. Measured in the hub
+  on 2026-08-16, the brand-only ring managed 2.95:1 / 2.88:1 / 2.66:1 against the
+  raised, canvas and sunken surfaces. All three fail. Re-point the halo ONLY when a
+  component sits on a genuinely dark ground, and then to a LIGHT value.
+- **`outline` for the ring, `box-shadow` only for the halo.** Forced-colors modes
+  replace box-shadows with system colours and keep outlines. A ring painted with
+  box-shadow alone disappears in Windows High Contrast Mode — that was fourteen
+  hub components, every form control, until it was caught.
+- **`:focus-visible`, not `:focus`.** Two sanctioned exceptions: `:focus-within` on a
+  text-entry wrapper (a ring on click is native there), and bare `:focus` where focus
+  arrives programmatically after a user action, as `esa-error-summary` does.
+- **Do not restyle the ring per component.** The five tokens are the whole surface.
+  A component that needs a different ring is nearly always a component that should
+  be asking for a token — run **/request-lego**.
+
 ## Mock data
 
 - **Invented, never derived.** Mock content is realistic but fictional — never

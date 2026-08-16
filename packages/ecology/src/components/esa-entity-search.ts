@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 // unsafeSVG for icon markup (SVG namespace); unsafeHTML stays for text highlight.
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
@@ -320,6 +322,27 @@ export class EsaEntitySearch extends LitElement {
     `;
   }
 
+  /**
+   * Announce only the transition INTO no-results, and only while a query is live.
+   *
+   * The cue on the input already tells the user results filter as they type, so a
+   * running count on every keystroke would be noise layered on information they
+   * have. The dry query is the exception: a sighted user watches the list empty and
+   * corrects immediately, and without this a screen reader user keeps typing into
+   * nothing. Assertive for that reason. Guarded on the transition so an
+   * already-empty query does not re-announce with every further keystroke.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this.open && !!this.query.trim() && this.queryMatches.length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No results found', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
   render() {
     if (!this.open) return html``;
     const q = this.query.trim();
@@ -332,15 +355,26 @@ export class EsaEntitySearch extends LitElement {
       <div class="esa-entity-search" role="dialog" aria-label="Search">
         <div class="esa-entity-search__search">
           <svg class="esa-entity-search__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <!-- The input had NO accessible name: no label, no aria-label, only a
+               placeholder — which is not a name and disappears the moment you type.
+               aria-describedby carries the instructional cue, which is what makes
+               announcing the result list on every keystroke unnecessary. The visible
+               footer below says the same thing to sighted users. -->
           <input
             class="esa-entity-search__input typography-microcopy-lg-subtle"
             type="text"
+            aria-label=${this.placeholder || 'Search'}
+            aria-describedby="cue"
             placeholder=${this.placeholder}
             .value=${this.query}
             @input=${this.onSearch}
             @keydown=${this.onKeydown}
             autocomplete="off"
           />
+          <span class="visually-hidden" id="cue"
+            >Results filter as you type. Use the up and down arrows to review them,
+            Enter to open, Escape to close.</span
+          >
           <kbd class="esa-entity-search__kbd typography-label-xs">ESC</kbd>
         </div>
 
@@ -402,6 +436,7 @@ export class EsaEntitySearch extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host { display: contents; }
 
@@ -443,10 +478,23 @@ export class EsaEntitySearch extends LitElement {
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
     }
+    /* The ring goes on the ROW, not the input. The input is chromeless by design
+       (it has no border of its own), so a ring drawn on it would float around bare
+       text; the row is the visible affordance. :focus-within rather than
+       :focus-visible for the same reason esa-text-field uses it — this is text
+       entry, where a ring on click is native behaviour and wanted.
+
+       Inset because the row runs edge to edge inside an overflow:hidden panel, so
+       an outline at positive offset would be clipped on both sides. */
+    .esa-entity-search__search:focus-within {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
+    }
     .esa-entity-search__search-icon { color: var(--color-content-default-muted, #7c7c7c); flex-shrink: 0; }
     .esa-entity-search__input {
       flex: 1;
       border: none;
+      /* Suppressed only because the row above paints the ring — never bare. */
       outline: none;
       color: var(--color-content-default, #171717);
       background: transparent;

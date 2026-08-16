@@ -5,6 +5,8 @@
   "description": "Ecology components — presentational primitives as .astro, interactive primitives as framework-agnostic Lit Web Components. Consumed by spoke repos.",
   "exports": {
     "./typography": "./src/typography.ts",
+    "./a11y": "./src/a11y.ts",
+    "./announcer": "./src/announcer.ts",
     "./*.astro": "./src/components/*.astro",
     "./*": "./src/components/*.ts"
   },

@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** Group label and segment text are both UI text (medium). The SELECTED segment
     steps up to semibold, which is what the -strong weight axis is for — it is not
@@ -282,6 +283,7 @@ export class EsaButtonToggle extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: flex;
@@ -373,8 +375,8 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
       position: relative;
       z-index: 1;
     }

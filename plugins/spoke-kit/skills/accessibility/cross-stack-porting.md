@@ -68,6 +68,12 @@ screen and every re-implemented component:
       colors, which takes you off the Radix scale (see SKILL.md §5). Text 4.5:1,
       large text 3:1, non-text/UI 3:1.
 - [ ] State is never conveyed by color alone.
+- [ ] Forced colors mode survives the port (see `forced-colors.md`): focus rings
+      use `outline`, not `box-shadow` alone; floating panels carry a border;
+      links keep an underline (`text-decoration-color: transparent`, never
+      `text-decoration: none`); icons inherit `currentColor`. A port that swaps
+      a native `<button>` for a `<div role="button">` loses its system colors
+      silently — forced colors reads elements, not roles.
 
 ### Verify
 - [ ] Keyboard-only walkthrough of every screen.

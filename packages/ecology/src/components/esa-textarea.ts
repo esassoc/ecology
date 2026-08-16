@@ -1,5 +1,26 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry — see esa-text-field.ts for why
+// a Lit component inlines the glyph rather than reaching for <EsaIcon>.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
 
 /** The label and value composites at each step of the control ramp. See
     the FORMS header in component-tokens.css for why the letters do not line up. */
@@ -34,6 +55,10 @@ export class EsaTextarea extends LitElement {
     autoResize: { type: Boolean, attribute: 'auto-resize', reflect: true },
     maxRows: { type: Number, attribute: 'max-rows' },
     value: { type: String },
+    minlength: { type: Number },
+    maxlength: { type: Number },
+    autocomplete: { type: String },
+    liveError: { type: Boolean, attribute: 'live-error' },
   };
 
   declare label: string;
@@ -49,8 +74,19 @@ export class EsaTextarea extends LitElement {
   declare autoResize: boolean;
   declare maxRows: number;
   declare value: string;
+  declare minlength: number | undefined;
+  declare maxlength: number | undefined;
+  /** Autofill hint. The only way to satisfy SC 1.3.5 Identify Input Purpose (AA). */
+  declare autocomplete: string;
+  /**
+   * Announce the error the moment it appears rather than only on focus. Off by default —
+   * see the long note on `esa-text-field.liveError` for why (the house pattern is
+   * validate-on-submit with `<esa-error-summary>`, and a live region per field races it).
+   */
+  declare liveError: boolean;
 
   private internals: ElementInternals;
+  private warnedNameless = false;
 
   constructor() {
     super();
@@ -65,6 +101,8 @@ export class EsaTextarea extends LitElement {
     this.autoResize = false;
     this.maxRows = 10;
     this.value = '';
+    this.autocomplete = '';
+    this.liveError = false;
     this.internals = this.attachInternals();
   }
 
@@ -79,22 +117,47 @@ export class EsaTextarea extends LitElement {
   updated(changed: Map<string, unknown>): void {
     if (changed.has('value')) this.internals.setFormValue(this.value);
     this.syncValidity();
+    this.warnIfNameless();
   }
 
   /**
-   * Constraint validation. `required` has to actually BLOCK submission, not just
-   * draw an asterisk and set aria-required — a required field the form happily
-   * submits empty is a promise the component does not keep.
+   * Constraint validation, MIRRORED from the inner textarea rather than hand-rolled.
+   * The inner control is in this shadow root and is therefore NOT a control of the outer
+   * form — the form sees only what `setValidity` reports here, so anything not mirrored
+   * simply does not exist as far as submission is concerned. See the fuller note in
+   * `esa-text-field.ts`; this file had the same defect with `minlength`/`maxlength`.
    */
   private syncValidity(): void {
-    if (!this.required || this.value) {
+    const inner = this.textareaEl;
+    if (!inner) return;
+    const v = inner.validity;
+    if (v.valid) {
       this.internals.setValidity({});
       return;
     }
+    const message =
+      v.valueMissing && this.label ? `Enter ${this.label}.` : inner.validationMessage;
     this.internals.setValidity(
-      { valueMissing: true },
-      this.label ? `Enter ${this.label}.` : 'Fill out this field.',
-      this.textareaEl ?? undefined,
+      {
+        valueMissing: v.valueMissing,
+        tooLong: v.tooLong,
+        tooShort: v.tooShort,
+        badInput: v.badInput,
+      },
+      message,
+      inner,
+    );
+  }
+
+  /** See esa-text-field.warnIfNameless — silent namelessness is the failure mode. */
+  private warnIfNameless(): void {
+    if (this.warnedNameless || this.label || this.getAttribute('aria-label')) return;
+    this.warnedNameless = true;
+    console.warn(
+      `⚠️  esa-textarea has no accessible name. Set \`label\` (preferred — it renders ` +
+        `visibly AND wires <label for>), or \`aria-label\`. \`placeholder\` is not a name: ` +
+        `it vanishes as soon as the user types.`,
+      this,
     );
   }
 
@@ -122,14 +185,41 @@ export class EsaTextarea extends LitElement {
     textarea.style.height = `${newHeight}px`;
   }
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
     const hasError = !!this.errorText;
+    // Error FIRST, then help — both, never one instead of the other. See esa-text-field.
+    const describedBy = [hasError ? 'error' : '', this.helpText ? 'help' : '']
+      .filter(Boolean)
+      .join(' ');
     return html`
       <div class="field ${hasError ? 'field--error' : ''} ${this.autoResize ? 'field--auto' : ''}">
         ${this.label
           ? html`<label class="label typography-${LABEL_TYPE[this.size]}" for="input"
               >${this.label}${this.required
-                ? html`<span class="required" aria-label="required">*</span>`
+                ? // aria-hidden, not aria-label — ARIA prohibits naming `generic`.
+                  html`<span class="required" aria-hidden="true">*</span>`
                 : null}</label
             >`
           : null}
@@ -141,20 +231,36 @@ export class EsaTextarea extends LitElement {
           ?disabled=${this.disabled}
           ?required=${this.required}
           rows=${this.rows}
-          aria-invalid=${hasError ? 'true' : 'false'}
+          minlength=${this.minlength ?? nothing}
+          maxlength=${this.maxlength ?? nothing}
+          autocomplete=${this.autocomplete || nothing}
+          name=${this.name || nothing}
+          aria-required=${this.required ? 'true' : nothing}
+          aria-invalid=${hasError ? 'true' : nothing}
+          aria-describedby=${describedBy || nothing}
           @input=${this.onInput}
         ></textarea>
-        ${hasError
-          ? html`<p class="error typography-body-sm">${this.errorText}</p>`
-          : this.helpText
-            ? html`<p class="help typography-body-sm">${this.helpText}</p>`
-            : null}
+
+        <!-- Both nodes always present so the live region pre-exists its content. -->
+        <p
+          class="error typography-body-sm ${hasError ? 'is-shown' : 'visually-hidden'}"
+          id="error"
+          role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+        >${hasError
+            ? html`${alertIcon}<span class="visually-hidden">Error: </span
+                ><span>${this.errorText}</span>`
+            : nothing}</p>
+        <p class="help typography-body-sm ${this.helpText ? 'is-shown' : 'visually-hidden'}" id="help"
+          >${this.helpText || nothing}</p
+        >
       </div>
     `;
   }
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_field-padding-y: var(--spacing-300, 0.75rem);
@@ -229,8 +335,8 @@ export class EsaTextarea extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width)
-        var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -257,17 +363,34 @@ export class EsaTextarea extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--form-error-border-color, #ef4444);
     }
 
-    /* Type comes from .typography-body-sm on the element. */
+    /* Type comes from .typography-body-sm on the element.
+
+       Both nodes are always in the DOM (the live region has to pre-exist its content),
+       so the gap is opt-IN via .is-shown rather than collapsed with :empty — Lit's
+       template whitespace defeats :empty in engines that follow Selectors L3. */
     .help,
     .error {
       margin: 0;
+    }
+    .help.is-shown,
+    .error.is-shown {
       margin-block-start: var(--form-help-gap, 4px);
     }
     .help {
       color: var(--form-help-color, #737373);
     }
+    /* Colour, icon AND a visually-hidden "Error:" — three signals, because colour
+       alone is SC 1.4.1 (Use of Color, Level A) and colour alone is what this had. */
     .error {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
+    }
+    .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
     }
   `,
   ];

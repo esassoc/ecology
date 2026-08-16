@@ -4,13 +4,15 @@ import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import AlertBox from '@esa/ecology/esa-alert-box.astro';
+import { withBase } from '@esa/docs/base';
 
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
   variant: "Tone — drives the background, border, and auto-mapped icon.",
   title: "Optional bold heading above the message.",
-  dismissable: "Shows a close button that hides the alert and emits a dismissed event.",
+  dismissable: "Shows a close button that hides the alert and emits a dismissed event. Dismissing moves focus to the next focusable element after the box, rather than dropping it to the top of the document.",
+  live: "Announce the box when it is injected into an already-loaded page. Off by default, and deliberately so — see Accessibility below. Ignored (with a console warning) when combined with dismissable, because a live region announces a button as bare text and gives no way to reach it.",
 };
 
 const events = [
@@ -60,10 +62,30 @@ const events = [
   </Section>
 
   <Section id="accessibility" title="Accessibility">
+    <h3>It is not a live region, despite the name</h3>
+    <p>
+      An alert box is the component most likely to be injected at runtime, so making it
+      <code>role="alert"</code> by default looks obvious. It is wrong for the general case,
+      for three reasons that compound:
+    </p>
+    <ul class="a11y">
+      <li>It takes a <strong>slot</strong>. Live regions announce raw text with no structure, so a slotted link or button is read as a run-on sentence with no roles. The component cannot see what you put in there.</li>
+      <li><code>dismissable</code> puts a <strong>control</strong> inside it. A live region does not take focus and cannot be navigated to, so the user is told a button exists and given no route to it. A message with a control in it is a dialog — use <a href={withBase('/components/esa-dialog')}>esa-dialog</a>.</li>
+      <li>Most alert boxes are <strong>present at page load</strong>, where there is no change for a live region to report — or worse, where some screen readers read it out on load as noise.</li>
+    </ul>
+    <p>
+      So <code>live</code> is opt-in. Turn it on only when all three hold: the box appears in
+      response to something the user did, it is not dismissable, and its slot is plain text.
+      <code>danger</code> then announces assertively (<code>role="alert"</code>); the other
+      variants wait for a pause (<code>role="status"</code>). Combining <code>live</code> with
+      <code>dismissable</code> is ignored and warns in the console.
+    </p>
+
+    <h3>Everything else</h3>
     <ul class="a11y">
       <li>Icons are auto-mapped per variant (info / circle-check / triangle-alert / circle-alert) and marked <code>aria-hidden</code>.</li>
       <li>The dismiss button has an <code>aria-label="Dismiss"</code>.</li>
-      <li>For time-sensitive alerts, wrap in a live region (<code>role="alert"</code> / <code>aria-live</code>) at the call site so screen readers announce it.</li>
+      <li>Dismissing moves focus to the next focusable element after the box. Hiding the box removes the button that had focus, and without this focus falls to <code>&lt;body&gt;</code> — silently returning a keyboard user to the top of the document.</li>
     </ul>
   </Section>
 

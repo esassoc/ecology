@@ -12,6 +12,10 @@
 //                 the dark TOKEN VALUES are the consumer's CSS, not baked here.
 import '@esa/tokens/tokens.css';
 import '@esa/tokens/component-tokens.css';
+// The focus ring used to be written out below, in this file only — which meant
+// the one correct page-level focus rule in the repo lived somewhere spokes never
+// receive. It is now @esa/tokens/focus.css and both consume the same definition.
+import '@esa/tokens/focus.css';
 import { withBase } from './base';
 import type { NavGroup } from './nav';
 
@@ -67,24 +71,17 @@ const showToggle = colorScheme === 'toggle';
       a { color: inherit; text-decoration: none; }
 
       /* ---------- Focus ----------
-         Until now this shell styled NO focus state at all, so every link in the
-         chrome fell back to the browser's default ring — blue in Safari and Chrome,
-         matching no theme, on the very site that exists to demonstrate the system.
+         The ring itself now comes from @esa/tokens/focus.css, imported above. It
+         was written out here, and ONLY here, until 2026-08-16 — which meant the
+         repo's one correct page-level focus rule lived in a docs-site file that
+         spokes never receive. Same rule, one definition, both consumers.
 
-         :focus-visible, not :focus, so the ring appears for keyboard and
-         programmatic focus but not on mouse click. The tokens are the same tier-3
-         hooks the esa-* components already use, so the chrome and the components
-         now show the SAME ring, and a spoke re-pointing its brand moves both. */
-      :where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
-        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, currentColor);
-        outline-offset: var(--focus-ring-offset, 2px);
-        border-radius: var(--radius-sm, 0.25rem);
-      }
-      /* Only suppress the UA ring where the rule above replaces it — never a bare
-         `outline: none`, which is how a focus state gets removed and not restored. */
-      :where(a, button, summary, input, select, textarea, [tabindex]):focus:not(:focus-visible) {
-        outline: none;
-      }
+         What stays here is the part that is genuinely this shell's: the topbar is
+         sticky at 56px, and when Tab scrolls a control into view the browser parks
+         it at the very top of the viewport — underneath that bar. This is SC 2.4.11
+         (Focus Not Obscured), and 76px is the bar plus the same 20px of breathing
+         room the heading offset below already uses. */
+      :root { --focus-scroll-margin: 76px; }
 
       /* ---------- App grid ---------- */
       .app { display: grid; grid-template-columns: 264px minmax(0, 1fr); min-height: 100vh; }

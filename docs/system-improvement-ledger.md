@@ -1284,3 +1284,398 @@ for keyboard, focus and target size.
   an `alt` attribute. *Action:* none. *Sink:* these are the two `check-a11y.mjs`
   rules with no judgment component, and the hook has evidently been holding them.
   *Priority:* resolved.
+
+## Source: the form validation pass (2026-08-16)
+Third topic in the batched accessibility review, after contrast + touch targets. Scope was
+narrow on purpose: how the kit tells a user a field is required, what format it wants, that
+they got it wrong, which field is wrong, and how to fix it. Unlike the contrast batch this
+one was FIXED, not just reported — the findings were mostly wiring, and wiring has one right
+answer. 11 findings, all resolved except the two noted at the end.
+
+- **The kit rendered error messages that assistive tech never read** · *Evidence:* only
+  **2 of 16** form-associated controls wired `aria-describedby` to their message node
+  (`esa-button-toggle`, `esa-input-tag`). The other five that HAD an `errorText` prop
+  rendered a red line with no `id` on it and no reference to it, so the message was visible,
+  correct, and invisible at the exact moment it was needed — when the user arrives at the
+  field to fix it. *Action:* all nine controls that collect a value now emit
+  `aria-describedby`, `aria-invalid` and (where the role allows) `aria-required`. Counts are
+  now describedby 9, invalid 9, required 8 · `lego` · **resolved 2026-08-16**
+
+- **`grep -l aria-required` returned 7 files when 2 set it, and that is a MEASUREMENT trap
+  worth naming** · *Evidence:* five files carried a shared comment reading "`required` has to
+  actually BLOCK submission, not just draw an asterisk and set `aria-required`". The phrase is
+  accurate prose about `setValidity`; it is also five false positives for any grep of the bare
+  name. Same shape as the `--form-*` miscount already in CLAUDE.md. *Action:* count
+  `aria-required=` **with the equals sign**. The comments are correct and were left alone —
+  the first instinct was to delete them as "misleading", which would have destroyed accurate
+  documentation to fix a bad query · `process` · **resolved 2026-08-16**
+
+- **The canonical form pattern instructed authors to produce unnamed controls** ·
+  *Evidence:* `patterns/form-section.astro` said "leave the control's own `label` unset so the
+  field isn't labeled twice" and demoed it six times, while `esa-form-field` renders a
+  `<label>` with no `for`, beside the slot rather than around it. A light-DOM label cannot
+  reach an input inside a shadow root, so following the documented pattern gave every control
+  no accessible name at all — SC 3.3.2 and 4.1.2, both Level A, failed before validation was
+  even reached. *Action:* prose corrected (in a parallel pass) and the specimens rewritten to
+  carry their own `label`. The wrapper is now documented as decorative · `docs` ·
+  **resolved 2026-08-16**
+
+- **`<esa-text-field type="email" value="not-an-email" required>` reported VALID and
+  submitted** · *Evidence:* `syncValidity()` hand-rolled `valueMissing` and carried a comment
+  saying format checking was "the inner native input's job". It is not — the inner input is in
+  the shadow root and is not a control of the outer form, so the form sees only what
+  `setValidity` reports. `checkValidity()` returned `true` on malformed input. *Action:*
+  validity is MIRRORED from the inner control in text-field, textarea and date-picker, which
+  picks up `typeMismatch`/`patternMismatch`/`tooShort`/`rangeOverflow` for free.
+  **This is a behaviour change** — spoke forms that silently accepted bad input will now
+  refuse to submit. No `migrations.json` row: nothing is renamed, so there is nothing to
+  rewrite · `lego` · **resolved 2026-08-16**
+
+- **Three defects have now landed on the same method, and the tell was identical each time** ·
+  *Evidence:* `syncValidity`/`setFormValue` previously produced "required was cosmetic in all 7
+  controls" (2026-08-14) and "a scripted value never reached the form in 8 of 12" (2026-08-14).
+  All three were a COMMENT describing a delegation that did not happen, which is why none was
+  caught by review — the comment reads as a design note, not as an unimplemented branch.
+  *Action:* none beyond the fixes. *Sink:* `process` — when a comment says another layer
+  handles something, check that the other layer can SEE the thing. Shadow boundaries are where
+  this assumption dies · **resolved 2026-08-16**
+
+- **The same defect immediately recurred in brand-new code** · *Evidence:* `esa-error-summary`
+  shipped with a comment stating "the form components each override `focus()` to forward to
+  their own inner control". None of them did, and none set `delegatesFocus`, so `.focus()` on
+  a form-associated custom element was a silent no-op — every summary link would scroll to its
+  field and leave focus on the link. *Action:* `focus()` overrides added to all 8 controls,
+  which makes the comment true. *Sink:* `process` — the interval between writing the lesson
+  above and re-committing it was under one hour · **resolved 2026-08-16**
+
+- **Error and help text were distinguished by COLOUR ALONE** · *Evidence:* every control
+  rendered `hasError ? <p class="error"> : <p class="help">` — same tag, same type role, same
+  slot, different custom property. SC 1.4.1 (Use of Color, Level A), as the kit-wide default.
+  `esa-field-error` was the only component with a non-colour indicator, its `icon` was OFF by
+  default, and it was instantiated **once** in the whole repo. *Action:* the error line now
+  carries an icon AND a visually-hidden "Error:" prefix in all nine; `esa-field-error`'s `icon`
+  defaults ON · `lego` · **resolved 2026-08-16**
+
+- **There was no `visually-hidden` utility, so the standard fix was not expressible** ·
+  *Evidence:* `grep -rn "visually-hidden\|sr-only"` over tokens, ecology and the site returned
+  nothing. *Action:* new `packages/tokens/src/a11y.css` + a `packages/ecology/src/a11y.ts` Lit
+  bridge, generated from the same source by `build.js` exactly as `typography` is — the clip
+  rect is fiddly enough that two hand-kept copies would drift, and the drift mode is someone
+  "simplifying" it to `display: none`, which hides it from the screen readers it exists for.
+  *Sink:* `hub-fix` — this was a prerequisite, not a nicety · **resolved 2026-08-16**
+
+- **A live region cannot announce content it was created with** · *Evidence:* `esa-field-error`
+  declared `role="alert"` AND `aria-live="polite"` — contradictory, since `alert` already
+  implies assertive — on an element that only exists when it has a message. A region has to
+  pre-exist its content for the mutation to be observed. It is also an `.astro` component
+  rendered at build time, so it can never be populated later; its doc page nonetheless claimed
+  the message "is announced when it appears". *Action:* the nine controls keep a PERSISTENT
+  empty message node (`.visually-hidden` when empty, so it stays in the accessibility tree
+  rather than `display: none`), gated behind a new `live-error` prop. `esa-field-error` drops
+  both attributes and is documented as server-rendered-errors-only · `lego` ·
+  **resolved 2026-08-16**
+
+- **`live-error` defaults OFF, which is the non-obvious half of the decision** · *Evidence:*
+  the house pattern is validate-on-submit with `<esa-error-summary>` taking focus. A live
+  region per field under that pattern fires an assertive announcement for EVERY invalid field
+  at once; assertive updates can clear each other's queue, so the user hears an arbitrary
+  subset in no guaranteed order while their focus is elsewhere. Pairing a live region with
+  `aria-describedby` on the same node also double-announces in JAWS. *Action:* off by default,
+  opt in per field for genuinely inline (on-blur) validation · `lego` · **resolved 2026-08-16**
+
+- **Option groups had no error channel at all, and their `role`s were the weak ones** ·
+  *Evidence:* `esa-radio-group` and `esa-checkbox-group` had no `required`, `errorText`,
+  `aria-required` or `aria-invalid`, and both put `aria-label={label}` on a `<div>` while ALSO
+  rendering the label visibly — a duplicated name that silently vanishes when `label` is empty.
+  *Action:* both now use a real `<fieldset>`/`<legend>` (measured to name correctly inside a
+  shadow root) with the full error channel. Radio group overrides to `role="radiogroup"`
+  because ARIA forbids `aria-required` on `group`; the checkbox group cannot, so its
+  requirement goes in the accessible name as "(select at least one)" — WCAG technique H90 ·
+  `lego` · **resolved 2026-08-16**
+
+- **Error no longer REPLACES help text** · *Evidence:* the kit's precedence deleted a field's
+  format instructions at the exact keystroke the format was got wrong. *Action:* both nodes
+  render; `aria-describedby="error help"` announces the error first, then the hint · `lego` ·
+  **resolved 2026-08-16**
+
+- **`autocomplete` was absent from every control, and it is a named AA criterion** ·
+  *Evidence:* SC 1.3.5 Identify Input Purpose can only be satisfied by `autocomplete`;
+  `type="email"` says what KIND of data, `autocomplete="email"` says WHOSE. It is also the
+  largest single error-PREVENTION affordance available, and matters disproportionately for
+  motor impairments. *Action:* `autocomplete`, `inputmode`, `pattern`, `minlength`, `maxlength`
+  forwarded to the inner control, and `name` with them — a `name` consumed only by
+  `ElementInternals` never reaches the DOM input, which is the quiet reason autofill "doesn't
+  work" on custom form controls · `lego` · **resolved 2026-08-16**
+
+- **`esa-date-picker` bound a `placeholder` browsers ignore, and an `aria-label` that beat its
+  own visible label** · *Evidence:* `<input type="date">` ignores `placeholder` outright, so
+  the prop appeared in the generated API table and did nothing. Separately,
+  `aria-label=${label || 'Date'}` was set unconditionally, and a measured test shows
+  `aria-label` on a date input BEATS an associated `<label for>` — so the visible label was
+  being silently discarded. *Action:* `aria-label` only when there is no visible label, a real
+  `<label for>` otherwise; `placeholder` kept (removing it is breaking) but now warns, per the
+  house shim pattern · `lego` · **resolved 2026-08-16**
+
+- **The axe audit is flaky on 13 pages, which matters because CLAUDE.md already warns it is
+  weak** · *Evidence:* a run reported `document-title` and `html-has-lang` failing on 13
+  `/foundations/*` pages. The built HTML for those pages contains both `lang="en"` and a
+  `<title>`; a prior run of the same build reported neither rule. *Action:* none.
+  *Sink:* `hub-fix` — the existing warning is that GREEN means little; flaky RED is the other
+  half, because it trains people to ignore the report. Probably an audit-before-ready race in
+  `scripts/a11y-audit.mjs`. *Priority:* medium.
+
+- **Two findings deliberately NOT fixed, so they are not mistaken for oversights** ·
+  *Evidence:* (1) neither option group does roving tabindex — every option is a tab stop, so a
+  10-option radio group is 10 of them, and APG wants arrow-key navigation. That is a keyboard
+  behaviour change, not validation wiring, and belongs with the deferred keyboard work
+  alongside `esa-date-picker`'s missing keyboard handling. (2) `esa-select` and `esa-combobox`
+  still lack `aria-controls` and `aria-activedescendant`, so their arrow-key highlight is
+  announced to nobody — the listbox APG gap named in the accessibility skill's §6, which is a
+  separate pass from this one. *Action:* none yet · `lego` · *Priority:* high for (2).
+
+- **Recorded decisions, so nobody "upgrades" them later** · `aria-errormessage` stays unused —
+  `aria-describedby` is the more robustly supported of the two today, per Roselli's testing.
+  Client-side validation LOGIC stays out of the hub; spokes bring it, and this pass is what
+  makes that contract real rather than nominal. Timing guidance is now house rule: validate on
+  blur at the earliest, always also on submit, and never on keypress — JAWS and VoiceOver do
+  not announce keypress-driven updates. No `optional` affordance exists; forms here are
+  all-required. Nothing warns against `disabled` on a submit button, which it should.
+
+## Source: the focus indicator pass (2026-08-16)
+
+Fifth topic in the batched accessibility review, after contrast, touch targets, status messages
+and form validation. Measured against the four criteria that govern focus indicators —
+SC 2.4.7 (Focus Visible), 1.4.11 (Non-Text Contrast), 2.4.13 (Focus Appearance) and
+2.4.11/2.4.12 (Focus Not Obscured). Every number below was run, not recalled.
+
+- **Four components had DELETED the focus ring outright** · *Evidence:* `esa-entity-search`,
+  `esa-search-panel`, `esa-command-palette` and `esa-combobox` each carried
+  `.<input> { border: none; outline: none; }` on a BASE class — unconditional, so the ring was
+  gone in every state. `grep -c ':focus'` was 0 in two of the four files. All four are Lit, so
+  the shadow boundary stopped any page-level rule from reaching them, and all four are the
+  SEARCH INPUT — the first thing a keyboard user lands on. A hard SC 2.4.7 failure.
+  *Action:* the ring moved to the bordered row each chromeless input sits in, via
+  `:focus-within` (matching the `esa-text-field` precedent for text entry) with an inset offset
+  because the rows are full-bleed inside `overflow: hidden` panels · `lego` · *Priority:* done.
+
+- **The guard could not see the shape the kit actually had** · *Evidence:* check-a11y's Check 4
+  had two regexes and BOTH required `:focus` in the selector, so a reset on a base class matched
+  neither. Verified by running the hook's own regexes against the literal rule: `focus-visible:
+  false | focus: false => flagged: false`. Four for four, the removals that existed were the
+  shape the guard was not written to catch — the same lesson as the `--form-*` miscount, where
+  the query decided the answer. *Action:* Check 4c added (unconditional reset on a selector the
+  same file proves lands on something tab-reachable), with two exemptions derived by sweeping all
+  66 components and keeping only the true positives: a `:focus-within` ring in the file (the
+  repair this rule recommends — without it the rule blocks its own fix) and a ring on the same
+  class in a `:focus` state. Plugin 1.17.0 → 1.18.0 · `plugin` · *Priority:* done.
+
+- **Three false positives in the EXISTING Check 4a, all on the files that get focus right** ·
+  *Evidence:* the rule matched `:focus:not(:focus-visible) { outline: none }` — the standard
+  backwards-compatible pairing — and matched a `:focus-visible` mentioned in PROSE above an
+  unrelated `outline: none`, because `[^{]*` runs happily from a comment into the next rule. It
+  also could not see that `esa-range-slider` moves its ring to the thumb pseudo-element. All
+  three fired on `@esa/tokens/focus.css`, the one file whose entire job is getting this right.
+  *Action:* comments stripped before the selector regexes run, `:not(:focus-visible)` normalised
+  away, and a pseudo-element exemption added. 10 new regression tests · `plugin` ·
+  *Priority:* done.
+
+- **THE SPOKE-VISIBLE CHANGE — the ring is now two bands** · *Evidence:* a brand-coloured ring
+  cannot be relied on to conform. The default measured **2.95:1** against the raised surface,
+  2.88:1 canvas, 2.66:1 sunken — all short of 3:1, and only 3.03:1 against pure white, which the
+  kit does not use as a surface. Worse, `--color-border-default-focus`'s own `$description`
+  recorded that number as a WIN ("lifts focus-ring contrast from 2.32:1 to 2.95:1"), so anyone
+  reading it concluded the ring was fine. It cannot be fixed by picking a better green either:
+  whatever a spoke chooses for its brand is chosen for brand reasons. Both demo themes passed
+  only by luck (beacon 5.04:1, qanat 5.63:1 — they picked darker brands), and the same audit
+  found they override just **3 of 26** brand-derived semantic roles, so any "spokes must also
+  override this" role would be forgotten exactly the way `--color-content-brand` already is.
+  *Action:* identity and contrast split onto separate bands. New tier-2
+  `--color-border-default-focus-halo` ({color.gray.12}) and tier-3 `--focus-ring-halo` +
+  `--focus-ring-halo-spread`; 52 call sites now paint outline-then-halo. The halo is outermost,
+  so it alone carries the 3:1 obligation: 15.9 / 15.5 / 14.3:1 against the three surfaces. This
+  is the guidance's universal focus indicator with the brand kept as the inner band. **A spoke
+  will see its focus ring gain a dark outer band.** No rename, so no `migrations.json` row;
+  `token-names.json` re-snapshotted (1227) · `lego` · *Priority:* done.
+
+- **Every form control lost its ring in forced-colors mode** · *Evidence:* `grep -rn
+  'forced-colors|-ms-high-contrast|forced-color-adjust'` across `packages/` and `apps/` returned
+  **zero hits**, while 14 components painted the ring as `box-shadow` after an `outline: none` —
+  text-field, textarea, select, combobox, date-picker, checkbox, checkbox-group, radio-group,
+  chip-group, button-toggle, input-tag, color-picker, file-upload, range-slider. Forced-colors
+  replaces box-shadows with system colours and retains outlines; that is the whole reason the
+  guidance prefers outlines. *Action:* two halves. A shared `@media (forced-colors: active)`
+  block in `a11y.css` (bridged into shadow roots via `a11y.ts`, `!important` because components
+  list it BEFORE their own styles), and the 19 box-shadow rings converted to outline + halo so
+  they survive without needing the fallback at all. Six components had to be wired to the shared
+  stylesheet · `lego` · *Priority:* done.
+
+- **`esa-filter-dropdown` had three problems in one rule** · *Evidence:* `box-shadow: 0 0 0 1px
+  var(--color-background-brand)` on `:focus` — 1px is half the area Focus Appearance asks for, it
+  read the raw brand token so a spoke re-pointing `--focus-ring-color` left this one field
+  behind, and `:focus` fired it on mouse. *Action:* rewritten to the house shape ·
+  `lego` · *Priority:* done.
+
+- **Nothing shipped a base focus rule to spokes** · *Evidence:* `@esa/tokens` exported
+  typography, layouts, component-tokens and a11y — no rule that paints the ring — and `grep -rn
+  focus packages/spoke-template/src` returned nothing. The light-DOM `.astro` components render
+  bare anchors (`esa-breadcrumbs.astro:37`, `esa-link-column.astro:26,31`) with no focus styling
+  of their own. The repo's ONE correct page-level focus rule lived in `packages/docs/src/
+  DocsShell.astro` — a docs-site file spokes never receive. *Action:* new
+  `packages/tokens/src/focus.css`, exported and imported by the spoke template; DocsShell and the
+  hub site now consume it instead of the shell keeping its own copy · `lego` · *Priority:* done.
+
+- **Focus Not Obscured was unaddressed** · *Evidence:* the docs shell has a 56px sticky topbar,
+  and the only `scroll-margin` in the repo was `scroll-margin-top: 76px` on an `h2` rule —
+  headings, not focusable elements. Tabbing to a control the browser scrolls to the top of the
+  viewport put it under the bar. *Action:* `focus.css` sets `scroll-margin-block-start` from
+  `--focus-scroll-margin`, defaulting to 0 so it is inert until a layout with sticky chrome opts
+  in; DocsShell sets 76px · `lego` · *Priority:* done.
+
+- **Focus was documented nowhere, by either skill** · *Evidence:* no `/foundations/focus` page,
+  and `grep -i focus` in `plugins/spoke-kit/skills/design-principles/` returned **zero hits** —
+  even though `skills/accessibility/SKILL.md:179` names design-principles as the owner of
+  "focus-ring visuals". Neither skill owned it. *Action:* new `/foundations/focus` (the two-band
+  recipe, the five tokens, outer vs inner rings, the forced-colors rule, the light-DOM/shadow-DOM
+  split, and a criterion-by-criterion table) plus a focus section in design-principles ·
+  `docs` · *Priority:* done.
+
+- **Measured and found NOT to be a problem, recorded so it is not re-opened** · *Evidence:* the
+  three inner rings (`outline-offset: -2px` on the command-palette item, tab and dropdown-menu
+  item) were flagged as possibly under Focus Appearance's minimum area. They are not. At
+  `outline-offset: -2px` with a 2px width the outline's OUTER edge lands exactly on the border
+  edge, so the ring rectangle is W×H and its area is `4W + 4H - 16` — short of the `4W + 4H`
+  formula by a constant 16px², the four corner squares, which the criterion's own definition of
+  perimeter ("not including shared pixels") already discounts. They meet it at any size.
+  *Action:* none · *Priority:* n/a.
+
+- **Deliberately NOT done, so they are not mistaken for oversights** · *Evidence:* (1) the ring
+  stays BRAND-coloured rather than becoming the plain black-and-white universal indicator — a
+  spoke's ring is part of its identity, and the halo is what makes keeping it safe. (2) No
+  `:focus-visible` polyfill; there is no IE support anywhere in this repo and the
+  `:focus:not(:focus-visible)` pairing in `focus.css` is the whole backwards-compat story.
+  (3) `esa-dialog` and `esa-side-dialog` keep `outline: none` on their programmatically-focused
+  panels, which is the OPPOSITE of the call `esa-error-summary` makes with a written rationale.
+  Check 4c deliberately does not adjudicate it: `tabindex="-1"` means the element is unreachable
+  by Tab, so whether a ring should paint on programmatic focus is change-of-context judgment, not
+  something provable from source. Worth settling one way in a later pass · *Priority:* low.
+
+- **Found by the new guard, outside this pass's scope** · *Evidence:* `esa-color-picker`,
+  `esa-input-tag` and `esa-range-slider` each still render a `<label>` inside their shadow root
+  that names nothing — no `for=`, no `id=` for an `aria-labelledby` reference, and no labelable
+  control wrapped. This is the forms-pass rule (`forms.md`) firing on components that pass did
+  not reach. *Action:* none taken here — it is naming work, not focus work · `lego` ·
+  *Priority:* high.
+
+- **axe is blind to all of this** · *Evidence:* `npm run a11y` reports nothing about focus
+  indicators — not their presence, not their contrast, not their size. It stayed green through
+  four deleted rings and a kit-wide forced-colors failure. *Action:* none possible; the note
+  belongs next to CLAUDE.md's existing "treat green as evidence of nothing much" ·
+  *Priority:* n/a.
+
+---
+
+## Source: the forced-colors audit (2026-08-16)
+Windows Contrast Themes (`@media (forced-colors: active)`) — ~4% of Windows machines, the
+platform's most-used inbox AT; WebAIM's Low Vision Survey puts high-contrast-mode use at
+51.4% of respondents. The mode force-adjusts every colour property to a user-chosen system
+palette and **deletes** `box-shadow`, `text-shadow`, and every non-`url()` `background-image`.
+It reads the **HTML element, never the ARIA role**.
+
+Baseline: `forced-colors`, `forced-color-adjust`, `-ms-high-contrast` and every CSS
+system-colour keyword (`Canvas`, `CanvasText`, `Highlight`, `HighlightText`, `ButtonFace`,
+`ButtonText`, `GrayText`, `LinkText`) appear **0 times** across all 66 components, both token
+packages and `apps/site`. Every finding below is therefore unmitigated.
+
+Numbers re-measured from source for this entry, not carried over from the first sweep — the
+first pass reported 15 broken focus rings by reading `outline: none` and stopping, missing the
+real `outline` two declarations below it in the same rule. The true count is 0.
+
+- **Focus rings already survive — the earlier focus pass fixed this before it was framed as a
+  forced-colors problem** · *Evidence:* zero components ring focus with `box-shadow` alone. Ten
+  (`esa-checkbox`, `esa-checkbox-group`, `esa-radio-group`, `esa-button-toggle`, `esa-chip-group`,
+  `esa-color-picker`, `esa-combobox`, `esa-dialog`, `esa-file-upload`, `esa-range-slider`) carry a
+  redundant `outline: none` immediately above a real `outline` in the same rule — dead code, no
+  behavioural effect. *Action:* the redundant line could be dropped in the batched pass · `hub-fix` ·
+  *Priority:* low.
+
+- **Eleven surfaces have no boundary at all once shadows are deleted** · *Evidence:* a rule with a
+  real `box-shadow` + a `background` and no real `border`: `esa-dialog` `.esa-dialog`,
+  `esa-confirm-dialog`, `esa-side-dialog` `.panel`, `esa-search-panel` `.panel`, `esa-tooltip`
+  (the file contains zero `border:` declarations), `esa-snackbar-item`, `esa-back-to-top` `.button`,
+  `esa-switch-toggle` `.thumb`, `esa-button-toggle` `.option--selected`, `esa-sidebar-nav`
+  `.link--active` (an *inset* box-shadow used as the active marker), `esa-tab-layout` pill/segmented
+  `.tab--active`. Overlays merge into the page; the switch thumb disappears into its track, taking
+  on/off with it. *Action:* `border: 1px solid transparent` — force-adjusted to a visible colour,
+  costs nothing in normal mode · `hub-fix` · *Priority:* high.
+  **NOT in this list, and worth recording:** `esa-card--elevated` sets `--_card-border: transparent`
+  against a real `border: 1px solid var(--_card-border)`, so it is **already correct** — a
+  transparent border is force-adjusted to a visible one. That is the fix, already shipped once.
+
+- **The kit's only gradient is load-bearing** · *Evidence:* `esa-range-slider` paints its value fill
+  with `linear-gradient(to right, brand 0 var(--fill-percent), border-default var(--fill-percent) 100%)`.
+  Non-`url()` `background-image` is forced to `none`, so the slider always reads empty. The thumb
+  survives (real 2px border). *Action:* a real filled child element, or expose the numeric value ·
+  `lego` · *Priority:* high.
+
+- **Eight widgets are ARIA on a non-native element, so they get no system styling** · *Evidence:*
+  `<span role="checkbox">` (`esa-checkbox`, `esa-checkbox-group`), `<span role="radio">`
+  (`esa-radio-group`), `<div role="button">` dropzone (`esa-file-upload`), `<div role="option">`
+  (`esa-select`, `esa-combobox`, `esa-filter-dropdown`), `<div role="progressbar">`
+  (`esa-progress-bar`). Plus `esa-button.astro`, which strips `href` from its `<a>` when disabled —
+  an anchor with no href is not a link element, so it forfeits `LinkText` too. None of these receive
+  `ButtonFace`/`ButtonText`/`GrayText`/`Highlight`. *Action:* explicit system-colour pairs under the
+  media query, or move to the native element · `lego` · *Priority:* high.
+
+- **Colour is the only channel for several states** · *Evidence:* selected `[role=option]` in
+  `esa-select`/`esa-combobox` is background+colour only (the checkmark renders **only** when
+  `multiple`); `esa-badge` dot mode renders no text at all — six variants are one 8×8 circle
+  distinguished purely by `--_badge-bg`; `esa-progress-bar` fill vs track is background-only with no
+  border on either, so every severity variant and every value look identical; `esa-pill`,
+  `esa-danger-zone` and `esa-stat` differentiate by colour alone. *Action:* a second channel — glyph,
+  weight, or border-width (width is not force-adjusted; colour is) · `lego` · *Priority:* high.
+
+- **Colour that IS content is not opted out** · *Evidence:* `esa-color-picker` paints both the
+  preview and every swatch with an inline `style="background-color: ${…}"` (lines 113 and 135), so in
+  forced colors every swatch renders identically and no colour is selectable. This is the one case
+  where `forced-color-adjust: none` is *correct* — better still, an inline `<svg>` with a `<title>`,
+  which is exempt from force-adjustment and supplies an accessible name at the same time ·
+  `lego` · *Priority:* medium.
+
+- **Already right, so nobody re-does it** · *Evidence:* **64/64** inline SVGs use
+  `stroke="currentColor"` with `fill="none"` and there are **zero** hardcoded icon colours in the
+  component library — icons inherit the force-adjusted text colour for free. **0** `text-shadow`
+  anywhere. `esa-alert-box`, `esa-snackbar-item`, `esa-field-error` and `esa-error-summary` each ship
+  a distinct per-variant glyph, so severity survives when the tint does not. 10 of 19 floating panels
+  already carry a border. *Action:* none · *Priority:* n/a.
+
+- **Disabled is dimmed, not signalled** · *Evidence:* 8 components put `aria-disabled` on a non-native
+  element (no `GrayText`); 16 express disabled with `opacity`. `opacity` is **not** force-adjusted, so
+  the dimming does survive — but a custom grey (`--color-content-disabled`) does not, and collapses
+  onto the same system colour as enabled text. *Action:* add `color: GrayText` under the query where
+  the native attribute is not available · `lego` · *Priority:* medium.
+
+- **The `prefers-reduced-motion` precedent does not transfer, and that is the architectural finding** ·
+  *Evidence:* reduced motion is handled once, at the token layer, by a generated `:root` block
+  (`packages/tokens/build.js`). Forced colors overrides at the **used-value** layer, downstream of every
+  token — no token value can bring `box-shadow` back. All 34 Lit components render into a shadow root
+  and **none** opts out (`createRenderRoot`: 0 hits repo-wide), so no global block reaches them either.
+  Rules must live inside each component's own `static styles`. The consolation: ~25 of the ~40 fixes
+  need no media query at all — a real `outline`, a transparent border and a persistent underline are
+  simply better default CSS. *Action:* do not look for a central lever; there isn't one · `process` ·
+  *Priority:* n/a.
+
+- **Shipped in this pass** · *Evidence:* `check-a11y` gained **check 9** — a focus ring painted only
+  with `box-shadow`, with no `outline` on the same rule, no outline ring on the same class elsewhere,
+  and no `forced-colors` block in the file. Swept over all 66 components: **0 flagged, 0 false
+  positives**, so it lands as a ratchet against regression rather than a cleanup. 8 regression tests in
+  `scripts/lib/check-a11y.test.mjs`. New skill reference `forced-colors.md`, linked from SKILL.md §6 and
+  `cross-stack-porting.md`. *Action:* done · `workflow` + `skill` · *Priority:* n/a.
+  Implementation note worth keeping: value tests read **declarations**, never
+  `/outline\s*:\s*(?!none\b)/` — `\s*` backtracks to zero width, the lookahead lands on `" none"`
+  instead of `"none"`, and `outline: none` reports as a real ring. That bug made the first draft of the
+  rule silently inert. The same shape exists today in check 4's `hasRingAlternative` (line ~301).
+
+- **axe cannot see any of this** · *Evidence:* axe-core has no forced-colors rule, so `npm run a11y`
+  reports clean on a page that is unusable in a contrast theme. This is the third thing it cannot do,
+  after name quality and live-region liveness. *Action:* none possible; verification is a Windows VM or
+  Edge DevTools ▸ Rendering ▸ *Emulate forced-colors* · *Priority:* n/a.

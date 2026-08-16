@@ -1,5 +1,6 @@
 import { LitElement, html, css, svg } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** A choice label is the option's own text, not the group's heading — prose
     weight, so it reads body-* rather than label-*. See the FORMS header in
@@ -106,6 +107,7 @@ export class EsaCheckbox extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_checkbox-size: 20px;
@@ -162,9 +164,9 @@ export class EsaCheckbox extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box:focus-visible {
-      outline: none;
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .icon {

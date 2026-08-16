@@ -1,5 +1,27 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry. A Lit component cannot import
+// the .astro <EsaIcon>, and the registry is a plain string map meant for `set:html`
+// — inlining the one glyph is cheaper than routing unsafeSVG through here.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
 
 /**
  * The two composites a control needs at each step of the size ramp.
@@ -55,6 +77,12 @@ export class EsaTextField extends LitElement {
     value: { type: String },
     prefix: { type: String },
     suffix: { type: String },
+    pattern: { type: String },
+    minlength: { type: Number },
+    maxlength: { type: Number },
+    autocomplete: { type: String },
+    inputmode: { type: String },
+    liveError: { type: Boolean, attribute: 'live-error' },
   };
 
   declare label: string;
@@ -70,8 +98,37 @@ export class EsaTextField extends LitElement {
   declare value: string;
   declare prefix: string;
   declare suffix: string;
+  /** Regular expression the value must match — forwarded to the inner input. */
+  declare pattern: string;
+  declare minlength: number | undefined;
+  declare maxlength: number | undefined;
+  /**
+   * Autofill hint (`email`, `given-name`, `one-time-code`, …). This is the ONLY way to
+   * satisfy SC 1.3.5 Identify Input Purpose (AA): `type="email"` says what KIND of data
+   * the field wants, `autocomplete="email"` says WHOSE. It also turns on browser autofill,
+   * which is a large win for motor impairments. Use the real fixed values, not invented ones.
+   */
+  declare autocomplete: string;
+  /** Mobile keyboard hint (`numeric`, `decimal`, `tel`, …). Usability only — enforces nothing. */
+  declare inputmode: string;
+  /**
+   * Announce the error the moment it appears, instead of only when the field is focused.
+   *
+   * OFF by default, and that default is the considered one. The house pattern is
+   * validate-on-submit with an `<esa-error-summary>` that takes focus — under which a
+   * live region here would fire an assertive announcement for EVERY invalid field at
+   * once, racing the summary the user was just sent to. `aria-describedby` already
+   * carries the message when they arrive at the field.
+   *
+   * Turn it on for fields you validate INLINE (on blur), where the appearing message is
+   * the only signal and there is exactly one of it. Note that JAWS may then announce it
+   * twice — once live, once as the description on focus — which is the known cost of
+   * pairing a live region with `aria-describedby` on the same node.
+   */
+  declare liveError: boolean;
 
   private internals: ElementInternals;
+  private warnedNameless = false;
 
   constructor() {
     super();
@@ -86,6 +143,10 @@ export class EsaTextField extends LitElement {
     this.value = '';
     this.prefix = '';
     this.suffix = '';
+    this.pattern = '';
+    this.autocomplete = '';
+    this.inputmode = '';
+    this.liveError = false;
     this.internals = this.attachInternals();
   }
 
@@ -100,25 +161,70 @@ export class EsaTextField extends LitElement {
   updated(changed: Map<string, unknown>): void {
     if (changed.has('value')) this.internals.setFormValue(this.value);
     this.syncValidity();
+    this.warnIfNameless();
   }
 
   /**
-   * Constraint validation. `required` has to actually BLOCK submission, not just
-   * draw an asterisk and set aria-required — a required field the form happily
-   * submits empty is a promise the component does not keep. Only `valueMissing`
-   * is enforced here; format checking for `type="email"` etc. is the inner
-   * native input's job and is not mirrored onto the host.
+   * Constraint validation, MIRRORED from the inner input.
+   *
+   * This used to hand-roll `valueMissing` and carried a comment saying format checking
+   * for `type="email"` was "the inner native input's job". It is not — the inner input
+   * lives in this shadow root and is not a control of the outer form, so the form sees
+   * ONLY what `setValidity` reports here. The result was that
+   * `<esa-text-field type="email" value="not-an-email" required>` reported VALID and
+   * submitted, while `checkValidity()` returned true. Three separate defects have now
+   * landed on this one method (cosmetic `required`, unsynced scripted `value`, this) —
+   * the shape to watch for is a comment describing a delegation that does not happen.
+   *
+   * Reading `inner.validity` gets `valueMissing`, `typeMismatch`, `patternMismatch`,
+   * `tooShort`/`tooLong` and the rest for free, and keeps them correct as the forwarded
+   * constraint attributes grow. The flags are copied explicitly rather than passing the
+   * live `ValidityState` through: `setValidity` takes a `ValidityStateFlags` dictionary,
+   * and the two interfaces are only incidentally compatible.
    */
   private syncValidity(): void {
-    if (!this.required || this.value) {
+    const inner = this.renderRoot?.querySelector<HTMLInputElement>('.input');
+    if (!inner) return;
+    const v = inner.validity;
+    if (v.valid) {
       this.internals.setValidity({});
       return;
     }
-    const anchor = this.renderRoot?.querySelector<HTMLElement>('.input') ?? undefined;
+    // A missing REQUIRED value gets our own wording; everything else keeps the browser's,
+    // which already names the constraint it broke and is localised.
+    const message =
+      v.valueMissing && this.label ? `Enter ${this.label}.` : inner.validationMessage;
     this.internals.setValidity(
-      { valueMissing: true },
-      this.label ? `Enter ${this.label}.` : 'Fill out this field.',
-      anchor,
+      {
+        valueMissing: v.valueMissing,
+        typeMismatch: v.typeMismatch,
+        patternMismatch: v.patternMismatch,
+        tooLong: v.tooLong,
+        tooShort: v.tooShort,
+        rangeUnderflow: v.rangeUnderflow,
+        rangeOverflow: v.rangeOverflow,
+        stepMismatch: v.stepMismatch,
+        badInput: v.badInput,
+      },
+      message,
+      inner,
+    );
+  }
+
+  /**
+   * A control with no name announces "edit text, blank". Nothing renders red and no test
+   * fails, which is why this warns — and why it checks `aria-label` too, since that is
+   * the legitimate way to run without a visible label. `placeholder` is deliberately NOT
+   * accepted as a name: it disappears the moment the user types.
+   */
+  private warnIfNameless(): void {
+    if (this.warnedNameless || this.label || this.getAttribute('aria-label')) return;
+    this.warnedNameless = true;
+    console.warn(
+      `⚠️  esa-text-field has no accessible name. Set \`label\` (preferred — it renders ` +
+        `visibly AND wires <label for>), or \`aria-label\` if the name is carried elsewhere. ` +
+        `\`placeholder\` is not a name: it vanishes as soon as the user types.`,
+      this,
     );
   }
 
@@ -130,20 +236,54 @@ export class EsaTextField extends LitElement {
     );
   };
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
     const hasError = !!this.errorText;
+    // BOTH ids, always, in that order. The error is announced first because it is what
+    // changed; the help text follows because a format hint is most needed at exactly the
+    // moment the format was got wrong. The old code swapped one for the other, so a user
+    // who mistyped a password lost the requirements list on the keystroke they needed it.
+    const describedBy = [hasError ? 'error' : '', this.helpText ? 'help' : '']
+      .filter(Boolean)
+      .join(' ');
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
           ? html`<label class="label typography-${LABEL_TYPE[this.size]}" for="input"
               >${this.label}${this.required
-                ? html`<span class="required" aria-label="required">*</span>`
+                ? // aria-hidden, NOT aria-label="required" — ARIA prohibits naming
+                  // `generic`, so the old attribute was inert in some engines and a
+                  // duplicate name in others. `aria-required` below is what carries it.
+                  html`<span class="required" aria-hidden="true">*</span>`
                 : null}</label
             >`
           : null}
         <div class="control typography-${FIELD_TYPE[this.size]}">
           ${this.prefix
-            ? html`<span class="affix affix--prefix" aria-hidden="true">${this.prefix}</span>`
+            ? // NOT aria-hidden. A "$" or "%" affix changes what the number MEANS;
+              // hiding it from assistive tech loses the unit.
+              html`<span class="affix affix--prefix">${this.prefix}</span>`
             : null}
           <input
             id="input"
@@ -153,18 +293,37 @@ export class EsaTextField extends LitElement {
             placeholder=${this.placeholder}
             ?disabled=${this.disabled}
             ?required=${this.required}
-            aria-invalid=${hasError ? 'true' : 'false'}
+            pattern=${this.pattern || nothing}
+            minlength=${this.minlength ?? nothing}
+            maxlength=${this.maxlength ?? nothing}
+            autocomplete=${this.autocomplete || nothing}
+            inputmode=${this.inputmode || nothing}
+            name=${this.name || nothing}
+            aria-required=${this.required ? 'true' : nothing}
+            aria-invalid=${hasError ? 'true' : nothing}
+            aria-describedby=${describedBy || nothing}
             @input=${this.onInput}
           />
-          ${this.suffix
-            ? html`<span class="affix affix--suffix" aria-hidden="true">${this.suffix}</span>`
-            : null}
+          ${this.suffix ? html`<span class="affix affix--suffix">${this.suffix}</span>` : null}
         </div>
-        ${hasError
-          ? html`<p class="error typography-body-sm">${this.errorText}</p>`
-          : this.helpText
-            ? html`<p class="help typography-body-sm">${this.helpText}</p>`
-            : null}
+
+        <!-- BOTH nodes render unconditionally. A live region that is created at the same
+             moment as its text is routinely not announced — it has to already exist for
+             the mutation to be observed. :empty collapses the gap so a clean field
+             looks untouched, WITHOUT display:none, which would drop it from the
+             accessibility tree and defeat the whole arrangement. -->
+        <p
+          class="error typography-body-sm ${hasError ? 'is-shown' : 'visually-hidden'}"
+          id="error"
+          role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+        >${hasError
+            ? html`${alertIcon}<span class="visually-hidden">Error: </span
+                ><span>${this.errorText}</span>`
+            : nothing}</p>
+        <p class="help typography-body-sm ${this.helpText ? 'is-shown' : 'visually-hidden'}" id="help"
+          >${this.helpText || nothing}</p
+        >
       </div>
     `;
   }
@@ -174,6 +333,7 @@ export class EsaTextField extends LitElement {
      class does not cross the boundary, so the definitions come with us. */
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_field-padding-y: var(--spacing-300, 0.75rem);
@@ -251,7 +411,8 @@ export class EsaTextField extends LitElement {
     }
     .control:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .input {
@@ -325,16 +486,41 @@ export class EsaTextField extends LitElement {
 
     /* Type comes from .typography-body-sm — help and error are one size at every
        control step, so they name the composite directly rather than mapping. */
+    /* Both nodes are ALWAYS in the DOM (see render()), so the gap is opt-IN rather
+       than collapsed away. Deliberately not display:none when empty — that removes
+       the node from the accessibility tree, and a live region that is not in the tree
+       cannot announce anything. An empty <p> with no margin occupies no space.
+
+       .is-shown rather than :empty: Lit's template whitespace leaves a text node
+       inside the element, and browsers still disagree about whether :empty ignores
+       whitespace-only children (Selectors L4 says yes, L3 says no). A class is
+       deterministic; :empty here would silently leave 4px of dead space under every
+       clean field in some engines and not others. */
     .help,
     .error {
       margin: 0;
+    }
+    .help.is-shown,
+    .error.is-shown {
       margin-block-start: var(--form-help-gap, 4px);
     }
     .help {
       color: var(--form-help-color, #737373);
     }
+    /* The error line is distinguished from the help line by THREE things — colour, the
+       icon, and the visually-hidden "Error:" prefix. Colour alone is SC 1.4.1 (Use of
+       Color, Level A), and colour alone is exactly what these two had: same tag, same
+       type role, same position, different custom property. */
     .error {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
+    }
+    .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
     }
   `,
   ];

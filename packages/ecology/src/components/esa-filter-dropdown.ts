@@ -1,5 +1,7 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 // Options render as esa-checkbox rows (the ui-filter pattern) — import to register it.
 import './esa-checkbox';
 
@@ -233,6 +235,23 @@ export class EsaFilterDropdown extends LitElement {
     );
   }
 
+  /**
+   * Announce only the transition INTO no-matches. See esa-combobox.announceEmptyResults
+   * for the reasoning: the cue already sets the expectation that the list filters, so
+   * a per-keystroke count is noise — but a query that matches nothing has no other
+   * signal for someone who cannot see the list empty out.
+   */
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this._open && !!this._searchText.trim() && this.filteredOptions.length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No options match', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
   render() {
     const options = this.filteredOptions;
     const triggerRole = this.hasSelection
@@ -259,17 +278,36 @@ export class EsaFilterDropdown extends LitElement {
         </button>
 
         ${this._open
-          ? html`<div class="esa-filter-dropdown__panel" role="listbox">
+          ? html`<div class="esa-filter-dropdown__panel" role="listbox" id="listbox">
               <div class="esa-filter-dropdown__search">
+                <!-- The search input had no accessible name — only a placeholder,
+                     which is not a name and vanishes as soon as you type. The cue is
+                     what makes announcing the option list on every keystroke
+                     unnecessary. aria-activedescendant is what makes arrow-key
+                     navigation audible: focus stays here, so without it the
+                     highlighted option changes silently. Both IDREFs resolve inside
+                     this shadow root, which is the only place they can. -->
                 <input
                   class="esa-filter-dropdown__search-input typography-${FIELD_TYPE[this.size]}"
                   type="text"
+                  role="combobox"
+                  aria-expanded="true"
+                  aria-controls="listbox"
+                  aria-label=${'Filter ' + this.label}
+                  aria-describedby="cue"
+                  aria-activedescendant=${this._highlighted >= 0
+                    ? `opt-${this._highlighted}`
+                    : nothing}
                   placeholder=${this.placeholder || 'Search...'}
                   .value=${this._searchText}
                   @input=${this.onSearchInput}
                   @keydown=${this.onKeydown}
                   autocomplete="off"
                 />
+                <span class="visually-hidden" id="cue"
+                  >Options filter as you type. Use the up and down arrows to review
+                  them, Enter to toggle one.</span
+                >
               </div>
               <div class="esa-filter-dropdown__options" role="group" aria-label=${this.label}>
                 ${options.length === 0
@@ -280,6 +318,7 @@ export class EsaFilterDropdown extends LitElement {
                           ${option.disabled ? 'esa-filter-dropdown__option--disabled' : ''}
                           ${this._highlighted === i ? 'esa-filter-dropdown__option--highlighted' : ''}"
                         role="option"
+                        id="opt-${i}"
                         aria-selected=${this.isSelected(option.value)}
                         aria-disabled=${option.disabled ?? false}
                         @click=${() => this.selectOption(option)}
@@ -320,6 +359,7 @@ export class EsaFilterDropdown extends LitElement {
      carries the .typography-* composite classes across the shadow boundary. */
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: inline-block;
@@ -467,11 +507,19 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--radius-sm, 0.25rem);
       background: var(--color-background-elevation-raised, #fff);
       color: var(--color-content-default, #171717);
+      /* Suppressed only because the :focus rule below paints the ring. */
       outline: none;
     }
-    .esa-filter-dropdown__search-input:focus {
-      border-color: var(--color-background-brand, #43608a);
-      box-shadow: 0 0 0 1px var(--color-background-brand, #43608a);
+    /* This ring was three problems in one rule until 2026-08-16: it was 1px, which
+       is half the area Focus Appearance asks for; it read --color-background-brand
+       directly, so a spoke re-pointing --focus-ring-color left this one field
+       behind; and it fired on mouse. Now the house shape. :focus-visible is safe
+       here even though it is a text input — engines match :focus-visible on text
+       entry whether it was clicked or tabbed to. */
+    .esa-filter-dropdown__search-input:focus-visible {
+      border-color: var(--form-border-color-focus, #43608a);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .esa-filter-dropdown__options {

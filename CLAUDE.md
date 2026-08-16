@@ -229,7 +229,97 @@ npm install
 npm run dev            # build tokens, then serve the site
 npm run build          # tokens + static site build
 npm run build:tokens   # just compile tokens → packages/tokens/dist/
+npm test               # token-name guard + hook regressions (scripts/**/*.test.mjs)
+npm run a11y           # axe-core over every built page (needs `npm run build` first)
+npm run a11y:live      # live-region structure audit (needs `npm run build` first)
 ```
+
+`npm run a11y` serves `apps/site/dist` on an ephemeral port, waits for custom
+elements to upgrade (auditing pre-hydration HTML is how you get a meaningless
+all-clear on a kit that is half web components), and reports grouped by rule. It
+does NOT gate — pass `--strict` for that. `--url http://localhost:4322` audits the
+dev server instead, which is the only way to reach debug pages (they return `[]`
+from `getStaticPaths`, so the build contains none of them).
+
+**Treat green as evidence of nothing much.** On 2026-08-16 it reported 5 rules
+across 84 pages and found **zero** naming failures in the `esa-*` components —
+while a manual audit found orphaned `<label>`s in six of eight text-entry
+components and nameless options in every checkbox and radio group. axe cannot see
+a `<label>` wrapping a `<span role="checkbox">`, cannot see a name that vanishes
+when the user types, and cannot see the keyboard at all. The judgment layer is
+`plugins/spoke-kit/skills/accessibility/` (start at `forms.md`).
+
+`npm run a11y:live` is the second thing axe cannot do. axe validates a live
+region's ATTRIBUTES and has no opinion on whether it will ever announce anything
+— which is the exact failure this kit shipped: `<span role="status"
+aria-label="Loading"></span>` on every spinner, for months, announcing nothing,
+with a clean axe run throughout. It walks the FLATTENED tree (shadow roots
+included, post-upgrade) and asserts the announcer invariants: exactly two
+regions and both owned by the announcer, none inside a shadow root, none
+permanently empty, no interactive control inside one, no politeness
+contradiction. It proves structure only — nothing automated proves an
+announcement reaches a screen reader. That needs NerdeRegion plus NVDA/Firefox
+and VoiceOver/Safari.
+
+**Forced colors is the third thing axe cannot do**, and unlike the other two there is
+no script to run: axe-core has no forced-colors rule at all, so `npm run a11y` reports
+clean on a page that is unusable in Windows Contrast Themes. As of the 2026-08-16 audit
+the kit has **zero** forced-colors support — `forced-colors`, `forced-color-adjust` and
+every system-colour keyword appear 0 times across all 66 components and both token
+packages. The findings are logged in `docs/system-improvement-ledger.md` and deferred to
+the batched accessibility pass; the judgment layer is
+`plugins/spoke-kit/skills/accessibility/forced-colors.md`.
+
+Two things about it that surprise people, and that no token can fix:
+- **It overrides at the USED-VALUE layer, downstream of every token.** The
+  `prefers-reduced-motion` trick — one generated `:root` block in `build.js` — does not
+  transfer. `box-shadow` and non-`url()` `background-image` are forced to `none`
+  whatever value you gave them, and all 34 Lit components are in shadow roots that no
+  global block reaches. Rules go inside each component's own `static styles`.
+- **It reads the HTML ELEMENT, never the ARIA role.** `<div role="button"
+  aria-disabled>` gets none of the system styling `<button disabled>` gets free, which
+  is a live cost for the eight `esa-*` widgets built that way.
+  A transparent `border` becomes VISIBLE (border-color is force-adjusted), which is why
+  most fixes need no media query at all. `esa-card--elevated` already does this.
+
+The one deterministic slice is enforced: `check-a11y` **check 9** blocks a focus ring
+painted only with `box-shadow`. It swept the 66 components at 0 flagged / 0 false
+positives, so it is a ratchet, not a cleanup.
+
+## Status messages — there is ONE announcer, and it is the last resort
+`packages/ecology/src/announcer.ts` owns the kit's ONLY two ARIA live regions —
+one polite, one assertive, in the LIGHT DOM, mounted before anything happens.
+Components call `announce(msg, { assertive })`; **no component writes
+`aria-live`.** Four reasons, each of which was a real bug here: a region created
+in the same tick as its text does not announce; regions interfere with each
+other (assertive can clear the polite queue), so the ceiling is ~2 per page;
+observation across a shadow boundary is unreliable (worst Safari/VoiceOver, and
+the toast's text was TWO roots deep); and re-setting `textContent` to the string
+it already holds is not a mutation, so a repeated message announces once.
+
+Light DOM also means **no cross-root reference is needed** — a component imports
+the function and the singleton mutates its own text. That matters because IDREFs
+never cross a shadow boundary in any engine.
+
+**Reach for a live region LAST.** In order: (1) an instructional cue via
+`aria-describedby` — the six filtering components use one, which is what makes
+per-keystroke announcements unnecessary; (2) moving focus — a change of context
+AT already surfaces, so SC 4.1.3 does not even apply, and this is what
+`esa-error-summary` does; (3) an ARIA state property (`aria-expanded`,
+`aria-valuenow`, `aria-busy`); (4) then `announce()`.
+
+Two consequences that surprise people:
+- **`esa-snackbar-container.duration` defaults to `0` (persistent)** as of
+  2026-08-16, down from `5000`. A timer the user cannot adjust is SC 2.2.1,
+  **Level A**. Auto-dismiss is opt-in per call. This is a behaviour change no
+  `migrations.json` row can express — the four kinds are all RENAMES — so it
+  warns once at runtime instead.
+- **A message with a control in it is a dialog, not a status message.** Live
+  regions announce raw text with no roles and cannot be focused or navigated to,
+  so a toast "Undo" is a bare word with no route to it. `check-a11y` blocks it.
+
+The full contract is
+`plugins/spoke-kit/skills/accessibility/status-messages.md`.
 
 ## Parallelism
 Component work parallelizes well (each component = independent files). Default to
@@ -246,8 +336,12 @@ composed from Ecology. Patterns that prove broadly useful get promoted back up h
 This repo is also a **Claude Code plugin marketplace** (`.claude-plugin/marketplace.json`).
 The **`spoke-kit`** plugin (`plugins/spoke-kit/`) ships everything Claude needs in a
 spoke: skills (`component-first`, `design-principles` — the canonical aesthetic/token
-rules, `spoke-init`, `spoke-precommit-review`), Node PreToolUse hooks
-(`check-component-first` — no bespoke UI primitives; `guard-hub-writes` — spoke
+rules, `accessibility` — the a11y judgment layer, whose `forms.md` is the naming/
+describedby/grouping contract for anything that collects a value, `spoke-init`,
+`spoke-precommit-review`), Node PreToolUse hooks
+(`check-component-first` — no bespoke UI primitives; `check-a11y` — the five
+deterministic a11y failures, and unlike the others it fires in the HUB TOO, since
+these components are what teams copy; `guard-hub-writes` — spoke
 sessions cannot edit this hub, even via the `node_modules/@esa/ecology` symlink;
 escape token `hub-edit-approved:` requires explicit human approval), a
 SessionStart hook (`check-hub-state` — warns spoke sessions when this checkout

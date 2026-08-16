@@ -1,0 +1,286 @@
+diff --git a/packages/ecology/src/components/esa-alert-box.astro b/packages/ecology/src/components/esa-alert-box.astro
+index 1e6d3e1..a436e47 100644
+--- a/packages/ecology/src/components/esa-alert-box.astro
++++ b/packages/ecology/src/components/esa-alert-box.astro
+@@ -183,0 +244 @@ const iconPath = ICON_PATHS[variant];
++    box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-back-to-top.ts b/packages/ecology/src/components/esa-back-to-top.ts
+index 8fe0698..eebe439 100644
+--- a/packages/ecology/src/components/esa-back-to-top.ts
++++ b/packages/ecology/src/components/esa-back-to-top.ts
+@@ -158,0 +159 @@ export class EsaBackToTop extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-button-toggle.ts b/packages/ecology/src/components/esa-button-toggle.ts
+index 06189ad..0730383 100644
+--- a/packages/ecology/src/components/esa-button-toggle.ts
++++ b/packages/ecology/src/components/esa-button-toggle.ts
+@@ -376,2 +378,3 @@ export class EsaButtonToggle extends LitElement {
+-      outline: none;
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-button.astro b/packages/ecology/src/components/esa-button.astro
+index ca3b45b..cf54263 100644
+--- a/packages/ecology/src/components/esa-button.astro
++++ b/packages/ecology/src/components/esa-button.astro
+@@ -457,0 +458 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
++    box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -478,0 +480 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
++    box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-checkbox-group.ts b/packages/ecology/src/components/esa-checkbox-group.ts
+index 5ad7918..d548fb3 100644
+--- a/packages/ecology/src/components/esa-checkbox-group.ts
++++ b/packages/ecology/src/components/esa-checkbox-group.ts
+@@ -233 +361,0 @@ export class EsaCheckboxGroup extends LitElement {
+-      outline: none;
+@@ -235,2 +363,3 @@ export class EsaCheckboxGroup extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width)
+-        var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-checkbox.ts b/packages/ecology/src/components/esa-checkbox.ts
+index 512245a..690fed2 100644
+--- a/packages/ecology/src/components/esa-checkbox.ts
++++ b/packages/ecology/src/components/esa-checkbox.ts
+@@ -165 +166,0 @@ export class EsaCheckbox extends LitElement {
+-      outline: none;
+@@ -167 +168,3 @@ export class EsaCheckbox extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-chip-group.ts b/packages/ecology/src/components/esa-chip-group.ts
+index 29ceb10..5b611d5 100644
+--- a/packages/ecology/src/components/esa-chip-group.ts
++++ b/packages/ecology/src/components/esa-chip-group.ts
+@@ -294,2 +296,3 @@ export class EsaChipGroup extends LitElement {
+-      outline: none;
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-color-picker.ts b/packages/ecology/src/components/esa-color-picker.ts
+index 7876886..94a77fc 100644
+--- a/packages/ecology/src/components/esa-color-picker.ts
++++ b/packages/ecology/src/components/esa-color-picker.ts
+@@ -226 +228,3 @@ export class EsaColorPicker extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -246 +250,3 @@ export class EsaColorPicker extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -287,2 +293,3 @@ export class EsaColorPicker extends LitElement {
+-      outline: none;
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-combobox.ts b/packages/ecology/src/components/esa-combobox.ts
+index 73c0530..978bb5b 100644
+--- a/packages/ecology/src/components/esa-combobox.ts
++++ b/packages/ecology/src/components/esa-combobox.ts
+@@ -638 +822,3 @@ export class EsaCombobox extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -705,0 +892 @@ export class EsaCombobox extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -741,2 +928,3 @@ export class EsaCombobox extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+-      outline: none;
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -918,0 +1118 @@ export class EsaCombobox extends LitElement {
++      box-shadow: 0 0 0 calc(1px + var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-command-palette.ts b/packages/ecology/src/components/esa-command-palette.ts
+index 6d7358d..bdae77f 100644
+--- a/packages/ecology/src/components/esa-command-palette.ts
++++ b/packages/ecology/src/components/esa-command-palette.ts
+@@ -311,0 +356 @@ export class EsaCommandPalette extends LitElement {
++      box-shadow: inset 0 0 0 calc(var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-confirm-dialog.ts b/packages/ecology/src/components/esa-confirm-dialog.ts
+index 91237cb..14ca46d 100644
+--- a/packages/ecology/src/components/esa-confirm-dialog.ts
++++ b/packages/ecology/src/components/esa-confirm-dialog.ts
+@@ -253,0 +254 @@ export class EsaConfirmDialog extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -312,0 +314 @@ export class EsaConfirmDialog extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-date-picker.ts b/packages/ecology/src/components/esa-date-picker.ts
+index 312d995..a66ef49 100644
+--- a/packages/ecology/src/components/esa-date-picker.ts
++++ b/packages/ecology/src/components/esa-date-picker.ts
+@@ -205 +336,3 @@ export class EsaDatePicker extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-dialog.ts b/packages/ecology/src/components/esa-dialog.ts
+index ab25507..fd40ab2 100644
+--- a/packages/ecology/src/components/esa-dialog.ts
++++ b/packages/ecology/src/components/esa-dialog.ts
+@@ -264,0 +265 @@ export class EsaDialog extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-dropdown-menu.ts b/packages/ecology/src/components/esa-dropdown-menu.ts
+index 89a1acb..065f737 100644
+--- a/packages/ecology/src/components/esa-dropdown-menu.ts
++++ b/packages/ecology/src/components/esa-dropdown-menu.ts
+@@ -187,0 +188 @@ export class EsaDropdownMenu extends LitElement {
++      box-shadow: inset 0 0 0 calc(var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-file-list.ts b/packages/ecology/src/components/esa-file-list.ts
+index 65007b8..9112634 100644
+--- a/packages/ecology/src/components/esa-file-list.ts
++++ b/packages/ecology/src/components/esa-file-list.ts
+@@ -193,0 +194 @@ export class EsaFileList extends LitElement {
++      box-shadow: 0 0 0 calc(1px + var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-file-upload.ts b/packages/ecology/src/components/esa-file-upload.ts
+index d7375aa..b812139 100644
+--- a/packages/ecology/src/components/esa-file-upload.ts
++++ b/packages/ecology/src/components/esa-file-upload.ts
+@@ -268 +289,0 @@ export class EsaFileUpload extends LitElement {
+-      outline: none;
+@@ -270 +291,3 @@ export class EsaFileUpload extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -359,0 +383 @@ export class EsaFileUpload extends LitElement {
++      box-shadow: 0 0 0 calc(1px + var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-filter-clear-button.astro b/packages/ecology/src/components/esa-filter-clear-button.astro
+index 3ca0797..4022f8f 100644
+--- a/packages/ecology/src/components/esa-filter-clear-button.astro
++++ b/packages/ecology/src/components/esa-filter-clear-button.astro
+@@ -79,0 +80 @@ import '@esa/tokens/typography.css';
++    box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-filter-dropdown.ts b/packages/ecology/src/components/esa-filter-dropdown.ts
+index e1f4ca3..2295878 100644
+--- a/packages/ecology/src/components/esa-filter-dropdown.ts
++++ b/packages/ecology/src/components/esa-filter-dropdown.ts
+@@ -386,0 +427 @@ export class EsaFilterDropdown extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-filter-pills.astro b/packages/ecology/src/components/esa-filter-pills.astro
+index 1f83ae4..dd51f90 100644
+--- a/packages/ecology/src/components/esa-filter-pills.astro
++++ b/packages/ecology/src/components/esa-filter-pills.astro
+@@ -135,0 +136 @@ import '@esa/tokens/typography.css';
++    box-shadow: 0 0 0 calc(1px + var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-header-nav.astro b/packages/ecology/src/components/esa-header-nav.astro
+index fdf37c4..ef83dab 100644
+--- a/packages/ecology/src/components/esa-header-nav.astro
++++ b/packages/ecology/src/components/esa-header-nav.astro
+@@ -162,0 +163 @@ function initialsFor(u: EsaHeaderNavUser): string {
++    box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-input-tag.ts b/packages/ecology/src/components/esa-input-tag.ts
+index b4a7421..04c1575 100644
+--- a/packages/ecology/src/components/esa-input-tag.ts
++++ b/packages/ecology/src/components/esa-input-tag.ts
+@@ -530 +581,3 @@ export class EsaInputTag extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -611,0 +665 @@ export class EsaInputTag extends LitElement {
++      box-shadow: 0 0 0 calc(1px + var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-pagination.ts b/packages/ecology/src/components/esa-pagination.ts
+index 7e40c3f..51779b3 100644
+--- a/packages/ecology/src/components/esa-pagination.ts
++++ b/packages/ecology/src/components/esa-pagination.ts
+@@ -218,0 +245 @@ export class EsaPagination extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -248,0 +276 @@ export class EsaPagination extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-pill.astro b/packages/ecology/src/components/esa-pill.astro
+index d046169..4d77454 100644
+--- a/packages/ecology/src/components/esa-pill.astro
++++ b/packages/ecology/src/components/esa-pill.astro
+@@ -198,0 +199 @@ const cls = [
++    box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-radio-group.ts b/packages/ecology/src/components/esa-radio-group.ts
+index 8e4926a..0c09a1e 100644
+--- a/packages/ecology/src/components/esa-radio-group.ts
++++ b/packages/ecology/src/components/esa-radio-group.ts
+@@ -200 +349,0 @@ export class EsaRadioGroup extends LitElement {
+-      outline: none;
+@@ -202,2 +351,3 @@ export class EsaRadioGroup extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width)
+-        var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-range-slider.ts b/packages/ecology/src/components/esa-range-slider.ts
+index a3ffe95..af01705 100644
+--- a/packages/ecology/src/components/esa-range-slider.ts
++++ b/packages/ecology/src/components/esa-range-slider.ts
+@@ -207 +209,3 @@ export class EsaRangeSlider extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -210 +214,3 @@ export class EsaRangeSlider extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-select.ts b/packages/ecology/src/components/esa-select.ts
+index 3290795..f41fac2 100644
+--- a/packages/ecology/src/components/esa-select.ts
++++ b/packages/ecology/src/components/esa-select.ts
+@@ -632 +774,3 @@ export class EsaSelect extends LitElement {
+-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -713 +857,3 @@ export class EsaSelect extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -865,0 +1012 @@ export class EsaSelect extends LitElement {
++      box-shadow: 0 0 0 calc(1px + var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-sidebar-nav.ts b/packages/ecology/src/components/esa-sidebar-nav.ts
+index 25f4cd2..57ea2b6 100644
+--- a/packages/ecology/src/components/esa-sidebar-nav.ts
++++ b/packages/ecology/src/components/esa-sidebar-nav.ts
+@@ -333,0 +334 @@ export class EsaSidebarNav extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+@@ -389,0 +391 @@ export class EsaSidebarNav extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-switch-toggle.ts b/packages/ecology/src/components/esa-switch-toggle.ts
+index f4717c4..cd5ae66 100644
+--- a/packages/ecology/src/components/esa-switch-toggle.ts
++++ b/packages/ecology/src/components/esa-switch-toggle.ts
+@@ -161,0 +162 @@ export class EsaSwitchToggle extends LitElement {
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-tab-layout.ts b/packages/ecology/src/components/esa-tab-layout.ts
+index a5fe57e..897450a 100644
+--- a/packages/ecology/src/components/esa-tab-layout.ts
++++ b/packages/ecology/src/components/esa-tab-layout.ts
+@@ -222,0 +223 @@ export class EsaTabLayout extends LitElement {
++      box-shadow: inset 0 0 0 calc(var(--focus-ring-width) * 2) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-text-field.ts b/packages/ecology/src/components/esa-text-field.ts
+index 7446ad8..c8191de 100644
+--- a/packages/ecology/src/components/esa-text-field.ts
++++ b/packages/ecology/src/components/esa-text-field.ts
+@@ -254 +414,3 @@ export class EsaTextField extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+diff --git a/packages/ecology/src/components/esa-textarea.ts b/packages/ecology/src/components/esa-textarea.ts
+index 8b74ee3..ed8ceb3 100644
+--- a/packages/ecology/src/components/esa-textarea.ts
++++ b/packages/ecology/src/components/esa-textarea.ts
+@@ -232,2 +338,3 @@ export class EsaTextarea extends LitElement {
+-      box-shadow: 0 0 0 var(--focus-ring-width)
+-        var(--focus-ring-color);
++      outline: var(--focus-ring-width) solid var(--focus-ring-color);
++      outline-offset: var(--focus-ring-offset);
++      box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);

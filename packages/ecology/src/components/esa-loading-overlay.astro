@@ -6,6 +6,20 @@
 // @if(active) → class list + conditional render. The spinner markup is inlined
 // (mirrors esa-loading-spinner size="lg"). Place inside a `position: relative`
 // container so the absolute backdrop fills it.
+//
+// A11Y: the spinner used to carry `role="status" aria-label="Loading"` while `message`
+// rendered in a <p> OUTSIDE it. Two failures in one line. `role="status"` is a live
+// region, and a live region announces CHANGES to its contents — the spinner span is
+// permanently empty, so it never announced anything. And the one piece of real text
+// was outside the region, so even a working region would not have read it.
+//
+// Now the backdrop is a single named graphic (`role="img"` + the message as its name)
+// with `aria-busy`, and the visual content is `aria-hidden` so the name is not read
+// twice. Persistent and re-readable, which a live region is not.
+//
+// This does NOT announce when loading starts or finishes — this component cannot know
+// that, because `active` is a build-time prop with no client runtime here. Whatever
+// owns the loading state calls `announce()` (../announcer.ts) at both edges.
 interface Props {
   active?: boolean;
   message?: string;
@@ -24,9 +38,16 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
 ---
 <div class={cls}>
   {active && (
-    <div class="esa-loading-overlay__backdrop">
-      <div class="esa-loading-overlay__content">
-        <span class="esa-loading-overlay__spinner" role="status" aria-label="Loading"></span>
+    <div
+      class="esa-loading-overlay__backdrop"
+      role="img"
+      aria-label={message || 'Loading'}
+      aria-busy="true"
+    >
+      {/* The spinner is decorative HERE — the backdrop above already carries the
+          name. Two names for one state is noise. */}
+      <div class="esa-loading-overlay__content" aria-hidden="true">
+        <span class="esa-loading-overlay__spinner"></span>
         {message && <p class="esa-loading-overlay__message typography-body-sm">{message}</p>}
       </div>
     </div>
