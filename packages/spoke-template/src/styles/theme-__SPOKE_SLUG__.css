@@ -111,14 +111,14 @@
 
      Never re-point --radius-100/200/… either: those are primitives and moving one
      moves everything downstream. Move the ROLE. */
-  --radius-control: /* __FILL__ small controls, badges, pills */ var(--radius-100);
-  --radius-surface: /* __FILL__ inputs, menus, panels — the most-used role */ var(--radius-100);
-  --radius-card:    /* __FILL__ cards, collapsibles */ var(--radius-200);
-  --radius-overlay: /* __FILL__ dialogs, command palette */ var(--radius-200);
+  --radius-xs:   /* __FILL__ swatches, inline markers */                var(--radius-050);
+  --radius-sm:   /* __FILL__ inputs/buttons at xs+sm, badges, kbd */     var(--radius-100);
+  --radius-md:   /* __FILL__ the default corner — the one to move first */ var(--radius-200);
+  --radius-lg:   /* __FILL__ dialogs, command palette */                 var(--radius-400);
 
   /* Tier 3 is for a component that must diverge from the roles above — e.g.
      inputs flatter than everything else. Delete if this spoke doesn't need it. */
-  /* --form-radius-md: var(--radius-050); */
+  /* --button-radius-md: var(--radius-pill); *//* buttons only, not fields */
 
   /* ===== (6) --button-on-warning — text color on a filled warning button =====
      Set to #fff if this spoke's warning fill is dark enough for white text;

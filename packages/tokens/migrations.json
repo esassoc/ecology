@@ -1380,6 +1380,54 @@
         ]
       ],
       "why": "ADDED AND RETIRED THE SAME DAY, deliberately, and the round trip is the point. These four existed because badge, pill, filter-pill and chip-group are single-line text in a box sized by padding, and no composite in the kit set line-height 1 — so each named a composite and then replaced its leading. A tier-3 hook made that deviation themeable, which is better than a raw --line-height-none read, but it did not make it go away.\n\nFOUR COMPONENTS WANTING IDENTICAL BEHAVIOUR IS AN INTENT, and spelling it four times hides that. The count would have reached twelve — every field, trigger and keycap has the same shape. That is the argument for tier 2: not that the hooks were wrong individually, but that each one is a small defeat, and twelve of them would have buried the fact that the system was missing a word. The word is `microcopy` — the small functional text a UI is built from, which sits IN a box rather than flowing in a column, and therefore carries no leading. See semantic/typography.json.\n\nNO ALIAS, AND NONE IS POSSIBLE. An alias re-points a name at another TOKEN; the replacement here is a CLASS, and build.js emits aliases only for kind:\"token\" pairs anyway. A spoke that declared one of these to retune chip density should instead re-point the composite it is actually using — --typography-microcopy-md-line-height and its siblings are tier 2 and overridable.\n\nREALISTICALLY ZERO EXPOSURE: these shipped for a matter of hours and no spoke has pulled a release containing them. The row is written anyway, because the guard is only worth having if it is fed every time — a rename that skips the row emits no alias, rewrites nothing in a spoke, and reports success. Writing it when the blast radius is nil is what keeps it trustworthy when the blast radius is not."
+    },
+    {
+      "id": "radius-roles-to-scale",
+      "kind": "token",
+      "since": "2026-08-16",
+      "why": "RADIUS IS A SCALE, NOT A SET OF ROLES, and the role layer was asserting distinctions it did not deliver. --radius-200 and --radius-300 are the same 0.5rem, so --radius-surface and --radius-card resolved to the identical number; five roles carried four values. Both shipped themes re-pointed exactly ONE of the five (--radius-surface: 6px in beacon, 10px in qanat) and nothing ever touched control/card/overlay/pill — which produced a live defect rather than a dormant one: in qanat a dropdown was 10px while the card behind it stayed 8px, because --radius-card pointed at --radius-300 and did not follow. Nobody intends a card to be less round than the menu in front of it.\n\nTHE ARGUMENT FOR A SCALE AT TIER 2 IS SPACING. Spacing has no semantic tier at all — it is a CORE set consumed directly, and nobody invented --spacing-card-gap. Colour earns roles because `danger` cannot be derived from a number; a corner can. What radius has that spacing does not is that themes DO move it, and primitives never move — so radius needs a themeable layer. It just never needed a ROLE layer. This is a documented exception to SPEC.md's tier-2-is-intent rule; the spec now carries it so nobody re-litigates it in six months.\n\n--radius-pill is NOT renamed. `full` is already taken at tier 1 (--radius-full: 9999px), and pill is a shape rather than a step — a squared-off brand re-points it to --radius-sm without touching the ramp. Every pair below is value-neutral. See also form-radius-to-radius-scale, which this unblocks: --form-radius-* existed only because tier 2 had no size axis.",
+      "pairs": [
+        [
+          "--radius-control",
+          "--radius-sm"
+        ],
+        [
+          "--radius-surface",
+          "--radius-md"
+        ],
+        [
+          "--radius-card",
+          "--radius-md"
+        ],
+        [
+          "--radius-overlay",
+          "--radius-lg"
+        ]
+      ]
+    },
+    {
+      "id": "form-radius-to-radius-scale",
+      "kind": "token",
+      "since": "2026-08-16",
+      "why": "THE LAST OF THE --form-* RAMP, and it fell for the reason the others did not. --form-height-*, --form-padding-* and --form-font-size-* were retired on 2026-08-14 as flat passthroughs; --form-radius-* was kept because it was NOT one — it encoded a mapping (xs/sm to the small corner, md/lg to the default one) that 13 components would otherwise each restate. That defense does not survive the source. The 13 already restate it, one line per size; they just restate it through a --form-* spelling, and the substitution is the same line count either way.\n\nWHAT THE HOOK ACTUALLY DID WAS HIDE THE MAPPING. Four names carried two values, and the read sites believed otherwise: of 49, thirteen carried literal fallbacks describing a 4/6/8/10 ramp (6px at sm in seven places, 10px at lg in six) that the tokens never produced. Seven components rendered 2px off their own fallback whenever component-tokens.css was absent, and nobody noticed — which is what a hook that 'encodes a mapping' exists to prevent. Fallbacks are normalised to the real values in the same pass.\n\nIt also never bounded its readers: esa-button and esa-button-group are not forms. The namespace test in SPEC.md — does the prefix bound who reads it? — fails here exactly as it failed for --form-bg. With radius-roles-to-scale landing a size axis at tier 2, the hook has no job left: a spoke re-points --radius-sm/--radius-md and gets the same lever with fewer names. Value-neutral at every step.",
+      "pairs": [
+        [
+          "--form-radius-xs",
+          "--radius-sm"
+        ],
+        [
+          "--form-radius-sm",
+          "--radius-sm"
+        ],
+        [
+          "--form-radius-md",
+          "--radius-md"
+        ],
+        [
+          "--form-radius-lg",
+          "--radius-md"
+        ]
+      ]
     }
   ]
 }

@@ -1192,3 +1192,95 @@ reads 0 in all three property groups for the first time.
   why: the set has no dark-scheme counterpart because black-alpha and white-alpha
   wash correctly over either ground. A role that needs no theme override is a role
   nothing can silently break. *Priority:* resolved.
+
+---
+
+## Source: post-canvas-move audit (2026-08-16)
+Measured after `background-default` moved gray-2 → gray-1 on 2026-08-15. The token's
+own `$description` asked for exactly this check; the numbers are worse in the dark
+scheme than that note anticipated.
+
+- **`esa-card--elevated` has no working separation mechanism in the dark scheme** ·
+  *Evidence:* the variant sets `--_card-border: transparent` and leans entirely on
+  `--elevation-2` (`esa-card.astro:126-129`), which resolves to
+  `0 2px 12px 0 rgba(0,0,0,0.04)` — 4% BLACK. In the light scheme that shadow lands
+  at `#f2f2f2` on a `#fcfcfc` canvas: **1.091**, faint but present. In the dark
+  scheme it lands at `#101010` on `#111111`: **1.008**. Black on near-black is not a
+  shadow, it is nothing. The card's own value separation is `#191919` on `#111111` =
+  **1.074**. So in dark mode the elevated variant separates from the page by neither
+  border, nor value, nor shadow. `--shadow-color-100` has no `[data-scheme='dark']`
+  override in `apps/site/src/styles/docs-dark.css`, which is why the shadow ramp
+  crosses into dark unchanged. *Action:* NOT fixed — the choice between giving
+  elevated a dark-scheme border, overriding the shadow ramp per scheme, or moving the
+  elevated rung up the value ladder is a design decision, and contrast work is
+  batched. *Sink:* `hub-fix` — pair every shadow-based affordance with a value-based
+  one, or scope the shadow ramp per scheme. A shadow is a light-scheme device that
+  silently no-ops on dark ground. *Priority:* high (a shipped variant that renders as
+  nothing).
+
+- **The default and outlined variants are fine, and that is why this went unnoticed** ·
+  *Evidence:* both keep the 1px `--color-border-default` — `#cecece` on `#fcfcfc` =
+  **1.534** light, `#3a3a3a` on `#191919` = **1.546** dark. Near-identical in both
+  schemes, which is the border ramp doing its job. Only the variant that opts OUT of
+  the border is exposed. *Action:* none. *Sink:* when a canvas moves, audit the
+  variants that decline the default affordance first — they are the ones with nothing
+  to fall back to. *Priority:* resolved.
+
+---
+
+## Source: the batched accessibility pass (2026-08-16)
+The contrast + touch-target batch, run across all 64 components together rather than
+piecemeal. Reported, not fixed — the fixes are design decisions and belong in one
+deliberate pass. `scripts/check-contrast.mjs --hub` for the token pairs; source audit
+for keyboard, focus and target size.
+
+- **Seven AA text-contrast failures in the hub defaults, and six share one cause** ·
+  *Evidence:* `content-link` on raised 2.95, `content-on-brand` on brand 2.95,
+  `content-on-accent` 2.90, `content-on-ai` 3.50, `content-on-utility-info` 3.18,
+  `content-on-utility-danger` 3.81, `content-utility-warning` on warning-subtle 4.43.
+  Warnings alongside: `content-muted` on raised 3.70, `content-disabled` 2.91,
+  the focus ring 2.95, brand-on-raised 2.95. *Action:* none yet. *Sink:* `hub-fix` —
+  every `-on-*` failure is white text on a Radix **step 9** fill, and step 9 is
+  engineered for 3:1 (UI components and large text), not 4.5:1 body text. So this is
+  not seven independent bugs: it is one decision about what step a solid fill uses,
+  or an admission that button labels are large text. Fixing them one at a time will
+  produce seven different answers. *Priority:* high.
+
+- **`esa-date-picker` has no keyboard handling of any kind** · *Evidence:* zero
+  `keydown` listeners, zero key comparisons, zero `.focus()` calls in the whole file.
+  The calendar popup cannot be opened, navigated, or dismissed from the keyboard.
+  *Action:* none yet. *Sink:* `lego` — WCAG 2.1.1 Keyboard is Level A, and this is a
+  form control. It is the single most serious finding in this pass and is not in the
+  same category as the contrast numbers. *Priority:* highest.
+
+- **The three true modals are complete; the nine non-modal popups return focus
+  nowhere** · *Evidence:* `esa-dialog`, `esa-side-dialog` and `esa-confirm-dialog`
+  each have Escape + a Tab trap + focus return + `aria-modal`. The other nine
+  (dropdown-menu, command-palette, popover, combobox, date-picker, entity-search,
+  filter-dropdown, nav-dropdown, tooltip) have no focus return to their trigger, and
+  three have no Escape at all: date-picker, nav-dropdown, tooltip. Tooltip is a named
+  AA failure on its own — WCAG 1.4.13 requires hover/focus content to be dismissible.
+  *Action:* none yet. *Sink:* `lego`. *Priority:* high for the three missing Escape,
+  medium for focus return.
+
+- **Two focus rings suppressed with no alternative** · *Evidence:* `.input` in
+  `esa-search-panel` and `.esa-entity-search__input` both declare `outline: none`
+  with no `box-shadow` ring and no `:focus-within` on a wrapper. The other 18 files
+  containing `outline: none` are all legitimate — `esa-textarea`, `esa-text-field`
+  and `esa-date-picker` substitute a box-shadow ring, and `esa-side-dialog:171` puts
+  it on the programmatically-focused panel, which is correct. *Action:* none yet.
+  *Sink:* `hub-fix` — note that `check-a11y.mjs` BLOCKS exactly this, but only fires
+  on Write/Edit, so code written before the hook existed was never scanned. A
+  one-shot sweep is what finds these; the hook only holds the line. *Priority:* high.
+
+- **`esa-pill__remove` is a 16x16 tap target** · *Evidence:* explicit
+  `width: 16px; height: 16px; padding: 0`. WCAG 2.5.8 (AA) sets the floor at 24x24.
+  `esa-filter-pills` has the same shape — `padding: 0` on the button with a 16x16
+  icon inside. `esa-tab-layout`'s 20x20 is a count badge, not interactive, and is
+  not a finding. *Action:* none yet. *Sink:* `lego`. *Priority:* medium.
+
+- **Two things came back clean, which is worth recording so they are not re-audited** ·
+  *Evidence:* zero positive `tabindex` anywhere in the 64, and zero `<img>` without
+  an `alt` attribute. *Action:* none. *Sink:* these are the two `check-a11y.mjs`
+  rules with no judgment component, and the hook has evidently been holding them.
+  *Priority:* resolved.

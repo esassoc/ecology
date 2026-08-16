@@ -90,7 +90,7 @@ export class EsaSnackbarItem extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-radius: var(--snackbar-item-radius, var(--radius-surface, 0.5rem));
+      border-radius: var(--snackbar-item-radius, var(--radius-md, 0.5rem));
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       background: var(--color-background-default-knockout);
       color: var(--snackbar-item-color, var(--color-content-default-knockout, #ffffff));
@@ -118,7 +118,7 @@ export class EsaSnackbarItem extends LitElement {
       flex-shrink: 0;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: none;
-      border-radius: var(--radius-control, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
       /* THE WHITE ALPHA IS CORRECT HERE AND SHOULD NOT BECOME A TOKEN.
          This button sits on FIVE different grounds — the knocked-out default
          plus the success, warning, danger and info fills below — and an alpha
@@ -143,7 +143,7 @@ export class EsaSnackbarItem extends LitElement {
       width: 24px;
       height: 24px;
       border: none;
-      border-radius: var(--radius-control, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
       background: transparent;
       color: inherit;
       cursor: pointer;

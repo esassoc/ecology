@@ -1089,7 +1089,7 @@ export const grammars = {
   rubric: '--eco-<tier>-<component|category|special>-<variant>-<property>[-<state>]',
   current: [
     'component:  --<component>[-<part>][-<variant>]-<property>[-<state>]',
-    'category:   --<category>-<property>-<size>            (--form-radius-md)',
+    'category:   --<category>-<property>-<size>            (--button-radius-md)',
     'special:    --focus-ring-<property>                    (rubric-shaped, tier-ambiguous)',
     'unplaced:   --<property>                               (--backdrop-filter, --fill-percent)',
   ],

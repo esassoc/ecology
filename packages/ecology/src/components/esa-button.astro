@@ -272,7 +272,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     /* Size tokens — md default. */
     --_btn-pad-y: var(--spacing-300, 0.75rem);
     --_btn-padding-x: var(--spacing-300, 0.75rem);
-    --_btn-radius: var(--form-radius-md, 6px);
+    --_btn-radius: var(--button-radius-md, 6px);
     /* Color tokens — primary default.
        --_accent      = fill / border color (step 9)
        --_accent-text = text color for outline/dashed (step 11 of the ramp)
@@ -288,9 +288,9 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   }
 
   /* ---------- Sizes ---------- */
-  .esa-button--xs { --_btn-pad-y: var(--spacing-200, 0.5rem); --_btn-padding-x: var(--spacing-200, 0.5rem);  --_btn-radius: var(--form-radius-xs, 4px); }
-  .esa-button--sm { --_btn-pad-y: var(--spacing-250, 0.625rem); --_btn-padding-x: var(--spacing-250, 0.625rem); --_btn-radius: var(--form-radius-sm, 4px); }
-  .esa-button--lg { --_btn-pad-y: var(--spacing-400, 1rem); --_btn-padding-x: var(--spacing-400, 1rem); --_btn-radius: var(--form-radius-lg, 8px); }
+  .esa-button--xs { --_btn-pad-y: var(--spacing-200, 0.5rem); --_btn-padding-x: var(--spacing-200, 0.5rem);  --_btn-radius: var(--button-radius-xs, 4px); }
+  .esa-button--sm { --_btn-pad-y: var(--spacing-250, 0.625rem); --_btn-padding-x: var(--spacing-250, 0.625rem); --_btn-radius: var(--button-radius-sm, 4px); }
+  .esa-button--lg { --_btn-pad-y: var(--spacing-400, 1rem); --_btn-padding-x: var(--spacing-400, 1rem); --_btn-radius: var(--button-radius-lg, 8px); }
 
   /* sm is NOT height-locked to the form scale — standalone small buttons get relaxed
      vertical padding (6px block) instead of matching input height. Icon-only keeps a

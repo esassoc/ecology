@@ -78,7 +78,7 @@ const showToggle = colorScheme === 'toggle';
       :where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
         outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, currentColor);
         outline-offset: var(--focus-ring-offset, 2px);
-        border-radius: var(--radius-control, 4px);
+        border-radius: var(--radius-sm, 0.25rem);
       }
       /* Only suppress the UA ring where the rule above replaces it — never a bare
          `outline: none`, which is how a focus state gets removed and not restored. */

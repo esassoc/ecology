@@ -79,7 +79,7 @@ const STRADDLE_COST: Record<string, string> = {
   color:
     'The big one. A raw ramp step and a semantic role are spelled the same way, so `--color-gray-3` and `--color-background-elevation-sunken` are indistinguishable in a diff. SPEC.md calls reaching past tier 2 “the bug”; nothing in the name announces that you just did it.',
   radius:
-    '`--radius-200` (a ramp step) and `--radius-surface` (a role) differ only by whether the last segment is a number. This is the exact violation SPEC.md uses as its worked example — `border-radius: var(--radius-200)` — and the name gives a reviewer nothing to catch it with.',
+    '`--radius-200` (a ramp step) and `--radius-md` (the tier-2 step) differ only by whether the last segment is a number — and since 2026-08-16 they are two spellings of the SAME ramp, which sharpens this finding rather than resolving it. This is the exact violation SPEC.md uses as its worked example — `border-radius: var(--radius-200)` — and the name gives a reviewer nothing to catch it with.',
   font:
     'Reduced but not closed, and honestly it was partly self-inflicted. Moving `--font-sans`/`--font-mono`/`--font-weight-<role>` to tier 2 took the roles out of tier 1; renaming `--type-size-*` to `--font-size-*` then put a NEW pair in collision — `--font-size-200` (tier 1) beside `--font-size-ui-md` (tier 2). That trade was made deliberately: the old name carried a homonym the rubric names explicitly, and a prefix straddle is a legibility problem where a role at tier 1 was a correctness one. It closes with the namespace decision, uniformly, along with `--color-` and `--radius-`.',
   icon:
@@ -983,7 +983,7 @@ export const worklist: Fix[] = [
     effort: 'design work',
     scope: `${dupeDefects.length} same-family duplicate`,
     detail:
-      'A decision, not a rename: --radius-200 and --radius-300 are both 0.5rem, while tier 2 points --radius-surface at one and --radius-card at the other. Either the ramp gains a real step between them, or one of the two roles is redundant and should be folded away.',
+      'RESOLVED 2026-08-16 (radius-roles-to-scale), the second way: --radius-surface and --radius-card both resolved to 0.5rem and folded into one tier-2 step, --radius-md. --radius-300 is now an unreferenced duplicate of --radius-200 at tier 1 and is the next thing to delete. The finding stood here unactioned long enough for the collision to ship a visible defect — qanat rendered a 10px dropdown over an 8px card.',
     done: dupeDefects.length === 0,
   },
   {

@@ -73,7 +73,7 @@ const baseTier = defined(tokensCss);
 
 // Which tier declared a token is decided by WHICH DIRECTORY its JSON lives in —
 // never by a name pattern. A regex on the name cannot do this job: nothing in
-// `--radius-200` (primitive) vs `--radius-surface` (semantic) marks the tier,
+// `--radius-200` (primitive) vs `--radius-md` (semantic) marks the tier,
 // so the old pattern read every `--radius-*` as a primitive and mislabelled the
 // semantic shape roles as untouchable on every component doc page. Reading the
 // source directories is the same source of truth the token graph uses.

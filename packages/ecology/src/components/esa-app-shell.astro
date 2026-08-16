@@ -224,7 +224,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   .esa-app-shell__toggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 32px; height: 32px; padding: 0; border: 0;
-    border-radius: var(--radius-control, 4px);
+    border-radius: var(--radius-sm, 0.25rem);
     background: transparent; color: var(--color-content-default-secondary, #525252);
     cursor: pointer; transition: background 150ms ease, color 150ms ease;
   }
@@ -237,7 +237,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     margin-inline: auto;
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
     width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
-    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-surface, 8px);
+    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-md, 0.5rem);
     background: var(--color-background-elevation-raised, #fff); color: var(--color-content-default-muted, #737373);
     /* Kept: a UA reset on a native <button>, not a type role — the rest of the type
        comes from .typography-body-sm on this element. */
@@ -250,7 +250,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   .esa-app-shell__search-kbd {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     min-width: 18px; height: 18px; padding: 0 5px;
-    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-control, 4px);
+    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-sm, 0.25rem);
     background: var(--color-background-elevation-sunken, #f2f6f3);
   }
 
@@ -258,7 +258,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   .esa-app-shell__brand {
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
     padding: var(--spacing-100, 4px); text-decoration: none;
-    border-radius: var(--radius-control, 4px);
+    border-radius: var(--radius-sm, 0.25rem);
     color: var(--color-content-default, #171717);
     transition: background 150ms ease;
   }

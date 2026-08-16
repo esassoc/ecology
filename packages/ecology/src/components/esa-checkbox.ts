@@ -109,24 +109,24 @@ export class EsaCheckbox extends LitElement {
     css`
     :host {
       --_checkbox-size: 20px;
-      --_checkbox-radius: var(--form-radius-md, 0.5rem);
+      --_checkbox-radius: var(--radius-md, 0.5rem);
       --_checkbox-icon-size: 16px;
       display: inline-block;
     }
     /* Box geometry only — the label's type is a composite named in render(). */
     :host([size='xs']) {
       --_checkbox-size: 14px;
-      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
+      --_checkbox-radius: var(--radius-sm, 0.25rem);
       --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
-      --_checkbox-radius: var(--form-radius-sm, 0.25rem);
+      --_checkbox-radius: var(--radius-sm, 0.25rem);
       --_checkbox-icon-size: 12px;
     }
     :host([size='lg']) {
       --_checkbox-size: 24px;
-      --_checkbox-radius: var(--form-radius-lg, 0.5rem);
+      --_checkbox-radius: var(--radius-md, 0.5rem);
       --_checkbox-icon-size: 20px;
     }
     :host([disabled]) .wrapper {

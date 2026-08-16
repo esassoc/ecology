@@ -153,28 +153,28 @@ export class EsaColorPicker extends LitElement {
       --_preview-size: 40px; /* was --control-height-*, now standalone — see note */
       --_swatch-size: 28px;
       --_pad-y: var(--spacing-300, 0.75rem);
-      --_radius: var(--form-radius-md, 8px);
+      --_radius: var(--radius-md, 0.5rem);
       --_padding-x: var(--spacing-300, 0.75rem);
     }
     :host([size='xs']) {
       --_preview-size: 28px;
       --_swatch-size: 20px;
       --_pad-y: var(--spacing-200, 0.5rem);
-      --_radius: var(--form-radius-xs, 4px);
+      --_radius: var(--radius-sm, 0.25rem);
       --_padding-x: var(--spacing-200, 0.5rem);
     }
     :host([size='sm']) {
       --_preview-size: 32px;
       --_swatch-size: 24px;
       --_pad-y: var(--spacing-250, 0.625rem);
-      --_radius: var(--form-radius-sm, 6px);
+      --_radius: var(--radius-sm, 0.25rem);
       --_padding-x: var(--spacing-250, 0.625rem);
     }
     :host([size='lg']) {
       --_preview-size: 48px;
       --_swatch-size: 32px;
       --_pad-y: var(--spacing-400, 1rem);
-      --_radius: var(--form-radius-lg, 10px);
+      --_radius: var(--radius-md, 0.5rem);
       --_padding-x: var(--spacing-400, 1rem);
     }
 
@@ -268,7 +268,7 @@ export class EsaColorPicker extends LitElement {
       height: var(--_swatch-size);
       flex-shrink: 0;
       border: 2px solid transparent;
-      border-radius: var(--radius-050, 4px);
+      border-radius: var(--radius-xs, 0.125rem);
       padding: 0;
       cursor: pointer;
       transition:

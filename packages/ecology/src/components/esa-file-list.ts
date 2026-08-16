@@ -125,8 +125,13 @@ export class EsaFileList extends LitElement {
          room without restyling the shadow DOM. Defaults reproduce the original tight row. */
       padding: var(--file-list-row-padding-y, 2px)
         var(--file-list-row-padding-x, var(--spacing-300, 12px));
-      border: var(--form-border-width, 1px) solid var(--color-border-default, #e5e5e5);
-      border-radius: var(--radius-control, 4px);
+      /* --border-width-default, not --form-border-width: a file row is not a form
+         control, and the colour half of this very declaration already reads the
+         tier-2 role. --form-border-width is a thin alias over the same token, so
+         this is value-neutral and stops a spoke's input restyling from reaching
+         file rows. */
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-radius: var(--radius-sm, 0.25rem);
       background: var(--color-background-elevation-raised, #fff);
     }
     .file__icon {
@@ -166,7 +171,7 @@ export class EsaFileList extends LitElement {
       border: 0;
       background: transparent;
       color: var(--color-content-default-muted, #737373);
-      border-radius: var(--radius-control, 4px);
+      border-radius: var(--radius-sm, 0.25rem);
       cursor: pointer;
       flex-shrink: 0;
       transition:

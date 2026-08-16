@@ -96,7 +96,7 @@ export class EsaTooltip extends LitElement {
       background: var(--tooltip-bg, var(--color-background-default-knockout));
       color: var(--tooltip-color, var(--color-content-default-knockout, #ffffff));
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--tooltip-radius, var(--radius-control, 0.25rem));
+      border-radius: var(--tooltip-radius, var(--radius-sm, 0.25rem));
       /* Leading comes from microcopy-sm-subtle. This carried a tight override
          justified as "a tooltip may wrap to two or three lines" — but the rule
          below sets white-space: nowrap, so it never wraps and never did. The

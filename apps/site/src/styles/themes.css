@@ -4,7 +4,7 @@
  * (default brand = Ecology teal). A theme re-skins by reassigning semantic tokens
  * under a [data-theme] scope — it never touches primitives or component internals.
  *
- * Shape lives at the semantic layer too: --radius-{control,surface,card,overlay,pill}
+ * Shape lives at the semantic layer too: --radius-{xs,sm,md,lg} + --radius-pill
  * are the roles. Re-point those, never --radius-100/200/… — moving a primitive moves
  * everything downstream of it, which is the blast radius the tier model exists to stop.
  *
@@ -21,7 +21,9 @@
   --color-background-brand-hover:  #155a50; /* TODO */
   --color-background-brand-secondary:      #2a9d8f; /* TODO */
   --color-background-elevation-sunken: #f0f6f4; /* TODO */
-  --radius-surface:       6px;     /* flatter than the hub default */
+  --radius-md:            6px;     /* flatter than the hub default — moves cards too,
+                                     which --radius-surface did not: qanat used to leave
+                                     cards at 8px behind a 10px dropdown. */
 }
 
 [data-theme="qanat"] {
@@ -29,5 +31,5 @@
   --color-background-brand-hover:  #11507f;
   --color-background-brand-secondary:      #4a90c2;
   --color-background-elevation-sunken: #eef4f8;
-  --radius-surface:       10px;    /* rounder than the hub default */
+  --radius-md:            10px;    /* rounder than the hub default */
 }

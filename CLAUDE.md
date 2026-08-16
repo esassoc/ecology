@@ -8,7 +8,11 @@ re-skin via the semantic/component token layers, and hand off to dev teams (on a
 stack) who interpret the standard — increasingly with Claude's help.
 
 This repo is **Astro + plain web tech, not Angular.** The original Angular library +
-Storybook were the starting point and now live, archived, in `../ecology-angular`.
+Storybook were the starting point and are no longer checked out anywhere on this
+machine — do not send anyone to `../ecology-angular`, which is where this line
+pointed until 2026-08-16. If that archive is still wanted as prior art, it has to be
+recovered from GitHub first. `../ecology-storybook` DOES exist and is unrelated: it
+is this repo's own `storybook` branch in a git worktree.
 
 ## Architecture (npm workspaces monorepo)
 - **packages/tokens/** → `@esa/tokens`. DTCG JSON (`tokens/{primitive,semantic}/*.json`)
@@ -29,12 +33,45 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
 the whole point of the tier is that a spoke can re-skin one component without
 moving the system. A token many components read is an INTENT, and intents live
 at tier 2. Applied across all 311 tier-3 declarations on 2026-08-14: **23
-violate, 248 are compliant.** The violators are `--form-*` (18 tokens, 18
-readers — five of them not forms), `--focus-ring-*` (3, read by 31) and
-`--loading-spinner-*` (2). The 18th reader used to be `_inject-styles`, which was
-not even a component; it was deleted on 2026-08-15 (dead module, zero importers,
-hand-written `.esa-field*` rules on raw `.875rem`/`600` literals), so 17 of the
-readers are now components and the shape of the violation is unchanged.
+violate, 248 are compliant.** Re-measured 2026-08-16 against 312 declarations, and
+only ONE of the three named violators is still one:
+
+- **`--form-*` — the live violation, and it SHRANK: 16 declared, 17 reader files**
+  (down from 18 declarations on 2026-08-14). The 18th reader used to be
+  `_inject-styles`, which was not even a component; it was deleted on 2026-08-15
+  (dead module, zero importers, hand-written `.esa-field*` rules on raw
+  `.875rem`/`600` literals).
+
+  **Count declarations with `^\s*--form-[a-z-]*:` — the trailing colon is load
+  bearing.** `^\s*--form-` alone returns 21, because five COMMENT lines in
+  `component-tokens.css` begin with a token name in the left margin. That is how a
+  shrinking namespace gets reported as a growing one.
+
+  What is actually wrong is not the count and not the alias depth — all 16 chain
+  straight to tier 2 and hold no values of their own. It is that **four non-form
+  components read form-named tokens**: `esa-button.astro` and `esa-button-group.ts`
+  (`--form-radius-*`), `esa-file-list.ts` (`--form-border-width`), and
+  `esa-button-toggle.ts` (ten of them, including `--form-label-color` and
+  `--form-error-color`). A spoke re-pointing `--form-border-color` to restyle its
+  inputs silently restyles buttons too.
+- **`--focus-ring-*` — resolved in substance, and the namespace stays on purpose.**
+  Both themeable properties are now thin aliases over tier-2 roles that already
+  exist: `--focus-ring-color` → `--color-border-default-focus`, `--focus-ring-width`
+  → `--border-width-focus`. A spoke re-points the ring at tier 2 and all 31 readers
+  follow, which is the entire point of promotion — so the count never needed to
+  drop. `--focus-ring-offset: 2px` stays a literal deliberately (the spacing scale
+  is a 4px grid; minting a 2px primitive for one consumer is what SPEC.md forbids),
+  and `focus-ring` is the naming rubric's own worked example of a `special` case in
+  the component slot. Read the comment above the declarations before reopening this.
+- **`--loading-spinner-*` — marginal.** 2 tokens, 2 readers, both tier-2 aliases;
+  the second reader is `esa-loading-overlay`, which composes a spinner. Not worth a
+  rename.
+
+**The lesson for the count itself:** "N components read it" does not measure the
+violation. A tier-3 token that is a pure alias over a tier-2 role is already
+promoted in every way that matters to a spoke — what matters is whether the
+re-skin surface a spoke reaches is a single point. Count HOLDERS OF VALUE, not
+readers of a name.
 
 Do NOT reach for "fan it out to per-component hooks" as the fix. That was
 measured for `--form-*` and comes to **162 names**, against SPEC.md's own

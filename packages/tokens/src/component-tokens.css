@@ -31,6 +31,43 @@
      into esa-button; see docs/button-consolidation-plan.md. */
   --button-chrome-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
 
+  /* The button's corner ramp. Mirrors the tier-2 scale — xs/sm take --radius-sm,
+     md/lg take --radius-md — and is value-neutral on the day it lands: every
+     button renders the same radius it did before.
+
+     IT EXISTS SO THE TWO CAN DIVERGE. esa-button and esa-button-group read
+     --form-radius-* until 2026-08-16, which meant a spoke had no way to give
+     buttons a different radius from inputs — pill buttons beside square fields is
+     an ordinary house style and the shared token made it unreachable. The FORMS
+     header below already names this defect for the ramp's other half ("button,
+     icon-button, chip-group and button-toggle, which are not forms; the `form`
+     namespace never bounded its readers because those four had nowhere else to get
+     the control ramp"). This is the somewhere else, for the one of the four that is
+     furthest from being a form.
+
+     NOT a fan-out. Four names, against SPEC.md's 5-9-per-component guidance, and
+     the fan-out CLAUDE.md warns about was 162.
+
+     READ THIS NEXT TO form-radius-to-radius-scale, LANDED THE SAME DAY. That row
+     deleted --form-radius-* for being four names carrying two values — which is
+     also the literal shape of the four declarations below. The two are not the
+     same case: --form-radius-* aliased a tier-2 pair for eleven components that
+     all wanted the SAME corner, while this set exists so ONE component can want a
+     different one. That is the tier-3 contract. But the justification is
+     divergence, so it is only earning its keep once something diverges: if no
+     theme in this repo or any spoke ever re-points a --button-radius-* away from
+     the scale, it has become the thing it replaced and should follow.
+
+     esa-button-group reads --button-radius-md too, and that is composition rather
+     than a second violation: a grouped button whose corners came from anywhere else
+     would stop matching an ungrouped one the moment a spoke re-pointed this. Same
+     shape as esa-loading-overlay reading --loading-spinner-*. */
+  /* esa-button */
+  --button-radius-xs: var(--radius-sm, 0.25rem);
+  --button-radius-sm: var(--radius-sm, 0.25rem);
+  --button-radius-md: var(--radius-md, 0.5rem);
+  --button-radius-lg: var(--radius-md, 0.5rem);
+
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
      One scale across button/input/icon-button so they line up on a row.
@@ -76,15 +113,23 @@
      share a padding value and a type rung, so they resolve to the same height.
      See typography-migration-log.md Change 9.
 
-     WHY --form-radius-* SURVIVES AND --form-padding-* DID NOT. Both sat on this
-     ramp; only one was doing work:
+     --form-radius-* OUTLIVED THE REST OF THE RAMP BY TWO DAYS AND IS ALSO GONE
+     (2026-08-16, migrations.json: form-radius-to-radius-scale). It was kept back
+     on the 14th because it looked like the one member that was NOT a passthrough:
+     it encoded a mapping — xs/sm to the small corner, md/lg to the default one —
+     that 13 components would otherwise each restate.
 
-       --form-radius-* is NOT a passthrough. It encodes a documented mapping —
-       --radius-control's description says "inputs at xs/sm", --radius-surface's
-       says "inputs at md/lg". Delete it and 13 components each restate that. For
-       type, writing the mapping out per component bought visibility because the
-       hook was hiding the rung offset; here it hides nothing, so the hook is
-       doing honest work.
+     The source did not bear that out. The 13 already restated it, one line per
+     size, just through a --form-* spelling; the substitution is the same line
+     count either way. And the hook was hiding the mapping rather than encoding
+     it: four names carried two values, and of 49 read sites, thirteen carried
+     literal fallbacks describing a 4/6/8/10 ramp the tokens never produced (6px
+     at sm in seven places, 10px at lg in six). Seven components rendered 2px off
+     their own fallback whenever this file was absent and nobody noticed.
+
+     What replaced it is a size axis at TIER 2 — --radius-{xs,sm,md,lg} — where
+     the ramp was always trying to live. See radius-roles-to-scale. A spoke that
+     wants flatter fields re-points --radius-sm/--radius-md.
 
        --form-padding-{y,x}-* was a flat passthrough and was deleted the same day
        (migrations.json: form-padding-to-spacing). Reading --spacing-* was never
@@ -107,14 +152,6 @@
        one-line density lever any more. Re-declaring --form-padding-y-md does
        nothing (nothing reads it) and re-pointing --spacing-* moves every gap in
        the kit. Tightening the controls is a /request-lego. */
-  /* size — xs */
-  --form-radius-xs: var(--radius-control);
-  /* size — sm */
-  --form-radius-sm: var(--radius-control);
-  /* size — md (default) */
-  --form-radius-md: var(--radius-surface);
-  /* size — lg */
-  --form-radius-lg: var(--radius-surface);
   /* colors */
   /* THE THREE SURFACE HOOKS ARE GONE — PROMOTED TO TIER 2 (2026-08-14).
      --form-bg, --form-bg-hover and --form-bg-disabled were read by 13, 3 and 7
@@ -238,7 +275,7 @@
      other border hook in the file, with the component composing the shorthand
      from --border-width-default. Value-neutral: that role is 1px. */
   --filter-dropdown-border-color: var(--color-border-default);
-  --filter-dropdown-radius: var(--radius-surface);
+  --filter-dropdown-radius: var(--radius-md, 0.5rem);
   --filter-dropdown-shadow: var(--elevation-4);
   --filter-dropdown-min-width: 200px;
   /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
@@ -274,7 +311,7 @@
      restating width and style. */
   --grid-bg: var(--color-background-elevation-raised);
   --grid-border-color: var(--color-border-default);
-  --grid-radius: var(--radius-surface);
+  --grid-radius: var(--radius-md, 0.5rem);
   --grid-shadow: var(--elevation-3);
   --grid-font-family: var(--typography-font-family-sans);
   --grid-font-size: var(--typography-label-md-font-size);
@@ -395,7 +432,7 @@
   --topbar-search-bg: var(--color-background-elevation-raised);
   --topbar-search-bg-hover: var(--color-background-default);
   --topbar-search-text: var(--color-content-default-muted);
-  --topbar-search-radius: var(--radius-surface, 8px);
+  --topbar-search-radius: var(--radius-md, 0.5rem);
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
   --breadcrumbs-bg: transparent;
@@ -431,7 +468,7 @@
   --alert-box-border-color: var(--color-border-utility-info, #bfdbfe);
   --alert-box-dismiss-bg-hover: var(--color-background-overlay-strong-hover);
   --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-  --alert-box-radius: var(--radius-surface, 0.5rem);
+  --alert-box-radius: var(--radius-md, 0.5rem);
   --alert-box-text-color: var(--color-content-default-secondary, #525252);
   --alert-box-title-color: var(--color-content-default, #171717);
 
@@ -486,7 +523,7 @@
 
   /* esa-badge */
   --badge-bg: var(--color-background-brand, #43608a);
-  --badge-radius: var(--radius-control, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
+  --badge-radius: var(--radius-sm, 0.25rem); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-content-default-knockout, #fff);
 
   /* esa-card */
@@ -497,13 +534,13 @@
   --card-header-border-color: var(--color-border-default-subtle, #efefef);
   --card-header-color: var(--color-content-default, #171717);
   --card-padding: var(--spacing-500, 1.5rem);
-  --card-radius: var(--radius-card, 0.5rem);
+  --card-radius: var(--radius-md, 0.5rem);
 
   /* esa-collapsible */
   --collapsible-bg: var(--color-background-elevation-raised, #fff);
   --collapsible-border-color: var(--color-border-default, #e5e5e5);
   --collapsible-padding-x: var(--spacing-400, 1rem);
-  --collapsible-radius: var(--radius-card, 0.5rem);
+  --collapsible-radius: var(--radius-md, 0.5rem);
   --collapsible-title-color: var(--color-content-default, #171717);
 
   /* esa-file-list */
@@ -517,7 +554,7 @@
   --command-palette-border-color: var(--color-border-default, #e5e5e5);
   --command-palette-item-bg-active: var(--color-background-elevation-sunken, #efefef);
   --command-palette-max-height: 440px;
-  --command-palette-radius: var(--radius-overlay, 0.75rem);
+  --command-palette-radius: var(--radius-lg, 0.75rem);
   --command-palette-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --command-palette-width: 560px;
 
@@ -525,7 +562,7 @@
   --confirm-dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
   --confirm-dialog-bg: var(--color-background-elevation-floating, #ffffff);
   --confirm-dialog-border-color: var(--color-border-default-subtle, #efefef);
-  --confirm-dialog-radius: var(--radius-overlay, 0.75rem);
+  --confirm-dialog-radius: var(--radius-lg, 0.75rem);
   --confirm-dialog-width: 360px;
 
   /* esa-container */
@@ -537,14 +574,14 @@
   --danger-zone-description-color: var(--color-content-default-secondary, #525252);
   --danger-zone-heading-color: var(--color-content-utility-danger);
   --danger-zone-padding: var(--spacing-300, 0.75rem);
-  --danger-zone-radius: var(--radius-surface, 0.5rem);
+  --danger-zone-radius: var(--radius-md, 0.5rem);
 
   /* esa-dialog */
   --dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
   --dialog-bg: var(--color-background-elevation-floating, #ffffff);
   --dialog-border-color: var(--color-border-default-subtle, #efefef);
   --dialog-color: var(--color-content-default, #171717);
-  --dialog-radius: var(--radius-overlay, 0.75rem);
+  --dialog-radius: var(--radius-lg, 0.75rem);
   --dialog-width: 480px;
   --dialog-width-lg: 640px;
   --dialog-width-sm: 360px;
@@ -556,7 +593,7 @@
   --dropdown-menu-item-color: var(--color-content-default, #171717);
   --dropdown-menu-max-width: 280px;
   --dropdown-menu-min-width: 160px;
-  --dropdown-menu-radius: var(--radius-surface, 0.5rem);
+  --dropdown-menu-radius: var(--radius-md, 0.5rem);
 
   /* esa-empty-state */
   --empty-state-description-color: var(--color-content-default-secondary, #525252);
@@ -572,7 +609,7 @@
   --entity-search-bg: var(--color-background-elevation-floating, #ffffff);
   --entity-search-border-color: var(--color-border-default, #dcdcdc);
   --entity-search-max-height: 70vh;
-  --entity-search-radius: var(--radius-overlay, 0.75rem);
+  --entity-search-radius: var(--radius-lg, 0.75rem);
   --entity-search-row-bg-active: var(--color-background-elevation-sunken, #f3f7fc);
   --entity-search-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --entity-search-width: 600px;
@@ -602,7 +639,7 @@
   --kbd-bg: var(--color-background-elevation-raised);
   --kbd-border-color: var(--color-border-default);
   --kbd-color: var(--color-content-default-muted);
-  --kbd-radius: var(--radius-control, 4px);
+  --kbd-radius: var(--radius-sm, 0.25rem);
 
   /* esa-link-column */
   --link-column-heading-font-size: var(--typography-label-md-font-size);
@@ -628,7 +665,7 @@
   --nav-dropdown-panel-border-color: var(--color-border-default, #e5e5e5);
   --nav-dropdown-panel-min-width: 240px;
   --nav-dropdown-panel-padding: var(--spacing-300, 12px);
-  --nav-dropdown-panel-radius: var(--radius-surface, 8px);
+  --nav-dropdown-panel-radius: var(--radius-md, 0.5rem);
   --nav-dropdown-panel-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
   --nav-dropdown-panel-text: var(--color-content-default, #171717);
 
@@ -645,7 +682,7 @@
   --pill-bg: var(--color-background-elevation-sunken, #efefef);
   --pill-border-color: var(--color-border-default-subtle, #efefef);
   --pill-remove-bg-hover: var(--color-background-overlay-heavy-hover);
-  --pill-radius: var(--radius-control, 4px);
+  --pill-radius: var(--radius-sm, 0.25rem);
   --pill-text-color: var(--color-content-default, #171717);
 
   /* esa-pillbox */
@@ -658,7 +695,7 @@
   --popover-border-color: var(--color-border-default, #e5e5e5);
   --popover-color: var(--color-content-default, #171717);
   --popover-max-width: none;
-  --popover-radius: var(--radius-surface, 0.5rem);
+  --popover-radius: var(--radius-md, 0.5rem);
 
   /* esa-progress-bar */
   --progress-bar-fill-bg: var(--color-background-brand, #43608a);
@@ -679,7 +716,7 @@
   --side-dialog-bg: var(--color-background-elevation-raised, #fff);
   --side-dialog-border-color: var(--color-border-default, #e5e5e5);
   --side-dialog-inset: 16px;
-  --side-dialog-radius: var(--radius-surface, 8px);
+  --side-dialog-radius: var(--radius-md, 0.5rem);
   --side-dialog-width: 400px;
   --side-dialog-width-lg: 520px;
   --side-dialog-width-sm: 320px;
@@ -697,7 +734,7 @@
   --snackbar-item-success-bg: var(--color-content-utility-success);
   --snackbar-item-warning-bg: var(--color-content-utility-warning);
   --snackbar-item-color: var(--color-content-default-knockout, #ffffff);
-  --snackbar-item-radius: var(--radius-surface, 0.5rem);
+  --snackbar-item-radius: var(--radius-md, 0.5rem);
 
   /* esa-stat — the whole surface is TYPE, which is unusual for a tier-3 block
      and is the point: a metric's authority comes from the size/weight/face of
@@ -737,5 +774,5 @@
   --tooltip-bg: var(--color-background-default-knockout);
   --tooltip-color: var(--color-content-default-knockout, #ffffff);
   --tooltip-max-width: 240px;
-  --tooltip-radius: var(--radius-control, 0.25rem);
+  --tooltip-radius: var(--radius-sm, 0.25rem);
 }
