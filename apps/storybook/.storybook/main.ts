@@ -37,7 +37,15 @@ const config: StorybookConfig = {
     astro: {
       title: 'Astro (.astro)',
       url: 'http://localhost:6007',
-      expanded: false,
+      expanded: true,
+      // Storybook v10 fetches a ref's /index.json WITH credentials, and the dev
+      // server answers `Access-Control-Allow-Origin: *`, which a browser rejects
+      // outright in credentials mode. Symptom: the section header renders, no
+      // components appear beneath it, and NOTHING is reported in the Storybook UI
+      // — the failure is console-only. See storybookjs/storybook#33724.
+      // Never verify this with curl: curl does not enforce CORS, so the wildcard
+      // looks perfectly fine there while every browser rejects it.
+      credentials: 'omit',
     },
   },
 

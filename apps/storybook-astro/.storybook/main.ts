@@ -15,6 +15,9 @@
  * Controls panel has NO EFFECT in a static build, because there is no server to
  * re-render. Controls work in `npm run storybook`, not in deployed output.
  */
+/** The composing Storybook that embeds this one. Must match apps/storybook's dev port. */
+const HOST_STORYBOOK = 'http://localhost:6006';
+
 const config = {
   stories: ['../src/**/*.stories.ts'],
 
@@ -31,6 +34,17 @@ const config = {
     config.server ??= {};
     config.server.fs ??= {};
     config.server.fs.allow = [...(config.server.fs.allow ?? []), '../..'];
+
+    // CORS for composition. The host Storybook (6006) fetches this server's
+    // /index.json to build its sidebar, and it sends credentials — which makes
+    // the default `Access-Control-Allow-Origin: *` ILLEGAL: with credentials the
+    // header must echo the exact origin. Without this the ref silently renders
+    // an empty "Astro (.astro)" section: the header appears, no components under
+    // it, and no error anywhere in the Storybook UI.
+    //
+    // Do not verify this with curl — curl does not enforce CORS, so the wildcard
+    // header looks fine there while every browser rejects it.
+    config.server.cors = { origin: HOST_STORYBOOK, credentials: true };
     return config;
   },
 };
