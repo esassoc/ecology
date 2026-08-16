@@ -90,10 +90,10 @@ export class EsaSnackbarItem extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-radius: var(--snackbar-item-radius, var(--radius-md, 0.5rem));
+      border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       background: var(--color-background-default-knockout);
-      color: var(--snackbar-item-color, var(--color-content-default-knockout, #ffffff));
+      color: var(--color-content-default-knockout, #fcfcfc);
       animation: esa-snackbar-enter var(--animation-overlay-enter, 250ms ease-out);
     }
     @keyframes esa-snackbar-enter {
@@ -101,10 +101,10 @@ export class EsaSnackbarItem extends LitElement {
       to { transform: translateX(0); opacity: 1; }
     }
 
-    .esa-snackbar--success { background: var(--snackbar-item-success-bg, var(--color-content-utility-success)); }
-    .esa-snackbar--warning { background: var(--snackbar-item-warning-bg, var(--color-content-utility-warning)); }
-    .esa-snackbar--danger { background: var(--snackbar-item-danger-bg, var(--color-content-utility-danger)); }
-    .esa-snackbar--info { background: var(--snackbar-item-info-bg, var(--color-content-utility-info)); }
+    .esa-snackbar--success { background: var(--color-content-utility-success); }
+    .esa-snackbar--warning { background: var(--color-content-utility-warning); }
+    .esa-snackbar--danger { background: var(--color-content-utility-danger); }
+    .esa-snackbar--info { background: var(--color-content-utility-info); }
 
     .esa-snackbar__icon {
       flex-shrink: 0;

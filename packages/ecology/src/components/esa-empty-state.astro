@@ -44,7 +44,7 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
 <style>
   .esa-empty-state {
     --_empty-icon-size: var(--empty-state-icon-size-md, 48px);
-    --_empty-gap: var(--empty-state-gap, var(--spacing-200, 0.5rem));
+    --_empty-gap: var(--spacing-200, 0.5rem);
 
     display: flex;
     flex-direction: column;
@@ -73,7 +73,7 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
   }
 
   .esa-empty-state__icon {
-    color: var(--empty-state-icon-color, var(--color-content-default-muted, #737373));
+    color: var(--color-content-default-muted, #838383);
     margin-bottom: var(--spacing-100, 0.25rem);
     display: inline-flex;
   }
@@ -85,12 +85,12 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
 
   .esa-empty-state__title {
     margin: 0;
-    color: var(--empty-state-title-color, var(--color-content-default, #171717));
+    color: var(--color-content-default, #202020);
   }
 
   .esa-empty-state__description {
     margin: 0;
-    color: var(--empty-state-description-color, var(--color-content-default-secondary, #525252));
+    color: var(--color-content-default-secondary, #646464);
     max-width: 360px;
   }
 

@@ -140,9 +140,9 @@ export class EsaDropdownMenu extends LitElement {
     .esa-dropdown-menu__panel {
       position: absolute;
       z-index: var(--z-dropdown, 50);
-      background: var(--dropdown-menu-bg, var(--color-background-elevation-floating, #ffffff));
-      border: var(--border-width-default, 1px) solid var(--dropdown-menu-border-color, var(--color-border-default, #e5e5e5));
-      border-radius: var(--dropdown-menu-radius, var(--radius-md, 0.5rem));
+      background: var(--color-background-elevation-floating, #fcfcfc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       min-width: var(--dropdown-menu-min-width, 160px);
       max-width: var(--dropdown-menu-max-width, 280px);
@@ -173,7 +173,7 @@ export class EsaDropdownMenu extends LitElement {
       border: none;
       border-radius: var(--radius-sm, 0.25rem);
       background: transparent;
-      color: var(--dropdown-menu-item-color, var(--color-content-default, #171717));
+      color: var(--color-content-default, #202020);
       /* UA reset, not a type role — a native button does not inherit the face. */
       font-family: inherit;
       cursor: pointer;
@@ -181,15 +181,15 @@ export class EsaDropdownMenu extends LitElement {
       transition: background 100ms ease;
     }
     .esa-dropdown-menu__item:hover:not(:disabled) {
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-dropdown-menu__item:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: -2px;
     }
     .esa-dropdown-menu__item--danger { color: var(--color-content-utility-danger, #ce2c31); }
     .esa-dropdown-menu__item--danger:hover:not(:disabled) {
-      background: var(--color-background-utility-danger-subtle, #fef2f2);
+      background: var(--color-background-utility-danger-subtle, #fff7f7);
     }
     .esa-dropdown-menu__item--disabled {
       opacity: 0.5;
@@ -207,7 +207,7 @@ export class EsaDropdownMenu extends LitElement {
 
     .esa-dropdown-menu__divider {
       height: 1px;
-      background: var(--color-border-default-subtle, #efefef);
+      background: var(--color-border-default-subtle, #d9d9d9);
       margin: var(--spacing-100, 0.25rem) 0;
     }
   `,

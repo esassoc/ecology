@@ -132,13 +132,13 @@ export class EsaPopover extends LitElement {
     typography,
     css`
     :host {
-      --_popover-bg: var(--popover-bg, var(--color-background-elevation-raised, #ffffff));
-      --_popover-border: var(--popover-border-color, var(--color-border-default, #e5e5e5));
+      --_popover-bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_popover-border: var(--color-border-default, #cecece);
       --_popover-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      --_popover-radius: var(--popover-radius, var(--radius-md, 0.5rem));
+      --_popover-radius: var(--radius-md, 0.5rem);
       --_popover-padding: var(--spacing-300, 0.75rem);
       --_popover-arrow-size: 8px;
-      --_popover-color: var(--popover-color, var(--color-content-default, #171717));
+      --_popover-color: var(--color-content-default, #202020);
       display: inline-block;
     }
 
@@ -156,7 +156,7 @@ export class EsaPopover extends LitElement {
     :host([appearance='inverse']) {
       --_popover-bg: var(--color-background-default-knockout);
       --_popover-border: var(--color-border-default-knockout, #484848);
-      --_popover-color: var(--color-content-default-knockout, #ffffff);
+      --_popover-color: var(--color-content-default-knockout, #fcfcfc);
     }
 
     /* label-md is the trigger's default type role — it inherits through the slot

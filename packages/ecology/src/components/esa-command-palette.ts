@@ -265,10 +265,10 @@ export class EsaCommandPalette extends LitElement {
       width: var(--command-palette-width, 560px);
       max-width: calc(100vw - 2rem);
       max-height: var(--command-palette-max-height, 440px);
-      background: var(--command-palette-bg, var(--color-background-elevation-floating, #ffffff));
-      border: var(--border-width-default, 1px) solid var(--command-palette-border-color, var(--color-border-default, #e5e5e5));
-      border-radius: var(--command-palette-radius, var(--radius-lg, 0.75rem));
-      box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
+      background: var(--color-background-elevation-floating, #fcfcfc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-lg, 0.75rem);
+      box-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
@@ -286,7 +286,7 @@ export class EsaCommandPalette extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
     /* The ring goes on the ROW, not the input. The input is chromeless by design,
        so a ring drawn on it would float around bare text; the row is the visible
@@ -297,11 +297,11 @@ export class EsaCommandPalette extends LitElement {
        Inset because the row runs edge to edge inside an overflow:hidden panel, so
        an outline at positive offset would be clipped on both sides. */
     .esa-command-palette__search:focus-within {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .esa-command-palette__search-icon {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       flex-shrink: 0;
     }
     .esa-command-palette__input {
@@ -309,19 +309,19 @@ export class EsaCommandPalette extends LitElement {
       border: none;
       /* Suppressed only because the row above paints the ring — never bare. */
       outline: none;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       background: transparent;
       font-family: inherit;
     }
-    .esa-command-palette__input::placeholder { color: var(--color-content-default-muted, #737373); }
+    .esa-command-palette__input::placeholder { color: var(--color-content-default-muted, #838383); }
 
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
       padding: 2px 6px;
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-sm, 0.25rem);
-      color: var(--color-content-default-muted, #737373);
-      background: var(--color-background-elevation-sunken, #efefef);
+      color: var(--color-content-default-muted, #838383);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
 
     .esa-command-palette__results {
@@ -330,7 +330,7 @@ export class EsaCommandPalette extends LitElement {
     }
     .esa-command-palette__group-label {
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
 
     .esa-command-palette__item {
@@ -342,16 +342,16 @@ export class EsaCommandPalette extends LitElement {
       border: none;
       border-radius: var(--radius-md, 0.5rem);
       background: transparent;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-background-elevation-sunken, #efefef)); }
+    .esa-command-palette__item--active { background: var(--color-background-elevation-sunken, #f0f0f0); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: -2px;
     }
 
@@ -361,13 +361,13 @@ export class EsaCommandPalette extends LitElement {
       flex-direction: column;
     }
     .esa-command-palette__item-desc {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
 
     .esa-command-palette__empty {
       padding: var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
   `,
   ];

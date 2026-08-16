@@ -35,20 +35,20 @@ const cls = ['esa-stat', accent && 'esa-stat--accent'].filter(Boolean).join(' ')
 
 <style>
   .esa-stat {
-    --_stat-value-color: var(--stat-value-color, var(--color-content-default, #171717));
+    --_stat-value-color: var(--stat-value-color, var(--color-content-default, #202020));
     /* Type comes from the composite classes in the markup. These six stay because
        they are the PUBLIC re-skin surface — each keeps one declaration below, with
        its composite token as the fallback, so a spoke override still wins. */
-    --_stat-value-font: var(--stat-value-font, var(--typography-display-sm-font-family, var(--typography-font-family-display, 'DM Sans', sans-serif)));
+    --_stat-value-font: var(--typography-font-family-display, var(--typography-display-sm-font-family, var(--typography-font-family-display, 'DM Sans', sans-serif)));
     --_stat-value-size: var(--stat-value-size, var(--typography-display-sm-font-size, var(--font-size-700, 2.25rem)));
-    --_stat-value-weight: var(--stat-value-weight, var(--typography-display-sm-font-weight, var(--typography-font-weight-bold, 650)));
-    --_stat-label-color: var(--stat-label-color, var(--color-content-default-secondary, #525252));
-    --_stat-label-size: var(--stat-label-size, var(--typography-label-md-font-size, var(--font-size-200, 0.9375rem)));
-    --_stat-label-weight: var(--stat-label-weight, var(--typography-label-md-font-weight, var(--typography-font-weight-medium, 500)));
-    --_stat-sub-color: var(--stat-sub-color, var(--color-content-default-muted, #737373));
-    --_stat-sub-size: var(--stat-sub-size, var(--typography-body-sm-font-size, var(--font-size-150, 0.875rem)));
-    --_stat-accent-color: var(--stat-accent-color, var(--color-content-brand-secondary, #3a7c59));
-    --_stat-gap: var(--stat-gap, var(--spacing-050, 0.125rem));
+    --_stat-value-weight: var(--typography-font-weight-bold, var(--typography-display-sm-font-weight, var(--typography-font-weight-bold, 650)));
+    --_stat-label-color: var(--color-content-default-secondary, #646464);
+    --_stat-label-size: var(--font-size-200, var(--typography-label-md-font-size, var(--font-size-200, 0.9375rem)));
+    --_stat-label-weight: var(--typography-font-weight-medium, var(--typography-label-md-font-weight, var(--typography-font-weight-medium, 500)));
+    --_stat-sub-color: var(--color-content-default-muted, #838383);
+    --_stat-sub-size: var(--font-size-150, var(--typography-body-sm-font-size, var(--font-size-150, 0.875rem)));
+    --_stat-accent-color: var(--stat-accent-color, var(--color-content-brand-secondary, #2a7e3b));
+    --_stat-gap: var(--spacing-050, 0.125rem);
 
     display: flex;
     flex-direction: column;

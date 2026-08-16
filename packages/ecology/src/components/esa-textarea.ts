@@ -266,7 +266,7 @@ export class EsaTextarea extends LitElement {
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--radius-md, 0.5rem);
-      --_field-border-color: var(--form-border-color, #e5e5e5);
+      --_field-border-color: var(--form-border-color, #cecece);
       display: block;
     }
     /* Geometry only — type comes from the composite classes named in render(). */
@@ -292,7 +292,7 @@ export class EsaTextarea extends LitElement {
     }
 
     .label {
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
@@ -312,7 +312,7 @@ export class EsaTextarea extends LitElement {
          into a neighbour composite for one of the five properties, which is the
          assembling-at-the-call-site problem in miniature. body-md leads at normal
          now, so there is nothing left to correct. */
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
@@ -324,7 +324,7 @@ export class EsaTextarea extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     /* Hover moves the BORDER, not the fill — the field is transparent in every
        state so that it is the colour of whatever contains it.
@@ -334,9 +334,9 @@ export class EsaTextarea extends LitElement {
       --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -357,10 +357,10 @@ export class EsaTextarea extends LitElement {
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-error-border-color, #ef4444);
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
     }
 
     /* Type comes from .typography-body-sm on the element.
@@ -377,7 +377,7 @@ export class EsaTextarea extends LitElement {
       margin-block-start: var(--form-help-gap, 4px);
     }
     .help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     /* Colour, icon AND a visually-hidden "Error:" — three signals, because colour
        alone is SC 1.4.1 (Use of Color, Level A) and colour alone is what this had. */

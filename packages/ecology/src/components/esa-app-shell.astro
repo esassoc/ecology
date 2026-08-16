@@ -200,13 +200,13 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 <style>
   /* Neutral chrome via SEMANTIC tokens (a spoke re-points these to its off-whites). */
   .esa-app-shell {
-    --app-bar-bg: var(--color-background-elevation-sunken, #f2f6f3);
-    --app-bar-text: var(--color-content-default, #171717);
+    --app-bar-bg: var(--color-background-elevation-sunken, #f0f0f0);
+    --app-bar-text: var(--color-content-default, #202020);
     --app-bar-pad-y: var(--spacing-200, 8px);
     --app-bar-pad-x: var(--spacing-400, 16px);
     --app-bar-gap: var(--spacing-300, 12px);
     --sidenav-bg: var(--color-background-default, #fcfcfc);
-    --sidenav-border-color: var(--color-border-default, #e5e5e5);
+    --sidenav-border-color: var(--color-border-default, #cecece);
 
     display: flex;
     flex-direction: column;
@@ -216,42 +216,42 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     background: var(--color-background-default, #fcfcfc);
   }
   .esa-app-shell--accent {
-    --app-bar-bg: color-mix(in srgb, var(--color-background-brand, #43608a) 5%, var(--color-background-elevation-sunken, #f2f6f3));
+    --app-bar-bg: color-mix(in srgb, var(--color-background-brand, #46a758) 5%, var(--color-background-elevation-sunken, #f0f0f0));
   }
 
-  .esa-app-shell__bar { flex: none; border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-strong, #d4d4d8); }
+  .esa-app-shell__bar { flex: none; border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-strong, #bbbbbb); }
 
   .esa-app-shell__toggle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 32px; height: 32px; padding: 0; border: 0;
     border-radius: var(--radius-sm, 0.25rem);
-    background: transparent; color: var(--color-content-default-secondary, #525252);
+    background: transparent; color: var(--color-content-default-secondary, #646464);
     cursor: pointer; transition: background 150ms ease, color 150ms ease;
   }
-  .esa-app-shell__toggle:hover { background: var(--color-background-elevation-sunken, #f2f6f3); color: var(--color-content-brand, #3a7c59); }
+  .esa-app-shell__toggle:hover { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-brand, #2a7e3b); }
   .esa-app-shell__toggle.is-collapsed svg { transform: scaleX(-1); }
-  .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-background-brand, #43608a); outline-offset: 2px; }
+  .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-background-brand, #46a758); outline-offset: 2px; }
 
   /* Compact, CENTERED omnibox trigger. */
   .esa-app-shell__search {
     margin-inline: auto;
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
     width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
-    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-md, 0.5rem);
-    background: var(--color-background-elevation-raised, #fff); color: var(--color-content-default-muted, #737373);
+    border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece); border-radius: var(--radius-md, 0.5rem);
+    background: var(--color-background-elevation-raised, #fcfcfc); color: var(--color-content-default-muted, #838383);
     /* Kept: a UA reset on a native <button>, not a type role — the rest of the type
        comes from .typography-body-sm on this element. */
     font-family: inherit;
     cursor: pointer; transition: border-color 150ms ease;
   }
-  .esa-app-shell__search:hover { border-color: var(--color-border-default-strong, #d4d4d4); }
-  .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-background-brand, #43608a); outline-offset: 2px; }
+  .esa-app-shell__search:hover { border-color: var(--color-border-default-strong, #bbbbbb); }
+  .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-background-brand, #46a758); outline-offset: 2px; }
   .esa-app-shell__search-label { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .esa-app-shell__search-kbd {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     min-width: 18px; height: 18px; padding: 0 5px;
-    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-sm, 0.25rem);
-    background: var(--color-background-elevation-sunken, #f2f6f3);
+    border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece); border-radius: var(--radius-sm, 0.25rem);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
   }
 
   /* Logo lockup at the top of the sidenav. */
@@ -259,21 +259,21 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
     padding: var(--spacing-100, 4px); text-decoration: none;
     border-radius: var(--radius-sm, 0.25rem);
-    color: var(--color-content-default, #171717);
+    color: var(--color-content-default, #202020);
     transition: background 150ms ease;
   }
   .esa-app-shell__brand:hover { background: var(--app-shell-brand-bg-hover, color-mix(in srgb, currentColor 8%, transparent)); }
   /* Collapsed rail: drop the wordmark (it pins the rail open), center the mark. */
   esa-sidebar-nav[collapsed] .esa-app-shell__brand { justify-content: center; padding-inline: 0; }
   esa-sidebar-nav[collapsed] .esa-app-shell__wordmark { display: none; }
-  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-content-brand, #3a7c59); }
+  .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-content-brand, #2a7e3b); }
   /* Brand, not a type role — the four hooks are tier-3 so a spoke can re-skin the
      wordmark without touching a composite every other component shares. */
   .esa-app-shell__wordmark {
-    font-family: var(--app-shell-wordmark-font, var(--typography-font-family-sans, sans-serif));
-    font-size: var(--app-shell-wordmark-size, 1.125rem);
-    font-weight: var(--app-shell-wordmark-weight, 650);
-    letter-spacing: var(--app-shell-wordmark-tracking, -0.01em);
+    font-family: var(--typography-font-family-display, var(--typography-font-family-sans, sans-serif));
+    font-size: var(--font-size-300, 1.125rem);
+    font-weight: var(--typography-font-weight-bold, 650);
+    letter-spacing: var(--letter-spacing-tight, -0.01em);
     /* A logotype, not a type role — it names no composite, so leading here is not a
        role being overridden. Flush because leading on a wordmark is meaningless. */
     line-height: var(--line-height-none, 1);
@@ -281,7 +281,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 
   .esa-app-shell__body { display: flex; flex: 1; min-height: 0; }
   .esa-app-shell__nav { flex: none; }
-  .esa-app-shell__content { flex: 1; min-width: 0; overflow-y: auto; padding: var(--spacing-500, 20px); }
+  .esa-app-shell__content { flex: 1; min-width: 0; overflow-y: auto; padding: var(--spacing-500, 1.5rem); }
 
   @media (max-width: 720px) {
     .esa-app-shell__search-label, .esa-app-shell__search-kbd { display: none; }

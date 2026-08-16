@@ -217,10 +217,10 @@ export class EsaErrorSummary extends LitElement {
         gap: var(--spacing-300, 0.75rem);
         padding: var(--spacing-400, 1rem);
         border: var(--error-summary-border-width, var(--border-width-200, 2px)) solid
-          var(--error-summary-border-color, var(--color-border-utility-danger, #ce2c31));
+          var(--error-summary-border-color, var(--color-border-utility-danger, #fdbdbe));
         border-radius: var(--error-summary-radius, var(--radius-md, 0.5rem));
-        background: var(--error-summary-bg, var(--color-background-utility-danger-subtle, #fff5f5));
-        color: var(--color-content-default, #171717);
+        background: var(--error-summary-bg, var(--color-background-utility-danger-subtle, #fff7f7));
+        color: var(--color-content-default, #202020);
       }
 
       /* It takes focus programmatically, so the ring has to be visible when it does
@@ -229,7 +229,7 @@ export class EsaErrorSummary extends LitElement {
          :focus-visible heuristics can decide not to paint. Losing the ring here
          means the user is moved somewhere with no indication of where. */
       .root:focus {
-        outline: var(--focus-ring-width) solid var(--focus-ring-color);
+        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
         outline-offset: var(--focus-ring-offset, 2px);
       }
 
@@ -267,7 +267,7 @@ export class EsaErrorSummary extends LitElement {
         text-decoration-thickness: 2px;
       }
       .link:focus-visible {
-        outline: var(--focus-ring-width) solid var(--focus-ring-color);
+        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
         outline-offset: var(--focus-ring-offset, 2px);
       }
     `,

@@ -539,6 +539,56 @@ beats 25 noisy ones. The generated "Theming surface" table on each component's
 doc page is the audit: `component`-tier rows are declared surface, `ad-hoc`
 rows are candidates to either promote into `component-tokens.css` or fold away.
 
+### The test: WOULD this component diverge, not COULD it
+
+**This is the canonical rationale for the 2026-08-16 demotion pass, and every
+`*-hooks-removed` row in `migrations.json` refers back to here rather than
+restating it.**
+
+The audit that drove that pass measured all 306 tier-3 declarations. **249 were
+read by exactly ONE component, and 240 held no value of their own — a pure alias
+over a tier-2 role.** Fifteen distinct names aliased `--color-content-default`
+(`--dialog-color`, `--popover-color`, `--pill-text-color`, `--kbd-color`, …);
+thirteen aliased `--color-border-default`; eleven aliased
+`--color-background-elevation-raised`.
+
+A hook like that is **a role wearing a component's name.** It adds a name and no
+capability. Ask of every hook:
+
+> *Would* a theme make this component diverge from the role it points at — not
+> *could* it. Every hook could.
+
+`--card-radius` → no: a brand re-points `--radius-md` and wants the card to
+follow. `--button-radius-md` → yes: pill buttons beside square fields is an
+ordinary house style, and the shared token made it unreachable.
+
+**The cost of the extra name is not neutral, which is the part that surprises
+people.** A spoke re-pointing `--color-background-elevation-floating` *wants* the
+dialog, popover, dropdown menu, command palette, confirm-dialog and search-panel
+to move together. Six separate hooks in front of that role are six chances to
+move five of them and miss one — and the miss is silent, because each hook still
+resolves.
+
+Three consequences worth stating outright:
+
+- **A hook is earned by demonstrated divergence, not provided in anticipation of
+  it.** The pass kept every hook a real spoke had actually overridden and
+  demoted the rest. If a spoke later needs one back, that is a `/request-lego` —
+  a cheap, visible request — not a surface carried indefinitely on the chance
+  someone wants it.
+- **Removal, never rename.** These rows carry `removed: true` even though the
+  destination is known and value-identical. A rename row would emit
+  `--card-bg: var(--color-background-elevation-raised)` into `tokens.css`,
+  keeping the dead name shipped and in the baseline forever; worse,
+  `migrate-tokens.mjs` rewrites *declarations* as well as reads, so it would turn
+  a spoke's one-component override into a whole-role override and report success.
+  The destination rides in the pair's second element as **print-only guidance**.
+- **Literal micro-geometry is not in scope and must not be swept in.**
+  `--dialog-width: 480px`, `--side-dialog-width-lg`, `--tab-layout-height-md`
+  and the rest hold values with no tier-1 or tier-2 home. Demoting one does not
+  move the capability somewhere better — it deletes it and hardcodes the number.
+  The test above only applies to a hook that *has* a role to fall back to.
+
 ## Mechanics (zero-regression rule)
 
 Adding a hook NEVER changes rendered output:
