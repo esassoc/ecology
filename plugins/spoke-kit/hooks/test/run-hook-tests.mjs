@@ -226,6 +226,69 @@ writeFileSync(
   expect('(n) a non-component file is out of scope', r.code, 0, r.stderr);
 }
 
+console.log('\ncheck-component-first — the change, not the context\n');
+
+// A page whose CSS already carries a font-family rule, put there long before
+// this gate existed.
+const STYLED_PAGE = path.join(pages, 'demo-out.astro');
+const EXISTING_RULE = ['  .demo-out {', '    font-family: var(--font-mono);', '    color: var(--ink);', '  }'].join('\n');
+writeFileSync(
+  STYLED_PAGE,
+  ['<main><section class="demo-out">out</section></main>', '<style>', EXISTING_RULE, '</style>', ''].join('\n')
+);
+
+// (o) remy's exact shape: the anchor quotes the existing font-family rule, the
+//     change adds spacing. The gate convicted the author of the anchor, and
+//     they dropped the styling rather than re-anchor around it.
+{
+  const r = run('check-component-first.mjs', 'Edit', {
+    file_path: STYLED_PAGE,
+    old_string: EXISTING_RULE,
+    new_string: `${EXISTING_RULE.replace('    color: var(--ink);', '    color: var(--ink);\n    margin-block: var(--space-m);\n    padding-inline: var(--space-s);\n    gap: var(--space-2xs);')}`,
+  });
+  expect('(o) spacing added, font-family only quoted as the anchor', r.code, 0, r.stderr);
+}
+
+// (p) the inverse must keep its teeth.
+{
+  const r = run('check-component-first.mjs', 'Edit', {
+    file_path: STYLED_PAGE,
+    old_string: '    color: var(--ink);',
+    new_string: '    color: var(--ink);\n    font-family: Georgia, serif;',
+  });
+  const blocked = r.code === 2 && /type role/.test(r.stderr);
+  expect('(p) an edit that ADDS a font-family still blocks', blocked ? 2 : r.code, 2, r.stderr);
+}
+
+// (q) a second copy of a rule is an addition, not a repeat of the anchor.
+{
+  const r = run('check-component-first.mjs', 'Edit', {
+    file_path: STYLED_PAGE,
+    old_string: '    font-family: var(--font-mono);',
+    new_string: '    font-family: var(--font-mono);\n    font-family: var(--font-sans);',
+  });
+  expect('(q) duplicating a banned declaration blocks', r.code, 2, r.stderr);
+}
+
+// (r) a whole-file Write is judged entire — nothing is context there.
+{
+  const r = run('check-component-first.mjs', 'Write', {
+    file_path: STYLED_PAGE,
+    content: ['<main><section class="demo-out">out</section></main>', '<style>', EXISTING_RULE, '</style>', ''].join('\n'),
+  });
+  expect('(r) a Write carrying font-family blocks', r.code, 2, r.stderr);
+}
+
+// (s) reindenting is not authoring.
+{
+  const r = run('check-component-first.mjs', 'Edit', {
+    file_path: STYLED_PAGE,
+    old_string: '    font-family: var(--font-mono);',
+    new_string: '      font-family: var(--font-mono);',
+  });
+  expect('(s) reindenting an existing declaration passes', r.code, 0, r.stderr);
+}
+
 rmSync(root, { recursive: true, force: true });
 console.log(`\n${failures ? `${failures} case(s) failed` : 'all cases passed'}`);
 process.exit(failures ? 1 : 0);

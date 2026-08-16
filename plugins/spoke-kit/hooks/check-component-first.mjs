@@ -9,7 +9,7 @@
 // The ecology hub is excluded (its specimen pages legitimately contain raw
 // <input> markup) — see classifyDir in lib.mjs.
 import { existsSync, readFileSync } from 'node:fs';
-import { classifyDir, nearestExistingDir, proposedContent, readPayload, targetPath } from './lib.mjs';
+import { addedContent, classifyDir, nearestExistingDir, proposedContent, readPayload, targetPath } from './lib.mjs';
 
 const payload = readPayload();
 if (!payload) process.exit(0); // unparseable payload — fail open
@@ -32,21 +32,30 @@ if (!isMarkup && !isScript) process.exit(0);
 // --- Gate (a): only enforce inside a spoke ---
 if (classifyDir(nearestExistingDir(file)) !== 'spoke') process.exit(0);
 
-const content = proposedContent(payload.tool_input ?? {});
-if (!content) process.exit(0);
+const proposed = proposedContent(payload.tool_input ?? {});
+if (!proposed) process.exit(0);
 
 // Scripts are only interesting if they actually BUILD markup. Config, data modules,
 // and pure logic have no tags and must not be dragged into a UI review.
-if (isScript && !/<\/?[a-z][a-z0-9-]*(\s|>|\/)/i.test(content)) process.exit(0);
+if (isScript && !/<\/?[a-z][a-z0-9-]*(\s|>|\/)/i.test(proposed)) process.exit(0);
 
 // --- Escape hatch: author asserted they walked the lookup order ---
 // Check the proposed content AND the existing file (token may already live there).
-if (/bcn-lego-checked:/i.test(content)) process.exit(0);
+if (/bcn-lego-checked:/i.test(proposed)) process.exit(0);
 try {
   if (existsSync(file) && /bcn-lego-checked:/i.test(readFileSync(file, 'utf8'))) process.exit(0);
 } catch {
   /* unreadable existing file — fall through to the checks */
 }
+
+// --- What the change ADDS is what gets judged ---
+// Everything above reads the whole payload on purpose: the escape token and the
+// "does this script build markup at all" question are about the file's state.
+// The violations below are about the change, and an Edit's anchor is context the
+// author did not write today. Scanning it blocked a spacing-only edit for a
+// font-family rule that was already in the file.
+const content = addedContent(payload.tool_input ?? {});
+if (!content.trim()) process.exit(0);
 
 const violations = [];
 

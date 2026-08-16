@@ -41,6 +41,11 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
       Greps every human-visible string against the canonical corpus behind
       design-principles § Verbal restraint. **ERRORS are Must-fix**, same weight
       as a banned visual pattern.
+      - **WARNINGS** are the em dash and the middot on surfaces that already
+        existed. Andy's ruling, 2026-08-16: "I don't want to deal with old work,
+        just new work." List the count, do not open a cleanup pass, and do not
+        offer one. The Stop hook blocks both at write time, so the backlog can
+        only shrink.
       - If it reports `"skipped": true`, the corpus is not installed on this
         machine. Say so in one line and **check the strings yourself** against
         design-principles § Verbal restraint — a skip is a missing tool, never a
