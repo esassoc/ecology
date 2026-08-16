@@ -124,10 +124,16 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
 
 - **Chips and badges are compact and quiet**: 4px border-radius, light-gray or
   no background, mid-gray border and text, vertically centered in cells —
-  never bulky rounded pills. This 4px radius is now the **`esa-badge` default**
-  (`--badge-radius` → `--radius-100` in `component-tokens.css`) — use the lego
-  as-is, don't restyle it. **`esa-pill` stays full** (`--radius-full`); it's a
-  pill on purpose. Badge ≠ pill: reach for the one that matches the shape you want.
+  never bulky rounded pills. This 4px radius is the **`esa-badge` default** — it
+  reads the tier-2 role `--radius-sm` directly, so a spoke that wants flatter or
+  rounder chips re-points that role. Use the lego as-is; don't restyle it.
+
+  **`esa-pill` is squared to match** and also reads `--radius-sm` — the claim
+  that it "stays full" was true only before the two were aligned. What still
+  separates them is not the corner: a badge is a status marker, a pill is a
+  removable token with its own dismiss affordance. Reach for the one whose
+  BEHAVIOUR you want, not its shape. (`--badge-radius` and `--pill-radius` were
+  demoted on 2026-08-16; there is no per-component corner hook for either.)
 - **Sibling controls match exactly.** Every control sharing a row, bar, or
   group matches its siblings in rendered height, font size, and variant.
   Verify *rendered output* — different components can resolve different tokens
@@ -148,10 +154,17 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   invite expressiveness.**
 - **House chrome is neutral; brand never floods it.** App chrome (top bar /
   sidenav / main) uses **neutral off-white surfaces layered by VALUE** —
-  canvas < bar < rail, separated by a hair of lightness, not by hue. Define
-  them as named near-off-white tokens (`--app-bar-bg`, `--sidenav-bg`,
-  `--app-surface-bg`) that may carry a **barely-perceptible brand tint (~2–5%)**
-  — never a saturated brand fill. A magenta/teal topbar is anathema. The
+  canvas < bar < rail, separated by a hair of lightness, not by hue. Re-point
+  the **tier-2 elevation roles** — `--color-background-default` (canvas),
+  `--color-background-elevation-raised` (bar) and
+  `--color-background-elevation-sunken` (rail) — which may carry a
+  **barely-perceptible brand tint (~2–5%)**, never a saturated brand fill. A
+  magenta/teal topbar is anathema.
+
+  Do NOT reach for per-component chrome hooks: `--app-bar-bg` and `--sidenav-bg`
+  were demoted on 2026-08-16 and no longer exist. That is deliberate — the three
+  chrome surfaces have to move TOGETHER to stay a value ramp, and three separate
+  hooks were three chances to move two of them and flatten it. The
   **`esa-app-bar` default tone is `surface`, never `brand`** for chrome.
   - *Beacon reference (pure-neutral):* top `#efefef`, sidenav/main `#fafafa`.
   - *A brand-tinted example (a green whisper):* canvas `#fbfdfb`, bar `#f2f6f3`,

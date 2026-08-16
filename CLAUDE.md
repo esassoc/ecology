@@ -27,68 +27,74 @@ is this repo's own `storybook` branch in a git worktree.
 ## Token tiers (3-tier)
 1. **Primitive** — raw values → `--color-teal-9`, `--spacing-400`
 2. **Semantic** — intent, references primitives → `--color-background-brand`
-3. **Component** — per-component theming surface → `--form-border-color`, `--sidenav-bg`
+3. **Component** — per-component theming surface → `--form-border-color`, `--button-radius-md`
 
-**A tier-3 token maps to ONE component.** That is what makes it an override —
-the whole point of the tier is that a spoke can re-skin one component without
-moving the system. A token many components read is an INTENT, and intents live
-at tier 2. Applied across all 311 tier-3 declarations on 2026-08-14: **23
-violate, 248 are compliant.** Re-measured 2026-08-16 against 312 declarations, and
-only ONE of the three named violators is still one:
+**Tier 3 is the fallback, not a neutral option.** It exists for three cases and
+nothing else: a **heavily variable component** (buttons — brands genuinely
+diverge), a **component category** (`--form-*` across input/textarea/select), and
+**special cases** (the focus ring, the data grid). Everything else is an intent,
+and intents live at tier 2. The full argument, including the test below, is
+`packages/tokens/SPEC.md` § "The test: WOULD this component diverge, not COULD
+it". Read it before adding a hook.
 
-- **`--form-*` — the live violation, and it SHRANK: 16 declared, 17 reader files**
-  (down from 18 declarations on 2026-08-14). The 18th reader used to be
-  `_inject-styles`, which was not even a component; it was deleted on 2026-08-15
-  (dead module, zero importers, hand-written `.esa-field*` rules on raw
-  `.875rem`/`600` literals).
+> **Would** a theme make this component diverge from the role it points at — not
+> **could** it. Every hook could.
 
-  **Count declarations with `^\s*--form-[a-z-]*:` — the trailing colon is load
-  bearing.** `^\s*--form-` alone returns 21, because five COMMENT lines in
-  `component-tokens.css` begin with a token name in the left margin. That is how a
-  shrinking namespace gets reported as a growing one.
+**THE RULE HERE USED TO BE "a tier-3 token maps to ONE component", AND THAT WAS
+BACKWARDS.** It measured leakage instead of necessity, so it flagged `--form-*`
+(15 readers) as the system's headline violation while treating 249 one-reader
+tokens as "the shape to hold to". Both readings were wrong in the same direction:
+`--form-*` is the *category* case stated almost verbatim, and `--focus-ring-*` is
+the *special* case by name — the two most defensible hooks in the file. Meanwhile
+**240 of 306 declarations held no value at all**, each a pure alias over a tier-2
+role: 15 different names for `--color-content-default`, 13 for
+`--color-border-default`, 11 for `--color-background-elevation-raised`.
 
-  What is actually wrong is not the count and not the alias depth — all 16 chain
-  straight to tier 2 and hold no values of their own. It is that **four non-form
-  components read form-named tokens**: `esa-button.astro` and `esa-button-group.ts`
-  (`--form-radius-*`), `esa-file-list.ts` (`--form-border-width`), and
-  `esa-button-toggle.ts` (ten of them, including `--form-label-color` and
-  `--form-error-color`). A spoke re-pointing `--form-border-color` to restyle its
-  inputs silently restyles buttons too.
-- **`--focus-ring-*` — resolved in substance, and the namespace stays on purpose.**
-  Both themeable properties are now thin aliases over tier-2 roles that already
-  exist: `--focus-ring-color` → `--color-border-default-focus`, `--focus-ring-width`
-  → `--border-width-focus`. A spoke re-points the ring at tier 2 and all 31 readers
-  follow, which is the entire point of promotion — so the count never needed to
-  drop. `--focus-ring-offset: 2px` stays a literal deliberately (the spacing scale
-  is a 4px grid; minting a 2px primitive for one consumer is what SPEC.md forbids),
-  and `focus-ring` is the naming rubric's own worked example of a `special` case in
-  the component slot. Read the comment above the declarations before reopening this.
-- **`--loading-spinner-*` — marginal.** 2 tokens, 2 readers, both tier-2 aliases;
-  the second reader is `esa-loading-overlay`, which composes a spinner. Not worth a
-  rename.
+That is not merely redundant. A spoke re-pointing
+`--color-background-elevation-floating` *wants* the dialog, popover, dropdown,
+palette, confirm-dialog and search-panel to move together; six hooks in front of
+that role are six chances to move five and miss one, silently, because each hook
+still resolves.
 
-**The lesson for the count itself:** "N components read it" does not measure the
-violation. A tier-3 token that is a pure alias over a tier-2 role is already
-promoted in every way that matters to a spoke — what matters is whether the
-re-skin surface a spoke reaches is a single point. Count HOLDERS OF VALUE, not
-readers of a name.
+**The 2026-08-16 pass took tier 3 from 306 declarations to 116** — 16 dead names
+deleted, 3 misfiled ones relocated, 168 demoted to the roles they aliased. What
+survives: `--form-*` (12), `--focus-ring-*` (3), `--button-*` (6), the staged
+`--grid-*` (24), every hook a real spoke had actually overridden (13), and
+literal micro-geometry with no tier-1/2 home (48). Each removal has a
+`removed: true` row in `migrations.json` naming what to read instead.
 
-Do NOT reach for "fan it out to per-component hooks" as the fix. That was
-measured for `--form-*` and comes to **162 names**, against SPEC.md's own
-5–9-per-component guidance. Promotion to tier 2 is usually the answer, because
-the thing you have is a role wearing a component's name.
+Two rules that came out of it and are easy to get wrong:
 
-SPEC.md's **"shared group surfaces"** category is the exception that licensed
-all of this, and it is the category to be most suspicious of: five of its
-members were deleted or moved on 2026-08-14 alone. It survives only where the
-namespace genuinely bounds its readers.
+- **Literal micro-geometry is out of scope.** `--dialog-width: 480px`,
+  `--side-dialog-width-lg`, `--tab-layout-height-md` have nothing at tier 1 or 2
+  to point at. Demoting one deletes the capability and hardcodes the number; the
+  divergence test only applies where there IS a role to fall back to.
+- **Removal, never rename.** A rename row emits `--card-bg: var(--role)` into
+  `tokens.css`, keeping the dead name shipped and in the baseline forever — and
+  `migrate-tokens.mjs` rewrites *declarations* as well as reads, so it would turn
+  a spoke's one-component override into a whole-role override and report success.
+  The destination rides in the pair's second element as print-only guidance.
+
+Do NOT reach for "fan it out to per-component hooks" as the fix for a category
+surface. That was measured for `--form-*` and comes to **162 names**, against
+SPEC.md's own 5–9-per-component guidance.
 
 **Theming = override the semantic and/or component layer** under a `[data-theme="x"]`
 scope. Primitives never move; component internals are never touched.
 The full contract — naming, when a property earns a tier-3 hook, the
-zero-regression splice mechanic — is **`packages/tokens/SPEC.md`**. As of
-2026-08-14 all 64 components expose a tier-3 surface and all 64 (+3 reference
-wrappers) have a doc page rendering its generated "Theming surface" table. The
+zero-regression splice mechanic — is **`packages/tokens/SPEC.md`**.
+
+**Most components no longer have a tier-3 surface of their own, and that is the
+target state, not a gap.** After the 2026-08-16 pass, **28 of 66** components own
+a namespace (`--card-*`, `--dialog-*`, …); the other 38 theme entirely through
+tier 2, which is what a spoke re-points anyway. 55 of 66 still READ a tier-3
+hook, but mostly the two shared surfaces — `--focus-ring-*` and `--form-*`. A
+component's doc page rendering an empty "Wired to this component" table is
+correct output; its hooks moved into "Shared tokens it reads". Do not treat that
+as a component missing its surface and re-add hooks to fill it.
+
+Every one of the 66 (+3 reference wrappers) still has a doc page rendering its
+generated "Theming surface" table. The
 "61" that stood here through 2026-06-12 was a doc-page count, not a component
 count — five later-promoted components (`esa-container`, `esa-kbd`,
 `esa-collapsible`, `esa-app-shell`, `esa-stat`) had catalog entries but no page.
@@ -119,7 +125,7 @@ destructuring, so any other form silently drops the default from the docs.
 
 ## Renaming or deleting a token — the row is enforced, not remembered
 `packages/tokens/token-names.json` is a **committed baseline** of every name the
-package ships (1,068). `npm test` fails when one disappears without a
+package ships (1,028). `npm test` fails when one disappears without a
 `migrations.json` row. Order matters: **add the row first** — that is what emits
 the alias or the removed note — then `npm run tokens:snapshot` to accept the new
 set. `npm run tokens:check` runs the same guard on its own.
