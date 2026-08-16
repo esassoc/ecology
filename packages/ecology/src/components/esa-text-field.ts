@@ -349,7 +349,7 @@ export class EsaTextField extends LitElement {
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--radius-md, 0.5rem);
-      --_field-border-color: var(--form-border-color, #e5e5e5);
+      --_field-border-color: var(--form-border-color, #cecece);
       display: block;
     }
     /* Type is NOT set here. The size steps carry geometry only; the text comes
@@ -380,7 +380,7 @@ export class EsaTextField extends LitElement {
     /* Type comes from .typography-label-* on the element. Colour and spacing are
        not typography and stay here. */
     .label {
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
@@ -420,9 +420,9 @@ export class EsaTextField extends LitElement {
       --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .control:focus-within {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .input {
@@ -438,14 +438,14 @@ export class EsaTextField extends LitElement {
       /* A native control does not inherit type by default — this is what opts it
          into the composite already resolved on .control. */
       font: inherit;
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: transparent;
       border: none;
       outline: none;
       box-sizing: border-box;
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -473,25 +473,25 @@ export class EsaTextField extends LitElement {
       align-items: center;
       flex: none;
       padding-inline: var(--_field-padding-x);
-      color: var(--form-affix-color, var(--color-content-default-secondary, #737373));
-      background: var(--form-affix-bg, var(--color-background-elevation-sunken, #efefef));
+      color: var(--form-affix-color, var(--color-content-default-secondary, #646464));
+      background: var(--form-affix-bg, var(--color-background-elevation-sunken, #f0f0f0));
       user-select: none;
       white-space: nowrap;
     }
     .affix--prefix {
       border-inline-end: var(--form-border-width, 1px) solid
-        var(--form-affix-border-color, var(--form-border-color, #e5e5e5));
+        var(--form-affix-border-color, var(--form-border-color, #cecece));
     }
     .affix--suffix {
       border-inline-start: var(--form-border-width, 1px) solid
-        var(--form-affix-border-color, var(--form-border-color, #e5e5e5));
+        var(--form-affix-border-color, var(--form-border-color, #cecece));
     }
 
     .field--error .control {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .control:focus-within {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #ef4444);
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
     }
 
     /* Type comes from .typography-body-sm — help and error are one size at every
@@ -515,7 +515,7 @@ export class EsaTextField extends LitElement {
       margin-block-start: var(--form-help-gap, 4px);
     }
     .help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     /* The error line is distinguished from the help line by THREE things — colour, the
        icon, and the visually-hidden "Error:" prefix. Colour alone is SC 1.4.1 (Use of

@@ -100,7 +100,7 @@ export class EsaRangeSlider extends LitElement {
             step=${this.step}
             .value=${String(this.value)}
             ?disabled=${this.disabled}
-            style="--fill-percent: ${this.fillPercent}%"
+            style="--_fill-percent: ${this.fillPercent}%"
             aria-label=${this.label || 'Range slider'}
             aria-valuemin=${this.min}
             aria-valuemax=${this.max}
@@ -138,7 +138,7 @@ export class EsaRangeSlider extends LitElement {
     .label {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
     }
     .row {
       display: flex;
@@ -165,10 +165,10 @@ export class EsaRangeSlider extends LitElement {
       border-radius: calc(var(--_track-height) / 2);
       background: linear-gradient(
         to right,
-        var(--color-background-brand, #43608a) 0%,
-        var(--color-background-brand, #43608a) var(--fill-percent, 0%),
-        var(--color-border-default, #e5e5e5) var(--fill-percent, 0%),
-        var(--color-border-default, #e5e5e5) 100%
+        var(--color-background-brand, #46a758) 0%,
+        var(--color-background-brand, #46a758) var(--_fill-percent, 0%),
+        var(--color-border-default, #cecece) var(--_fill-percent, 0%),
+        var(--color-border-default, #cecece) 100%
       );
     }
     .input::-webkit-slider-thumb {
@@ -176,9 +176,9 @@ export class EsaRangeSlider extends LitElement {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
       margin-top: calc((var(--_track-height) - var(--_thumb-size)) / 2);
-      border: 2px solid var(--color-background-brand, #43608a);
+      border: 2px solid var(--color-background-brand, #46a758);
       border-radius: 50%;
-      background: var(--color-background-elevation-raised, #fff);
+      background: var(--color-background-elevation-raised, #fcfcfc);
       box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
       transition:
         box-shadow var(--transition-fast, 150ms ease),
@@ -187,31 +187,31 @@ export class EsaRangeSlider extends LitElement {
     .input::-moz-range-track {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-border-default, #e5e5e5);
+      background: var(--color-border-default, #cecece);
     }
     .input::-moz-range-progress {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-background-brand, #43608a);
+      background: var(--color-background-brand, #46a758);
     }
     .input::-moz-range-thumb {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
-      border: 2px solid var(--color-background-brand, #43608a);
+      border: 2px solid var(--color-background-brand, #46a758);
       border-radius: 50%;
-      background: var(--color-background-elevation-raised, #fff);
+      background: var(--color-background-elevation-raised, #fcfcfc);
       box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
     }
     .input:focus-visible {
       outline: none;
     }
     .input:focus-visible::-webkit-slider-thumb {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .input:focus-visible::-moz-range-thumb {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .input:hover:not(:disabled)::-webkit-slider-thumb {
       transform: scale(1.1);
@@ -224,7 +224,7 @@ export class EsaRangeSlider extends LitElement {
     .value {
       min-width: 3ch;
       text-align: right;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       font-variant-numeric: tabular-nums;
     }
   `,

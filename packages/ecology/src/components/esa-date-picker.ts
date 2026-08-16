@@ -274,7 +274,7 @@ export class EsaDatePicker extends LitElement {
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--radius-md, 0.5rem);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
     :host([size='xs']) {
       --_field-padding-y: var(--spacing-200, 0.5rem);
@@ -299,14 +299,14 @@ export class EsaDatePicker extends LitElement {
     }
     /* Type comes from the composite class on the element. */
     .field__label {
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .field__required {
       color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     /* Three signals, not one: colour, icon, and a visually-hidden "Error:" prefix.
        Colour alone is SC 1.4.1 (Use of Color, Level A). */
@@ -331,7 +331,7 @@ export class EsaDatePicker extends LitElement {
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
@@ -342,9 +342,9 @@ export class EsaDatePicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -368,10 +368,10 @@ export class EsaDatePicker extends LitElement {
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width)
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,

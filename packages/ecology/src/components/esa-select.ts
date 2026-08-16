@@ -695,7 +695,7 @@ export class EsaSelect extends LitElement {
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--radius-md, 0.5rem);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
     /* No :host([size='xs']) — see the note on "declare size". "sm" is the floor by
        decision, and an out-of-range size is clamped to it before it reaches here.
@@ -720,14 +720,14 @@ export class EsaSelect extends LitElement {
       /* Was the last reader of --form-label-font-size and one of two readers of
          --form-label-font-weight. Both are retired with the rest of the size-only
          ramp; the composite carries size and weight together. */
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .field__required {
       color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     /* Three signals, not one: colour, the icon, and a visually-hidden "Error:" prefix.
        Colour alone is SC 1.4.1 (Use of Color, Level A) — and colour alone is exactly
@@ -780,9 +780,9 @@ export class EsaSelect extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input-wrapper--tags:focus-within {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .input-wrapper--tags .input {
       /* Compact tag filter: at most ONE token renders (a single chip, or an
@@ -801,7 +801,7 @@ export class EsaSelect extends LitElement {
       box-shadow: none;
     }
     .field--error .input-wrapper--tags {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .input {
       width: 100%;
@@ -819,7 +819,7 @@ export class EsaSelect extends LitElement {
          would cancel it at exactly one viewport. Same line esa-button,
          esa-text-field, esa-button-toggle and esa-color-picker already carry.
          esa-textarea deliberately does NOT — it is genuinely multi-line. */
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
@@ -831,7 +831,7 @@ export class EsaSelect extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
 
     /* The default trigger is a BUTTON, not an input — a select opens a list, it does
@@ -852,7 +852,7 @@ export class EsaSelect extends LitElement {
     /* ::placeholder cannot apply to a button — there is no placeholder attribute,
        only fallback text — so the muted colour is a class instead. */
     .input--placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     /* Hover moves the BORDER, not the fill — the field is transparent in every
        state so that it is the colour of whatever contains it.
@@ -862,9 +862,9 @@ export class EsaSelect extends LitElement {
       --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -891,7 +891,7 @@ export class EsaSelect extends LitElement {
       top: 50%;
       transform: translateY(-50%);
       display: inline-flex;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
     }
@@ -912,8 +912,8 @@ export class EsaSelect extends LitElement {
       margin-top: var(--spacing-100, 4px);
       max-height: 256px;
       overflow-y: auto;
-      background: var(--color-background-elevation-raised, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overscroll-behavior: contain;
@@ -924,21 +924,21 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .option--selected {
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
     }
     .option--disabled {
-      color: var(--color-content-disabled, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -946,7 +946,7 @@ export class EsaSelect extends LitElement {
       background: transparent;
     }
     .option--empty {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       cursor: default;
       font-style: var(--font-style-italic, italic);
     }
@@ -965,7 +965,7 @@ export class EsaSelect extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -987,7 +987,7 @@ export class EsaSelect extends LitElement {
       gap: var(--spacing-050, 2px);
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: var(--radius-pill, 9999px);
       user-select: none;
     }
@@ -1003,7 +1003,7 @@ export class EsaSelect extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -1016,15 +1016,15 @@ export class EsaSelect extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width)
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,

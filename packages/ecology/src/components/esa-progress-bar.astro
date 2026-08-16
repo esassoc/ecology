@@ -90,9 +90,9 @@ const showHeader = !!label || showValue;
 <style>
   .esa-progress-bar {
     --_progress-height: var(--progress-bar-height-md, 8px);
-    --_progress-radius: var(--progress-bar-radius, var(--radius-pill, 9999px));
-    --_progress-track-bg: var(--progress-bar-track-bg, var(--color-background-elevation-sunken, #efefef));
-    --_progress-fill-bg: var(--progress-bar-fill-bg, var(--color-background-brand, #43608a));
+    --_progress-radius: var(--radius-pill, 9999px);
+    --_progress-track-bg: var(--color-background-elevation-sunken, #f0f0f0);
+    --_progress-fill-bg: var(--color-background-brand, #46a758);
 
     display: block;
     width: 100%;
@@ -106,11 +106,11 @@ const showHeader = !!label || showValue;
   }
 
   .esa-progress-bar__label {
-    color: var(--color-content-default, #171717);
+    color: var(--color-content-default, #202020);
   }
 
   .esa-progress-bar__value {
-    color: var(--color-content-default-secondary, #525252);
+    color: var(--color-content-default-secondary, #646464);
     font-variant-numeric: tabular-nums;
   }
 
@@ -134,9 +134,9 @@ const showHeader = !!label || showValue;
   .esa-progress-bar--sm { --_progress-height: var(--progress-bar-height-sm, 4px); }
   .esa-progress-bar--lg { --_progress-height: var(--progress-bar-height-lg, 12px); }
 
-  .esa-progress-bar--success { --_progress-fill-bg: var(--color-background-utility-success, #22c55e); }
-  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-background-utility-warning, #f59e0b); }
-  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-background-utility-danger, #ef4444); }
+  .esa-progress-bar--success { --_progress-fill-bg: var(--color-background-utility-success, #bdee63); }
+  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-background-utility-warning, #ffc53d); }
+  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-background-utility-danger, #e5484d); }
 
   .esa-progress-bar--indeterminate .esa-progress-bar__fill {
     width: 40% !important;

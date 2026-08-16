@@ -646,52 +646,11 @@
       ]
     },
     {
-      "id": "tier3-border-to-border-color",
-      "kind": "token",
-      "since": "2026-08-14",
-      "why": "The word `border` named two different things at tier 3. This one held a plain colour; --filter-dropdown-border held a whole `1px solid …` shorthand (see the row below, which is NOT an exact alias). Both are now `-border-color`, matching the 27 border hooks in the file that already were. Names only, values untouched. FIRST TIER-3 ROWS IN THIS FILE — note the asymmetry: the emitted alias rescues a spoke that READS an old name, but tier 3 is the surface a spoke DECLARES, and an alias cannot rescue a declaration. A spoke that overrode --sidenav-border silently loses that override and renders the hub default with no error, so /update-tokens has to run in every spoke rather than the alias being left to absorb it.\n\nTHIS ROW SHIPPED A SECOND PAIR, --topbar-border -> --topbar-border-color, AND IT WAS MOVED OUT ON 2026-08-16 when the whole --topbar-* namespace was deleted. Left here it would have become the exact defect this file warns about twice over: an alias whose destination no longer exists is itself declared and resolves to nothing, so a spoke reading --topbar-border would lose the property with the manifest reporting success. The pair now lives in topbar-chrome-exempt-removed with an empty destination, which is the truthful shape — there is nothing to rename it to. The destination-resolves guard in token-rename.test.mjs is what caught it.",
-      "pairs": [
-        [
-          "--sidenav-border",
-          "--sidenav-border-color"
-        ]
-      ]
-    },
-    {
-      "id": "filter-dropdown-border-shorthand-to-colour",
-      "kind": "token",
-      "since": "2026-08-14",
-      "exact": false,
-      "why": "NOT an exact alias — the VALUE SHAPE changed, not just the name. --filter-dropdown-border held `1px solid var(--color-border)`; --filter-dropdown-border-color holds the colour alone, and esa-filter-dropdown now composes the shorthand from --border-width-default. The hub renders identically (that role is 1px, the same literal the shorthand carried), but a spoke is NOT safe by construction here: anything that wrote `border: var(--filter-dropdown-border)` now gets a bare colour where a shorthand was, which is not a valid border. That is the whole reason the token changed — a theme could not re-point this colour without restating a width and style it had no reason to care about. Rewrite such a site as `border: var(--border-width-default, 1px) solid var(--filter-dropdown-border-color)`.",
-      "pairs": [
-        [
-          "--filter-dropdown-border",
-          "--filter-dropdown-border-color"
-        ]
-      ]
-    },
-    {
       "id": "tier3-variant-before-property",
       "kind": "token",
       "since": "2026-08-14",
-      "why": "Five tokens put their variant AFTER the property, where the rest of the file puts it before (--app-bar-brand-bg, --app-bar-brand-strong-text). Four were esa-snackbar-item's colour-variant surface — the only component in the kit that exposes its variant axis at tier 3 at all — and the fifth, --form-border-color-error, put a validation VARIANT in the trailing slot reserved for interaction states, beside hover and focus. Renaming it also pairs it with the existing --form-error-color: one error treatment, two properties. Names only; every value is untouched. Same tier-3 declaration caveat as the border row above.",
+      "why": "Five tokens put their variant AFTER the property, where the rest of the file puts it before (--app-bar-brand-bg, --app-bar-brand-strong-text). Four were esa-snackbar-item's colour-variant surface — the only component in the kit that exposes its variant axis at tier 3 at all — and the fifth, --form-border-color-error, put a validation VARIANT in the trailing slot reserved for interaction states, beside hover and focus. Renaming it also pairs it with the existing --form-error-color: one error treatment, two properties. Names only; every value is untouched. Same tier-3 declaration caveat as the border row above.\n\nTHE FOUR --snackbar-item-bg-* PAIRS WERE MOVED OUT ON 2026-08-16, when their destinations were demoted to the tier-2 utility roles (snackbar-item-hooks-removed). Left here they would have been aliases onto names declared nowhere — the exact defect this file records twice already. Only --form-border-color-error remains, whose destination is in the kept --form-* set.",
       "pairs": [
-        [
-          "--snackbar-item-bg-danger",
-          "--snackbar-item-danger-bg"
-        ],
-        [
-          "--snackbar-item-bg-info",
-          "--snackbar-item-info-bg"
-        ],
-        [
-          "--snackbar-item-bg-success",
-          "--snackbar-item-success-bg"
-        ],
-        [
-          "--snackbar-item-bg-warning",
-          "--snackbar-item-warning-bg"
-        ],
         [
           "--form-border-color-error",
           "--form-error-border-color"
@@ -1434,19 +1393,58 @@
       "to": "Nothing. esa-app-shell renders every surface these named — the bar, the sidebar toggle, the omnibox — and styles them from the SEMANTIC layer directly. A spoke re-skins the chrome by re-pointing those tier-2 roles (--color-background-elevation-raised, --color-content-default-secondary and friends), which is what it was already doing, because none of these twelve was ever read.",
       "why": "THE ONLY CHROME EXEMPTION, AND IT DOCUMENTED A LOOK THE KIT DOES NOT RENDER. These twelve were held exempt from the wire-or-delete rule on the grounds that esa-app-shell could read them and we were choosing not to wire it. The disclosure burden SPEC.md sets for that — an owner and a plain-language cost — was met. What was not checked is whether the DEFAULTS were true, and seven of the twelve were not: the block claims the bar sits on --color-background-elevation-sunken and the toggle on content-secondary, while esa-app-shell paints elevation-raised and content-tertiary.\n\nThat is worse than an unwired hook. An unwired hook does nothing; a wrong one is a published contract that lies. A spoke reading this block to learn what the chrome looks like learns something false, and a spoke overriding --topbar-bg to change the bar gets silence.\n\nThe category dies with it: --topbar-* was CHROME_EXEMPT's only member, so SPEC.md's 'Chrome exemptions' section and the CHROME_EXEMPT constant in apps/site/src/data/token-graph.ts both go in the same commit. Retiring the exemption is the honest move — the surface it was protecting was never real. If the chrome ever earns a theming surface, it gets one built from what esa-app-shell actually paints, not from what this block wished it did.\n\nexact:false because there is no equivalent — the block's own values disagree with the shipped chrome, so no substitution is value-neutral.",
       "pairs": [
-        ["--topbar-bg", ""],
-        ["--topbar-border-color", ""],
-        ["--topbar-border", ""],
-        ["--topbar-shadow", ""],
-        ["--topbar-icon-color", ""],
-        ["--topbar-icon-color-hover", ""],
-        ["--topbar-icon-bg", ""],
-        ["--topbar-icon-bg-hover", ""],
-        ["--topbar-icon-radius", ""],
-        ["--topbar-search-bg", ""],
-        ["--topbar-search-bg-hover", ""],
-        ["--topbar-search-text", ""],
-        ["--topbar-search-radius", ""]
+        [
+          "--topbar-bg",
+          ""
+        ],
+        [
+          "--topbar-border-color",
+          ""
+        ],
+        [
+          "--topbar-border",
+          ""
+        ],
+        [
+          "--topbar-shadow",
+          ""
+        ],
+        [
+          "--topbar-icon-color",
+          ""
+        ],
+        [
+          "--topbar-icon-color-hover",
+          ""
+        ],
+        [
+          "--topbar-icon-bg",
+          ""
+        ],
+        [
+          "--topbar-icon-bg-hover",
+          ""
+        ],
+        [
+          "--topbar-icon-radius",
+          ""
+        ],
+        [
+          "--topbar-search-bg",
+          ""
+        ],
+        [
+          "--topbar-search-bg-hover",
+          ""
+        ],
+        [
+          "--topbar-search-text",
+          ""
+        ],
+        [
+          "--topbar-search-radius",
+          ""
+        ]
       ]
     },
     {
@@ -1457,9 +1455,18 @@
       "to": "Nothing. esa-icon-link is a deprecation shim over esa-button variant=\"chrome\" (icon-link-to-button-chrome, 2026-08-14) and no longer paints anything of its own. Type comes from the typography-label-* composite the button applies; the icon gap is the button's.",
       "why": "THE HOOKS OUTLIVED THE COMPONENT BY TWO DAYS. esa-icon-link folded into esa-button on 2026-08-14 and became a shim; these three were left declared, reading nothing, in a namespace whose component no longer draws. Verified across packages/tokens/src, packages/ecology/src, packages/docs/src, packages/spoke-template/src, apps/site/src and plugins/: zero readers anywhere.\n\nWORTH RECORDING WHY THEY WERE MISSED. The component rename rows (kind: component) carry no `pairs`, so nothing walked this namespace when the fold landed — a component removal and its tier-3 surface are two separate migrations and only one of them was written. --icon-button-bg-hover was stranded by the same fold on the same day; see icon-button-bg-hover-removed.\n\nThe two font-size names were also the last survivors of the size-only typography ramp that --form-font-size-* died for on 2026-08-14: a size with no weight, leading or face behind it. They would have failed that test too if anyone had been reading them.",
       "pairs": [
-        ["--icon-link-font-size-md", ""],
-        ["--icon-link-font-size-sm", ""],
-        ["--icon-link-gap", ""]
+        [
+          "--icon-link-font-size-md",
+          ""
+        ],
+        [
+          "--icon-link-font-size-sm",
+          ""
+        ],
+        [
+          "--icon-link-gap",
+          ""
+        ]
       ]
     },
     {
@@ -1470,7 +1477,1153 @@
       "to": "--button-chrome-bg-hover, which holds the identical value (color-mix(in srgb, currentColor 14%, transparent)) and is read by esa-button. Named for the variant that absorbed the behaviour rather than the component that used to own it.",
       "why": "STRANDED BY THE esa-icon-button FOLD (icon-button-to-button-chrome, 2026-08-14). The scrim itself did not go anywhere — esa-button variant=\"chrome\" paints it, and --button-chrome-bg-hover was declared for exactly that purpose, carrying this token's value verbatim. What was left behind was the old NAME, declared and read by nothing.\n\nA rename row would have been wrong even though the values match. This is a tier-3 name, which is the surface a spoke DECLARES, and the alias build.js emits rescues only readers; it would also have re-declared the dead name into dist/tokens.css and kept it in the shipped baseline forever. The destination is recorded here as guidance instead — migrate-tokens.mjs prints it and a human decides, which is right, because a spoke that overrode --icon-button-bg-hover was theming icon buttons specifically and --button-chrome-bg-hover now covers every chrome button.",
       "pairs": [
-        ["--icon-button-bg-hover", "--button-chrome-bg-hover"]
+        [
+          "--icon-button-bg-hover",
+          "--button-chrome-bg-hover"
+        ]
+      ]
+    },
+    {
+      "id": "backdrop-filter-namespaced",
+      "kind": "token",
+      "since": "2026-08-16",
+      "why": "A TIER-3 HOOK NAMED AFTER THE CSS PROPERTY IT SETS, DECLARED AT :root. Two separate faults, and the second is the dangerous one.\n\nThe name broke the tier-3 rule that a hook carries its component's prefix (--<component>-<part?>-<property>); --backdrop-filter carried none, so nothing in the name said esa-side-dialog owned it, and it sorted into the file's alphabetical HOOKIFY block under a bare `b` where no reader would look for it.\n\nWorse, custom properties INHERIT. Declaring --backdrop-filter at :root meant every element in every consuming app inherited it, and any spoke that wrote `backdrop-filter: var(--backdrop-filter)` on its own element — the obvious spelling, since that is what the property is called — silently picked up this component's opt-in default of `none` instead of whatever it meant to define. A token cannot squat on a property name at the root of the cascade.\n\nValue-neutral: `none` either way, and the only reader (esa-side-dialog) moves with it. A spoke that set --backdrop-filter to opt into a frosted backdrop keeps working through the emitted alias until it re-declares under the new name — the usual tier-3 asymmetry applies, so /update-tokens is what actually restores a DECLARATION.",
+      "pairs": [
+        [
+          "--backdrop-filter",
+          "--side-dialog-backdrop-filter"
+        ]
+      ]
+    },
+    {
+      "id": "fill-percent-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "Nothing — and nothing is correct. This was never a theming value. esa-range-slider now uses --_fill-percent, a private under the kit's `--_*` convention, which is what runtime state should always have been.",
+      "why": "RUNTIME STATE PUBLISHED AS A THEMING TOKEN. esa-range-slider writes this from JS on every render as an inline style on its own <input> — `--fill-percent: <n>%` — and reads it back in that input's track gradient to paint the filled portion. It is the slider's current position, recomputed on input, and the ONE thing a spoke must never override: setting it would freeze the fill and desynchronise it from the value the control reports.\n\nDeclaring it at :root published it as part of the theming surface, where /debug/components listed it beside real hooks with no way to tell them apart, and gave it a `0%` default that could only ever apply before first paint — a case both read sites already handled with their own `0%` inline fallback. So the declaration was simultaneously misleading and inert.\n\nWorth stating as a rule, because this is the second construct found squatting in this file that was not a token (see backdrop-filter-namespaced, same day): a tier-3 token is a value a THEME may set. If the component writes it itself, it is state, and state goes behind `--_`.",
+      "pairs": [
+        [
+          "--fill-percent",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "color-link-to-content-brand",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "--color-content-brand, the tier-2 role it already aliased. esa-file-list reads it directly now. A link colour that must diverge from the brand content role is a MISSING TIER-2 ROLE, not a file-list hook — raise it as one rather than re-adding this.",
+      "why": "THREE DEFECTS IN ONE DECLARATION.\n\n(1) MIS-TIERED BY NAME. `--color-link` sits in the `--color-*` namespace that 354 tier-2 tokens occupy, so read on its own it is indistinguishable from a semantic role — a spoke would reasonably expect re-pointing it to move every link in the kit. tier3-naming.ts already carried a standing finding saying exactly this.\n\n(2) A ROLE-RENAME, NOT AN OVERRIDE. It aliased --color-content-brand and had exactly one reader, esa-file-list. A tier-3 hook exists so ONE component can diverge from a role; a hook that only restates the role for one component adds a name and no capability.\n\n(3) THE CHAIN AND THE READ SITE DISAGREED. The declaration pointed at --color-content-brand (grass-11, #2a7e3b). The read site's fallback was --color-background-brand (#43608a) — a BACKGROUND role painting TEXT, and a blue one from a palette this kit no longer uses. Whenever component-tokens.css was absent the file link rendered a foreign blue, and the two literals in the chain (#3a7c59 here, #43608a there) agreed with each other and with the token on nothing.\n\nValue-neutral in the shipped kit: the resolved colour was and remains --color-content-brand. Only the absent-partial case changes, and it changes from wrong to right.",
+      "pairs": [
+        [
+          "--color-link",
+          "--color-content-brand"
+        ]
+      ]
+    },
+    {
+      "id": "kbd-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-kbd: --kbd-color -> --color-content-default-muted, --kbd-bg -> --color-background-elevation-raised, --kbd-border-color -> --color-border-default, --kbd-radius -> --radius-sm. Values unchanged.",
+      "why": "FIRST OF THE TIER-3 DEMOTION PASS, and the shape every later row in that pass repeats.\n\nEach of the four was read by exactly ONE component and held no value of its own — a pure alias over a tier-2 role. That is a role wearing a component's name, not an override. A tier-3 hook exists so ONE component can DIVERGE from a role; a keycap has no reason to diverge from the kit's raised surface, default border or muted text, and nothing in this repo or either audited spoke ever re-pointed one. Four extra names in front of four roles bought no capability and cost a spoke four more places to remember.\n\nWHAT A SPOKE SHOULD DO. If you declared --kbd-bg to re-skin keycaps ONLY, there is no longer a hook: re-pointing --color-background-elevation-raised instead moves every raised surface in that scope, which is probably not what you meant. If keycaps genuinely must diverge from the surface role, that is a /request-lego, not a find-and-replace. This is why the row is `removed` rather than a rename — a rename would have had the codemod perform exactly the substitution this paragraph warns against, and migrate-tokens.mjs rewrites declarations as well as reads.\n\nValue-neutral in the shipped kit. Read-site fallbacks were normalised to the resolved values in the same pass, which also corrected --kbd-radius's literal `4px` and the three colour fallbacks that still described the pre-Radix palette.",
+      "pairs": [
+        [
+          "--kbd-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--kbd-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--kbd-color",
+          "--color-content-default-muted"
+        ],
+        [
+          "--kbd-radius",
+          "--radius-sm"
+        ]
+      ]
+    },
+    {
+      "id": "filter-container-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-filter-container: --filter-container-gap -> --spacing-200. Values unchanged.",
+      "why": "One hook, a gap, aliasing --spacing-200. --filter-container-padding stays: it holds a literal `0` with no spacing rung behind it, which is the micro-geometry case the demotion test does not apply to.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--filter-container-gap",
+          "--spacing-200"
+        ]
+      ]
+    },
+    {
+      "id": "filter-dropdown-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-filter-dropdown: --filter-dropdown-bg -> --color-background-elevation-raised; --filter-dropdown-border-color -> --color-border-default; --filter-dropdown-radius -> --radius-md; --filter-dropdown-shadow -> --elevation-4. Values unchanged.",
+      "why": "CARRIES A SECOND, OLDER NAME. `--filter-dropdown-border` was renamed to `--filter-dropdown-border-color` on 2026-08-14 (row filter-dropdown-border-shorthand-to-colour, now folded in here) because it held a whole `1px solid …` SHORTHAND behind a name spelled like the file's plain-colour border hooks. That rename's destination has now been demoted, so the row was pointing at a name declared nowhere — an alias that resolves to nothing while the manifest reports success. Both names retire together.\n\nexact:false because the older half was never an exact alias: anything that wrote `border: var(--filter-dropdown-border)` was getting a shorthand and now needs `border: var(--border-width-default, 1px) solid var(--color-border-default)`.\n\nThe standard floating-panel set — surface, border, corner, shadow — every one of them the same role every other panel in the kit reads. --filter-dropdown-min-width stays; 200px has no tier-2 home.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--filter-dropdown-border",
+          "--color-border-default"
+        ],
+        [
+          "--filter-dropdown-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--filter-dropdown-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--filter-dropdown-radius",
+          "--radius-md"
+        ],
+        [
+          "--filter-dropdown-shadow",
+          "--elevation-4"
+        ]
+      ],
+      "exact": false
+    },
+    {
+      "id": "filter-pills-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-filter-pills: --filter-pill-bg -> --color-background-brand-muted; --filter-pill-bg-hover -> --color-background-brand-muted-hover; --filter-pill-label-color -> --color-content-default-secondary; --filter-pill-text -> --color-content-brand; --filter-pill-radius -> --radius-pill; --filter-pill-font-size -> --typography-label-xs-font-size; --filter-pill-remove-color -> --color-content-default-secondary; --filter-pill-remove-color-hover -> --color-content-utility-danger. Values unchanged.",
+      "why": "All eight, and this does NOT re-open the documented decision that esa-filter-pills hand-rolls its chip rather than composing esa-pill. That decision was about MARKUP (a two-tone `label: value`, and a remove button that emits an event instead of removing itself). It never required a private token surface: the eight hooks aliased the ordinary brand-muted and danger roles, so the chip stays hand-rolled and simply reads those roles directly.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--filter-pill-bg",
+          "--color-background-brand-muted"
+        ],
+        [
+          "--filter-pill-bg-hover",
+          "--color-background-brand-muted-hover"
+        ],
+        [
+          "--filter-pill-label-color",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--filter-pill-text",
+          "--color-content-brand"
+        ],
+        [
+          "--filter-pill-radius",
+          "--radius-pill"
+        ],
+        [
+          "--filter-pill-font-size",
+          "--typography-label-xs-font-size"
+        ],
+        [
+          "--filter-pill-remove-color",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--filter-pill-remove-color-hover",
+          "--color-content-utility-danger"
+        ]
+      ]
+    },
+    {
+      "id": "avatar-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-avatar: --avatar-radius -> --radius-pill; --avatar-text-color -> --color-content-default-knockout. Values unchanged.",
+      "why": "Only the two aliases go. --avatar-bg stays — it is an hsl() generator over --_avatar-hue, not an alias — and so does the xs/sm/md/lg size ramp, which is literal micro-geometry with no tier-2 home.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--avatar-radius",
+          "--radius-pill"
+        ],
+        [
+          "--avatar-text-color",
+          "--color-content-default-knockout"
+        ]
+      ]
+    },
+    {
+      "id": "back-to-top-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-back-to-top: --back-to-top-bg -> --color-background-brand; --back-to-top-bottom -> --spacing-500; --back-to-top-radius -> --radius-pill; --back-to-top-right -> --spacing-500; --back-to-top-text -> --color-content-default-knockout. Values unchanged.",
+      "why": "Five, including the two offsets that aliased --spacing-500. --back-to-top-size stays at 44px: that is a hit-target minimum, and SPEC.md's 'does NOT earn a hook' list names hit-target minimums explicitly — it should not have been themeable in the first place, and this leaves it that way.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--back-to-top-bg",
+          "--color-background-brand"
+        ],
+        [
+          "--back-to-top-bottom",
+          "--spacing-500"
+        ],
+        [
+          "--back-to-top-radius",
+          "--radius-pill"
+        ],
+        [
+          "--back-to-top-right",
+          "--spacing-500"
+        ],
+        [
+          "--back-to-top-text",
+          "--color-content-default-knockout"
+        ]
+      ]
+    },
+    {
+      "id": "collapsible-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-collapsible: --collapsible-bg -> --color-background-elevation-raised; --collapsible-border-color -> --color-border-default; --collapsible-padding-x -> --spacing-400; --collapsible-radius -> --radius-md; --collapsible-title-color -> --color-content-default. Values unchanged.",
+      "why": "Five: surface, border, corner, title colour, and a padding that aliased --spacing-400.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--collapsible-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--collapsible-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--collapsible-padding-x",
+          "--spacing-400"
+        ],
+        [
+          "--collapsible-radius",
+          "--radius-md"
+        ],
+        [
+          "--collapsible-title-color",
+          "--color-content-default"
+        ]
+      ]
+    },
+    {
+      "id": "confirm-dialog-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-confirm-dialog: --confirm-dialog-backdrop-bg -> --color-background-overlay-backdrop; --confirm-dialog-bg -> --color-background-elevation-floating; --confirm-dialog-border-color -> --color-border-default-subtle; --confirm-dialog-radius -> --radius-lg. Values unchanged.",
+      "why": "Four. --confirm-dialog-width stays (360px, literal). Note this component is one of the six with a real colour-variant axis that exposes NONE of it at tier 3 — see SPEC.md's tier-3 colour naming. That gap is unaffected here and still open.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--confirm-dialog-backdrop-bg",
+          "--color-background-overlay-backdrop"
+        ],
+        [
+          "--confirm-dialog-bg",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--confirm-dialog-border-color",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--confirm-dialog-radius",
+          "--radius-lg"
+        ]
+      ]
+    },
+    {
+      "id": "container-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-container: --container-gutter -> --spacing-600. Values unchanged.",
+      "why": "One hook, the gutter, aliasing --spacing-600.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--container-gutter",
+          "--spacing-600"
+        ]
+      ]
+    },
+    {
+      "id": "danger-zone-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-danger-zone: --danger-zone-bg -> --color-background-utility-danger-subtle; --danger-zone-border-color -> --color-border-utility-danger; --danger-zone-description-color -> --color-content-default-secondary; --danger-zone-heading-color -> --color-content-utility-danger; --danger-zone-padding -> --spacing-300; --danger-zone-radius -> --radius-md. Values unchanged.",
+      "why": "All six, including --danger-zone-heading-color, which aliased --color-content-utility-danger. A danger zone is the kit's danger role applied to a layout, not a component with its own palette.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--danger-zone-bg",
+          "--color-background-utility-danger-subtle"
+        ],
+        [
+          "--danger-zone-border-color",
+          "--color-border-utility-danger"
+        ],
+        [
+          "--danger-zone-description-color",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--danger-zone-heading-color",
+          "--color-content-utility-danger"
+        ],
+        [
+          "--danger-zone-padding",
+          "--spacing-300"
+        ],
+        [
+          "--danger-zone-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "dialog-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-dialog: --dialog-backdrop-bg -> --color-background-overlay-backdrop; --dialog-bg -> --color-background-elevation-floating; --dialog-border-color -> --color-border-default-subtle; --dialog-color -> --color-content-default; --dialog-radius -> --radius-lg. Values unchanged.",
+      "why": "Five colour/corner hooks. The four --dialog-width-* stay: literal micro-geometry, and the ramp stays whole.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--dialog-backdrop-bg",
+          "--color-background-overlay-backdrop"
+        ],
+        [
+          "--dialog-bg",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--dialog-border-color",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--dialog-color",
+          "--color-content-default"
+        ],
+        [
+          "--dialog-radius",
+          "--radius-lg"
+        ]
+      ]
+    },
+    {
+      "id": "dropdown-menu-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-dropdown-menu: --dropdown-menu-bg -> --color-background-elevation-floating; --dropdown-menu-border-color -> --color-border-default; --dropdown-menu-item-color -> --color-content-default; --dropdown-menu-radius -> --radius-md. Values unchanged.",
+      "why": "Four. The two min/max-width literals stay.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--dropdown-menu-bg",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--dropdown-menu-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--dropdown-menu-item-color",
+          "--color-content-default"
+        ],
+        [
+          "--dropdown-menu-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "empty-state-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-empty-state: --empty-state-description-color -> --color-content-default-secondary; --empty-state-gap -> --spacing-200; --empty-state-icon-color -> --color-content-default-muted; --empty-state-title-color -> --color-content-default. Values unchanged.",
+      "why": "Four. The xs/sm/md/lg icon-size ramp stays — literal, and kept whole.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--empty-state-description-color",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--empty-state-gap",
+          "--spacing-200"
+        ],
+        [
+          "--empty-state-icon-color",
+          "--color-content-default-muted"
+        ],
+        [
+          "--empty-state-title-color",
+          "--color-content-default"
+        ]
+      ]
+    },
+    {
+      "id": "header-nav-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-header-nav: --header-nav-avatar-bg -> --color-background-brand; --header-nav-avatar-text -> --color-content-default-knockout; --header-nav-border-color -> --color-border-default; --header-nav-menu-item-color -> --color-content-default-secondary. Values unchanged.",
+      "why": "Four, including three that duplicated esa-avatar's surface under a --header-nav-avatar-* spelling. The nav composes an avatar; an avatar themes through --avatar-*. This is the same defect the deleted --sidenav-user-avatar-* tokens were removed for on 2026-08-13, and the note there predicted it: a name that nests two part words has stopped naming a part and started naming a component tree. --header-nav-avatar-size stays only because it is a literal.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--header-nav-avatar-bg",
+          "--color-background-brand"
+        ],
+        [
+          "--header-nav-avatar-text",
+          "--color-content-default-knockout"
+        ],
+        [
+          "--header-nav-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--header-nav-menu-item-color",
+          "--color-content-default-secondary"
+        ]
+      ]
+    },
+    {
+      "id": "link-column-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-link-column: --link-column-heading-font-size -> --typography-label-md-font-size; --link-column-item-font-size -> --font-size-150. Values unchanged.",
+      "why": "Two type hooks. This closes half of the ledger's open P1 on tier-3 typography hooks (option c): a component reads the composite whose job matches its text, and per-component font-size overrides are the fragmentation composites exist to prevent.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--link-column-heading-font-size",
+          "--typography-label-md-font-size"
+        ],
+        [
+          "--link-column-item-font-size",
+          "--font-size-150"
+        ]
+      ]
+    },
+    {
+      "id": "loading-overlay-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-loading-overlay: --loading-overlay-bg -> --color-background-elevation-raised; --loading-overlay-bg-transparent -> --color-background-overlay-scrim; --loading-overlay-message-color -> --color-content-default-secondary. Values unchanged.",
+      "why": "Three. The overlay keeps reading --loading-spinner-* — that is composition, not a hook of its own, and those two stay.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--loading-overlay-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--loading-overlay-bg-transparent",
+          "--color-background-overlay-scrim"
+        ],
+        [
+          "--loading-overlay-message-color",
+          "--color-content-default-secondary"
+        ]
+      ]
+    },
+    {
+      "id": "nav-dropdown-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-nav-dropdown: --nav-dropdown-panel-bg -> --color-background-elevation-raised; --nav-dropdown-panel-border-color -> --color-border-default; --nav-dropdown-panel-padding -> --spacing-300; --nav-dropdown-panel-radius -> --radius-md; --nav-dropdown-panel-shadow -> --elevation-4; --nav-dropdown-panel-text -> --color-content-default. Values unchanged.",
+      "why": "Six panel hooks. Same floating-panel set as every other menu surface in the kit.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--nav-dropdown-panel-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--nav-dropdown-panel-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--nav-dropdown-panel-padding",
+          "--spacing-300"
+        ],
+        [
+          "--nav-dropdown-panel-radius",
+          "--radius-md"
+        ],
+        [
+          "--nav-dropdown-panel-shadow",
+          "--elevation-4"
+        ],
+        [
+          "--nav-dropdown-panel-text",
+          "--color-content-default"
+        ]
+      ]
+    },
+    {
+      "id": "pagination-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-pagination: --pagination-bg -> --color-background-elevation-raised; --pagination-border-color -> --color-border-default; --pagination-button-color -> --color-content-default; --pagination-font-size -> --typography-label-md-font-size; --pagination-padding-x -> --spacing-400; --pagination-padding-y -> --spacing-200; --pagination-text-color -> --color-content-default-secondary. Values unchanged.",
+      "why": "All seven, including --pagination-font-size (see esa-link-column for the typography-hook decision) and two paddings that aliased --spacing-*.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--pagination-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--pagination-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--pagination-button-color",
+          "--color-content-default"
+        ],
+        [
+          "--pagination-font-size",
+          "--typography-label-md-font-size"
+        ],
+        [
+          "--pagination-padding-x",
+          "--spacing-400"
+        ],
+        [
+          "--pagination-padding-y",
+          "--spacing-200"
+        ],
+        [
+          "--pagination-text-color",
+          "--color-content-default-secondary"
+        ]
+      ]
+    },
+    {
+      "id": "pillbox-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-pillbox: --pillbox-gap-large -> --spacing-300; --pillbox-gap-medium -> --spacing-200; --pillbox-gap-small -> --spacing-100. Values unchanged.",
+      "why": "Three gaps aliasing --spacing-100/200/300. Note the small/medium/large spelling, which predates the shared xs/sm/md/lg scale; nothing now carries it.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--pillbox-gap-large",
+          "--spacing-300"
+        ],
+        [
+          "--pillbox-gap-medium",
+          "--spacing-200"
+        ],
+        [
+          "--pillbox-gap-small",
+          "--spacing-100"
+        ]
+      ]
+    },
+    {
+      "id": "popover-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-popover: --popover-bg -> --color-background-elevation-raised; --popover-border-color -> --color-border-default; --popover-color -> --color-content-default; --popover-radius -> --radius-md. Values unchanged.",
+      "why": "Four. --popover-max-width stays (`none`, literal).\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--popover-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--popover-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--popover-color",
+          "--color-content-default"
+        ],
+        [
+          "--popover-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "progress-bar-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-progress-bar: --progress-bar-fill-bg -> --color-background-brand; --progress-bar-radius -> --radius-pill; --progress-bar-track-bg -> --color-background-elevation-sunken. Values unchanged.",
+      "why": "Three colour hooks. The xs/sm/md/lg height ramp stays — literal, kept whole.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--progress-bar-fill-bg",
+          "--color-background-brand"
+        ],
+        [
+          "--progress-bar-radius",
+          "--radius-pill"
+        ],
+        [
+          "--progress-bar-track-bg",
+          "--color-background-elevation-sunken"
+        ]
+      ]
+    },
+    {
+      "id": "search-panel-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-search-panel: --search-panel-bg -> --color-background-elevation-floating; --search-panel-result-bg-hover -> --color-background-elevation-sunken. Values unchanged.",
+      "why": "Two. --search-panel-width stays (400px, literal).\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--search-panel-bg",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--search-panel-result-bg-hover",
+          "--color-background-elevation-sunken"
+        ]
+      ]
+    },
+    {
+      "id": "side-dialog-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-side-dialog: --side-dialog-backdrop-bg -> --color-background-overlay-backdrop; --side-dialog-bg -> --color-background-elevation-raised; --side-dialog-border-color -> --color-border-default; --side-dialog-radius -> --radius-md. Values unchanged.",
+      "why": "Seven colour/corner hooks. The three --side-dialog-width* stay and the ramp stays WHOLE, even though only -lg had a spoke override: they are raw px with no tier-2 size role to fall back to, so demoting them would delete the capability rather than move it. --side-dialog-inset stays for the same reason.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--side-dialog-backdrop-bg",
+          "--color-background-overlay-backdrop"
+        ],
+        [
+          "--side-dialog-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--side-dialog-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--side-dialog-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "snackbar-item-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-snackbar-item: --snackbar-item-danger-bg -> --color-content-utility-danger; --snackbar-item-info-bg -> --color-content-utility-info; --snackbar-item-success-bg -> --color-content-utility-success; --snackbar-item-warning-bg -> --color-content-utility-warning; --snackbar-item-color -> --color-content-default-knockout; --snackbar-item-radius -> --radius-md. Values unchanged.",
+      "why": "CARRIES THE PRE-2026-08-14 SPELLING TOO. `--snackbar-item-bg-{variant}` was renamed to `--snackbar-item-{variant}-bg` (row tier3-variant-before-property) to put the variant before the property. Those destinations are now demoted, so both spellings retire here rather than leaving the older row aliasing onto names declared nowhere.\n\nSix, and this one deserves a caution. Four of them are the variant axis (--snackbar-item-{danger,info,success,warning}-bg) that SPEC.md singles out as the ONE component exposing its colour variants at tier 3 — six others read the utility roles directly. Demoting these makes the kit consistent, but it CLOSES that exception rather than resolving the underlying gap: no component can now diverge its status colours without moving the whole kit's. That gap is real and stays open; see SPEC.md, tier-3 colour naming.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--snackbar-item-bg-warning",
+          "--color-content-utility-warning"
+        ],
+        [
+          "--snackbar-item-bg-success",
+          "--color-content-utility-success"
+        ],
+        [
+          "--snackbar-item-bg-info",
+          "--color-content-utility-info"
+        ],
+        [
+          "--snackbar-item-bg-danger",
+          "--color-content-utility-danger"
+        ],
+        [
+          "--snackbar-item-danger-bg",
+          "--color-content-utility-danger"
+        ],
+        [
+          "--snackbar-item-info-bg",
+          "--color-content-utility-info"
+        ],
+        [
+          "--snackbar-item-success-bg",
+          "--color-content-utility-success"
+        ],
+        [
+          "--snackbar-item-warning-bg",
+          "--color-content-utility-warning"
+        ],
+        [
+          "--snackbar-item-color",
+          "--color-content-default-knockout"
+        ],
+        [
+          "--snackbar-item-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "switch-toggle-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-switch-toggle: --switch-toggle-label-color -> --color-content-default; --switch-toggle-thumb-bg -> --color-background-elevation-raised; --switch-toggle-track-bg -> --color-border-default-strong; --switch-toggle-track-bg-checked -> --color-background-brand. Values unchanged.",
+      "why": "Four. Note --switch-toggle-track-bg aliased --color-border-default-strong: an unchecked track is a border weight, not a surface, which is worth knowing if a spoke ever wants to re-point it.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--switch-toggle-label-color",
+          "--color-content-default"
+        ],
+        [
+          "--switch-toggle-thumb-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--switch-toggle-track-bg",
+          "--color-border-default-strong"
+        ],
+        [
+          "--switch-toggle-track-bg-checked",
+          "--color-background-brand"
+        ]
+      ]
+    },
+    {
+      "id": "tab-layout-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-tab-layout: --tab-layout-border-color -> --color-border-default; --tab-layout-color -> --color-content-default-secondary; --tab-layout-color-active -> --color-background-brand; --tab-layout-indicator-color -> --color-background-brand. Values unchanged.",
+      "why": "Four colour hooks. The xs/sm/md/lg height ramp stays whole — raw px, no tier-2 size role, and cb-fish READS --tab-layout-height-md. A read is rescuable; these are not being removed.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--tab-layout-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--tab-layout-color",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--tab-layout-color-active",
+          "--color-background-brand"
+        ],
+        [
+          "--tab-layout-indicator-color",
+          "--color-background-brand"
+        ]
+      ]
+    },
+    {
+      "id": "tooltip-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-tooltip: --tooltip-bg -> --color-background-default-knockout; --tooltip-color -> --color-content-default-knockout; --tooltip-radius -> --radius-sm. Values unchanged.",
+      "why": "Three. --tooltip-max-width stays (240px, literal).\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--tooltip-bg",
+          "--color-background-default-knockout"
+        ],
+        [
+          "--tooltip-color",
+          "--color-content-default-knockout"
+        ],
+        [
+          "--tooltip-radius",
+          "--radius-sm"
+        ]
+      ]
+    },
+    {
+      "id": "filter-clear-button-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-filter-clear-button: --filter-clear-color -> --color-content-default-muted; --filter-clear-color-hover -> --color-content-utility-danger. Values unchanged.",
+      "why": "Two, both aliasing content roles — the muted default and the danger hover.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--filter-clear-color",
+          "--color-content-default-muted"
+        ],
+        [
+          "--filter-clear-color-hover",
+          "--color-content-utility-danger"
+        ]
+      ]
+    },
+    {
+      "id": "sidebar-nav-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-sidebar-nav: --sidenav-bg -> --color-background-elevation-sunken; --sidenav-border-color -> --color-border-default-subtle; --sidenav-item-padding-x -> --spacing-300; --sidenav-icon-gap -> --spacing-200; --sidenav-section-text -> --color-content-default-muted; --sidenav-section-spacing -> --spacing-300; --sidenav-nested-indent -> --spacing-400; --sidenav-link-text -> --color-content-default-secondary; --sidenav-link-text-hover -> --sidenav-link-text; --sidenav-link-bg-hover -> --color-background-elevation-sunken; --sidenav-link-text-active -> --color-content-brand; --sidenav-link-bg-active -> --color-background-brand-subtle; --sidenav-link-weight-active -> --typography-font-weight-semibold; --sidenav-active-border-color -> --color-background-brand. Values unchanged.",
+      "why": "CARRIES AN OLDER NAME TOO, AND THE ROW IT CAME FROM IS NOW GONE ENTIRELY. `--sidenav-border` was renamed to `--sidenav-border-color` on 2026-08-14 (tier3-border-to-border-color, the FIRST tier-3 row in this file) because the word `border` named two different things at tier 3. That row shipped two pairs; --topbar-border left it when the topbar namespace was deleted earlier today, and this one leaves now that its destination is demoted — so the row retires with nothing in it. Both names resolve to --color-border-default-subtle.\n\nTHE PATTERN IS WORTH NAMING, because it has now fired three times in one day: a rename row's destination is only as durable as the token it points at, and demoting that token turns the alias into one that resolves to NOTHING while the manifest still reports success. The destination-resolves guard in token-rename.test.mjs caught all three; without it each would have shipped as a silent property drop in any spoke still reading the old name.\n\nThe largest single block in the pass at fourteen, and the one whose read sites most needed the fallback reconciliation that preceded it: --sidenav-bg carried a #ffffff literal against a token resolving to the SUNKEN surface, so the rail rendered white instead of grey whenever component-tokens.css was absent. --sidenav-link-text-hover was also the file's only tier-3 -> tier-3 alias (it read --sidenav-link-text, meaning 'hover keeps the resting colour'); both retire together and the behaviour is unchanged. Everything geometric stays: the two rail widths, item height, icon sizes, and the four hooks deliberately declared at an INERT value (item-gap, nested-gap, section-margin-top, active-border-width) so the behaviour they enable is opt-in.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--sidenav-border",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--sidenav-bg",
+          "--color-background-elevation-sunken"
+        ],
+        [
+          "--sidenav-border-color",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--sidenav-item-padding-x",
+          "--spacing-300"
+        ],
+        [
+          "--sidenav-icon-gap",
+          "--spacing-200"
+        ],
+        [
+          "--sidenav-section-text",
+          "--color-content-default-muted"
+        ],
+        [
+          "--sidenav-section-spacing",
+          "--spacing-300"
+        ],
+        [
+          "--sidenav-nested-indent",
+          "--spacing-400"
+        ],
+        [
+          "--sidenav-link-text",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--sidenav-link-text-hover",
+          "--sidenav-link-text"
+        ],
+        [
+          "--sidenav-link-bg-hover",
+          "--color-background-elevation-sunken"
+        ],
+        [
+          "--sidenav-link-text-active",
+          "--color-content-brand"
+        ],
+        [
+          "--sidenav-link-bg-active",
+          "--color-background-brand-subtle"
+        ],
+        [
+          "--sidenav-link-weight-active",
+          "--typography-font-weight-semibold"
+        ],
+        [
+          "--sidenav-active-border-color",
+          "--color-background-brand"
+        ]
+      ]
+    },
+    {
+      "id": "app-shell-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-app-shell: --app-shell-wordmark-font -> --typography-font-family-display; --app-shell-wordmark-size -> --font-size-300; --app-shell-wordmark-weight -> --typography-font-weight-bold; --app-shell-wordmark-tracking -> --letter-spacing-tight. Values unchanged.",
+      "why": "Four. The wordmark STAYS in full (--app-shell-wordmark-{font,size,weight,tracking}): a wordmark is brand identity rather than a type role — it is the one text in the kit that is not served by a composite — and re-skinning it is precisely what a spoke arrives wanting to do. That is the heavily-variable-component case tier 3 exists for. --app-shell-brand-bg-hover stays too, being a currentColor-derived scrim rather than an alias.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--app-shell-wordmark-font",
+          "--typography-font-family-display"
+        ],
+        [
+          "--app-shell-wordmark-size",
+          "--font-size-300"
+        ],
+        [
+          "--app-shell-wordmark-weight",
+          "--typography-font-weight-bold"
+        ],
+        [
+          "--app-shell-wordmark-tracking",
+          "--letter-spacing-tight"
+        ]
+      ]
+    },
+    {
+      "id": "entity-search-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-entity-search: --entity-search-selected-text -> --color-content-default-knockout; --entity-search-bg -> --color-background-elevation-floating; --entity-search-border-color -> --color-border-default; --entity-search-radius -> --radius-lg; --entity-search-row-bg-active -> --color-background-elevation-sunken; --entity-search-shadow -> --elevation-6. Values unchanged.",
+      "why": "Six. The width and max-height literals stay. Note --entity-search-selected-text was declared twice in this file under two different owner comments, which is how it ended up filed away from its five siblings.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--entity-search-selected-text",
+          "--color-content-default-knockout"
+        ],
+        [
+          "--entity-search-bg",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--entity-search-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--entity-search-radius",
+          "--radius-lg"
+        ],
+        [
+          "--entity-search-row-bg-active",
+          "--color-background-elevation-sunken"
+        ],
+        [
+          "--entity-search-shadow",
+          "--elevation-6"
+        ]
+      ]
+    },
+    {
+      "id": "command-palette-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-command-palette: --command-palette-bg -> --color-background-elevation-floating; --command-palette-border-color -> --color-border-default; --command-palette-item-bg-active -> --color-background-elevation-sunken; --command-palette-radius -> --radius-lg; --command-palette-shadow -> --elevation-6. Values unchanged.",
+      "why": "Five. The width and max-height literals stay.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--command-palette-bg",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--command-palette-border-color",
+          "--color-border-default"
+        ],
+        [
+          "--command-palette-item-bg-active",
+          "--color-background-elevation-sunken"
+        ],
+        [
+          "--command-palette-radius",
+          "--radius-lg"
+        ],
+        [
+          "--command-palette-shadow",
+          "--elevation-6"
+        ]
+      ]
+    },
+    {
+      "id": "pill-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-pill: --pill-bg -> --color-background-elevation-sunken; --pill-border-color -> --color-border-default-subtle; --pill-remove-bg-hover -> --color-background-overlay-heavy-hover; --pill-radius -> --radius-sm; --pill-text-color -> --color-content-default. Values unchanged.",
+      "why": "Five. Read this next to esa-filter-pills in the same pass: the two components keep separate markup for documented reasons, and neither needs a private token surface to do it.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--pill-bg",
+          "--color-background-elevation-sunken"
+        ],
+        [
+          "--pill-border-color",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--pill-remove-bg-hover",
+          "--color-background-overlay-heavy-hover"
+        ],
+        [
+          "--pill-radius",
+          "--radius-sm"
+        ],
+        [
+          "--pill-text-color",
+          "--color-content-default"
+        ]
+      ]
+    },
+    {
+      "id": "breadcrumbs-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-breadcrumbs: --breadcrumbs-text-color -> --color-content-default; --breadcrumbs-separator-color -> --color-border-default-strong. Values unchanged.",
+      "why": "Two of five. --breadcrumbs-link-color and --breadcrumbs-link-hover stay (cb-fish declares both). --breadcrumbs-bg is a literal `transparent` and stays. --breadcrumbs-text-color and --breadcrumbs-separator-color go.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--breadcrumbs-text-color",
+          "--color-content-default"
+        ],
+        [
+          "--breadcrumbs-separator-color",
+          "--color-border-default-strong"
+        ]
+      ]
+    },
+    {
+      "id": "alert-box-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-alert-box: --alert-box-dismiss-bg-hover -> --color-background-overlay-strong-hover; --alert-box-padding -> --spacing-300; --alert-box-radius -> --radius-md. Values unchanged.",
+      "why": "Three of seven. The four air-exchange declares stay. Worth recording while here: that spoke sets --alert-box-bg and --alert-box-border-color to `initial` to work around a hub defect — the hookify defaults pin both to the INFO (blue) tint for EVERY variant, so success and warning alerts render blue. That is a zero-regression-rule miss, it is NOT fixed by this row, and it is logged separately.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--alert-box-dismiss-bg-hover",
+          "--color-background-overlay-strong-hover"
+        ],
+        [
+          "--alert-box-padding",
+          "--spacing-300"
+        ],
+        [
+          "--alert-box-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "app-bar-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-app-bar: --app-bar-bg -> --color-background-elevation-raised; --app-bar-brand-bg -> --color-background-brand; --app-bar-brand-strong-bg -> --color-background-default-knockout; --app-bar-brand-strong-text -> --color-content-default-knockout; --app-bar-brand-text -> --color-content-default-knockout; --app-bar-gap -> --spacing-600; --app-bar-pad-x -> --spacing-600; --app-bar-pad-y -> --spacing-400; --app-bar-text -> --color-content-default. Values unchanged.",
+      "why": "All nine, including the --app-bar-pad-{x,y} pair. That pair is the ramp rule in action: --app-bar-pad-y is declared by cb-fish, but both arms alias --spacing-* and keeping one without the other would give a spoke a single axis, which is worse than neither. Unlike the width and height ramps kept elsewhere in this pass, these DO have a tier-2 destination, so demoting moves the capability rather than deleting it.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--app-bar-bg",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--app-bar-brand-bg",
+          "--color-background-brand"
+        ],
+        [
+          "--app-bar-brand-strong-bg",
+          "--color-background-default-knockout"
+        ],
+        [
+          "--app-bar-brand-strong-text",
+          "--color-content-default-knockout"
+        ],
+        [
+          "--app-bar-brand-text",
+          "--color-content-default-knockout"
+        ],
+        [
+          "--app-bar-gap",
+          "--spacing-600"
+        ],
+        [
+          "--app-bar-pad-x",
+          "--spacing-600"
+        ],
+        [
+          "--app-bar-pad-y",
+          "--spacing-400"
+        ],
+        [
+          "--app-bar-text",
+          "--color-content-default"
+        ]
+      ]
+    },
+    {
+      "id": "badge-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-badge: --badge-radius -> --radius-sm. Values unchanged.",
+      "why": "One of three. --badge-bg and --badge-text-color stay (cb-fish declares both). --badge-radius goes: it aliased --radius-sm, and the quiet-4px-chip decision it encodes is a design-principles rule that lives in the skill, not a token — esa-pill's corner was squared to match it by the same reasoning and its hook went in 5C.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--badge-radius",
+          "--radius-sm"
+        ]
+      ]
+    },
+    {
+      "id": "card-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-card: --card-footer-bg -> --color-background-elevation-sunken; --card-header-border-color -> --color-border-default-subtle; --card-header-color -> --color-content-default; --card-padding -> --spacing-500; --card-radius -> --radius-md. Values unchanged.",
+      "why": "Five, and this is the first block where a spoke-proven name survives ALONGSIDE demoted siblings. --card-bg and --card-border-color stay: cb-fish and air-exchange both declare them as component-scoped instance overrides, which is demonstrated divergence and the whole test. --card-radius, --card-padding, --card-footer-bg and the three --card-header-* go. The asymmetry is deliberate and is the cost recorded in the plan: a spoke that later wants the card corner back files a /request-lego rather than finding a hook that was never used.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--card-footer-bg",
+          "--color-background-elevation-sunken"
+        ],
+        [
+          "--card-header-border-color",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--card-header-color",
+          "--color-content-default"
+        ],
+        [
+          "--card-padding",
+          "--spacing-500"
+        ],
+        [
+          "--card-radius",
+          "--radius-md"
+        ]
+      ]
+    },
+    {
+      "id": "stat-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "The tier-2 roles each one aliased, read directly by esa-stat: --stat-gap -> --spacing-050; --stat-label-color -> --color-content-default-secondary; --stat-label-size -> --font-size-200; --stat-label-weight -> --typography-font-weight-medium; --stat-sub-color -> --color-content-default-muted; --stat-sub-size -> --font-size-150; --stat-value-font -> --typography-font-family-display; --stat-value-weight -> --typography-font-weight-bold. Values unchanged.",
+      "why": "Eight of eleven. --stat-accent-color, --stat-value-color and --stat-value-size stay — all three are declared by a real spoke. The rest go, including the label/sub sizes, which is the other half of the ledger's typography-hook P1 (option c). --stat-value-font stays: like the app-shell wordmark it names a FACE rather than a size, and a metric's authority is the thing a spoke re-skins.\n\nSee SPEC.md, \"The test: WOULD this component diverge, not COULD it\", for the full rationale — it is the canonical text for this pass and is not repeated per row. In short: each hook below was read by exactly ONE component and held no value of its own, aliasing a tier-2 role it had no reason to diverge from. That is a role wearing a component's name: an extra name, no capability, and one more place a spoke has to remember when it re-points the role.\n\nWHAT A SPOKE SHOULD DO. If you declared one of these to re-skin this component ALONE, there is no longer a hook — re-pointing the tier-2 role instead moves every component reading it, which is probably not what you meant. If this component genuinely must diverge, that is a /request-lego, not a find-and-replace. That asymmetry is why these are `removed` rows and not renames: migrate-tokens.mjs rewrites declarations as well as reads, so a rename would perform exactly the substitution this paragraph warns against and report success.\n\nValue-neutral in the shipped kit — every substitution resolves to the value the hook already produced.",
+      "pairs": [
+        [
+          "--stat-gap",
+          "--spacing-050"
+        ],
+        [
+          "--stat-label-color",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--stat-label-size",
+          "--font-size-200"
+        ],
+        [
+          "--stat-label-weight",
+          "--typography-font-weight-medium"
+        ],
+        [
+          "--stat-sub-color",
+          "--color-content-default-muted"
+        ],
+        [
+          "--stat-sub-size",
+          "--font-size-150"
+        ],
+        [
+          "--stat-value-font",
+          "--typography-font-family-display"
+        ],
+        [
+          "--stat-value-weight",
+          "--typography-font-weight-bold"
+        ]
       ]
     }
   ]

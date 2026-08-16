@@ -742,7 +742,7 @@ export class EsaCombobox extends LitElement {
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--radius-md, 0.5rem);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
     :host([size='xs']) {
       --_field-padding-y: var(--spacing-200, 0.5rem);
@@ -766,14 +766,14 @@ export class EsaCombobox extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .field__required {
       color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     /* Three signals, not one: colour, icon, and a visually-hidden "Error:" prefix.
        Colour alone is SC 1.4.1 (Use of Color, Level A), and colour alone is all that
@@ -814,7 +814,7 @@ export class EsaCombobox extends LitElement {
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
@@ -825,12 +825,12 @@ export class EsaCombobox extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -847,7 +847,7 @@ export class EsaCombobox extends LitElement {
 
     .spinner {
       display: inline-flex;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       animation: esa-cb-spin var(--animation-spin, 750ms linear infinite);
     }
     .spinner svg {
@@ -888,16 +888,16 @@ export class EsaCombobox extends LitElement {
       padding: 0;
       border: none;
       background: none;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       cursor: pointer;
       max-width: 100%;
     }
     .trigger--text:hover {
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .trigger--text:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 2px;
       border-radius: var(--_field-radius);
     }
@@ -920,7 +920,7 @@ export class EsaCombobox extends LitElement {
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
@@ -932,9 +932,9 @@ export class EsaCombobox extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .trigger--field:focus-visible {
-      border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .trigger--field:disabled {
       background: var(--color-background-disabled, #f0f0f0);
@@ -951,7 +951,7 @@ export class EsaCombobox extends LitElement {
 
     .arrow {
       display: inline-flex;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
       flex-shrink: 0;
@@ -971,8 +971,8 @@ export class EsaCombobox extends LitElement {
       right: 0;
       z-index: var(--z-dropdown, 50);
       margin-top: var(--spacing-100, 4px);
-      background: var(--color-background-elevation-raised, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overflow: hidden;
@@ -983,7 +983,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     /* The ring goes on the ROW. .search-input is chromeless by design, so a ring on
        it would float around bare text; the row is the visible affordance. Inset
@@ -991,13 +991,13 @@ export class EsaCombobox extends LitElement {
        the same repair as esa-entity-search, esa-search-panel and esa-command-palette
        — the whole shape is "chromeless input in a bordered row". */
     .search:focus-within {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .search__icon {
       width: var(--icon-size-sm, 16px);
       height: var(--icon-size-sm, 16px);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       flex-shrink: 0;
     }
     .search-input {
@@ -1006,16 +1006,16 @@ export class EsaCombobox extends LitElement {
       background: none;
       /* Suppressed only because .search paints the ring — never bare. */
       outline: none;
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
     }
     .search-input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      color: var(--color-content-default-muted, #737373);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
+      color: var(--color-content-default-muted, #838383);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
 
     .viewport {
@@ -1029,7 +1029,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
@@ -1037,14 +1037,14 @@ export class EsaCombobox extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .option--selected {
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
     }
     .option--disabled {
-      color: var(--color-content-disabled, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -1055,7 +1055,7 @@ export class EsaCombobox extends LitElement {
       flex: 1;
     }
     .hl {
-      background: var(--color-background-utility-warning-subtle, #fffbeb);
+      background: var(--color-background-utility-warning-subtle, #fefbe9);
       color: inherit;
       border-radius: 2px;
       padding: 0 1px;
@@ -1069,7 +1069,7 @@ export class EsaCombobox extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -1091,7 +1091,7 @@ export class EsaCombobox extends LitElement {
       gap: var(--spacing-050, 2px);
       padding: var(--spacing-050, 2px) var(--spacing-100, 4px) var(--spacing-050, 2px) var(--spacing-200, 8px);
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: var(--radius-pill, 9999px);
       user-select: none;
     }
@@ -1107,7 +1107,7 @@ export class EsaCombobox extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -1120,7 +1120,7 @@ export class EsaCombobox extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
     }
 
@@ -1130,17 +1130,17 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       font-style: var(--font-style-italic, italic);
     }
 
     .field--error .input,
     .field--error .trigger--field {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .input:focus,
     .field--error .trigger--field:focus-visible {
-      box-shadow: 0 0 0 var(--focus-ring-width)
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,

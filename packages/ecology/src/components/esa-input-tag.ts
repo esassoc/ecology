@@ -526,11 +526,11 @@ export class EsaInputTag extends LitElement {
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--radius-md, 0.5rem);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-border-color: var(--form-border-color, #cecece);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
       --_chip-bg: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      --_chip-color: var(--color-content-brand, #3a7c59);
+      --_chip-color: var(--color-content-brand, #2a7e3b);
       --_chip-radius: var(--radius-pill, 9999px);
     }
     :host([size='xs']) {
@@ -555,14 +555,14 @@ export class EsaInputTag extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      color: var(--form-label-color, #525252);
+      color: var(--form-label-color, #646464);
     }
     .field__required {
       color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     .field__error {
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
@@ -583,13 +583,13 @@ export class EsaInputTag extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .container:hover:not(.container--disabled) {
-      --_field-border-color: var(--form-border-color-hover, #a3a3a3);
+      --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .container:focus-within,
     .container--open {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -608,16 +608,16 @@ export class EsaInputTag extends LitElement {
        on it. */
     .field--error .container,
     .field--error .container:hover:not(.container--disabled) {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .container:focus-within,
     .field--error .container.container--open {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
     }
     .container--disabled:focus-within {
       box-shadow: none;
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
 
     .chips {
@@ -657,7 +657,7 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -670,7 +670,7 @@ export class EsaInputTag extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.06));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
     }
 
@@ -684,14 +684,14 @@ export class EsaInputTag extends LitElement {
       background: transparent;
       border: none;
       outline: none;
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     .input:disabled {
       cursor: not-allowed;
-      color: var(--color-content-disabled, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
     }
 
     .toggle {
@@ -702,11 +702,11 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       background: transparent;
       border: none;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       cursor: pointer;
     }
     .toggle:hover:not(:disabled) {
-      color: var(--color-content-default-secondary, #525252);
+      color: var(--color-content-default-secondary, #646464);
     }
     .toggle:disabled {
       cursor: not-allowed;
@@ -732,8 +732,8 @@ export class EsaInputTag extends LitElement {
       max-height: 252px;
       overflow-y: auto;
       overscroll-behavior: contain;
-      background: var(--color-background-elevation-raised, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
     }
@@ -746,7 +746,7 @@ export class EsaInputTag extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: transparent;
       border: none;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       text-align: left;
       cursor: pointer;
       box-sizing: border-box;
@@ -754,7 +754,7 @@ export class EsaInputTag extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .option__label {
       flex: 1;
@@ -764,8 +764,8 @@ export class EsaInputTag extends LitElement {
       white-space: nowrap;
     }
     .option--add {
-      color: var(--color-content-brand, #3a7c59);
-      border-top: var(--form-border-width, 1px) solid var(--color-border-default-subtle, #efefef);
+      color: var(--color-content-brand, #2a7e3b);
+      border-top: var(--form-border-width, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
     .option__icon {
       width: var(--icon-size-sm, 16px);
@@ -775,7 +775,7 @@ export class EsaInputTag extends LitElement {
 
     .empty {
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }

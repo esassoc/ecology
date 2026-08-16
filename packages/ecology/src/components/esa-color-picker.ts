@@ -184,7 +184,7 @@ export class EsaColorPicker extends LitElement {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
 
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
     }
     .controls {
       display: flex;
@@ -214,19 +214,19 @@ export class EsaColorPicker extends LitElement {
       width: var(--_preview-size);
       height: var(--_preview-size);
       border-radius: var(--_radius);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       cursor: pointer;
       transition:
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .preview:hover {
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus, #46a758);
     }
     .native:focus-visible + .preview {
-      border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .hex-input {
@@ -234,9 +234,9 @@ export class EsaColorPicker extends LitElement {
       /* A bare input with no flex centring — at padding:0 and no height token this
          would collapse straight to its line box. */
       padding: var(--_pad-y) var(--_padding-x);
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--_radius);
       outline: none;
       box-sizing: border-box;
@@ -245,9 +245,9 @@ export class EsaColorPicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .hex-input:focus {
-      border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -284,12 +284,12 @@ export class EsaColorPicker extends LitElement {
       transform: scale(1.1);
     }
     .swatch--selected {
-      border-color: var(--color-background-brand, #43608a);
-      box-shadow: 0 0 0 1px var(--color-background-brand, #43608a);
+      border-color: var(--color-background-brand, #46a758);
+      box-shadow: 0 0 0 1px var(--color-background-brand, #46a758);
     }
     .swatch:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .swatch:disabled {
       opacity: 0.6;

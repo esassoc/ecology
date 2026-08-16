@@ -243,29 +243,29 @@ export class EsaSidebarNav extends LitElement {
          rendered. See migrations.json: sidebar-width-to-sidenav-width. */
       --_sidenav-width: var(--sidenav-width, 280px);
       --_sidenav-collapsed-width: var(--sidenav-width-collapsed, 72px);
-      --_sidenav-bg: var(--sidenav-bg, #ffffff);
-      --_sidenav-border: var(--sidenav-border-color, #efefef);
+      --_sidenav-bg: var(--color-background-elevation-sunken, #f0f0f0);
+      --_sidenav-border: var(--color-border-default-subtle, #d9d9d9);
       --_sidenav-item-height: var(--sidenav-item-height, 40px);
-      --_sidenav-item-padding: var(--sidenav-item-padding-x, var(--spacing-300, 12px));
+      --_sidenav-item-padding: var(--spacing-300, 12px);
       --_sidenav-item-gap: var(--sidenav-item-gap, 0);
-      --_sidenav-icon-gap: var(--sidenav-icon-gap, var(--spacing-200, 8px));
+      --_sidenav-icon-gap: var(--spacing-200, 8px);
       --_sidenav-icon-size: var(--sidenav-icon-size, 18px);
       --_sidenav-icon-size-collapsed: var(--sidenav-icon-size-collapsed, 18px);
       --_sidenav-item-radius: var(--radius-md, 0.5rem);
-      --_sidenav-item-color: var(--sidenav-link-text, #525252);
-      --_sidenav-item-color-hover: var(--sidenav-link-text-hover, var(--sidenav-link-text, #525252));
-      --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-content-brand, #3a7c59));
+      --_sidenav-item-color: var(--color-content-default-secondary, #646464);
+      --_sidenav-item-color-hover: var(--color-content-default-secondary, #646464);
+      --_sidenav-item-color-active: var(--color-content-brand, #2a7e3b);
       --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
-      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-background-elevation-sunken, #efefef));
-      --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-background-brand-subtle, #f3f8fb));
-      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--typography-font-weight-semibold, 550));
+      --_sidenav-item-bg-hover: var(--color-background-elevation-sunken, #f0f0f0);
+      --_sidenav-item-bg-active: var(--color-background-brand-subtle, #f5fbf5);
+      --_sidenav-item-weight-active: var(--typography-font-weight-semibold, 550);
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
-      --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-background-brand, #43608a));
-      --_sidenav-group-color: var(--sidenav-section-text, #737373);
-      --_sidenav-section-spacing: var(--sidenav-section-spacing, var(--spacing-300, 12px));
+      --_sidenav-active-border-color: var(--color-background-brand, #46a758);
+      --_sidenav-group-color: var(--color-content-default-muted, #838383);
+      --_sidenav-section-spacing: var(--spacing-300, 12px);
       --_sidenav-section-margin-top: var(--sidenav-section-margin-top, 0);
       --_sidenav-nested-gap: var(--sidenav-nested-gap, 0);
-      --_sidenav-nested-indent: var(--sidenav-nested-indent, var(--spacing-400, 16px));
+      --_sidenav-nested-indent: var(--spacing-400, 16px);
       --_sidenav-transition: var(--transition-base, 200ms ease);
 
       display: block;
@@ -330,7 +330,7 @@ export class EsaSidebarNav extends LitElement {
     }
     .toggle:hover { background: var(--_sidenav-item-bg-hover); }
     .toggle:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -386,7 +386,7 @@ export class EsaSidebarNav extends LitElement {
        that is the behaviour that shipped before this hook existed. */
     .link:hover:not(.link--disabled):not(.link--active) { color: var(--_sidenav-item-color-hover); }
     .link:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -429,8 +429,8 @@ export class EsaSidebarNav extends LitElement {
       height: 20px;
       padding: 0 6px;
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-brand, #43608a);
-      color: var(--color-content-default-knockout, #ffffff);
+      background: var(--color-background-brand, #46a758);
+      color: var(--color-content-default-knockout, #fcfcfc);
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }
     .chevron {

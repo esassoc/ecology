@@ -66,12 +66,12 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--loading-overlay-bg, var(--color-background-elevation-raised, #fff));
+    background: var(--color-background-elevation-raised, #fcfcfc);
     z-index: 10;
   }
 
   .esa-loading-overlay--transparent .esa-loading-overlay__backdrop {
-    background: var(--loading-overlay-bg-transparent, rgba(255, 255, 255, 0.8));
+    background: var(--color-background-overlay-scrim, rgba(255, 255, 255, 0.8));
   }
 
   .esa-loading-overlay__content {
@@ -86,8 +86,8 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
   .esa-loading-overlay__spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid var(--loading-spinner-track-color, var(--color-border-default-subtle, #efefef));
-    border-top-color: var(--loading-spinner-color, var(--color-background-brand, #43608a));
+    border: 4px solid var(--loading-spinner-track-color, var(--color-border-default-subtle, #d9d9d9));
+    border-top-color: var(--loading-spinner-color, var(--color-background-brand, #46a758));
     border-radius: var(--radius-pill, 9999px);
     animation: esa-overlay-spinner-rotate var(--animation-spin, 750ms linear infinite);
     box-sizing: border-box;
@@ -99,7 +99,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
 
   .esa-loading-overlay__message {
     margin: 0;
-    color: var(--loading-overlay-message-color, var(--color-content-default-secondary, #525252));
+    color: var(--color-content-default-secondary, #646464);
     text-align: center;
   }
 </style>

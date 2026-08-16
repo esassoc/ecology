@@ -98,10 +98,10 @@ export class EsaTooltip extends LitElement {
     .esa-tooltip {
       position: absolute;
       z-index: var(--z-tooltip, 600);
-      background: var(--tooltip-bg, var(--color-background-default-knockout));
-      color: var(--tooltip-color, var(--color-content-default-knockout, #ffffff));
+      background: var(--color-background-default-knockout);
+      color: var(--color-content-default-knockout, #fcfcfc);
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--tooltip-radius, var(--radius-sm, 0.25rem));
+      border-radius: var(--radius-sm, 0.25rem);
       /* Leading comes from microcopy-sm-subtle. This carried a tight override
          justified as "a tooltip may wrap to two or three lines" — but the rule
          below sets white-space: nowrap, so it never wraps and never did. The
@@ -143,7 +143,7 @@ export class EsaTooltip extends LitElement {
       position: absolute;
       width: 8px;
       height: 8px;
-      background: var(--tooltip-bg, var(--color-background-default-knockout));
+      background: var(--color-background-default-knockout);
       transform: rotate(45deg);
     }
     .esa-tooltip--above .esa-tooltip__arrow {

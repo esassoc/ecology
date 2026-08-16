@@ -300,7 +300,7 @@ export class EsaCheckboxGroup extends LitElement {
     .group-label {
       display: block;
       margin-bottom: var(--spacing-200, 8px);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
     }
 
     .items {
@@ -333,18 +333,18 @@ export class EsaCheckboxGroup extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--_checkbox-radius);
       background: var(--color-background-field, transparent);
-      color: var(--color-content-default-knockout, #fff);
+      color: var(--color-content-default-knockout, #fcfcfc);
       transition:
         background var(--transition-fast, 150ms ease),
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box--checked {
-      background: var(--color-background-brand, #43608a);
-      border-color: var(--color-background-brand, #43608a);
+      background: var(--color-background-brand, #46a758);
+      border-color: var(--color-background-brand, #46a758);
     }
 
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -359,9 +359,9 @@ export class EsaCheckboxGroup extends LitElement {
       border-color: var(--color-border-disabled, #d9d9d9);
     }
     .box:focus-visible {
-      border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .icon {
@@ -370,7 +370,7 @@ export class EsaCheckboxGroup extends LitElement {
     }
 
     .item-label {
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
     }
 
     /* An invalid group reddens its legend — the group is what is invalid, and there is
@@ -391,7 +391,7 @@ export class EsaCheckboxGroup extends LitElement {
       margin-block-start: var(--form-help-gap, 4px);
     }
     .help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     /* Colour, icon AND a visually-hidden "Error:" — colour alone is SC 1.4.1. */
     .error {

@@ -107,12 +107,12 @@ export class EsaBackToTop extends LitElement {
   static styles = css`
     :host {
       --_btt-size: var(--back-to-top-size, 44px);
-      --_btt-bg: var(--back-to-top-bg, var(--color-background-brand, #43608a));
-      --_btt-text: var(--back-to-top-text, var(--color-content-default-knockout, #fff));
+      --_btt-bg: var(--color-background-brand, #46a758);
+      --_btt-text: var(--color-content-default-knockout, #fcfcfc);
       --_btt-shadow: var(--elevation-3, 0 4px 20px -4px rgba(0, 0, 0, 0.06));
-      --_btt-radius: var(--back-to-top-radius, var(--radius-pill, 9999px));
-      --_btt-bottom: var(--back-to-top-bottom, var(--spacing-500, 1.5rem));
-      --_btt-right: var(--back-to-top-right, var(--spacing-500, 1.5rem));
+      --_btt-radius: var(--radius-pill, 9999px);
+      --_btt-bottom: var(--spacing-500, 1.5rem);
+      --_btt-right: var(--spacing-500, 1.5rem);
 
       position: fixed;
       bottom: var(--_btt-bottom);
@@ -149,13 +149,13 @@ export class EsaBackToTop extends LitElement {
     }
 
     .button:hover {
-      background: var(--color-background-brand-hover, #39506f);
+      background: var(--color-background-brand-hover, #3e9b4f);
       /* Hover is one rung up from the resting rung, never a rung of its own. */
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
     }
 
     .button:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

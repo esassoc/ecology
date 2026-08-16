@@ -367,12 +367,12 @@ export class EsaFilterDropdown extends LitElement {
       --_filter-height: 40px;
       --_filter-padding-x: var(--spacing-400, 1rem);
       --_filter-radius: var(--radius-md, 0.5rem);
-      --_filter-bg: var(--color-background-elevation-raised, #fff);
-      --_filter-bg-active: var(--color-background-brand-subtle, #f3f8fb);
-      --_filter-text: var(--color-content-default, #171717);
-      --_filter-text-active: var(--color-background-brand, #43608a);
-      --_filter-border: var(--color-border-default, #e5e5e5);
-      --_filter-border-active: var(--color-background-brand, #43608a);
+      --_filter-bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_filter-bg-active: var(--color-background-brand-subtle, #f5fbf5);
+      --_filter-text: var(--color-content-default, #202020);
+      --_filter-text-active: var(--color-background-brand, #46a758);
+      --_filter-border: var(--color-border-default, #cecece);
+      --_filter-border-active: var(--color-background-brand, #46a758);
     }
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values.
@@ -423,7 +423,7 @@ export class EsaFilterDropdown extends LitElement {
       border-color: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* Weight comes from TRIGGER_ACTIVE_TYPE (label-*-strong) — same rung as the
@@ -452,8 +452,8 @@ export class EsaFilterDropdown extends LitElement {
       height: 1.25rem;
       padding-inline: 0.3rem;
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-brand, #43608a);
-      color: var(--color-content-default-knockout, #fff);
+      background: var(--color-background-brand, #46a758);
+      color: var(--color-content-default-knockout, #fcfcfc);
     }
 
     .esa-filter-dropdown__arrow {
@@ -484,11 +484,11 @@ export class EsaFilterDropdown extends LitElement {
       z-index: var(--z-dropdown, 50);
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
-      background: var(--filter-dropdown-bg, var(--color-background-elevation-raised, #fff));
+      background: var(--color-background-elevation-raised, #fcfcfc);
       border: var(--border-width-default, 1px) solid
-        var(--filter-dropdown-border-color, var(--color-border-default, #e5e5e5));
-      border-radius: var(--filter-dropdown-radius, var(--radius-md, 0.5rem));
-      box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
+        var(--color-border-default, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -496,17 +496,17 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__search {
       padding: var(--spacing-200, 0.5rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     .esa-filter-dropdown__search-input {
       /* A real <input> — it cannot wrap, so leading only sets the box height. */
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-sm, 0.25rem);
-      background: var(--color-background-elevation-raised, #fff);
-      color: var(--color-content-default, #171717);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-default, #202020);
       /* Suppressed only because the :focus rule below paints the ring. */
       outline: none;
     }
@@ -517,8 +517,8 @@ export class EsaFilterDropdown extends LitElement {
        here even though it is a text input — engines match :focus-visible on text
        entry whether it was clicked or tabbed to. */
     .esa-filter-dropdown__search-input:focus-visible {
-      border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -533,14 +533,14 @@ export class EsaFilterDropdown extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 0.5rem);
       padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-background-elevation-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
@@ -567,7 +567,7 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }
@@ -576,7 +576,7 @@ export class EsaFilterDropdown extends LitElement {
       display: flex;
       justify-content: flex-end;
       padding: var(--spacing-200, 0.5rem);
-      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     .esa-filter-dropdown__clear-link {
       background: none;
@@ -587,10 +587,10 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--radius-sm, 0.25rem);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
-      background: var(--color-background-elevation-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-content-default-muted, #a3a3a3);
+      color: var(--color-content-default-muted, #838383);
       cursor: not-allowed;
     }
   `,

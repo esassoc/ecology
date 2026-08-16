@@ -43,7 +43,7 @@ import '@esa/tokens/typography.css';
        is the PUBLIC size hook — a spoke overrides it, and a deleted declaration is
        exactly what an alias cannot rescue. Its fallback is now the composite's own
        size token, so unset it and the role decides. */
-    font-size: var(--link-column-heading-font-size, var(--typography-label-md-font-size));
+    font-size: var(--typography-label-md-font-size);
     color: inherit;
     text-decoration: none;
   }
@@ -60,7 +60,7 @@ import '@esa/tokens/typography.css';
     /* Same deal as the heading: keep the PUBLIC size hook, let body-sm supply the
        fallback. The bare `line-height: 22px` is gone — at 14px that was 1.57, which
        body-sm's normal ramp (1.6) already gives. */
-    font-size: var(--link-column-item-font-size, var(--typography-body-sm-font-size));
+    font-size: var(--font-size-150, var(--typography-body-sm-font-size));
     margin-bottom: var(--spacing-100, 4px);
   }
   .esa-link-column__list a { color: inherit; text-decoration: none; }

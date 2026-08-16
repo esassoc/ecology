@@ -273,20 +273,15 @@
      See migrations.json: icon-button-bg-hover-removed. */
 
   /* ===================== FILTERS ===================== */
-  --filter-container-gap: var(--spacing-200);
   /* 0, not the old `spacing-200 0` — the bar has always rendered flush, so the
      declared value was describing padding no spoke could have been seeing. */
   --filter-container-padding: 0;
-  --filter-dropdown-bg: var(--color-background-elevation-raised);
   /* Was `--filter-dropdown-border: 1px solid …` — a whole shorthand behind a
      name spelled exactly like the two bare `border` tokens that held a plain
      colour. A theme could not re-point this one's colour without restating the
      width and style it had no reason to care about. Now a colour, like every
      other border hook in the file, with the component composing the shorthand
      from --border-width-default. Value-neutral: that role is 1px. */
-  --filter-dropdown-border-color: var(--color-border-default);
-  --filter-dropdown-radius: var(--radius-md, 0.5rem);
-  --filter-dropdown-shadow: var(--elevation-4);
   --filter-dropdown-min-width: 200px;
   /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
      that is ACCEPTED, not an oversight — do not re-open it without new evidence.
@@ -301,16 +296,6 @@
      Revisit only if esa-pill grows those two capabilities for other reasons;
      then this collapses to scoped --pill-* aliases the way esa-header-nav's
      avatar did. */
-  --filter-pill-bg: var(--color-background-brand-muted);
-  --filter-pill-bg-hover: var(--color-background-brand-muted-hover);
-  --filter-pill-label-color: var(--color-content-default-secondary);
-  --filter-pill-text: var(--color-content-brand);
-  --filter-pill-radius: var(--radius-pill);
-  --filter-pill-font-size: var(--typography-label-xs-font-size);
-  --filter-pill-remove-color: var(--color-content-default-secondary);
-  --filter-pill-remove-color-hover: var(--color-content-utility-danger);
-  --filter-clear-color: var(--color-content-default-muted);
-  --filter-clear-color-hover: var(--color-content-utility-danger);
 
   /* ===================== DATA GRID (STAGED) =====================
      No esa-grid component ships yet — this is the theming contract the AG Grid
@@ -366,36 +351,22 @@
      outright. See migrations.json: sidebar-width-to-sidenav-width. */
   --sidenav-width: 280px;
   --sidenav-width-collapsed: 72px;
-  --sidenav-bg: var(--color-background-elevation-sunken);
-  --sidenav-border-color: var(--color-border-default-subtle);
   /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
      --sidenav-item-padding-y, which nothing could ever have read. */
   --sidenav-item-height: 40px;
-  --sidenav-item-padding-x: var(--spacing-300);
   /* Gap BETWEEN rows. 0 = the shipped stacked rail; raise it for an airier one. */
   --sidenav-item-gap: 0;
   /* Gap between a row's icon and its label. */
-  --sidenav-icon-gap: var(--spacing-200);
   --sidenav-icon-size: 18px;
   --sidenav-icon-size-collapsed: 18px;
-  --sidenav-section-text: var(--color-content-default-muted);
-  --sidenav-section-spacing: var(--spacing-300);
   /* Extra breathing room above a group heading that follows another section. */
   --sidenav-section-margin-top: 0;
   --sidenav-nested-gap: 0;
-  --sidenav-nested-indent: var(--spacing-400);
-  --sidenav-link-text: var(--color-content-default-secondary);
   --sidenav-link-bg: transparent;
   /* Inherits the resting colour by default — the rail signals hover with the
      background wash alone. Re-point to also shift the text. */
-  --sidenav-link-text-hover: var(--sidenav-link-text);
-  --sidenav-link-bg-hover: var(--color-background-elevation-sunken);
-  --sidenav-link-text-active: var(--color-content-brand);
-  --sidenav-link-bg-active: var(--color-background-brand-subtle);
-  --sidenav-link-weight-active: var(--typography-font-weight-semibold);
   /* Inset marker on the active row. Width 0 = off, which is what ships. */
   --sidenav-active-border-width: 0;
-  --sidenav-active-border-color: var(--color-background-brand);
 
   /* DELETED (2026-08-13) — six tokens describing a user/account block at the
      foot of the rail: --sidenav-user-{border,text,text-hover,avatar-bg,
@@ -440,10 +411,8 @@
   /* The trail's non-link text — i.e. the current (last) crumb. Was declared as
      text-secondary while the component painted text-primary; on the shipped
      value now. */
-  --breadcrumbs-text-color: var(--color-content-default);
   --breadcrumbs-link-color: var(--color-content-default-secondary);
   --breadcrumbs-link-hover: var(--color-content-default);
-  --breadcrumbs-separator-color: var(--color-border-default-strong);
 
   /* DELETED (2026-08-13) — --breadcrumbs-pill-{bg,bg-hover,radius,padding}, a
      "pill" breadcrumb variant esa-breadcrumbs never had: no markup, no prop, no
@@ -467,9 +436,6 @@
   /* esa-alert-box */
   --alert-box-bg: var(--color-background-utility-info-subtle, #eff6ff);
   --alert-box-border-color: var(--color-border-utility-info, #bfdbfe);
-  --alert-box-dismiss-bg-hover: var(--color-background-overlay-strong-hover);
-  --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-  --alert-box-radius: var(--radius-md, 0.5rem);
   --alert-box-text-color: var(--color-content-default-secondary, #525252);
   --alert-box-title-color: var(--color-content-default, #171717);
 
@@ -481,30 +447,15 @@
      leave a 300 -> 700 -> 800 hole in that ramp. A tier-3 surface is what a
      per-component, one-reader property is for, and re-skinning the wordmark is
      exactly what a spoke arrives wanting to do. */
-  --app-shell-wordmark-font: var(--typography-font-family-display, var(--typography-font-family-sans, sans-serif));
-  --app-shell-wordmark-size: var(--font-size-300);
-  --app-shell-wordmark-weight: var(--typography-font-weight-bold);
-  --app-shell-wordmark-tracking: var(--letter-spacing-tight);
 
   /* esa-app-bar */
-  --app-bar-bg: var(--color-background-elevation-raised, #fff);
-  --app-bar-brand-bg: var(--color-background-brand, #43608a);
-  --app-bar-brand-strong-bg: var(--color-background-default-knockout, #171717);
-  --app-bar-brand-strong-text: var(--color-content-default-knockout, #fff);
-  --app-bar-brand-text: var(--color-content-default-knockout, #fff);
-  --app-bar-gap: var(--spacing-600, 32px);
-  --app-bar-pad-x: var(--spacing-600, 32px);
-  --app-bar-pad-y: var(--spacing-400, 16px);
-  --app-bar-text: var(--color-content-default, #171717);
 
   /* esa-avatar */
   --avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
-  --avatar-radius: var(--radius-pill, 9999px);
   --avatar-size-lg: 56px;
   --avatar-size-md: 40px;
   --avatar-size-sm: 28px;
   --avatar-size-xs: 20px;
-  --avatar-text-color: var(--color-content-default-knockout, #fff);
   /* Initials type. One hook rather than four: each size rule repeats it with its
      own literal default, so an override lands on whichever size is active. Left
      UNSET here on purpose — declaring a value would pin every size to one number
@@ -512,111 +463,85 @@
      does, to hold 12px initials in a 32px face. */
 
   /* esa-back-to-top */
-  --back-to-top-bg: var(--color-background-brand, #43608a);
-  --back-to-top-bottom: var(--spacing-500, 1.5rem);
-  --back-to-top-radius: var(--radius-pill, 9999px);
-  --back-to-top-right: var(--spacing-500, 1.5rem);
   --back-to-top-size: 44px;
-  --back-to-top-text: var(--color-content-default-knockout, #fff);
 
   /* esa-side-dialog */
-  --backdrop-filter: none;
+  /* Opt-in frosted backdrop; `none` is the inert default. RENAMED from
+     --backdrop-filter (2026-08-16, migrations.json: backdrop-filter-namespaced).
+     That spelling shadowed the CSS property of the same name AND was declared at
+     :root, so every element in the kit inherited `none` for a property one
+     component uses — and a spoke writing `backdrop-filter: var(--backdrop-filter)`
+     anywhere got this token instead of a value of its own. */
+  --side-dialog-backdrop-filter: none;
 
   /* esa-badge */
   --badge-bg: var(--color-background-brand, #43608a);
-  --badge-radius: var(--radius-sm, 0.25rem); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-content-default-knockout, #fff);
 
   /* esa-card */
   --card-bg: var(--color-background-elevation-raised, #ffffff);
   --card-border-color: var(--color-border-default, #e5e5e5);
-  --card-footer-bg: var(--color-background-elevation-sunken, #efefef);
   --card-header-bg: transparent;
-  --card-header-border-color: var(--color-border-default-subtle, #efefef);
-  --card-header-color: var(--color-content-default, #171717);
-  --card-padding: var(--spacing-500, 1.5rem);
-  --card-radius: var(--radius-md, 0.5rem);
 
   /* esa-collapsible */
-  --collapsible-bg: var(--color-background-elevation-raised, #fff);
-  --collapsible-border-color: var(--color-border-default, #e5e5e5);
-  --collapsible-padding-x: var(--spacing-400, 1rem);
-  --collapsible-radius: var(--radius-md, 0.5rem);
-  --collapsible-title-color: var(--color-content-default, #171717);
 
-  /* esa-file-list */
-  --color-link: var(--color-content-brand, #3a7c59);
+  /* DELETED (2026-08-16) — --color-link, which was three defects in one line.
+     See migrations.json: color-link-to-content-brand.
+
+     (1) It was named for a TIER-2 role and declared at tier 3, so read on its own
+     it was indistinguishable from a semantic token — tier3-naming.ts already
+     flagged this. (2) It aliased --color-content-brand and had exactly ONE
+     reader, which is a role-rename, not an override. (3) esa-file-list read it
+     with the fallback --color-background-brand — a BACKGROUND role painting
+     text — so the declared chain and the read site disagreed about which token
+     they meant.
+
+     esa-file-list now reads --color-content-brand directly. A link colour that
+     diverges from the brand content role is a missing tier-2 role, not a
+     file-list hook. */
 
   /* esa-entity-search */
-  --entity-search-selected-text: var(--color-content-default-knockout);
 
   /* esa-command-palette */
-  --command-palette-bg: var(--color-background-elevation-floating, #ffffff);
-  --command-palette-border-color: var(--color-border-default, #e5e5e5);
-  --command-palette-item-bg-active: var(--color-background-elevation-sunken, #efefef);
   --command-palette-max-height: 440px;
-  --command-palette-radius: var(--radius-lg, 0.75rem);
-  --command-palette-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --command-palette-width: 560px;
 
   /* esa-confirm-dialog */
-  --confirm-dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
-  --confirm-dialog-bg: var(--color-background-elevation-floating, #ffffff);
-  --confirm-dialog-border-color: var(--color-border-default-subtle, #efefef);
-  --confirm-dialog-radius: var(--radius-lg, 0.75rem);
   --confirm-dialog-width: 360px;
 
   /* esa-container */
-  --container-gutter: var(--spacing-600, 2rem);
 
   /* esa-danger-zone */
-  --danger-zone-bg: var(--color-background-utility-danger-subtle, #fef2f2);
-  --danger-zone-border-color: var(--color-border-utility-danger, #fecaca);
-  --danger-zone-description-color: var(--color-content-default-secondary, #525252);
-  --danger-zone-heading-color: var(--color-content-utility-danger);
-  --danger-zone-padding: var(--spacing-300, 0.75rem);
-  --danger-zone-radius: var(--radius-md, 0.5rem);
 
   /* esa-dialog */
-  --dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
-  --dialog-bg: var(--color-background-elevation-floating, #ffffff);
-  --dialog-border-color: var(--color-border-default-subtle, #efefef);
-  --dialog-color: var(--color-content-default, #171717);
-  --dialog-radius: var(--radius-lg, 0.75rem);
   --dialog-width: 480px;
   --dialog-width-lg: 640px;
   --dialog-width-sm: 360px;
   --dialog-width-xs: 280px;
 
   /* esa-dropdown-menu */
-  --dropdown-menu-bg: var(--color-background-elevation-floating, #ffffff);
-  --dropdown-menu-border-color: var(--color-border-default, #e5e5e5);
-  --dropdown-menu-item-color: var(--color-content-default, #171717);
   --dropdown-menu-max-width: 280px;
   --dropdown-menu-min-width: 160px;
-  --dropdown-menu-radius: var(--radius-md, 0.5rem);
 
   /* esa-empty-state */
-  --empty-state-description-color: var(--color-content-default-secondary, #525252);
-  --empty-state-gap: var(--spacing-200, 0.5rem);
-  --empty-state-icon-color: var(--color-content-default-muted, #737373);
   --empty-state-icon-size-lg: 64px;
   --empty-state-icon-size-md: 48px;
   --empty-state-icon-size-sm: 32px;
   --empty-state-icon-size-xs: 24px;
-  --empty-state-title-color: var(--color-content-default, #171717);
 
   /* esa-entity-search */
-  --entity-search-bg: var(--color-background-elevation-floating, #ffffff);
-  --entity-search-border-color: var(--color-border-default, #dcdcdc);
   --entity-search-max-height: 70vh;
-  --entity-search-radius: var(--radius-lg, 0.75rem);
-  --entity-search-row-bg-active: var(--color-background-elevation-sunken, #f3f7fc);
-  --entity-search-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --entity-search-width: 600px;
 
-  /* esa-range-slider */
-  --fill-percent: 0%;
+  /* DELETED (2026-08-16) — --fill-percent was never a theming token.
+     esa-range-slider SETS it from JS on every render, as an inline style on its
+     own <input>, and reads it back in that input's track gradient: it is runtime
+     state expressed as a custom property, and
+     the one thing a spoke must NOT do is override it. Declaring it at :root
+     published it as part of the theming surface and gave it a default that only
+     ever applied before first paint — which the read sites already covered with
+     their own `0%` fallback. Now --_fill-percent, per the private convention.
+     See migrations.json: fill-percent-removed. */
 
   /* --form-label-font-size used to be argued about here. It is gone as of
      2026-08-14 along with the rest of the size-only ramp — a label's size and
@@ -625,11 +550,7 @@
      rather than being solved. See the FORMS header. */
 
   /* esa-header-nav */
-  --header-nav-avatar-bg: var(--color-background-brand, #43608a);
   --header-nav-avatar-size: 32px;
-  --header-nav-avatar-text: var(--color-content-default-knockout, #fff);
-  --header-nav-border-color: var(--color-border-default, #e5e5e5);
-  --header-nav-menu-item-color: var(--color-content-default-secondary, #525252);
 
   /* DELETED (2026-08-16) — the three --icon-link-* hooks. esa-icon-link became
      a shim over esa-button variant="chrome" on 2026-08-14 and paints nothing of
@@ -640,21 +561,20 @@
      tier-3 surface are two separate migrations, and only one was written.
      See migrations.json: icon-link-hooks-removed. */
 
-  /* esa-kbd */
-  --kbd-bg: var(--color-background-elevation-raised);
-  --kbd-border-color: var(--color-border-default);
-  --kbd-color: var(--color-content-default-muted);
-  --kbd-radius: var(--radius-sm, 0.25rem);
+  /* DEMOTED (2026-08-16) — the four --kbd-* hooks. See migrations.json:
+     kbd-hooks-removed. FIRST OF THE TIER-3 DEMOTION PASS, and the pattern for
+     the rest: one reader, and each hook a pure alias over a tier-2 role it had
+     no reason to diverge from. esa-kbd reads those roles directly now.
+
+     A keycap's surface, border and text are the kit's ordinary raised surface,
+     default border and muted text. A spoke re-pointing those WANTS the keycap to
+     follow — that is what makes them roles. Four extra names in front of them
+     bought nothing and cost a spoke four more places to remember. */
 
   /* esa-link-column */
-  --link-column-heading-font-size: var(--typography-label-md-font-size);
-  --link-column-item-font-size: var(--font-size-150, 0.875rem);
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
   /* esa-loading-overlay */
-  --loading-overlay-bg: var(--color-background-elevation-raised, #fff);
-  --loading-overlay-bg-transparent: var(--color-background-overlay-scrim);
-  --loading-overlay-message-color: var(--color-content-default-secondary, #525252);
 
   /* The spinner owns these; the overlay reads them because it renders one.
      Filed under esa-loading-overlay until now, which made the spinner's own
@@ -666,62 +586,28 @@
   --loading-spinner-track-color: var(--color-border-default-subtle, #efefef);
 
   /* esa-nav-dropdown */
-  --nav-dropdown-panel-bg: var(--color-background-elevation-raised, #fff);
-  --nav-dropdown-panel-border-color: var(--color-border-default, #e5e5e5);
   --nav-dropdown-panel-min-width: 240px;
-  --nav-dropdown-panel-padding: var(--spacing-300, 12px);
-  --nav-dropdown-panel-radius: var(--radius-md, 0.5rem);
-  --nav-dropdown-panel-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-  --nav-dropdown-panel-text: var(--color-content-default, #171717);
 
   /* esa-pagination */
-  --pagination-bg: var(--color-background-elevation-raised, #ffffff);
-  --pagination-border-color: var(--color-border-default, rgba(0, 0, 0, 0.12));
-  --pagination-button-color: var(--color-content-default, #171717);
-  --pagination-font-size: var(--typography-label-md-font-size);
-  --pagination-padding-x: var(--spacing-400, 16px);
-  --pagination-padding-y: var(--spacing-200, 8px);
-  --pagination-text-color: var(--color-content-default-secondary, #525252);
 
   /* esa-pill */
-  --pill-bg: var(--color-background-elevation-sunken, #efefef);
-  --pill-border-color: var(--color-border-default-subtle, #efefef);
-  --pill-remove-bg-hover: var(--color-background-overlay-heavy-hover);
-  --pill-radius: var(--radius-sm, 0.25rem);
-  --pill-text-color: var(--color-content-default, #171717);
 
   /* esa-pillbox */
-  --pillbox-gap-large: var(--spacing-300, 12px);
-  --pillbox-gap-medium: var(--spacing-200, 8px);
-  --pillbox-gap-small: var(--spacing-100, 4px);
 
   /* esa-popover */
-  --popover-bg: var(--color-background-elevation-raised, #ffffff);
-  --popover-border-color: var(--color-border-default, #e5e5e5);
-  --popover-color: var(--color-content-default, #171717);
   --popover-max-width: none;
-  --popover-radius: var(--radius-md, 0.5rem);
 
   /* esa-progress-bar */
-  --progress-bar-fill-bg: var(--color-background-brand, #43608a);
   --progress-bar-height-lg: 12px;
   --progress-bar-height-md: 8px;
   --progress-bar-height-sm: 4px;
   --progress-bar-height-xs: 2px;
-  --progress-bar-radius: var(--radius-pill, 9999px);
-  --progress-bar-track-bg: var(--color-background-elevation-sunken, #efefef);
 
   /* esa-search-panel */
-  --search-panel-bg: var(--color-background-elevation-floating, #ffffff);
-  --search-panel-result-bg-hover: var(--color-background-elevation-sunken, #efefef);
   --search-panel-width: 400px;
 
   /* esa-side-dialog */
-  --side-dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
-  --side-dialog-bg: var(--color-background-elevation-raised, #fff);
-  --side-dialog-border-color: var(--color-border-default, #e5e5e5);
   --side-dialog-inset: 16px;
-  --side-dialog-radius: var(--radius-md, 0.5rem);
   --side-dialog-width: 400px;
   --side-dialog-width-lg: 520px;
   --side-dialog-width-sm: 320px;
@@ -734,12 +620,6 @@
      be diverged from the rest of the kit; see SPEC.md, tier-3 colour naming).
      Variant sits BEFORE the property, matching --app-bar-brand-bg; these four
      were the only tokens in the file with it the other way round. */
-  --snackbar-item-danger-bg: var(--color-content-utility-danger);
-  --snackbar-item-info-bg: var(--color-content-utility-info);
-  --snackbar-item-success-bg: var(--color-content-utility-success);
-  --snackbar-item-warning-bg: var(--color-content-utility-warning);
-  --snackbar-item-color: var(--color-content-default-knockout, #ffffff);
-  --snackbar-item-radius: var(--radius-md, 0.5rem);
 
   /* esa-stat — the whole surface is TYPE, which is unusual for a tier-3 block
      and is the point: a metric's authority comes from the size/weight/face of
@@ -748,36 +628,17 @@
      class) because the value deliberately sits at a large-but-tasteful step,
      below the display/900 roles. */
   --stat-accent-color: var(--color-content-brand-secondary, #3a7c59);
-  --stat-gap: var(--spacing-050, 0.125rem);
-  --stat-label-color: var(--color-content-default-secondary, #525252);
-  --stat-label-size: var(--font-size-200, 0.9375rem);
-  --stat-label-weight: var(--typography-font-weight-medium, 500);
-  --stat-sub-color: var(--color-content-default-muted, #737373);
-  --stat-sub-size: var(--font-size-150, 0.875rem);
   --stat-value-color: var(--color-content-default, #171717);
-  --stat-value-font: var(--typography-font-family-display, var(--typography-font-family-sans, 'DM Sans', sans-serif));
   --stat-value-size: var(--font-size-700, 2.25rem);
-  --stat-value-weight: var(--typography-font-weight-bold, 650);
 
   /* esa-switch-toggle */
-  --switch-toggle-label-color: var(--color-content-default, #171717);
-  --switch-toggle-thumb-bg: var(--color-background-elevation-raised, #fff);
-  --switch-toggle-track-bg: var(--color-border-default-strong, #d4d4d4);
-  --switch-toggle-track-bg-checked: var(--color-background-brand, #43608a);
 
   /* esa-tab-layout */
-  --tab-layout-border-color: var(--color-border-default, #e5e5e5);
-  --tab-layout-color: var(--color-content-default-secondary, #525252);
-  --tab-layout-color-active: var(--color-background-brand, #43608a);
   --tab-layout-height-lg: 52px;
   --tab-layout-height-md: 44px;
   --tab-layout-height-sm: 36px;
   --tab-layout-height-xs: 30px;
-  --tab-layout-indicator-color: var(--color-background-brand, #43608a);
 
   /* esa-tooltip */
-  --tooltip-bg: var(--color-background-default-knockout);
-  --tooltip-color: var(--color-content-default-knockout, #ffffff);
   --tooltip-max-width: 240px;
-  --tooltip-radius: var(--radius-sm, 0.25rem);
 }

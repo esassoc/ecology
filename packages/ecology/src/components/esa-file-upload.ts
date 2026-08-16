@@ -272,28 +272,28 @@ export class EsaFileUpload extends LitElement {
       justify-content: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
-      border: 2px dashed var(--form-border-color, #d4d4d4);
+      border: 2px dashed var(--form-border-color, #cecece);
       border-radius: var(--radius-md, 0.5rem);
       background: var(--color-background-field, transparent);
       cursor: pointer;
       text-align: center;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       transition:
         border-color var(--transition-fast, 150ms ease),
         background var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .zone:hover {
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus, #46a758);
     }
     .zone:focus-visible {
-      border-color: var(--form-border-color-focus, #43608a);
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
-      outline-offset: var(--focus-ring-offset);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     :host([dragging]) .zone {
-      border-color: var(--color-background-brand, #43608a);
+      border-color: var(--color-background-brand, #46a758);
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #2a7e3b);
     }
@@ -312,17 +312,17 @@ export class EsaFileUpload extends LitElement {
     }
 
     .zone__label {
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
     }
     .zone__hint {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
     .browse {
       color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .zone__limit {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
 
     .error {
@@ -343,19 +343,19 @@ export class EsaFileUpload extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
       border-radius: var(--radius-sm, 0.25rem);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
     .file__name {
       flex: 1;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .file__size {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       white-space: nowrap;
     }
     .file__remove {
@@ -367,18 +367,18 @@ export class EsaFileUpload extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       border-radius: 50%;
       cursor: pointer;
       flex-shrink: 0;
       transition: background var(--transition-fast, 150ms ease);
     }
     .file__remove:hover {
-      background: var(--color-border-default, #e5e5e5);
+      background: var(--color-border-default, #cecece);
       color: var(--color-content-utility-danger, #ce2c31);
     }
     .file__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
     }
   `,

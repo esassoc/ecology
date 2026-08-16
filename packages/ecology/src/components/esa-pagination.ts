@@ -191,14 +191,14 @@ export class EsaPagination extends LitElement {
     typography,
     css`
     :host {
-      --_pagination-bg: var(--pagination-bg, var(--color-background-elevation-raised, #ffffff));
-      --_pagination-border-color: var(--pagination-border-color, var(--color-border-default, rgba(0, 0, 0, 0.12)));
-      --_pagination-text-color: var(--pagination-text-color, var(--color-content-default-secondary, #525252));
-      --_pagination-button-color: var(--pagination-button-color, var(--color-content-default, #171717));
-      --_pagination-button-disabled-color: var(--color-content-disabled, #bdbdbd);
+      --_pagination-bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_pagination-border-color: var(--color-border-default, rgba(0, 0, 0, 0.12));
+      --_pagination-text-color: var(--color-content-default-secondary, #646464);
+      --_pagination-button-color: var(--color-content-default, #202020);
+      --_pagination-button-disabled-color: var(--color-content-disabled, #8d8d8d);
       --_pagination-button-hover-bg: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
-      --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
-      --_pagination-padding-y: var(--pagination-padding-y, var(--spacing-200, 8px));
+      --_pagination-padding-x: var(--spacing-400, 16px);
+      --_pagination-padding-y: var(--spacing-200, 8px);
 
       display: block;
     }
@@ -207,7 +207,7 @@ export class EsaPagination extends LitElement {
     .page-size-label,
     .page-size-select,
     .range {
-      font-size: var(--pagination-font-size, var(--typography-body-md-font-size));
+      font-size: var(--typography-label-md-font-size, var(--typography-body-md-font-size));
     }
 
     .container {
@@ -241,7 +241,7 @@ export class EsaPagination extends LitElement {
       appearance: auto;
     }
     .page-size-select:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .page-size-select:disabled { cursor: default; opacity: 0.5; }
@@ -271,7 +271,7 @@ export class EsaPagination extends LitElement {
     .ic { display: flex; }
     .button:hover:not(:disabled) { background: var(--_pagination-button-hover-bg); }
     .button:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .button:disabled { color: var(--_pagination-button-disabled-color); cursor: default; }

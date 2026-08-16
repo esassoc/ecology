@@ -272,14 +272,14 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     /* Size tokens — md default. */
     --_btn-pad-y: var(--spacing-300, 0.75rem);
     --_btn-padding-x: var(--spacing-300, 0.75rem);
-    --_btn-radius: var(--button-radius-md, 6px);
+    --_btn-radius: var(--button-radius-md, 0.5rem);
     /* Color tokens — primary default.
        --_accent      = fill / border color (step 9)
        --_accent-text = text color for outline/dashed (step 11 of the ramp)
        --_on          = text color on a solid fill (step 12 for bright/mid fills) */
     --_accent: var(--color-background-brand, #46a758);
     --_accent-hover: var(--color-background-brand-hover, #3e9b4f);
-    --_on: var(--color-content-default-knockout, #ffffff);
+    --_on: var(--color-content-default-knockout, #fcfcfc);
     --_accent-text: var(--_accent);
     /* Tint overlays for outline/dashed appearances — track --_accent so they update per color variant. */
     --_btn-tint-hover: color-mix(in srgb, var(--_accent) 8%, transparent);
@@ -366,10 +366,10 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
      darker-gray border, red text; hover fills red. hub-edit-approved: Andy (header). */
   /* hub-edit-approved: Andy (see header) — soft bg is a light tint (mix of sunken + surface). */
   .esa-button--appearance-soft .esa-button__native {
-    background: color-mix(in srgb, var(--color-background-elevation-sunken, #efefef) 45%, var(--color-background-elevation-raised, #fff));
+    background: color-mix(in srgb, var(--color-background-elevation-sunken, #f0f0f0) 45%, var(--color-background-elevation-raised, #fcfcfc));
     /* --_accent-text (step 11), not --_accent (step 9): colored text on a light surface. */
     color: var(--_accent-text);
-    border-color: var(--color-border-default-strong, #d4d4d4);
+    border-color: var(--color-border-default-strong, #bbbbbb);
   }
   .esa-button--appearance-soft .esa-button__native:hover:not(:disabled),
   .esa-button--appearance-soft.esa-button--active .esa-button__native {
@@ -381,13 +381,13 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
   .esa-button--variant-ghost .esa-button__native {
     background: transparent;
-    color: var(--color-content-default, #171717);
+    color: var(--color-content-default, #202020);
     border-color: transparent;
   }
   .esa-button--variant-ghost.esa-button--appearance-outline .esa-button__native,
-  .esa-button--variant-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border-default, #e5e5e5); }
+  .esa-button--variant-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border-default, #cecece); }
   .esa-button--variant-ghost .esa-button__native:hover:not(:disabled),
-  .esa-button--variant-ghost.esa-button--active .esa-button__native { background: var(--color-background-elevation-sunken, #efefef); }
+  .esa-button--variant-ghost.esa-button--active .esa-button__native { background: var(--color-background-elevation-sunken, #f0f0f0); }
 
   /* ---------- Chrome (takes its color FROM context instead of owning one) ------
      Every variant above picks a color. That is exactly what makes them unusable on
@@ -454,7 +454,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     appearance: none;
   }
   .esa-button__native:focus-visible {
-    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 
@@ -475,7 +475,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   summary.esa-button { list-style: none; cursor: pointer; }
   summary.esa-button::-webkit-details-marker { display: none; }
   summary.esa-button:focus-visible {
-    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
     outline-offset: var(--focus-ring-offset, 2px);
     border-radius: var(--_btn-radius);
   }
