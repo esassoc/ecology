@@ -4,6 +4,10 @@ import { typography } from '../typography.js';
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
     chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaComboboxOption {
@@ -410,7 +414,7 @@ export class EsaCombobox extends LitElement {
       ${this.multiple ? this.renderChips() : null}
       <div class="input-wrapper">
         <input
-          class="input typography-${VALUE_TYPE[this.size]}"
+          class="input typography-${FIELD_TYPE[this.size]}"
           role="combobox"
           aria-expanded=${this._open}
           aria-haspopup="listbox"
@@ -450,7 +454,7 @@ export class EsaCombobox extends LitElement {
       ${this.multiple && isField ? this.renderChips() : null}
       <button
         type="button"
-        class="trigger typography-${isField ? VALUE_TYPE[this.size] : LABEL_TYPE[this.size]} ${isField ? 'trigger--field' : 'trigger--text'}"
+        class="trigger typography-${isField ? FIELD_TYPE[this.size] : LABEL_TYPE[this.size]} ${isField ? 'trigger--field' : 'trigger--text'}"
         ?disabled=${this.disabled}
         @click=${() => this.toggleDropdown()}
         @keydown=${this.onKeydown}
@@ -616,7 +620,6 @@ export class EsaCombobox extends LitElement {
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
-      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -722,7 +725,6 @@ export class EsaCombobox extends LitElement {
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
-      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);

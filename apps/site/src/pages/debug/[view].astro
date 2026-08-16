@@ -63,7 +63,7 @@ const {
 const t2 = await import('../../data/tier2-naming');
 const t3 = await import('../../data/tier3-naming');
 const t1 = await import('../../data/tier1-naming');
-const { unwiredSlots } = await import('../../data/composite-classes');
+const { unwiredSlots, leadingMismatches } = await import('../../data/composite-classes');
 
 const TIER_NOTE = {
   component:
@@ -1729,8 +1729,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
               which is what makes these two categories readable as one system rather than two habits.
             </p>
             <p class="cat-note">
-              <b>{t2.typeSlotCoverage.total}</b> composite tokens · <b>{t2.typeSlotCoverage.intentions}</b> intentions ·
-              {' '}<b>{t2.typeSlotCoverage.variants}</b> variants.
+              <b>{t2.typeSlotCoverage.composites}</b> composite tokens across
+              {' '}<b>{t2.typeSlotCoverage.intentions}</b> intentions, assembled from
+              {' '}<b>{t2.typeSlotCoverage.propertyTokens}</b> property tokens.
               {t2.typeSlotCoverage.unparsed.length === 0 ? (
                 <> Every one parses into all three slots.</>
               ) : (
@@ -1748,7 +1749,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
               documentation rendering a specimen of the composite, which is not evidence that anything
               depends on it — that is exactly why the two are counted separately rather than summed.
               The per-property `Used by` column to the right cannot show any of this: it reports
-              {' '}<code>typography.css</code> on all {t2.typeSlotCoverage.total} rows, because a component
+              {' '}<code>typography.css</code> on all {t2.typeSlotCoverage.propertyTokens} rows, because a component
               applies the CLASS and never reads the tokens.
             </p>
             {/* The acceptance test for this whole layer, rendered rather than written
@@ -1818,6 +1819,32 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
               {' '}<code>class</code> rather than building a DOM, so a slot whose container sits
               several elements up can read as unwired. Treat it as a candidate list.
             </p>
+            {/* microcopy is the one intention with no leading, and at the same rung it is
+                otherwise identical to its body/label twin — so the wrong pick is invisible
+                in review AND at runtime. This is the only place it surfaces. */}
+            <p class="cat-gap">
+              <b>Leading / box mismatches: {leadingMismatches.length}</b>
+              {' '}<code>microcopy-*</code> carries no leading, for text that sits IN a box.
+              Every other role leads for a column of prose. Where the two disagree:
+              {leadingMismatches.length === 0 ? (
+                <span class="ok"> None — every role matches the box it is in.</span>
+              ) : (
+                <details class="uses">
+                  <summary><span class="pill req">{leadingMismatches.length} site</span></summary>
+                  <ul>
+                    {leadingMismatches.map((m) => (
+                      <li>
+                        <code>{m.kind}</code> — <code>{m.component}</code>
+                        {' '}<code>{m.selector}</code> ({m.roles.join(', ')}): {m.detail}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              {' '}Only <code>microcopy-on-flowing</code> is a defect — the lines touch when
+              that text wraps. The other two are decisions to review, not bugs.
+            </p>
+
 
             {t2.typographyGroups.map((g) => (
               <details class={g.isUnclassified && g.total === 0 ? 'tok-group is-empty' : 'tok-group'} data-group>

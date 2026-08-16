@@ -201,7 +201,7 @@ export class EsaSearchPanel extends LitElement {
           <div class="search-box">
             ${searchIcon(20)}
             <input
-              class="input typography-body-md"
+              class="input typography-microcopy-md-subtle"
               type="text"
               placeholder=${this.placeholder}
               autocomplete="off"
@@ -323,9 +323,6 @@ export class EsaSearchPanel extends LitElement {
       border: none;
       outline: none;
       font-family: inherit;
-      /* body-md leads for prose; this is a single-line search field whose height
-         comes from the header padding, so it sits flush. */
-      line-height: var(--line-height-none, 1);
       color: var(--color-content-default, #171717);
       background: transparent;
     }

@@ -15,6 +15,10 @@ import { typography } from '../typography.js';
  * for the control step.
  */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 /**
@@ -137,7 +141,7 @@ export class EsaTextField extends LitElement {
                 : null}</label
             >`
           : null}
-        <div class="control typography-${VALUE_TYPE[this.size]}">
+        <div class="control typography-${FIELD_TYPE[this.size]}">
           ${this.prefix
             ? html`<span class="affix affix--prefix" aria-hidden="true">${this.prefix}</span>`
             : null}
@@ -229,7 +233,6 @@ export class EsaTextField extends LitElement {
          grows faster than either input. Everything else — face, size, weight,
          tracking — still comes from .typography-body-* on this element and
          inherits to the input and the affixes below. */
-      line-height: var(--line-height-none, 1);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);

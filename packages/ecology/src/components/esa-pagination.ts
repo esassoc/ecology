@@ -117,12 +117,12 @@ export class EsaPagination extends LitElement {
 
   render() {
     return html`
-      <div class="container typography-body-md ${this.disabled ? 'container--disabled' : ''}" role="navigation" aria-label="Pagination">
+      <div class="container typography-microcopy-md-subtle ${this.disabled ? 'container--disabled' : ''}" role="navigation" aria-label="Pagination">
         ${this.showPageSizeSelector && this.pageSizeOptions.length > 0
           ? html`<div class="page-size">
-              <label class="page-size-label typography-body-md" for="esa-page-size">Items per page:</label>
+              <label class="page-size-label typography-microcopy-md-subtle" for="esa-page-size">Items per page:</label>
               <select
-                class="page-size-select typography-body-md"
+                class="page-size-select typography-microcopy-md-subtle"
                 id="esa-page-size"
                 .value=${String(this.pageSize)}
                 ?disabled=${this.disabled}
@@ -135,7 +135,7 @@ export class EsaPagination extends LitElement {
             </div>`
           : null}
 
-        <span class="range typography-body-md">${this.rangeLabel}</span>
+        <span class="range typography-microcopy-md-subtle">${this.rangeLabel}</span>
 
         <div class="buttons">
           ${this.showFirstLastButtons
@@ -177,21 +177,17 @@ export class EsaPagination extends LitElement {
       display: block;
     }
 
-    /* Type comes from .typography-body-md on each of these. --pagination-font-size
-       is a PUBLIC tier-3 hook and a spoke's declaration of it is what no alias could
-       ever rescue, so it stays honoured — with the composite's own size as the
-       fallback rather than the 14px literal, which was a px value sitting inside a
-       rem ramp. The bar is a single-line row sized by its padding, so the leading
-       stays flush rather than taking the leading body-md carries for prose. */
     .container,
     .page-size-label,
     .page-size-select,
     .range {
       font-size: var(--pagination-font-size, var(--typography-body-md-font-size));
-      line-height: var(--line-height-none, 1);
     }
 
     .container {
+      /* The bar is one row. Its children already declare this; saying it here is what
+         makes the no-leading role safe rather than incidentally safe. */
+      white-space: nowrap;
       display: flex;
       align-items: center;
       justify-content: flex-end;

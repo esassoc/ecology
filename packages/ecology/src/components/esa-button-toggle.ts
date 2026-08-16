@@ -5,7 +5,10 @@ import { typography } from '../typography.js';
     steps up to semibold, which is what the -strong weight axis is for — it is not
     a size change, so the rung stays the same. */
 const LABEL_TYPE  = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
-const STRONG_TYPE = { xs: 'label-2xs-strong', sm: 'label-xs-strong', md: 'label-md-strong', lg: 'label-lg-strong' } as const;
+// The OPTIONS are microcopy — nowrap text in a padding-sized box. The group label
+// above them is not: it flows, so it keeps LABEL_TYPE. Selected steps to -strong.
+const OPTION_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
+const OPTION_SELECTED_TYPE = { xs: 'microcopy-2xs-strong', sm: 'microcopy-xs-strong', md: 'microcopy-md-strong', lg: 'microcopy-lg-strong' } as const;
 // unsafeSVG (not unsafeHTML): parses the markup in the SVG namespace so injected
 // <path>/<rect> children render. unsafeHTML would create them as XHTML elements.
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
@@ -244,7 +247,7 @@ export class EsaButtonToggle extends LitElement {
           return html`<button
             type="button"
             role="radio"
-            class="option ${selected ? 'option--selected' : ''} typography-${selected ? STRONG_TYPE[this.size] : LABEL_TYPE[this.size]}"
+            class="option ${selected ? 'option--selected' : ''} typography-${selected ? OPTION_SELECTED_TYPE[this.size] : OPTION_TYPE[this.size]}"
             aria-checked=${selected}
             aria-label=${opt.ariaLabel ?? (opt.label ? null : opt.value)}
             tabindex=${i === this.focusIndex ? 0 : -1}
@@ -345,7 +348,6 @@ export class EsaButtonToggle extends LitElement {
          height token the segment is its own text plus padding, and the track wraps
          it — the compensation has nothing left to compensate for. */
       padding: var(--_pad-y) var(--_padding-x);
-      line-height: var(--line-height-none, 1);
       color: var(--color-content-default-secondary, #525252);
       background: transparent;
       border: 0;

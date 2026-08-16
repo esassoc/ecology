@@ -4,7 +4,7 @@ import { typography } from '../typography.js';
 /** Chip text is UI text at the SEMIBOLD tier. It rendered `font-weight: 600` as a
     raw literal — 600 is not a token weight in this system (semibold is 550), so
     adopting the composite is a small deliberate weight change, logged in the ledger. */
-const STRONG_TYPE = { xs: 'label-2xs-strong', sm: 'label-xs-strong', md: 'label-md-strong', lg: 'label-lg-strong' } as const;
+const STRONG_TYPE = { xs: 'microcopy-2xs-strong', sm: 'microcopy-xs-strong', md: 'microcopy-md-strong', lg: 'microcopy-lg-strong' } as const;
 
 /** Active-state palette for a chip. Maps to Ecology semantic tokens inside the primitive. */
 export type EsaChipTone = 'neutral' | 'neutral-strong' | 'brand' | 'amber';
@@ -266,7 +266,6 @@ export class EsaChipGroup extends LitElement {
     }
 
     .chip {
-      line-height: var(--chip-group-line-height, 1);
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);

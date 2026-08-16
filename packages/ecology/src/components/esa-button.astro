@@ -33,7 +33,9 @@ import EsaIcon from './esa-icon.astro';
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
 
-const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// Button text is microcopy: one line (the label is white-space: nowrap) in a box whose
+// height comes from padding, so it carries no leading. Base weight — the pressable step.
+const LABEL_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
 type EsaButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost' | 'chrome';
@@ -434,7 +436,6 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
        pure box height, not typography. Deleted twice now on the reasoning that a
        flex-centred button never lets leading reach an edge; there is no fixed
        height, so leading IS the term that sets the height. */
-    line-height: var(--line-height-none, 1);
     border: var(--border-width-default, 1px) solid transparent;
     border-radius: var(--_btn-radius);
     /* Type comes from .typography-label-* on this element. Nothing font-related

@@ -262,13 +262,6 @@
   --filter-pill-font-size: var(--typography-label-xs-font-size);
   --filter-pill-remove-color: var(--color-content-default-secondary);
   --filter-pill-remove-color-hover: var(--color-content-utility-danger);
-  /* Flush leading. These four are single-line text (all four are white-space:
-     nowrap) in a box whose height comes from padding alone — the height tokens
-     were deleted because a px box cannot grow with rem text, so leading is now
-     the term that sets the box. It is a tier-3 hook rather than a raw
-     --line-height-none read so the deviation from the composite is named, and
-     so a spoke retuning chip density has a lever. One reader each. */
-  --filter-pill-line-height: var(--line-height-none);
   --filter-clear-color: var(--color-content-default-muted);
   --filter-clear-color-hover: var(--color-content-utility-danger);
 
@@ -491,17 +484,10 @@
   /* esa-side-dialog */
   --backdrop-filter: none;
 
-  /* esa-chip-group */
-  /* The first hook in this namespace. Same case as --filter-pill-line-height:
-     --chip-group-height-* and the shared --chip-height-* were deleted, so a chip
-     is padding-sized and its leading sets the box. */
-  --chip-group-line-height: var(--line-height-none);
-
   /* esa-badge */
   --badge-bg: var(--color-background-brand, #43608a);
   --badge-radius: var(--radius-control, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-content-default-knockout, #fff);
-  --badge-line-height: var(--line-height-none); /* see --filter-pill-line-height */
 
   /* esa-card */
   --card-bg: var(--color-background-elevation-raised, #ffffff);
@@ -656,7 +642,6 @@
   --pagination-text-color: var(--color-content-default-secondary, #525252);
 
   /* esa-pill */
-  --pill-line-height: var(--line-height-none); /* see --filter-pill-line-height */
   --pill-bg: var(--color-background-elevation-sunken, #efefef);
   --pill-border-color: var(--color-border-default-subtle, #efefef);
   --pill-remove-bg-hover: var(--color-background-overlay-heavy-hover);

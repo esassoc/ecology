@@ -4,7 +4,8 @@ import { typography } from '../typography.js';
 /** The label is UI text. The hex field is the one value slot in the kit set in the
     MONO face — a hex code is tabular, so it reads code-* rather than body-*. */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
-const CODE_TYPE  = { xs: 'code-sm', sm: 'code-sm', md: 'code-md', lg: 'code-lg' } as const;
+// The hex field is microcopy in the mono face — a single-line <input> sized by padding.
+const CODE_TYPE  = { xs: 'microcopy-code-sm', sm: 'microcopy-code-sm', md: 'microcopy-code-md', lg: 'microcopy-code-lg' } as const;
 
 /**
  * esa-color-picker — form-associated Lit Web Component.
@@ -230,7 +231,6 @@ export class EsaColorPicker extends LitElement {
       /* A bare input with no flex centring — at padding:0 and no height token this
          would collapse straight to its line box. */
       padding: var(--_pad-y) var(--_padding-x);
-      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);

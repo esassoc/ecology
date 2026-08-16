@@ -124,14 +124,14 @@ export class EsaSidebarNav extends LitElement {
 
   private badge(value?: string | number) {
     return value != null
-      ? html`<span class="badge typography-label-xs-strong">${value}</span>`
+      ? html`<span class="badge typography-microcopy-xs-strong">${value}</span>`
       : null;
   }
 
   private renderLeaf(item: EsaSidebarNavItem) {
     if (item.href) {
       return html`<a
-        class="link typography-label-md ${item.active ? 'link--active' : ''} ${item.disabled ? 'link--disabled' : ''}"
+        class="link typography-microcopy-md ${item.active ? 'link--active' : ''} ${item.disabled ? 'link--disabled' : ''}"
         href=${item.href}
         tabindex=${item.disabled ? -1 : 0}
         aria-current=${item.active ? 'page' : 'false'}
@@ -141,7 +141,7 @@ export class EsaSidebarNav extends LitElement {
         ${this.badge(item.badge)}
       </a>`;
     }
-    return html`<span class="link link--inert typography-label-md">
+    return html`<span class="link link--inert typography-microcopy-md">
       ${this.icon(item.icon)}
       <span class="label">${item.label}</span>
       ${this.badge(item.badge)}
@@ -153,7 +153,7 @@ export class EsaSidebarNav extends LitElement {
       const expanded = this.isExpanded(item);
       return html`<li class="item ${item.disabled ? 'item--disabled' : ''}">
         <button
-          class="link link--parent typography-label-md ${expanded ? 'link--expanded' : ''}"
+          class="link link--parent typography-microcopy-md ${expanded ? 'link--expanded' : ''}"
           type="button"
           aria-expanded=${expanded}
           ?disabled=${item.disabled}
@@ -170,7 +170,7 @@ export class EsaSidebarNav extends LitElement {
                 (child) => html`<li class="child ${child.disabled ? 'child--disabled' : ''}">
                   ${child.href
                     ? html`<a
-                        class="link link--child typography-label-sm ${child.active ? 'link--active' : ''} ${child.disabled ? 'link--disabled' : ''}"
+                        class="link link--child typography-microcopy-sm ${child.active ? 'link--active' : ''} ${child.disabled ? 'link--disabled' : ''}"
                         href=${child.href}
                         tabindex=${child.disabled ? -1 : 0}
                       >

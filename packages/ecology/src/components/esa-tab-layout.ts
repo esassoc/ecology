@@ -9,8 +9,8 @@ import { typography } from '../typography.js';
  * font-weight override on top of the resting role. Both maps walk the same rung,
  * which is what keeps the tab from reflowing when selection moves.
  */
-const TAB_TYPE = { xs: 'body-xs', sm: 'body-sm', md: 'body-md', lg: 'body-lg' } as const;
-const TAB_ACTIVE_TYPE = { xs: 'label-xs', sm: 'label-sm', md: 'label-md', lg: 'label-lg' } as const;
+const TAB_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
+const TAB_ACTIVE_TYPE = { xs: 'microcopy-xs', sm: 'microcopy-sm', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
 
 /**
  * esa-tab-layout — Lit Web Component.
@@ -129,7 +129,7 @@ export class EsaTabLayout extends LitElement {
               ${tab.icon ? html`<span class="icon" .innerHTML=${tab.icon}></span>` : null}
               <span>${tab.label}</span>
               ${tab.badge != null
-                ? html`<span class="badge typography-label-xs-strong">${tab.badge}</span>`
+                ? html`<span class="badge typography-microcopy-xs-strong">${tab.badge}</span>`
                 : null}
             </button>`;
           })}
@@ -227,6 +227,8 @@ export class EsaTabLayout extends LitElement {
     .icon { display: inline-flex; }
 
     .badge {
+      /* A count. microcopy has no leading, so it must not wrap. */
+      white-space: nowrap;
       display: inline-flex;
       align-items: center;
       justify-content: center;
