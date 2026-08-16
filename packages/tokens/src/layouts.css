@@ -80,6 +80,11 @@
 /* ---- sidebar: a fixed-ish aside + a fluid main; aside drops below when cramped ---- */
 .sidebar {
   --gap: var(--spacing-500, 1.5rem);
+  /* Sole owner of this name since 2026-08-15. A semantic --sidebar-width: 280px
+     shipped alongside this 18rem for months, so which one an element got was
+     decided by cascade position rather than intent; it was demoted to tier 3 as
+     --sidenav-width (migrations.json: sidebar-width-to-sidenav-width). If a
+     spoke declares --sidebar-width it now unambiguously means THIS knob. */
   --sidebar-width: 18rem;
   --sidebar-content-min: 60%;
   display: flex;

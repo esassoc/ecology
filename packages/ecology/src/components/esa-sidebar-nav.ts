@@ -235,8 +235,14 @@ export class EsaSidebarNav extends LitElement {
     *, *::before, *::after { box-sizing: border-box; }
 
     :host {
-      --_sidenav-width: var(--sidebar-width, 260px);
-      --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
+      /* Renamed from --sidebar-width / --sidebar-width-collapsed on 2026-08-15:
+         one component read them, and the name collided with the `.sidebar`
+         layout primitive's own knob at a different value. The 260/56 fallbacks
+         that sat here did not match the 280/72 the tokens ship — dead code,
+         since the token always resolves, but it stated a default the rail never
+         rendered. See migrations.json: sidebar-width-to-sidenav-width. */
+      --_sidenav-width: var(--sidenav-width, 280px);
+      --_sidenav-collapsed-width: var(--sidenav-width-collapsed, 72px);
       --_sidenav-bg: var(--sidenav-bg, #ffffff);
       --_sidenav-border: var(--sidenav-border-color, #efefef);
       --_sidenav-item-height: var(--sidenav-item-height, 40px);
@@ -370,9 +376,6 @@ export class EsaSidebarNav extends LitElement {
       border-radius: var(--_sidenav-item-radius);
       background: var(--_sidenav-item-bg);
       color: var(--_sidenav-item-color);
-      /* Type comes from .typography-label-md (children: -sm). A row is one line in a
-         box whose height is --_sidenav-item-height, so the leading stays flush. */
-      line-height: var(--line-height-none, 1);
       text-decoration: none;
       cursor: pointer;
       white-space: nowrap;
@@ -428,8 +431,6 @@ export class EsaSidebarNav extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-brand, #43608a);
       color: var(--color-content-default-knockout, #ffffff);
-      /* Count in a 20px pill — flush, so the digits sit centred. */
-      line-height: var(--line-height-none, 1);
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }
     .chevron {

@@ -79,7 +79,7 @@ import EsaBadge from '@esa/ecology/esa-badge.astro';
   <ul>
     <li><strong>Two flex passes make the frame.</strong> A column lays the bar over the body; a row lays the nav beside the content. Only <code>.shell-content</code> scrolls (<code>flex: 1</code> + <code>min-height: 0</code> + <code>overflow-y: auto</code>) — in a spoke the shell runs <code>height: 100vh</code>; here it's 440px to frame the miniature.</li>
     <li><strong>The bar brands itself from tokens.</strong> <code>tone="brand"</code> sets background and currentColor from <code>--color-background-brand</code> / <code>--color-content-default-knockout</code>; the wordmark, icon buttons, and user menu trigger all inherit. A spoke re-brands the whole bar by re-pointing <code>--color-background-brand</code> in its theme file — never by touching the component.</li>
-    <li><strong>The sidebar re-skins through its component tokens.</strong> <code>--sidebar-width</code>, <code>--sidenav-bg</code>, <code>--sidenav-link-text-active</code>, and friends are set on the shell wrapper and inherit through the shadow boundary — that's exactly how this demo narrows the rail to 248px.</li>
+    <li><strong>The sidebar re-skins through its component tokens.</strong> <code>--sidenav-width</code>, <code>--sidenav-bg</code>, <code>--sidenav-link-text-active</code>, and friends are set on the shell wrapper and inherit through the shadow boundary — that's exactly how this demo narrows the rail to 248px. The width joined that namespace on 2026-08-15; it used to be a semantic <code>--sidebar-width</code>, which is why this note could once claim a component surface that the width was not actually part of.</li>
     <li><strong>Navigation is data, not markup.</strong> <code>esa-sidebar-nav</code> takes <code>items</code> as a JS array property (not an attribute): groups, badges, accordion children, and the active flag all live in the array, so a spoke swaps its whole nav by swapping data.</li>
     <li><strong>Page content owns everything below the chrome.</strong> The scrolling region is plain composition space — here a page head plus <code>esa-card</code> / <code>esa-badge</code> legos. The shell makes no assumptions about what goes inside it.</li>
   </ul>
@@ -137,7 +137,7 @@ import EsaBadge from '@esa/ecology/esa-badge.astro';
     --app-bar-pad-y: var(--spacing-300, 0.75rem);
     --app-bar-pad-x: var(--spacing-500, 1.25rem);
     --app-bar-gap: var(--spacing-400, 1rem);
-    --sidebar-width: 248px;
+    --sidenav-width: 248px;
 
     display: flex;
     flex-direction: column;

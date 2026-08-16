@@ -263,7 +263,7 @@ export const categoryRows: CategoryRow[] = [
   {
     category: 'width',
     count: t2Count(/width|height/),
-    how: 'Splits in two. `--chip-height-*` is a proper role. The layout.json set (`--sidebar-width`, `--header-height`) still leads with a region rather than the category — and `height` has no home in the rubric, which lists width but not height.',
+    how: 'Resolved, and by subtraction — the category is now EMPTY. `--chip-height-*` was the last member and went on 2026-08-15 (migrations.json: chip-height-removed); nothing states a dimension as a tier-2 token any more. Before that it was the whole category — the layout.json set that led with a region rather than the category (`--sidebar-width`, `--header-height`) is gone: five deleted 2026-08-14 as zero-reader, the last two demoted to tier 3 as `--sidenav-width*` on 2026-08-15 once the "15 readers" on their $description turned out to be one component. Nothing here leads with a region any more. `height` still has no home in the rubric, which lists width but not height; with `width` now unrepresented at this tier that is a gap in the rubric rather than in the names.',
   },
   {
     category: 'radius',
@@ -320,7 +320,7 @@ export const variantVocab: VocabRow[] = [
   { rubric: 'utility-warning', current: 'utility-warning', status: 'match', note: 'As above.' },
   { rubric: 'utility-information', current: 'utility-info', status: 'renamed', note: 'Prefix matches; the last word is abbreviated.' },
   { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed at the intention level, not as a state, which is the de-duplication the rubric recommends. The slot order used to be inverted (`--color-disabled-bg`); it now reads `--color-background-disabled` like everything else.' },
-  { rubric: 'sizes lg / md / sm', current: '--chip-height-*', status: 'partial', note: 'One ramp left, and it is the exception. The size axis briefly had three: a text ramp (`--font-size-ui-*`, deleted 2026-08-14, then a proposed `--control-font-size-*` reverted the same day — both were size-only scales running parallel to the composites), and a height ramp for inputs and buttons (`--control-height-*`, deleted the same day). A px height cannot grow with rem text, so it clipped; those elements are now as tall as their padding plus their text. The padding hook that briefly inherited the density job (`--form-padding-{y,x}-*`) was deleted hours later for being a flat passthrough — sixteen names for four spacing rungs, identical on both axes — so there is no size lever left at any tier for inputs and buttons. `--chip-height-*` stays fixed because a badge is a shape more than a box of text — see its description. Padding is tier 1 by design: spacing is a measure, not an intent, and it is CORE, so components read it directly.' },
+  { rubric: 'sizes lg / md / sm', current: '—', status: 'missing', note: 'NO ramp left at this tier, as of 2026-08-15. The size axis briefly had three: a text ramp (`--font-size-ui-*`, deleted 2026-08-14, then a proposed `--control-font-size-*` reverted the same day — both were size-only scales running parallel to the composites), and a height ramp for inputs and buttons (`--control-height-*`, deleted the same day). A px height cannot grow with rem text, so it clipped; those elements are now as tall as their padding plus their text. The padding hook that briefly inherited the density job (`--form-padding-{y,x}-*`) was deleted hours later for being a flat passthrough — sixteen names for four spacing rungs, identical on both axes — so there is no size lever left at any tier for inputs and buttons. `--chip-height-*` was the last survivor and it went too. It had FOUR readers, which is a real tier-2 intent by this system\'s own rule, and it was still wrong: the four wear three different type rungs at the same nominal size (label-sm-strong, label-sm, label-md-strong, and a fixed label-xs), so the shared height was compensating for a typography inconsistency one tier away from where it lives. Its four components are sized by padding + text now, and are NOT guaranteed to line up on a row until the type rungs are aligned — a separate pass. Padding is tier 1 by design: spacing is a measure, not an intent, and it is CORE, so components read it directly.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
   { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; the rubric explicitly expects teams to add their own. `ai` earns its place by never colliding with brand or status; `accent` has thin surface area and is worth watching.' },
   { rubric: '—', current: 'link, inverse, raised, floating, sunken, muted, subtle', status: 'extra', note: 'Variant words with no rubric equivalent, all describing prominence or elevation. `raised`, `floating` and `sunken` sat in the INTENTION slot until 2026-08-15, which is what kept three rungs of one axis reading as three unrelated roles; they are variants of `elevation` now. `strong` used to head this list and was the worst offender — it marked step-11 tokens that are TEXT on a surface, so it read like a bolder fill and got used as one. Those are now `--color-content-*` and the word is gone from colour entirely.' },
@@ -788,7 +788,9 @@ const FAMILY_LEADS: Record<string, string> = {
   'box-shadow': 'a scale name (elevation), not the property',
   'transition / animation': 'the property',
   'z-index': 'the property, abbreviated (z)',
-  'width / height': 'a region or element (sidebar, header, control, chip)',
+  /* 'width / height' was here until 2026-08-15. Its last member (--chip-height-*) was
+     deleted, the family with it, and this lookup is `?? '—'` so a stale key would have
+     sat here rendering nothing forever. */
   'touch target': 'a concept with no CSS property behind it',
   unclassified: '—',
 };
@@ -835,12 +837,20 @@ const NON_COLOR_FAMILIES: {
     property: 'first',
     note: 'semantic/effect.json. A stacking ORDER named by what stacks — dropdown, sidebar, header, modal, toast, tooltip — so the layer relationships are readable without comparing numbers. The taxonomy notes it is a genuine judgement call whether to tokenise stacking at all.',
   },
-  {
-    label: 'width / height',
-    match: /^--(sidebar|header|footer|content|chip-height)/,
-    property: 'last',
-    note: 'semantic/layout.json and size.json, and really two families. `--chip-height-*` is a proper size ROLE (its sibling `--control-height-*` was deleted 2026-08-14 — inputs and buttons are sized by padding now). The layout set is down to `--sidebar-width` and `--sidebar-width-collapsed`: it leads with a REGION and puts the property last — the same shape colour had before it was flipped, where `--color-danger-border` became `--color-border-danger` (and `--color-border-utility-danger` a rename later). Flipping it would scatter a region across the file for no gain, since a sidebar has one dimension that matters and there is no cross-product to group by. The five siblings that WERE inconsistent (`--header-height`, `--footer-height`, and the `--content-*-width` trio that spelled its property three different ways) were deleted on 2026-08-14 rather than renamed — every one had zero readers, so the naming question resolved itself.',
-  },
+  // THE `width / height` FAMILY IS GONE, not empty — removed 2026-08-15 when its last
+  // member did. It ran /^--(sidebar|header|footer|content|chip-height)/, then narrowed
+  // to /^--chip-height/ when the first four went, then had nothing left at all once
+  // --chip-height-* was deleted (migrations.json: chip-height-removed). A NAMED family
+  // matching zero tokens is worse than no entry: it renders a group asserting that a
+  // tier-2 dimension category exists. `unclassified` is the one bucket that renders
+  // empty on purpose, and a genuinely new dimension token would land there — visibly —
+  // which is the behaviour this file wants. The reasoning it carried is preserved in
+  // semantic/size.json's $description and in the chip-height-removed row.
+  // Note the shape of the two deletions, because it is the same shape twice: both
+  // families died of a reader count that was assumed rather than counted. --sidebar-*
+  // claimed 15 readers and had one component. --chip-height-* genuinely had four, and
+  // was still wrong, because what the four agreed on was a number papering over three
+  // different type rungs.
   {
     label: 'touch target',
     match: /^--touch-target-/,

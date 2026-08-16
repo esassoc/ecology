@@ -45,10 +45,6 @@ const show = !!(message && String(message).trim());
     margin: 0;
     margin-block-start: var(--_error-gap);
     color: var(--_error-color);
-    /* Type comes from .typography-body-xs on this element. Leading stays tight:
-       the message sits directly under an input and body-xs's normal ramp would
-       widen the gap it is meant to close. */
-    line-height: var(--line-height-tight, 1.3);
   }
 
   .esa-field-error__icon {

@@ -229,7 +229,7 @@ export class EsaChipGroup extends LitElement {
     css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
-      --_height: var(--chip-height-md, 28px);
+      --_pad-y: var(--spacing-150, 0.375rem);
       --_pad-x: var(--spacing-300, 0.75rem);
       --_radius: var(--radius-control, 0.25rem);
 
@@ -247,10 +247,16 @@ export class EsaChipGroup extends LitElement {
        inputs and buttons, because a chip is interactive and lines up beside them.
        esa-badge and esa-pill look identical in shape but walk 100/150/200/300: they
        are static marks, not controls. Same code, different ramp; don't sync them.
-       (--chip-height-* stays a fixed height on purpose — see its description.) */
-    :host([size='xs']) { --_pad-x: var(--spacing-200, 0.5rem); --_height: var(--chip-height-xs, 18px); }
-    :host([size='sm']) { --_pad-x: var(--spacing-250, 0.625rem); --_height: var(--chip-height-sm, 22px); }
-    :host([size='lg']) { --_pad-x: var(--spacing-400, 1rem); --_height: var(--chip-height-lg, 34px); }
+       --_pad-y is its OWN ramp (--spacing-100/100/150/200), NOT a copy of --_pad-x.
+       That is the one place this component must not follow the control ramp: --_pad-x
+       walks 200/250/300/400 because a chip sits beside an input, but 12-16px of
+       VERTICAL padding makes it as tall as a button (measured: md rendered 50px).
+       A chip is wider than it is tall. There is no height token any more:
+       --chip-group-height-* and the shared --chip-height-* ramp behind it went on
+       2026-08-15. This box also carries a 1px border per side. */
+    :host([size='xs']) { --_pad-y: var(--spacing-100, 0.25rem); --_pad-x: var(--spacing-200, 0.5rem); }
+    :host([size='sm']) { --_pad-y: var(--spacing-100, 0.25rem); --_pad-x: var(--spacing-250, 0.625rem); }
+    :host([size='lg']) { --_pad-y: var(--spacing-200, 0.5rem); --_pad-x: var(--spacing-400, 1rem); }
 
     .root {
       display: inline-flex;
@@ -260,21 +266,17 @@ export class EsaChipGroup extends LitElement {
     }
 
     .chip {
+      line-height: var(--chip-group-line-height, 1);
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
-      /* Height from the shared chip ramp rather than font + padding: every other chip
-         in the kit (esa-pill, esa-filter-pills) is fixed-height, and a padding-sized
-         one cannot line up with them on a row. It also makes line-height inert here,
-         so this can take a typography composite whole. */
-      height: var(--_height);
       box-sizing: border-box;
+      padding-block: var(--_pad-y);
       padding-inline: var(--_pad-x);
       border-radius: var(--_radius, 0.25rem);
       border: var(--border-width-default, 1px) solid var(--_border);
       background: var(--_bg);
       color: var(--_color);
-      line-height: var(--line-height-none, 1);
       white-space: nowrap;
       cursor: pointer;
       transition:

@@ -448,14 +448,19 @@ codemod rather than a flag day.
   by rebuilding against `HEAD`'s `color.json` · *Action:* find them — a collision means two
   tokens compiling to one CSS name, and whichever wins is decided by emission order rather
   than intent · `hub-fix` · **P2**
-- **`layouts.css` shadows a semantic token name at a different value** · *Evidence:*
-  `packages/tokens/src/layouts.css:83` declares `--sidebar-width: 18rem` on `.sidebar` as a
-  per-primitive knob, while `dist/tokens.css:380` ships a semantic `--sidebar-width: 280px`
-  (17.5rem). Two different constructs — an element-scoped knob and a layout role — competing
-  for one name, and whichever wins is decided by cascade position rather than by intent ·
-  *Action:* rename the primitive's knob (`--sidebar-basis`?) or point it at the semantic
-  token. Found while adding the scan-root roster, which had to special-case the collision to
-  avoid crediting the file with reading a token it shadows · `hub-fix` · **P2**
+- ✅ **`layouts.css` shadowed a semantic token name at a different value — CLOSED 2026-08-15**
+  by a third route neither proposed action anticipated: the SEMANTIC side moved, not the
+  primitive's. `packages/tokens/src/layouts.css:83` declared `--sidebar-width: 18rem` on
+  `.sidebar` as a per-primitive knob while the semantic layer shipped `--sidebar-width: 280px`
+  (17.5rem) — an element-scoped knob and a layout role competing for one name, resolved by
+  cascade position rather than intent. Renaming the knob (the logged suggestion,
+  `--sidebar-basis`) would have broken the one spoke that declares it for a name the hub
+  should never have contested; pointing it at the semantic token would have kept a tier-2
+  entry that only one component read. Demoting the semantic pair to tier 3 as
+  `--sidenav-width` / `--sidenav-width-collapsed` vacates the name, hands it to the primitive
+  outright, and costs no spoke a single edit. `migrations.json` row
+  `sidebar-width-to-sidenav-width`; the special-case in the scan-root roster
+  (`token-graph.ts:309`) can come out on the next pass through that file.
 - **Contrast, as ONE batched pass** · *Evidence:* `check-contrast.mjs --hub` reports 7 AA
   failures sharing a root cause — Radix step-9 fills are built for ~3:1 with white, not the
   4.5:1 body text needs, so `content-on-brand` on `background-brand` is 2.95:1 and the focus
@@ -548,6 +553,15 @@ codemod rather than a flag day.
   the defect. The widths: they had already lost to a hardcoded 1556px. `--sidebar-width`
   (15 readers) and `--sidebar-width-collapsed` (1) stay — those are a real agreement.
   `migrations.json` row `layout-orphans-removed`.
+  **CORRECTION, 2026-08-15: the "15 readers" was wrong, and it is the only reason those two
+  survived this pass.** The real count was ONE COMPONENT — `esa-sidebar-nav.ts:238-239`,
+  reading both names. The number came from the token's own `$description` in
+  `semantic/layout.json` and was copied into this entry without being counted; the third
+  apparent reader, `layouts.css:89`, reads its own shadowing 18rem and never touched the
+  semantic token. Both are tier 3 now (`sidebar-width-to-sidenav-width`), which makes this
+  entry's deletion pass 7 of 7 rather than 5 of 7 and leaves `semantic/layout.json` with no
+  tokens at all. The lesson generalises past these two: **an assumed reader count is what
+  keeps a token at the wrong tier.** Count before you defend.
 - ✅ **The `--content-*-width` trio was named three different ways — MOOT 2026-08-14.**
   Resolved by deletion rather than by renaming; the three tokens no longer exist. Recorded
   because the reasoning still applies to any future family: `--content-max-width` named the

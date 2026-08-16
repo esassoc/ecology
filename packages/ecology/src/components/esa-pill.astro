@@ -92,42 +92,46 @@ const cls = [
 
 <style>
   .esa-pill {
+    line-height: var(--pill-line-height, 1);
     --_pill-bg: var(--pill-bg, var(--color-background-elevation-sunken, #efefef));
     --_pill-text: var(--pill-text-color, var(--color-content-default, #171717));
     --_pill-border: var(--pill-border-color, var(--color-border-default-subtle, #efefef));
-    --_pill-height: var(--pill-height-md, 28px);
+    --_pill-padding-y: var(--spacing-150, 0.375rem);
     --_pill-padding-x: var(--spacing-200, 0.5rem);
     --_pill-gap: var(--spacing-100, 0.25rem);
 
     display: inline-flex;
     align-items: center;
     gap: var(--_pill-gap);
-    height: var(--_pill-height);
+    /* Sized by padding + text — --pill-height-* and the shared --chip-height-* ramp
+       behind it were deleted 2026-08-15. --_pill-padding-y sits one rung below
+       --_pill-padding-x (see esa-badge for why esa-button's equal-axis rule does not
+       transfer to a chip). The radius is 9999px, so the capsule follows whatever
+       height the text and padding resolve to. Note this box has a 1px border on each
+       side, so it renders 2px taller than esa-badge at the same rung. */
+    padding-block: var(--_pill-padding-y);
     padding-inline: var(--_pill-padding-x);
     border: var(--border-width-default, 1px) solid var(--_pill-border);
     border-radius: var(--pill-radius, var(--radius-pill, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
-    /* Type comes from .typography-label-* on this element. Flush leading is kept:
-       one line in a box whose height is --_pill-height, so leading must not centre-shift. */
-    line-height: var(--line-height-none, 1);
     white-space: nowrap;
     box-sizing: border-box;
   }
 
   /* Size no longer carries a font-size — that rung comes from LABEL_TYPE above. */
   .esa-pill--xs {
-    --_pill-height: var(--pill-height-xs, 18px);
+    --_pill-padding-y: var(--spacing-100, 0.25rem);
     --_pill-padding-x: var(--spacing-100, 0.25rem);
   }
 
   .esa-pill--sm {
-    --_pill-height: var(--pill-height-sm, 22px);
+    --_pill-padding-y: var(--spacing-100, 0.25rem);
     --_pill-padding-x: var(--spacing-150, 0.375rem);
   }
 
   .esa-pill--lg {
-    --_pill-height: var(--pill-height-lg, 34px);
+    --_pill-padding-y: var(--spacing-200, 0.5rem);
     --_pill-padding-x: var(--spacing-300, 0.75rem);
   }
 

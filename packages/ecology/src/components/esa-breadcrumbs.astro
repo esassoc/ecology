@@ -88,13 +88,8 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
     gap: var(--_crumb-gap);
   }
 
-  /* Flush leading on the crumbs themselves, not on the list: each crumb carries its
-     own composite, whose line-height would beat anything inherited from the <ol>.
-     body-md/body-lg are set relaxed (1.8) for running prose — a one-line trail would
-     grow the whole bar by half a line. */
   .esa-breadcrumbs__link,
   .esa-breadcrumbs__current {
-    line-height: var(--line-height-none, 1);
   }
 
   .esa-breadcrumbs__link {

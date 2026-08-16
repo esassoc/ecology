@@ -296,7 +296,7 @@ export class EsaConfirmDialog extends LitElement {
     .esa-confirm-dialog__message {
       color: var(--confirm-dialog-color, var(--color-content-default-secondary, #525252));
       /* Leading comes from .typography-body-md. It carried an override back when
-         body-md was relaxed (1.8); the role is `normal` now, so the override went. */
+         body-md was relaxed (1.8); the role leads at normal now, so it went. */
       margin: 0;
     }
 
