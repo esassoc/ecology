@@ -12,14 +12,18 @@ import './esa-checkbox';
  * prose (body-*, regular): they are content, not chrome, and the panel matching the
  * trigger's rung is what keeps the two halves the same control.
  */
-const TRIGGER_TYPE = { xs: 'label-xs', sm: 'label-sm', md: 'label-md', lg: 'label-lg' } as const;
+const TRIGGER_TYPE = { xs: 'microcopy-xs', sm: 'microcopy-sm', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
 const TRIGGER_ACTIVE_TYPE = {
-  xs: 'label-xs-strong',
-  sm: 'label-sm-strong',
-  md: 'label-md-strong',
-  lg: 'label-lg-strong',
+  xs: 'microcopy-xs-strong',
+  sm: 'microcopy-sm-strong',
+  md: 'microcopy-md-strong',
+  lg: 'microcopy-lg-strong',
 } as const;
-const OPTION_TYPE = { xs: 'body-xs', sm: 'body-sm', md: 'body-md', lg: 'body-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
+const OPTION_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 
 /**
  * esa-filter-dropdown — INTERACTIVE filter control (Lit Web Component).
@@ -245,7 +249,7 @@ export class EsaFilterDropdown extends LitElement {
         >
           <span class="esa-filter-dropdown__label">${this.buttonLabel}</span>
           ${this.multiple && this._selected.length > 0
-            ? html`<span class="esa-filter-dropdown__count typography-label-xs-strong"
+            ? html`<span class="esa-filter-dropdown__count typography-microcopy-xs-strong"
                 >${this._selected.length}</span
               >`
             : null}
@@ -258,7 +262,7 @@ export class EsaFilterDropdown extends LitElement {
           ? html`<div class="esa-filter-dropdown__panel" role="listbox">
               <div class="esa-filter-dropdown__search">
                 <input
-                  class="esa-filter-dropdown__search-input typography-${OPTION_TYPE[this.size]}"
+                  class="esa-filter-dropdown__search-input typography-${FIELD_TYPE[this.size]}"
                   type="text"
                   placeholder=${this.placeholder || 'Search...'}
                   .value=${this._searchText}
@@ -301,7 +305,7 @@ export class EsaFilterDropdown extends LitElement {
               <div class="esa-filter-dropdown__footer">
                 <button
                   type="button"
-                  class="esa-filter-dropdown__clear-link typography-label-sm"
+                  class="esa-filter-dropdown__clear-link typography-microcopy-sm"
                   ?disabled=${!this.hasSelection}
                   @click=${this.clear}
                 >Clear all</button>
@@ -456,7 +460,6 @@ export class EsaFilterDropdown extends LitElement {
     }
     .esa-filter-dropdown__search-input {
       /* A real <input> — it cannot wrap, so leading only sets the box height. */
-      line-height: var(--line-height-none, 1);
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);

@@ -126,10 +126,10 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     </button>
 
     {hasSearch && (
-      <button class="esa-app-shell__search typography-body-sm" data-shell-search={uid} type="button" aria-label="Search">
+      <button class="esa-app-shell__search typography-microcopy-sm-subtle" data-shell-search={uid} type="button" aria-label="Search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <span class="esa-app-shell__search-label">{searchPlaceholder}</span>
-        <kbd class="esa-app-shell__search-kbd typography-label-xs">/</kbd>
+        <kbd class="esa-app-shell__search-kbd typography-microcopy-xs">/</kbd>
       </button>
     )}
 

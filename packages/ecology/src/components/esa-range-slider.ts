@@ -3,7 +3,10 @@ import { typography } from '../typography.js';
 
 /** Both slots are UI text at medium: the field label, and the numeric readout —
     a readout is chrome, not something the user typed, so it stays label-*. */
+// The readout is microcopy — a tabular number, min-width 3ch, in a flex row. The LABEL
+// above it flows, so it keeps its own map.
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
 
 /**
  * esa-range-slider — form-associated Lit Web Component.
@@ -104,7 +107,7 @@ export class EsaRangeSlider extends LitElement {
             @input=${this.onInput}
           />
         </div>
-        ${this.showValue ? html`<span class="value typography-${LABEL_TYPE[this.size]}">${this.value}</span>` : null}
+        ${this.showValue ? html`<span class="value typography-${VALUE_TYPE[this.size]}">${this.value}</span>` : null}
       </div>
     `;
   }

@@ -190,6 +190,18 @@ const lineageOf = (start: string | null): LineageLink[] => {
   return chain;
 };
 
+/**
+ * The lineage of any declared token, for callers outside this module.
+ *
+ * Exported so the component doc page can resolve a COMPOSITE's property tokens
+ * with the same walker the token table uses. A composite is a class, so none of
+ * its tokens appear in `themingSurface` — the page would otherwise have needed a
+ * second resolver, and two walkers over the same `defs` map is how the two
+ * columns start disagreeing about what a token computes to.
+ */
+export const lineageFor = (token: string): LineageLink[] =>
+  defs.has(token) ? lineageOf(defs.get(token)!) : [];
+
 export const themingSurface: Record<string, ThemingHook[]> = {};
 
 // PASS 1 — scan every component for the tokens it reads. Kept separate from

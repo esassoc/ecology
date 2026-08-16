@@ -10,6 +10,10 @@ import { typography } from '../typography.js';
     set in willUpdate now, so these maps are never asked for a key they lack — and if
     one is ever added back here it must come with a `:host([size='…'])` block. */
 const LABEL_TYPE = { sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaOption {
@@ -444,7 +448,7 @@ export class EsaSelect extends LitElement {
     const isPlaceholder = !shown;
     return html`<button
       type="button"
-      class="input input--trigger typography-${VALUE_TYPE[this.size]} ${isPlaceholder ? 'input--placeholder' : ''}"
+      class="input input--trigger typography-${FIELD_TYPE[this.size]} ${isPlaceholder ? 'input--placeholder' : ''}"
       role="combobox"
       aria-expanded=${this._open}
       aria-haspopup="listbox"
@@ -474,7 +478,7 @@ export class EsaSelect extends LitElement {
       );
     }
     return html`<input
-      class="input typography-${VALUE_TYPE[this.size]}"
+      class="input typography-${FIELD_TYPE[this.size]}"
       role="combobox"
       aria-expanded=${this._open}
       aria-haspopup="listbox"
@@ -672,7 +676,6 @@ export class EsaSelect extends LitElement {
          would cancel it at exactly one viewport. Same line esa-button,
          esa-text-field, esa-button-toggle and esa-color-picker already carry.
          esa-textarea deliberately does NOT — it is genuinely multi-line. */
-      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);

@@ -180,8 +180,8 @@ export class EsaFileUpload extends LitElement {
             ${this._files.map(
               (file, i) => html`<li class="file">
                 ${this.fileIcon()}
-                <span class="file__name typography-body-sm">${file.name}</span>
-                <span class="file__size typography-body-sm">${this.formatFileSize(file.size)}</span>
+                <span class="file__name typography-microcopy-sm-subtle">${file.name}</span>
+                <span class="file__size typography-microcopy-sm-subtle">${this.formatFileSize(file.size)}</span>
                 <button
                   type="button"
                   class="file__remove"

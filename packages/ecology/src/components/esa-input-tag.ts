@@ -4,6 +4,10 @@ import { typography } from '../typography.js';
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
     chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaInputTagOption {
@@ -364,7 +368,7 @@ export class EsaInputTag extends LitElement {
           <div class="chips">
             ${this.tagsBelow ? null : this.renderChips()}
             <input
-              class="input typography-${VALUE_TYPE[this.size]}"
+              class="input typography-${FIELD_TYPE[this.size]}"
               type="text"
               role="combobox"
               aria-haspopup="listbox"
@@ -625,7 +629,6 @@ export class EsaInputTag extends LitElement {
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
-      line-height: var(--line-height-none, 1);
       background: transparent;
       border: none;
       outline: none;

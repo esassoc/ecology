@@ -19,7 +19,7 @@ const { label, variant = 'default', removable = true, size = 'md' } = Astro.prop
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
 
-const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-sm', lg: 'label-md' } as const;
+const LABEL_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-sm', lg: 'microcopy-md' } as const;
 
 const hasIconSlot = Astro.slots.has('icon');
 const cls = [
@@ -92,7 +92,6 @@ const cls = [
 
 <style>
   .esa-pill {
-    line-height: var(--pill-line-height, 1);
     --_pill-bg: var(--pill-bg, var(--color-background-elevation-sunken, #efefef));
     --_pill-text: var(--pill-text-color, var(--color-content-default, #171717));
     --_pill-border: var(--pill-border-color, var(--color-border-default-subtle, #efefef));

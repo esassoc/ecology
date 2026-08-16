@@ -9,10 +9,13 @@
 // half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
 ---
-<kbd class="esa-kbd typography-label-xs"><slot /></kbd>
+<kbd class="esa-kbd typography-microcopy-xs"><slot /></kbd>
 
 <style>
   .esa-kbd {
+    /* microcopy carries no leading, which is only safe because a keycap is one
+       line. Say so, rather than relying on it being short. */
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;

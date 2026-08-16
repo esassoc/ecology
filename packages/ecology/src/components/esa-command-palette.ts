@@ -172,7 +172,7 @@ export class EsaCommandPalette extends LitElement {
         <div class="esa-command-palette__search">
           <svg class="esa-command-palette__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input
-            class="esa-command-palette__input typography-body-lg"
+            class="esa-command-palette__input typography-microcopy-lg-subtle"
             type="text"
             placeholder="Type a command..."
             .value=${this.query}
@@ -273,9 +273,6 @@ export class EsaCommandPalette extends LitElement {
       flex: 1;
       border: none;
       outline: none;
-      /* body-lg is relaxed (1.8) for running prose; this is a single-line search
-         field whose height comes from the row padding, so it sits flush. */
-      line-height: var(--line-height-none, 1);
       color: var(--color-content-default, #171717);
       background: transparent;
       font-family: inherit;

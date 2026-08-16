@@ -255,3 +255,168 @@ export const typeRolesBySlug: Map<string, TypeRoles> = (() => {
   }
   return map;
 })();
+
+export interface LeadingMismatch {
+  component: string;
+  selector: string;
+  roles: string[];
+  kind: 'microcopy-on-flowing' | 'flowing-in-a-box' | 'outside-the-system';
+  detail: string;
+}
+
+/**
+ * Elements whose leading and whose box disagree.
+ *
+ * `microcopy-*` is the one intention with no leading — it exists for text that sits
+ * IN a box whose height comes from padding. Every other role leads for a column of
+ * prose. The two are otherwise identical at the same rung: `body-md` and
+ * `microcopy-md-subtle` differ ONLY in line-height, so picking the wrong one is
+ * invisible in review and invisible at runtime. CSS has no diagnostic for it — the
+ * same silent shape as a class that matches no rule.
+ *
+ * Two directions, and they fail differently:
+ *
+ *   microcopy-on-flowing   a no-leading role on text that can wrap. Real bug: the
+ *                          lines touch on the second line. Nothing catches it until
+ *                          someone writes a long label or a translation lands.
+ *   flowing-in-a-box       a leading role on nowrap/input text in a padding-sized
+ *                          box. Not a bug — the box is just taller than intended,
+ *                          which is the condition this whole layer was built to
+ *                          remove. Advisory.
+ *
+ * HEURISTIC, and it says so: it reads `white-space: nowrap` and `height` from the
+ * element's own rules, so an element that inherits either from an ancestor reads
+ * wrong. It also checks the styled element rather than the child holding the text —
+ * `esa-button`'s nowrap sits on `.esa-button__label`, not `.esa-button__native`, and
+ * that exact gap caused a wrong deletion during this migration. Treat it as a
+ * candidate list, like the API-drift warning.
+ */
+export const leadingMismatches: LeadingMismatch[] = (() => {
+  const out: LeadingMismatch[] = [];
+  if (!existsSync(COMPONENTS)) return out;
+
+  for (const file of readdirSync(COMPONENTS)) {
+    if (!/\.(astro|ts)$/.test(file)) continue;
+    const component = file.replace(/\.(astro|ts)$/, '');
+    const src = stripComments(readFileSync(path.join(COMPONENTS, file), 'utf8'));
+
+    const bundles = [
+      ...src.matchAll(/class(?::list)?=\s*(?:["'`]([\s\S]*?)["'`]|\{([\s\S]*?)\})/g),
+    ].map((m) => m[1] ?? m[2] ?? '');
+    for (const m of src.matchAll(/const\s+[A-Za-z_$][\w$]*\s*(?::[^=]+?)?=([\s\S]*?);/g)) {
+      if (/typography-/.test(m[1])) bundles.push(m[1]);
+    }
+
+    const regions = file.endsWith('.astro')
+      ? [...src.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1])
+      : [...src.matchAll(/css`([\s\S]*?)`\s*[,;\]]/g)].map((m) => m[1]);
+
+    for (const region of regions) {
+      const clean = region.replace(/\/\*[\s\S]*?\*\//g, '');
+      const rules = [...clean.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((r) => ({
+        sel: r[1].trim().replace(/\s+/g, ' '),
+        body: r[2],
+      }));
+
+      for (const rule of rules) {
+        const targets = [...rule.sel.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]);
+        if (!targets.length) continue;
+
+        const roles = new Set<string>();
+        for (const t of targets) {
+          const word = new RegExp(`(?<![\\w-])${t}(?![\\w-])`);
+          for (const b of bundles) {
+            if (!word.test(b)) continue;
+            for (const r of compositeClassesIn(b)) roles.add(r.replace(/^typography-/, ''));
+          }
+        }
+
+        // Text that names NO composite is invisible to a check that measures
+        // agreement WITHIN the system — which is how `esa-app-shell__wordmark` sat
+        // here unflagged, assembling its type from four tier-3 hooks. A rule that
+        // sets leading AND its own face or size has opted out; say so, because
+        // opting out should be a visible decision rather than a silent one.
+        if (!roles.size) {
+          const assembles = /(^|[;\s])(font-family|font-size|font-weight)\s*:/.test(rule.body);
+          const setsLeading = /(^|[;\s])line-height\s*:/.test(rule.body);
+          if (assembles && setsLeading) {
+            out.push({
+              component, selector: rule.sel, roles: [],
+              kind: 'outside-the-system',
+              detail: 'assembles its own type and leading — names no composite',
+            });
+          }
+          continue;
+        }
+
+        // Everything the component says about this class OR its BEM neighbours.
+        // `nowrap` is routinely declared somewhere other than the styled element:
+        // `.link--child` inherits it from `.link`, and `.esa-app-shell__search` gets
+        // it from the `__search-label` inside it. Matching only the exact class
+        // reported 24 false positives out of 26 — the ratio at which a guard stops
+        // being read. Block = the part before `__` or `--`.
+        const blocks = new Set(targets.map((t) => t.split(/__|--/)[0]));
+        const related = rules.filter((r) =>
+          targets.some((t) => new RegExp(`\\.${t}(?![\\w-])`).test(r.sel)) ||
+          [...blocks].some((b) => new RegExp(`\\.${b}(?:__|--)?[\\w-]*(?![\\w-])`).test(r.sel)));
+        const all = related.map((r) => r.body).join(';');
+        const nowrap = /white-space:\s*nowrap/.test(all);
+        // A native input or select is single-line by construction. `textarea` is NOT
+        // included — it is the one form control that is genuinely multi-line, and
+        // treating it as single-line would hide the one place this check should fire.
+        const nativeInput = targets.some((t) =>
+          new RegExp(`<(?:input|select)\\b[\\s\\S]{0,200}?${t}(?![\\w-])`).test(src));
+        const single = nowrap || nativeInput;
+        const hasHeight = /(^|[;\s])height\s*:/.test(all);
+        const padded = /(^|[;\s])padding(-block|-inline|-top|-bottom)?\s*:/.test(all);
+
+        const micro = [...roles].filter((r) => r.startsWith('microcopy-'));
+        const flowing = [...roles].filter((r) => !r.startsWith('microcopy-'));
+
+        if (micro.length && !single) {
+          out.push({
+            component, selector: rule.sel, roles: micro, kind: 'microcopy-on-flowing',
+            detail: 'no leading on text that can wrap — lines touch on the second line',
+          });
+        }
+        if (flowing.length && single && padded && !hasHeight) {
+          out.push({
+            component, selector: rule.sel, roles: flowing, kind: 'flowing-in-a-box',
+            detail: 'single-line text in a padding-sized box — its leading is setting the height',
+          });
+        }
+      }
+    }
+  }
+  // One finding per element, not per state. `.x`, `.x:hover` and `.x:disabled` are
+  // the same element with the same role; reporting three made the list look four
+  // times worse than it was.
+  const seen = new Set<string>();
+  return out
+    .map((m) => ({ ...m, selector: m.selector.replace(/:{1,2}[a-z-]+(\([^)]*\))?/g, '') }))
+    .filter((m) => {
+      const k = `${m.component}|${m.selector}|${m.kind}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .sort((a, b) => a.kind.localeCompare(b.kind) || a.component.localeCompare(b.component));
+})();
+
+/**
+ * The property tokens a composite assembles, read from the compiled output.
+ *
+ * READ, not assumed. Every composite has five — except the two eyebrows, which add
+ * `text-transform` for their caps treatment — so a hardcoded list of five would be
+ * wrong about them and right about everything else, which is the worst kind of
+ * wrong. It also means the doc page prints names a spoke can copy: the column used
+ * to render `--typography-microcopy-xs-*`, which is a shorthand, not a token, and
+ * cannot be pasted into a theme file.
+ */
+export const propertyTokensOf = (compositeClass: string): string[] => {
+  const role = compositeClass.replace(/^\.?typography-/, '');
+  const dist = path.join(ROOT, 'packages', 'tokens', 'dist', 'tokens.css');
+  if (!existsSync(dist)) return [];
+  const RE = new RegExp(`(--typography-${role}-(?:font-family|font-size|font-weight|line-height|letter-spacing|text-transform))\\s*:`, 'g');
+  return [...new Set([...readFileSync(dist, 'utf8').matchAll(RE)].map((m) => m[1]))].sort();
+};

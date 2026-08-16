@@ -1144,7 +1144,7 @@ export const REQUIRED_TYPE_PROPS = [
  * would put `font-family` in a slot the composites use for an intention.
  */
 const TYPE_INTENTIONS = new Set([
-  'display', 'heading', 'title', 'body', 'label', 'meta', 'eyebrow', 'code',
+  'display', 'heading', 'title', 'body', 'label', 'meta', 'eyebrow', 'code', 'microcopy',
 ]);
 
 /** Longest-match first, so `font-family` never parses as `font` + `family`. */
@@ -1189,7 +1189,8 @@ const TYPE_UNSLOTTED = 'no intention in slot 1';
  * name fills slot 1; a populated one is a name nobody has decided about yet.
  */
 const TYPE_INTENTION_ORDER = [
-  'display', 'heading', 'title', 'body', 'label', 'meta', 'eyebrow', 'code', TYPE_UNSLOTTED,
+  'display', 'heading', 'title', 'body', 'label', 'microcopy', 'meta', 'eyebrow', 'code',
+  TYPE_UNSLOTTED,
 ];
 
 /* The same pair of guards colour carries, and for the same reason: the order list
@@ -1574,7 +1575,12 @@ export const typographyGroups: TypeIntentionGroup[] = (() => {
         label: v || null,
         className,
         classShipped: shipped.has(className),
-        usedBy: compositeUsage.get(className) ?? { components: [], files: [] },
+        // Every field, including `undelivered`. This fallback lost a key when
+        // `undelivered` was added to CompositeUse and crashed the page on `.length`
+        // — and `npm run build` did not catch it, because getStaticPaths returns []
+        // in production, so the build renders none of this. Debug pages have to be
+        // checked against the dev server.
+        usedBy: compositeUsage.get(className) ?? { components: [], files: [], undelivered: [] },
         assemblesFrom: [...new Set(rows.map((r) => r.references).filter((w): w is string =>
           !!w && w.startsWith('--typography-font-')))]
           .sort()
@@ -1657,9 +1663,16 @@ export const typeSlotCoverage = (() => {
     return !s.intention || !s.property;
   });
   return {
-    total: composites.length,
+    /**
+     * The PROPERTY tokens — five per composite (six for the eyebrows, which add
+     * text-transform). NOT the composite count. A composite token IS the class:
+     * `.typography-code-xs` is one. Naming this `total` is how the page came to
+     * report "242 composite tokens" when it ships 48.
+     */
+    propertyTokens: composites.length,
     intentions: typographyGroups.filter((g) => !g.isUnclassified).length,
-    variants: typographyGroups.reduce((n, g) => n + g.variants.length, 0),
+    /** One row per composite — this is the composite count. */
+    composites: typographyGroups.reduce((n, g) => n + g.variants.length, 0),
     unparsed: unparsed.map((t) => t.name),
   };
 })();

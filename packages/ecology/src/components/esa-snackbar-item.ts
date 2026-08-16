@@ -71,7 +71,7 @@ export class EsaSnackbarItem extends LitElement {
         <span class="esa-snackbar__icon">${this.renderIcon()}</span>
         <span class="esa-snackbar__message">${this.message}</span>
         ${this.action
-          ? html`<button class="esa-snackbar__action typography-label-sm-strong" @click=${this.onAction}>${this.action}</button>`
+          ? html`<button class="esa-snackbar__action typography-microcopy-sm-strong" @click=${this.onAction}>${this.action}</button>`
           : null}
         ${this.dismissable
           ? html`
@@ -117,6 +117,8 @@ export class EsaSnackbarItem extends LitElement {
     .esa-snackbar__message { flex: 1; }
 
     .esa-snackbar__action {
+      /* One word ("Undo"). microcopy has no leading, so wrapping would collide. */
+      white-space: nowrap;
       flex-shrink: 0;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: none;

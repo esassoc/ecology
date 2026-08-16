@@ -75,7 +75,7 @@ export class EsaTooltip extends LitElement {
         <slot></slot>
         ${this.open && this.text
           ? html`
-              <span class="esa-tooltip typography-body-sm esa-tooltip--${this.position}" role="tooltip">
+              <span class="esa-tooltip typography-microcopy-sm-subtle esa-tooltip--${this.position}" role="tooltip">
                 <span class="esa-tooltip__text">${this.text}</span>
                 <span class="esa-tooltip__arrow"></span>
               </span>
@@ -102,9 +102,11 @@ export class EsaTooltip extends LitElement {
       color: var(--tooltip-color, var(--color-content-default-knockout, #ffffff));
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--tooltip-radius, var(--radius-control, 0.25rem));
-      /* body-sm sits on the normal ramp; a tooltip may wrap to two or three
-         lines and wants them close, so it keeps the tight one. */
-      line-height: var(--line-height-tight, 1.3);
+      /* Leading comes from microcopy-sm-subtle. This carried a tight override
+         justified as "a tooltip may wrap to two or three lines" — but the rule
+         below sets white-space: nowrap, so it never wraps and never did. The
+         override was correcting for a case this component cannot produce.
+         --tooltip-max-width is in the same position: nowrap makes it inert. */
       max-width: var(--tooltip-max-width, 240px);
       pointer-events: none;
       white-space: nowrap;
