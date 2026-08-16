@@ -1,6 +1,6 @@
 {
   "name": "spoke-kit",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "Claude intelligence layer for ESA Ecology design-system spokes. Ships the component-first discipline (skill + PreToolUse hook enforcing the Ecology esa-* -> Beacon -> bcn- lookup order), the accessibility discipline (skill + PreToolUse hook enforcing deterministic a11y practices — positive tabindex, missing alt, suppressed focus rings, keyboard-unreachable roles — without prescribing patterns), the hub-state discipline (SessionStart hook warning when the sibling ecology checkout has WIP that the spoke's file: symlinks are serving live, plus the /ship hub gate that blocks deploying it — escape ship-wip-approved:), the /spoke-init scaffolding command, and the spoke pre-commit review skill. Single source of truth lives in the ecology hub repo; do not copy these files into spokes.",
   "author": {
     "name": "ESA Data Technology"
