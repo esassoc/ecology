@@ -133,11 +133,8 @@ export class EsaDropdownMenu extends LitElement {
       position: relative;
       display: inline-block;
     }
-    /* body-md matches the menu items the trigger opens, and inherits through the
-       slot to whatever is slotted in. A trigger is one line, so it runs flush. */
     .esa-dropdown__trigger {
       display: inline-block;
-      line-height: var(--line-height-none, 1);
     }
 
     .esa-dropdown-menu__panel {
@@ -179,9 +176,6 @@ export class EsaDropdownMenu extends LitElement {
       color: var(--dropdown-menu-item-color, var(--color-content-default, #171717));
       /* UA reset, not a type role — a native button does not inherit the face. */
       font-family: inherit;
-      /* body-md is set relaxed (1.8) for running prose. A menu item is one line
-         in a row sized by its padding, so it runs flush. */
-      line-height: var(--line-height-none, 1);
       cursor: pointer;
       text-align: left;
       transition: background 100ms ease;

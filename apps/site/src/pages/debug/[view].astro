@@ -1539,9 +1539,18 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
               {cat.kind === 'family' && !cat.isUnclassified && cat.property === 'last' && (
                 <span class="gap-flag">property last</span>
               )}
-              {cat.kind === 'family' && !cat.isUnclassified && cat.property === 'none' && (
-                <span class="gap-flag">no property slot</span>
-              )}
+              {/* There is no `no property slot` chip, removed 2026-08-15. It fired on
+                  box-shadow and touch target, and in neither case was it reporting
+                  something to fix. `--elevation-1…6` cannot be `--shadow-*` — tier 1
+                  owns that namespace for the raw axes (offset-y / blur / spread /
+                  color) and `--shadow-050…500` is already the deprecated spelling of
+                  these very tokens; `elevation` also pairs with
+                  `--color-background-elevation-*`, one concept as value and as shadow.
+                  `--touch-target-min` is a WCAG floor with no CSS property behind it
+                  at all. A flag on a name that is correct and cannot move trains the
+                  reader to skim past flags. The `Property slot` column in the
+                  non-colour summary table above still records the fact for anyone
+                  auditing the rubric — that table describes, this chip alarmed. */}
               <span class={cat.isUnclassified && cat.count === 0 ? 'group-count none' : 'group-count'}>
                 {cat.count}
               </span>

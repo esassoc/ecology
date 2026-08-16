@@ -262,6 +262,13 @@
   --filter-pill-font-size: var(--typography-label-xs-font-size);
   --filter-pill-remove-color: var(--color-content-default-secondary);
   --filter-pill-remove-color-hover: var(--color-content-utility-danger);
+  /* Flush leading. These four are single-line text (all four are white-space:
+     nowrap) in a box whose height comes from padding alone — the height tokens
+     were deleted because a px box cannot grow with rem text, so leading is now
+     the term that sets the box. It is a tier-3 hook rather than a raw
+     --line-height-none read so the deviation from the composite is named, and
+     so a spoke retuning chip density has a lever. One reader each. */
+  --filter-pill-line-height: var(--line-height-none);
   --filter-clear-color: var(--color-content-default-muted);
   --filter-clear-color-hover: var(--color-content-utility-danger);
 
@@ -311,6 +318,14 @@
      Hooks for behaviour the component does not do by default are declared at
      their INERT value (0 / same-as-resting) so they stay zero-regression and
      opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
+  /* Rail width, expanded and collapsed. These were semantic tokens named
+     --sidebar-width / --sidebar-width-collapsed until 2026-08-15, on a
+     $description claiming 15 readers; the real count was this one component.
+     They also collided by name — at a different value — with the `.sidebar`
+     layout primitive's own 18rem knob in layouts.css, which now owns that name
+     outright. See migrations.json: sidebar-width-to-sidenav-width. */
+  --sidenav-width: 280px;
+  --sidenav-width-collapsed: 72px;
   --sidenav-bg: var(--color-background-elevation-sunken);
   --sidenav-border-color: var(--color-border-default-subtle);
   /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
@@ -476,14 +491,17 @@
   /* esa-side-dialog */
   --backdrop-filter: none;
 
+  /* esa-chip-group */
+  /* The first hook in this namespace. Same case as --filter-pill-line-height:
+     --chip-group-height-* and the shared --chip-height-* were deleted, so a chip
+     is padding-sized and its leading sets the box. */
+  --chip-group-line-height: var(--line-height-none);
+
   /* esa-badge */
   --badge-bg: var(--color-background-brand, #43608a);
-  --badge-height-lg: var(--chip-height-lg, 34px);
-  --badge-height-md: var(--chip-height-md, 28px);
-  --badge-height-sm: var(--chip-height-sm, 22px);
-  --badge-height-xs: var(--chip-height-xs, 18px);
   --badge-radius: var(--radius-control, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-content-default-knockout, #fff);
+  --badge-line-height: var(--line-height-none); /* see --filter-pill-line-height */
 
   /* esa-card */
   --card-bg: var(--color-background-elevation-raised, #ffffff);
@@ -638,13 +656,10 @@
   --pagination-text-color: var(--color-content-default-secondary, #525252);
 
   /* esa-pill */
+  --pill-line-height: var(--line-height-none); /* see --filter-pill-line-height */
   --pill-bg: var(--color-background-elevation-sunken, #efefef);
   --pill-border-color: var(--color-border-default-subtle, #efefef);
   --pill-remove-bg-hover: var(--color-background-overlay-heavy-hover);
-  --pill-height-lg: var(--chip-height-lg, 34px);
-  --pill-height-md: var(--chip-height-md, 28px);
-  --pill-height-sm: var(--chip-height-sm, 22px);
-  --pill-height-xs: var(--chip-height-xs, 18px);
   --pill-radius: var(--radius-control, 4px);
   --pill-text-color: var(--color-content-default, #171717);
 

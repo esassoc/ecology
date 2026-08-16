@@ -430,6 +430,10 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
        case is gone rather than generalised. */
     padding-block: var(--_btn-pad-y);
     padding-inline: var(--_btn-padding-x);
+    /* The label is white-space: nowrap, so it is one line always — leading here is
+       pure box height, not typography. Deleted twice now on the reasoning that a
+       flex-centred button never lets leading reach an edge; there is no fixed
+       height, so leading IS the term that sets the height. */
     line-height: var(--line-height-none, 1);
     border: var(--border-width-default, 1px) solid transparent;
     border-radius: var(--_btn-radius);

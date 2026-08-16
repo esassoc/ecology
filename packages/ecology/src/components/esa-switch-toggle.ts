@@ -163,9 +163,9 @@ export class EsaSwitchToggle extends LitElement {
     }
 
     /* Type comes from .typography-body-md on the element, leading included — the
-       role is `normal`, which is what a one-word label beside a 22px track wants.
-       This carried a line-height override back when body-md was relaxed (1.8) and
-       the row outgrew the track; the role moved, so the override went. */
+       role leads at normal, which is what a one-word label beside a 22px track
+       wants. This carried a line-height override back when body-md was relaxed
+       (1.8) and the row outgrew the track; the role moved, so the override went. */
   `,
   ];
 }

@@ -94,9 +94,6 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
     display: inline-flex;
     align-items: center;
     gap: var(--_bar-gap);
-    /* Flush: single-line chrome rows in a box whose height comes from --_bar-pad-y,
-       so label-md's `normal` leading would only pad the bar taller. */
-    line-height: var(--line-height-none, 1);
   }
   .esa-app-bar__start { flex: none; }
   .esa-app-bar__main { flex: 1 1 auto; }

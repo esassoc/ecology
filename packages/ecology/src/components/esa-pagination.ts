@@ -182,7 +182,7 @@ export class EsaPagination extends LitElement {
        ever rescue, so it stays honoured — with the composite's own size as the
        fallback rather than the 14px literal, which was a px value sitting inside a
        rem ramp. The bar is a single-line row sized by its padding, so the leading
-       stays flush; body-md is set relaxed (1.8) for running prose. */
+       stays flush rather than taking the leading body-md carries for prose. */
     .container,
     .page-size-label,
     .page-size-select,

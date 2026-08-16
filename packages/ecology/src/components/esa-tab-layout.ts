@@ -192,10 +192,6 @@ export class EsaTabLayout extends LitElement {
       gap: var(--spacing-200, 8px);
       height: var(--_tab-height);
       padding-inline: var(--_tab-padding-x);
-      /* A tab is one line in a box whose height is --_tab-height, so the leading is
-         flush. The body roles lead for prose, and any leading at all pushes the
-         label off-centre inside that fixed height. */
-      line-height: var(--line-height-none, 1);
       color: var(--_tab-color);
       background: none;
       border: none;
@@ -237,8 +233,6 @@ export class EsaTabLayout extends LitElement {
       min-width: 20px;
       height: 20px;
       padding-inline: var(--spacing-150, 6px);
-      /* Count in a 20px pill — flush, so the digits sit centred. */
-      line-height: var(--line-height-none, 1);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);
       border-radius: var(--radius-pill, 9999px);

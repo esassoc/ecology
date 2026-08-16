@@ -197,12 +197,15 @@ export class EsaTextarea extends LitElement {
     .input {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      /* The one element here that KEEPS real leading. --form-line-height is gone —
-         it existed to force 1.6 onto single-line boxes that now use 1 — but a
-         textarea is genuinely multi-line prose, and its rows attribute budgets
-         height off this. body-md/lg lead at relaxed (1.8), which is looser than a
-         field wants, so it reads the normal rung directly. */
-      line-height: var(--typography-body-sm-line-height, 1.6);
+      /* The one element here that KEEPS real leading, and it takes it from its own
+         role rather than declaring any. --form-line-height is gone — it existed to
+         force 1.6 onto single-line boxes that now run flush — and a textarea is
+         genuinely multi-line prose, which is the case the body roles lead FOR; its
+         rows attribute budgets height off that leading. This used to read
+         --typography-body-sm-line-height while wearing body-md or body-lg: a reach
+         into a neighbour composite for one of the five properties, which is the
+         assembling-at-the-call-site problem in miniature. body-md leads at normal
+         now, so there is nothing left to correct. */
       color: var(--form-text-color, #171717);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);

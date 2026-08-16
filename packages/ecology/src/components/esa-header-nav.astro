@@ -132,9 +132,6 @@ function initialsFor(u: EsaHeaderNavUser): string {
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
     color: var(--header-nav-menu-item-color, var(--color-content-default-secondary, #525252));
-    /* body-md runs relaxed (1.8) for prose; a menu row is one line in a box sized
-       by its padding, so it stays flush. */
-    line-height: var(--line-height-none, 1);
     text-decoration: none;
   }
   .esa-header-nav__menu-item:hover { background: var(--color-background-elevation-sunken, #efefef); }
@@ -189,8 +186,6 @@ function initialsFor(u: EsaHeaderNavUser): string {
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
     color: var(--header-nav-menu-item-color, var(--color-content-default-secondary, #525252));
-    /* Single-line row in a padded box — same flush leading as the menu items above. */
-    line-height: var(--line-height-none, 1);
     text-decoration: none;
   }
   .esa-header-nav__user-action:hover { background: var(--color-background-elevation-sunken, #efefef); }

@@ -430,6 +430,386 @@
       "$type": "dimension"
     },
 
+    "microcopy-2xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "THE MICROCOPY INTENTION — small functional text that sits IN a box rather than flowing in a column, and therefore carries NO leading. Every other composite sets line-height to normal, relaxed or tight; microcopy sets `none` (1), and that is the whole reason it exists as its own intention.\\n\\nWHY IT HAD TO EXIST. The height tokens were all deleted because a px box cannot grow with rem text (--control-height-*, --chip-height-*, --badge-height-*, --pill-height-*). Once they were gone, leading became the term that SETS the box wherever padding is the only other variable — so 20 elements named a composite and then replaced its line-height, which means the class on them was a partial truth. esa-badge said `label-md-strong` and rendered something else. Those overrides are what this intention removes.\\n\\nSCOPE, and it is strict: only text that is STRUCTURALLY single-line — a native <input>, or white-space: nowrap. On text that can wrap, line-height 1 makes the lines touch. Check the child that holds the text, not the styled element: esa-button's nowrap sits on .esa-button__label, not on .esa-button__native.\\n\\nTHE THREE WEIGHTS each do distinct work, measured across all 31 consumers — every size x weight cell has one, so none is speculative:\\n  -subtle / regular   the VALUE: what the user typed, what the data says. Regular so it does not outweigh the label naming it.\\n  base / medium       the PRESSABLE: button labels, nav links, pills, triggers, keycaps.\\n  -strong / semibold  small text knocked out on a COLORED FILL — badges, counts, avatar initials. Here semibold is legibility, not emphasis: 10-12px light text on a saturated fill needs the stroke.\\n\\n`-subtle` is borrowed rather than invented: it already means \\\"the quieter version of this\\\" across 21 colour tokens, so the word keeps one meaning instead of gaining a second."
+    },
+    "microcopy-2xs-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "microcopy-2xs-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-2xs-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-2xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-xs-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "microcopy-xs-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-xs-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-sm-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-sm-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-sm-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-sm-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-md-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-md-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-md-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-md-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-lg-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-lg-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-lg-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-lg-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-2xs-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-2xs-subtle-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "microcopy-2xs-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-2xs-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-2xs-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-xs-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-xs-subtle-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "microcopy-xs-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-xs-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-xs-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-sm-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-sm-subtle-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-sm-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-sm-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-sm-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-md-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-md-subtle-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-md-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-md-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-md-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-lg-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-lg-subtle-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-lg-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-lg-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-lg-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-2xs-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-2xs-strong-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "microcopy-2xs-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-2xs-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-2xs-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-xs-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-xs-strong-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "microcopy-xs-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-xs-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-xs-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-sm-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-sm-strong-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-sm-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-sm-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-sm-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-md-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-md-strong-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-md-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-md-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-md-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-lg-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-lg-strong-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-lg-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-lg-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-lg-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-code-sm-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily",
+      "$description": "The mono branch, for a hex field — the only mono input in the kit. `code` sits where a weight modifier otherwise would because it is a FACE, which is the one awkward corner of this naming. Taken deliberately: the alternative is letting that field keep `code-*` plus a line-height override, which is exactly the exception this intention removes."
+    },
+    "microcopy-code-sm-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-code-sm-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-code-sm-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-code-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-code-md-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily"
+    },
+    "microcopy-code-md-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-code-md-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-code-md-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-code-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-code-lg-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily"
+    },
+    "microcopy-code-lg-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-code-lg-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-code-lg-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-code-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
     "title-strong-font-family": {
       "$value": "{typography.font-family.sans}",
       "$type": "fontFamily",

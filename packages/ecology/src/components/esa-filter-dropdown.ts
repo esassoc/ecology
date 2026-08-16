@@ -366,8 +366,6 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--_filter-radius);
       background: var(--_filter-bg);
       color: var(--_filter-text);
-      /* Single line in a box whose height is --_filter-height — flush leading. */
-      line-height: var(--line-height-none, 1);
       cursor: pointer;
       white-space: nowrap;
       transition:
@@ -412,8 +410,6 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-brand, #43608a);
       color: var(--color-content-default-knockout, #fff);
-      /* Count in a 1.25rem pill — flush, so the digits sit centred. */
-      line-height: var(--line-height-none, 1);
     }
 
     .esa-filter-dropdown__arrow {
@@ -459,13 +455,13 @@ export class EsaFilterDropdown extends LitElement {
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
     .esa-filter-dropdown__search-input {
+      /* A real <input> — it cannot wrap, so leading only sets the box height. */
+      line-height: var(--line-height-none, 1);
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-control, 0.25rem);
-      /* One line of typing inside a box sized by its padding — flush leading. */
-      line-height: var(--line-height-none, 1);
       background: var(--color-background-elevation-raised, #fff);
       color: var(--color-content-default, #171717);
       outline: none;

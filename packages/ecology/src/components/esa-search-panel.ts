@@ -323,8 +323,8 @@ export class EsaSearchPanel extends LitElement {
       border: none;
       outline: none;
       font-family: inherit;
-      /* body-md is relaxed (1.8) for running prose; this is a single-line search
-         field whose height comes from the header padding, so it sits flush. */
+      /* body-md leads for prose; this is a single-line search field whose height
+         comes from the header padding, so it sits flush. */
       line-height: var(--line-height-none, 1);
       color: var(--color-content-default, #171717);
       background: transparent;

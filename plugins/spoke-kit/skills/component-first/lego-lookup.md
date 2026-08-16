@@ -36,7 +36,7 @@ plain `<div>`s. Use these instead of bespoke flex/grid CSS.
 | Inline group that wraps (toolbars, tag rows) | `.cluster` |
 | Push two ends apart (title left, actions right) | `.repel` |
 | Responsive card grid | `.grid` (knob `--grid-min`) |
-| Fixed rail + fluid main | `.sidebar` (knobs `--sidebar-width`, `--sidebar-content`) |
+| Fixed rail + fluid main | `.sidebar` (knobs `--sidebar-width`, `--sidebar-content-min`) |
 | Switch row→column under a threshold | `.switcher` (knob `--switcher-threshold`) |
 | Aspect-ratio media box | `.frame` (knobs `--frame-ratio`, `--frame-fit`) |
 | Horizontal scroller | `.reel` (knob `--reel-item`) |

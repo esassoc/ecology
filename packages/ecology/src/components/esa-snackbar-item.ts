@@ -94,9 +94,6 @@ export class EsaSnackbarItem extends LitElement {
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       background: var(--color-background-default-knockout);
       color: var(--snackbar-item-color, var(--color-content-default-knockout, #ffffff));
-      /* body-md is set relaxed (1.8) for running prose. A toast is one line in a
-         box sized by its padding, so it runs flush. */
-      line-height: var(--line-height-none, 1);
       animation: esa-snackbar-enter var(--animation-overlay-enter, 250ms ease-out);
     }
     @keyframes esa-snackbar-enter {

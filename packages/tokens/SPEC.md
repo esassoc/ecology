@@ -75,13 +75,23 @@ all new components follow.
      does — see `docs/typography-adoption-plan.md` D1–D3 and the control-step
      mapping in `semantic/size.json`.
    - elevation — `--elevation-1…6`
-   - layout — `--sidebar-width`, `--sidebar-width-collapsed`. This category is
-     nearly empty on purpose: `--header-height`, `--footer-height` and the
-     `--content-*-width` trio were deleted 2026-08-14 with zero readers between
-     them. A dimension token nothing reads cannot be re-pointed to any effect, so
-     it is a theming surface that only appears to exist. The sidebar pair stays
-     because it is a real agreement — the rail, the content offset and the
-     collapse transition must land on the same number.
+   - layout — **empty, and the emptiest category is the most instructive one.**
+     It shipped seven names and has none. `--header-height`, `--footer-height`
+     and the `--content-*-width` trio went on 2026-08-14 with zero readers
+     between them: a dimension token nothing reads cannot be re-pointed to any
+     effect, so it is a theming surface that only appears to exist.
+     `--sidebar-width` and `--sidebar-width-collapsed` survived that pass on the
+     claim that they were "a real agreement — the rail, the content offset and
+     the collapse transition must land on the same number," sourced from a
+     `$description` asserting 15 readers. Counted on 2026-08-15 the number was
+     ONE COMPONENT, and there is no content offset or transition reading them at
+     all; both are tier 3 now as `--sidenav-width*`
+     (`migrations.json: sidebar-width-to-sidenav-width`). **Before you put a
+     dimension here, count its readers — do not accept a count already written
+     down.** All seven of this category's tokens were defended by a reader count
+     nobody had run, and two of them additionally collided by name, at a
+     different value, with a `.sidebar` layout-primitive knob in `layouts.css`.
+     See `tokens/semantic/layout.json`, kept for that record.
 
    **Components read this tier, never a primitive — except the CORE set.** A
    component reaching past it (`border-radius: var(--radius-200)`) is the bug
