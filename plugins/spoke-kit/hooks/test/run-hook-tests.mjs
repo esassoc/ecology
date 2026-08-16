@@ -142,6 +142,90 @@ console.log('check-manifest — trigger scope\n');
   expect('(g) duplicating an existing component counts as composition', r.code, 2, r.stderr);
 }
 
+console.log('\ncheck-prose-props — genre tier only\n');
+
+const components = path.join(root, 'src', 'components');
+mkdirSync(components, { recursive: true });
+
+// A component that already declares a genre slot: the gate must not wall off
+// later edits to it, only the moment one is introduced.
+const HAS_LEDE = path.join(components, 'demo-report-intro.astro');
+writeFileSync(
+  HAS_LEDE,
+  ['---', 'interface Props {', '  title: string;', '  lede?: string;', '}', '---', '<header><h1>{title}</h1></header>', ''].join('\n')
+);
+
+{
+  const r = run('check-prose-props.mjs', 'Write', {
+    file_path: path.join(components, 'demo-hero.astro'),
+    content: ['---', 'interface Props {', '  title: string;', '  tagline: string;', '}', '---'].join('\n'),
+  });
+  const blocked = r.code === 2 && /named for a kind of PROSE/.test(r.stderr) && /`tagline`/.test(r.stderr);
+  expect('(h) writing a new genre prop blocks', blocked ? 2 : r.code, 2, r.stderr);
+}
+{
+  const r = run('check-prose-props.mjs', 'Edit', {
+    file_path: HAS_LEDE,
+    old_string: '  title: string;',
+    new_string: '  title: string;\n  overview: string;',
+  });
+  expect('(i) adding a genre prop by Edit blocks', r.code, 2, r.stderr);
+}
+{
+  const r = run('check-prose-props.mjs', 'Edit', {
+    file_path: HAS_LEDE,
+    old_string: '<header><h1>{title}</h1></header>',
+    new_string: '<header><h1>{title}</h1><p>{lede}</p></header>',
+  });
+  expect('(j) editing a file that ALREADY has a genre prop passes', r.code, 0, r.stderr);
+}
+{
+  const r = run('check-prose-props.mjs', 'Write', {
+    file_path: path.join(components, 'demo-figure.astro'),
+    content: ['---', 'interface Props {', '  caption: string;', '  summary: string;', '}', '---'].join('\n'),
+  });
+  expect('(k) the contested tier never blocks', r.code, 0, r.stderr);
+}
+{
+  const r = run('check-prose-props.mjs', 'Write', {
+    file_path: path.join(components, 'demo-items.astro'),
+    content: [
+      '---',
+      '// prose-prop-checked: `overview` is the stored report abstract, not page copy',
+      'interface RelatedItem {',
+      '  overview: string;',
+      '}',
+      '---',
+    ].join('\n'),
+  });
+  expect('(l) the escape hatch passes', r.code, 0, r.stderr);
+}
+{
+  const r = run('check-prose-props.mjs', 'Write', {
+    file_path: path.join(components, 'demo-related.astro'),
+    content: [
+      '---',
+      'interface RelatedItem {',
+      '  title: string;',
+      '  overview: string;',
+      '}',
+      'interface Props {',
+      '  items: RelatedItem[];',
+      '}',
+      '---',
+    ].join('\n'),
+  });
+  const blocked = r.code === 2 && /on `RelatedItem`/.test(r.stderr);
+  expect('(m) a genre prop one level down still blocks', blocked ? 2 : r.code, 2, r.stderr);
+}
+{
+  const r = run('check-prose-props.mjs', 'Write', {
+    file_path: path.join(root, 'notes.md'),
+    content: 'interface Props {\n  tagline: string;\n}\n',
+  });
+  expect('(n) a non-component file is out of scope', r.code, 0, r.stderr);
+}
+
 rmSync(root, { recursive: true, force: true });
 console.log(`\n${failures ? `${failures} case(s) failed` : 'all cases passed'}`);
 process.exit(failures ? 1 : 0);

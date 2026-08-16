@@ -39,6 +39,25 @@ or companion doc. The canonical corpus and review pass is the global
 `design-restraint` skill (Andy's tunable hates-list, seeded 2026-08-10);
 /design-qa treats ABOUT-text as Must-fix like any banned pattern.
 
+Upstream of the strings are the slots that invite them. A prop named for a kind
+of writing — `lede`, `tagline`, `blurb`, `subtext`, `overview` — has no datum
+reading, and the flourish arrives later on a page nobody is reviewing. Measured
+across the hub: `esa-stat.sub`, documented as "muted meta", ran 5% flourish over
+20 fills; `esa-page-header.lede`, documented by type size, ran 100% over 4.
+**Name a prop for the datum it holds.** Declaring a new prose-genre one is
+blocked at write time; if it genuinely holds a datum, say so in the file:
+
+```
+// prose-prop-checked: `overview` is the stored report abstract, not page copy
+```
+
+Names with a real datum reading but a measured flourish rate — `caption`,
+`summary`, `description`, `purpose` — are advisory only. /design-qa surfaces
+them; nothing blocks them, because `caption` on a figure is correct.
+
+Text a contract obliges you to show is exempted where it appears, by exact
+string: `<!-- verbal-restraint-allow: Powered by Power BI -->`.
+
 ## Token-first styling
 
 A styling change in a spoke is a **token re-point until proven otherwise**:

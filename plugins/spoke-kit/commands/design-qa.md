@@ -49,12 +49,21 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
         captions, taglines, chips restating the table beneath them, synthesis —
         sweep the surface's strings yourself and classify each OF the page or
         ABOUT it. The ABOUT count must be zero.
+      - Text someone is contractually obliged to show — a vendor attribution —
+        is exempted where it appears, by exact string:
+        `<!-- verbal-restraint-allow: Powered by Power BI -->`. Check any you
+        find: the mechanism is for required text, not for winning an argument
+        with the gate.
    4. **Prose-shaped props** — `node ../ecology/scripts/check-prose-props.mjs`,
-      when the scope includes any component that declares props. Everything it
-      returns is a **warning and never a blocker**: it reads prop NAMES, and it
-      cannot tell `caption` on a figure (correct) from `caption` on a stat card
-      (a flourish slot).
-      - `prose-prop-genre` — the name names a kind of prose. Worth acting on.
+      when the scope includes any component that declares props. Everything this
+      REPORT returns is a **warning and never a blocker**: it reads prop NAMES,
+      and it cannot tell `caption` on a figure (correct) from `caption` on a
+      stat card (a flourish slot).
+      - `prose-prop-genre` — the name names a kind of prose. Worth acting on,
+        and the only tier with teeth: declaring a NEW one is blocked at write
+        time by the `check-prose-props` hook, escapable with a
+        `prose-prop-checked: <reason>` comment. Names already in a file never
+        block a later edit to it, so the report still surfaces them here.
       - `prose-prop-contested` — a real datum reading, but a measured flourish
         rate. Confirm, do not assume.
       - The usual fix is the **doc comment, not the prop**. A slot documented by
