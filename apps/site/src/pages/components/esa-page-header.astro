@@ -39,12 +39,12 @@ const slots = [
 
   <Section id="no-description" title="There is no description slot">
     <p>This component takes no <code>lede</code>, <code>subtitle</code>, or <code>description</code>. A page header carries the page’s name and its actions; a sentence explaining the page to its reader is text <em>about</em> the page rather than <em>of</em> it, and the page’s own data and structure are what say what it is.</p>
-    <p>Identifying facts go in <code>meta</code>, which takes labeled pairs rather than free text — see below. A figure the page exists to report is a stat: put it in an <code>esa-stat</code> under the header, where it reads at stat scale.</p>
+    <p>Identifying facts go in <code>meta</code>, which takes labeled pairs rather than free text (see below). A figure the page exists to report is a stat, so put it in an <code>esa-stat</code> under the header, where it reads at stat scale.</p>
   </Section>
 
   <Section id="meta" title="Meta pairs">
     <p>Each entry in <code>meta</code> is a <code>{`{ label, value }`}</code> pair: the label is the field's name in the record, the value is what is stored there. Both parts are required.</p>
-    <p>That is why it is a prop and not a slot. A slot takes anything, and what it took was a row of facts glued together with separators — <q>SFO, Shoreline Protection Program, Beacon compliance platform</q> — where a client, a program and a platform are three different kinds of thing and nothing on the line says which is which. A pair cannot be written that way.</p>
+    <p>That is why it is a prop and not a slot. A slot takes anything, and what it took was a row of facts glued together with separators, like <q>SFO, Shoreline Protection Program, Beacon compliance platform</q>. A client, a program and a platform are three different kinds of thing, and nothing on that line says which is which. A pair cannot be written that way.</p>
     <p>A period pair states the calendar it counts by. This domain runs fiscal years and water years alongside calendar ones, and a compliance figure means a different span under each.</p>
     <Preview align="start" code={`<PageHeader
   title="Quarterly Compliance Summary"

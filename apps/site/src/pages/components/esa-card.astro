@@ -42,7 +42,7 @@ const slots = [
 
   <Section id="meta" title="Meta pairs">
     <p>Each entry in <code>meta</code> is a <code>{`{ label, value }`}</code> pair: the label is the field's name in the record, the value is what is stored there. Both parts are required, so the header can carry several facts without the reader having to work out how they relate.</p>
-    <p>A pair identifies the record — which project, which permit, which period. A figure the card exists to report is a stat: put it in an <code>esa-stat</code> in the body, where it reads at stat scale.</p>
+    <p>A pair identifies the record: which project, which permit, which period. A figure the card exists to report is a stat, so put it in an <code>esa-stat</code> in the body, where it reads at stat scale.</p>
     <Preview align="start" code={`<Card
   title="Eelgrass restoration"
   meta={[
