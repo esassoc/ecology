@@ -30,8 +30,11 @@ the whole point of the tier is that a spoke can re-skin one component without
 moving the system. A token many components read is an INTENT, and intents live
 at tier 2. Applied across all 311 tier-3 declarations on 2026-08-14: **23
 violate, 248 are compliant.** The violators are `--form-*` (18 tokens, 18
-readers — five of them not forms, and `_inject-styles` is not even a component),
-`--focus-ring-*` (3, read by 31) and `--loading-spinner-*` (2).
+readers — five of them not forms), `--focus-ring-*` (3, read by 31) and
+`--loading-spinner-*` (2). The 18th reader used to be `_inject-styles`, which was
+not even a component; it was deleted on 2026-08-15 (dead module, zero importers,
+hand-written `.esa-field*` rules on raw `.875rem`/`600` literals), so 17 of the
+readers are now components and the shape of the violation is unchanged.
 
 Do NOT reach for "fan it out to per-component hooks" as the fix. That was
 measured for `--form-*` and comes to **162 names**, against SPEC.md's own

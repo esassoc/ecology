@@ -75,6 +75,14 @@
   letter-spacing: var(--typography-display-letter-spacing);
 }
 
+.typography-display-sm {
+  font-family: var(--typography-display-sm-font-family);
+  font-size: var(--typography-display-sm-font-size);
+  font-weight: var(--typography-display-sm-font-weight);
+  line-height: var(--typography-display-sm-line-height);
+  letter-spacing: var(--typography-display-sm-letter-spacing);
+}
+
 .typography-heading-lg {
   font-family: var(--typography-heading-lg-font-family);
   font-size: var(--typography-heading-lg-font-size);
@@ -229,6 +237,14 @@
   font-weight: var(--typography-title-strong-font-weight);
   line-height: var(--typography-title-strong-line-height);
   letter-spacing: var(--typography-title-strong-letter-spacing);
+}
+
+.typography-title-sm-strong {
+  font-family: var(--typography-title-sm-strong-font-family);
+  font-size: var(--typography-title-sm-strong-font-size);
+  font-weight: var(--typography-title-sm-strong-font-weight);
+  line-height: var(--typography-title-sm-strong-line-height);
+  letter-spacing: var(--typography-title-sm-strong-letter-spacing);
 }
 
 .typography-meta {

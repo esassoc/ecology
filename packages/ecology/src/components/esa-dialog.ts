@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-dialog — modal dialog [wc].
@@ -135,8 +136,8 @@ export class EsaDialog extends LitElement {
         <div class="esa-dialog" role="dialog" aria-modal="true" aria-label=${this.heading || 'Dialog'} tabindex="-1">
           ${hasHeader
             ? html`
-                <div class="esa-dialog__header">
-                  <slot name="header"><h2 class="esa-dialog__title">${this.heading}</h2></slot>
+                <div class="esa-dialog__header typography-title">
+                  <slot name="header"><h2 class="esa-dialog__title typography-title">${this.heading}</h2></slot>
                   ${this.showCloseButton
                     ? html`
                         <button class="esa-dialog__close" @click=${this.close} aria-label="Close dialog">
@@ -147,14 +148,16 @@ export class EsaDialog extends LitElement {
                 </div>
               `
             : null}
-          <div class="esa-dialog__body"><slot></slot></div>
-          <div class="esa-dialog__footer"><slot name="footer"></slot></div>
+          <div class="esa-dialog__body typography-body-md"><slot></slot></div>
+          <div class="esa-dialog__footer typography-label-md"><slot name="footer"></slot></div>
         </div>
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       --_dialog-bg: var(--dialog-bg, var(--color-background-elevation-floating, #ffffff));
       --_dialog-border-radius: var(--dialog-radius, var(--radius-overlay, 0.75rem));
@@ -181,7 +184,7 @@ export class EsaDialog extends LitElement {
     .esa-dialog-backdrop {
       position: fixed;
       inset: 0;
-      background: var(--dialog-backdrop-bg, var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5)));
+      background: var(--dialog-backdrop-bg, var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5)));
       z-index: var(--z-modal-backdrop, 300);
     }
     .esa-dialog-panel {
@@ -240,8 +243,6 @@ export class EsaDialog extends LitElement {
       flex-shrink: 0;
     }
     .esa-dialog__title {
-      font-size: var(--font-size-400, 1.125rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
       margin: 0;
       color: var(--dialog-color, var(--color-content-default, #171717));
     }
@@ -280,7 +281,8 @@ export class EsaDialog extends LitElement {
       flex-shrink: 0;
     }
     .esa-dialog__footer:not(:has(*)) { display: none; }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-dialog')) {

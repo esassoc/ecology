@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-side-dialog — a slide-in drawer / side sheet (Ecology's first).
@@ -121,8 +122,8 @@ export class EsaSideDialog extends LitElement {
         @keydown=${this.onKeydown}
       >
         ${hasHeader
-          ? html`<header class="header">
-              <slot name="header"><h2 class="title">${this.heading}</h2></slot>
+          ? html`<header class="header typography-title">
+              <slot name="header"><h2 class="title typography-title">${this.heading}</h2></slot>
               ${this.showCloseButton
                 ? html`<button class="close" @click=${this.close} aria-label="Close">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -130,13 +131,15 @@ export class EsaSideDialog extends LitElement {
                 : null}
             </header>`
           : null}
-        <div class="body"><slot></slot></div>
-        <footer class="footer"><slot name="footer"></slot></footer>
+        <div class="body typography-body-md"><slot></slot></div>
+        <footer class="footer typography-label-md"><slot name="footer"></slot></footer>
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { --_width: var(--side-dialog-width, 400px); }
     :host([size='sm']) { --_width: var(--side-dialog-width-sm, 320px); }
     :host([size='lg']) { --_width: var(--side-dialog-width-lg, 520px); }
@@ -144,7 +147,7 @@ export class EsaSideDialog extends LitElement {
     .backdrop {
       position: fixed;
       inset: 0;
-      background: var(--side-dialog-backdrop-bg, var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5)));
+      background: var(--side-dialog-backdrop-bg, var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5)));
       /* Opt-in frosted backdrop — set --backdrop-filter (e.g. blur(4px)) on the host. */
       backdrop-filter: var(--backdrop-filter, none);
       -webkit-backdrop-filter: var(--backdrop-filter, none);
@@ -187,7 +190,7 @@ export class EsaSideDialog extends LitElement {
       border-bottom: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border-default, #e5e5e5));
       flex: none;
     }
-    .title { margin: 0; font-size: var(--font-size-400, 1.25rem); font-weight: var(--typography-font-weight-semibold, 550); color: var(--side-dialog-color, var(--color-content-default, #171717)); }
+    .title { margin: 0; color: var(--side-dialog-color, var(--color-content-default, #171717)); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
       border: 0; border-radius: var(--radius-control, 4px); background: none;
@@ -205,7 +208,8 @@ export class EsaSideDialog extends LitElement {
     @keyframes slide-left { from { transform: translateX(calc(-100% - var(--_inset))); } }
     @keyframes slide-out-right { to { transform: translateX(calc(100% + var(--_inset))); } }
     @keyframes slide-out-left { to { transform: translateX(calc(-100% - var(--_inset))); } }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-side-dialog')) {

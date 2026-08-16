@@ -18,8 +18,12 @@ const style = [
   `--_filter-container-gap: var(--filter-container-gap, var(--spacing-${gap}, 0.75rem))`,
   `--_filter-container-row-gap: var(--spacing-${rowGap}, 0.5rem)`,
 ].join('; ');
+
+// TYPE: a filter bar is UI chrome, so the row names `label-md` for any raw text
+// slotted between the dropdowns and pills. A default — slotted esa-* legos win.
+import '@esa/tokens/typography.css';
 ---
-<div class="esa-filter-container" style={style}>
+<div class="esa-filter-container typography-label-md" style={style}>
   <slot />
 </div>
 

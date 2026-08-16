@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 export interface EsaCommand {
   id: string;
@@ -171,7 +172,7 @@ export class EsaCommandPalette extends LitElement {
         <div class="esa-command-palette__search">
           <svg class="esa-command-palette__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input
-            class="esa-command-palette__input"
+            class="esa-command-palette__input typography-body-lg"
             type="text"
             placeholder="Type a command..."
             .value=${this.query}
@@ -179,13 +180,13 @@ export class EsaCommandPalette extends LitElement {
             @keydown=${this.onKeydown}
             autocomplete="off"
           />
-          <kbd class="esa-command-palette__kbd">ESC</kbd>
+          <kbd class="esa-command-palette__kbd typography-body-xs">ESC</kbd>
         </div>
         <div class="esa-command-palette__results" role="listbox">
           ${groups.map(
             (group) => html`
               <div class="esa-command-palette__group">
-                <div class="esa-command-palette__group-label">${group.label}</div>
+                <div class="esa-command-palette__group-label typography-eyebrow-md">${group.label}</div>
                 ${group.commands.map(
                   (cmd) => html`
                     <button
@@ -199,13 +200,13 @@ export class EsaCommandPalette extends LitElement {
                       @mouseenter=${() => (this.activeId = cmd.id)}
                     >
                       <div class="esa-command-palette__item-content">
-                        <span class="esa-command-palette__item-label">${cmd.label}</span>
+                        <span class="esa-command-palette__item-label typography-label-md">${cmd.label}</span>
                         ${cmd.description
-                          ? html`<span class="esa-command-palette__item-desc">${cmd.description}</span>`
+                          ? html`<span class="esa-command-palette__item-desc typography-body-sm">${cmd.description}</span>`
                           : null}
                       </div>
                       ${cmd.shortcut
-                        ? html`<kbd class="esa-command-palette__item-shortcut">${cmd.shortcut}</kbd>`
+                        ? html`<kbd class="esa-command-palette__item-shortcut typography-body-xs">${cmd.shortcut}</kbd>`
                         : null}
                     </button>
                   `,
@@ -214,20 +215,22 @@ export class EsaCommandPalette extends LitElement {
             `,
           )}
           ${groups.length === 0
-            ? html`<div class="esa-command-palette__empty">No commands found for "${this.query}"</div>`
+            ? html`<div class="esa-command-palette__empty typography-body-md">No commands found for "${this.query}"</div>`
             : null}
         </div>
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: contents; }
 
     .esa-command-palette__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
       z-index: var(--z-modal-backdrop, 300);
     }
 
@@ -270,7 +273,9 @@ export class EsaCommandPalette extends LitElement {
       flex: 1;
       border: none;
       outline: none;
-      font-size: var(--font-size-300, 1rem);
+      /* body-lg is relaxed (1.8) for running prose; this is a single-line search
+         field whose height comes from the row padding, so it sits flush. */
+      line-height: var(--line-height-none, 1);
       color: var(--color-content-default, #171717);
       background: transparent;
       font-family: inherit;
@@ -282,8 +287,6 @@ export class EsaCommandPalette extends LitElement {
       padding: 2px 6px;
       border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-control, 0.25rem);
-      font-size: var(--font-size-100, 0.75rem);
-      font-family: inherit;
       color: var(--color-content-default-muted, #737373);
       background: var(--color-background-elevation-sunken, #efefef);
     }
@@ -294,10 +297,6 @@ export class EsaCommandPalette extends LitElement {
     }
     .esa-command-palette__group-label {
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      font-size: var(--font-size-100, 0.75rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
-      text-transform: var(--text-transform-uppercase, uppercase);
-      letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--color-content-default-muted, #737373);
     }
 
@@ -311,7 +310,6 @@ export class EsaCommandPalette extends LitElement {
       border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
       color: var(--color-content-default, #171717);
-      font-size: var(--font-size-200, 0.9375rem);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
@@ -329,9 +327,7 @@ export class EsaCommandPalette extends LitElement {
       display: flex;
       flex-direction: column;
     }
-    .esa-command-palette__item-label { font-weight: var(--typography-font-weight-medium, 500); }
     .esa-command-palette__item-desc {
-      font-size: var(--font-size-150, 0.875rem);
       color: var(--color-content-default-muted, #737373);
     }
 
@@ -339,9 +335,9 @@ export class EsaCommandPalette extends LitElement {
       padding: var(--spacing-600, 2rem);
       text-align: center;
       color: var(--color-content-default-muted, #737373);
-      font-size: var(--font-size-200, 0.9375rem);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-command-palette')) {

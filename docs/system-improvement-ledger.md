@@ -437,9 +437,9 @@ codemod rather than a flag day.
   read `--form-border-color`; `--form-bg-hover` was read by 3 of 13 before it moved ·
   *Action:* wire them across the family or drop them. A spoke that sets one today gets a
   partial result and no error · `hub-fix` · **P2**
-- **`--form-error-border-color` does not track `--color-border-danger`** · *Evidence:* it
+- **`--form-error-border-color` does not track `--color-border-utility-danger`** · *Evidence:* it
   points at `--color-background-**danger**` (red-9, a fill role) rather than
-  `--color-border-danger` (red-6), which exists. Visually defensible — red-6 is a very faint
+  `--color-border-utility-danger` (red-6), which exists. Visually defensible — red-6 is a very faint
   error outline — but the consequence is that a spoke re-pointing its danger border, as
   air-exchange does, does not move its error borders · *Action:* decide and document, either
   way · `hub-fix` · **P2**
@@ -932,3 +932,249 @@ components sharing 10 identically-named props across 1,622 lines.
   taught `doctor.mjs` to scan it tag-scoped via `renameProp` with `to === from`, so
   the rewrite is a no-op and only the count matters. *Sink:* every new row shape needs
   a reader; check the consumer, not the manifest. *Priority:* medium.
+
+## Source: tier-2 colour grammar + the knockout variant (2026-08-15)
+Started from "why aren't we using `--color-background-disabled`" and became a pass
+over the whole tier-2 colour vocabulary: the four slots
+(`property > intention > variant > state`), three renames onto them, and the
+`inverse` → `knockout` generalisation. **The dark-mode question this opened is
+DEFERRED by decision, not dropped — it is the first item below.**
+
+- **DEFERRED — dark mode is not in the token layer at all** · *Evidence:*
+  `@esa/tokens` ships **no dark scheme whatsoever**; every dark value lives in
+  `apps/site/src/styles/docs-dark.css`, which is the SITE's file. A spoke that
+  installs the package gets no dark mode and no way to ask for one. Worse, that
+  single hand-maintained file covers **29 of 73** tier-2 colour roles — the other
+  **44 keep their light values on a `#111111` ground**, including
+  `--color-background-disabled` (gray-3, a light grey), `--color-border-default-focus`,
+  both link colours, all 8 `content-on-*` pairs and every brand and feedback fill.
+  Nothing can catch this: `token-names.json` guards 1,094 names and **not one is a
+  dark value**, so the snapshot test, `migrations.json` and `/debug/tokens` are all
+  structurally blind to the dark half. The file is hand-maintained with no guard,
+  which is how it came to declare `--color-content-default-secondary` twice (fixed).
+  *Action:* NONE YET — deferred 2026-08-15 by decision, to be taken up as its own
+  piece of work. `knockout` was built in this session and is **not** the fix: it
+  handles a region rendered against the reverse of the theme's ground (a dark
+  tooltip in a light app), which is orthogonal to a theme whose default IS dark.
+  The open question is which model the hub commits to — a dark *scheme* the package
+  ships, or dark *themes* where a dark spoke simply declares dark defaults and the
+  44 becomes a completeness problem in one theme file rather than a grammar problem.
+  *Blocked on a real gap either way:* **three dark primitive ramps do not exist** —
+  orange, copper and teal — which is exactly why `accent` and `ai` have no dark
+  values today. There was nothing to point at. *Sink:* a layer the enforcement
+  apparatus cannot see is not in the system, however many files reference it; the
+  1,094-name baseline looked like total coverage while covering only the light half.
+  *Priority:* high.
+
+- **An alias whose destination is itself deprecated resolves, reports success, and
+  strands the spoke** · *Evidence:* found **twelve** such chains while verifying an
+  unrelated rename — `--color-surface` → `--color-background-raised` → (renamed
+  again the same day). They resolve, because the alias block chains, so nothing
+  renders wrong and nothing complains. What it costs is a spoke: `/update-tokens`
+  rewrites onto the MIDDLE name, reports success, and the spoke is still on a
+  deprecated token needing a second run nobody knows to make. **Nine of the twelve
+  were created by two renames earlier the same day** — by the same author, twice,
+  unnoticed both times. *Action:* all twelve collapsed to their final destinations,
+  and a test added (`token-rename.test.mjs`) asserting no row's `to` is any other
+  row's `from`. It caught the very next rename (`inverse-to-knockout`) within the
+  hour, which is the whole argument for it. *Sink:* "it resolves" is not the bar —
+  a migration has to land a spoke on a LIVE name in one run. *Priority:* medium.
+
+- **A token created from an argument rather than a call site is a theming surface
+  that only appears to exist** · *Evidence:* five `-knockout` roles were added on a
+  demonstrable hole (a muted label in a dark app bar fell back to `#646464` on
+  `#202020`). On audit, **four had zero readers**, and the hardcodes they were meant
+  to replace did not want them: `esa-snackbar-item`'s `rgba(255,255,255,0.2)` is
+  CORRECT — that action button sits on five different grounds (knockout plus four
+  status fills) and only an alpha lifts off all of them — and `esa-card`'s
+  `rgba(255,255,255,0.8)` sits on a BRAND header, so it wanted the existing
+  `--color-content-on-brand-secondary`, not a knockout variant. *Action:* the four
+  were dropped before commit; `--color-border-default-knockout` survived because
+  `esa-popover[appearance="inverse"]` was setting its border to its own background
+  as a workaround for that token not existing. The snackbar alpha is commented so it
+  is not "fixed" later. *Sink:* this repo already deleted five layout tokens for
+  having zero readers; the same test has to be applied to tokens on the way IN, at
+  the moment the argument feels strongest. *Priority:* medium.
+
+- **`--color-background-default-knockout-hover` has zero readers** · *Evidence:* 0
+  reads in source under that name and none under its previous name
+  (`--color-background-inverse-hover`) either — the orphan predates the rename.
+  *Action:* NOT deleted. It is a SHIPPED name, so removing it is a `removed: true`
+  row and a different decision from renaming one; recorded in its `$description` and
+  logged here for that call. *Sink:* a rename is a bad moment to also delete —
+  bundling them hides which change caused which breakage. *Priority:* low.
+
+- **~~Four tier-2 tokens still have an empty intention slot~~ — CLOSED 2026-08-15** ·
+  *Evidence:* `--color-overlay-{hover, hover-strong, hover-heavy, active}` named only a
+  state or an intensity with nothing in slot 2. They live in `semantic/effect.json`,
+  not `color.json`, which is why the first sweep for this defect missed them and
+  reported the set clean. *Action:* closed by `overlay-property-to-intention` — the
+  word they needed was `overlay` itself, which had been sitting in the PROPERTY slot
+  the whole time as an invented fourth alongside background/content/border. It moved
+  one slot right and all four inherited it. `backdrop` and `scrim`, named here as the
+  model because they DID name what they were for, moved one slot right too and are
+  variants now. *Sink:* the missing word was already in the name. A token whose
+  intention slot is empty is worth checking for a word doing the job from the wrong
+  slot before inventing a new one. *Priority:* resolved.
+
+- **`--color-background-elevation-sunken` is a raw `#0d0d0f` in the dark scheme**
+  · *Evidence:* the only literal in `docs-dark.css`, off-palette, reachable by no
+  theme and traceable to no ramp step. *Action:* left alone — changing it is a
+  rendered change and belongs with the dark-mode work above. *Priority:* low.
+
+- **UNEXPLAINED: `npm run build` failed twice with 56 Style Dictionary reference
+  errors, then stopped reproducing** · *Evidence:* two consecutive failures inside
+  `build.js` on the `js` platform, bracketed by successful runs before and six
+  successful runs after with no relevant change. In the same window the deprecated
+  alias count moved 149 → 157 (the 8 `form-padding-to-spacing` aliases began
+  emitting). The two were not tied together. *Action:* none — recorded rather than
+  explained, because a green build is not evidence the failure is gone. *Sink:*
+  worth watching; if it returns, capture `dist/tokens.css` at the moment of failure.
+  *Priority:* low.
+
+## Source: `utility` as an intention (2026-08-15)
+
+Four intentions (`info`, `success`, `warning`, `danger`) became four variants of
+one, `utility`. 24 tokens, 310 rewrites across 51 files, value-identical. Row
+`status-to-utility` in `migrations.json`. This is the third instance of the same
+defect in two days — `elevation` and `knockout` were the first two — and the
+findings below are mostly about what the fix keeps catching on the way past.
+
+- **The two-hop guard earned its keep on its second day** · *Evidence:* 34 pairs
+  across two LIVE rows (`status-colors-to-semantic`, 12; `color-tier2-property-first`,
+  22) had the renamed names as their DESTINATION. Left alone, a spoke on
+  `--color-status-info` would have been rewritten to `--color-background-info` —
+  deprecated the same commit — told it succeeded, and stranded one rename behind,
+  with nothing rendering wrong because aliases chain. The test added 2026-08-15
+  failed on exactly this before the destinations were repointed. *Action:* done —
+  all 34 repointed, both rows carry a dated note saying so. Both spokes' dry runs
+  now land on the `utility` names in ONE hop (cb-fish 1,285 rewrites under
+  `color-tier2-property-first`, air-exchange 232), and `status-to-utility` itself
+  reports zero in both, which is the correct result and only looks like a no-op.
+  *Sink:* a rename's blast radius includes `migrations.json` itself. Every row is
+  a reader of the names it points at. *Priority:* resolved.
+
+- **The hub planted the declaration it is now breaking, for the second time** ·
+  *Evidence:* 15 declarations of these 24 names exist. 12 are the hub's own dark
+  scheme. The other 3 are `__FILL__` slots in
+  `packages/spoke-template/src/styles/theme-__SPOKE_SLUG__.css` —
+  `--color-background-{info,success,warning,danger}` are scaffolded into every new
+  spoke. An alias rescues a read and never a declaration, so every spoke scaffolded
+  before today has three lines that go inert on upgrade: its brand's success green
+  silently reverts to Ecology's. First instance was `form-padding-to-spacing`.
+  *Action:* template renamed; a warning added in place explaining why the old lines
+  are inert. *Sink:* the spoke template is a DECLARATION SITE the hub owns. Grep it
+  on every rename, and treat a hit there as a heavier cost than any number of reads.
+  *Priority:* medium — the pattern will recur until the template's declaration slots
+  are audited as a set.
+
+- **`scripts/check-contrast.mjs` is reading 15 deprecated names and passing** ·
+  *Evidence:* its pair list still names `--color-content-{primary,secondary,muted,link}`,
+  `--color-background-raised` and `--color-border-focus` — all renamed in earlier
+  changes this week. It reports "checked 29/29 pairs" because the deprecated alias
+  block resolves every one of them. It is not wrong today and it will go quietly
+  wrong the day the aliases are deleted, losing pairs rather than erroring.
+  *Action:* none taken — reported, not fixed, to keep this change to one rename.
+  *Sink:* the token-name baseline guards `dist/tokens.css`; it does not guard the
+  hub's own SCRIPTS, which read token names as data. Nothing checks those at all.
+  *Priority:* medium.
+
+- **`SPEC.md`'s grammar diagram had been stale since the `knockout` slot landed** ·
+  *Evidence:* it drew four slots (`property > intention > variant > state`) a day
+  after the fifth was added, and listed `info, success, warning, danger` as
+  intentions. *Action:* redrawn with all five slots, and with a paragraph naming the
+  two intentions that are AXES WITH RUNGS (`utility`, `elevation`) — the thing that
+  explains why the variant slot legitimately holds words like `danger` and `sunken`
+  that read like intentions. *Sink:* the diagram is prose and nothing derives from
+  it, so it is the one part of the contract that can drift silently. *Priority:*
+  resolved, but it will drift again.
+
+- **The refusal comment was right, and paying it is different from overruling it** ·
+  *Evidence:* `tier2-naming.ts` carried an explicit "NOT collapsed under an invented
+  `utility` heading: no token is named `utility`, and that is the same defect as
+  `neutral` was." The objection was never to the grouping — it was that a heading no
+  token carries cannot be read back off a name. Renaming the tokens satisfies it.
+  *Action:* the comment now records both positions and what changed between them;
+  `/debug/tokens`' unclassified note says the same to a reader who never opens the
+  source. *Sink:* a comment that says "we refused X" is worth keeping when X arrives,
+  rewritten to say what it cost to earn. Deleting it loses the standard. *Priority:*
+  resolved.
+
+- **`--color-content-on-info` and `--color-content-on-danger` still have zero readers**
+  · *Evidence:* carried through the rename unchanged; 0 reads each across the repo,
+  against 45 for `--color-content-utility-danger`. *Action:* none — kept, because the
+  argument for `utility` being ONE intention is that all four variants take the same
+  six roles, and deleting two members of the set to save two names would break the
+  regularity that justifies the grouping. *Sink:* the zero-readers standard the repo
+  applies to new tokens does not straightforwardly apply to a member of a complete
+  set. *Priority:* low; revisit with the other orphan decisions.
+
+- **`danger` is the weakest fit under `utility` and it is the most-read of the four**
+  · *Evidence:* `--color-background-utility-danger` is read 12 times, mostly by
+  `esa-button`'s destructive variant and `esa-danger-zone` — an ACTION, not feedback.
+  `--color-content-utility-danger` has 45 reads, the highest in the set, and those are
+  genuinely feedback (inline validation). *Action:* none; the word was chosen knowing
+  this. `feedback` would have fitted the four better and the destructive-button
+  reader worse. *Sink:* a grouping word is chosen against the whole set, and the
+  member it fits worst is worth naming out loud rather than discovering later.
+  *Priority:* low.
+
+## Source: `overlay` from property to intention (2026-08-15)
+
+Six tokens, 29 rewrites across 18 files, value-identical. Row
+`overlay-property-to-intention`. The property slot is back to the rubric's three
+words for the whole colour set, and the unclassified group on `/debug/tokens`
+reads 0 in all three property groups for the first time.
+
+- **The missing intention was already in the name, one slot to the left** ·
+  *Evidence:* four washes had an empty intention slot and were logged open above;
+  the fix was not a new word but moving `overlay` out of the property slot it never
+  belonged in. Two candidate new words were worked up first — `interaction` over the
+  four washes, then `transparent` over all six — and both were worse than the word
+  already present. *Action:* done. *Sink:* before inventing a grouping word, check
+  whether one of the words in the name is doing that job from the wrong slot.
+  *Priority:* resolved.
+
+- **`transparent` was rejected, and the reason generalises** · *Evidence:*
+  `transparent` names the alpha channel; `overlay` names transparency AND position,
+  and every one of the six is defined by where it sits. Nesting them
+  (`--color-background-transparent-overlay-hover`) states one fact twice, since an
+  overlay that is not transparent is not an overlay. *Action:* recorded in the row's
+  `why` so the candidate is not re-proposed. *Sink:* a name describing HOW a value is
+  made loses to one describing WHERE it is used, even when both are true. Same test
+  that chose `knockout` over `-dark`. *Priority:* resolved.
+
+- **A sanctioned exception is a bug report with a long fuse** · *Evidence:* the
+  fourth property carried a real justification for its whole life —
+  `--color-background-hover` genuinely would have collided with the opaque gray-4
+  hover. It was documented in `SPEC.md`, defended in `effect.json`, and carved out
+  three separate times in `tier2-naming.ts` (`SURFACE_VOCAB`, the `isOverlay` guard,
+  and an explicit `surfaceWord !== 'overlay'` in the spelling check). All three
+  carve-outs are gone; the collision is resolved by a slot the grammar already had.
+  *Action:* done. *Sink:* count the carve-outs an exception needs. Three is the
+  signal that the model is wrong, not that the exception is special. *Priority:*
+  resolved.
+
+- **The state/variant inversion was invisible until the property moved** ·
+  *Evidence:* `--color-overlay-hover-strong` and `-hover-heavy` put the STATE before
+  the VARIANT, backwards against the declared order. Nothing flagged it, because
+  with no intention in the name the parser could not tell `hover-strong` from a
+  two-word variant. *Action:* fixed in the same pass — `-strong-hover`, `-heavy-hover`.
+  *Sink:* an empty slot hides defects in the slots around it. Filling one is worth
+  doing for what it reveals, not only for what it fixes. *Priority:* resolved.
+
+- **Third two-hop catch in two days; the guard has now fired on every rename since
+  it was written** · *Evidence:* `color-overlay-property-first` — the row that CREATED
+  the `--color-overlay-*` names by moving the property word to the front — held all
+  six as destinations. cb-fish reads `--color-active-overlay` and would have been
+  written onto a name deprecated in the same commit. *Action:* all 6 repointed; the
+  row carries a dated note. cb-fish's dry run now lands its 2 rewrites in one hop.
+  *Sink:* the row most likely to hold a stale destination is the one that made the
+  name you are renaming. Check it first. *Priority:* resolved.
+
+- **No declarations anywhere, for once** · *Evidence:* 25 reads, 0 declarations —
+  not in the hub's dark scheme, not the spoke template, not either spoke. Every
+  affected site is rescued by the alias. *Action:* none needed. *Sink:* worth naming
+  why: the set has no dark-scheme counterpart because black-alpha and white-alpha
+  wash correctly over either ground. A role that needs no theme override is a role
+  nothing can silently break. *Priority:* resolved.

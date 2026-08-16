@@ -474,7 +474,7 @@ export class EsaInputTag extends LitElement {
       --_field-border-color: var(--form-border-color, #d4d4d4);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
-      --_chip-bg: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      --_chip-bg: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       --_chip-color: var(--color-content-brand, #3a7c59);
       --_chip-radius: var(--radius-pill, 9999px);
     }
@@ -503,14 +503,14 @@ export class EsaInputTag extends LitElement {
       color: var(--form-label-color, #525252);
     }
     .field__required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
 
     .container {
@@ -611,7 +611,7 @@ export class EsaInputTag extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-overlay-hover-strong, rgba(0, 0, 0, 0.06));
+      background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.06));
     }
     .chip__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

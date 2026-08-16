@@ -8,8 +8,13 @@ interface Props {
   maxWidth?: string;
 }
 const { maxWidth = '1556px' } = Astro.props;
+
+// TYPE: `body-md` is the reading default for a page section — loose text put
+// straight into the container names a role instead of inheriting the document's.
+// A DEFAULT, not a dictate: every esa-* and every type-role class inside overrides it.
+import '@esa/tokens/typography.css';
 ---
-<div class="esa-container" style={`--_container-max:${maxWidth}`}>
+<div class="esa-container typography-body-md" style={`--_container-max:${maxWidth}`}>
   <slot />
 </div>
 

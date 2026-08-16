@@ -1,4 +1,16 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+
+/**
+ * The two composites a tab renders at each step of the size ramp.
+ *
+ * A tab label is regular until it is the selected one, and then it is UI text
+ * carrying state — so the active row swaps family rather than stacking a
+ * font-weight override on top of the resting role. Both maps walk the same rung,
+ * which is what keeps the tab from reflowing when selection moves.
+ */
+const TAB_TYPE = { xs: 'body-xs', sm: 'body-sm', md: 'body-md', lg: 'body-lg' } as const;
+const TAB_ACTIVE_TYPE = { xs: 'label-xs', sm: 'label-sm', md: 'label-md', lg: 'label-lg' } as const;
 
 /**
  * esa-tab-layout — Lit Web Component.
@@ -103,8 +115,9 @@ export class EsaTabLayout extends LitElement {
         <div class="tabs" part="tabs" role="tablist">
           ${this.tabs.map((tab, i) => {
             const active = this.activeIndex === i;
+            const role = active ? TAB_ACTIVE_TYPE[this.size] : TAB_TYPE[this.size];
             return html`<button
-              class="tab ${active ? 'tab--active' : ''} ${tab.disabled ? 'tab--disabled' : ''}"
+              class="tab typography-${role} ${active ? 'tab--active' : ''} ${tab.disabled ? 'tab--disabled' : ''}"
               type="button"
               role="tab"
               aria-selected=${active}
@@ -115,21 +128,26 @@ export class EsaTabLayout extends LitElement {
             >
               ${tab.icon ? html`<span class="icon" .innerHTML=${tab.icon}></span>` : null}
               <span>${tab.label}</span>
-              ${tab.badge != null ? html`<span class="badge">${tab.badge}</span>` : null}
+              ${tab.badge != null
+                ? html`<span class="badge typography-label-xs-strong">${tab.badge}</span>`
+                : null}
             </button>`;
           })}
         </div>
-        <div class="panel" role="tabpanel">
+        <div class="panel typography-body-md" role="tabpanel">
           <slot name="panel-${this.activeIndex}"><slot></slot></slot>
         </div>
       </div>
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
       --_tab-height: var(--tab-layout-height-md, 44px);
-      --_tab-font-size: var(--font-size-200, 0.875rem);
       --_tab-color: var(--tab-layout-color, var(--color-content-default-secondary, #525252));
       --_tab-color-active: var(--tab-layout-color-active, var(--color-background-brand, #43608a));
       --_tab-color-hover: var(--color-content-default, #171717);
@@ -145,20 +163,20 @@ export class EsaTabLayout extends LitElement {
       display: block;
     }
 
-    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
+    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values.
+       The size steps carry geometry only — the text comes from a composite class
+       named in render() (TAB_TYPE / TAB_ACTIVE_TYPE), so a tab says "this is body
+       text at the sm rung" rather than assembling a size and a weight here. */
     :host([size='xs']) {
       --_tab-height: var(--tab-layout-height-xs, 30px);
-      --_tab-font-size: var(--font-size-100, 0.6875rem);
       --_tab-padding-x: var(--spacing-200, 8px);
     }
     :host([size='sm']) {
       --_tab-height: var(--tab-layout-height-sm, 36px);
-      --_tab-font-size: var(--font-size-150, 0.75rem);
       --_tab-padding-x: var(--spacing-300, 12px);
     }
     :host([size='lg']) {
       --_tab-height: var(--tab-layout-height-lg, 52px);
-      --_tab-font-size: var(--font-size-300, 1rem);
       --_tab-padding-x: var(--spacing-500, 24px);
     }
 
@@ -174,8 +192,10 @@ export class EsaTabLayout extends LitElement {
       gap: var(--spacing-200, 8px);
       height: var(--_tab-height);
       padding-inline: var(--_tab-padding-x);
-      font-family: inherit;
-      font-size: var(--_tab-font-size);
+      /* A tab is one line in a box whose height is --_tab-height, so the leading is
+         flush. The body roles lead for prose, and any leading at all pushes the
+         label off-centre inside that fixed height. */
+      line-height: var(--line-height-none, 1);
       color: var(--_tab-color);
       background: none;
       border: none;
@@ -189,7 +209,8 @@ export class EsaTabLayout extends LitElement {
       color: var(--_tab-color-hover);
       background: var(--_tab-bg-hover);
     }
-    .tab--active { color: var(--_tab-color-active); font-weight: var(--typography-font-weight-medium, 500); }
+    /* The active tab's weight comes from TAB_ACTIVE_TYPE (label-*, medium). */
+    .tab--active { color: var(--_tab-color-active); }
     .tab--active::after {
       content: '';
       position: absolute;
@@ -216,8 +237,8 @@ export class EsaTabLayout extends LitElement {
       min-width: 20px;
       height: 20px;
       padding-inline: var(--spacing-150, 6px);
-      font-size: var(--font-size-100, 0.6875rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
+      /* Count in a 20px pill — flush, so the digits sit centred. */
+      line-height: var(--line-height-none, 1);
       background: var(--_tab-badge-bg);
       color: var(--_tab-badge-color);
       border-radius: var(--radius-pill, 9999px);
@@ -245,8 +266,11 @@ export class EsaTabLayout extends LitElement {
     :host([appearance='segmented']) .tab--active::after,
     :host([variant='pill']) .tab--active::after { display: none; }
 
+    /* body-md is the panel's default type role — it inherits through the slot to
+       light-DOM content, and any esa-* component slotted in names its own. */
     .panel { padding-top: var(--spacing-400, 16px); }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-tab-layout')) {

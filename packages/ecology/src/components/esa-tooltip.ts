@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 type TooltipPosition = 'above' | 'below' | 'left' | 'right';
 
@@ -65,7 +66,7 @@ export class EsaTooltip extends LitElement {
   render() {
     return html`
       <span
-        class="esa-tooltip-anchor"
+        class="esa-tooltip-anchor typography-label-md"
         @mouseenter=${this.onEnter}
         @mouseleave=${this.onLeave}
         @focusin=${this.onEnter}
@@ -74,7 +75,7 @@ export class EsaTooltip extends LitElement {
         <slot></slot>
         ${this.open && this.text
           ? html`
-              <span class="esa-tooltip esa-tooltip--${this.position}" role="tooltip">
+              <span class="esa-tooltip typography-body-sm esa-tooltip--${this.position}" role="tooltip">
                 <span class="esa-tooltip__text">${this.text}</span>
                 <span class="esa-tooltip__arrow"></span>
               </span>
@@ -84,7 +85,9 @@ export class EsaTooltip extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: inline-block; }
 
     .esa-tooltip-anchor {
@@ -99,8 +102,8 @@ export class EsaTooltip extends LitElement {
       color: var(--tooltip-color, var(--color-content-default-knockout, #ffffff));
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--tooltip-radius, var(--radius-control, 0.25rem));
-      font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
-      font-size: var(--font-size-150, 0.875rem);
+      /* body-sm sits on the normal ramp; a tooltip may wrap to two or three
+         lines and wants them close, so it keeps the tight one. */
       line-height: var(--line-height-tight, 1.3);
       max-width: var(--tooltip-max-width, 240px);
       pointer-events: none;
@@ -161,7 +164,8 @@ export class EsaTooltip extends LitElement {
       top: 50%;
       margin-top: -4px;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-tooltip')) {

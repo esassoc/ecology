@@ -29,6 +29,13 @@ interface Props {
   class?: string;
 }
 
+// TYPE: the three slot regions carry `label-md` so raw text dropped into a bar
+// names a role instead of inheriting whatever the page happens to be. It is a
+// DEFAULT, not a dictate — any esa-* slotted in brings its own composite and wins.
+// The import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
 const { tone = 'surface', contained = false, maxWidth = '1556px', as = 'div', class: className } = Astro.props;
 const Tag = as;
 const hasStart = Astro.slots.has('start');
@@ -39,11 +46,11 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
 <Tag class={cls}>
   <div class={rowCls} style={contained ? `--_bar-max:${maxWidth}` : undefined}>
     {hasStart && (
-      <div class="esa-app-bar__start"><slot name="start" /></div>
+      <div class="esa-app-bar__start typography-label-md"><slot name="start" /></div>
     )}
-    <div class="esa-app-bar__main"><slot /></div>
+    <div class="esa-app-bar__main typography-label-md"><slot /></div>
     {hasEnd && (
-      <div class="esa-app-bar__end"><slot name="end" /></div>
+      <div class="esa-app-bar__end typography-label-md"><slot name="end" /></div>
     )}
   </div>
 </Tag>
@@ -87,6 +94,9 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
     display: inline-flex;
     align-items: center;
     gap: var(--_bar-gap);
+    /* Flush: single-line chrome rows in a box whose height comes from --_bar-pad-y,
+       so label-md's `normal` leading would only pad the bar taller. */
+    line-height: var(--line-height-none, 1);
   }
   .esa-app-bar__start { flex: none; }
   .esa-app-bar__main { flex: 1 1 auto; }

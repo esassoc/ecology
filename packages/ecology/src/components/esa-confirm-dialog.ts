@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 type ConfirmVariant = 'default' | 'danger' | 'warning';
 
@@ -169,13 +170,13 @@ export class EsaConfirmDialog extends LitElement {
             ${this.showIcon
               ? html`<div class="esa-confirm-dialog__icon esa-confirm-dialog__icon--${this.variant}">${this.icon()}</div>`
               : null}
-            <h2 class="esa-confirm-dialog__title">${this.heading}</h2>
-            <p class="esa-confirm-dialog__message">${this.message}</p>
+            <h2 class="esa-confirm-dialog__title typography-title">${this.heading}</h2>
+            <p class="esa-confirm-dialog__message typography-body-md">${this.message}</p>
           </div>
           <div class="esa-confirm-dialog__footer">
-            <button class="esa-confirm-dialog__btn esa-confirm-dialog__btn--outline" @click=${this.cancel}>${this.cancelLabel}</button>
+            <button class="esa-confirm-dialog__btn esa-confirm-dialog__btn--outline typography-label-md" @click=${this.cancel}>${this.cancelLabel}</button>
             <button
-              class="esa-confirm-dialog__confirm esa-confirm-dialog__btn esa-confirm-dialog__btn--${this.variant === 'default' ? 'primary' : this.variant}"
+              class="esa-confirm-dialog__confirm esa-confirm-dialog__btn typography-label-md esa-confirm-dialog__btn--${this.variant === 'default' ? 'primary' : this.variant}"
               @click=${this.confirm}
             >${this.confirmLabel}</button>
           </div>
@@ -184,13 +185,15 @@ export class EsaConfirmDialog extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: contents; }
 
     .esa-confirm-dialog__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--confirm-dialog-backdrop-bg, var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5)));
+      background: var(--confirm-dialog-backdrop-bg, var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5)));
       z-index: var(--z-modal-backdrop, 300);
     }
     .esa-confirm-dialog__panel {
@@ -275,27 +278,25 @@ export class EsaConfirmDialog extends LitElement {
       margin-bottom: var(--spacing-300, 0.75rem);
     }
     .esa-confirm-dialog__icon--default {
-      background: var(--color-background-info-subtle, #eff6ff);
-      color: var(--color-content-info, #0d74ce);
+      background: var(--color-background-utility-info-subtle, #eff6ff);
+      color: var(--color-content-utility-info, #0d74ce);
     }
     .esa-confirm-dialog__icon--danger {
-      background: var(--color-background-danger-subtle, #fef2f2);
-      color: var(--color-content-danger, #ce2c31);
+      background: var(--color-background-utility-danger-subtle, #fef2f2);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
     .esa-confirm-dialog__icon--warning {
-      background: var(--color-background-warning-subtle, #fffbeb);
-      color: var(--color-content-warning, #ab6400);
+      background: var(--color-background-utility-warning-subtle, #fffbeb);
+      color: var(--color-content-utility-warning, #ab6400);
     }
     .esa-confirm-dialog__title {
-      font-size: var(--font-size-400, 1.125rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
       margin: 0 0 var(--spacing-150, 0.375rem);
       color: var(--confirm-dialog-color, var(--color-content-default, #171717));
     }
     .esa-confirm-dialog__message {
       color: var(--confirm-dialog-color, var(--color-content-default-secondary, #525252));
-      font-size: var(--font-size-200, 0.9375rem);
-      line-height: var(--line-height-normal, 1.6);
+      /* Leading comes from .typography-body-md. It carried an override back when
+         body-md was relaxed (1.8); the role is `normal` now, so the override went. */
       margin: 0;
     }
 
@@ -310,9 +311,6 @@ export class EsaConfirmDialog extends LitElement {
     .esa-confirm-dialog__btn {
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
       border-radius: var(--radius-surface, 0.5rem);
-      font-family: inherit;
-      font-size: var(--font-size-200, 0.9375rem);
-      font-weight: var(--typography-font-weight-medium, 500);
       cursor: pointer;
       border: var(--border-width-default, 1px) solid transparent;
       transition: background var(--transition-fast, 150ms ease);
@@ -333,16 +331,17 @@ export class EsaConfirmDialog extends LitElement {
     }
     .esa-confirm-dialog__btn--primary:hover { background: var(--color-background-brand-hover, #39506f); }
     .esa-confirm-dialog__btn--danger {
-      background: var(--color-background-danger, #ef4444);
+      background: var(--color-background-utility-danger, #ef4444);
       color: var(--color-content-default-knockout, #ffffff);
     }
     .esa-confirm-dialog__btn--danger:hover { background: #dc2626; }
     .esa-confirm-dialog__btn--warning {
-      background: var(--color-background-warning, #f59e0b);
+      background: var(--color-background-utility-warning, #f59e0b);
       color: var(--color-content-default-knockout, #ffffff);
     }
     .esa-confirm-dialog__btn--warning:hover { background: #d97706; }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-confirm-dialog')) {

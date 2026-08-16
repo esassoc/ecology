@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 export interface EsaMenuItem {
   label: string;
@@ -93,7 +94,7 @@ export class EsaDropdownMenu extends LitElement {
   render() {
     return html`
       <div class="esa-dropdown" @keydown=${this.onKeydown}>
-        <div class="esa-dropdown__trigger" @click=${this.toggle}>
+        <div class="esa-dropdown__trigger typography-body-md" @click=${this.toggle}>
           <slot></slot>
         </div>
         ${this.open
@@ -104,7 +105,7 @@ export class EsaDropdownMenu extends LitElement {
                     ? html`<div class="esa-dropdown-menu__divider" role="separator"></div>`
                     : html`
                         <button
-                          class="esa-dropdown-menu__item ${item.variant === 'danger'
+                          class="esa-dropdown-menu__item typography-body-md ${item.variant === 'danger'
                             ? 'esa-dropdown-menu__item--danger'
                             : ''} ${item.disabled ? 'esa-dropdown-menu__item--disabled' : ''}"
                           ?disabled=${item.disabled}
@@ -123,14 +124,21 @@ export class EsaDropdownMenu extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: inline-block; }
 
     .esa-dropdown {
       position: relative;
       display: inline-block;
     }
-    .esa-dropdown__trigger { display: inline-block; }
+    /* body-md matches the menu items the trigger opens, and inherits through the
+       slot to whatever is slotted in. A trigger is one line, so it runs flush. */
+    .esa-dropdown__trigger {
+      display: inline-block;
+      line-height: var(--line-height-none, 1);
+    }
 
     .esa-dropdown-menu__panel {
       position: absolute;
@@ -169,8 +177,11 @@ export class EsaDropdownMenu extends LitElement {
       border-radius: var(--radius-control, 0.25rem);
       background: transparent;
       color: var(--dropdown-menu-item-color, var(--color-content-default, #171717));
+      /* UA reset, not a type role — a native button does not inherit the face. */
       font-family: inherit;
-      font-size: var(--font-size-200, 0.9375rem);
+      /* body-md is set relaxed (1.8) for running prose. A menu item is one line
+         in a row sized by its padding, so it runs flush. */
+      line-height: var(--line-height-none, 1);
       cursor: pointer;
       text-align: left;
       transition: background 100ms ease;
@@ -182,9 +193,9 @@ export class EsaDropdownMenu extends LitElement {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
     }
-    .esa-dropdown-menu__item--danger { color: var(--color-content-danger, #ce2c31); }
+    .esa-dropdown-menu__item--danger { color: var(--color-content-utility-danger, #ce2c31); }
     .esa-dropdown-menu__item--danger:hover:not(:disabled) {
-      background: var(--color-background-danger-subtle, #fef2f2);
+      background: var(--color-background-utility-danger-subtle, #fef2f2);
     }
     .esa-dropdown-menu__item--disabled {
       opacity: 0.5;
@@ -205,7 +216,8 @@ export class EsaDropdownMenu extends LitElement {
       background: var(--color-border-default-subtle, #efefef);
       margin: var(--spacing-100, 0.25rem) 0;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-dropdown-menu')) {

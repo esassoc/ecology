@@ -16,7 +16,12 @@ interface Props {
 }
 const { variant = 'info', title, dismissable = false } = Astro.props;
 
-const cls = ['esa-alert-box', `esa-alert-box--${variant}`].join(' ');
+// TYPE: the box names roles rather than assembling them — `body-sm` on the root so
+// message text inherits it, `label-sm-strong` on the title. The import is the Astro
+// half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+const cls = ['esa-alert-box', `esa-alert-box--${variant}`, 'typography-body-sm'].join(' ');
 
 // Inlined Lucide icon paths per variant (avoids an icon dependency).
 const ICON_PATHS: Record<string, string> = {
@@ -49,7 +54,7 @@ const iconPath = ICON_PATHS[variant];
   </div>
 
   <div class="esa-alert-box__body">
-    {title && <strong class="esa-alert-box__title">{title}</strong>}
+    {title && <strong class="esa-alert-box__title typography-label-sm-strong">{title}</strong>}
     <div class="esa-alert-box__message">
       <slot />
     </div>
@@ -102,9 +107,9 @@ const iconPath = ICON_PATHS[variant];
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--alert-box-bg, var(--color-background-info-subtle, #eff6ff));
-    --_alert-border: var(--alert-box-border-color, var(--color-border-info, #bfdbfe));
-    --_alert-icon-color: var(--color-content-info, #0d74ce);
+    --_alert-bg: var(--alert-box-bg, var(--color-background-utility-info-subtle, #eff6ff));
+    --_alert-border: var(--alert-box-border-color, var(--color-border-utility-info, #bfdbfe));
+    --_alert-icon-color: var(--color-content-utility-info, #0d74ce);
     --_alert-title-color: var(--alert-box-title-color, var(--color-content-default, #171717));
     --_alert-text-color: var(--alert-box-text-color, var(--color-content-default-secondary, #525252));
 
@@ -115,26 +120,24 @@ const iconPath = ICON_PATHS[variant];
     border: var(--border-width-default, 1px) solid var(--_alert-border);
     border-radius: var(--alert-box-radius, var(--radius-surface, 0.5rem));
     background: var(--_alert-bg);
-    font-size: var(--font-size-150, 0.875rem);
-    line-height: var(--line-height-normal, 1.6);
   }
 
   .esa-alert-box--success {
-    --_alert-bg: var(--color-background-success-subtle, #f0fdf4);
-    --_alert-border: var(--color-border-success, #bbf7d0);
-    --_alert-icon-color: var(--color-content-success, #3a6d3f);
+    --_alert-bg: var(--color-background-utility-success-subtle, #f0fdf4);
+    --_alert-border: var(--color-border-utility-success, #bbf7d0);
+    --_alert-icon-color: var(--color-content-utility-success, #3a6d3f);
   }
 
   .esa-alert-box--warning {
-    --_alert-bg: var(--color-background-warning-subtle, #fffbeb);
-    --_alert-border: var(--color-border-warning, #fde68a);
-    --_alert-icon-color: var(--color-content-warning, #915930);
+    --_alert-bg: var(--color-background-utility-warning-subtle, #fffbeb);
+    --_alert-border: var(--color-border-utility-warning, #fde68a);
+    --_alert-icon-color: var(--color-content-utility-warning, #915930);
   }
 
   .esa-alert-box--danger {
-    --_alert-bg: var(--color-background-danger-subtle, #fef2f2);
-    --_alert-border: var(--color-border-danger, #fecaca);
-    --_alert-icon-color: var(--color-content-danger, #ce2c31);
+    --_alert-bg: var(--color-background-utility-danger-subtle, #fef2f2);
+    --_alert-border: var(--color-border-utility-danger, #fecaca);
+    --_alert-icon-color: var(--color-content-utility-danger, #ce2c31);
   }
 
   .esa-alert-box__icon {
@@ -150,7 +153,6 @@ const iconPath = ICON_PATHS[variant];
 
   .esa-alert-box__title {
     display: block;
-    font-weight: 600;
     color: var(--_alert-title-color);
     margin-bottom: var(--spacing-050, 0.125rem);
   }

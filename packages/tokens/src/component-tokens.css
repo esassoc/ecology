@@ -15,13 +15,13 @@
   /* ===================== BUTTON ===================== */
   /* Text/icon color painted on a solid `warning` fill. Defaults to the tier-2
      role so a filled warning button and an esa-badge warning agree by default —
-     they paint on the same --color-background-warning fill and must not diverge.
+     they paint on the same --color-background-utility-warning fill and must not diverge.
      The hook stays because the right choice depends on the themed
-     --color-background-warning shade: a light amber wants dark text (the hub default), a
+     --color-background-utility-warning shade: a light amber wants dark text (the hub default), a
      darker orange wants white. A spoke whose warning is dark (e.g. Beacon's
      #f2770e) flips the button to white here without forking the component;
-     to move BOTH, re-point --color-content-on-warning instead. */
-  --button-on-warning: var(--color-content-on-warning);
+     to move BOTH, re-point --color-content-on-utility-warning instead. */
+  --button-on-warning: var(--color-content-on-utility-warning);
 
   /* Hover/selected scrim for `variant="chrome"` — the variant that takes its color
      from the surrounding color context (an esa-app-bar) rather than owning one.
@@ -173,12 +173,12 @@
      with hover/focus/pressed, and it was the one token in the file with a
      variant in the trailing state slot. Now variant-first, which also pairs it
      with --form-error-color below: one error treatment, two properties. */
-  --form-error-border-color: var(--color-background-danger);
+  --form-error-border-color: var(--color-background-utility-danger);
   --form-text-color: var(--color-content-default);
   --form-placeholder-color: var(--color-content-default-muted);
   --form-label-color: var(--color-content-default-secondary);
   --form-help-color: var(--color-content-default-muted);
-  --form-error-color: var(--color-content-danger);
+  --form-error-color: var(--color-content-utility-danger);
   /* structure */
   /* Every form edge, including the checkbox box and the radio circle. There was
      briefly a --form-indicator-border-width at --border-width-200, added because both
@@ -261,9 +261,9 @@
   --filter-pill-radius: var(--radius-pill);
   --filter-pill-font-size: var(--typography-label-xs-font-size);
   --filter-pill-remove-color: var(--color-content-default-secondary);
-  --filter-pill-remove-color-hover: var(--color-content-danger);
+  --filter-pill-remove-color-hover: var(--color-content-utility-danger);
   --filter-clear-color: var(--color-content-default-muted);
-  --filter-clear-color-hover: var(--color-content-danger);
+  --filter-clear-color-hover: var(--color-content-utility-danger);
 
   /* ===================== DATA GRID (STAGED) =====================
      No esa-grid component ships yet — this is the theming contract the AG Grid
@@ -419,9 +419,9 @@
 :root {
 
   /* esa-alert-box */
-  --alert-box-bg: var(--color-background-info-subtle, #eff6ff);
-  --alert-box-border-color: var(--color-border-info, #bfdbfe);
-  --alert-box-dismiss-bg-hover: var(--color-overlay-hover-strong);
+  --alert-box-bg: var(--color-background-utility-info-subtle, #eff6ff);
+  --alert-box-border-color: var(--color-border-utility-info, #bfdbfe);
+  --alert-box-dismiss-bg-hover: var(--color-background-overlay-strong-hover);
   --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
   --alert-box-radius: var(--radius-surface, 0.5rem);
   --alert-box-text-color: var(--color-content-default-secondary, #525252);
@@ -429,6 +429,16 @@
 
   /* esa-app-shell */
   --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
+  /* The wordmark is the one text in the kit that is BRAND rather than a type role.
+     It reads the display face, bold and tight tracking — the `display` recipe — but
+     at rung 300, and a `display-xs` composite invented for a single call site would
+     leave a 300 -> 700 -> 800 hole in that ramp. A tier-3 surface is what a
+     per-component, one-reader property is for, and re-skinning the wordmark is
+     exactly what a spoke arrives wanting to do. */
+  --app-shell-wordmark-font: var(--typography-font-family-display, var(--typography-font-family-sans, sans-serif));
+  --app-shell-wordmark-size: var(--font-size-300);
+  --app-shell-wordmark-weight: var(--typography-font-weight-bold);
+  --app-shell-wordmark-tracking: var(--letter-spacing-tight);
 
   /* esa-app-bar */
   --app-bar-bg: var(--color-background-elevation-raised, #fff);
@@ -508,7 +518,7 @@
   --command-palette-width: 560px;
 
   /* esa-confirm-dialog */
-  --confirm-dialog-backdrop-bg: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  --confirm-dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
   --confirm-dialog-bg: var(--color-background-elevation-floating, #ffffff);
   --confirm-dialog-border-color: var(--color-border-default-subtle, #efefef);
   --confirm-dialog-radius: var(--radius-overlay, 0.75rem);
@@ -518,15 +528,15 @@
   --container-gutter: var(--spacing-600, 2rem);
 
   /* esa-danger-zone */
-  --danger-zone-bg: var(--color-background-danger-subtle, #fef2f2);
-  --danger-zone-border-color: var(--color-border-danger, #fecaca);
+  --danger-zone-bg: var(--color-background-utility-danger-subtle, #fef2f2);
+  --danger-zone-border-color: var(--color-border-utility-danger, #fecaca);
   --danger-zone-description-color: var(--color-content-default-secondary, #525252);
-  --danger-zone-heading-color: var(--color-content-danger);
+  --danger-zone-heading-color: var(--color-content-utility-danger);
   --danger-zone-padding: var(--spacing-300, 0.75rem);
   --danger-zone-radius: var(--radius-surface, 0.5rem);
 
   /* esa-dialog */
-  --dialog-backdrop-bg: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  --dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
   --dialog-bg: var(--color-background-elevation-floating, #ffffff);
   --dialog-border-color: var(--color-border-default-subtle, #efefef);
   --dialog-color: var(--color-content-default, #171717);
@@ -597,7 +607,7 @@
 
   /* esa-loading-overlay */
   --loading-overlay-bg: var(--color-background-elevation-raised, #fff);
-  --loading-overlay-bg-transparent: var(--color-overlay-scrim);
+  --loading-overlay-bg-transparent: var(--color-background-overlay-scrim);
   --loading-overlay-message-color: var(--color-content-default-secondary, #525252);
 
   /* The spinner owns these; the overlay reads them because it renders one.
@@ -630,7 +640,7 @@
   /* esa-pill */
   --pill-bg: var(--color-background-elevation-sunken, #efefef);
   --pill-border-color: var(--color-border-default-subtle, #efefef);
-  --pill-remove-bg-hover: var(--color-overlay-hover-heavy);
+  --pill-remove-bg-hover: var(--color-background-overlay-heavy-hover);
   --pill-height-lg: var(--chip-height-lg, 34px);
   --pill-height-md: var(--chip-height-md, 28px);
   --pill-height-sm: var(--chip-height-sm, 22px);
@@ -665,7 +675,7 @@
   --search-panel-width: 400px;
 
   /* esa-side-dialog */
-  --side-dialog-backdrop-bg: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  --side-dialog-backdrop-bg: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
   --side-dialog-bg: var(--color-background-elevation-raised, #fff);
   --side-dialog-border-color: var(--color-border-default, #e5e5e5);
   --side-dialog-inset: 16px;
@@ -682,10 +692,10 @@
      be diverged from the rest of the kit; see SPEC.md, tier-3 colour naming).
      Variant sits BEFORE the property, matching --app-bar-brand-bg; these four
      were the only tokens in the file with it the other way round. */
-  --snackbar-item-danger-bg: var(--color-content-danger);
-  --snackbar-item-info-bg: var(--color-content-info);
-  --snackbar-item-success-bg: var(--color-content-success);
-  --snackbar-item-warning-bg: var(--color-content-warning);
+  --snackbar-item-danger-bg: var(--color-content-utility-danger);
+  --snackbar-item-info-bg: var(--color-content-utility-info);
+  --snackbar-item-success-bg: var(--color-content-utility-success);
+  --snackbar-item-warning-bg: var(--color-content-utility-warning);
   --snackbar-item-color: var(--color-content-default-knockout, #ffffff);
   --snackbar-item-radius: var(--radius-surface, 0.5rem);
 

@@ -272,7 +272,7 @@ export class EsaFileUpload extends LitElement {
 
     :host([dragging]) .zone {
       border-color: var(--color-background-brand, #43608a);
-      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #2a7e3b);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -305,7 +305,7 @@ export class EsaFileUpload extends LitElement {
 
     .error {
       margin-top: var(--spacing-100, 4px);
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
 
     .files {
@@ -353,7 +353,7 @@ export class EsaFileUpload extends LitElement {
     }
     .file__remove:hover {
       background: var(--color-border-default, #e5e5e5);
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
     .file__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

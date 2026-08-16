@@ -204,8 +204,8 @@ import Section from '@esa/docs/Section.astro';
   .lede { max-width: 70ch; }
   .ref-banner {
     padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    background: var(--color-background-warning-subtle, #fffbeb);
-    border: 1px solid var(--color-border-warning, #fde68a);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
+    border: 1px solid var(--color-border-utility-warning, #fde68a);
     border-radius: var(--radius-200, 8px);
     color: var(--color-content-default-secondary, #525252);
     font-size: var(--font-size-150, 0.875rem);
@@ -234,7 +234,7 @@ import Section from '@esa/docs/Section.astro';
   .grid-row:last-child { border-bottom: 0; }
   .grid-head { background: var(--color-background-elevation-sunken, #efefef); }
   .grid-head .cell { color: var(--color-content-default-secondary, #525252); font-size: var(--font-size-100, 0.75rem); font-weight: var(--typography-font-weight-semibold, 550); text-transform: uppercase; letter-spacing: 0.04em; }
-  .grid-row.is-selected { background: var(--color-overlay-active, rgba(0,88,98,0.08)); }
+  .grid-row.is-selected { background: var(--color-background-overlay-active, rgba(0,88,98,0.08)); }
   .cell { padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); min-width: 0; }
   .cell-check { display: flex; justify-content: center; }
   .cell-flag, .cell-actions { display: flex; }
@@ -249,10 +249,10 @@ import Section from '@esa/docs/Section.astro';
 
   .chips-wrap { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-full, 9999px); font-size: var(--font-size-100, 0.75rem); font-weight: var(--typography-font-weight-medium, 500); background: var(--color-background-elevation-sunken, #efefef); color: var(--color-content-default, #171717); white-space: nowrap; }
-  .chip-primary { background: var(--color-background-info-subtle, #eff6ff); color: var(--color-background-brand, #43608a); }
-  .chip-success { background: var(--color-background-success-subtle, #f0fdf4); color: var(--color-background-success, #22c55e); }
-  .chip-warning { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-background-warning, #f59e0b); }
-  .chip-danger { background: var(--color-background-danger-subtle, #fef2f2); color: var(--color-background-danger, #ef4444); }
+  .chip-primary { background: var(--color-background-utility-info-subtle, #eff6ff); color: var(--color-background-brand, #43608a); }
+  .chip-success { background: var(--color-background-utility-success-subtle, #f0fdf4); color: var(--color-background-utility-success, #22c55e); }
+  .chip-warning { background: var(--color-background-utility-warning-subtle, #fffbeb); color: var(--color-background-utility-warning, #f59e0b); }
+  .chip-danger { background: var(--color-background-utility-danger-subtle, #fef2f2); color: var(--color-background-utility-danger, #ef4444); }
   .chip-overflow { font-size: var(--font-size-100, 0.75rem); color: var(--color-content-default-muted, #737373); }
 
   .tip-cell { display: flex; align-items: center; gap: 4px; color: var(--color-content-default, #171717); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

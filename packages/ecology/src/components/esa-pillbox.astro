@@ -7,8 +7,12 @@ interface Props {
   /** Spacing between pills. */
   gap?: 'small' | 'medium' | 'large';
 }
+// TYPE: pills are chrome, so the box names `label-md` for anything dropped in
+// loose. A default — esa-pill and friends bring their own composite and win.
+import '@esa/tokens/typography.css';
+
 const { gap = 'small' } = Astro.props;
-const cls = ['esa-pillbox', `esa-pillbox--${gap}`].join(' ');
+const cls = ['esa-pillbox', `esa-pillbox--${gap}`, 'typography-label-md'].join(' ');
 ---
 <div class={cls}><slot /></div>
 

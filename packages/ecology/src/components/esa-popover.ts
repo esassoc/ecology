@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 type PopoverPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -100,7 +101,7 @@ export class EsaPopover extends LitElement {
   render() {
     return html`
       <div
-        class="esa-popover-anchor"
+        class="esa-popover-anchor typography-label-md"
         @click=${this.onTriggerClick}
         @mouseenter=${this.onMouseEnter}
         @mouseleave=${this.onMouseLeave}
@@ -117,7 +118,7 @@ export class EsaPopover extends LitElement {
                 ${this.hasArrow
                   ? html`<div class="esa-popover__arrow esa-popover__arrow--${this.position}"></div>`
                   : null}
-                <div class="esa-popover__body"><slot name="content"></slot></div>
+                <div class="esa-popover__body typography-body-md"><slot name="content"></slot></div>
               </div>
             `
           : null}
@@ -125,7 +126,11 @@ export class EsaPopover extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
       --_popover-bg: var(--popover-bg, var(--color-background-elevation-raised, #ffffff));
       --_popover-border: var(--popover-border-color, var(--color-border-default, #e5e5e5));
@@ -154,6 +159,8 @@ export class EsaPopover extends LitElement {
       --_popover-color: var(--color-content-default-knockout, #ffffff);
     }
 
+    /* label-md is the trigger's default type role — it inherits through the slot
+       to whatever is slotted in, and the panel below re-declares its own. */
     .esa-popover-anchor {
       position: relative;
       display: inline-block;
@@ -239,7 +246,8 @@ export class EsaPopover extends LitElement {
       border-bottom: none;
       border-left: none;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-popover')) {

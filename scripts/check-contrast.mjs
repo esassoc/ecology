@@ -50,24 +50,24 @@ const PAIRS = [
   ['--color-content-on-brand-secondary', '--color-background-brand-secondary', 4.5, 'fail'],
   ['--color-content-on-accent', '--color-background-accent', 4.5, 'fail'],
   ['--color-content-on-ai', '--color-background-ai', 4.5, 'fail'],
-  ['--color-content-on-info', '--color-background-info', 4.5, 'fail'],
-  ['--color-content-on-success', '--color-background-success', 4.5, 'fail'],
-  ['--color-content-on-warning', '--color-background-warning', 4.5, 'fail'],
-  ['--color-content-on-danger', '--color-background-danger', 4.5, 'fail'],
+  ['--color-content-on-utility-info', '--color-background-utility-info', 4.5, 'fail'],
+  ['--color-content-on-utility-success', '--color-background-utility-success', 4.5, 'fail'],
+  ['--color-content-on-utility-warning', '--color-background-utility-warning', 4.5, 'fail'],
+  ['--color-content-on-utility-danger', '--color-background-utility-danger', 4.5, 'fail'],
 
   // Coloured text on its own subtle tint — the alert/banner pairing.
   ['--color-content-brand', '--color-background-brand-subtle', 4.5, 'fail'],
-  ['--color-content-info', '--color-background-info-subtle', 4.5, 'fail'],
-  ['--color-content-success', '--color-background-success-subtle', 4.5, 'fail'],
-  ['--color-content-warning', '--color-background-warning-subtle', 4.5, 'fail'],
-  ['--color-content-danger', '--color-background-danger-subtle', 4.5, 'fail'],
+  ['--color-content-utility-info', '--color-background-utility-info-subtle', 4.5, 'fail'],
+  ['--color-content-utility-success', '--color-background-utility-success-subtle', 4.5, 'fail'],
+  ['--color-content-utility-warning', '--color-background-utility-warning-subtle', 4.5, 'fail'],
+  ['--color-content-utility-danger', '--color-background-utility-danger-subtle', 4.5, 'fail'],
 
   // Body text on the subtle tints, which is how the alert bodies are actually built.
   ['--color-content-primary', '--color-background-brand-subtle', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-success-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-warning-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-danger-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-info-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-utility-success-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-utility-warning-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-utility-danger-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-utility-info-subtle', 4.5, 'warn'],
 
   ['--color-content-disabled', '--color-background-disabled', 4.5, 'warn'], // disabled is exempt from AA; informational
   ['--color-border-focus', '--color-background-raised', 3.0, 'warn'],

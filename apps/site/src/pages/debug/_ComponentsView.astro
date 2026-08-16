@@ -406,8 +406,8 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
      because this page is debug-only and never ships. Namespaced under
      .promises-debug for the same reason .tokens-debug is: is:inline is unscoped. */
   .promises-debug .dev-banner {
-    border: 1px dashed var(--color-content-warning, #ab6400);
-    background: var(--color-background-warning-subtle, #fffbeb);
+    border: 1px dashed var(--color-content-utility-warning, #ab6400);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
     color: var(--color-content-default, #111);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-surface, 6px);
@@ -434,9 +434,9 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   }
   .promises-debug .tally-cell b { display: block; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .promises-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-default-secondary, #666); }
-  .promises-debug .tally-cell.ok { border-left: 3px solid var(--color-content-success, #5c7c2f); }
-  .promises-debug .tally-cell.warn { border-left: 3px solid var(--color-content-warning, #ab6400); }
-  .promises-debug .tally-cell.bad { border-left: 3px solid var(--color-content-danger, #ce2c31); }
+  .promises-debug .tally-cell.ok { border-left: 3px solid var(--color-content-utility-success, #5c7c2f); }
+  .promises-debug .tally-cell.warn { border-left: 3px solid var(--color-content-utility-warning, #ab6400); }
+  .promises-debug .tally-cell.bad { border-left: 3px solid var(--color-content-utility-danger, #ce2c31); }
 
   .promises-debug .kinds { margin: 0; }
   .promises-debug .kind-row {
@@ -460,19 +460,19 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   }
   /* -strong (step 11) is the "coloured text on surfaces" step; -subtle is the
      wash behind it. Step 9 is a solid FILL and would fail contrast as text. */
-  .promises-debug .kind-flag.k-no-component { background: var(--color-background-danger-subtle, #ffefef); color: var(--color-content-danger, #ce2c31); }
-  .promises-debug .kind-flag.k-missing-part { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
-  .promises-debug .kind-flag.k-unwired { background: var(--color-background-info-subtle, #eff6ff); color: var(--color-content-info, #0d74ce); }
+  .promises-debug .kind-flag.k-no-component { background: var(--color-background-utility-danger-subtle, #ffefef); color: var(--color-content-utility-danger, #ce2c31); }
+  .promises-debug .kind-flag.k-missing-part { background: var(--color-background-utility-warning-subtle, #fffbeb); color: var(--color-content-utility-warning, #ab6400); }
+  .promises-debug .kind-flag.k-unwired { background: var(--color-background-utility-info-subtle, #eff6ff); color: var(--color-content-utility-info, #0d74ce); }
   .promises-debug .kind-flag.k-elsewhere { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default-secondary, #666); }
   .promises-debug .kind-flag.k-exempt { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default-secondary, #666); }
-  .promises-debug .kind-flag.n-open { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
+  .promises-debug .kind-flag.n-open { background: var(--color-background-utility-warning-subtle, #fffbeb); color: var(--color-content-utility-warning, #ab6400); }
   .promises-debug .kind-flag.n-accepted { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default-secondary, #666); }
-  .promises-debug .kind-flag.n-resolved { background: var(--color-background-success-subtle, #f3fbf0); color: var(--color-content-success, #5c7c2f); }
+  .promises-debug .kind-flag.n-resolved { background: var(--color-background-utility-success-subtle, #f3fbf0); color: var(--color-content-utility-success, #5c7c2f); }
   /* Sharing: `group-surface` is the healthy one, so it reads as success — the
      other two are the ones to look at. */
-  .promises-debug .kind-flag.s-unowned { background: var(--color-background-warning-subtle, #fffbeb); color: var(--color-content-warning, #ab6400); }
-  .promises-debug .kind-flag.s-borrowed { background: var(--color-background-info-subtle, #eff6ff); color: var(--color-content-info, #0d74ce); }
-  .promises-debug .kind-flag.s-group-surface { background: var(--color-background-success-subtle, #f3fbf0); color: var(--color-content-success, #5c7c2f); }
+  .promises-debug .kind-flag.s-unowned { background: var(--color-background-utility-warning-subtle, #fffbeb); color: var(--color-content-utility-warning, #ab6400); }
+  .promises-debug .kind-flag.s-borrowed { background: var(--color-background-utility-info-subtle, #eff6ff); color: var(--color-content-utility-info, #0d74ce); }
+  .promises-debug .kind-flag.s-group-surface { background: var(--color-background-utility-success-subtle, #f3fbf0); color: var(--color-content-utility-success, #5c7c2f); }
   .promises-debug h3.sub { margin-top: var(--spacing-500, 20px); font-size: 0.95rem; }
   .promises-debug table.exemptions { margin-bottom: var(--spacing-300, 12px); }
   .promises-debug table.exemptions td:last-child { font-size: 0.8rem; }
@@ -495,7 +495,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   }
   .promises-debug .ns-name { display: inline-flex; align-items: center; gap: var(--spacing-250, 10px); flex-wrap: wrap; }
   .promises-debug .ns-slug { font-size: 0.8rem; color: var(--color-content-default-secondary, #666); }
-  .promises-debug .ns-slug.none { color: var(--color-content-danger, #ce2c31); }
+  .promises-debug .ns-slug.none { color: var(--color-content-utility-danger, #ce2c31); }
   .promises-debug .ns-type { font-size: 0.7rem; color: var(--color-content-default-muted, #888); }
   .promises-debug .summary-right { display: inline-flex; align-items: center; gap: var(--spacing-250, 10px); }
   .promises-debug .ns-count { font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--color-content-default-secondary, #666); }
@@ -507,7 +507,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
     background: var(--color-background-elevation-sunken, #f0f0f0);
     overflow: hidden;
   }
-  .promises-debug .bar i { display: block; height: 100%; background: var(--color-content-success, #5c7c2f); }
+  .promises-debug .bar i { display: block; height: 100%; background: var(--color-content-utility-success, #5c7c2f); }
 
   .promises-debug .part { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
   .promises-debug .part-head {
