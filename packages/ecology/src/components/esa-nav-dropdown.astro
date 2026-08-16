@@ -8,6 +8,11 @@
 // The trailing chevron rotates when open. The panel resets to surface colors so it
 // reads correctly even when the trigger lives on a dark/brand bar.
 import EsaButton from './esa-button.astro';
+// TYPE: the panel is the inheritance root for slotted menu content, so it names
+// `body-md` rather than leaving loose text on whatever the bar above it set. The
+// import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 interface Props {
   /** Trigger label. */
@@ -24,7 +29,7 @@ const cls = ['esa-nav-dropdown', `esa-nav-dropdown--${align}`].join(' ');
 ---
 <details class={cls}>
   <EsaButton tag="summary" variant="chrome" icon={icon} iconRight="chevron-down" size={size}>{label}</EsaButton>
-  <div class="esa-nav-dropdown__panel">
+  <div class="esa-nav-dropdown__panel typography-body-md">
     <slot />
   </div>
 </details>

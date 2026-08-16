@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-search-panel — interactive Lit Web Component.
@@ -200,7 +201,7 @@ export class EsaSearchPanel extends LitElement {
           <div class="search-box">
             ${searchIcon(20)}
             <input
-              class="input"
+              class="input typography-body-md"
               type="text"
               placeholder=${this.placeholder}
               autocomplete="off"
@@ -223,15 +224,17 @@ export class EsaSearchPanel extends LitElement {
     if ((this.results?.length ?? 0) > 0) {
       return this.groupedResults.map(
         (group) => html`
-          ${group.category ? html`<div class="category">${group.category}</div>` : null}
+          ${group.category
+            ? html`<div class="category typography-eyebrow-md">${group.category}</div>`
+            : null}
           ${group.items.map(
             (item) => html`
-              <button class="result" @click=${() => this.selectResult(item)}>
+              <button class="result typography-body-sm" @click=${() => this.selectResult(item)}>
                 ${item.icon ? dotIcon(16) : null}
                 <div class="result-content">
-                  <span class="result-title">${item.title}</span>
+                  <span class="result-title typography-label-sm">${item.title}</span>
                   ${item.subtitle
-                    ? html`<span class="result-subtitle">${item.subtitle}</span>`
+                    ? html`<span class="result-subtitle typography-body-xs">${item.subtitle}</span>`
                     : null}
                 </div>
               </button>
@@ -251,7 +254,9 @@ export class EsaSearchPanel extends LitElement {
     return null;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: contents;
     }
@@ -259,7 +264,7 @@ export class EsaSearchPanel extends LitElement {
     .backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.3));
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.3));
       z-index: var(--z-modal-backdrop, 9998);
     }
 
@@ -318,7 +323,9 @@ export class EsaSearchPanel extends LitElement {
       border: none;
       outline: none;
       font-family: inherit;
-      font-size: var(--font-size-200, 0.9375rem);
+      /* body-md is relaxed (1.8) for running prose; this is a single-line search
+         field whose height comes from the header padding, so it sits flush. */
+      line-height: var(--line-height-none, 1);
       color: var(--color-content-default, #171717);
       background: transparent;
     }
@@ -352,10 +359,6 @@ export class EsaSearchPanel extends LitElement {
 
     .category {
       padding: var(--spacing-300, 12px) var(--spacing-200, 8px) var(--spacing-100, 4px);
-      font-size: var(--font-size-100, 0.75rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
-      text-transform: var(--text-transform-uppercase, uppercase);
-      letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--color-content-default-muted, #737373);
     }
 
@@ -370,7 +373,6 @@ export class EsaSearchPanel extends LitElement {
       background: transparent;
       color: var(--color-content-default, #171717);
       font-family: inherit;
-      font-size: var(--font-size-150, 0.875rem);
       cursor: pointer;
       text-align: left;
     }
@@ -384,12 +386,7 @@ export class EsaSearchPanel extends LitElement {
       flex-direction: column;
     }
 
-    .result-title {
-      font-weight: var(--typography-font-weight-medium, 500);
-    }
-
     .result-subtitle {
-      font-size: var(--font-size-100, 0.75rem);
       color: var(--color-content-default-muted, #737373);
     }
 
@@ -408,7 +405,8 @@ export class EsaSearchPanel extends LitElement {
       text-align: center;
       color: var(--color-content-default-muted, #737373);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-search-panel')) {

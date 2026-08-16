@@ -14,8 +14,20 @@ interface Props {
 }
 const { label, variant = 'default', removable = true, size = 'md' } = Astro.props;
 
+// Pill text is UI text — the label composite, one rung per size. The import is the
+// Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-sm', lg: 'label-md' } as const;
+
 const hasIconSlot = Astro.slots.has('icon');
-const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
+const cls = [
+  'esa-pill',
+  `esa-pill--${variant}`,
+  `esa-pill--${size}`,
+  `typography-${LABEL_TYPE[size]}`,
+].join(' ');
 ---
 <span class={cls}>
   {hasIconSlot && (
@@ -84,7 +96,6 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     --_pill-text: var(--pill-text-color, var(--color-content-default, #171717));
     --_pill-border: var(--pill-border-color, var(--color-border-default-subtle, #efefef));
     --_pill-height: var(--pill-height-md, 28px);
-    --_pill-font-size: var(--font-size-150, 0.875rem);
     --_pill-padding-x: var(--spacing-200, 0.5rem);
     --_pill-gap: var(--spacing-100, 0.25rem);
 
@@ -97,27 +108,26 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     border-radius: var(--pill-radius, var(--radius-pill, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
-    font-size: var(--_pill-font-size);
+    /* Type comes from .typography-label-* on this element. Flush leading is kept:
+       one line in a box whose height is --_pill-height, so leading must not centre-shift. */
     line-height: var(--line-height-none, 1);
     white-space: nowrap;
     box-sizing: border-box;
   }
 
+  /* Size no longer carries a font-size — that rung comes from LABEL_TYPE above. */
   .esa-pill--xs {
     --_pill-height: var(--pill-height-xs, 18px);
-    --_pill-font-size: var(--font-size-050, 0.625rem);
     --_pill-padding-x: var(--spacing-100, 0.25rem);
   }
 
   .esa-pill--sm {
     --_pill-height: var(--pill-height-sm, 22px);
-    --_pill-font-size: var(--font-size-100, 0.75rem);
     --_pill-padding-x: var(--spacing-150, 0.375rem);
   }
 
   .esa-pill--lg {
     --_pill-height: var(--pill-height-lg, 34px);
-    --_pill-font-size: var(--font-size-200, 0.9375rem);
     --_pill-padding-x: var(--spacing-300, 0.75rem);
   }
 
@@ -128,27 +138,27 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
   }
 
   .esa-pill--info {
-    --_pill-bg: var(--color-background-info-subtle, var(--color-blue-2));
-    --_pill-text: var(--color-content-info, #0d74ce);
-    --_pill-border: var(--color-border-info, var(--color-blue-6));
+    --_pill-bg: var(--color-background-utility-info-subtle, var(--color-blue-2));
+    --_pill-text: var(--color-content-utility-info, #0d74ce);
+    --_pill-border: var(--color-border-utility-info, var(--color-blue-6));
   }
 
   .esa-pill--success {
-    --_pill-bg: var(--color-background-success-subtle, var(--color-lime-2));
-    --_pill-text: var(--color-content-success, #5c7c2f);
-    --_pill-border: var(--color-border-success, var(--color-lime-6));
+    --_pill-bg: var(--color-background-utility-success-subtle, var(--color-lime-2));
+    --_pill-text: var(--color-content-utility-success, #5c7c2f);
+    --_pill-border: var(--color-border-utility-success, var(--color-lime-6));
   }
 
   .esa-pill--warning {
-    --_pill-bg: var(--color-background-warning-subtle, var(--color-yellow-2));
-    --_pill-text: var(--color-content-warning, #ab6400);
-    --_pill-border: var(--color-border-warning, var(--color-yellow-6));
+    --_pill-bg: var(--color-background-utility-warning-subtle, var(--color-yellow-2));
+    --_pill-text: var(--color-content-utility-warning, #ab6400);
+    --_pill-border: var(--color-border-utility-warning, var(--color-yellow-6));
   }
 
   .esa-pill--danger {
-    --_pill-bg: var(--color-background-danger-subtle, var(--color-red-2));
-    --_pill-text: var(--color-content-danger, #ce2c31);
-    --_pill-border: var(--color-border-danger, var(--color-red-6));
+    --_pill-bg: var(--color-background-utility-danger-subtle, var(--color-red-2));
+    --_pill-text: var(--color-content-utility-danger, #ce2c31);
+    --_pill-border: var(--color-border-utility-danger, var(--color-red-6));
   }
 
   .esa-pill__icon {
@@ -156,9 +166,8 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     display: inline-flex;
   }
 
-  .esa-pill__label {
-    font-weight: 500;
-  }
+  /* .esa-pill__label had font-weight: 500 — exactly what label-* already carries,
+     so it is inherited from the root composite now rather than restated here. */
 
   .esa-pill__remove {
     display: inline-flex;

@@ -3,8 +3,13 @@
 // (/, Tab, Esc, ↑ ↓ ↵). Slot the key label. Token-driven, so it re-skins with the
 // active theme. (Promoted from cb-fish's cbf-kbd; the same keycap styling was also
 // duplicated inside esa-command-palette — this is the shared primitive both use.)
+//
+// TYPE: `label-xs` — a keycap is UI text, not code, and the sans face is deliberate
+// (it also overrides the UA's monospace default for <kbd>). The import is the Astro
+// half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 ---
-<kbd class="esa-kbd"><slot /></kbd>
+<kbd class="esa-kbd typography-label-xs"><slot /></kbd>
 
 <style>
   .esa-kbd {
@@ -14,9 +19,8 @@
     min-width: 19px;
     height: 19px;
     padding: 0 5px;
-    font-family: var(--typography-font-family-sans);
-    font-size: var(--font-size-100, 0.75rem);
-    font-weight: var(--typography-font-weight-medium);
+    /* Type comes from .typography-label-xs on this element. Flush leading is kept:
+       the keycap is one line in a 19px box, so leading must not shift it off centre. */
     line-height: var(--line-height-none, 1);
     color: var(--kbd-color, var(--color-content-default-muted));
     background: var(--kbd-bg, var(--color-background-elevation-raised));

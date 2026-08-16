@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 export type EsaSnackbarVariant = 'info' | 'success' | 'warning' | 'danger';
 
@@ -62,11 +63,11 @@ export class EsaSnackbarItem extends LitElement {
 
   render() {
     return html`
-      <div class="esa-snackbar esa-snackbar--${this.variant}">
+      <div class="esa-snackbar typography-body-md esa-snackbar--${this.variant}">
         <span class="esa-snackbar__icon">${this.renderIcon()}</span>
         <span class="esa-snackbar__message">${this.message}</span>
         ${this.action
-          ? html`<button class="esa-snackbar__action" @click=${this.onAction}>${this.action}</button>`
+          ? html`<button class="esa-snackbar__action typography-label-sm-strong" @click=${this.onAction}>${this.action}</button>`
           : null}
         ${this.dismissable
           ? html`
@@ -79,7 +80,9 @@ export class EsaSnackbarItem extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: block; }
 
     .esa-snackbar {
@@ -91,8 +94,9 @@ export class EsaSnackbarItem extends LitElement {
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       background: var(--color-background-default-knockout);
       color: var(--snackbar-item-color, var(--color-content-default-knockout, #ffffff));
-      font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
-      font-size: var(--font-size-200, 0.9375rem);
+      /* body-md is set relaxed (1.8) for running prose. A toast is one line in a
+         box sized by its padding, so it runs flush. */
+      line-height: var(--line-height-none, 1);
       animation: esa-snackbar-enter var(--animation-overlay-enter, 250ms ease-out);
     }
     @keyframes esa-snackbar-enter {
@@ -100,10 +104,10 @@ export class EsaSnackbarItem extends LitElement {
       to { transform: translateX(0); opacity: 1; }
     }
 
-    .esa-snackbar--success { background: var(--snackbar-item-success-bg, var(--color-content-success)); }
-    .esa-snackbar--warning { background: var(--snackbar-item-warning-bg, var(--color-content-warning)); }
-    .esa-snackbar--danger { background: var(--snackbar-item-danger-bg, var(--color-content-danger)); }
-    .esa-snackbar--info { background: var(--snackbar-item-info-bg, var(--color-content-info)); }
+    .esa-snackbar--success { background: var(--snackbar-item-success-bg, var(--color-content-utility-success)); }
+    .esa-snackbar--warning { background: var(--snackbar-item-warning-bg, var(--color-content-utility-warning)); }
+    .esa-snackbar--danger { background: var(--snackbar-item-danger-bg, var(--color-content-utility-danger)); }
+    .esa-snackbar--info { background: var(--snackbar-item-info-bg, var(--color-content-utility-info)); }
 
     .esa-snackbar__icon {
       flex-shrink: 0;
@@ -126,9 +130,8 @@ export class EsaSnackbarItem extends LitElement {
          did not want it. */
       background: rgba(255, 255, 255, 0.2);
       color: inherit;
+      /* UA reset, not a type role — a native button does not inherit the face. */
       font-family: inherit;
-      font-size: var(--font-size-150, 0.875rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
       cursor: pointer;
     }
     .esa-snackbar__action:hover { background: rgba(255, 255, 255, 0.3); }
@@ -151,7 +154,8 @@ export class EsaSnackbarItem extends LitElement {
       opacity: 1;
       background: rgba(255, 255, 255, 0.1);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-snackbar-item')) {

@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 // unsafeSVG for icon markup (SVG namespace); unsafeHTML stays for text highlight.
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
@@ -294,17 +295,17 @@ export class EsaEntitySearch extends LitElement {
       >
         <span class="esa-entity-search__row-icon">${this.renderIcon(this.iconFor(entity))}</span>
         <span class="esa-entity-search__row-text">
-          <span class="esa-entity-search__row-title">${unsafeHTML(highlight(entity.title, this.query.trim()))}</span>
+          <span class="esa-entity-search__row-title typography-label-md">${unsafeHTML(highlight(entity.title, this.query.trim()))}</span>
           ${entity.subtitle
-            ? html`<span class="esa-entity-search__row-subtitle">${unsafeHTML(highlight(entity.subtitle, this.query.trim()))}</span>`
+            ? html`<span class="esa-entity-search__row-subtitle typography-body-xs">${unsafeHTML(highlight(entity.subtitle, this.query.trim()))}</span>`
             : null}
         </span>
-        ${entity.meta ? html`<span class="esa-entity-search__row-meta">${entity.meta}</span>` : null}
+        ${entity.meta ? html`<span class="esa-entity-search__row-meta typography-body-xs">${entity.meta}</span>` : null}
         ${actions.length
           ? html`<span class="esa-entity-search__row-actions">
               ${actions.map(
                 (a) => html`<button
-                  class="esa-entity-search__row-action"
+                  class="esa-entity-search__row-action typography-body-xs"
                   type="button"
                   title=${a.label}
                   aria-label=${a.label}
@@ -332,7 +333,7 @@ export class EsaEntitySearch extends LitElement {
         <div class="esa-entity-search__search">
           <svg class="esa-entity-search__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input
-            class="esa-entity-search__input"
+            class="esa-entity-search__input typography-body-lg"
             type="text"
             placeholder=${this.placeholder}
             .value=${this.query}
@@ -340,28 +341,28 @@ export class EsaEntitySearch extends LitElement {
             @keydown=${this.onKeydown}
             autocomplete="off"
           />
-          <kbd class="esa-entity-search__kbd">ESC</kbd>
+          <kbd class="esa-entity-search__kbd typography-label-xs">ESC</kbd>
         </div>
 
         ${this.scopes.length
           ? html`<div class="esa-entity-search__scopes" role="tablist">
               <button
-                class="esa-entity-search__scope ${this.activeScope === '' ? 'esa-entity-search__scope--active' : ''}"
+                class="esa-entity-search__scope typography-body-xs ${this.activeScope === '' ? 'esa-entity-search__scope--active' : ''}"
                 role="tab"
                 aria-selected=${this.activeScope === ''}
                 @click=${() => this.setScope('')}
               >
-                ${this.allLabel}${q ? html`<span class="esa-entity-search__scope-count">${totalCount}</span>` : null}
+                ${this.allLabel}${q ? html`<span class="esa-entity-search__scope-count typography-body-xs">${totalCount}</span>` : null}
               </button>
               ${this.scopes.map(
                 (s) => html`<button
-                  class="esa-entity-search__scope ${this.activeScope === s.id ? 'esa-entity-search__scope--active' : ''}"
+                  class="esa-entity-search__scope typography-body-xs ${this.activeScope === s.id ? 'esa-entity-search__scope--active' : ''}"
                   role="tab"
                   aria-selected=${this.activeScope === s.id}
                   @click=${() => this.setScope(s.id)}
                 >
                   ${this.renderIcon(s.icon)}${s.label}${q
-                    ? html`<span class="esa-entity-search__scope-count">${this.scopeCount(s.id)}</span>`
+                    ? html`<span class="esa-entity-search__scope-count typography-body-xs">${this.scopeCount(s.id)}</span>`
                     : null}
                 </button>`,
               )}
@@ -371,39 +372,43 @@ export class EsaEntitySearch extends LitElement {
         <div class="esa-entity-search__results" role="listbox">
           ${showingRecent
             ? html`<div class="esa-entity-search__group">
-                <div class="esa-entity-search__group-head"><span>Recent</span></div>
+                <div class="esa-entity-search__group-head typography-eyebrow-md"><span>Recent</span></div>
                 ${this.recent.map((e) => this.renderRow(e))}
               </div>`
             : groups.length
               ? groups.map(
                   (g) => html`<div class="esa-entity-search__group">
-                    <div class="esa-entity-search__group-head">
+                    <div class="esa-entity-search__group-head typography-eyebrow-md">
                       <span>${g.scope.label}</span>
                       <span class="esa-entity-search__group-count">${g.items.length}</span>
                     </div>
                     ${g.items.map((e) => this.renderRow(e))}
                   </div>`,
                 )
-              : html`<div class="esa-entity-search__empty">No results${q ? html` for “${this.query}”` : null}.</div>`}
+              : html`<div class="esa-entity-search__empty typography-body-md">No results${q ? html` for “${this.query}”` : null}.</div>`}
         </div>
 
-        <div class="esa-entity-search__footer">
-          <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
-          <span><kbd>↵</kbd> Select</span>
-          ${this.scopes.length ? html`<span><kbd>Tab</kbd> Scope</span>` : null}
-          <span><kbd>Esc</kbd> Close</span>
+        <div class="esa-entity-search__footer typography-body-xs">
+          <span><kbd class="typography-label-xs">↑</kbd><kbd class="typography-label-xs">↓</kbd> Navigate</span>
+          <span><kbd class="typography-label-xs">↵</kbd> Select</span>
+          ${this.scopes.length
+            ? html`<span><kbd class="typography-label-xs">Tab</kbd> Scope</span>`
+            : null}
+          <span><kbd class="typography-label-xs">Esc</kbd> Close</span>
         </div>
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: contents; }
 
     .esa-entity-search__backdrop {
       position: fixed;
       inset: 0;
-      background: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
       z-index: var(--z-modal-backdrop, 300);
     }
 
@@ -443,7 +448,9 @@ export class EsaEntitySearch extends LitElement {
       flex: 1;
       border: none;
       outline: none;
-      font-size: var(--font-size-300, 1.0625rem);
+      /* body-lg is relaxed (1.8) for running prose; this is a single-line search
+         field whose height comes from the row padding, so it sits flush. */
+      line-height: var(--line-height-none, 1);
       color: var(--color-content-default, #171717);
       background: transparent;
       font-family: inherit;
@@ -456,9 +463,6 @@ export class EsaEntitySearch extends LitElement {
       min-width: 19px;
       height: 19px;
       padding: 0 5px;
-      font-family: inherit;
-      font-size: var(--font-size-100, 0.75rem);
-      font-weight: var(--typography-font-weight-medium, 500);
       color: var(--color-content-default-muted, #7c7c7c);
       background: var(--color-background-elevation-raised, #fff);
       border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
@@ -482,8 +486,6 @@ export class EsaEntitySearch extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-elevation-raised, #fff);
       color: var(--color-content-default-secondary, #525252);
-      font: inherit;
-      font-size: var(--font-size-100, 0.875rem);
       cursor: pointer;
       transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
     }
@@ -494,7 +496,6 @@ export class EsaEntitySearch extends LitElement {
       color: var(--entity-search-selected-text, var(--color-content-default-knockout, #fcfcfc));
     }
     .esa-entity-search__scope-count {
-      font-size: var(--font-size-100, 0.75rem);
       font-variant-numeric: tabular-nums;
       opacity: 0.8;
     }
@@ -507,10 +508,6 @@ export class EsaEntitySearch extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      font-size: var(--font-size-100, 0.8125rem);
-      font-weight: var(--typography-font-weight-semibold, 550);
-      text-transform: var(--text-transform-uppercase, uppercase);
-      letter-spacing: 0.03em;
       color: var(--color-content-default-muted, #7c7c7c);
     }
     .esa-entity-search__group-count { font-variant-numeric: tabular-nums; }
@@ -535,12 +532,9 @@ export class EsaEntitySearch extends LitElement {
     .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-content-brand, #2a7e3b); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .esa-entity-search__row-title {
-      font-size: var(--font-size-200, 0.9375rem);
-      font-weight: var(--typography-font-weight-medium, 500);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-subtitle {
-      font-size: var(--font-size-100, 0.8125rem);
       color: var(--color-content-default-muted, #7c7c7c);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
@@ -549,7 +543,7 @@ export class EsaEntitySearch extends LitElement {
       color: inherit;
       border-radius: 2px;
     }
-    .esa-entity-search__row-meta { flex-shrink: 0; font-size: var(--font-size-100, 0.8125rem); color: var(--color-content-default-muted, #7c7c7c); font-variant-numeric: tabular-nums; }
+    .esa-entity-search__row-meta { flex-shrink: 0; color: var(--color-content-default-muted, #7c7c7c); font-variant-numeric: tabular-nums; }
     .esa-entity-search__row-actions { flex-shrink: 0; display: inline-flex; gap: var(--spacing-100, 0.25rem); opacity: 0; }
     .esa-entity-search__row:hover .esa-entity-search__row-actions,
     .esa-entity-search__row--active .esa-entity-search__row-actions { opacity: 1; }
@@ -560,7 +554,7 @@ export class EsaEntitySearch extends LitElement {
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-elevation-raised, #fff);
       color: var(--color-content-default-secondary, #525252);
-      font: inherit; font-size: var(--font-size-100, 0.75rem); cursor: pointer;
+      cursor: pointer;
     }
     .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #1e5386); color: var(--color-background-brand, #1e5386); }
 
@@ -568,7 +562,6 @@ export class EsaEntitySearch extends LitElement {
       padding: var(--spacing-700, 3rem) var(--spacing-600, 2rem);
       text-align: center;
       color: var(--color-content-default-muted, #7c7c7c);
-      font-size: var(--font-size-200, 0.9375rem);
     }
 
     .esa-entity-search__footer {
@@ -576,11 +569,11 @@ export class EsaEntitySearch extends LitElement {
       gap: var(--spacing-400, 1rem);
       padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
       border-top: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
-      font-size: var(--font-size-100, 0.8125rem);
       color: var(--color-content-default-muted, #7c7c7c);
     }
     .esa-entity-search__footer span { display: inline-flex; align-items: center; gap: 4px; }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-entity-search')) {

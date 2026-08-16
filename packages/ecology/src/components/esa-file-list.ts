@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 export interface EsaFile {
   /** File name shown in the row. */
@@ -59,7 +60,7 @@ export class EsaFileList extends LitElement {
     return html`
       <ul class="list">
         ${this.files.map(
-          (file, i) => html`<li class="file">
+          (file, i) => html`<li class="file typography-body-sm">
             <span class="file__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" />
@@ -100,7 +101,9 @@ export class EsaFileList extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
     }
@@ -125,8 +128,6 @@ export class EsaFileList extends LitElement {
       border: var(--form-border-width, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-control, 4px);
       background: var(--color-background-elevation-raised, #fff);
-      font-family: var(--typography-font-family-sans, sans-serif);
-      font-size: var(--font-size-150, 12px);
     }
     .file__icon {
       display: inline-flex;
@@ -181,13 +182,14 @@ export class EsaFileList extends LitElement {
       color: var(--color-content-default, #171717);
     }
     .file__btn--remove:hover {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
     .file__btn:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-file-list')) {

@@ -123,26 +123,54 @@ all new components follow.
 Colour is the largest and most-read part of this tier, so it has a fixed shape:
 
 ```
---color-<property>-<intention>-<variant>-<state>
-            │           │          │        └── hover, active, focus  (optional)
-            │           │          └─────────── subtle, muted, strong, secondary (optional)
-            │           └────────────────────── brand, info, success, warning,
-            │                                   danger, accent, ai, disabled (optional)
-            └────────────────────────────────── background | content | border
+--color-<property>-<intention>-<variant>-<knockout>-<state>
+            │           │          │          │         └── hover, active, focus (optional)
+            │           │          │          └──────────── knockout (optional)
+            │           │          └─────────────────────── info, success, warning, danger,
+            │           │                                   raised, floating, sunken,
+            │           │                                   backdrop, scrim, strong, heavy,
+            │           │                                   subtle, muted, secondary (optional)
+            │           └────────────────────────────────── brand, utility, elevation, overlay,
+            │                                               accent, ai, link, disabled (optional)
+            └────────────────────────────────────────────── background | content | border
 ```
 
+**The property slot holds three words and only three.** It said "and `overlay`"
+until 2026-08-15, when the fourth retired — see below.
+
+Three of those intentions are **axes with named rungs**, and that is why the
+variant slot carries words like `danger`, `sunken` and `backdrop` that look like
+intentions themselves. `utility` holds the four feedback rungs, `elevation` the
+three surface rungs, `overlay` the translucent washes. All three were separate
+intentions until 2026-08-15 — eleven of them between the three — and splitting
+one axis across the intention slot is what stopped anything in the system from
+saying its rungs belonged together. `knockout` gets its own slot rather than
+sharing `variant`, because the variant slot is frequently already occupied —
+see `inverse-to-knockout` in `migrations.json`.
+
+**`overlay` is the fourth property that stopped being one.** The washes are
+applied OVER a background rather than being one, and `--color-background-hover`
+would read as the hover state of the page canvas — the opaque gray-4 that
+already owns that meaning — instead of a wash painted on hover. That collision
+was real, and a fourth property was the wrong place to resolve it:
+`--color-background-overlay-hover` says the same thing in slots the grammar
+already had. Property says it paints a fill; intention says it stacks rather
+than replaces. It also gave four washes their first intention — `hover`,
+`strong-hover`, `heavy-hover` and `active` had named a state and nothing else,
+and were the last residents of the unclassified group on `/debug/tokens`.
+Now empty, which is the assertion that group exists to make. See
+`overlay-property-to-intention`.
+
 **The property is never optional.** It is the thing that makes a name guessable:
-a danger border is `--color-border-danger`. Not `--color-danger-border`, and not
+a danger border is `--color-border-utility-danger`. Not `--color-danger-border`, and not
 `--color-danger` — that one is a background, and it says so.
 
 - **`background`** — fills and surfaces. Page canvas, cards, solid button fills.
 - **`content`** — text, icons and SVG strokes. Anything sitting *on* a background.
   `content` rather than `text` because icons read these too.
 - **`border`** — strokes and dividers.
-- **`overlay`** is a deliberate fourth property for the translucent washes
-  (`--color-overlay-hover`, `--color-overlay-backdrop`). They sit *over* a
-  background rather than being one, and naming them `background-*` would collide
-  with the opaque neutrals already holding those names.
+There is no fourth. `overlay` was one until 2026-08-15 and is an **intention**
+now — see above.
 
 **Neutral is the default intention and carries no intention word.**
 `--color-background` is the page; `--color-content-default` is body text. Every
@@ -158,7 +186,7 @@ non-neutral names its intention: `--color-background-brand`.
 
 2. **A step-11 colour is `content-*`, never `-strong`.** The old
    `--color-danger-strong` sounded like a bolder fill and was used as one; it is
-   Radix step 11, which is *text on a surface*. `--color-content-danger` cannot be
+   Radix step 11, which is *text on a surface*. `--color-content-utility-danger` cannot be
    misread that way.
 
 ### Defining vs deriving — when tier 2 may point at tier 2
@@ -368,8 +396,8 @@ real names; the summary:
 - **Variant — mostly absent, and this is the substantive gap.** Seven components
   have a real colour-variant axis (button, badge, pill, alert-box,
   confirm-dialog, progress-bar, snackbar-item — measured as reading three or
-  more of the four status intentions). **Six of them expose none of it at
-  tier 3**: they read `--color-background-danger` and friends directly, so their
+  more of the four `utility` variants). **Six of them expose none of it at
+  tier 3**: they read `--color-background-utility-danger` and friends directly, so their
   variants are themeable only by moving the whole kit's danger.
   `esa-snackbar-item` is the one exception, and its four hooks now put the
   variant *before* the property (`--snackbar-item-danger-bg`), matching

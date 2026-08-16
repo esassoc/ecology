@@ -14,10 +14,15 @@ interface Props {
   hidden?: boolean;
 }
 const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
+
+// TYPE: the button names a role — label-sm (150/medium). The import is the Astro
+// half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 ---
 {!hidden && (
   <button
-    class="esa-filter-clear-button"
+    class="esa-filter-clear-button typography-label-sm"
     type="button"
     data-esa-filter-clear
     aria-label="Clear all filters"
@@ -47,7 +52,6 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
   .esa-filter-clear-button {
     --_clear-text: var(--filter-clear-color, var(--color-content-brand, #3a7c59));
     --_clear-text-hover: var(--filter-clear-color-hover, var(--color-content-brand, #3a7c59));
-    --_clear-font-size: var(--font-size-150, 0.875rem);
     --_clear-icon-size: 18px;
 
     display: inline-flex;
@@ -58,9 +62,6 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
     border-radius: var(--radius-control, 0.25rem);
     background: transparent;
     color: var(--_clear-text);
-    font-family: var(--typography-font-family-sans, inherit);
-    font-size: var(--_clear-font-size);
-    font-weight: var(--typography-font-weight-medium, 500);
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -71,7 +72,7 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
 
   .esa-filter-clear-button:hover {
     color: var(--_clear-text-hover);
-    background: var(--color-overlay-hover, rgba(0, 0, 0, 0.03));
+    background: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.03));
   }
 
   .esa-filter-clear-button:focus-visible {

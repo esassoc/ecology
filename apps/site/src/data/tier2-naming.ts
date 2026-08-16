@@ -19,6 +19,7 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { allTokens, byTier } from './token-graph';
+import { dynamicClassNames, stripComments } from './composite-classes';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const TYPOGRAPHY_CSS = path.join(ROOT, 'packages', 'tokens', 'src', 'typography.css');
@@ -80,13 +81,16 @@ const allNonColor = semantic.filter(
 // the need for. `surface`/`bg` and `text` are kept only so the deprecated aliases in
 // dist/tokens.css still parse into a property rather than showing up as unclassified.
 //
-// `overlay` maps to background because that is the property it lands on. It is the
-// system's one deliberate synonym: the translucent washes sit OVER a background
-// rather than being one, and naming them `background-*` would collide with the
-// opaque neutrals already holding those names. Documented in SPEC.md, so the parser
-// should read them as DECLARED rather than counting them against the worklist.
+// `overlay` WAS here, as the system's one deliberate synonym for `background` —
+// the washes sit OVER a background rather than being one, and `--color-background-hover`
+// would have read as the hover state of the page canvas (the opaque gray-4 that
+// already owns that meaning) instead of a wash painted on hover. That collision was
+// real; a fourth property was not the way to resolve it. Since 2026-08-15 `overlay`
+// is an INTENTION and the property slot is back to the rubric's three — see
+// `overlay-property-to-intention` in migrations.json. `--color-background-overlay-hover`
+// says the same thing in slots the grammar already had.
 const SURFACE_VOCAB: Record<'background' | 'content' | 'border', string[]> = {
-  background: ['background', 'surface', 'bg', 'overlay'],
+  background: ['background', 'surface', 'bg'],
   content: ['content', 'text'],
   border: ['border'],
 };
@@ -98,10 +102,15 @@ for (const [rubric, words] of Object.entries(SURFACE_VOCAB)) {
 const STATE_WORDS = new Set(['hover', 'active', 'focus', 'pressed']);
 
 /**
- * Washes and scrims. They ARE backgrounds, but they name themselves after the
- * effect rather than the surface, so the surface parser can't see it — and any
- * trailing `-strong` on one is an intensity, not a content colour.
- * `hover`/`active` lead these names, so match on the overlay word itself.
+ * Washes and scrims. They ARE backgrounds, but they used to name themselves
+ * after the effect rather than the surface, so the surface parser could not see
+ * it — and any trailing `-strong` on one is an intensity, not a content colour.
+ *
+ * It fires on NOTHING live as of 2026-08-15: all six now lead with `background`
+ * and state their property outright, so `parseColor` finds a surface word and
+ * never reaches the paths this guards. Kept as a regression guard, like the
+ * `-on-fill` check beside it — a new wash named after its effect would still be
+ * caught rather than mis-parsed as a content colour.
  */
 const isOverlay = (name: string) => /(^|-)(overlay|scrim|backdrop)(-|$)/.test(name);
 
@@ -167,9 +176,10 @@ const parseColor = (name: string): Tier2Row => {
     if (order === 'inverted') flags.push('variant before surface — inverted vs rubric');
   }
 
-  // `overlay` is the one sanctioned synonym (see SURFACE_VOCAB), so it is not a
-  // spelling defect. Everything else that diverges from the rubric word still is.
-  if (surfaceWord && surfaceWord !== surface && surfaceWord !== 'overlay') {
+  // The `overlay` carve-out that used to sit here is gone with the synonym itself
+  // (see SURFACE_VOCAB). Every remaining divergence from the rubric word is a
+  // spelling defect again, with no exceptions to remember.
+  if (surfaceWord && surfaceWord !== surface) {
     flags.push(`surface spelled "${surfaceWord}" where the rubric says "${surface}"`);
   }
 
@@ -304,11 +314,11 @@ export interface VocabRow {
 
 export const variantVocab: VocabRow[] = [
   { rubric: 'brand', current: 'brand', status: 'match', note: 'Now an exact match. It was `primary`, which meant two different things at once — the brand hue, and the most prominent of a set (`--color-text-primary`). Property-first naming collapsed those into one slot, so the hue took `brand` and `primary` was left to mean prominence only. `secondary` survives as a brand VARIANT (`--color-background-brand-secondary`), a second fill rather than a separate intention.' },
-  { rubric: 'subtle', current: 'subtle', status: 'match', note: 'Exact match, and used consistently: background-brand-subtle, background-ai-subtle, background-{info,success,warning,danger}-subtle.' },
-  { rubric: 'utility-error', current: 'danger', status: 'renamed', note: 'No `utility-` grouping prefix, and error is spelled danger.' },
-  { rubric: 'utility-success', current: 'success', status: 'renamed', note: 'Concept 1:1. Tier 1 used to group these as `--color-status-*`, giving the family a third name one tier down; those aliases have been deleted and these roles now point straight at their ramp steps.' },
-  { rubric: 'utility-warning', current: 'warning', status: 'renamed', note: 'As above.' },
-  { rubric: 'utility-information', current: 'info', status: 'renamed', note: 'Abbreviated.' },
+  { rubric: 'subtle', current: 'subtle', status: 'match', note: 'Exact match, and used consistently: background-brand-subtle, background-ai-subtle, background-utility-{info,success,warning,danger}-subtle.' },
+  { rubric: 'utility-error', current: 'utility-danger', status: 'renamed', note: 'The `utility-` grouping prefix EXISTS as of 2026-08-15 — this row read "No `utility-` grouping prefix" until then, and the rubric was right. See `status-to-utility` in migrations.json. What is left of the rename is the last word: error is spelled danger, because the token also fills destructive buttons, which are an action rather than an error.' },
+  { rubric: 'utility-success', current: 'utility-success', status: 'match', note: 'Now an exact match, prefix included. Tier 1 used to group these as `--color-status-*`, giving the family a third name one tier down; those aliases have been deleted and these roles now point straight at their ramp steps. Note the shape of that history — `status` at tier 1, nothing at tier 2, `utility` at tier 2 now: the grouping word kept being deleted from the tier that could not hold it before it landed on the one that could.' },
+  { rubric: 'utility-warning', current: 'utility-warning', status: 'match', note: 'As above.' },
+  { rubric: 'utility-information', current: 'utility-info', status: 'renamed', note: 'Prefix matches; the last word is abbreviated.' },
   { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed at the intention level, not as a state, which is the de-duplication the rubric recommends. The slot order used to be inverted (`--color-disabled-bg`); it now reads `--color-background-disabled` like everything else.' },
   { rubric: 'sizes lg / md / sm', current: '--chip-height-*', status: 'partial', note: 'One ramp left, and it is the exception. The size axis briefly had three: a text ramp (`--font-size-ui-*`, deleted 2026-08-14, then a proposed `--control-font-size-*` reverted the same day — both were size-only scales running parallel to the composites), and a height ramp for inputs and buttons (`--control-height-*`, deleted the same day). A px height cannot grow with rem text, so it clipped; those elements are now as tall as their padding plus their text. The padding hook that briefly inherited the density job (`--form-padding-{y,x}-*`) was deleted hours later for being a flat passthrough — sixteen names for four spacing rungs, identical on both axes — so there is no size lever left at any tier for inputs and buttons. `--chip-height-*` stays fixed because a badge is a shape more than a box of text — see its description. Padding is tier 1 by design: spacing is a measure, not an intent, and it is CORE, so components read it directly.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
@@ -445,6 +455,11 @@ const UNSLOTTED = 'no intention in slot 2';
  * was standing in for the one that had been deleted. Every label this returns is
  * now a word some token actually carries.
  *
+ * `utility` came back on 2026-08-15, and it is worth being clear that the rule
+ * did not bend. The objection was never to the grouping; it was that the word
+ * appeared only on the heading, so a reader holding a token name could not find
+ * its way up the tree. The tokens carry it now.
+ *
  * `on-` comes off first: `--color-content-on-brand` is text placed ON a brand
  * fill, so its intention is `brand`. The prefix is relational and has no slot in
  * the grammar at all — see ON_PREFIX below.
@@ -473,16 +488,46 @@ const INTENTIONS = new Set([
   'default', 'elevation', 'field',
   // brand and its neighbours
   'brand', 'accent', 'ai', 'link',
-  // feedback. NOT collapsed under an invented `utility` heading: no token is
-  // named `utility`, and that is the same defect as `neutral` was.
-  'info', 'success', 'warning', 'danger',
+  //
+  // `utility` is ONE intention with four variants (`info`, `success`,
+  // `warning`, `danger`) — renamed 2026-08-15, see `status-to-utility` in
+  // migrations.json. This line used to read the other way, and refused the
+  // grouping in as many words: "NOT collapsed under an invented `utility`
+  // heading: no token is named `utility`, and that is the same defect as
+  // `neutral` was." That objection was right and it has been PAID rather than
+  // overruled. The defect was never that the four do not belong together; it
+  // was that a heading no token carries cannot be read back off a name. The
+  // tokens carry the word now.
+  //
+  // What makes them one axis rather than four: all four take the SAME six
+  // roles at the same Radix steps — fill (9), fill-hover (10), subtle surface
+  // (2), border (6), coloured text (11), and an on-fill foreground chosen by
+  // scale brightness. Nothing else in tier 2 is that regular. `brand` has no
+  // subtle hover, `link` no border, `disabled` no fill-hover. Four names
+  // moving in lockstep across six roles are variants of one thing.
+  'utility',
   // a state raised to the intention level, deliberately — see SPEC.md
   'disabled',
-  // the two overlay washes that DO name what they are for. Their four siblings
-  // (--color-overlay-hover, -hover-strong, -hover-heavy, -active) name only a
-  // state and stay in UNSLOTTED, which is the correct place for them until they
-  // are given one.
-  'backdrop', 'scrim',
+  // `overlay` is ONE intention whose variants are the translucent washes —
+  // `backdrop`, `scrim`, `strong`, `heavy` — renamed 2026-08-15, see
+  // `overlay-property-to-intention` in migrations.json.
+  //
+  // It spent its whole life in the PROPERTY slot, as an invented fourth
+  // alongside background/content/border. The justification was a real collision:
+  // these are washes applied OVER a background, and `--color-background-hover`
+  // would read as the hover state of the page canvas — the opaque gray-4 that
+  // already owns that meaning — rather than a wash painted on hover. Putting
+  // `overlay` in the intention slot resolves it inside the grammar: property
+  // says it paints a fill, intention says it STACKS rather than replaces. The
+  // fourth property retires instead of being entrenched.
+  //
+  // `backdrop` and `scrim` used to sit HERE, and this comment used to call them
+  // the model — the two washes that named what they were for while their four
+  // siblings named only a state and lived in UNSLOTTED. They still name what
+  // they are for; they are one slot to the right, exactly as raised/floating/
+  // sunken moved under `elevation` and the four status words under `utility`.
+  // And the four siblings finally have the intention they were waiting for.
+  'overlay',
 ]);
 
 /**
@@ -534,7 +579,7 @@ export const slotsOf = (name: string): Slots => {
 const familyOf = (name: string): string => {
   const words = name
     .replace(/^--color-/, '')
-    .replace(/^(background|content|border|overlay)(-|$)/, '')
+    .replace(/^(background|content|border)(-|$)/, '')
     .replace(/^on-/, '')
     .split('-')
     .filter(Boolean);
@@ -552,7 +597,7 @@ const familyOf = (name: string): string => {
  * the grouping. So the disagreement is flagged rather than resolved by moving the
  * token, because the name is not wrong — it is derived.
  */
-const INTENTION_IN_VALUE = /--color-(?:background|content|border)-(brand|accent|ai|info|success|warning|danger)/;
+const INTENTION_IN_VALUE = /--color-(?:background|content|border)-(?:on-)?(brand|accent|ai|utility)/;
 
 const derivedFrom = (name: string): string | null => {
   const node = semantic.find((t) => t.name === name);
@@ -579,9 +624,9 @@ const derivedFrom = (name: string): string | null => {
 const FAMILY_ORDER = [
   'default', 'elevation', 'field',
   'brand', 'accent', 'ai', 'link',
-  'info', 'success', 'warning', 'danger',
+  'utility',
   'disabled',
-  'backdrop', 'scrim',
+  'overlay',
   UNSLOTTED,
 ];
 
@@ -794,7 +839,7 @@ const NON_COLOR_FAMILIES: {
     label: 'width / height',
     match: /^--(sidebar|header|footer|content|chip-height)/,
     property: 'last',
-    note: 'semantic/layout.json and size.json, and really two families. `--chip-height-*` is a proper size ROLE (its sibling `--control-height-*` was deleted 2026-08-14 — inputs and buttons are sized by padding now). The layout set is down to `--sidebar-width` and `--sidebar-width-collapsed`: it leads with a REGION and puts the property last — the same shape colour had before it was flipped, where `--color-danger-border` became `--color-border-danger`. Flipping it would scatter a region across the file for no gain, since a sidebar has one dimension that matters and there is no cross-product to group by. The five siblings that WERE inconsistent (`--header-height`, `--footer-height`, and the `--content-*-width` trio that spelled its property three different ways) were deleted on 2026-08-14 rather than renamed — every one had zero readers, so the naming question resolved itself.',
+    note: 'semantic/layout.json and size.json, and really two families. `--chip-height-*` is a proper size ROLE (its sibling `--control-height-*` was deleted 2026-08-14 — inputs and buttons are sized by padding now). The layout set is down to `--sidebar-width` and `--sidebar-width-collapsed`: it leads with a REGION and puts the property last — the same shape colour had before it was flipped, where `--color-danger-border` became `--color-border-danger` (and `--color-border-utility-danger` a rename later). Flipping it would scatter a region across the file for no gain, since a sidebar has one dimension that matters and there is no cross-product to group by. The five siblings that WERE inconsistent (`--header-height`, `--footer-height`, and the `--content-*-width` trio that spelled its property three different ways) were deleted on 2026-08-14 rather than renamed — every one had zero readers, so the naming question resolved itself.',
   },
   {
     label: 'touch target',
@@ -849,7 +894,7 @@ export const nonColorGroups: {
  * The category IS the namespace, deliberately, rather than the rubric's
  * conceptual grouping. `categoryRows` files border colours and border widths
  * together under `border`, which is true as taxonomy and useless as a tree —
- * `--color-border-danger` would have to live in two places at once. One token,
+ * `--color-border-utility-danger` would have to live in two places at once. One token,
  * one node, keyed on what the name leads with.
  * ====================================================================== */
 
@@ -1254,13 +1299,40 @@ const walkFiles = (dir: string): string[] => {
 export interface CompositeUse {
   components: string[];
   files: string[];
+  /**
+   * Components that APPLY this class but never pull in the definitions, so the
+   * class is an inert string wherever they render it.
+   *
+   * A composite is a CLASS, and a class needs its rule in scope. Lit components
+   * render into a shadow root, which document stylesheets do not cross — they get
+   * the rule from `static styles = [typography, …]`. Astro components render into
+   * the page, but the hub's own BaseLayout does not import `typography.css`
+   * globally, so they self-import it. Either way the import IS the delivery, and a
+   * component that applies a class without one renders unstyled with no error
+   * anywhere: CSS has no diagnostic for a class that matches nothing.
+   */
+  undelivered: string[];
 }
+
+/*
+ * The dynamic-class resolver and the comment strip live in
+ * ./composite-classes, because the doc-page theming table needs exactly the
+ * same scan and a second copy is how the two counts drift apart. See that
+ * file for why a literal-only scan under-reported adoption by an order of
+ * magnitude.
+ */
+
+/** The import that puts the class definitions in scope, per component bucket. */
+const DELIVERY = {
+  ts: "from '../typography.js'",
+  astro: '@esa/tokens/typography.css',
+} as const;
 
 /** className (without the dot) -> who applies it. */
 export const compositeUsage: Map<string, CompositeUse> = (() => {
   const known = [...new Set(compositeClasses)].sort((a, b) => b.length - a.length);
   const map = new Map<string, CompositeUse>();
-  for (const c of known) map.set(c, { components: [], files: [] });
+  for (const c of known) map.set(c, { components: [], files: [], undelivered: [] });
   if (!known.length) return map;
 
   const RE = new RegExp(`(?<![\\w-])(${known.join('|')})(?![\\w-])`, 'g');
@@ -1271,24 +1343,102 @@ export const compositeUsage: Map<string, CompositeUse> = (() => {
       // typography.css DEFINES these classes; a definition is not a usage.
       if (rel === 'packages/tokens/src/typography.css') continue;
       if (COMPOSITE_USE_EXEMPT.some((e) => rel === e || rel.startsWith(`${e}/`))) continue;
-      const src = readFileSync(abs, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      const raw = readFileSync(abs, 'utf8');
+      const src = stripComments(raw);
 
       const inComponentDir = path.dirname(abs) === COMPONENTS_DIR;
-      const slug =
-        root.kind === 'component' && inComponentDir && /\.(astro|ts)$/.test(abs)
-          ? path.basename(abs).replace(/\.(astro|ts)$/, '')
-          : null;
+      const isComponent = root.kind === 'component' && inComponentDir && /\.(astro|ts)$/.test(abs);
+      const slug = isComponent ? path.basename(abs).replace(/\.(astro|ts)$/, '') : null;
 
-      for (const m of src.matchAll(RE)) {
-        const hit = map.get(m[1]);
-        if (!hit) continue;
-        if (slug) { if (!hit.components.includes(slug)) hit.components.push(slug); }
-        else if (!hit.files.includes(rel)) hit.files.push(rel);
+      const applied = new Set<string>();
+      for (const m of src.matchAll(RE)) applied.add(m[1]);
+      for (const c of dynamicClassNames(src)) if (map.has(c)) applied.add(c);
+      if (!applied.size) continue;
+
+      // Delivery is only decidable for a component, which owns its own styles. A
+      // page can legitimately inherit the import from the layout that wraps it.
+      const delivered =
+        !isComponent || raw.includes(abs.endsWith('.ts') ? DELIVERY.ts : DELIVERY.astro);
+
+      for (const c of applied) {
+        const hit = map.get(c)!;
+        if (slug) {
+          if (!hit.components.includes(slug)) hit.components.push(slug);
+          if (!delivered && !hit.undelivered.includes(slug)) hit.undelivered.push(slug);
+        } else if (!hit.files.includes(rel)) hit.files.push(rel);
       }
     }
   }
-  for (const v of map.values()) { v.components.sort(); v.files.sort(); }
+  for (const v of map.values()) { v.components.sort(); v.files.sort(); v.undelivered.sort(); }
   return map;
+})();
+
+export interface HandAssembled {
+  component: string;
+  line: number;
+  decl: string;
+}
+
+/**
+ * Typographic declarations in a component that still assemble type instead of
+ * naming a role — the acceptance test for the composite layer.
+ *
+ * The goal this measures is "every rendered text names a type role", so the count
+ * belongs on the page rather than in a migration note: a number nobody renders is a
+ * number that goes stale the first time someone adds a component. Zero is the
+ * target, and the list names its own exceptions rather than hiding them.
+ *
+ * ALLOWED, and therefore not counted:
+ *  - `line-height` reading a `--line-height-*` rung. A composite sets one leading,
+ *    but the same role appears both flowing and flush (an input value and a
+ *    paragraph are both `body`), so the box states its own leading. Both halves are
+ *    tokens; nothing is invented.
+ *  - `font-family: inherit` on a native button/input — a UA reset, not a type role.
+ *  - a read of a component's own tier-3 hook (public, or the `--_` private that
+ *    wraps one). That hook is the spoke's override surface and deleting it would
+ *    break a spoke theme silently — an alias rescues `var(--old)`, never
+ *    `--old: value`.
+ *  - `font-family` reading a `--typography-font-family-*` ingredient on an overlay
+ *    root. This is the ONE ingredient read that is not assembly: a popover or
+ *    dialog hosts SLOTTED content it does not own, so it cannot name a role for
+ *    text it never sees. Establishing the face is all it can honestly do.
+ */
+export const handAssembledType: HandAssembled[] = (() => {
+  const out: HandAssembled[] = [];
+  const PROPS = /^\s*(font-size|font-weight|font-family|letter-spacing|text-transform)\s*:\s*([^;]+);/;
+  // Reading one of these IS assembling: they are the raw scale and the ingredients,
+  // one rung below the role a component should be naming.
+  const RAW = /^--(font-size-|font-weight-|letter-spacing-|text-transform-|typography-font-)/;
+
+  for (const abs of walkFiles(COMPONENTS_DIR)) {
+    if (!/\.(astro|ts)$/.test(abs)) continue;
+    const component = path.basename(abs).replace(/\.(astro|ts)$/, '');
+    const lines = stripComments(readFileSync(abs, 'utf8')).split('\n');
+
+    lines.forEach((line, i) => {
+      const m = PROPS.exec(line);
+      if (!m) return;
+      const [, prop, value] = m;
+      if (prop === 'font-family' && /^inherit\b/.test(value.trim())) return;
+      // A declaration that DEFINES a hook is the hook's home, not a call site.
+      if (/^\s*--/.test(line)) return;
+      // The slot-root exemption. Only font-family, and only the face ingredient.
+      if (prop === 'font-family' && /var\(\s*--typography-font-family-/.test(value)) return;
+
+      // `_` matters: a component's private hook is `--_stat-value-size`, and it is
+      // the wrapper the PUBLIC `--stat-value-size` is read through. Omitting it from
+      // the class made every rule-6 hook look like raw assembly.
+      const firstVar = /var\(\s*(--[a-z0-9_-]+)/.exec(value);
+      if (firstVar && !RAW.test(firstVar[1])) return; // reads a component hook
+      // Exact match, not a prefix: `/^0\b/` also accepts `0.02em`, because there is
+      // a word boundary between the 0 and the dot. That one character silently
+      // exempted every bare letter-spacing literal in the kit.
+      if (!firstVar && /^(inherit|normal|0)$/.test(value.trim())) return;
+
+      out.push({ component, line: i + 1, decl: `${prop}: ${value.trim()}` });
+    });
+  }
+  return out.sort((a, b) => a.component.localeCompare(b.component) || a.line - b.line);
 })();
 
 export interface TypePropRow {

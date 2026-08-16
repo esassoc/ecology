@@ -13,6 +13,11 @@ interface Props {
 }
 const { active = false, message, transparent = false } = Astro.props;
 
+// TYPE: the status message is short prose under the spinner — `body-sm`. The import is
+// the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
 const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transparent']
   .filter(Boolean)
   .join(' ');
@@ -22,7 +27,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     <div class="esa-loading-overlay__backdrop">
       <div class="esa-loading-overlay__content">
         <span class="esa-loading-overlay__spinner" role="status" aria-label="Loading"></span>
-        {message && <p class="esa-loading-overlay__message">{message}</p>}
+        {message && <p class="esa-loading-overlay__message typography-body-sm">{message}</p>}
       </div>
     </div>
   )}
@@ -72,7 +77,6 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
 
   .esa-loading-overlay__message {
     margin: 0;
-    font-size: var(--font-size-150, 0.875rem);
     color: var(--loading-overlay-message-color, var(--color-content-default-secondary, #525252));
     text-align: center;
   }

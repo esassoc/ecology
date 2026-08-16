@@ -64,7 +64,7 @@ const spokeThemes = existsSync(stylesDir)
 const TOKEN_SOURCES = [
   join(HUB, 'packages/tokens/dist/tokens.css'),
   join(HUB, 'packages/tokens/src/component-tokens.css'),
-  join(HUB, 'packages/tokens/src/type-roles.css'),
+  join(HUB, 'packages/tokens/src/typography.css'),
   ...spokeThemes,
 ];
 const defined = new Set();

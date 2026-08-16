@@ -314,7 +314,7 @@ export class EsaButtonToggle extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
 
@@ -367,7 +367,7 @@ export class EsaButtonToggle extends LitElement {
 
     .option:hover:not(:disabled):not(.option--selected) {
       color: var(--color-content-default, #171717);
-      background: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
+      background: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
     }
 
     .option:focus-visible {
@@ -397,7 +397,7 @@ export class EsaButtonToggle extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
   `,
   ];

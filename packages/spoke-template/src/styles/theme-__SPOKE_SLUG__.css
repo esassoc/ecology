@@ -74,10 +74,17 @@
 
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
-     where it's standalone. */
-  --color-background-success:  var(--color-green-9);   /* __FILL__ */
-  --color-background-warning:  var(--color-orange-9);  /* __FILL__ */
-  --color-background-info:     /* __FILL__ */ #228be6;
+     where it's standalone.
+
+     RENAMED 2026-08-15: these were `--color-background-{success,warning,info}`
+     before `utility` became their intention. If your spoke was scaffolded from
+     an older template it still DECLARES the old names, and a declaration gets
+     no alias rescue — the hub can only redirect a `var()` read. Those three
+     lines are inert until you run /update-tokens, and inert here means your
+     brand's success green silently reverts to Ecology's. */
+  --color-background-utility-success:  var(--color-green-9);   /* __FILL__ */
+  --color-background-utility-warning:  var(--color-orange-9);  /* __FILL__ */
+  --color-background-utility-info:     /* __FILL__ */ #228be6;
   --color-background-ai:       var(--color-blue-9);    /* __FILL__ */
   --color-background-ai-hover: var(--color-blue-10);   /* __FILL__ */
 

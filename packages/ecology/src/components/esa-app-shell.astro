@@ -23,6 +23,11 @@
 // Lit shadow DOM).
 import EsaAppBar from './esa-app-bar.astro';
 import EsaButton from './esa-button.astro';
+// The omnibox trigger is UI text at the compact step (`body-sm`); its hotkey hint is
+// the same label rung esa-kbd uses; the main region carries `body-md` so app content
+// slotted into it lands on a role by default. The import is the Astro half of the
+// composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 export interface AppShellNavItem {
   key?: string;
@@ -113,10 +118,10 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     </button>
 
     {hasSearch && (
-      <button class="esa-app-shell__search" data-shell-search={uid} type="button" aria-label="Search">
+      <button class="esa-app-shell__search typography-body-sm" data-shell-search={uid} type="button" aria-label="Search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <span class="esa-app-shell__search-label">{searchPlaceholder}</span>
-        <kbd class="esa-app-shell__search-kbd">/</kbd>
+        <kbd class="esa-app-shell__search-kbd typography-label-xs">/</kbd>
       </button>
     )}
 
@@ -140,7 +145,9 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
       </a>
     </esa-sidebar-nav>
 
-    <main class="esa-app-shell__content"><slot /></main>
+    {/* `body-md` is the default for whatever the app renders here — a page that
+        composes esa-* legos has each of them override it with their own role. */}
+    <main class="esa-app-shell__content typography-body-md"><slot /></main>
   </div>
 
   {hasSearch && (
@@ -232,7 +239,9 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
     border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-surface, 8px);
     background: var(--color-background-elevation-raised, #fff); color: var(--color-content-default-muted, #737373);
-    font-family: inherit; font-size: var(--font-size-150, 0.875rem);
+    /* Kept: a UA reset on a native <button>, not a type role — the rest of the type
+       comes from .typography-body-sm on this element. */
+    font-family: inherit;
     cursor: pointer; transition: border-color 150ms ease;
   }
   .esa-app-shell__search:hover { border-color: var(--color-border-default-strong, #d4d4d4); }
@@ -242,7 +251,9 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     min-width: 18px; height: 18px; padding: 0 5px;
     border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-control, 4px);
-    background: var(--color-background-elevation-sunken, #f2f6f3); font-size: var(--font-size-100, 0.8125rem);
+    background: var(--color-background-elevation-sunken, #f2f6f3);
+    /* Single glyph in an 18px box — flush, matching esa-kbd. */
+    line-height: var(--line-height-none, 1);
   }
 
   /* Logo lockup at the top of the sidenav. */
@@ -258,10 +269,14 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   esa-sidebar-nav[collapsed] .esa-app-shell__brand { justify-content: center; padding-inline: 0; }
   esa-sidebar-nav[collapsed] .esa-app-shell__wordmark { display: none; }
   .esa-app-shell__mark { display: inline-flex; flex: none; color: var(--color-content-brand, #3a7c59); }
+  /* Brand, not a type role — the four hooks are tier-3 so a spoke can re-skin the
+     wordmark without touching a composite every other component shares. */
   .esa-app-shell__wordmark {
-    font-family: var(--typography-font-family-display, var(--typography-font-family-sans, sans-serif));
-    font-size: var(--font-size-300, 1.125rem); font-weight: var(--typography-font-weight-bold, 650);
-    letter-spacing: -0.01em; line-height: var(--line-height-none, 1);
+    font-family: var(--app-shell-wordmark-font, var(--typography-font-family-sans, sans-serif));
+    font-size: var(--app-shell-wordmark-size, 1.125rem);
+    font-weight: var(--app-shell-wordmark-weight, 650);
+    letter-spacing: var(--app-shell-wordmark-tracking, -0.01em);
+    line-height: var(--line-height-none, 1);
   }
 
   .esa-app-shell__body { display: flex; flex: 1; min-height: 0; }

@@ -12,6 +12,12 @@
 // This is a SINGLE disclosure, not a single-open accordion group — compose several for a
 // stacked set; each opens independently, matching native <details> semantics.
 import EsaIcon from './esa-icon.astro';
+// TYPE: the summary is a UI label on a clickable row, so `label-sm-strong` — one role
+// instead of a size + a weight. The body names `body-md`, which slotted content
+// inherits: a default for whatever the host drops in, and one any esa-* slotted there
+// overrides with its own class. The import is the Astro half of the composite
+// mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 interface Props {
   /** Summary label (required). */
@@ -30,11 +36,11 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
 ---
 
 <details class:list={['esa-collapsible', { 'esa-collapsible--flush': flush }]} open={open}>
-  <summary class="esa-collapsible__summary">
+  <summary class="esa-collapsible__summary typography-label-sm-strong">
     {icon && <EsaIcon name={icon} paths={iconPaths} size="sm" />}
     <span class="esa-collapsible__title">{title}</span>
   </summary>
-  <div class="esa-collapsible__body"><slot /></div>
+  <div class="esa-collapsible__body typography-body-md"><slot /></div>
 </details>
 
 <style>
@@ -57,8 +63,6 @@ const { title, icon, iconPaths, open = false, flush = false } = Astro.props;
     align-items: center;
     gap: var(--spacing-200, 0.5rem);
     padding: var(--spacing-300, 0.75rem) var(--collapsible-padding-x, var(--spacing-400, 1rem));
-    font-size: var(--font-size-150, 0.9375rem);
-    font-weight: var(--typography-font-weight-semibold, 550);
     color: var(--collapsible-title-color, var(--color-content-default, #171717));
     cursor: pointer;
     list-style: none;

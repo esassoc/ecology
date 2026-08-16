@@ -103,7 +103,7 @@ import Section from '@esa/docs/Section.astro';
       <li><strong>Shell:</strong> <code>--form-border-color → --color-border</code>, <code>--form-radius-medium → --radius-200</code>; focus uses <code>--form-border-color-focus → --color-background-brand</code> + <code>--form-focus-ring-width</code>.</li>
       <li><strong>Toolbar:</strong> <code>--color-background-elevation-sunken</code> background, buttons <code>--color-content-default-secondary</code> hovering to <code>--color-background-elevation-raised</code>; dividers <code>--color-border</code>; gap <code>--spacing-050</code>.</li>
       <li><strong>Content:</strong> <code>--color-background-elevation-raised</code> background, <code>--color-content-default</code> text, padding <code>--spacing-300</code>; placeholder <code>--color-content-default-muted</code>.</li>
-      <li><strong>Label / required:</strong> <code>--color-content-default</code> label, <code>--color-background-danger</code> asterisk.</li>
+      <li><strong>Label / required:</strong> <code>--color-content-default</code> label, <code>--color-background-utility-danger</code> asterisk.</li>
       <li><strong>Focus rings:</strong> <code>--focus-ring-width</code> / <code>--focus-ring-color</code> on toolbar buttons.</li>
     </ul>
   </Section>
@@ -114,8 +114,8 @@ import Section from '@esa/docs/Section.astro';
   .lede { max-width: 70ch; }
   .ref-banner {
     padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    background: var(--color-background-warning-subtle, #fffbeb);
-    border: 1px solid var(--color-border-warning, #fde68a);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
+    border: 1px solid var(--color-border-utility-warning, #fde68a);
     border-radius: var(--radius-200, 8px);
     color: var(--color-content-default-secondary, #525252);
     font-size: var(--font-size-150, 0.875rem);
@@ -132,7 +132,7 @@ import Section from '@esa/docs/Section.astro';
 
   .editor-mock { display: block; }
   .ed-label { display: block; margin-bottom: var(--spacing-100, 0.25rem); font-size: var(--font-size-150, 0.875rem); font-weight: var(--typography-font-weight-medium, 500); color: var(--color-content-default, #171717); }
-  .ed-required { color: var(--color-content-danger, #ce2c31); }
+  .ed-required { color: var(--color-content-utility-danger, #ce2c31); }
   .ed-shell { border: 1px solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-200, 8px); overflow: hidden; }
   .ed-shell--disabled { opacity: 0.5; }
   .ed-toolbar { display: flex; align-items: center; gap: 2px; padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem); background: var(--color-background-elevation-sunken, #efefef); border-bottom: 1px solid var(--color-border-default, #e5e5e5); }

@@ -62,10 +62,10 @@ const semanticGroups = [
       { token: '--color-background-brand-subtle', role: 'Brand-tinted sections' },
       { token: '--color-background-brand-muted', role: 'Chips, tags, filter pills' },
       { token: '--color-background-brand-active', role: 'Pressed brand fill' },
-      { token: '--color-background-success', role: 'Success fill' },
-      { token: '--color-background-warning', role: 'Warning fill' },
-      { token: '--color-background-danger', role: 'Danger fill' },
-      { token: '--color-background-info', role: 'Info fill' },
+      { token: '--color-background-utility-success', role: 'Success fill' },
+      { token: '--color-background-utility-warning', role: 'Warning fill' },
+      { token: '--color-background-utility-danger', role: 'Danger fill' },
+      { token: '--color-background-utility-info', role: 'Info fill' },
       { token: '--color-background-disabled', role: 'The fill of a disabled input, select, checkbox or dropzone' },
     ],
   },
@@ -80,10 +80,10 @@ const semanticGroups = [
       { token: '--color-content-default-knockout', role: 'Text on inverse backgrounds' },
       { token: '--color-content-link', role: 'Links' },
       { token: '--color-content-brand', role: 'Brand-coloured text' },
-      { token: '--color-content-success', role: 'Success text' },
-      { token: '--color-content-warning', role: 'Warning text' },
-      { token: '--color-content-danger', role: 'Danger text' },
-      { token: '--color-content-info', role: 'Info text' },
+      { token: '--color-content-utility-success', role: 'Success text' },
+      { token: '--color-content-utility-warning', role: 'Warning text' },
+      { token: '--color-content-utility-danger', role: 'Danger text' },
+      { token: '--color-content-utility-info', role: 'Info text' },
       { token: '--color-content-disabled', role: 'Disabled labels' },
     ],
   },
@@ -94,10 +94,10 @@ const semanticGroups = [
     rows: [
       { token: '--color-content-on-brand', role: 'On --color-background-brand' },
       { token: '--color-content-on-brand-secondary', role: 'On --color-background-brand-secondary' },
-      { token: '--color-content-on-success', role: 'On --color-background-success' },
-      { token: '--color-content-on-warning', role: 'On --color-background-warning' },
-      { token: '--color-content-on-danger', role: 'On --color-background-danger' },
-      { token: '--color-content-on-info', role: 'On --color-background-info' },
+      { token: '--color-content-on-utility-success', role: 'On --color-background-utility-success' },
+      { token: '--color-content-on-utility-warning', role: 'On --color-background-utility-warning' },
+      { token: '--color-content-on-utility-danger', role: 'On --color-background-utility-danger' },
+      { token: '--color-content-on-utility-info', role: 'On --color-background-utility-info' },
     ],
   },
   {
@@ -109,10 +109,10 @@ const semanticGroups = [
       { token: '--color-border-default-strong', role: 'Emphasised border' },
       { token: '--color-border-default-focus', role: 'Focus ring' },
       { token: '--color-border-brand', role: 'Brand-tinted border' },
-      { token: '--color-border-success', role: 'Success border' },
-      { token: '--color-border-warning', role: 'Warning border' },
-      { token: '--color-border-danger', role: 'Danger border' },
-      { token: '--color-border-info', role: 'Info border' },
+      { token: '--color-border-utility-success', role: 'Success border' },
+      { token: '--color-border-utility-warning', role: 'Warning border' },
+      { token: '--color-border-utility-danger', role: 'Danger border' },
+      { token: '--color-border-utility-info', role: 'Info border' },
       { token: '--color-border-disabled', role: 'The border of a disabled input, select, checkbox or dropzone' },
     ],
   },
@@ -152,7 +152,7 @@ const semanticGroups = [
 
   <Section id="semantic" title="Semantic tokens">
     <p>What components actually consume. Re-skinning a project = reassigning these.</p>
-    <p>Every name reads <code>color</code> → <strong>property</strong> → <strong>intention</strong> → <strong>variant</strong> → <strong>state</strong>, and the property is always one of <code>background</code>, <code>content</code> or <code>border</code>. So the token you want is guessable: a danger border is <code>--color-border-danger</code>, never <code>--color-danger-border</code>.</p>
+    <p>Every name reads <code>color</code> → <strong>property</strong> → <strong>intention</strong> → <strong>variant</strong> → <strong>state</strong>, and the property is always one of <code>background</code>, <code>content</code> or <code>border</code>. So the token you want is guessable: a danger border is <code>--color-border-utility-danger</code>, never <code>--color-danger-border</code>.</p>
     {semanticGroups.map((g) => (
       <>
         <h3><code>--color-{g.property}-*</code></h3>

@@ -63,6 +63,7 @@ const {
 const t2 = await import('../../data/tier2-naming');
 const t3 = await import('../../data/tier3-naming');
 const t1 = await import('../../data/tier1-naming');
+const { unwiredSlots } = await import('../../data/composite-classes');
 
 const TIER_NOTE = {
   component:
@@ -1423,8 +1424,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <p class="resolved">
           <span class="slot-flag f-match">resolved</span>
           The check returns zero. It found 6 across 5 files. The live ones were in
-          <code>packages/spoke-template/</code> — <code>--color-background-success</code>,
-          <code>--color-background-warning</code> and <code>--color-background-ai</code> were <code>var()</code> reads of
+          <code>packages/spoke-template/</code> — <code>--color-background-utility-success</code>,
+          <code>--color-background-utility-warning</code> and <code>--color-background-ai</code> were <code>var()</code> reads of
           names that no longer existed, so every new spoke started with those properties dropped.
           The rest were documentation: SPEC.md, CLAUDE.md and README.md all taught
           <code>--color-teal-900</code>.
@@ -1513,7 +1514,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-note">
         Category here is the NAMESPACE, not the rubric&rsquo;s taxonomy: the rubric files border
         colours and border widths together under <code>border</code>, which is true but cannot be a
-        tree &mdash; <code>--color-border-danger</code> would need to be in two places. One token,
+        tree &mdash; <code>--color-border-utility-danger</code> would need to be in two places. One token,
         one node.{' '}
         <b>{t2.categoryCoverage.grouped}</b> of <b>{t2.categoryCoverage.total}</b> tier-2 tokens are
         filed below.
@@ -1616,6 +1617,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                     umbrella (<code>neutral</code>, then <code>default</code>-as-a-bucket, then{' '}
                     <code>utility</code>) to stand in for the slot that had been deleted. Anything
                     whose slot 2 is not an intention lands here instead of being absorbed.
+                    {' '}<code>utility</code> is the one that came back, and the difference is
+                    the whole test: it was a heading with no token behind it, and since
+                    2026-08-15 the tokens carry the word &mdash; <code>--color-background-utility-danger</code>,
+                    not <code>--color-background-danger</code> under a label nobody could
+                    have guessed. An umbrella you can read off a name is just an intention.
                   </p>
                 )}
                 {/* Scrolls inside its own box. Six columns of token names and
@@ -1736,6 +1742,73 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
               {' '}<code>typography.css</code> on all {t2.typeSlotCoverage.total} rows, because a component
               applies the CLASS and never reads the tokens.
             </p>
+            {/* The acceptance test for this whole layer, rendered rather than written
+                down: a migration note saying "we finished" goes stale the first time
+                someone adds a component, and nothing here would notice. */}
+            <p class="cat-gap">
+              <b>
+                Hand-assembled type: {t2.handAssembledType.length}
+                {' '}declaration{t2.handAssembledType.length === 1 ? '' : 's'}
+              </b>
+              {' '}still set a size, weight, family or tracking from the raw scale instead of
+              naming a role. Zero is the target.
+              {t2.handAssembledType.length === 0 ? (
+                <span class="ok"> Every rendered text in the kit names a composite.</span>
+              ) : (
+                <details class="uses">
+                  <summary><span class="pill req">{
+                    new Set(t2.handAssembledType.map((h) => h.component)).size
+                  } component</span></summary>
+                  <ul>
+                    {t2.handAssembledType.map((h) => (
+                      <li><code>{h.component}</code>:{h.line} — <code>{h.decl}</code></li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              {' '}Three things are deliberately NOT counted, because each is a token read
+              rather than an invention: a <code>line-height</code> naming a
+              {' '}<code>--line-height-*</code> rung (a role appears both flowing and flush,
+              so the box states its own leading), <code>font-family: inherit</code> on a
+              native button or input (a UA reset), and a read of the component&rsquo;s own
+              public tier-3 hook, which carries the composite token as its fallback and is
+              the surface a spoke overrides.
+            </p>
+            {/* The other half of the same question. A component owning zero
+                hand-assembled declarations still leaves text unwired if its SLOTS
+                land on nothing — that is text the component never sees, but it can
+                still state a default, because a composite on the slot's container
+                reaches slotted content through ordinary inheritance. */}
+            <p class="cat-gap">
+              <b>
+                Slots with no type role: {unwiredSlots.length}
+              </b>
+              {' '}A composite on a slot&rsquo;s container reaches slotted content through the
+              flattened tree, and anything slotted in that names its own role overrides it —
+              so a container can state a default without dictating. A slot with no default is
+              text with no role.
+              {unwiredSlots.length === 0 ? (
+                <span class="ok"> Every slot that can receive text names one.</span>
+              ) : (
+                <details class="uses">
+                  <summary><span class="pill req">{
+                    new Set(unwiredSlots.map((s) => s.component)).size
+                  } component</span></summary>
+                  <ul>
+                    {unwiredSlots.map((s) => (
+                      <li>
+                        <code>{s.component}</code>:{s.line} — slot <code>{s.slot}</code>
+                        {' '}in <code>{s.container}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              {' '}Icon and logo slots are exempt by name — they receive a mark, not text.
+              This one is a HEURISTIC and says so: it reads the nearest preceding
+              {' '}<code>class</code> rather than building a DOM, so a slot whose container sits
+              several elements up can read as unwired. Treat it as a candidate list.
+            </p>
 
             {t2.typographyGroups.map((g) => (
               <details class={g.isUnclassified && g.total === 0 ? 'tok-group is-empty' : 'tok-group'} data-group>
@@ -1781,18 +1854,43 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                               <span class="composite-edges">
                                 {/* THE question this cell exists to answer: which
                                     components apply this composite. Spelled out
-                                    rather than collapsed behind a count — a list of
-                                    component names is the useful artefact, and for
-                                    26 of 28 composites that list is EMPTY, which is
-                                    a finding you should not have to click to see. */}
+                                    rather than collapsed behind a count — the list
+                                    of component names is the useful artefact, and an
+                                    EMPTY one is a finding you should not have to
+                                    click to see. Note the scanner resolves the size
+                                    maps — a class name interpolated from LABEL_TYPE
+                                    or VALUE_TYPE — as well as literal class names; a
+                                    literal-only scan reported two adopted composites
+                                    where the real figure was about seventeen. */}
                                 <span class="used-by-comp">
                                   <span class="wired-label">used by components</span>
                                   {v.usedBy.components.length > 0 ? (
-                                    v.usedBy.components.map((c) => <code class="comp-chip">{c}</code>)
+                                    v.usedBy.components.map((c) => (
+                                      <code
+                                        class:list={['comp-chip', v.usedBy.undelivered.includes(c) && 'inert']}
+                                        title={
+                                          v.usedBy.undelivered.includes(c)
+                                            ? `${c} applies this class but never imports the definitions — it renders unstyled there.`
+                                            : undefined
+                                        }
+                                      >
+                                        {c}
+                                      </code>
+                                    ))
                                   ) : (
                                     <span class="pill none">none</span>
                                   )}
                                 </span>
+                                {/* A class that matches no rule is silent — CSS has no
+                                    diagnostic for it, so an undelivered composite renders
+                                    at whatever the element inherits and looks merely a bit
+                                    wrong. Marking it here is the only place it surfaces. */}
+                                {v.usedBy.undelivered.length > 0 && (
+                                  <span class="undelivered-note">
+                                    ⚠ {v.usedBy.undelivered.length} of these never import the
+                                    definitions — the class is inert there
+                                  </span>
+                                )}
                                 {v.usedBy.files.length > 0 && (
                                   <details class="uses">
                                     <summary><span class="pill">{v.usedBy.files.length} file</span></summary>
@@ -2131,8 +2229,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   /* Page-scoped styles are normally banned in this system — allowed here only
      because this page is debug-only and never ships. */
   .tokens-debug .dev-banner {
-    border: 1px dashed var(--color-content-warning, #ab6400);
-    background: var(--color-background-warning-subtle, #fffbeb);
+    border: 1px dashed var(--color-content-utility-warning, #ab6400);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
     color: var(--color-content-default, #111);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-200, 6px);
@@ -2155,9 +2253,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-default-secondary, #666); }
   .tokens-debug .tally-cell.t3 { border-left: 3px solid var(--color-background-ai, #b45309); }
   .tokens-debug .tally-cell.t2 { border-left: 3px solid var(--color-background-brand, #16a34a); }
-  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-content-info, #0d74ce); }
-  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-content-warning, #ab6400); }
-  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-content-success, #5c7c2f); }
+  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-content-utility-info, #0d74ce); }
+  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-content-utility-warning, #ab6400); }
+  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-content-utility-success, #5c7c2f); }
   .tokens-debug .filter-bar {
     position: sticky;
     top: 0;
@@ -2195,13 +2293,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.9rem;
     /* Generous target: the whole summary row is clickable, not just the marker. */
   }
-  /* -strong (step 11) is the "colored text on surfaces" step. --color-background-danger /
-     --color-background-warning are step 9 — solid FILL, for a background with dark text on
-     it. As text on white, --color-background-warning (#ffc53d) reads at ~1.7:1. The old
+  /* -strong (step 11) is the "colored text on surfaces" step. --color-background-utility-danger /
+     --color-background-utility-warning are step 9 — solid FILL, for a background with dark text on
+     it. As text on white, --color-background-utility-warning (#ffc53d) reads at ~1.7:1. The old
      fallbacks here were hand-darkened to compensate, which never took effect
      because the tokens are defined. */
-  .tokens-debug details.check.bad > summary { color: var(--color-content-danger, #ce2c31); }
-  .tokens-debug details.check.warn > summary { color: var(--color-content-warning, #ab6400); }
+  .tokens-debug details.check.bad > summary { color: var(--color-content-utility-danger, #ce2c31); }
+  .tokens-debug details.check.warn > summary { color: var(--color-content-utility-warning, #ab6400); }
   .tokens-debug .check-count, .tokens-debug .group-count {
     font-variant-numeric: tabular-nums;
     background: var(--color-background-elevation-sunken, #f0f0f0);
@@ -2242,9 +2340,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-content-warning, #ab6400);
-    border: 1px solid var(--color-border-warning, #fcd34d);
-    background: var(--color-background-warning-subtle, #fffbeb);
+    color: var(--color-content-utility-warning, #ab6400);
+    border: 1px solid var(--color-border-utility-warning, #fcd34d);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
   }
@@ -2253,8 +2351,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .cat-gap {
     margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
     padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
-    border-left: 3px solid var(--color-content-warning, #ab6400);
-    background: var(--color-background-warning-subtle, #fffbeb);
+    border-left: 3px solid var(--color-content-utility-warning, #ab6400);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
     border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
     font-size: 0.82rem;
     line-height: 1.55;
@@ -2286,14 +2384,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     max-width: 72ch;
   }
   .tokens-debug .core-wrap { margin-bottom: var(--spacing-400, 16px); }
-  .tokens-debug .tok-group.is-core { border-color: var(--color-border-info, #93c5fd); }
+  .tokens-debug .tok-group.is-core { border-color: var(--color-border-utility-info, #93c5fd); }
   .tokens-debug .core-flag {
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-content-info, #0d74ce);
-    border: 1px solid var(--color-border-info, #93c5fd);
-    background: var(--color-background-info-subtle, #eff6ff);
+    color: var(--color-content-utility-info, #0d74ce);
+    border: 1px solid var(--color-border-utility-info, #93c5fd);
+    background: var(--color-background-utility-info-subtle, #eff6ff);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
   }
@@ -2364,7 +2462,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
      than disappear into the muted text around it. */
   .tokens-debug .pill.none {
     opacity: 1;
-    color: var(--color-content-danger, #b4392f);
+    color: var(--color-content-utility-danger, #b4392f);
     border-color: currentColor;
   }
   .tokens-debug .c-variant .wired-ing {
@@ -2393,6 +2491,38 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .c-variant .wired-ing code b {
     font-weight: 600;
     color: var(--color-content-default, #1c1c1c);
+  }
+  .tokens-debug .c-variant .used-by-comp {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px;
+  }
+  /* A component name is the payload of this whole tree — it gets the only
+     high-contrast treatment in the cell, so a populated composite is findable by
+     scanning rather than by reading. */
+  .tokens-debug .c-variant .comp-chip {
+    font-size: 0.62rem;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background: var(--color-background-brand-muted, #e6f4ea);
+    border: 1px solid var(--color-border-brand, #b7dfc4);
+    color: var(--color-content-brand, #1e6b39);
+  }
+  /* Applies the class, never imports the definitions. It reads as adoption in
+     every other view and renders as nothing in the browser, so it must not look
+     like the chips beside it. */
+  .tokens-debug .c-variant .comp-chip.inert {
+    background: var(--color-background-utility-danger-subtle, #fef2f2);
+    border-color: var(--color-border-utility-danger, #fecaca);
+    color: var(--color-content-utility-danger, #ce2c31);
+    text-decoration: line-through;
+  }
+  .tokens-debug .c-variant .undelivered-note {
+    display: block;
+    margin-block-start: 2px;
+    font-size: 0.62rem;
+    color: var(--color-content-utility-danger, #ce2c31);
   }
   .tokens-debug .on-prefix {
     display: inline-block;
@@ -2436,9 +2566,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .k-component { background: var(--color-background-ai-subtle, #fff7ed); border-color: var(--color-background-ai, #b45309); }
   .tokens-debug .k-semantic { background: var(--color-background-brand-subtle, #f0fdf4); border-color: var(--color-border-brand, #86efac); }
-  .tokens-debug .k-primitive { background: var(--color-background-info-subtle, #eff6ff); border-color: var(--color-border-info, #93c5fd); }
+  .tokens-debug .k-primitive { background: var(--color-background-utility-info-subtle, #eff6ff); border-color: var(--color-border-utility-info, #93c5fd); }
   .tokens-debug .k-raw { background: var(--color-background-elevation-sunken, #f4f4f4); border-color: var(--color-border-default, #d4d4d4); }
-  .tokens-debug .k-unknown { background: var(--color-background-danger-subtle, #fef2f2); border-color: var(--color-background-danger, #dc2626); }
+  .tokens-debug .k-unknown { background: var(--color-background-utility-danger-subtle, #fef2f2); border-color: var(--color-background-utility-danger, #dc2626); }
   .tokens-debug .arrow { color: var(--color-content-default-muted, #999); margin: 0 4px; }
   .tokens-debug .c-value { white-space: nowrap; }
   .tokens-debug .swatch {
@@ -2457,7 +2587,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 1px 6px;
     font-size: 0.7rem;
   }
-  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-content-warning, #ab6400); }
+  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-content-utility-warning, #ab6400); }
   .tokens-debug tr[hidden] { display: none; }
 
   /* ---------------------------------------------- tier-2 naming audit */
@@ -2496,8 +2626,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     margin-bottom: var(--spacing-200, 8px);
   }
   .tokens-debug .grammar code { display: block; font-size: 0.78rem; line-height: 1.7; word-break: break-word; }
-  .tokens-debug .grammar > div:first-child code { color: var(--color-content-success, #2a7e3b); }
-  .tokens-debug .grammar > div:last-child code { color: var(--color-content-warning, #a35200); }
+  .tokens-debug .grammar > div:first-child code { color: var(--color-content-utility-success, #2a7e3b); }
+  .tokens-debug .grammar > div:last-child code { color: var(--color-content-utility-warning, #a35200); }
 
   .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-content-default-muted, #999); width: 1.5rem; }
   .tokens-debug .slots .slot-name { font-weight: 600; white-space: nowrap; }
@@ -2514,27 +2644,27 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border: 1px solid transparent;
   }
   .tokens-debug .f-absent, .tokens-debug .f-missing {
-    color: var(--color-content-danger, #c62a2f);
-    background: var(--color-background-danger-subtle, #fef2f2);
-    border-color: var(--color-border-danger, #fbbcbc);
+    color: var(--color-content-utility-danger, #c62a2f);
+    background: var(--color-background-utility-danger-subtle, #fef2f2);
+    border-color: var(--color-border-utility-danger, #fbbcbc);
   }
   .tokens-debug .f-partial, .tokens-debug .f-renamed {
-    color: var(--color-content-warning, #a35200);
-    background: var(--color-background-warning-subtle, #fffbeb);
-    border-color: var(--color-border-warning, #fcd34d);
+    color: var(--color-content-utility-warning, #a35200);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
+    border-color: var(--color-border-utility-warning, #fcd34d);
   }
   .tokens-debug .f-match {
-    color: var(--color-content-success, #2a7e3b);
-    background: var(--color-background-success-subtle, #f0fdf4);
-    border-color: var(--color-border-success, #a7e8a7);
+    color: var(--color-content-utility-success, #2a7e3b);
+    background: var(--color-background-utility-success-subtle, #f0fdf4);
+    border-color: var(--color-border-utility-success, #a7e8a7);
   }
   .tokens-debug .f-extra {
     color: var(--color-content-default-secondary, #666);
     background: var(--color-background-elevation-sunken, #f4f4f4);
     border-color: var(--color-border-default, #d4d4d4);
   }
-  .tokens-debug tr.slot-absent td { background: var(--color-background-danger-subtle, #fef2f2); }
-  .tokens-debug tr.slot-match td { background: var(--color-background-success-subtle, #f0fdf4); }
+  .tokens-debug tr.slot-absent td { background: var(--color-background-utility-danger-subtle, #fef2f2); }
+  .tokens-debug tr.slot-match td { background: var(--color-background-utility-success-subtle, #f0fdf4); }
   .tokens-debug tr.row-zero code { color: var(--color-content-default-muted, #999); }
 
   .tokens-debug code.vocab {
@@ -2546,14 +2676,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     background: var(--color-background-elevation-sunken, #f4f4f4);
     border: 1px solid var(--color-border-default-subtle, #e5e5e5);
   }
-  .tokens-debug code.vocab.st { background: var(--color-background-info-subtle, #eff6ff); border-color: var(--color-border-info, #93c5fd); }
+  .tokens-debug code.vocab.st { background: var(--color-background-utility-info-subtle, #eff6ff); border-color: var(--color-border-utility-info, #93c5fd); }
   /* Knocked out, literally — the chip renders as its own subject. */
   .tokens-debug code.vocab.ko {
     background: var(--color-background-default-knockout, #202020);
     border-color: var(--color-background-default-knockout, #202020);
     color: var(--color-content-default-knockout, #fcfcfc);
   }
-  .tokens-debug code.vocab.warnv { background: var(--color-background-warning-subtle, #fffbeb); border-color: var(--color-border-warning, #fcd34d); }
+  .tokens-debug code.vocab.warnv { background: var(--color-background-utility-warning-subtle, #fffbeb); border-color: var(--color-border-utility-warning, #fcd34d); }
 
   .tokens-debug .ord {
     font-size: 0.68rem;
@@ -2561,8 +2691,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     letter-spacing: 0.04em;
     white-space: nowrap;
   }
-  .tokens-debug .o-rubric { color: var(--color-content-success, #2a7e3b); }
-  .tokens-debug .o-inverted { color: var(--color-content-danger, #c62a2f); font-weight: 600; }
+  .tokens-debug .o-rubric { color: var(--color-content-utility-success, #2a7e3b); }
+  .tokens-debug .o-inverted { color: var(--color-content-utility-danger, #c62a2f); font-weight: 600; }
   .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-content-default-muted, #999); }
   .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-content-default-secondary, #666); max-width: 30ch; }
   .tokens-debug table.parse .notes div + div { margin-top: 3px; }
@@ -2620,8 +2750,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .inf {
     font-size: 0.7rem;
     font-style: italic;
-    color: var(--color-content-warning, #a35200);
-    border-bottom: 1px dotted var(--color-content-warning, #ab6400);
+    color: var(--color-content-utility-warning, #a35200);
+    border-bottom: 1px dotted var(--color-content-utility-warning, #ab6400);
     cursor: help;
   }
   /* Typography roles: six fixed property columns, so the table is wide. Let it
@@ -2643,7 +2773,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug table.type-table .t1 .arrow { margin: 0 3px 0 0; }
   /* The end of the chain — the tier-1 step the composite actually lands on. */
   .tokens-debug table.type-table .t1 .t1-ref { color: var(--color-content, #171717); font-weight: 600; }
-  .tokens-debug table.type-table .t1.direct { color: var(--color-content-warning, #a35200); }
+  .tokens-debug table.type-table .t1.direct { color: var(--color-content-utility-warning, #a35200); }
   /* An unset property is the finding, not an absence — mark it, don't blank it.
      The quiet hatch is opt-in-unset; is-required is the one that's a defect. */
   .tokens-debug .req {
@@ -2651,9 +2781,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: 600;
-    color: var(--color-content-danger, #c62a2f);
+    color: var(--color-content-utility-danger, #c62a2f);
   }
-  .tokens-debug table.type-table td.is-required { background: var(--color-background-danger-subtle, #fef2f2); }
+  .tokens-debug table.type-table td.is-required { background: var(--color-background-utility-danger-subtle, #fef2f2); }
   .tokens-debug table.type-table td.unset {
     background: repeating-linear-gradient(
       45deg,
@@ -2666,15 +2796,15 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug table.findings .detail { font-size: 0.78rem; line-height: 1.55; max-width: 46ch; }
   .tokens-debug .pair {
     font-size: 0.7rem;
-    color: var(--color-content-success, #2a7e3b);
+    color: var(--color-content-utility-success, #2a7e3b);
   }
   .tokens-debug .inf-flag {
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-content-warning, #a35200);
-    border: 1px solid var(--color-border-warning, #fcd34d);
-    background: var(--color-background-warning-subtle, #fffbeb);
+    color: var(--color-content-utility-warning, #a35200);
+    border: 1px solid var(--color-border-utility-warning, #fcd34d);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
   }
@@ -2694,9 +2824,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .pk-variant,
   .tokens-debug .pk-state {
-    color: var(--color-content-warning, #a35200);
-    border-color: var(--color-border-warning, #fcd34d);
-    background: var(--color-background-warning-subtle, #fffbeb);
+    color: var(--color-content-utility-warning, #a35200);
+    border-color: var(--color-border-utility-warning, #fcd34d);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
   }
 
   /* ---------------------------------------------- tier-1 naming audit */
@@ -2707,15 +2837,15 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .resolved {
     margin: var(--spacing-300, 12px) 0;
     padding: var(--spacing-300, 12px);
-    border: 1px solid var(--color-border-success, #a7e8a7);
+    border: 1px solid var(--color-border-utility-success, #a7e8a7);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-background-success-subtle, #f0fdf4);
+    background: var(--color-background-utility-success-subtle, #f0fdf4);
     font-size: 0.85rem;
     line-height: 1.6;
   }
   .tokens-debug .resolved .slot-flag { margin: 0 var(--spacing-200, 8px) 0 0; }
   .tokens-debug tr.is-done td { opacity: 0.72; }
-  .tokens-debug tr.is-done .rank { color: var(--color-content-success, #2a7e3b); }
+  .tokens-debug tr.is-done .rank { color: var(--color-content-utility-success, #2a7e3b); }
   /* The verdict cells in this section pair a flag chip with a sentence. */
   .tokens-debug table.findings td.detail > div { margin-top: 4px; }
 </style>

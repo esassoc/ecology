@@ -48,12 +48,12 @@ Set `--typography-font-family-sans` / `--typography-font-family-mono` / `--typog
 faces loaded via `__FONT_LINKS__`. Leave a token out to inherit the hub default.
 
 ### (d) Feedback + AI — the sneaky one
-The hub's SEMANTIC `--color-background-success/warning/info/ai` default to **generic
+The hub's SEMANTIC `--color-background-utility-success/warning/info/ai` default to **generic
 brights** that often differ from the source's actual button palette *even when the
 underlying primitive ramps match*. Re-point each onto the exact color the source's
-button renders. Beacon example: `--color-background-success: #2e7571` (a dark teal-green that
+button renders. Beacon example: `--color-background-utility-success: #2e7571` (a dark teal-green that
 sits on no hub ramp, so it terminates in a literal — not the hub's lime `#bdee63`);
-`--color-background-info: #228be6` (a standalone azure, not on the blue ramp);
+`--color-background-utility-info: #228be6` (a standalone azure, not on the blue ramp);
 `--color-background-ai: var(--color-blue-9)` (hub default is copper).
 
 Ramp steps are Radix's 1–12 scale — step 9 is the solid fill, 10 its hover, 2 a

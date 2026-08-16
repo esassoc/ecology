@@ -585,14 +585,14 @@ export class EsaSelect extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
 
     .container {
@@ -777,7 +777,7 @@ export class EsaSelect extends LitElement {
       background: var(--color-background-elevation-sunken, #efefef);
     }
     .option--selected {
-      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #3a7c59);
     }
     .option--disabled {
@@ -829,7 +829,7 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-050, 2px);
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
-      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #3a7c59);
       border-radius: var(--radius-pill, 9999px);
       user-select: none;
@@ -856,7 +856,7 @@ export class EsaSelect extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-overlay-hover-strong, rgba(0, 0, 0, 0.05));
+      background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -867,7 +867,7 @@ export class EsaSelect extends LitElement {
       --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
+      box-shadow: 0 0 0 2px var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,
   ];

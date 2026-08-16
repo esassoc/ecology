@@ -8,6 +8,12 @@
 // the Astro half of the mechanism its Lit siblings get from `static styles =
 // [typography, …]` — Astro bundles it into every page that uses this component, so
 // a spoke gets the class definitions without a global import it has to remember.
+//
+// The SLOT container names `body-md` — the value role its help/error siblings already
+// sit beside, since the field slotted in is read rather than labelled. It reaches
+// slotted content by inheritance, so it is a default: an esa-text-field carries its own
+// composite and wins, and a bare native field keeps the UA font reset until the host
+// opts in with `font: inherit`. The label keeps its own LABEL_TYPE rung, untouched.
 import '@esa/tokens/typography.css';
 
 // The label composite for each step of the control ramp. Note the letters do not
@@ -51,7 +57,7 @@ const cls = [
     </label>
   )}
 
-  <div class="esa-form-field__input">
+  <div class="esa-form-field__input typography-body-md">
     <slot />
   </div>
 
@@ -66,10 +72,10 @@ const cls = [
   .esa-form-field {
     --_label-color: var(--form-label-color, #171717);
     --_help-color: var(--form-help-color, #737373);
-    --_error-color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+    --_error-color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     --_label-gap: var(--form-label-gap, 4px);
     --_help-gap: var(--form-help-gap, 4px);
-    --_required-color: var(--color-content-danger, #ce2c31);
+    --_required-color: var(--color-content-utility-danger, #ce2c31);
 
     display: flex;
     flex-direction: column;

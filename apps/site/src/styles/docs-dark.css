@@ -60,23 +60,26 @@ html[data-scheme='dark'] {
   --color-background-brand-subtle: var(--color-grass-dark-2);
   --color-border-brand: var(--color-grass-dark-6);
 
-  /* Status subtles & borders — light ramp steps 1-6 are near-white; replace
-     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged. */
-  --color-background-info-subtle:    var(--color-blue-dark-2);
-  --color-border-info:    var(--color-blue-dark-6);
-  --color-background-success-subtle: var(--color-lime-dark-2);
-  --color-border-success: var(--color-lime-dark-6);
-  --color-background-warning-subtle: var(--color-yellow-dark-2);
-  --color-border-warning: var(--color-yellow-dark-6);
-  --color-background-danger-subtle:  var(--color-red-dark-2);
-  --color-border-danger:  var(--color-red-dark-6);
+  /* Utility subtles & borders — light ramp steps 1-6 are near-white; replace
+     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged.
+     `utility` is ONE intention with four variants as of 2026-08-15 — the
+     lockstep visible in this block, four names taking the identical step at
+     every role, is the evidence that made it one. */
+  --color-background-utility-info-subtle:    var(--color-blue-dark-2);
+  --color-border-utility-info:    var(--color-blue-dark-6);
+  --color-background-utility-success-subtle: var(--color-lime-dark-2);
+  --color-border-utility-success: var(--color-lime-dark-6);
+  --color-background-utility-warning-subtle: var(--color-yellow-dark-2);
+  --color-border-utility-warning: var(--color-yellow-dark-6);
+  --color-background-utility-danger-subtle:  var(--color-red-dark-2);
+  --color-border-utility-danger:  var(--color-red-dark-6);
 
-  /* Status strong — light step-11 values are dark and unreadable on dark surfaces.
+  /* Utility coloured text — light step-11 values are dark and unreadable on dark surfaces.
      Dark step-11 is a lighter, accessible tone on dark bg. */
-  --color-content-info:    var(--color-blue-dark-11);
-  --color-content-success: var(--color-lime-dark-11);
-  --color-content-warning: var(--color-yellow-dark-11);
-  --color-content-danger:  var(--color-red-dark-11);
+  --color-content-utility-info:    var(--color-blue-dark-11);
+  --color-content-utility-success: var(--color-lime-dark-11);
+  --color-content-utility-warning: var(--color-yellow-dark-11);
+  --color-content-utility-danger:  var(--color-red-dark-11);
 
   /* Brand strong — same reasoning. These were missing while the four status
      tokens above were mapped, which was harmless only while nothing used them

@@ -12,6 +12,19 @@ interface Props {
 }
 const { title, description, size = 'md' } = Astro.props;
 
+// TYPE: the size variants pick a ROLE per step rather than a bare font-size, so the
+// weight and line-height travel with it. The action slot takes a flat `label-md` — it
+// holds buttons, whose own composite wins, so it is a default for bare markup rather
+// than a step on the ramp. The "icon" slot is deliberately UNWIRED: it holds an SVG,
+// and a type role on a glyph is a value nothing reads. The import is the Astro half of
+// the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+// `lg` is medium where the other three are semibold — every `title-strong` call site
+// moved to `title`, and this ramp's top rung came with it. Noted, not hidden.
+const TITLE_TYPE = { xs: 'label-xs-strong', sm: 'label-sm-strong', md: 'label-md-strong', lg: 'title' } as const;
+const DESC_TYPE = { xs: 'body-xs', sm: 'body-xs', md: 'body-sm', lg: 'body-md' } as const;
+
 const hasIconSlot = Astro.slots.has('icon');
 const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
 ---
@@ -21,9 +34,9 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
       <slot name="icon" />
     </div>
   )}
-  <h3 class="esa-empty-state__title">{title}</h3>
-  {description && <p class="esa-empty-state__description">{description}</p>}
-  <div class="esa-empty-state__actions">
+  <h3 class={`esa-empty-state__title typography-${TITLE_TYPE[size]}`}>{title}</h3>
+  {description && <p class={`esa-empty-state__description typography-${DESC_TYPE[size]}`}>{description}</p>}
+  <div class="esa-empty-state__actions typography-label-md">
     <slot />
   </div>
 </div>
@@ -31,8 +44,6 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
 <style>
   .esa-empty-state {
     --_empty-icon-size: var(--empty-state-icon-size-md, 48px);
-    --_empty-title-size: var(--font-size-200, 0.9375rem);
-    --_empty-desc-size: var(--font-size-150, 0.875rem);
     --_empty-gap: var(--empty-state-gap, var(--spacing-200, 0.5rem));
 
     display: flex;
@@ -44,24 +55,20 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
     gap: var(--_empty-gap);
   }
 
+  /* Size ladders carry the icon size and padding only — the type steps live in
+     TITLE_TYPE / DESC_TYPE above, one composite per step. */
   .esa-empty-state--xs {
     --_empty-icon-size: var(--empty-state-icon-size-xs, 24px);
-    --_empty-title-size: var(--font-size-100, 0.75rem);
-    --_empty-desc-size: var(--font-size-100, 0.75rem);
     padding: var(--spacing-300, 0.75rem) var(--spacing-200, 0.5rem);
   }
 
   .esa-empty-state--sm {
     --_empty-icon-size: var(--empty-state-icon-size-sm, 32px);
-    --_empty-title-size: var(--font-size-150, 0.875rem);
-    --_empty-desc-size: var(--font-size-100, 0.75rem);
     padding: var(--spacing-400, 1rem) var(--spacing-300, 0.75rem);
   }
 
   .esa-empty-state--lg {
     --_empty-icon-size: var(--empty-state-icon-size-lg, 64px);
-    --_empty-title-size: var(--font-size-400, 1.25rem);
-    --_empty-desc-size: var(--font-size-200, 0.9375rem);
     padding: var(--spacing-800, 4rem) var(--spacing-400, 1rem);
   }
 
@@ -78,14 +85,11 @@ const cls = ['esa-empty-state', `esa-empty-state--${size}`].join(' ');
 
   .esa-empty-state__title {
     margin: 0;
-    font-size: var(--_empty-title-size);
-    font-weight: 600;
     color: var(--empty-state-title-color, var(--color-content-default, #171717));
   }
 
   .esa-empty-state__description {
     margin: 0;
-    font-size: var(--_empty-desc-size);
     color: var(--empty-state-description-color, var(--color-content-default-secondary, #525252));
     max-width: 360px;
   }

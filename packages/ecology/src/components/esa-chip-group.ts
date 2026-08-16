@@ -313,9 +313,9 @@ export class EsaChipGroup extends LitElement {
       color: var(--color-content-brand, #3a7c59);
     }
     .chip--active.chip--amber {
-      background: var(--color-background-warning-subtle, #fffbeb);
-      border-color: var(--color-border-warning, #fde68a);
-      color: var(--color-content-warning, #915930);
+      background: var(--color-background-utility-warning-subtle, #fffbeb);
+      border-color: var(--color-border-utility-warning, #fde68a);
+      color: var(--color-content-utility-warning, #915930);
     }
   `,
   ];
