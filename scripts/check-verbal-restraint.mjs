@@ -118,22 +118,28 @@ const targets = args.length
 
 /*
  * Two tiers, and the split is a policy Andy set on 2026-08-16: "I don't want to
- * deal with old work, just new work." The two lexical entries — em dash, middot
- * — matched 259 strings across the three repos the day they landed, none of
- * which is a defect anyone intends to fix. They report here as warnings, while
- * the Stop hook keeps blocking them at write time, so the character stops
- * spreading without a cleanup pass being owed. Everything else still gates.
+ * deal with old work, just new work." These three entries — em dash, middot,
+ * packed metadata — matched several hundred strings across the three repos the
+ * day they landed, none of which is a defect anyone intends to fix. They report
+ * here as warnings, while the Stop hook keeps blocking them at write time, so
+ * the constructions stop spreading without a cleanup pass being owed. Every
+ * other entry still gates.
  */
-const WARN_ONLY = new Set(['corpus:em-dash-in-surface-string', 'corpus:middot-separator']);
+const WARN_ONLY = new Set([
+  'corpus:em-dash-in-surface-string',
+  'corpus:middot-separator',
+  'corpus:packed-metadata',
+]);
 
 /*
- * Tier by the defect, not by which entry claimed the string. The packed-metadata
+ * Name the defect, not the entry that claimed the string. The packed-metadata
  * entry sits ahead of the character entries and first match wins, so a prose
  * sentence hinged on an em dash — "Best for small fixed option sets — past about
  * six options, prefer a select." — reports as packed metadata. 90 of the 123
  * packed-metadata findings across the three repos are that shape: an em dash and
- * no other separator. Leaving them as errors would have kept the tier flip from
- * doing the thing it was for.
+ * no other separator. All three tiers are warnings now, so this only changes the
+ * message, and it is worth keeping: an author told to unglue a metadata row will
+ * go looking for a row that isn't there.
  */
 const emDashOnly = (f) => f.rule === 'corpus:packed-metadata' && !/[·|/•]/.test(f.excerpt);
 
@@ -149,7 +155,7 @@ for (const file of targets) {
   const strings = extractStrings(source, file);
   for (const f of corpusGrep.run({ strings, config })) {
     const dashed = emDashOnly(f);
-    const warn = WARN_ONLY.has(f.rule) || dashed;
+    const warn = WARN_ONLY.has(f.rule);
     const message = dashed
       ? 'Em dash in a surface string. Reported under packed metadata because that entry matches first; the defect is the character. Existing strings are left alone; anything written now is blocked at write time.'
       : warn
