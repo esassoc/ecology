@@ -78,6 +78,53 @@ export function proposedContent(toolInput) {
   return parts.join('\n');
 }
 
+/**
+ * Opening-tag counts in a fragment, keyed by element name. Closing tags are
+ * ignored: they mirror the openings, and an Edit fragment is routinely
+ * unbalanced (`<div class="a">` on its own is a normal old_string).
+ */
+function tagCounts(s) {
+  const counts = new Map();
+  const re = /<([A-Za-z][\w.:-]*)(?=[\s/>])/g;
+  let m;
+  while ((m = re.exec(s)) !== null) {
+    counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Does an Edit / MultiEdit payload COMPOSE structure — introduce an element
+ * that was not already in the span it replaces?
+ *
+ * Composition gates exist to stop uncomponentized structure being ADDED. A
+ * change that rewrites text, edits an attribute value, or deletes markup
+ * introduces nothing, so it cannot violate a composition rule whatever state
+ * the surrounding file is in. Counting (not just presence) keeps a second
+ * <EsaCard> next to an existing one honest.
+ *
+ * Conservative on purpose: an ambiguous fragment reads as introducing
+ * structure, so the gate still fires.
+ */
+export function editsIntroduceStructure(toolInput = {}) {
+  const pairs = [];
+  if (typeof toolInput.new_string === 'string') {
+    pairs.push([toolInput.old_string ?? '', toolInput.new_string]);
+  }
+  for (const e of toolInput.edits ?? []) {
+    if (typeof e.new_string === 'string') pairs.push([e.old_string ?? '', e.new_string]);
+  }
+  if (!pairs.length) return false;
+
+  for (const [before, after] of pairs) {
+    const b = tagCounts(before);
+    for (const [name, n] of tagCounts(after)) {
+      if (n > (b.get(name) ?? 0)) return true;
+    }
+  }
+  return false;
+}
+
 /** Absolute target path — relative file_path resolves against the payload cwd. */
 export function targetPath(payload) {
   const fp = payload?.tool_input?.file_path;

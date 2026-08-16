@@ -30,7 +30,14 @@
 //   a primitive (stack/grid) or `inline`/`div`/`none` — is REJECTED: a section is a
 //   component, not page-level bespoke markup.
 import { existsSync, readFileSync } from 'node:fs';
-import { classifyDir, nearestExistingDir, proposedContent, readPayload, targetPath } from './lib.mjs';
+import {
+  classifyDir,
+  editsIntroduceStructure,
+  nearestExistingDir,
+  proposedContent,
+  readPayload,
+  targetPath,
+} from './lib.mjs';
 
 const payload = readPayload();
 if (!payload) process.exit(0); // unparseable — fail open
@@ -45,6 +52,17 @@ if (!norm.includes('/src/pages/')) process.exit(0);
 if (norm.includes('/src/pages/design-system/')) process.exit(0);
 if (norm.includes('/src/pages/patterns/')) process.exit(0);
 if (/\/src\/pages\/index\.astro$/.test(norm)) process.exit(0);
+
+// --- Trigger scope: only a change that COMPOSES structure ---
+// A Write is a whole-file compose and always lints. An Edit only lints if it
+// introduces an element the replaced span did not already have. Rewriting a
+// sentence, editing an attribute value, or deleting markup cannot introduce a
+// composition violation, so the file's manifest state is irrelevant to it —
+// and gating those walled off every copy fix on a page authored before this
+// gate existed.
+const toolInput = payload.tool_input ?? {};
+const isWholeFileWrite = typeof toolInput.content === 'string';
+if (!isWholeFileWrite && !editsIntroduceStructure(toolInput)) process.exit(0);
 
 // The manifest may live in the proposed content OR already in the file (an edit
 // often doesn't re-send the header). Same dual-read as the escape-token check.
