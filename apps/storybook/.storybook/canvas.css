@@ -1,0 +1,39 @@
+/*
+ * Base canvas styles for the Storybook preview iframe.
+ *
+ * WHY THIS EXISTS: apps/site/src/layouts/BaseLayout.astro sets the body font,
+ * size, weight, line-height and surface colors globally. Storybook's canvas is a
+ * bare iframe that inherits none of it, so without this every component renders in
+ * the browser's default serif (Times) on plain white — which reads as "the styles
+ * are broken" when in fact only the page chrome is missing.
+ *
+ * Keep the body rule in sync with BaseLayout.astro. The font <link> lives in
+ * preview-head.html, because Storybook needs it in the iframe's <head>.
+ *
+ * Loaded by BOTH apps/storybook and apps/storybook-astro (via a relative import)
+ * so the two halves cannot drift from each other.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--typography-font-family-sans, system-ui, sans-serif);
+  font-size: var(--font-size-200, 1rem);
+  font-weight: var(--typography-font-weight-regular, 350);
+  line-height: var(--line-height-normal, 1.6);
+  background: var(--color-background-elevation-raised, #fff);
+  color: var(--color-content-default, #171717);
+}
+
+code {
+  font-family: var(--typography-font-family-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+  background: var(--color-background-elevation-sunken, #efefef);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-100, 4px);
+}

@@ -1,0 +1,11 @@
+<!--
+  Injected into the preview iframe's <head>. Same DM Sans load as
+  apps/site/src/layouts/BaseLayout.astro — without it the canvas falls back to the
+  browser default serif and every component looks wrong.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>

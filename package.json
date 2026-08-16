@@ -13,10 +13,17 @@
     "build:tokens": "npm run build --workspace=@esa/tokens",
     "dev": "npm run build:tokens && npm run dev --workspace=@esa/site",
     "build": "npm run build:tokens && npm run build --workspace=@esa/site",
+    "storybook": "npm run build:tokens && npm-run-all --parallel storybook:lit storybook:astro",
+    "storybook:lit": "npm run dev --workspace=@esa/storybook",
+    "storybook:astro": "npm run dev --workspace=@esa/storybook-astro",
+    "build:storybook": "npm run build:tokens && npm run build --workspace=@esa/storybook-astro && npm run build --workspace=@esa/storybook",
     "preview": "npm run preview --workspace=@esa/site",
     "deploy": "npm run build:tokens && npm run deploy --workspace=@esa/site"
   },
   "dependencies": {
     "@radix-ui/colors": "^3.0.0"
+  },
+  "devDependencies": {
+    "npm-run-all2": "^9.0.3"
   }
 }
