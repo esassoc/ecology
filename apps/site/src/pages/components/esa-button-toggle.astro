@@ -7,7 +7,7 @@ import Api from '@esa/docs/Api.astro';
 const props = [
   { name: 'options', type: '{ value, label, icon?, ariaLabel? }[]', default: '[]', description: 'The segments. Set as a property (an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon), rendered before the label and inheriting currentColor. Omit label for an icon-only segment, but then set ariaLabel for its accessible name.' },
   { name: 'value', type: 'string', default: "''", description: "Selected option's value. Single-select; bound to the form value." },
-  { name: 'label', type: 'string', default: "''", description: 'The name of the value being chosen — a field name, not an instruction; becomes the radiogroup name.' },
+  { name: 'label', type: 'string', default: "''", description: 'The name of the value being chosen; a field name, not an instruction. Becomes the radiogroup name.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
   { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (adds an asterisk and aria-required).' },
   { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables every segment.' },

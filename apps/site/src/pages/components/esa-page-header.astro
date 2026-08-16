@@ -9,7 +9,7 @@ import Button from '@esa/ecology/esa-button.astro';
 
 const props = [
   { name: 'title', type: 'string', description: 'The page’s name, as it appears in navigation and breadcrumbs (required). Rendered as the <h1>.' },
-  { name: 'eyebrow', type: 'string', description: 'The named thing this page sits inside — a section, a report, a person, a record id. A proper noun or a short label, never a sentence.' },
+  { name: 'eyebrow', type: 'string', description: 'The named thing this page sits inside: a section, a report, a person, a record id. A proper noun or a short label, never a sentence.' },
   { name: 'icon', type: 'string', description: 'esa-icon registry name for the eyebrow’s leading glyph, e.g. "award" (eyebrow only).' },
   { name: 'prominence', type: "'page-title' | 'display'", default: "'page-title'", description: 'Title scale: the page-title role (default) or the oversized display role for a hero.' },
   { name: 'as', type: "'header' | 'div' | 'section'", default: "'header'", description: 'The host element tag.' },
@@ -24,7 +24,7 @@ const slots = [
   summary="The standard prototype page top: optional breadcrumbs OR an eyebrow (with a leading icon), a title (page-title role, or the oversized display role for a hero), and a right-aligned actions slot.">
 
   <Section id="preview" title="Preview">
-    <p>The default form: a page-title-scale heading with an actions slot. The container is neutral and transparent — color is the consumer’s job.</p>
+    <p>The default form: a page-title-scale heading with an actions slot. The container is neutral and transparent; color is the consumer’s job.</p>
     <Preview align="start" code={`<PageHeader title="Requirements">
   <Button slot="actions" color="primary" icon="plus">New requirement</Button>
 </PageHeader>`}>
@@ -38,7 +38,7 @@ const slots = [
 
   <Section id="no-description" title="There is no description slot">
     <p>This component takes no <code>lede</code>, <code>subtitle</code>, or <code>description</code>. A page header carries the page’s name and its actions; a sentence explaining the page to its reader is text <em>about</em> the page rather than <em>of</em> it, and the page’s own data and structure are what say what it is.</p>
-    <p>Every real fill of the former <code>lede</code> prop was that kind of sentence, which is why it was removed on 2026-08-16. If a page genuinely needs a number or a date up top, that is a datum — put it in the <code>eyebrow</code>, or in an <code>esa-stat</code> below the header where it can be read as data.</p>
+    <p>If a page genuinely needs a number or a date up top, that is a datum: put it in the <code>eyebrow</code>, or in an <code>esa-stat</code> below the header where it can be read as data.</p>
   </Section>
 
   <Section id="hero" title="Eyebrow + display prominence (hero)">
