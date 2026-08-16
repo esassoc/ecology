@@ -18,7 +18,8 @@
  * failure: a missing personal config must never fail someone else's build.
  *
  * Usage (from a spoke repo, sibling of the `ecology` checkout):
- *   node ../ecology/scripts/check-verbal-restraint.mjs            # scans src/pages, src/components, src/layouts
+ *   node ../ecology/scripts/check-verbal-restraint.mjs            # src/pages, src/components, src/layouts
+ *                                                                # (and the same three under each package, in the hub)
  *   node ../ecology/scripts/check-verbal-restraint.mjs [file ...] # checks the named files only
  * Output: a JSON report to stdout. Exit 1 if any ERROR, else 0.
  *
@@ -33,6 +34,22 @@ import { pathToFileURL } from 'node:url';
 const ROOT = process.cwd();
 const GATE = process.env.DESIGN_GATE_HOME || path.join(os.homedir(), '.claude', 'hooks', 'design-gate');
 const SCAN_DIRS = ['src/pages', 'src/components', 'src/layouts'];
+
+/** A spoke keeps these at the root; the hub keeps them under packages/. */
+function scanRoots() {
+  const roots = SCAN_DIRS.map((d) => path.join(ROOT, d));
+  let packages;
+  try {
+    packages = readdirSync(path.join(ROOT, 'packages'));
+  } catch {
+    return roots;
+  }
+  for (const pkg of packages) {
+    if (pkg.startsWith('.')) continue;
+    roots.push(...SCAN_DIRS.map((d) => path.join(ROOT, 'packages', pkg, d)));
+  }
+  return roots;
+}
 const EXTS = /\.(astro|html)$/i;
 
 function skip(reason) {
@@ -97,7 +114,7 @@ if (!existsSync(resolvedCorpus)) skip(`corpus not found at ${resolvedCorpus}`);
 const args = process.argv.slice(2).filter((a) => !a.startsWith('-'));
 const targets = args.length
   ? args.map((a) => path.resolve(ROOT, a)).filter((f) => existsSync(f) && EXTS.test(f))
-  : SCAN_DIRS.flatMap((d) => walk(path.join(ROOT, d)));
+  : scanRoots().flatMap((d) => walk(d));
 
 const errors = [];
 for (const file of targets) {
