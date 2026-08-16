@@ -19,7 +19,7 @@
  *
  * Run: node --experimental-strip-types scripts/generate-stories.ts
  */
-import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { componentApi, type ApiProp } from '../apps/site/src/data/component-api.ts';
@@ -91,8 +91,37 @@ function controlFor(p: ApiProp): string {
 /** Components whose generated story renders empty because their data props can't be synthesised. */
 const thin: string[] = [];
 
-/** Boolean props that gate whether an overlay component renders anything at all. */
-const GATE = /^(open|visible|active|show)$/;
+/**
+ * Boolean props that gate whether an OVERLAY renders anything at all.
+ *
+ * Deliberately just these two. An earlier version also matched `active` and
+ * `show`, which silently broke esa-button — `active` there is a visual state, not
+ * a visibility gate, so every generated button rendered stuck in its active
+ * style. A false match here changes how a component LOOKS with no error anywhere,
+ * so keep this list narrow and literal rather than clever.
+ */
+const GATE = /^(open|visible)$/;
+
+/**
+ * Slot names a `.astro` component exposes, default slot first.
+ *
+ * Content-taking components get their content from CHILDREN, not props, so a
+ * props-only story renders an empty shell — esa-button came out as a correctly
+ * styled button with no label. 18 of the 31 .astro components are in this
+ * category. Slot content is passed as `args.slots.<name>`; `default` maps to the
+ * unnamed `<slot />`.
+ */
+function slotNames(slug: string): string[] {
+  const file = path.join(ROOT, 'packages', 'ecology', 'src', 'components', `${slug}.astro`);
+  if (!existsSync(file)) return [];
+  const src = readFileSync(file, 'utf8');
+  const names = new Set<string>();
+  for (const m of src.matchAll(/<slot(\s[^>]*)?\/?>/g)) {
+    const named = m[1]?.match(/name=["']([^"']+)["']/);
+    names.add(named ? named[1] : 'default');
+  }
+  return [...names].sort((a, b) => (a === 'default' ? -1 : b === 'default' ? 1 : a.localeCompare(b)));
+}
 
 function storySource(slug: string, name: string, group: string, kind: 'wc' | '.astro'): string {
   const api = componentApi[slug];
@@ -123,6 +152,18 @@ function storySource(slug: string, name: string, group: string, kind: 'wc' | '.a
       argLines.push(`    ${key}: [], // synthesised: component iterates this; real data needs an authored story`);
       synthesised = true;
     }
+  }
+
+  // Slot content — .astro only. `default` is the unnamed <slot />; named slots
+  // keep their name. Placeholder text, so the component at least renders with
+  // something in it; a real specimen is what an authored story is for.
+  const slots = kind === '.astro' ? slotNames(slug) : [];
+  if (slots.length) {
+    const label = name.replace(/([a-z])([A-Z])/g, '$1 $2');
+    const entries = slots.map((s) =>
+      s === 'default' ? `default: '${label}'` : `${JSON.stringify(s)}: '${s}'`,
+    );
+    argLines.push(`    slots: { ${entries.join(', ')} },`);
   }
 
   if (synthesised) thin.push(slug);
