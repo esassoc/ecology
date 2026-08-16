@@ -8,13 +8,55 @@
 // The default slot states the condition the user must act on — never a place to
 // describe the page or caption an embed (e.g. not "This report is rendered by
 // Microsoft Power BI inside the CBFish shell…", a provenance string wearing an alert).
+//
+// A11Y — why this is NOT `role="alert"` by default, despite the name.
+//
+// An alert box is the canonical inject-at-runtime component (that is why the dismiss
+// listener below is delegated), so the obvious move is to make it a live region. It is
+// the wrong move for the general case:
+//
+//   - It takes a SLOT. Live regions announce raw text with no structure, so a slotted
+//     link, button or list is read as a run-on sentence with no roles. We cannot see
+//     what a spoke put in there.
+//   - `dismissable` puts a button inside it — a control the user is told about but
+//     given no route to, since a live region does not take focus and cannot be
+//     navigated to. That is the toast trap, and the guidance is unambiguous: a message
+//     with a control in it is a dialog, not a status message.
+//   - Most alert boxes are present at page load, where a live region announces nothing
+//     anyway (there is no change) or, worse, fires on load as noise.
+//
+// So `live` is OPT-IN, off by default, and refuses to combine with `dismissable`.
 interface Props {
   variant?: 'info' | 'success' | 'warning' | 'danger';
   /** The condition the user must act on, in 1-3 words — not a greeting. "Saved", "Check this", "Error". */
   title?: string;
   dismissable?: boolean;
+  /**
+   * Announce this box when it is injected into an already-loaded page.
+   *
+   * Off by default. Turn it on ONLY when all three hold: the box appears in response
+   * to something the user did, it is NOT dismissable, and its slot holds plain text
+   * with no links or buttons. `danger` announces assertively (`role="alert"`);
+   * everything else waits for a pause (`role="status"`).
+   *
+   * A box that is in the initial HTML should leave this off — there is no change for
+   * a live region to report, and on some screen readers it reads out on load instead.
+   */
+  live?: boolean;
 }
-const { variant = 'info', title, dismissable = false } = Astro.props;
+const { variant = 'info', title, dismissable = false, live = false } = Astro.props;
+
+if (live && dismissable) {
+  console.warn(
+    '[esa-alert-box] `live` and `dismissable` together: the dismiss button is announced ' +
+      'as bare text with no role and no way to reach it. Drop `live`, or drop `dismissable` ' +
+      'and let the box persist. Rendering without the live region.',
+  );
+}
+// danger interrupts; the rest wait for a pause. `alert` and `status` carry their own
+// implicit aria-live, so declaring the attribute as well would be the contradiction
+// that esa-field-error used to ship.
+const liveRole = live && !dismissable ? (variant === 'danger' ? 'alert' : 'status') : undefined;
 
 // TYPE: the box names roles rather than assembling them — `body-sm` on the root so
 // message text inherits it, `label-sm-strong` on the title. The import is the Astro
@@ -36,7 +78,7 @@ const ICON_PATHS: Record<string, string> = {
 };
 const iconPath = ICON_PATHS[variant];
 ---
-<div class={cls}>
+<div class={cls} role={liveRole} data-esa-live={liveRole ? "opt-in" : undefined}>
   <div class="esa-alert-box__icon">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -98,10 +140,28 @@ const iconPath = ICON_PATHS[variant];
     const btn = (event.target as HTMLElement).closest?.('[data-esa-alert-dismiss]');
     if (!btn) return;
     const box = btn.closest('.esa-alert-box') as HTMLElement | null;
-    if (box) {
-      box.style.display = 'none';
-      box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
-    }
+    if (!box) return;
+
+    // Where focus goes next. `display: none` on the box removes the button the user
+    // just pressed, and focus falls to <body> — a keyboard user is silently returned
+    // to the top of the document with no idea where they were. Nothing in the DOM
+    // says "this used to be here", so the only sane destination is the nearest thing
+    // still on screen: the next focusable element after the box, or the previous one
+    // if the box was last.
+    const focusables = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => !box.contains(el) && el.offsetParent !== null);
+
+    const after = focusables.find(
+      (el) => box.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    const next = after ?? focusables[focusables.length - 1];
+
+    box.style.display = 'none';
+    box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
+    next?.focus();
   });
 </script>
 

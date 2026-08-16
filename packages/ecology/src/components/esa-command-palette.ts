@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 
 export interface EsaCommand {
   id: string;
@@ -163,6 +165,23 @@ export class EsaCommandPalette extends LitElement {
     this.close();
   }
 
+  /**
+   * Announce only the transition INTO no-results. See esa-combobox.announceEmptyResults
+   * for the full reasoning: the cue sets the expectation, so a per-keystroke count
+   * would be noise, but a query that has gone dry has no other signal for someone who
+   * cannot see the list empty out.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this.open && !!this.query.trim() && this.filteredGroups().length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No commands found', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
   render() {
     if (!this.open) return html``;
     const groups = this.filteredGroups();
@@ -171,15 +190,25 @@ export class EsaCommandPalette extends LitElement {
       <div class="esa-command-palette" role="dialog" aria-label="Command palette">
         <div class="esa-command-palette__search">
           <svg class="esa-command-palette__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <!-- The input had no accessible name — only a placeholder, which is not a
+               name and vanishes as soon as you type. The cue below is what makes
+               announcing the result list on every keystroke unnecessary; the visible
+               footer tells sighted users the same thing. -->
           <input
             class="esa-command-palette__input typography-microcopy-lg-subtle"
             type="text"
+            aria-label="Search commands"
+            aria-describedby="cue"
             placeholder="Type a command..."
             .value=${this.query}
             @input=${this.onSearch}
             @keydown=${this.onKeydown}
             autocomplete="off"
           />
+          <span class="visually-hidden" id="cue"
+            >Commands filter as you type. Use the up and down arrows to review them,
+            Enter to run one, Escape to close.</span
+          >
           <kbd class="esa-command-palette__kbd typography-body-xs">ESC</kbd>
         </div>
         <div class="esa-command-palette__results" role="listbox">
@@ -224,6 +253,7 @@ export class EsaCommandPalette extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host { display: contents; }
 
@@ -265,6 +295,18 @@ export class EsaCommandPalette extends LitElement {
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
     }
+    /* The ring goes on the ROW, not the input. The input is chromeless by design,
+       so a ring drawn on it would float around bare text; the row is the visible
+       affordance. :focus-within rather than :focus-visible for the same reason
+       esa-text-field uses it — this is text entry, where a ring on click is native
+       behaviour and wanted.
+
+       Inset because the row runs edge to edge inside an overflow:hidden panel, so
+       an outline at positive offset would be clipped on both sides. */
+    .esa-command-palette__search:focus-within {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
+    }
     .esa-command-palette__search-icon {
       color: var(--color-content-default-muted, #737373);
       flex-shrink: 0;
@@ -272,6 +314,7 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__input {
       flex: 1;
       border: none;
+      /* Suppressed only because the row above paints the ring — never bare. */
       outline: none;
       color: var(--color-content-default, #171717);
       background: transparent;

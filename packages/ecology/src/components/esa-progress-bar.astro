@@ -48,12 +48,27 @@ const cls = [
 
 const showHeader = !!label || showValue;
 ---
+{/*
+  role="progressbar" is CORRECT here and is deliberately not a live region. A value
+  that changes is a state change, and `aria-valuenow` is the property that reports it;
+  wrapping this in aria-live would announce every increment, which is the textbook
+  misuse. If a stack needs to announce that a long job finished, that is one call to
+  `announce()` (../announcer.ts) at the end, not a region around the bar.
+
+  Indeterminate mode is the gap this closes. It has no `aria-valuenow` by definition,
+  so the bar announced as a progressbar with no value and nothing to say it was
+  working — a screen reader read "Progress, progress bar" and stopped. `aria-busy`
+  says the thing is in progress, and `aria-valuetext` gives the state a word, since
+  there is no number to give.
+*/}
 <div
   class={cls}
   role="progressbar"
   aria-valuenow={isDeterminate ? clampedValue : undefined}
-  aria-valuemin="0"
-  aria-valuemax="100"
+  aria-valuemin={isDeterminate ? '0' : undefined}
+  aria-valuemax={isDeterminate ? '100' : undefined}
+  aria-valuetext={isDeterminate ? undefined : 'Working'}
+  aria-busy={isDeterminate ? undefined : 'true'}
   aria-label={label || 'Progress'}
 >
   {showHeader && (
@@ -126,6 +141,24 @@ const showHeader = !!label || showValue;
   .esa-progress-bar--indeterminate .esa-progress-bar__fill {
     width: 40% !important;
     animation: esa-progress-indeterminate var(--animation-indeterminate, 1500ms ease-in-out infinite);
+  }
+
+  /* An infinite animation is what SC 2.2.2 (Pause, Stop, Hide) and the reduced-motion
+     preference are about. Stopping it outright would read as a stalled job, so it
+     slows to a pulse that still says "working" without sliding across the screen. */
+  @media (prefers-reduced-motion: reduce) {
+    .esa-progress-bar--indeterminate .esa-progress-bar__fill {
+      animation: esa-progress-pulse 2s ease-in-out infinite;
+      width: 100% !important;
+    }
+    .esa-progress-bar__fill {
+      transition: none;
+    }
+  }
+
+  @keyframes esa-progress-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
   }
 
   @keyframes esa-progress-indeterminate {

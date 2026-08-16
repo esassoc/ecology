@@ -9,7 +9,8 @@ import EsaFieldError from '@esa/ecology/esa-field-error.astro';
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
   message: "Resolved error message. Renders nothing when null or empty.",
-  icon: "Show a small leading alert icon before the message.",
+  icon: "Show the leading alert icon. On by default — without it, an error line and a help line are the same element in the same slot differing only by colour, which is SC 1.4.1.",
+  id: "The element id, so a control's aria-describedby can point at this message. Without one the association this component exists for cannot be written.",
 };
 ---
 <ComponentDoc name="Field Error" category="Forms" slug="esa-field-error" type=".astro" status="stable"
@@ -40,13 +41,14 @@ const describe = {
 
   <Section id="composition" title="Under an input">
     <p>It is presentational and composable — drop it beneath any control. Your validation layer decides the message.</p>
-    <Preview align="start" code={`<label>Email</label>
-<input type="email" value="not-an-email" />
-<EsaFieldError message="Enter a valid email address." icon />`}>
+    <Preview align="start" code={`<label for="email">Email</label>
+<input id="email" type="email" value="not-an-email"
+       aria-invalid="true" aria-describedby="email-error" />
+<EsaFieldError id="email-error" message="Enter a valid email address." icon />`}>
       <div style="display: flex; flex-direction: column; gap: 4px; max-width: 320px;">
-        <label style="font-weight: 500;">Email</label>
-        <input type="email" value="not-an-email" style="padding: 8px 12px; border: 1px solid var(--color-background-utility-danger, #ef4444); border-radius: 6px;" />
-        <EsaFieldError message="Enter a valid email address." icon />
+        <label for="fe-email" style="font-weight: 500;">Email</label>
+        <input id="fe-email" type="email" value="not-an-email" aria-invalid="true" aria-describedby="fe-email-error" style="padding: 8px 12px; border: 1px solid var(--color-background-utility-danger, #ef4444); border-radius: 6px;" />
+        <EsaFieldError id="fe-email-error" message="Enter a valid email address." icon />
       </div>
     </Preview>
   </Section>
@@ -57,9 +59,30 @@ const describe = {
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>Renders with <code>role="alert"</code> and <code>aria-live="polite"</code> so the message is announced when it appears.</li>
-      <li>Purely presentational — it does not own the input's <code>aria-invalid</code> or <code>aria-describedby</code>. Wire those on the control to point at this message when integrating.</li>
-      <li>The leading icon is decorative (<code>aria-hidden</code>); the text carries the meaning.</li>
+      <li>
+        <strong>This does not announce itself.</strong> It is an <code>.astro</code> component
+        rendered at build time, and it renders <em>nothing at all</em> when <code>message</code>
+        is empty — so there is no element in the DOM for a live region to update. A live region
+        has to already exist, and be empty, before the text arrives; one created together with
+        its content is routinely not announced. This page previously claimed otherwise.
+      </li>
+      <li>
+        Its scope is therefore <strong>server-rendered errors already present on page load</strong> —
+        the message a form comes back with after a failed round trip. For an error that appears
+        <em>during</em> a session, use the control's own <code>error-text</code>: those keep a
+        persistent empty message node exactly so the region can fire, and expose
+        <code>live-error</code> to opt into announcing it.
+      </li>
+      <li>
+        Purely presentational — it does not own the input's <code>aria-invalid</code> or
+        <code>aria-describedby</code>. Give it an <code>id</code> and point the control at it,
+        as the example above does.
+      </li>
+      <li>
+        The leading icon is decorative (<code>aria-hidden</code>) and the text carries the
+        meaning — but the icon is doing real work for sighted users, since colour alone cannot
+        distinguish an error line from a hint (SC 1.4.1). Prefer <code>icon</code> on.
+      </li>
     </ul>
   </Section>
 

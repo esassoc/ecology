@@ -3,17 +3,44 @@
 // Faithful translation of the Angular esa-loading-spinner: xs/sm/md/lg sizes
 // and an optional custom color (CSS value, defaults to --color-background-brand).
 // Angular host classes + [style.--_spinner-color] → class list + inline style.
+// A11Y: this used to carry `role="status" aria-label="Loading"` on the ring. That was
+// a no-op dressed as a feature. `role="status"` is a LIVE REGION, and a live region
+// only ever announces a CHANGE to its contents — this ring is permanently empty, so
+// there was never a change and it never announced anything, on any screen reader.
+// Worse, it was a standing live region: every spinner on the page was one more region
+// competing with the others for announcements that do matter.
+//
+// A spinner is not a status message. It is a graphic that means "loading", so it is
+// `role="img"` with a name — persistent, navigable, and re-readable, which a live
+// region is not. When the loading STATE changes and that change needs announcing,
+// that is the job of `announce()` in ../announcer.ts, called by whatever owns the
+// state. This component cannot know when loading started or stopped.
 interface Props {
   size?: 'xs' | 'sm' | 'md' | 'lg';
   color?: string;
+  /** Accessible name. Say what is loading when you can — "Loading results". */
+  label?: string;
+  /**
+   * Hide from assistive technology entirely.
+   *
+   * For a spinner inside something that already says it is busy — an
+   * `esa-button` with `loading` (which sets `aria-busy` and keeps its own label),
+   * or an `esa-loading-overlay` that carries the message. Two names for one state
+   * is noise, not redundancy.
+   */
+  decorative?: boolean;
 }
-const { size = 'md', color } = Astro.props;
+const { size = 'md', color, label = 'Loading', decorative = false } = Astro.props;
 
 const cls = ['esa-loading-spinner', `esa-loading-spinner--${size}`].join(' ');
 const style = color ? `--_spinner-color: ${color}` : undefined;
 ---
-<span class={cls} style={style}>
-  <span class="esa-loading-spinner__ring" role="status" aria-label="Loading"></span>
+<span class={cls} style={style} aria-hidden={decorative ? 'true' : undefined}>
+  <span
+    class="esa-loading-spinner__ring"
+    role={decorative ? undefined : 'img'}
+    aria-label={decorative ? undefined : label}
+  ></span>
 </span>
 
 <style>
@@ -43,5 +70,16 @@ const style = color ? `--_spinner-color: ${color}` : undefined;
 
   @keyframes esa-spinner-rotate {
     to { transform: rotate(360deg); }
+  }
+
+  /* An infinite animation is the one kind SC 2.2.2 (Pause, Stop, Hide) and the
+     reduced-motion preference both care about. It cannot be removed outright —
+     a frozen ring reads as a broken one — so it slows to a step that still says
+     "working" without spinning. */
+  @media (prefers-reduced-motion: reduce) {
+    .esa-loading-spinner__ring {
+      animation-duration: 2.5s;
+      animation-timing-function: steps(8, end);
+    }
   }
 </style>

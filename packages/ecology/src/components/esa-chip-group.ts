@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** Chip text is UI text at the SEMIBOLD tier. It rendered `font-weight: 600` as a
     raw literal — 600 is not a token weight in this system (semibold is 550), so
@@ -226,6 +227,7 @@ export class EsaChipGroup extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
@@ -291,8 +293,8 @@ export class EsaChipGroup extends LitElement {
     }
 
     .chip:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
 
     /* Active palettes mirror Ecology semantic tokens. */

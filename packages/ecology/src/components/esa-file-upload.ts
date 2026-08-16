@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 
 /**
  * esa-file-upload — form-associated Lit Web Component.
@@ -115,8 +117,14 @@ export class EsaFileUpload extends LitElement {
   };
 
   private removeFile(index: number): void {
+    const removed = this._files[index];
     this._files = this._files.filter((_, i) => i !== index);
     this.syncFormValue();
+    // The remove button the user just pressed is gone, and with it the row it sat
+    // in — so there is no element left to carry the confirmation and nothing for
+    // focus to land on. Name the file: with several rows the user cannot otherwise
+    // tell WHICH one went.
+    if (removed) announce(`${removed.name} removed. ${this._files.length} remaining.`);
   }
 
   private formatFileSize(bytes: number): string {
@@ -134,6 +142,12 @@ export class EsaFileUpload extends LitElement {
       this._error = `File${oversized.length > 1 ? 's' : ''} exceed ${this.maxSizeMb} MB limit: ${oversized
         .map((f) => f.name)
         .join(', ')}`;
+      // ASSERTIVE, and this is the clearest case for it in the kit. The user dropped
+      // files and some were silently discarded. A sighted user sees the red line
+      // appear the moment it happens; waiting for a pause to say so means they keep
+      // going on the assumption it worked. Rejection is exactly the "interrupt when
+      // things go wrong" case.
+      announce(this._error, { assertive: true });
       files = files.filter((f) => f.size <= maxBytes);
     }
 
@@ -141,6 +155,13 @@ export class EsaFileUpload extends LitElement {
 
     this._files = this.multiple ? [...this._files, ...files] : [files[0]];
     this.syncFormValue();
+
+    // Polite: the drop zone gives no other feedback that anything landed, and the
+    // file list that appears below is not announced by existing. Count only — the
+    // names are in the list, which the user can now navigate to and read.
+    announce(
+      `${files.length} file${files.length > 1 ? 's' : ''} added. ${this._files.length} total.`,
+    );
   }
 
   render() {
@@ -221,6 +242,7 @@ export class EsaFileUpload extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: block;
@@ -265,9 +287,9 @@ export class EsaFileUpload extends LitElement {
       border-color: var(--form-border-color-focus, #43608a);
     }
     .zone:focus-visible {
-      outline: none;
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
 
     :host([dragging]) .zone {

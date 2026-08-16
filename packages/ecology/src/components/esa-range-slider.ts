@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** Both slots are UI text at medium: the field label, and the numeric readout —
     a readout is chrome, not something the user typed, so it stays label-*. */
@@ -114,6 +115,7 @@ export class EsaRangeSlider extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: block;
@@ -204,10 +206,12 @@ export class EsaRangeSlider extends LitElement {
       outline: none;
     }
     .input:focus-visible::-webkit-slider-thumb {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     .input:focus-visible::-moz-range-thumb {
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     .input:hover:not(:disabled)::-webkit-slider-thumb {
       transform: scale(1.1);

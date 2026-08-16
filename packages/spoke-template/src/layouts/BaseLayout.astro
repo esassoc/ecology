@@ -6,6 +6,11 @@ import '@esa/tokens/tokens.css';
 import '@esa/tokens/component-tokens.css';
 import '@esa/tokens/typography.css';
 import '@esa/tokens/layouts.css';
+// The page-level focus ring. Light DOM only — the esa-* web components paint
+// their own from the same tokens. Without this a spoke's own <a>/<button> fall
+// back to the browser default, which differs per engine and is user-editable.
+import '@esa/tokens/focus.css';
+import '@esa/tokens/a11y.css';
 import '../styles/theme-__SPOKE_SLUG__.css';
 // Runtime handoff inspector — self-gating: dormant unless the current route
 // has a bundle at public/handoff/<slug>/ (generated via `npx handoff`).

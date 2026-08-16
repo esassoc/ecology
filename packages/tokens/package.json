@@ -7,9 +7,12 @@
     "./tokens.css": "./dist/tokens.css",
     "./tokens.js": "./dist/tokens.js",
     "./typography-styles.js": "./dist/typography-styles.js",
+    "./a11y-styles.js": "./dist/a11y-styles.js",
     "./typography.css": "./src/typography.css",
     "./type-roles.css": "./src/typography.css",
     "./layouts.css": "./src/layouts.css",
+    "./a11y.css": "./src/a11y.css",
+    "./focus.css": "./src/focus.css",
     "./component-tokens.css": "./src/component-tokens.css",
     "./migrations.json": "./migrations.json"
   },

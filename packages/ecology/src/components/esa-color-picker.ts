@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** The label is UI text. The hex field is the one value slot in the kit set in the
     MONO face — a hex code is tabular, so it reads code-* rather than body-*. */
@@ -147,6 +148,7 @@ export class EsaColorPicker extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: block;
@@ -223,7 +225,8 @@ export class EsaColorPicker extends LitElement {
     }
     .native:focus-visible + .preview {
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
 
     .hex-input {
@@ -243,7 +246,8 @@ export class EsaColorPicker extends LitElement {
     }
     .hex-input:focus {
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -284,8 +288,8 @@ export class EsaColorPicker extends LitElement {
       box-shadow: 0 0 0 1px var(--color-background-brand, #43608a);
     }
     .swatch:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     .swatch:disabled {
       opacity: 0.6;

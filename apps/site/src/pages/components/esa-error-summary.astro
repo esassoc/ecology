@@ -1,0 +1,213 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import ApiTable from '../../components/ApiTable.astro';
+
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  errors: "The problems to list. Each entry is { field, message }: `field` is the id of the HOST element to send the user to, `message` is what is wrong in the user's words. Omit `field` for a form-level error (\"Your session expired\") and it renders as plain text rather than a link. Renders nothing when empty, so it is safe to leave in the DOM.",
+  heading: "Heading text. The error count is appended for you — do not put a number here, or it will be the thing that disagrees with the list underneath it.",
+  "heading-level": "Which heading element to render, 2–6. A summary sits inside a form under whatever heading introduces it, so h2 is usually right — but heading order is a document-level concern the component cannot see, and skipping a level is its own failure (SC 1.3.1).",
+};
+
+const methods = [
+  { name: 'focus(options?)', type: '(options?: FocusOptions): void', description: 'Move focus to the summary. This IS the announcement — call it once after a failed submit, as an immediate response to the user pressing the button. No-op when there are no errors, so a submit handler can call it unconditionally without stranding focus on an empty box.' },
+];
+---
+<ComponentDoc name="Error Summary" category="Forms" slug="esa-error-summary" type="wc" status="stable"
+  summary="The form-level validation summary: a focusable panel above the form listing every problem, each one a link to the field that has it.">
+
+  <Section id="preview" title="Preview">
+    <p>
+      Renders nothing until it has errors. Set <code>errors</code>, then call
+      <code>focus()</code> — that is what tells the user something went wrong.
+    </p>
+    <Preview code={`<esa-error-summary id="summary"></esa-error-summary>
+
+<script>
+  summary.errors = [
+    { field: 'project-name', message: 'Enter a project name.' },
+    { field: 'pathway', message: 'Select a review pathway.' },
+  ];
+  summary.focus();   // ← the announcement
+</script>`}>
+      <esa-error-summary data-demo="preview"></esa-error-summary>
+    </Preview>
+  </Section>
+
+  <Section id="why" title="Why a summary, and why it takes focus">
+    <p>
+      Inline <code>error-text</code> on each field is necessary and not sufficient. When the
+      user presses Submit their focus is on the button, usually at the bottom of the form.
+      Errors are added above it, off-screen, and nothing announces them: a screen reader is on
+      one element at a time and hears nothing about a mutation elsewhere; someone at high page
+      zoom sees only the region around the button; anyone on a long form is scrolled past the
+      fields that failed. All three get a form that appears to do nothing when pressed.
+    </p>
+    <p>
+      This is the W3C's advisory technique for <strong>both</strong> SC 3.3.1 (Error
+      Identification) and SC 3.3.3 (Error Suggestion), and it is what GOV.UK ships on every
+      form — including single-field ones, so the pattern is consistent rather than conditional.
+    </p>
+    <p>
+      It is deliberately <strong>not</strong> a live region, and adding <code>role="alert"</code>
+      would be a regression. Moving focus is a change of context that assistive technology
+      already surfaces, so SC 4.1.3 does not apply — that criterion exists for updates which
+      happen <em>without</em> taking focus. Focus is also more robust: an announcement is
+      transient and cannot be replayed, whereas a focused summary is still sitting there when
+      the user wants to re-read it.
+    </p>
+    <p>
+      The alternative scales badly. Turn on <code>live-error</code> for every field and a
+      six-error form fires six assertive announcements at once; assertive updates can clear
+      each other's queue, so the user hears some subset, in no guaranteed order, while their
+      focus is somewhere else. One summary, one focus move, one reading order — and it carries
+      what a per-field announcement cannot: <strong>how many</strong> problems there are, and a
+      route to each.
+    </p>
+  </Section>
+
+  <Section id="wiring" title="Wiring it to a form">
+    <p>
+      Put <code>novalidate</code> on the form to suppress the browser's own error bubbles —
+      they are unstyleable, they do not respect page zoom, and Chrome dismisses them after
+      about five seconds, which can be while the user is still reading. Then intercept submit,
+      collect what failed, and set both the summary and each field's <code>error-text</code>.
+    </p>
+    <Preview code={`<form id="intake" novalidate>
+  <esa-error-summary id="summary"></esa-error-summary>
+
+  <esa-text-field id="name" label="Project name" required></esa-text-field>
+  <esa-text-field id="email" label="Contact email" type="email"
+                  autocomplete="email" required></esa-text-field>
+
+  <button type="submit">Save and continue</button>
+</form>
+
+<script>
+  intake.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const failed = [];
+
+    for (const f of [name, email]) {
+      const bad = !f.checkValidity();
+      // Same wording in both places.
+      f.errorText = bad ? f.validationMessage : '';
+      if (bad) failed.push({ field: f.id, message: f.validationMessage });
+    }
+
+    summary.errors = failed;
+    summary.focus();               // no-op when failed is empty
+    if (!failed.length) intake.submit();
+  });
+</script>`}>
+      <div class="wiring-demo">
+        <form id="es-demo-form" novalidate>
+          <esa-error-summary data-demo="live" heading-level="3"></esa-error-summary>
+          <esa-text-field id="es-name" label="Project name" required></esa-text-field>
+          <esa-text-field id="es-email" label="Contact email" type="email" autocomplete="email" required
+            help-text="We'll only use this to confirm the submission."></esa-text-field>
+          <button class="es-submit" type="submit">Save and continue</button>
+        </form>
+      </div>
+    </Preview>
+    <p>
+      Submit the form above empty, then with a malformed email. Focus lands on the summary, and
+      each link puts you on the field it names — including the <em>input inside</em> that
+      component's shadow root, which the summary reaches by calling <code>focus()</code> on the
+      host rather than by an IDREF that could never cross the boundary.
+    </p>
+  </Section>
+
+  <Section id="api" title="API">
+    <ApiTable slug="esa-error-summary" describe={describe} methods={methods} />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>
+        <code>tabindex="-1"</code> with <code>role="group"</code> and
+        <code>aria-labelledby</code> pointing at the heading — a bare <code>&lt;div&gt;</code>
+        is name-prohibited, so without the role the container would announce nothing when it
+        takes focus.
+      </li>
+      <li>
+        The focus ring uses <code>:focus</code>, not <code>:focus-visible</code>. This is one of
+        the few places that is correct: the user was <em>sent</em> here by a failed submit
+        rather than clicking, and <code>:focus-visible</code> heuristics can decide not to
+        paint — which would move a sighted keyboard user with no indication of where they went.
+      </li>
+      <li>
+        The count is inside the heading, so it is announced when focus lands. It is the single
+        most useful thing to say at that moment, and a separate paragraph below would not be
+        read.
+      </li>
+      <li>
+        Items are a real <code>&lt;ul&gt;</code>, so the list role reinforces the count.
+      </li>
+      <li>
+        Links are <strong>underlined</strong>, not just coloured — the panel sits on a tinted
+        danger ground where a colour shift alone would be the SC 1.4.1 failure.
+      </li>
+      <li>
+        Each link resolves its field via <code>getRootNode()</code>, so a summary nested inside
+        a spoke's own shadow root still finds fields in that same root.
+      </li>
+      <li>
+        Pair it with, never instead of, <code>error-text</code> on each invalid control. The
+        summary says what failed; the inline message sits where the fixing happens. Word them
+        the same.
+      </li>
+    </ul>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .a11y li { margin-block-end: var(--spacing-200, 0.5rem); line-height: var(--line-height-relaxed, 1.8); }
+  .wiring-demo { max-width: 460px; }
+  #es-demo-form { display: flex; flex-direction: column; gap: var(--spacing-400, 1rem); }
+  .es-submit {
+    align-self: flex-start;
+    font: inherit;
+    padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
+    border: none;
+    border-radius: var(--radius-md, 0.5rem);
+    background: var(--color-background-brand, #43608a);
+    color: var(--color-content-on-brand, #fff);
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  import '@esa/ecology/esa-error-summary';
+  import '@esa/ecology/esa-text-field';
+
+  customElements.whenDefined('esa-error-summary').then(() => {
+    const preview = document.querySelector('esa-error-summary[data-demo="preview"]') as any;
+    // Errors only — deliberately NOT calling focus(). The preview is an illustration, and a
+    // page that grabs focus on load is a worse bug than the one this component fixes.
+    if (preview) {
+      preview.errors = [
+        { field: 'es-name', message: 'Enter a project name.' },
+        { field: 'es-email', message: 'Enter a valid contact email.' },
+      ];
+    }
+  });
+
+  const form = document.getElementById('es-demo-form') as HTMLFormElement | null;
+  const summary = document.querySelector('esa-error-summary[data-demo="live"]') as any;
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const failed: { field: string; message: string }[] = [];
+    for (const id of ['es-name', 'es-email']) {
+      const f = document.getElementById(id) as any;
+      const bad = !f.checkValidity();
+      f.errorText = bad ? f.validationMessage : '';
+      if (bad) failed.push({ field: f.id, message: f.validationMessage });
+    }
+    summary.errors = failed;
+    summary.focus();
+  });
+</script>

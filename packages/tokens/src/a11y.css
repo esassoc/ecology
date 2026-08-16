@@ -1,0 +1,101 @@
+/*
+ * Ecology — Accessibility utilities.
+ *
+ * Atomic utilities, deliberately NOT in layouts.css: that file is composable
+ * layout ENGINES in the Every-Layout tradition and says so in its header ("the
+ * opposite of atomic/Tailwind utilities"). This is the other kind. Keeping the
+ * two apart is what stops layouts.css becoming a junk drawer.
+ *
+ * It earns its own file because the alternative — pasting the clip rect into
+ * each component that needs it — is how a technique this fiddly drifts into six
+ * subtly-broken copies. The same argument now covers the forced-colors focus
+ * fallback at the bottom.
+ *
+ * This file is bridged into Lit via packages/ecology/src/a11y.ts, so a component
+ * that lists `a11y` in its `static styles` gets these rules INSIDE its shadow
+ * root — which is the only way a page-level stylesheet can reach a web component
+ * at all.
+ */
+
+/* ---- .visually-hidden ----
+   Text that must reach a screen reader but not the screen: the "Error:" prefix
+   on a field message, the count in an error summary heading, an icon's text
+   alternative.
+
+   NOT `display: none`, NOT `visibility: hidden`, NOT `width/height: 0` — all
+   three remove the element from the accessibility tree, which is the exact
+   opposite of the point.
+
+   The declarations, and why each is load-bearing:
+   - `clip-path: inset(50%)` does the actual hiding. `clip` is the legacy
+     property; it is deprecated but still what some older AT paths honour, so
+     both ship. They agree, so there is no conflict to resolve.
+   - `1px` (not 0) box with `overflow: hidden` — a zero-size box is pruned from
+     the a11y tree by some engines.
+   - `position: absolute` keeps it out of flow so it cannot open a gap.
+   - `white-space: nowrap` stops a long string wrapping inside the 1px box,
+     which in some engines stretches the line box and reintroduces a visual gap.
+   - `margin: -1px` absorbs the 1px the box still occupies.
+   - `border: 0; padding: 0` because a component's own reset must not be able to
+     inflate this back into view. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+/* The `focusable` variant: hidden until it receives focus, then revealed. This
+   is the skip-link shape — a control that should be silent to sighted users
+   until a keyboard user tabs to it. Kept here rather than in a component so a
+   spoke's own skip link behaves identically to ours. */
+.visually-hidden--focusable:focus,
+.visually-hidden--focusable:focus-within,
+.visually-hidden--focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  white-space: normal;
+  clip: auto;
+  clip-path: none;
+}
+
+/* ---- Focus ring fallback for forced-colors modes ----
+   Forced-colors (Windows High Contrast and friends) replaces author colours with
+   a small system palette. Backgrounds, borders and BOX-SHADOWS are overridden;
+   `outline` is retained. That is the whole reason the guidance prefers outlines
+   for focus indicators, and it is where this kit was caught out.
+
+   Measured 2026-08-16: 14 components paint their ring as
+   `box-shadow: 0 0 0 <width> <colour>` after an `outline: none` — every form
+   control we ship. In forced-colors those rings simply are not drawn, so the
+   entire form layer had NO keyboard focus indicator. Zero files in the repo
+   mentioned forced-colors at all.
+
+   `Highlight` is the system's own selection colour, so it is guaranteed to
+   contrast with `Canvas` under whatever theme the user picked. Author colours
+   are not, which is why this does not reuse --focus-ring-color.
+
+   The `!important` is load-bearing, not defensive. Components list this
+   stylesheet BEFORE their own in `static styles`, so a later `outline: none` in
+   the component wins on order at equal specificity — which is exactly the
+   declaration this rule has to beat.
+
+   :focus-visible only. Matching :focus-within here would paint a ring on every
+   ancestor of the focused node, nesting rings inside rings. The components that
+   ring a wrapper with :focus-within already use `outline`, so forced-colors
+   keeps those for free and they need nothing from this rule. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+}

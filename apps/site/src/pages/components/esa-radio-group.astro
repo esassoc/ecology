@@ -80,9 +80,11 @@ const events = [
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>The options container has <code>role="radiogroup"</code> labeled by the group label.</li>
+      <li>The options container has <code>role="radiogroup"</code>, named by <code>aria-label</code> from the <code>label</code> attribute — so <strong>leaving <code>label</code> unset leaves the group unnamed</strong>. Always set it, including inside an <code>esa-form-field</code>.</li>
       <li>Each option has <code>role="radio"</code> with <code>aria-checked</code> and selects on Space or Enter.</li>
+      <li><strong>Known gaps.</strong> Arrow keys do not move selection, and every option is a tab stop rather than one roving tab stop — the WAI-ARIA radiogroup pattern expects the reverse. The option text also sits in a sibling <code>&lt;span&gt;</code>: the wrapping <code>&lt;label&gt;</code> cannot name a <code>&lt;span role="radio"&gt;</code>, so options currently announce without their text.</li>
       <li>Disabled options carry <code>aria-disabled</code> and a <code>-1</code> tabindex.</li>
+      <li>The whole option row is the click target, not just the circle.</li>
       <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
     </ul>
   </Section>

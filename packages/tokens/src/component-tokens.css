@@ -254,7 +254,14 @@
      --spacing-100 (0.25rem), and minting a 2px primitive to serve exactly one
      consumer is the move SPEC.md forbids — a role nobody can point at. The ring
      gap is genuine micro-geometry, which is the category the width turned out
-     not to belong to. */
+     not to belong to.
+
+     CONTRAST IS UNRESOLVED (2026-08-16). The brand ring measured 2.95:1 / 2.88:1
+     / 2.66:1 against the raised, canvas and sunken surfaces — all short of the
+     3:1 SC 1.4.11 asks for. A second, non-brand contrast band was tried and
+     reverted the same day: it read as a heavy near-black slab around every
+     focused control. The measurement stands; the remedy is still open. Do not
+     re-add a band without agreeing the requirement and the weight first. */
   --focus-ring-color: var(--color-border-default-focus);
   --focus-ring-width: var(--border-width-focus);
   --focus-ring-offset: 2px;

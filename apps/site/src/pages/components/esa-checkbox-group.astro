@@ -80,8 +80,9 @@ const events = [
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>The options container has <code>role="group"</code> labeled by the group label.</li>
+      <li>The options container has <code>role="group"</code>, named by <code>aria-label</code> from the <code>label</code> attribute — so <strong>leaving <code>label</code> unset leaves the group unnamed</strong>. Note that <code>role="group"</code> has weak support on iOS VoiceOver and Android TalkBack; a native <code>&lt;fieldset&gt;</code>/<code>&lt;legend&gt;</code> is the more reliable grouping.</li>
       <li>Each box has <code>role="checkbox"</code> with <code>aria-checked</code> and toggles on Space or Enter.</li>
+      <li><strong>Known gaps.</strong> The option text sits in a sibling <code>&lt;span&gt;</code>, and a wrapping <code>&lt;label&gt;</code> cannot name a <code>&lt;span role="checkbox"&gt;</code> — options currently announce without their text. The click target is the box alone, not the row, so the visible text is not clickable and the target is 14–20px at <code>xs</code>–<code>md</code>, under the 24×24 minimum. <code>esa-checkbox</code> binds the whole row and does not have this.</li>
       <li>Disabled options carry <code>aria-disabled</code> and a <code>-1</code> tabindex.</li>
       <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
     </ul>

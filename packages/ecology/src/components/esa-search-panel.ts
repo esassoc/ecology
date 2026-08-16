@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 
 /**
  * esa-search-panel — interactive Lit Web Component.
@@ -147,7 +149,24 @@ export class EsaSearchPanel extends LitElement {
     return Array.from(groupMap.entries()).map(([category, items]) => ({ category, items }));
   }
 
+  /**
+   * Announce only the transition INTO no-results. See esa-combobox.announceEmptyResults
+   * for the reasoning — the cue sets the expectation, so a per-keystroke count would be
+   * noise, but a dry query has no other signal for someone who cannot see the list.
+   *
+   * Gated on `hasSearched` so the panel does not announce "no results" the moment it
+   * opens, before anyone has typed anything.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty =
+      this.open && this.hasSearched && !this.loading && (this.results?.length ?? 0) === 0;
+    if (isEmpty && !this.wasEmpty) announce('No results found', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
   updated(changed: Map<string, unknown>): void {
+    this.announceEmptyResults();
     // Auto-focus the input + reset search state when the panel opens.
     if (changed.has('open')) {
       if (this.open) {
@@ -205,13 +224,21 @@ export class EsaSearchPanel extends LitElement {
         <div class="header">
           <div class="search-box">
             ${searchIcon(20)}
+            <!-- The input had no accessible name — only a placeholder, which is not
+                 a name and disappears once you type. The cue is what makes announcing
+                 the result list on every keystroke unnecessary. -->
             <input
               class="input typography-microcopy-md-subtle"
               type="text"
+              aria-label=${this.placeholder || 'Search'}
+              aria-describedby="cue"
               placeholder=${this.placeholder}
               autocomplete="off"
               @input=${this.onSearch}
             />
+            <span class="visually-hidden" id="cue"
+              >Results appear below as you type. Escape closes the panel.</span
+            >
           </div>
           <button class="close" @click=${this.close} aria-label="Close search">
             ${xIcon(20)}
@@ -261,6 +288,7 @@ export class EsaSearchPanel extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: contents;
@@ -323,9 +351,21 @@ export class EsaSearchPanel extends LitElement {
       color: var(--color-content-default-muted, #737373);
     }
 
+    /* The ring goes on the search BOX, not the input — the input is chromeless, so
+       a ring on it would float around bare text. :focus-within rather than
+       :focus-visible because this is text entry, where a ring on click is native
+       behaviour and wanted. Inset so it cannot collide with the close button that
+       shares the header row. */
+    .search-box:focus-within {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
+      border-radius: var(--radius-sm, 0.25rem);
+    }
+
     .input {
       flex: 1;
       border: none;
+      /* Suppressed only because .search-box paints the ring — never bare. */
       outline: none;
       font-family: inherit;
       color: var(--color-content-default, #171717);

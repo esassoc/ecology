@@ -1,5 +1,27 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry — see esa-text-field.ts for why
+// a Lit component inlines the glyph rather than reaching for <EsaIcon>.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
 
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
     chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
@@ -69,12 +91,14 @@ export class EsaCombobox extends LitElement {
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
     required: { type: Boolean },
+    liveError: { type: Boolean, attribute: 'live-error' },
     /**
      * A constraint on what this field will accept — its format, source, or
      * limit. "As it appears on the permit." "Letters, numbers, hyphens." Never
      * reassurance addressed to the user, nor a restatement of the field's state.
      */
     helpText: { type: String, attribute: 'help-text' },
+    cue: { type: String },
     errorText: { type: String, attribute: 'error-text' },
     loading: { type: Boolean },
     debounceMs: { type: Number, attribute: 'debounce-ms' },
@@ -107,7 +131,24 @@ export class EsaCombobox extends LitElement {
   /** Form field name — the key this control submits under. */
   declare name: string | undefined;
   declare required: boolean;
+  /**
+   * Announce the error the moment it appears rather than only when the field is focused.
+   * OFF by default — see the long note on `esa-text-field.liveError`: the house pattern is
+   * validate-on-submit with `<esa-error-summary>`, under which a live region per field
+   * fires an assertive announcement for EVERY invalid field at once, racing the summary
+   * the user was just sent to. Turn it on for fields validated INLINE, on blur.
+   */
+  declare liveError: boolean;
   declare helpText: string;
+  /**
+   * Override the visually-hidden instructional cue read to screen reader users.
+   *
+   * The default explains that results filter as you type and how to review them —
+   * which is what makes announcing every keystroke unnecessary. Replace it if this
+   * combobox behaves differently (server-side search with a delay, say); do not
+   * blank it, or the results list becomes silent with nothing to set expectations.
+   */
+  declare cue: string;
   declare errorText: string;
   declare loading: boolean;
   declare debounceMs: number;
@@ -138,7 +179,9 @@ export class EsaCombobox extends LitElement {
     this.placeholder = 'Select...';
     this.disabled = false;
     this.required = false;
+    this.liveError = false;
     this.helpText = '';
+    this.cue = '';
     this.errorText = '';
     this.loading = false;
     this.debounceMs = 300;
@@ -219,6 +262,53 @@ export class EsaCombobox extends LitElement {
 
   updated(): void {
     this.syncValidity();
+    this.announceEmptyResults();
+  }
+
+  /**
+   * Announce the moment a query stops matching anything — and ONLY that moment.
+   *
+   * The instructional cue (see `cueText`) already tells the user results filter as
+   * they type, so announcing every keystroke's result count would be noise on top of
+   * information they already have. Running commentary while someone is typing is the
+   * classic way this pattern is got wrong.
+   *
+   * The exception is the dry query. A sighted user sees the list empty out
+   * immediately and corrects course; with no announcement, a screen reader user keeps
+   * typing into nothing and only finds out when they navigate down to an empty list.
+   * That is the one case worth interrupting for, which is why it is assertive.
+   *
+   * Guarded on the TRANSITION, not the state — otherwise every subsequent keystroke
+   * in an already-empty query re-announces.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty =
+      this._open && !this.loading && !!this._search && this.filteredOptions.length === 0;
+    if (isEmpty && !this.wasEmpty) {
+      announce('No results found', { assertive: true });
+    }
+    this.wasEmpty = isEmpty;
+  }
+
+  /**
+   * The instructional cue, wired to the control via `aria-describedby`.
+   *
+   * This is the part that removes the NEED for a live region on the results. Telling
+   * someone once, up front, that the list filters as they type sets the expectation
+   * for every keystroke after it — so they know to go and read the list when they are
+   * done, and nothing has to interrupt them meanwhile. A persistent description beats
+   * a transient announcement: it can be re-read, it cannot be missed, and it does not
+   * compete with anything else for the announcement queue.
+   *
+   * Visually hidden because sighted users get the same information from watching the
+   * list change.
+   */
+  private get cueText(): string {
+    if (this.cue) return this.cue;
+    return this.mode === 'autocomplete'
+      ? 'Results filter as you type. Use the up and down arrows to review them, Enter to choose.'
+      : 'Use the up and down arrows to review options, Enter to choose.';
   }
 
   /**
@@ -395,14 +485,43 @@ export class EsaCombobox extends LitElement {
     )}`;
   }
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input, .trigger');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
     const hasError = !!this.errorText;
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
-              ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
-            </label>`
+          ? // A <span>, not a <label>. <label> names LABELABLE elements only; the thing
+            // being named here is an <input role="combobox"> that the label never had a
+            // `for` on, so this was an orphaned <label> and the control's only accessible
+            // name was its own value. Named by REFERENCE below via aria-labelledby — a
+            // copied aria-label silently unnames the control when `label` goes empty.
+            html`<span class="field__label typography-${LABEL_TYPE[this.size]}" id="label">
+              ${this.label}${this.required
+                ? html`<span class="field__required" aria-hidden="true">*</span>`
+                : null}
+            </span>`
           : null}
 
         <div class="container">
@@ -410,16 +529,52 @@ export class EsaCombobox extends LitElement {
           ${this._open ? this.renderDropdown() : null}
         </div>
 
-        ${hasError
-          ? html`<span class="field__error typography-body-sm">${this.errorText}</span>`
-          : this.helpText
-            ? html`<span class="field__help typography-body-sm">${this.helpText}</span>`
-            : null}
+        <!-- Both message nodes always present so the live region pre-exists its content;
+             .visually-hidden when empty keeps them out of .field's flex gap. -->
+        <span
+          class="field__error typography-body-sm ${hasError ? '' : 'visually-hidden'}"
+          id="error"
+          role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+        >${hasError
+            ? html`${alertIcon}<span class="visually-hidden">Error: </span
+                ><span>${this.errorText}</span>`
+            : nothing}</span
+        >
+        <span
+          class="field__help typography-body-sm ${this.helpText ? '' : 'visually-hidden'}"
+          id="help"
+          >${this.helpText || nothing}</span
+        >
+        <!-- Always hidden, always present: the instructional cue that means the
+             results list does not need to announce itself. See the cueText prop. -->
+        <span class="visually-hidden" id="cue">${this.cueText}</span>
       </div>
     `;
   }
 
+  /**
+   * Error FIRST, then help, then the cue. See esa-text-field for the error/help order.
+   *
+   * The cue goes LAST because it is the least situational of the three: an error is
+   * about right now, help is about this field, the cue is about how the widget works.
+   * A screen reader reads descriptions in order, so the most specific thing should not
+   * be sitting behind a sentence about arrow keys.
+   */
+  private get describedBy(): string {
+    return [this.errorText ? 'error' : '', this.helpText ? 'help' : '', 'cue']
+      .filter(Boolean)
+      .join(' ');
+  }
+
   private renderAutocomplete() {
+    // aria-activedescendant is what makes arrow-key navigation audible. Focus stays
+    // on the input (it has to — the user is still typing), so without it the active
+    // option changes visually and a screen reader says nothing at all. It was absent
+    // from every listbox in this kit until 2026-08-16.
+    //
+    // Both IDREFs resolve inside this shadow root, which is the only place they can:
+    // aria-activedescendant, like every IDREF, does not cross a shadow boundary.
     return html`
       ${this.multiple ? this.renderChips() : null}
       <div class="input-wrapper">
@@ -429,6 +584,12 @@ export class EsaCombobox extends LitElement {
           aria-expanded=${this._open}
           aria-haspopup="listbox"
           aria-autocomplete="list"
+          aria-labelledby=${this.label ? 'label' : nothing}
+          aria-required=${this.required ? 'true' : nothing}
+          aria-invalid=${this.errorText ? 'true' : nothing}
+          aria-describedby=${this.describedBy || nothing}
+          aria-controls=${this._open ? 'listbox' : nothing}
+          aria-activedescendant=${this._open && this._active >= 0 ? `opt-${this._active}` : nothing}
           placeholder=${this.currentPlaceholder}
           .value=${this.inputValue}
           ?disabled=${this.disabled}
@@ -465,6 +626,10 @@ export class EsaCombobox extends LitElement {
       <button
         type="button"
         class="trigger typography-${isField ? FIELD_TYPE[this.size] : LABEL_TYPE[this.size]} ${isField ? 'trigger--field' : 'trigger--text'}"
+        aria-labelledby=${this.label ? 'label' : nothing}
+        aria-required=${this.required ? 'true' : nothing}
+        aria-invalid=${this.errorText ? 'true' : nothing}
+        aria-describedby=${this.describedBy || nothing}
         ?disabled=${this.disabled}
         @click=${() => this.toggleDropdown()}
         @keydown=${this.onKeydown}
@@ -496,7 +661,7 @@ export class EsaCombobox extends LitElement {
 
   private renderDropdown() {
     const opts = this.filteredOptions;
-    return html`<div class="dropdown" role="listbox" @keydown=${this.onKeydown}>
+    return html`<div class="dropdown" role="listbox" id="listbox" @keydown=${this.onKeydown}>
       ${this.mode === 'select'
         ? html`<div class="search">
             ${this.searchIcon()}
@@ -523,7 +688,9 @@ export class EsaCombobox extends LitElement {
               ? 'option--selected'
               : ''} ${option.disabled ? 'option--disabled' : ''}"
             role="option"
+            id="opt-${i}"
             aria-selected=${selected}
+            aria-disabled=${option.disabled ? 'true' : nothing}
             @click=${() => this.selectOption(option)}
             @mouseenter=${() => (this._active = i)}
           >
@@ -568,6 +735,7 @@ export class EsaCombobox extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: block;
@@ -607,9 +775,25 @@ export class EsaCombobox extends LitElement {
     .field__help {
       color: var(--form-help-color, #737373);
     }
+    /* Three signals, not one: colour, icon, and a visually-hidden "Error:" prefix.
+       Colour alone is SC 1.4.1 (Use of Color, Level A), and colour alone is all that
+       separated this from .field__help — same tag, same slot, same type role. */
     .field__error {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
+    .field__error .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
+    }
+    /* Both message nodes ALWAYS render — a live region created at the same moment as
+       its text is routinely not announced, so it has to already exist. When empty they
+       carry .visually-hidden, which takes them out of flow: .field is a flex column
+       with a gap, so an in-flow empty node would spend 4px of dead space each.
+       Deliberately NOT display:none, which drops them from the accessibility tree. */
 
     .container {
       position: relative;
@@ -645,7 +829,8 @@ export class EsaCombobox extends LitElement {
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -748,8 +933,8 @@ export class EsaCombobox extends LitElement {
     }
     .trigger--field:focus-visible {
       border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
-      outline: none;
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     .trigger--field:disabled {
       background: var(--color-background-disabled, #f0f0f0);
@@ -800,6 +985,15 @@ export class EsaCombobox extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
+    /* The ring goes on the ROW. .search-input is chromeless by design, so a ring on
+       it would float around bare text; the row is the visible affordance. Inset
+       because the row runs edge to edge inside an overflow:hidden dropdown. This is
+       the same repair as esa-entity-search, esa-search-panel and esa-command-palette
+       — the whole shape is "chromeless input in a bordered row". */
+    .search:focus-within {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
+    }
     .search__icon {
       width: var(--icon-size-sm, 16px);
       height: var(--icon-size-sm, 16px);
@@ -810,6 +1004,7 @@ export class EsaCombobox extends LitElement {
       flex: 1;
       border: none;
       background: none;
+      /* Suppressed only because .search paints the ring — never bare. */
       outline: none;
       color: var(--form-text-color, #171717);
     }
@@ -945,7 +1140,8 @@ export class EsaCombobox extends LitElement {
     }
     .field--error .input:focus,
     .field--error .trigger--field:focus-visible {
-      box-shadow: 0 0 0 2px var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width)
+        var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,
   ];

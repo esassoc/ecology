@@ -1,5 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
     chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
@@ -152,6 +154,25 @@ export class EsaInputTag extends LitElement {
 
   updated(): void {
     this.syncValidity();
+    this.announceEmptyResults();
+  }
+
+  /**
+   * Announce only the transition INTO no-matches. See esa-combobox.announceEmptyResults
+   * for the reasoning: the cue sets the expectation that the list filters, so a
+   * per-keystroke count is noise — but a query matching nothing has no other signal
+   * for someone who cannot see the list empty out.
+   *
+   * `strict` matters here. Without it a typed term that matches no option can still be
+   * ADDED as a free-form token, so the list being empty is not a dead end and saying
+   * "no matches" would be misleading. With `strict` there is nowhere left to go.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty =
+      this._open && this.strict && !!this._search.trim() && this.filteredOptions.length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No matching options', { assertive: true });
+    this.wasEmpty = isEmpty;
   }
 
   /**
@@ -350,12 +371,35 @@ export class EsaInputTag extends LitElement {
     );
   }
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * Same override, same reason, as `esa-text-field` — see the long note there. A
+   * form-associated custom element is not focusable by default, so `host.focus()`
+   * is a silent no-op and `<esa-error-summary>` cannot send the user here.
+   *
+   * The target is the text input, NOT the first token's remove button, even though
+   * the tokens come first in the DOM. Someone sent here to fix a validation error
+   * needs the place they type, and the remove buttons come and go with the value —
+   * landing on one is landing somewhere that may not exist next time.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
     const hasError = !!this.errorText;
     const help = this.resolvedHelpText;
     // Error replaces help — same precedence as esa-select / esa-text-field, so
-    // only one of the two ever occupies the slot below the control.
-    const describedBy = hasError ? 'error' : help ? 'help' : nothing;
+    // only one of the two ever occupies the slot below the control. The cue is
+    // appended, not alternated: it explains how the widget works, which stays true
+    // whichever message is showing. It goes LAST so the situational message is not
+    // sitting behind a sentence about arrow keys.
+    const describedBy = [hasError ? 'error' : help ? 'help' : '', 'cue']
+      .filter(Boolean)
+      .join(' ');
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
@@ -410,6 +454,12 @@ export class EsaInputTag extends LitElement {
           : help
             ? html`<span class="field__help typography-body-sm" id="help">${help}</span>`
             : null}
+        <!-- Always hidden, always present: the instructional cue that means the
+             suggestion list does not need to announce itself as it filters. -->
+        <span class="visually-hidden" id="cue"
+          >Suggestions filter as you type. Use the up and down arrows to review them,
+          Enter to add one, Backspace on an empty field to remove the last.</span
+        >
       </div>
     `;
   }
@@ -469,6 +519,7 @@ export class EsaInputTag extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: block;
@@ -537,7 +588,8 @@ export class EsaInputTag extends LitElement {
     .container:focus-within,
     .container--open {
       --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,

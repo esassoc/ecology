@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { announce } from '../announcer.js';
 
 /**
  * esa-pagination — Lit Web Component.
@@ -81,6 +82,31 @@ export class EsaPagination extends LitElement {
     this.dispatchEvent(
       new CustomEvent('pagechange', { detail: { page }, bubbles: true, composed: true })
     );
+
+    // A page change replaces the content the user came here to read, and nothing else
+    // reports it: the range label updates silently, and the results themselves live in
+    // some other element this component cannot see.
+    //
+    // The MORE robust answer is for the host to move focus to the results heading —
+    // that is a change of context, so assistive tech surfaces it without any live
+    // region, and it puts a keyboard user at the top of the new content instead of
+    // leaving them in the pager. This announcement is the fallback for hosts that do
+    // not, because saying nothing at all is the worse failure.
+    announce(`Page ${page + 1} of ${this.totalPages}. Showing ${this.rangeLabel}.`);
+
+    // Keep focus off a control that is about to disable itself. Pressing Next onto the
+    // last page disables Next under the user's finger, and a disabled button drops
+    // focus to <body> — a keyboard user is silently returned to the top of the
+    // document. Hand focus to the opposite direction button, which is by definition
+    // still enabled at a boundary.
+    void this.updateComplete.then(() => {
+      const active = this.renderRoot.activeElement as HTMLElement | null;
+      if (!active || !(active as HTMLButtonElement).disabled) return;
+      const fallback = this.renderRoot.querySelector<HTMLButtonElement>(
+        'button:not([disabled])',
+      );
+      fallback?.focus();
+    });
   }
 
   private goToFirst = (): void => {

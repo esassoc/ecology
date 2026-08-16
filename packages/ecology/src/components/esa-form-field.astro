@@ -62,7 +62,12 @@ const cls = [
   {label && (
     <label class={`esa-form-field__label typography-${LABEL_TYPE[size]}`}>
       {label}
-      {required && <span class="esa-form-field__required" aria-label="required">*</span>}
+      {/* aria-hidden, NOT aria-label="required". ARIA prohibits naming `generic`, so the
+          old attribute was inert in some engines and a duplicate accessible name in
+          others — it looked like an accessibility feature in a diff and did nothing at
+          runtime. This whole label is DECORATIVE anyway (see the header): the slotted
+          control carries the real `required` + `aria-required`. */}
+      {required && <span class="esa-form-field__required" aria-hidden="true">*</span>}
     </label>
   )}
 
