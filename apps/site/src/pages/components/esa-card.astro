@@ -7,8 +7,9 @@ import PropsTable from '@esa/docs/PropsTable.astro';
 import Card from '@esa/ecology/esa-card.astro';
 
 const props = [
-  { name: 'title', type: 'string', description: 'Header title. Presence (or a header/actions slot) renders the header band.' },
-  { name: 'subtitle', type: 'string', description: 'Secondary line under the title.' },
+  { name: 'title', type: 'string', description: 'Header title. Presence (or meta, or a header/actions slot) renders the header band.' },
+  { name: 'meta', type: 'EsaMetaPair[]', description: 'Identifying facts about the record, as {label, value} pairs. Renders as a definition list under the title, each label beside its value. Both parts are required. A period pair states its calendar: "Calendar Q3 2026", not "Q3".' },
+  { name: 'subtitle', type: 'string', description: 'Deprecated 2026-08-16 in favour of meta; still renders. A free-text line cannot name what its facts are.' },
   { name: 'icon', type: 'string', description: 'Lucide icon name shown left of the title.' },
   { name: 'variant', type: "'default' | 'outlined' | 'elevated' | 'filled'", default: "'default'", description: 'Surface treatment: bordered, shadowed, or sunken.' },
   { name: 'headerVariant', type: "'default' | 'primary' | 'muted'", default: "'default'", description: 'Header band tint.' },
@@ -23,14 +24,42 @@ const slots = [
 ];
 ---
 <ComponentDoc name="Card" category="Display" slug="esa-card" type=".astro" status="stable"
-  summary="Surface container with an optional header (icon, title, subtitle, actions), body, and footer. Variants, header tints, and padding scales.">
+  summary="Surface container with an optional header (icon, title, meta pairs, actions), body, and footer. Variants, header tints, and padding scales.">
 
   <Section id="preview" title="Preview">
-    <Preview align="start" code={`<Card title="Report" subtitle="Q3 summary">
+    <Preview align="start" code={`<Card
+  title="Quarterly report"
+  meta={[{ label: 'Reporting period', value: 'Calendar Q3 2026' }]}>
   <p>Body content for the card.</p>
 </Card>`}>
       <div style="width: 320px;">
-        <Card title="Report" subtitle="Q3 summary">
+        <Card title="Quarterly report" meta={[{ label: 'Reporting period', value: 'Calendar Q3 2026' }]}>
+          <p style="margin: 0;">Body content for the card.</p>
+        </Card>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="meta" title="Meta pairs">
+    <p>Each entry in <code>meta</code> is a <code>{`{ label, value }`}</code> pair: the label is the field's name in the record, the value is what is stored there. Both parts are required, so the header can carry several facts without the reader having to work out how they relate.</p>
+    <p>A pair identifies the record — which project, which permit, which period. A figure the card exists to report is a stat: put it in an <code>esa-stat</code> in the body, where it reads at stat scale.</p>
+    <Preview align="start" code={`<Card
+  title="Eelgrass restoration"
+  meta={[
+    { label: 'Permit', value: 'USACE Section 404' },
+    { label: 'County', value: 'Marin' },
+    { label: 'Received', value: 'Mar 4, 2026' },
+  ]}>
+  <p>Body content for the card.</p>
+</Card>`}>
+      <div style="width: 420px; max-width: 100%;">
+        <Card
+          title="Eelgrass restoration"
+          meta={[
+            { label: 'Permit', value: 'USACE Section 404' },
+            { label: 'County', value: 'Marin' },
+            { label: 'Received', value: 'Mar 4, 2026' },
+          ]}>
           <p style="margin: 0;">Body content for the card.</p>
         </Card>
       </div>
@@ -38,22 +67,22 @@ const slots = [
   </Section>
 
   <Section id="variants" title="Variants">
-    <Preview align="start" code={`<Card title="Default" subtitle="Bordered surface">…</Card>
-<Card variant="elevated" title="Elevated" subtitle="Shadow, no border">…</Card>
-<Card variant="filled" title="Filled" subtitle="Sunken background">…</Card>`}>
+    <Preview align="start" code={`<Card title="Default">…</Card>
+<Card variant="elevated" title="Elevated">…</Card>
+<Card variant="filled" title="Filled">…</Card>`}>
       <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-        <div style="width: 240px;"><Card title="Default" subtitle="Bordered surface"><p style="margin: 0;">Default card.</p></Card></div>
-        <div style="width: 240px;"><Card variant="elevated" title="Elevated" subtitle="Shadow, no border"><p style="margin: 0;">Elevated card.</p></Card></div>
-        <div style="width: 240px;"><Card variant="filled" title="Filled" subtitle="Sunken background"><p style="margin: 0;">Filled card.</p></Card></div>
+        <div style="width: 240px;"><Card title="Default"><p style="margin: 0;">Default card.</p></Card></div>
+        <div style="width: 240px;"><Card variant="elevated" title="Elevated"><p style="margin: 0;">Elevated card.</p></Card></div>
+        <div style="width: 240px;"><Card variant="filled" title="Filled"><p style="margin: 0;">Filled card.</p></Card></div>
       </div>
     </Preview>
   </Section>
 
   <Section id="header-variants" title="Header variants">
-    <Preview align="start" code={`<Card headerVariant="primary" title="Primary header" subtitle="Inverted text">…</Card>
+    <Preview align="start" code={`<Card headerVariant="primary" title="Primary header" meta={[{ label: 'Status', value: 'Active' }]}>…</Card>
 <Card headerVariant="muted" title="Muted header">…</Card>`}>
       <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-        <div style="width: 260px;"><Card headerVariant="primary" title="Primary header" subtitle="Inverted text"><p style="margin: 0;">Tinted header band.</p></Card></div>
+        <div style="width: 260px;"><Card headerVariant="primary" title="Primary header" meta={[{ label: 'Status', value: 'Active' }]}><p style="margin: 0;">Tinted header band.</p></Card></div>
         <div style="width: 260px;"><Card headerVariant="muted" title="Muted header"><p style="margin: 0;">Subtle sunken header.</p></Card></div>
       </div>
     </Preview>
@@ -73,13 +102,13 @@ const slots = [
 
   <Section id="slots" title="Actions & footer">
     <p>The <code>actions</code> slot sits at the right of the header; the <code>footer</code> slot renders a bottom band.</p>
-    <Preview align="start" code={`<Card title="Report" subtitle="Q3 summary" icon="info">
+    <Preview align="start" code={`<Card title="Quarterly report" meta={[{ label: 'Reporting period', value: 'Calendar Q3 2026' }]} icon="info">
   <button slot="actions" type="button">Edit</button>
   <p>Body content.</p>
   <span slot="footer">Last updated 2 hours ago</span>
 </Card>`}>
       <div style="width: 420px; max-width: 100%;">
-        <Card title="Report" subtitle="Q3 summary" icon="info">
+        <Card title="Quarterly report" meta={[{ label: 'Reporting period', value: 'Calendar Q3 2026' }]} icon="info">
           <button slot="actions" type="button">Edit</button>
           <p style="margin: 0;">The actions slot sits at the right of the header; the footer slot renders a bottom band.</p>
           <span slot="footer">Last updated 2 hours ago</span>

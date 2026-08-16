@@ -5,14 +5,28 @@
 // Angular TemplateRef inputs (header/actions/footer) → Astro named slots
 // ("header", "actions", "footer"); the default slot is the body.
 // Angular @if → conditional render here.
+//
+// `meta` replaces `subtitle` (deprecated 2026-08-16). The free-text line under
+// the title took two kinds of fill: a sentence explaining the card to its
+// reader, and a row of facts glued together with separators. Pairs admit
+// neither — every value arrives with the name of its field, and a sentence has
+// no field name to give. Pairs identify the RECORD in the card; the figure the
+// card exists to report is a stat (esa-stat), and the card's own body is what
+// explains it.
+import type { EsaMetaPair } from './_meta';
+
 interface Props {
   /** What the card is — the name of the record, section, or metric it holds. */
   title?: string;
+  /** Identifying facts about the record, as {label, value} pairs:
+      [{ label: 'Permit', value: 'USACE Section 404' }]. Renders as a definition
+      list under the title. A period pair states its calendar. */
+  meta?: EsaMetaPair[];
   /**
-   * A short datum qualifying the title: a count, a date range, a status, an id
-   * — "Across 14 monitored sites", "Next two weeks", "401 Water Quality
-   * Certification". Never a sentence, and never a gloss explaining the card's
-   * contents to its reader; the card's body is what says that.
+   * @deprecated Use `meta`. A free-text line under the title cannot say what
+   * its facts are, so it filled with sentences and with separator-joined rows.
+   * Still renders; migrate a fill to a pair, or delete it when the card's body
+   * already carries the fact.
    */
   subtitle?: string;
   icon?: string;
@@ -22,6 +36,7 @@ interface Props {
 }
 const {
   title,
+  meta,
   subtitle,
   icon,
   variant = 'default',
@@ -32,7 +47,8 @@ const {
 const hasHeaderSlot = Astro.slots.has('header');
 const hasActionsSlot = Astro.slots.has('actions');
 const hasFooterSlot = Astro.slots.has('footer');
-const showHeader = !!title || hasHeaderSlot || hasActionsSlot;
+const hasMeta = !!meta && meta.length > 0;
+const showHeader = !!title || hasMeta || hasHeaderSlot || hasActionsSlot;
 
 const cls = [
   'esa-card',
@@ -73,6 +89,16 @@ const cls = [
             <div class="esa-card__titles">
               {title && <h3 class="esa-card__title">{title}</h3>}
               {subtitle && <p class="esa-card__subtitle">{subtitle}</p>}
+              {hasMeta && (
+                <dl class="esa-card__meta">
+                  {meta!.map((pair) => (
+                    <div class="esa-card__meta-pair">
+                      <dt>{pair.label}</dt>
+                      <dd>{pair.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
             </div>
           </div>
           {hasActionsSlot && (
@@ -103,6 +129,9 @@ const cls = [
     --_card-header-bg: var(--card-header-bg, transparent);
     --_card-header-color: var(--card-header-color, var(--color-text-primary, #171717));
     --_card-header-border: var(--card-header-border-color, var(--color-border-light, #efefef));
+    --_card-meta-label-color: var(--card-meta-label-color, var(--color-text-secondary, #525252));
+    --_card-meta-label-size: var(--card-meta-label-size, var(--type-size-150, 0.875rem));
+    --_card-meta-value-size: var(--card-meta-value-size, var(--type-size-200, 0.9375rem));
 
     display: block;
     background: var(--_card-bg);
@@ -177,6 +206,41 @@ const cls = [
   }
 
   .esa-card--header-primary .esa-card__subtitle {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* meta — labeled pairs under the title. Each pair keeps its label beside its
+     value on one line; pairs wrap as a set. */
+  /* The gap BETWEEN pairs has to beat the gap inside one, or the reader has to
+     work out which value belongs to which label — the failure the pair exists
+     to prevent. */
+  .esa-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-100, 0.25rem) var(--spacing-500, 1.5rem);
+    margin: var(--spacing-050, 0.125rem) 0 0;
+  }
+
+  .esa-card__meta-pair {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-100, 0.25rem);
+    min-width: 0;
+  }
+
+  .esa-card__meta dt {
+    font-size: var(--_card-meta-label-size);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--_card-meta-label-color);
+  }
+
+  .esa-card__meta dd {
+    margin: 0;
+    font-size: var(--_card-meta-value-size);
+    color: inherit;
+  }
+
+  .esa-card--header-primary .esa-card__meta dt {
     color: rgba(255, 255, 255, 0.8);
   }
 

@@ -9,6 +9,7 @@ import Button from '@esa/ecology/esa-button.astro';
 
 const props = [
   { name: 'title', type: 'string', description: 'The page’s name, as it appears in navigation and breadcrumbs (required). Rendered as the <h1>.' },
+  { name: 'meta', type: 'EsaMetaPair[]', description: 'Identifying facts about the record this page shows, as {label, value} pairs. Renders as a definition list under the title: a wrapping row at width, one stack per pair below it. Both parts are required. A period pair states its calendar: "Calendar Q2 2026", not "Q2".' },
   { name: 'eyebrow', type: 'string', description: 'The named thing this page sits inside: a section, a report, a person, a record id. A proper noun or a short label, never a sentence.' },
   { name: 'icon', type: 'string', description: 'esa-icon registry name for the eyebrow’s leading glyph, e.g. "award" (eyebrow only).' },
   { name: 'prominence', type: "'page-title' | 'display'", default: "'page-title'", description: 'Title scale: the page-title role (default) or the oversized display role for a hero.' },
@@ -38,7 +39,34 @@ const slots = [
 
   <Section id="no-description" title="There is no description slot">
     <p>This component takes no <code>lede</code>, <code>subtitle</code>, or <code>description</code>. A page header carries the page’s name and its actions; a sentence explaining the page to its reader is text <em>about</em> the page rather than <em>of</em> it, and the page’s own data and structure are what say what it is.</p>
-    <p>If a page genuinely needs a number or a date up top, that is a datum: put it in the <code>eyebrow</code>, or in an <code>esa-stat</code> below the header where it can be read as data.</p>
+    <p>Identifying facts go in <code>meta</code>, which takes labeled pairs rather than free text — see below. A figure the page exists to report is a stat: put it in an <code>esa-stat</code> under the header, where it reads at stat scale.</p>
+  </Section>
+
+  <Section id="meta" title="Meta pairs">
+    <p>Each entry in <code>meta</code> is a <code>{`{ label, value }`}</code> pair: the label is the field's name in the record, the value is what is stored there. Both parts are required.</p>
+    <p>That is why it is a prop and not a slot. A slot takes anything, and what it took was a row of facts glued together with separators — <q>SFO, Shoreline Protection Program, Beacon compliance platform</q> — where a client, a program and a platform are three different kinds of thing and nothing on the line says which is which. A pair cannot be written that way.</p>
+    <p>A period pair states the calendar it counts by. This domain runs fiscal years and water years alongside calendar ones, and a compliance figure means a different span under each.</p>
+    <Preview align="start" code={`<PageHeader
+  title="Quarterly Compliance Summary"
+  meta={[
+    { label: 'Project', value: 'Delta Conveyance Project' },
+    { label: 'Reporting period', value: 'Calendar Q2 2026' },
+    { label: 'Lead agency', value: 'DWR' },
+  ]}>
+  <Button slot="actions" color="ghost" appearance="outline" icon="download">Export</Button>
+</PageHeader>`}>
+      <div style="width: 100%;">
+        <PageHeader
+          title="Quarterly Compliance Summary"
+          meta={[
+            { label: 'Project', value: 'Delta Conveyance Project' },
+            { label: 'Reporting period', value: 'Calendar Q2 2026' },
+            { label: 'Lead agency', value: 'DWR' },
+          ]}>
+          <Button slot="actions" color="ghost" appearance="outline" icon="download">Export</Button>
+        </PageHeader>
+      </div>
+    </Preview>
   </Section>
 
   <Section id="hero" title="Eyebrow + display prominence (hero)">

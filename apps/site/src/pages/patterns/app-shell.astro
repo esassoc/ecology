@@ -36,7 +36,7 @@ import EsaBadge from '@esa/ecology/esa-badge.astro';
           </div>
 
           <div class="shell-cards">
-            <EsaCard title="Active permits" subtitle="Across 14 monitored sites">
+            <EsaCard title="Active permits" meta={[{ label: 'Monitored sites', value: '14' }]}>
               <ul class="shell-list">
                 <li>
                   <span class="shell-list__label">Shoreline stabilization — Carquinez Strait</span>
@@ -53,7 +53,7 @@ import EsaBadge from '@esa/ecology/esa-badge.astro';
               </ul>
             </EsaCard>
 
-            <EsaCard title="Upcoming field visits" subtitle="Next two weeks">
+            <EsaCard title="Upcoming field visits" meta={[{ label: 'Window', value: 'June 16 to June 30, 2026' }]}>
               <ul class="shell-list">
                 <li>
                   <span class="shell-list__date">Jun 16</span>
