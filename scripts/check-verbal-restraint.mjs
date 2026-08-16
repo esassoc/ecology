@@ -132,17 +132,12 @@ const WARN_ONLY = new Set([
 ]);
 
 /*
- * Name the defect, not the entry that claimed the string. The packed-metadata
- * entry sits ahead of the character entries and first match wins, so a prose
- * sentence hinged on an em dash — "Best for small fixed option sets — past about
- * six options, prefer a select." — reports as packed metadata. 90 of the 123
- * packed-metadata findings across the three repos are that shape: an em dash and
- * no other separator. All three tiers are warnings now, so this only changes the
- * message, and it is worth keeping: an author told to unglue a metadata row will
- * go looking for a row that isn't there.
+ * The check itself now names the defect when the packed-metadata entry claims a
+ * prose sentence hinged on an em dash — that used to be relabelled here, on a
+ * cruder test that also caught genuine rows joined by em dashes. One heuristic,
+ * one home: `f.reason` carries whatever correction applies, and this script only
+ * appends the tier's own sentence.
  */
-const emDashOnly = (f) => f.rule === 'corpus:packed-metadata' && !/[·|/•]/.test(f.excerpt);
-
 const errors = [];
 const warnings = [];
 for (const file of targets) {
@@ -154,13 +149,10 @@ for (const file of targets) {
   }
   const strings = extractStrings(source, file);
   for (const f of corpusGrep.run({ strings, config })) {
-    const dashed = emDashOnly(f);
     const warn = WARN_ONLY.has(f.rule);
-    const message = dashed
-      ? 'Em dash in a surface string. Reported under packed metadata because that entry matches first; the defect is the character. Existing strings are left alone; anything written now is blocked at write time.'
-      : warn
-        ? `${f.reason} Existing strings are left alone; anything written now is blocked at write time.`
-        : `${f.reason} This string is ABOUT the page — remove it, or replace it with data that earns a place in the structure.`;
+    const message = warn
+      ? `${f.reason} Existing strings are left alone; anything written now is blocked at write time.`
+      : `${f.reason} This string is ABOUT the page — remove it, or replace it with data that earns a place in the structure.`;
     (warn ? warnings : errors).push({
       level: warn ? 'warning' : 'error',
       rule: f.rule,
