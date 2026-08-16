@@ -649,15 +649,11 @@
       "id": "tier3-border-to-border-color",
       "kind": "token",
       "since": "2026-08-14",
-      "why": "The word `border` named two different things at tier 3. These two held a plain colour; --filter-dropdown-border held a whole `1px solid …` shorthand (see the row below, which is NOT an exact alias). All three are now `-border-color`, matching the 27 border hooks in the file that already were. Names only, values untouched. FIRST TIER-3 ROWS IN THIS FILE — note the asymmetry: the emitted alias rescues a spoke that READS an old name, but tier 3 is the surface a spoke DECLARES, and an alias cannot rescue a declaration. A spoke that overrode --sidenav-border silently loses that override and renders the hub default with no error, so /update-tokens has to run in every spoke rather than the alias being left to absorb it.",
+      "why": "The word `border` named two different things at tier 3. This one held a plain colour; --filter-dropdown-border held a whole `1px solid …` shorthand (see the row below, which is NOT an exact alias). Both are now `-border-color`, matching the 27 border hooks in the file that already were. Names only, values untouched. FIRST TIER-3 ROWS IN THIS FILE — note the asymmetry: the emitted alias rescues a spoke that READS an old name, but tier 3 is the surface a spoke DECLARES, and an alias cannot rescue a declaration. A spoke that overrode --sidenav-border silently loses that override and renders the hub default with no error, so /update-tokens has to run in every spoke rather than the alias being left to absorb it.\n\nTHIS ROW SHIPPED A SECOND PAIR, --topbar-border -> --topbar-border-color, AND IT WAS MOVED OUT ON 2026-08-16 when the whole --topbar-* namespace was deleted. Left here it would have become the exact defect this file warns about twice over: an alias whose destination no longer exists is itself declared and resolves to nothing, so a spoke reading --topbar-border would lose the property with the manifest reporting success. The pair now lives in topbar-chrome-exempt-removed with an empty destination, which is the truthful shape — there is nothing to rename it to. The destination-resolves guard in token-rename.test.mjs is what caught it.",
       "pairs": [
         [
           "--sidenav-border",
           "--sidenav-border-color"
-        ],
-        [
-          "--topbar-border",
-          "--topbar-border-color"
         ]
       ]
     },
@@ -1427,6 +1423,54 @@
           "--form-radius-lg",
           "--radius-md"
         ]
+      ]
+    },
+    {
+      "id": "topbar-chrome-exempt-removed",
+      "kind": "token",
+      "removed": true,
+      "exact": false,
+      "since": "2026-08-16",
+      "to": "Nothing. esa-app-shell renders every surface these named — the bar, the sidebar toggle, the omnibox — and styles them from the SEMANTIC layer directly. A spoke re-skins the chrome by re-pointing those tier-2 roles (--color-background-elevation-raised, --color-content-default-secondary and friends), which is what it was already doing, because none of these twelve was ever read.",
+      "why": "THE ONLY CHROME EXEMPTION, AND IT DOCUMENTED A LOOK THE KIT DOES NOT RENDER. These twelve were held exempt from the wire-or-delete rule on the grounds that esa-app-shell could read them and we were choosing not to wire it. The disclosure burden SPEC.md sets for that — an owner and a plain-language cost — was met. What was not checked is whether the DEFAULTS were true, and seven of the twelve were not: the block claims the bar sits on --color-background-elevation-sunken and the toggle on content-secondary, while esa-app-shell paints elevation-raised and content-tertiary.\n\nThat is worse than an unwired hook. An unwired hook does nothing; a wrong one is a published contract that lies. A spoke reading this block to learn what the chrome looks like learns something false, and a spoke overriding --topbar-bg to change the bar gets silence.\n\nThe category dies with it: --topbar-* was CHROME_EXEMPT's only member, so SPEC.md's 'Chrome exemptions' section and the CHROME_EXEMPT constant in apps/site/src/data/token-graph.ts both go in the same commit. Retiring the exemption is the honest move — the surface it was protecting was never real. If the chrome ever earns a theming surface, it gets one built from what esa-app-shell actually paints, not from what this block wished it did.\n\nexact:false because there is no equivalent — the block's own values disagree with the shipped chrome, so no substitution is value-neutral.",
+      "pairs": [
+        ["--topbar-bg", ""],
+        ["--topbar-border-color", ""],
+        ["--topbar-border", ""],
+        ["--topbar-shadow", ""],
+        ["--topbar-icon-color", ""],
+        ["--topbar-icon-color-hover", ""],
+        ["--topbar-icon-bg", ""],
+        ["--topbar-icon-bg-hover", ""],
+        ["--topbar-icon-radius", ""],
+        ["--topbar-search-bg", ""],
+        ["--topbar-search-bg-hover", ""],
+        ["--topbar-search-text", ""],
+        ["--topbar-search-radius", ""]
+      ]
+    },
+    {
+      "id": "icon-link-hooks-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "Nothing. esa-icon-link is a deprecation shim over esa-button variant=\"chrome\" (icon-link-to-button-chrome, 2026-08-14) and no longer paints anything of its own. Type comes from the typography-label-* composite the button applies; the icon gap is the button's.",
+      "why": "THE HOOKS OUTLIVED THE COMPONENT BY TWO DAYS. esa-icon-link folded into esa-button on 2026-08-14 and became a shim; these three were left declared, reading nothing, in a namespace whose component no longer draws. Verified across packages/tokens/src, packages/ecology/src, packages/docs/src, packages/spoke-template/src, apps/site/src and plugins/: zero readers anywhere.\n\nWORTH RECORDING WHY THEY WERE MISSED. The component rename rows (kind: component) carry no `pairs`, so nothing walked this namespace when the fold landed — a component removal and its tier-3 surface are two separate migrations and only one of them was written. --icon-button-bg-hover was stranded by the same fold on the same day; see icon-button-bg-hover-removed.\n\nThe two font-size names were also the last survivors of the size-only typography ramp that --form-font-size-* died for on 2026-08-14: a size with no weight, leading or face behind it. They would have failed that test too if anyone had been reading them.",
+      "pairs": [
+        ["--icon-link-font-size-md", ""],
+        ["--icon-link-font-size-sm", ""],
+        ["--icon-link-gap", ""]
+      ]
+    },
+    {
+      "id": "icon-button-bg-hover-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "--button-chrome-bg-hover, which holds the identical value (color-mix(in srgb, currentColor 14%, transparent)) and is read by esa-button. Named for the variant that absorbed the behaviour rather than the component that used to own it.",
+      "why": "STRANDED BY THE esa-icon-button FOLD (icon-button-to-button-chrome, 2026-08-14). The scrim itself did not go anywhere — esa-button variant=\"chrome\" paints it, and --button-chrome-bg-hover was declared for exactly that purpose, carrying this token's value verbatim. What was left behind was the old NAME, declared and read by nothing.\n\nA rename row would have been wrong even though the values match. This is a tier-3 name, which is the surface a spoke DECLARES, and the alias build.js emits rescues only readers; it would also have re-declared the dead name into dist/tokens.css and kept it in the shipped baseline forever. The destination is recorded here as guidance instead — migrate-tokens.mjs prints it and a human decides, which is right, because a spoke that overrode --icon-button-bg-hover was theming icon buttons specifically and --button-chrome-bg-hover now covers every chrome button.",
+      "pairs": [
+        ["--icon-button-bg-hover", "--button-chrome-bg-hover"]
       ]
     }
   ]
