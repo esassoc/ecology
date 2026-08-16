@@ -561,10 +561,11 @@ the theming contract can be reviewed before code depends on it. `--grid-*` is
 staged today — no `esa-grid` component ships yet.
 
 `--topbar-*` **was** listed here and should not have been: `esa-app-shell`
-renders the bar, the sidebar toggle and the omnibox that those 12 tokens name.
+renders the bar, the sidebar toggle and the omnibox that those 12 tokens named.
 The premise of staging is *"the component does not exist yet"*, and because
 "staged" reads as *"arriving soon"* nobody re-checked it once that stopped
-being true. It is now a **chrome exemption** — see below.
+being true. It became a chrome exemption, and on **2026-08-16 it was deleted
+outright** — see below.
 
 A staged surface must:
 
@@ -576,6 +577,14 @@ A staged surface must:
 Removing a prefix from that list should mean **the component landed**, not that
 the finding got annoying. A staged surface that no one has claimed after a
 release cycle is dead surface — fold it away.
+
+**`--grid-*` is deliberately being held past that rule**, and the exception is
+recorded here so the next sweep does not delete it on this section's authority.
+The 24 tokens are the theming contract an AG Grid wrapper will read, and a data
+grid is one of the three cases tier 3 exists for. **Review it against the tier-3
+framework by the next release cycle**: either the wrapper has landed and the
+surface is wired, or the surface has to justify itself again from scratch. It is
+the largest unread block in the file and the only one exempt from its own rule.
 
 ## A shipped `.css` partial is a token READER
 
@@ -613,12 +622,31 @@ A chrome exemption must:
   `owner` (the component that renders the surface) and a `cost` sentence
   stating in plain terms what a spoke gives up;
 - keep every token rendered by name on `/debug/components` — an exemption that
-  hid them would be indistinguishable from having wired them.
+  hid them would be indistinguishable from having wired them;
+- **assert that its declared values match what the owner actually renders, and
+  re-check that.** This rule is new, and it is the one the category died of.
 
-`--topbar-*` → `esa-app-shell` is the only entry. The cost: a spoke overriding
-`--topbar-bg`, `--topbar-icon-bg-hover` or `--topbar-search-*` gets nothing;
-the chrome re-skins only through the semantic layer the component reads
-directly.
+**`CHROME_EXEMPT` IS EMPTY AS OF 2026-08-16.** `--topbar-*` → `esa-app-shell`
+was the only entry and all 12 tokens are gone (`migrations.json`:
+`topbar-chrome-exempt-removed`). The category is kept, empty, because *how* it
+failed is the useful part.
+
+Every disclosure rule above was satisfied. There was an owner, there was a
+stated cost, the tokens were rendered by name. And the block still rotted:
+**seven of the twelve defaults drifted from what `esa-app-shell` actually
+paints** — it claimed the bar sat on `background-elevation-sunken` and the
+toggle on `content-secondary` while the component painted `elevation-raised`
+and `content-tertiary`.
+
+Nothing could have caught that. The tokens had no readers, so no render
+depended on them, so no test, no audit and no visual diff could disagree with
+them. **An unread hook is inert; an unread hook with a wrong default is a
+published contract that lies** — a spoke reading it to learn the chrome learns
+something false, and a spoke overriding `--topbar-bg` gets silence.
+
+So the standing decision an exemption represents has to include re-verifying the
+values, by hand, because nothing else will. Absent someone willing to own that,
+**delete the surface instead**. That is what happened here.
 
 ## Themes consume the tiers like this
 

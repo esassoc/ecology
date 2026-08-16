@@ -904,15 +904,21 @@ const isStaged = (name: string) => STAGED_PREFIXES.some((p) => name.startsWith(p
  * surface belongs to, so the exemption can never again imply "nothing owns
  * this". `cost` states plainly what a spoke loses, because an exemption that
  * only says "ignore me" is how the last one went quiet.
+ *
+ * EMPTY SINCE 2026-08-16, and the reason the category is kept rather than
+ * deleted is the reason it failed. `--topbar-*` was its only member and is gone
+ * (migrations.json: topbar-chrome-exempt-removed). The exemption's disclosure
+ * rules — an owner, a stated cost — were all satisfied, and the block still
+ * rotted: nothing required the DEFAULTS to be true, and seven of the twelve
+ * drifted from what esa-app-shell actually paints. An unwired hook does
+ * nothing; a wrong unwired hook is a published contract that lies.
+ *
+ * So the missing rule, for whoever adds the next entry: an exemption must also
+ * assert that its declared values match what the owner renders, and that has to
+ * be re-checked, because nothing reads the tokens and therefore nothing else
+ * can catch the drift. Absent that, prefer deleting the surface.
  */
-export const CHROME_EXEMPT: { prefix: string; owner: string; why: string; cost: string }[] = [
-  {
-    prefix: '--topbar-',
-    owner: 'esa-app-shell',
-    why: 'App chrome. esa-app-shell renders the bar, the sidebar toggle and the omnibox, and these 12 map onto them exactly — but chrome is held exempt from the wire-or-delete rule by decision.',
-    cost: 'A spoke overriding --topbar-bg, --topbar-icon-bg-hover or --topbar-search-* gets nothing. The chrome re-skins only through the semantic layer the component reads directly.',
-  },
-];
+export const CHROME_EXEMPT: { prefix: string; owner: string; why: string; cost: string }[] = [];
 const CHROME_PREFIXES = CHROME_EXEMPT.map((c) => c.prefix);
 const isChrome = (name: string) => CHROME_PREFIXES.some((p) => name.startsWith(p));
 

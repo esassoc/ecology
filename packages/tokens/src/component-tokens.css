@@ -266,8 +266,11 @@
   --focus-ring-width: var(--border-width-focus);
   --focus-ring-offset: 2px;
 
-  /* ===================== ICON BUTTON ===================== */
-  --icon-button-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
+  /* DELETED (2026-08-16) — --icon-button-bg-hover, stranded by the
+     esa-icon-button fold on 2026-08-14. The scrim did not go anywhere:
+     --button-chrome-bg-hover above holds the identical value and esa-button
+     paints it. Only the old name was left, declared and read by nothing.
+     See migrations.json: icon-button-bg-hover-removed. */
 
   /* ===================== FILTERS ===================== */
   --filter-container-gap: var(--spacing-200);
@@ -413,33 +416,24 @@
      If a rail user block is ever built, compose esa-avatar and add ONE divider
      hook — not this namespace. */
 
-  /* ============ NAVIGATION — HEADER / TOPBAR (CHROME, EXEMPT) ============
-     Read by NOTHING, by decision. esa-app-shell renders every surface these
-     name — the bar, the sidebar toggle (--topbar-icon-*) and the omnibox
-     (--topbar-search-*) — and styles them from the semantic layer directly
-     instead. Held exempt from the wire-or-delete rule; see SPEC.md "Chrome
-     exemptions" and CHROME_EXEMPT in apps/site/src/data/token-graph.ts.
+  /* DELETED (2026-08-16) — the twelve --topbar-* hooks, and with them the
+     "chrome exemption" category they were the only member of. See
+     migrations.json: topbar-chrome-exempt-removed.
 
-     NOT staged. This block carried a STAGED banner for months on the premise
-     that no component existed to read it, which was never true.
+     They were held exempt from the wire-or-delete rule on the grounds that
+     esa-app-shell COULD read them and we were choosing not to wire it. That
+     bargain is defensible; what was never checked is whether the defaults were
+     TRUE. Seven of the twelve were not — the block claimed the bar sat on
+     surface-sunken and the toggle on text-secondary while esa-app-shell paints
+     elevation-raised and content-tertiary.
 
-     The values below therefore document intent, not what paints. Seven of the
-     twelve already disagree with esa-app-shell's actual chrome (it renders the
-     bar on --color-background-elevation-raised, not surface-sunken; the toggle on text-tertiary,
-     not text-secondary). Do not trust them as a record of the shipped look —
-     read esa-app-shell.astro. If this is ever wired, reconcile there first. */
-  --topbar-bg: var(--color-background-elevation-sunken);
-  --topbar-border-color: var(--color-border-default-subtle);
-  --topbar-shadow: none;
-  --topbar-icon-color: var(--color-content-default-secondary);
-  --topbar-icon-color-hover: var(--color-background-brand);
-  --topbar-icon-bg: transparent;
-  --topbar-icon-bg-hover: var(--color-background-default-hover);
-  --topbar-icon-radius: 6px;
-  --topbar-search-bg: var(--color-background-elevation-raised);
-  --topbar-search-bg-hover: var(--color-background-default);
-  --topbar-search-text: var(--color-content-default-muted);
-  --topbar-search-radius: var(--radius-md, 0.5rem);
+     An unwired hook does nothing. A WRONG unwired hook is a published contract
+     that lies: a spoke reading it to learn the chrome learns something false,
+     and a spoke overriding --topbar-bg gets silence. That is the difference
+     that retired the category rather than the block.
+
+     If the chrome ever earns a theming surface, build it from what
+     esa-app-shell.astro actually paints — not from this block. */
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
   --breadcrumbs-bg: transparent;
@@ -637,10 +631,14 @@
   --header-nav-border-color: var(--color-border-default, #e5e5e5);
   --header-nav-menu-item-color: var(--color-content-default-secondary, #525252);
 
-  /* esa-icon-link */
-  --icon-link-font-size-md: 1rem;
-  --icon-link-font-size-sm: 0.875rem;
-  --icon-link-gap: var(--spacing-150, 6px);
+  /* DELETED (2026-08-16) — the three --icon-link-* hooks. esa-icon-link became
+     a shim over esa-button variant="chrome" on 2026-08-14 and paints nothing of
+     its own; these outlived it by two days with zero readers anywhere.
+
+     Worth keeping: a `component` migration row carries no `pairs`, so nothing
+     walked this namespace when the fold landed. A component removal and its
+     tier-3 surface are two separate migrations, and only one was written.
+     See migrations.json: icon-link-hooks-removed. */
 
   /* esa-kbd */
   --kbd-bg: var(--color-background-elevation-raised);
