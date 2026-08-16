@@ -11,6 +11,68 @@ component), `hub-fix`, `skill`, `workflow` (planner/gate defaults), `process`.
 
 ---
 
+## Source: the tier-3 reduction pass (2026-08-16)
+Applied the three-tier framework's necessity test to all 306 tier-3 declarations:
+**306 → 116** (16 dead deleted, 3 misfiled relocated, 168 demoted to the tier-2 roles
+they aliased, 3 pre-existing rename rows repaired). Findings that were surfaced BY the
+pass but are not part of it, logged rather than fixed:
+
+- **`esa-alert-box` pins every variant to the INFO tint** · *Evidence:* the hookify
+  defaults set `--alert-box-bg` → `--color-background-utility-info-subtle` and
+  `--alert-box-border-color` → `--color-border-utility-info` for ALL variants, so success
+  and warning alerts render blue. air-exchange-tool works around it in its own theme with
+  `--alert-box-bg: initial`, with a comment naming it as a hub defect — meaning a spoke
+  found this, patched locally, and it never came back up. A zero-regression-rule miss: the
+  hook was spliced above a chain that was per-variant, and the default flattened it.
+  *Action:* the two hooks must derive from the variant's accent context, not from `info`.
+  Both survived the demotion pass (air-exchange declares them, which is demonstrated
+  divergence), so the fix is a value change, not a re-add · `hub-fix` · **P1**
+
+- **`--color-background-default-hover` is a tier-2 orphan, and three migrations rows point
+  spokes AT it** · *Evidence:* its only reader was `--topbar-icon-bg-hover`, deleted with
+  the topbar namespace. It was already effectively dead — its one reader was itself
+  unread — so the deletion revealed the orphan rather than creating it. The sharp edge is
+  that `form-bg-to-background-field` and two other rows name it as a rename DESTINATION,
+  so any spoke that ran `/update-tokens` was rewritten onto a role the hub reads nowhere.
+  *Action:* decide whether the role is real (wire it — a neutral hover surface is a
+  plausible intent) or dead (`removed: true`, and repoint the three rows). Do NOT leave it
+  declared-but-unread while rows aim at it · `hub-fix` · **P2**
+
+- **A rename row's destination is only as durable as the token it points at** ·
+  *Evidence:* the destination-resolves guard fired THREE times in one pass —
+  `tier3-border-to-border-color`, `filter-dropdown-border-shorthand-to-colour` and
+  `tier3-variant-before-property` all aliased onto tier-3 names being demoted. Each would
+  have shipped as an alias resolving to nothing while the manifest reported success, which
+  is the exact defect `form-height-to-control-height` records. *Action:* none needed — the
+  guard caught all three and they are folded into the removals. Logged because the *rate*
+  is the signal: any pass that deletes tier-3 names should expect to repair older rename
+  rows, and the guard is the only thing that finds them · `process` · **P3**
+
+- **`--focus-ring-halo` / `--focus-ring-halo-spread` are documented but declared nowhere** ·
+  *Evidence:* both appear in `apps/site/src/pages/foundations/focus.astro` (a live doc page
+  that lists them in a token table with `maps:` targets), in
+  `plugins/spoke-kit/skills/design-principles/SKILL.md:57` as a token to re-point, and in
+  `plugins/spoke-kit/skills/accessibility/forced-colors.md:83` inside a worked example.
+  Neither is declared in `tokens.css` or `component-tokens.css`. This is the reverted
+  contrast band CLAUDE.md records ("A second, non-brand contrast band was tried and reverted
+  the same day"): the TOKENS were reverted, the three documents referencing them were not.
+  *Impact:* the skill ships to spokes, so a spoke is being told to re-point a token that
+  does not exist — and because the read sites carry fallbacks, doing so fails silently.
+  *Action:* either land the halo tokens or strip all three references. Not touched by the
+  tier-3 pass — surfaced by its stale-reference sweep · `hub-fix` · **P1**
+
+- **The computed-style probe is too noisy to prove zero-regression** · *Evidence:* built
+  the Playwright probe the plan called for; it reported 48 routes differing — and the
+  control (same build, two runs) reported the same 48. Hydration/animation timing makes
+  per-element computed styles non-deterministic at this precision. *Action:* zero-regression
+  was argued by construction instead (160 of 174 substitutions are pure layer-strips; the
+  other 14 keep their own fallback with only the token name swapped). If a real visual gate
+  is wanted, it needs deterministic settling — disable animations, await
+  `customElements.whenDefined` per tag, and compare a stable ordering key rather than a
+  positional DOM path · `workflow` · **P2**
+
+---
+
 ## Source: an end-to-end spoke build (2026-06-13)
 A spoke built end-to-end by a planner→implementer→evaluator Workflow.
 Result: 6/6 pages passed both gates, 0 adherence errors, AA contrast — but Andy's review
@@ -509,8 +571,19 @@ codemod rather than a flag day.
   move them onto `--transition-*`. Until they do they **ignore the reduced-motion override**,
   which is what makes that block worth having. Not a codemod: each site needs the right role
   chosen, and 80ms sites have no exact rung · `hub-fix` · **P1**
-- **FOR THE TIER-3 PASS — adopting a typography composite removes the component's
-  typography hook** · *Evidence:* 13 tier-3 typography hooks exist (`--grid-font-size`,
+- ✅ **FOR THE TIER-3 PASS — adopting a typography composite removes the component's
+  typography hook** · *Closed 2026-08-16 as **option (c)**, by the tier-3 reduction pass
+  (306 declarations → 116).* Of the 13 hooks listed below, 5 were already gone; of the 8
+  that remained, the 4 `--grid-*` ones were KEPT (inside the staged data-grid surface —
+  a data grid is one of the three cases tier 3 exists for) and the 4 one-reader ones were
+  demoted: `--filter-pill-font-size`, `--link-column-heading-font-size`,
+  `--link-column-item-font-size`, `--pagination-font-size`. Each was a pure alias over a
+  `--typography-*` property or a `--font-size-*` rung, which is the fragmentation the
+  composites exist to prevent. **This unblocks the typography migration**, which the
+  entry below says was waiting on this decision. Original entry follows for the reasoning.
+
+  ~~**FOR THE TIER-3 PASS — adopting a typography composite removes the component's
+  typography hook**~~ · *Evidence:* 13 tier-3 typography hooks exist (`--grid-font-size`,
   `--grid-header-font-size`, `--grid-row-font-size`, `--grid-font-family`,
   `--form-font-size`, `--form-label-font-size`, `--form-label-font-weight`,
   `--form-line-height`, `--filter-pill-font-size`, `--icon-link-font-size`,

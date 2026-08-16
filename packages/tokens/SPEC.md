@@ -392,13 +392,29 @@ Privates are internals — never themed, never documented as surface.
   hooks, against the 5–9 guidance below.
 
   Applied across the file, that test leaves exactly three multi-reader sets:
-  `--form-*` (18 tokens), `--focus-ring-*` (3, read by 31 components) and
-  `--loading-spinner-*` (2, where the honest fix is composition). 248 of 311
-  tier-3 tokens are read by exactly one component, which is the shape to hold to.
+  `--form-*` (12 tokens, 15 components), `--focus-ring-*` (3, read by 35) and
+  `--loading-spinner-*` (2, where the second reader composes the first).
+
+  **THIS SENTENCE USED TO END "248 of 311 tier-3 tokens are read by exactly one
+  component, which is the shape to hold to." THAT WAS EXACTLY BACKWARDS**, and it
+  is the single most expensive error this spec has carried. The
+  bounds-its-readers test measures LEAKAGE, which is a real defect, but it says
+  nothing about NECESSITY — so it endorsed 249 one-reader tokens as the target
+  while flagging the three sets above as the problem. They are the three cases
+  tier 3 is *for*: a category surface, a special case, and composition.
+
+  The 2026-08-16 pass applied the necessity test instead (see "The test: WOULD
+  this component diverge" above) and took the file from 306 declarations to 116.
+  **Both tests are live and they catch different things** — run the leakage test
+  on a namespace to see whether it bounds its readers, and the divergence test on
+  each hook to see whether it should exist at all. A hook can pass the first and
+  fail the second, and 168 of them did.
 - **Per-component surfaces**: `--<component>-<part?>-<property>` —
-  `--card-bg`, `--card-border-color`, `--dialog-width`, `--badge-radius`,
-  `--sidenav-item-color`. Size-variant knobs take the size suffix last:
-  `--badge-height-sm`.
+  `--card-bg`, `--card-border-color`, `--dialog-width`, `--avatar-size-md`.
+  Size-variant knobs take the size suffix last: `--dialog-width-sm`.
+  (This list previously used `--badge-radius` and `--sidenav-item-color` as
+  examples; both were demoted on 2026-08-16 for aliasing a tier-2 role, so they
+  illustrated the naming shape with hooks that should not have existed.)
 - The component prefix is the element name minus `esa-` (esa-side-dialog →
   `--side-dialog-*`).
 

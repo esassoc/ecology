@@ -60,11 +60,24 @@ Ramp steps are Radix's 1–12 scale — step 9 is the solid fill, 10 its hover, 
 subtle surface, 11 coloured text. There is no `-500`/`-700` step; that was an
 earlier scale and those names resolve to nothing.
 
-### (e) Form sizing + control radius
-Re-point `--form-height-{xs,sm,md,lg}` and `--form-radius-{xs,sm,md,lg}` if the
-source runs more compact or flatter. **Beacon is a flat 4px (`--radius-100`) on
-every control; the hub defaults md/lg to 8px** — a very visible delta. Beacon
-heights: 24 / 28 / 36 / 44.
+### (e) Control radius
+Re-point the tier-2 **`--radius-{xs,sm,md,lg}`** scale if the source runs
+flatter or rounder. **Beacon is a flat 4px on every control; the hub defaults
+md/lg to 8px** — a very visible delta. Buttons can diverge from fields via
+`--button-radius-{xs,sm,md,lg}`, which is the one control axis that keeps a
+tier-3 hook (pill buttons beside square inputs is an ordinary house style).
+
+**THERE IS NO CONTROL HEIGHT LEVER, and this section used to claim there was.**
+It instructed re-pointing `--form-height-*` and `--form-radius-*`, both of which
+were deleted (2026-08-14 and 2026-08-16). A control is now as tall as its padding
+plus its own text, because a px height cannot grow with rem text — raise the
+browser font size and the box could not follow. Beacon's 24 / 28 / 36 / 44 are
+therefore not settable here; if a spoke genuinely needs tighter controls, that is
+a `/request-lego`, not a theme override.
+
+Do not re-add either name. A spoke that DECLARES a deleted token gets no error —
+the declaration is simply inert — which is exactly how air-exchange ended up
+carrying eight of them. `npm run doctor` now fails on that rather than warning.
 
 ### (f) `--button-on-warning`
 Set to `#fff` if the warning fill is dark enough for white text (Beacon's
