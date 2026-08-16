@@ -22,7 +22,7 @@
 import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { componentApi, type ApiProp } from '../apps/site/src/data/component-api.ts';
+import { componentApi, type ApiProp } from './lib/component-api.ts';
 import { catalog } from '../apps/site/src/data/catalog.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

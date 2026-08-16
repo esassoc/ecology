@@ -31,21 +31,19 @@ const config: StorybookConfig = {
    * @storybook-astro/framework, because `framework` above is singular: one framework
    * per instance. `refs` embeds its index here so the two read as one UI.
    *
-   * Both servers must be up: `npm run storybook` runs them together.
+   * ORDER MATTERS, and it is not obvious. The ref at :6007 must ALREADY BE
+   * LISTENING when this Storybook starts — then the index fetch happens
+   * server-side in Node, where CORS does not apply. Start the two in parallel
+   * and the fetch falls back to the browser, where it is blocked, and this
+   * section renders as a header with NOTHING under it and no error in the UI.
+   * `scripts/storybook-dev.mjs` sequences them; run `npm run storybook` rather
+   * than starting each by hand. Full explanation lives in that script.
    */
   refs: {
     astro: {
       title: 'Astro (.astro)',
       url: 'http://localhost:6007',
       expanded: true,
-      // Storybook v10 fetches a ref's /index.json WITH credentials, and the dev
-      // server answers `Access-Control-Allow-Origin: *`, which a browser rejects
-      // outright in credentials mode. Symptom: the section header renders, no
-      // components appear beneath it, and NOTHING is reported in the Storybook UI
-      // — the failure is console-only. See storybookjs/storybook#33724.
-      // Never verify this with curl: curl does not enforce CORS, so the wildcard
-      // looks perfectly fine there while every browser rejects it.
-      credentials: 'omit',
     },
   },
 
