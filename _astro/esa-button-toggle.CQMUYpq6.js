@@ -1,16 +1,15 @@
-import{i as a,b as s,a as i}from"./lit-element.C8p3bJxG.js";import{o as n}from"./unsafe-svg.BgYkCkso.js";class l extends a{constructor(){super(),this.onKeydown=e=>{if(this.disabled)return;const t=this.options;if(t.length===0)return;const o=this.selectedIndex>=0?this.selectedIndex:0;let r;switch(e.key){case"ArrowRight":case"ArrowDown":r=(o+1)%t.length;break;case"ArrowLeft":case"ArrowUp":r=(o-1+t.length)%t.length;break;case"Home":r=0;break;case"End":r=t.length-1;break;case"Enter":case" ":e.preventDefault(),this.select(t[o]);return;default:return}e.preventDefault(),this.select(t[r]),this.focusButton(r)},this.label="",this.hint="",this.options=[],this.value="",this.size="md",this.disabled=!1,this.required=!1,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},hint:{type:String},options:{type:Array},value:{type:String},size:{type:String,reflect:!0},disabled:{type:Boolean,reflect:!0},required:{type:Boolean}}}connectedCallback(){super.connectedCallback(),this.syncFormValue()}willUpdate(e){(e.has("value")||e.has("options"))&&this.syncFormValue()}get selectedIndex(){return this.options.findIndex(e=>e.value===this.value)}get focusIndex(){const e=this.selectedIndex;return e>=0?e:0}syncFormValue(){this.internals.setFormValue(this.value||null)}select(e){this.disabled||e.value===this.value||(this.value=e.value,this.syncFormValue(),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0})))}focusButton(e){this.renderRoot.querySelectorAll(".option")[e]?.focus()}render(){const e=!!this.label;return s`
-      ${e?s`<span class="label" id="label">
-            ${this.label}${this.required?s`<span class="required" aria-hidden="true">*</span>`:null}
+import{i as s,b as a,a as i}from"./lit-element.C8p3bJxG.js";import{o as n}from"./unsafe-svg.BgYkCkso.js";class l extends s{constructor(){super(),this.onKeydown=e=>{if(this.disabled)return;const t=this.options;if(t.length===0)return;const o=this.selectedIndex>=0?this.selectedIndex:0;let r;switch(e.key){case"ArrowRight":case"ArrowDown":r=(o+1)%t.length;break;case"ArrowLeft":case"ArrowUp":r=(o-1+t.length)%t.length;break;case"Home":r=0;break;case"End":r=t.length-1;break;case"Enter":case" ":e.preventDefault(),this.select(t[o]);return;default:return}e.preventDefault(),this.select(t[r]),this.focusButton(r)},this.label="",this.options=[],this.value="",this.size="md",this.disabled=!1,this.required=!1,this.internals=this.attachInternals()}static{this.formAssociated=!0}static{this.properties={label:{type:String},options:{type:Array},value:{type:String},size:{type:String,reflect:!0},disabled:{type:Boolean,reflect:!0},required:{type:Boolean}}}connectedCallback(){super.connectedCallback(),this.syncFormValue()}willUpdate(e){(e.has("value")||e.has("options"))&&this.syncFormValue()}get selectedIndex(){return this.options.findIndex(e=>e.value===this.value)}get focusIndex(){const e=this.selectedIndex;return e>=0?e:0}syncFormValue(){this.internals.setFormValue(this.value||null)}select(e){this.disabled||e.value===this.value||(this.value=e.value,this.syncFormValue(),this.dispatchEvent(new CustomEvent("change",{detail:{value:this.value},bubbles:!0,composed:!0})))}focusButton(e){this.renderRoot.querySelectorAll(".option")[e]?.focus()}render(){const e=!!this.label;return a`
+      ${e?a`<span class="label" id="label">
+            ${this.label}${this.required?a`<span class="required" aria-hidden="true">*</span>`:null}
           </span>`:null}
       <div
         class="group"
         role="radiogroup"
         aria-labelledby=${e?"label":null}
         aria-required=${this.required?"true":null}
-        aria-describedby=${this.hint?"hint":null}
         @keydown=${this.onKeydown}
       >
-        ${this.options.map((t,o)=>{const r=o===this.selectedIndex;return s`<button
+        ${this.options.map((t,o)=>{const r=o===this.selectedIndex;return a`<button
             type="button"
             role="radio"
             class="option ${r?"option--selected":""}"
@@ -20,7 +19,7 @@ import{i as a,b as s,a as i}from"./lit-element.C8p3bJxG.js";import{o as n}from".
             ?disabled=${this.disabled}
             @click=${()=>this.select(t)}
           >
-            ${t.icon?s`<svg
+            ${t.icon?a`<svg
                   class="option__icon"
                   viewBox="0 0 24 24"
                   fill="none"
@@ -32,10 +31,9 @@ import{i as a,b as s,a as i}from"./lit-element.C8p3bJxG.js";import{o as n}from".
                 >
                   ${n(t.icon)}
                 </svg>`:null}
-            ${t.label?s`<span class="option__label">${t.label}</span>`:null}
+            ${t.label?a`<span class="option__label">${t.label}</span>`:null}
           </button>`})}
       </div>
-      ${this.hint?s`<span class="hint" id="hint">${this.hint}</span>`:null}
     `}static{this.styles=i`
     :host {
       display: flex;
@@ -153,10 +151,5 @@ import{i as a,b as s,a as i}from"./lit-element.C8p3bJxG.js";import{o as n}from".
     .option--selected:disabled {
       background: var(--form-bg, #fff);
       color: var(--color-disabled-text, #a3a3a3);
-    }
-
-    .hint {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-help-color, #737373);
     }
   `}}customElements.get("esa-button-toggle")||customElements.define("esa-button-toggle",l);
