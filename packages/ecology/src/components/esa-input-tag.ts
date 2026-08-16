@@ -37,8 +37,18 @@ export class EsaInputTag extends LitElement {
   static formAssociated = true;
 
   static properties = {
+    /** The name of the value being collected. */
     label: { type: String },
+    /**
+     * The non-obvious interaction this control requires, stated as an
+     * instruction — a keyboard or entry mechanic the user can't infer on
+     * their own, not a restatement of the label. "Press Enter to add each tag."
+     */
     hint: { type: String },
+    /**
+     * An example of a well-formed value for this field — never an instruction,
+     * never a substitute for the label. "e.g. 12-345-678."
+     */
     placeholder: { type: String },
     options: { type: Array },
     size: { type: String, reflect: true },

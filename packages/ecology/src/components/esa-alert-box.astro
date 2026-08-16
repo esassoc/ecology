@@ -5,8 +5,12 @@
 // optional dismiss button. Angular host classes → class list; @if → conditional render.
 // The dismiss interaction (hide on click) is handled by a tiny inline script — light
 // enough to stay in the presentational bucket without becoming a web component.
+// The default slot states the condition the user must act on — never a place to
+// describe the page or caption an embed (e.g. not "This report is rendered by
+// Microsoft Power BI inside the CBFish shell…", a provenance string wearing an alert).
 interface Props {
   variant?: 'info' | 'success' | 'warning' | 'danger';
+  /** The condition the user must act on, in 1-3 words — not a greeting. "Saved", "Check this", "Error". */
   title?: string;
   dismissable?: boolean;
 }

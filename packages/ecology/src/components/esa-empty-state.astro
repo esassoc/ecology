@@ -6,7 +6,14 @@
 // → required `title` prop. The icon prop names a Lucide icon; pass an inline SVG via
 // the "icon" slot for full fidelity, or omit it.
 interface Props {
+  /** What is absent, stated as a fact — "No results", "No documents yet". */
   title: string;
+  /**
+   * One imperative recovery action, ≤12 words — the thing the user can do to
+   * make the list non-empty. "Try a different keyword." "Clear the Type filter."
+   * Not a description of the missing feature, not an explanation of what the
+   * view would contain, and never a note about the state of the work.
+   */
   description?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }

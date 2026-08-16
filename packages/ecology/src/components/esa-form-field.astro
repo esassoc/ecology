@@ -4,9 +4,18 @@
 // hint/error text. Error text replaces help text when present. Size variants drive
 // the label font-size. Angular @if → conditional render; host classes → class list.
 interface Props {
+  /** The name of the value being collected. */
   label?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
+  /**
+   * A constraint on what this field will accept — its format, its source, or
+   * its limit. "As it appears on the permit." "Letters, numbers, hyphens."
+   * Never reassurance addressed to the user ("We'll never share your email"),
+   * and never a restatement of the field's own state — a disabled field already
+   * reads as disabled.
+   */
   helpText?: string;
+  /** Why the current value was rejected, and what would be accepted instead. */
   errorText?: string;
   required?: boolean;
   disabled?: boolean;

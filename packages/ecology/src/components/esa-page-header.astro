@@ -2,10 +2,16 @@
 // esa-page-header — presentational page top (.astro).
 // The standard prototype page header: optional breadcrumbs OR an eyebrow (with
 // an optional leading icon), a title (at the page-title role by default, or the
-// oversized display role via prominence="display"), an optional lede at
-// body-large in secondary text, and a right-aligned actions slot. Replaces both
-// the bespoke .x__head / .x__title / .x__lede / .x__cta cluster every prototype
-// re-implements AND the per-spoke "hero header" (eyebrow + icon + big title).
+// oversized display role via prominence="display"), and a right-aligned actions
+// slot. Replaces both the bespoke .x__head / .x__title / .x__cta cluster every
+// prototype re-implements AND the per-spoke "hero header" (eyebrow + icon + big
+// title).
+//
+// There is deliberately NO description/lede slot. A page header carries the
+// page's name and its actions; a sentence explaining the page to its reader is
+// text ABOUT the page, and the audit of 2026-08-16 found every real fill of the
+// former `lede` prop was exactly that. The page's own data and structure say
+// what it is.
 //
 // Container stays neutral — no background of its own (transparent); color is
 // the consumer's job. Private --_* tokens read public semantic tokens with a
@@ -16,9 +22,10 @@
 import EsaIcon from './esa-icon.astro';
 
 interface Props {
+  /** The page's name, as it appears in navigation and breadcrumbs. */
   title: string;
-  lede?: string;
-  /** Small kicker above the title (e.g. a section or award name). */
+  /** The named thing this page sits inside — a section, a report, a person, a
+      record id. A proper noun or a short label, never a sentence. */
   eyebrow?: string;
   /** esa-icon registry name for the eyebrow's leading glyph, e.g. 'award' (eyebrow only). */
   icon?: string;
@@ -26,7 +33,7 @@ interface Props {
   prominence?: 'page-title' | 'display';
   as?: 'header' | 'div' | 'section';
 }
-const { title, lede, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
+const { title, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
 const Tag = as;
 
 const hasBreadcrumbs = Astro.slots.has('breadcrumbs');
@@ -47,7 +54,6 @@ const hasActions = Astro.slots.has('actions');
         </p>
       )}
       <h1 class="esa-page-header__title">{title}</h1>
-      {lede && <p class="esa-page-header__lede">{lede}</p>}
     </div>
     {hasActions && (
       <div class="esa-page-header__actions">
@@ -63,8 +69,6 @@ const hasActions = Astro.slots.has('actions');
     --_ph-title-font: var(--page-header-title-font, var(--font-display, var(--font-sans, 'DM Sans', sans-serif)));
     --_ph-title-size: var(--page-header-title-size, var(--type-size-600, 1.875rem));
     --_ph-title-weight: var(--page-header-title-weight, var(--font-weight-semibold, 550));
-    --_ph-lede-color: var(--page-header-lede-color, var(--color-text-secondary, #525252));
-    --_ph-lede-size: var(--page-header-lede-size, var(--type-size-300, 1.125rem));
     --_ph-eyebrow-color: var(--page-header-eyebrow-color, var(--color-text-secondary, #525252));
     --_ph-eyebrow-size: var(--page-header-eyebrow-size, var(--type-size-200, 0.9375rem));
     --_ph-gap: var(--page-header-gap, var(--spacing-200, 0.5rem));
@@ -119,15 +123,6 @@ const hasActions = Astro.slots.has('actions');
     line-height: var(--line-height-tight, 1.3);
     letter-spacing: var(--letter-spacing-tight, -0.01em);
     color: var(--_ph-title-color);
-  }
-
-  .esa-page-header__lede {
-    margin: 0;
-    font-size: var(--_ph-lede-size);
-    font-weight: var(--font-weight-regular, 350);
-    line-height: var(--line-height-relaxed, 1.8);
-    color: var(--_ph-lede-color);
-    max-width: 70ch;
   }
 
   .esa-page-header__actions {

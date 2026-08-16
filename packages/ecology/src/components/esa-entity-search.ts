@@ -18,14 +18,19 @@ export interface EsaSearchScope {
 /** A searchable record. Falls back to its scope's icon when `icon` is omitted. */
 export interface EsaSearchEntity {
   id: string;
+  /** The record's name. e.g. "Riverbank restoration — Phase 2", "Rita Alvarez". */
   title: string;
+  /**
+   * The record's distinguishing attribute — status, type, role, or file size.
+   * e.g. "Active · 2026", "Hydrologist", "PDF · 2.1 MB".
+   */
   subtitle?: string;
   /** id of the EsaSearchScope this entity belongs to. */
   scope: string;
   icon?: string;
   /** Where selecting it should navigate — the consumer handles the actual nav. */
   url?: string;
-  /** Optional right-aligned secondary text (e.g. a status or date). */
+  /** The record's identifier or date — the trailing datum that pins which one this is. e.g. "PRJ-204", "Mar 2026". */
   meta?: string;
 }
 

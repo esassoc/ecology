@@ -22,6 +22,11 @@ export class EsaTooltip extends LitElement {
     open: { type: Boolean, reflect: true },
   };
 
+  /**
+   * What the hovered element means or does, when its own label doesn't already
+   * say. e.g. "Search", "Least-advanced covering permit — its status sets this
+   * segment's status". Don't restate the trigger's visible label — that's redundant.
+   */
   declare text: string;
   declare position: TooltipPosition;
   declare delay: number;

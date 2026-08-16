@@ -7,7 +7,9 @@
 // Per the project rule, no colored LEFT border — danger emphasis comes from
 // a danger-tinted heading, subtle danger background, and a full danger border.
 interface Props {
+  /** The destructive action being gated, named plainly. Defaults to "Danger Zone". */
   heading?: string;
+  /** The irreversible consequence, stated plainly — including what else is destroyed. "Deleting this project also removes its annotations and history. This cannot be undone." */
   description?: string;
 }
 const { heading = 'Danger Zone', description } = Astro.props;

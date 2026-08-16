@@ -7,8 +7,7 @@ import Api from '@esa/docs/Api.astro';
 const props = [
   { name: 'options', type: '{ value, label, icon?, ariaLabel? }[]', default: '[]', description: 'The segments. Set as a property (an array, not an attribute). Optional icon is inner Lucide SVG markup (the same paths convention as esa-icon), rendered before the label and inheriting currentColor. Omit label for an icon-only segment, but then set ariaLabel for its accessible name.' },
   { name: 'value', type: 'string', default: "''", description: "Selected option's value. Single-select; bound to the form value." },
-  { name: 'label', type: 'string', default: "''", description: 'Optional visible label above the group; becomes the radiogroup name.' },
-  { name: 'hint', type: 'string', default: "''", description: 'Optional helper text below the group.' },
+  { name: 'label', type: 'string', default: "''", description: 'The name of the value being chosen — a field name, not an instruction; becomes the radiogroup name.' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
   { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (adds an asterisk and aria-required).' },
   { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables every segment.' },
@@ -72,11 +71,9 @@ const events = [
 
   <Section id="states" title="States">
     <Preview align="start" code={`<esa-button-toggle label="Default"></esa-button-toggle>
-<esa-button-toggle label="With hint" hint="Pick a layout"></esa-button-toggle>
 <esa-button-toggle label="Disabled" disabled></esa-button-toggle>`}>
       <div class="col">
         <esa-button-toggle label="Default" data-demo="sizes"></esa-button-toggle>
-        <esa-button-toggle label="With hint" hint="Pick a layout" data-demo="sizes"></esa-button-toggle>
         <esa-button-toggle label="Disabled" disabled data-demo="sizes"></esa-button-toggle>
       </div>
     </Preview>
@@ -105,7 +102,7 @@ const events = [
       <li>Renders <code>role="radiogroup"</code> wrapping <code>role="radio"</code> buttons with <code>aria-checked</code> reflecting selection.</li>
       <li>Roving tabindex: only the selected (or first) segment is tab-reachable; Arrow keys move selection through the group, wrapping at the ends.</li>
       <li><code>Home</code> and <code>End</code> jump to the first and last segments; Enter and Space select the focused segment.</li>
-      <li>The <code>label</code> becomes the group's accessible name via <code>aria-labelledby</code>; <code>hint</code> is wired with <code>aria-describedby</code>.</li>
+      <li>The <code>label</code> becomes the group's accessible name via <code>aria-labelledby</code>.</li>
       <li>Visible focus ring on the active segment via <code>--focus-ring-*</code> tokens; the focused segment is raised so its ring sits above neighbors.</li>
       <li>Best for small fixed option sets — past about six options, prefer a select.</li>
     </ul>

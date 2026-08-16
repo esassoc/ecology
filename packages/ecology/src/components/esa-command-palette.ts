@@ -2,7 +2,14 @@ import { LitElement, html, css } from 'lit';
 
 export interface EsaCommand {
   id: string;
+  /** The command's name, as it reads in the list. e.g. "New file", "Toggle theme". */
   label: string;
+  /**
+   * The action's effect, in 2-4 words — only when `label` alone leaves it
+   * ambiguous what running the command does. e.g. "Create a blank file",
+   * "Open an existing file". Omit it when the label is already self-explanatory;
+   * most real commands do.
+   */
   description?: string;
   icon?: string;
   shortcut?: string;

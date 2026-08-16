@@ -23,6 +23,10 @@ export class EsaSnackbarItem extends LitElement {
     icon: { type: String },
   };
 
+  /**
+   * The completed action, in the past tense, naming the affected record where
+   * there is one. e.g. "Saved.", "Item deleted.", "{name} turned on — saved".
+   */
   declare message: string;
   declare variant: EsaSnackbarVariant;
   declare action: string;

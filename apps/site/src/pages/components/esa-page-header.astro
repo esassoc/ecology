@@ -8,9 +8,8 @@ import PageHeader from '@esa/ecology/esa-page-header.astro';
 import Button from '@esa/ecology/esa-button.astro';
 
 const props = [
-  { name: 'title', type: 'string', description: 'The page title (required). Rendered as the <h1>.' },
-  { name: 'lede', type: 'string', description: 'Optional supporting sentence below the title, at the body-large role in secondary text.' },
-  { name: 'eyebrow', type: 'string', description: 'Small kicker above the title — e.g. a section or award name.' },
+  { name: 'title', type: 'string', description: 'The page’s name, as it appears in navigation and breadcrumbs (required). Rendered as the <h1>.' },
+  { name: 'eyebrow', type: 'string', description: 'The named thing this page sits inside — a section, a report, a person, a record id. A proper noun or a short label, never a sentence.' },
   { name: 'icon', type: 'string', description: 'esa-icon registry name for the eyebrow’s leading glyph, e.g. "award" (eyebrow only).' },
   { name: 'prominence', type: "'page-title' | 'display'", default: "'page-title'", description: 'Title scale: the page-title role (default) or the oversized display role for a hero.' },
   { name: 'as', type: "'header' | 'div' | 'section'", default: "'header'", description: 'The host element tag.' },
@@ -22,19 +21,24 @@ const slots = [
 ];
 ---
 <ComponentDoc name="Page Header" category="Layout & Sections" slug="esa-page-header" type=".astro" status="stable"
-  summary="The standard prototype page top: optional breadcrumbs OR an eyebrow (with a leading icon), a title (page-title role, or the oversized display role for a hero), an optional lede, and a right-aligned actions slot.">
+  summary="The standard prototype page top: optional breadcrumbs OR an eyebrow (with a leading icon), a title (page-title role, or the oversized display role for a hero), and a right-aligned actions slot.">
 
   <Section id="preview" title="Preview">
-    <p>The default form: a page-title-scale heading with a lede and an actions slot. The container is neutral and transparent — color is the consumer’s job.</p>
-    <Preview align="start" code={`<PageHeader title="Requirements" lede="Track and triage every requirement across the program.">
+    <p>The default form: a page-title-scale heading with an actions slot. The container is neutral and transparent — color is the consumer’s job.</p>
+    <Preview align="start" code={`<PageHeader title="Requirements">
   <Button slot="actions" color="primary" icon="plus">New requirement</Button>
 </PageHeader>`}>
       <div style="width: 100%;">
-        <PageHeader title="Requirements" lede="Track and triage every requirement across the program.">
+        <PageHeader title="Requirements">
           <Button slot="actions" color="primary" icon="plus">New requirement</Button>
         </PageHeader>
       </div>
     </Preview>
+  </Section>
+
+  <Section id="no-description" title="There is no description slot">
+    <p>This component takes no <code>lede</code>, <code>subtitle</code>, or <code>description</code>. A page header carries the page’s name and its actions; a sentence explaining the page to its reader is text <em>about</em> the page rather than <em>of</em> it, and the page’s own data and structure are what say what it is.</p>
+    <p>Every real fill of the former <code>lede</code> prop was that kind of sentence, which is why it was removed on 2026-08-16. If a page genuinely needs a number or a date up top, that is a datum — put it in the <code>eyebrow</code>, or in an <code>esa-stat</code> below the header where it can be read as data.</p>
   </Section>
 
   <Section id="hero" title="Eyebrow + display prominence (hero)">
@@ -43,13 +47,12 @@ const slots = [
   eyebrow="Annual Report"
   icon="award"
   prominence="display"
-  title="2026 in Review"
-  lede="A year of monitoring, mitigation, and measurable outcomes across the program.">
+  title="2026 in Review">
   <Button slot="actions" color="primary" href="/report">Read the report</Button>
   <Button slot="actions" color="ghost" appearance="outline" href="/data">View the data</Button>
 </PageHeader>`}>
       <div style="width: 100%;">
-        <PageHeader eyebrow="Annual Report" icon="award" prominence="display" title="2026 in Review" lede="A year of monitoring, mitigation, and measurable outcomes across the program.">
+        <PageHeader eyebrow="Annual Report" icon="award" prominence="display" title="2026 in Review">
           <Button slot="actions" color="primary" href="#">Read the report</Button>
           <Button slot="actions" color="ghost" appearance="outline" href="#">View the data</Button>
         </PageHeader>
@@ -59,12 +62,12 @@ const slots = [
 
   <Section id="breadcrumbs" title="With breadcrumbs">
     <p>Host an <code>esa-breadcrumbs</code> in the <code>breadcrumbs</code> slot for a record or nested page.</p>
-    <Preview align="start" code={`<PageHeader title="Permit #4471" lede="Filed 12 days ago · awaiting review.">
+    <Preview align="start" code={`<PageHeader title="Permit #4471" eyebrow="Filed 12 days ago">
   <nav slot="breadcrumbs">Permits / Active / #4471</nav>
   <Button slot="actions" color="ghost" appearance="outline" icon="pencil">Edit</Button>
 </PageHeader>`}>
       <div style="width: 100%;">
-        <PageHeader title="Permit #4471" lede="Filed 12 days ago · awaiting review.">
+        <PageHeader title="Permit #4471" eyebrow="Filed 12 days ago">
           <nav slot="breadcrumbs" style="font-size: 0.875rem; color: var(--color-text-secondary, #555);">Permits / Active / #4471</nav>
           <Button slot="actions" color="ghost" appearance="outline" icon="pencil">Edit</Button>
         </PageHeader>

@@ -24,10 +24,20 @@ export class EsaSelect extends LitElement {
   static formAssociated = true;
 
   static properties = {
+    /** The name of the value being collected. */
     label: { type: String },
     options: { type: Array },
     size: { type: String, reflect: true },
+    /**
+     * An example of a well-formed value for this field — never an instruction,
+     * never a substitute for the label. "e.g. 12-345-678."
+     */
     placeholder: { type: String },
+    /**
+     * A constraint on what this field will accept — its format, source, or
+     * limit. "As it appears on the permit." "Letters, numbers, hyphens." Never
+     * reassurance addressed to the user, nor a restatement of the field's state.
+     */
     helpText: { type: String, attribute: 'help-text' },
     errorText: { type: String, attribute: 'error-text' },
     required: { type: Boolean },

@@ -6,7 +6,14 @@
 // ("header", "actions", "footer"); the default slot is the body.
 // Angular @if → conditional render here.
 interface Props {
+  /** What the card is — the name of the record, section, or metric it holds. */
   title?: string;
+  /**
+   * A short datum qualifying the title: a count, a date range, a status, an id
+   * — "Across 14 monitored sites", "Next two weeks", "401 Water Quality
+   * Certification". Never a sentence, and never a gloss explaining the card's
+   * contents to its reader; the card's body is what says that.
+   */
   subtitle?: string;
   icon?: string;
   variant?: 'default' | 'outlined' | 'elevated' | 'filled';

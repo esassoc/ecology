@@ -1,19 +1,23 @@
 ---
 // esa-stat — presentational single-metric block (.astro).
-// A big display value, a readable label, and an optional muted sub/caption.
+// A big display value, a readable label, and an optional supporting datum.
 // Replaces the bespoke .stat / .stat__value / .stat__label / .stat__sub cluster
 // every prototype re-implements.
 //
 // Value uses --font-display at a large-but-tasteful role (NOT the giant
 // display/900 roles). Label is a readable body role (sentence case, secondary
-// color) — NOT an uppercase, micro, letter-spaced overline. Sub is muted meta.
+// color) — NOT an uppercase, micro, letter-spaced overline. Sub carries a
+// supporting datum, not a caption.
 // Container stays neutral — no background of its own (transparent); color is
 // the consumer's job. accent=true tints the value with the spoke's secondary
 // emphasis; default false keeps it primary text. Private --_* tokens read
 // public semantic tokens with a literal fallback, mirroring esa-badge.
 interface Props {
+  /** The metric itself. "23", "$254M", "600+ projects". */
   value: string | number;
+  /** What the value counts or measures, in a few words. "Active projects", "Total funding". */
   label: string;
+  /** A short datum qualifying the value — a period, a rate, a comparison. "FY 1999–2029", "1.4/wk average". */
   sub?: string;
   accent?: boolean;
 }

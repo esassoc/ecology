@@ -21,7 +21,12 @@ import { LitElement, html, css } from 'lit';
 
 export interface EsaSearchResult {
   id: string;
+  /** The record's name. e.g. "Wetland delineation report", "Jane Doe". */
   title: string;
+  /**
+   * The record's distinguishing attribute — status, type, role, or a related
+   * identifier. e.g. "Project 2024-118", "Draft", "Compliance officer".
+   */
   subtitle?: string;
   icon?: string;
   category?: string;

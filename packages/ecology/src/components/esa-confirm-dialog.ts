@@ -29,7 +29,14 @@ export class EsaConfirmDialog extends LitElement {
   };
 
   declare open: boolean;
+  /** The question being confirmed, as a short phrase. e.g. "Delete project?", "Unsaved changes". */
   declare heading: string;
+  /**
+   * The consequence of confirming, stated in full — including anything else it
+   * affects, not just the immediate action. e.g. "This action cannot be undone.",
+   * "You have unsaved changes that will be lost." Never shorten this to a
+   * restatement of the heading; the sentence is the safety check.
+   */
   declare message: string;
   declare variant: ConfirmVariant;
   declare confirmLabel: string;

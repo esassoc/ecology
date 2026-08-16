@@ -39,13 +39,17 @@ interface EsaToggleOption {
  *
  * Decorator-free on purpose: avoids per-consumer tsconfig decorator flags.
  * Set `options` as a property (it is an array, not an attribute).
+ *
+ * There is deliberately NO `hint` prop. The options are their own labels, so a
+ * hint here restates the control — the audit of 2026-08-16 found its only fill
+ * anywhere was "Pick a layout" above a row already reading Grid / List / Map.
+ * A genuinely non-obvious interaction belongs on esa-input-tag's `hint`.
  */
 export class EsaButtonToggle extends LitElement {
   static formAssociated = true;
 
   static properties = {
     label: { type: String },
-    hint: { type: String },
     options: { type: Array },
     value: { type: String },
     size: { type: String, reflect: true },
@@ -54,7 +58,6 @@ export class EsaButtonToggle extends LitElement {
   };
 
   declare label: string;
-  declare hint: string;
   declare options: EsaToggleOption[];
   declare value: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
@@ -66,7 +69,6 @@ export class EsaButtonToggle extends LitElement {
   constructor() {
     super();
     this.label = '';
-    this.hint = '';
     this.options = [];
     this.value = '';
     this.size = 'md';
@@ -166,7 +168,6 @@ export class EsaButtonToggle extends LitElement {
         role="radiogroup"
         aria-labelledby=${hasLabel ? 'label' : null}
         aria-required=${this.required ? 'true' : null}
-        aria-describedby=${this.hint ? 'hint' : null}
         @keydown=${this.onKeydown}
       >
         ${this.options.map((opt, i) => {
@@ -199,7 +200,6 @@ export class EsaButtonToggle extends LitElement {
           </button>`;
         })}
       </div>
-      ${this.hint ? html`<span class="hint" id="hint">${this.hint}</span>` : null}
     `;
   }
 
@@ -320,11 +320,6 @@ export class EsaButtonToggle extends LitElement {
     .option--selected:disabled {
       background: var(--form-bg, #fff);
       color: var(--color-disabled-text, #a3a3a3);
-    }
-
-    .hint {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-help-color, #737373);
     }
   `;
 }
