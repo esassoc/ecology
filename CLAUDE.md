@@ -56,7 +56,8 @@ palette, confirm-dialog and search-panel to move together; six hooks in front of
 that role are six chances to move five and miss one, silently, because each hook
 still resolves.
 
-**The 2026-08-16 pass took tier 3 from 306 declarations to 116** — 16 dead names
+**The 2026-08-16 demotion pass took tier 3 from 306 declarations to 116** (a
+later pass the same day took it to 125 — see "there is no fourth tier" below) — 16 dead names
 deleted, 3 misfiled ones relocated, 168 demoted to the roles they aliased. What
 survives: `--form-*` (12), `--focus-ring-*` (3), `--button-*` (6), the staged
 `--grid-*` (24), every hook a real spoke had actually overridden (13), and
@@ -79,21 +80,150 @@ Do NOT reach for "fan it out to per-component hooks" as the fix for a category
 surface. That was measured for `--form-*` and comes to **162 names**, against
 SPEC.md's own 5–9-per-component guidance.
 
+**THERE IS NO FOURTH TIER, and the repo shipped one for two months.** A token a
+component reads as `var(--x, <fallback>)` that no token file declares is not a
+category — it is a **tier-3 token missing its declaration**. It carries a
+component-scoped name, it occupies the component-theming slot, and the fallback
+makes it work, so nothing ever failed. What it is missing is everything the
+declaration buys: presence in `component-tokens.css` (the file a spoke author
+opens), presence in `token-names.json` (so the guard cannot see it disappear),
+and any record of its existence outside the component's own source.
+
+The site labelled these tier `ad-hoc`, and four places called that legitimate
+"per SPEC.md" — `component-promises.ts`, both `/debug` views, and
+`component-tokens.css`'s own HOOKIFY header. SPEC.md says the opposite. Its only
+mention of the word gives **two dispositions and no third**: *"`ad-hoc` rows are
+candidates to either promote into `component-tokens.css` or fold away."*
+
+The exemption came from a collision with the **zero-regression rule**: when one
+name is read at several sites with DIFFERENT defaults, no single declaration
+reproduces them all, so the HOOKIFY pass exempted those names from being
+declared. **The divergence was the signal, not the obstacle** —
+`--confirm-dialog-color` meant `--color-content-default` in one place and
+`--color-content-default-secondary` in another, one name standing for two roles.
+The objection only ever ruled out ONE declaration; `--avatar-size-*` already
+showed the answer, which is one per rung.
+
+**2026-08-16 resolved all 30: tier 3 went 116 → 125 declarations** (9 added
+across 3 surfaces), 24 reads folded onto the roles they aliased, and `esa-file-list`
+became the 33rd component to own a namespace. What earned a declaration, and why
+each is the *narrow* case rather than the default:
+
+- `--form-affix-*` (3) — extends the existing `--form-*` category surface rather
+  than opening a new one; `--form-affix-border-color` points at
+  `--form-border-color`, and that coupling belongs in the token file.
+- `--avatar-font-size-{xs,sm,md,lg}` (4) — replaces a single undeclared umbrella
+  that `esa-header-nav.astro` **actually sets**. An in-repo setter is the
+  "someone asked" test passing outright.
+- `--file-list-row-padding-{x,y}` (2) — added under a `hub-edit-approved:` note
+  with a named human behind it (Andrew, front-end architect).
+
+Everything else folded, **including hooks whose own comments called them
+"the PUBLIC re-skin surface"** (`esa-page-header`, 13 of them). They were public
+in a comment and nowhere else.
+
+Two checks that follow from this, and the second is the one that bites:
+
+- **`npm run tokens:snapshot` is not a formality after declaring.** It is what
+  puts the name under the guard. Run it, then confirm the diff added *only* your
+  names — the snapshot sweeps `dist/tokens.css` too, so any other in-flight work
+  compiling into it rides along silently.
+- **Grep for in-repo SETTERS (`--x:`), not just reads, before folding anything.**
+  Checking spokes is not enough. `--avatar-font-size` had zero spoke references
+  and one hub consumer, and folding it would have silently broken
+  `esa-header-nav`'s 32px avatar.
+
+The detector stays live at zero — `/debug/components` § "Under-promise" and
+`/debug/tokens` § "Ad-hoc hooks". Both render **None.** A row in either is a
+regression, not a backlog.
+
 **Theming = override the semantic and/or component layer** under a `[data-theme="x"]`
 scope. Primitives never move; component internals are never touched.
 The full contract — naming, when a property earns a tier-3 hook, the
 zero-regression splice mechanic — is **`packages/tokens/SPEC.md`**.
 
+## Assurance is a THIRD axis, orthogonal to the theme
+`data-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
+composes with `data-theme` (brand) and `data-scheme` (light/dark) — a project is
+entitled to be on-brand AND assured. Authored ONCE in
+`packages/tokens/src/assurance.css`, appended into `dist/tokens.css` by `build.js`,
+**inert unless the attribute is set**, so there is nothing for a spoke to import.
+Not an opt-in import on purpose: spokes override 3 of 26 brand-derived roles, so
+"you must ALSO import X" gets forgotten — `focus.css` is the standing proof. A
+spoke sets the attribute and declares none of these names itself.
+
+**IT DOES NOT BEAT A SPOKE'S THEME, and that is the design.** `[data-theme]` and
+`[data-assurance]` have identical specificity (0,1,0) and the theme's stylesheet
+loads later, so a re-pointed brand wins. The hub cannot know a spoke's brand ramp.
+The teeth are in the gate, not the cascade:
+`check-contrast.mjs <theme>.css --assurance wcag-aa` composes them in the browser's
+order and fails the spoke whose brand misses AA (`beacon` still fails
+`content-on-brand-secondary` at 3.64:1 with the profile on — that failure is the
+feature).
+
+**A profile is a TOKEN SCOPE.** It re-points values; it cannot add behaviour,
+markup, or a rule inside a shadow root — `:host-context()` is Chromium-only and
+`@container style()` is not baseline, so **inherited custom properties are the only
+channel that crosses a shadow boundary in every engine**. So it fixes contrast,
+ring weight, min type size and the target-size floor, and fixes NONE of:
+`esa-date-picker`'s absent keyboard handling (SC 2.1.1, Level A), the nine popups
+that return focus nowhere, or anything in forced colors. Setting the attribute is a
+statement about DEFAULTS, never a certificate — `npm run a11y:assured` is what makes
+it more than a promise.
+
+**`--target-size-min` is a FLOOR, not the height ramp that was deleted twice.** The
+objection that killed `--control-height-*` was that a fixed px height cannot grow
+with its contents, so `esa-text-field` clipped rem text (SC 1.4.4). A
+`min-block-size` raises the bottom and does nothing to the top, so the box still
+grows; and it is ONE name, not a four-step ramp, so it cannot become the density
+lever. Components read it on their HIT AREA — for checkbox/radio that is the
+**label row, not the glyph** (measuring the 14–20px glyph reports the correct
+whole-row implementation as the defect). Measured: 33 component failures by default,
+**0** under the profile.
+
+`npm run a11y:targets` (`scripts/check-target-size.mjs`) renders every page and
+measures `getBoundingClientRect()` on the flattened tree. **axe is NOT blind here** —
+axe-core 4.13 ships a `target-size` rule, it is in the `wcag22aa` tag this repo
+already runs, and it sees into shadow roots. The difference is the **spacing
+exception**: 2.5.8 passes an undersized target whose 24px circle clears its
+neighbours', and axe implements that faithfully — measured, it returns 0 violations
+and 0 incomplete on the pages where this tool reports 16×16 controls. So axe answers
+*does this conform*, and this tool answers *how big is it actually*. The profile
+holds the stricter line because conformance-via-spacing is a property of the LAYOUT,
+not the component: move a button nearer its neighbour and a passing page silently
+starts failing with no code change. **This tool therefore over-reports against the
+letter of the spec, and says so in its own header line.** It also cannot be a
+source-text check, because since the height ramps went a control's height is EMERGENT
+(`2 × padding-y + font-size + border`, font size a viewport-dependent `clamp()`) —
+there is no number in any file to grep.
+`--scope components` narrows only the EXIT CODE to the `esa-*` kit — the site's own
+prose links and debug `<summary>` rows are not what a spoke installs — and prints
+both counts, a visible flag rather than a silent carve-out.
+
 **Most components no longer have a tier-3 surface of their own, and that is the
-target state, not a gap.** After the 2026-08-16 pass, **28 of 66** components own
-a namespace (`--card-*`, `--dialog-*`, …); the other 38 theme entirely through
-tier 2, which is what a spoke re-points anyway. 55 of 66 still READ a tier-3
+target state, not a gap.** After the 2026-08-16 passes, **33 of 65** components own
+a namespace (`--card-*`, `--dialog-*`, …); the other 32 theme entirely through
+tier 2, which is what a spoke re-points anyway. 55 of 65 still READ a tier-3
 hook, but mostly the two shared surfaces — `--focus-ring-*` and `--form-*`. A
 component's doc page rendering an empty "Wired to this component" table is
 correct output; its hooks moved into "Shared tokens it reads". Do not treat that
 as a component missing its surface and re-add hooks to fill it.
 
-Every one of the 66 (+3 reference wrappers) still has a doc page rendering its
+**THE COMPONENT COUNT IS 65, AND IT IS NOT `ls | wc -l`.** That directory holds
+66 FILES; the 66th is `icon-registry.ts`, which is not a component and is named
+in `EXCLUDE` in `catalog.ts` for exactly this reason. "66" stood here from
+2026-08-16 — written in the same commit that added `esa-error-summary.ts` and
+took the file count to 66 — and the file contradicted itself in two places while
+it did: 34 Lit + 31 `.astro` is 65, and 65 (+3 reference wrappers) is the 68 doc
+pages on disk. Nothing was deleted to explain a drop; `git log --diff-filter=D`
+over `esa-*` is empty. The authority is `componentCount` in
+`apps/site/src/data/catalog.ts` (`sourceSlugs.size`, regex-matched), which the
+catalog index renders — read it there rather than counting by hand. The "28 of
+66" above was 28 + 38 = 66, both halves back-derived from the wrong total; the
+32/33 replacing them come from the site's own generated `themingSurface`
+(`scope === 'exclusive'`), which is what the doc pages render.
+
+Every one of the 65 (+3 reference wrappers) still has a doc page rendering its
 generated "Theming surface" table. The
 "61" that stood here through 2026-06-12 was a doc-page count, not a component
 count — five later-promoted components (`esa-container`, `esa-kbd`,
@@ -213,6 +343,30 @@ became one; see `docs/button-consolidation-plan.md` for the measured deltas and 
 `aria-current` vs `aria-pressed` split that made `current` a separate prop.
 **The shims must not be deleted until spokes have run `/update-tokens`.**
 
+**A component removal has a docs half too, and it is a second edit.** The
+`migrations.json` row rewrites spoke source; it does nothing to this site, where
+the component keeps its old catalog group and its green "Stable" pill. Both
+deprecated components sat under **Core** with `status="stable"` for two days,
+directly above a summary opening `⚠ DEPRECATED` — the badge a reader scans
+contradicting the prose they don't. As of 2026-08-16 they live in a trailing
+**Deprecated** group: add the slug to `DEPRECATED` in
+`apps/site/src/data/catalog.ts` (slug → successor), move its `CATEGORIES` entry
+into the `Deprecated` group, and set `category="Deprecated" status="deprecated"
+supersededBy={…}` on its doc page. **The URL does not move** — `/components/
+esa-icon-link` still resolves, because six other doc pages link to it and a spoke
+mid-migration is exactly who needs the page. A `deprecated` status makes
+`ComponentDoc.astro` render the migration banner; the successor string is the
+only thing shown in the sidebar, so write it as the call site
+(`esa-button variant="chrome" iconOnly`), not the tag name.
+
+The two facts are written in two places and a guard in `catalog.ts` warns when
+they disagree, because each direction is silent alone: in `DEPRECATED` but filed
+under Core renders the badge inside the group people shop from, and filed under
+Deprecated but missing from `DEPRECATED` renders a green Stable pill under a
+Deprecated heading. Note the pill reads `status`, NOT `type` — it read `type`
+until this pass, which is why setting `status="deprecated"` had no visible
+effect and nobody noticed the pages were mislabelled.
+
 ## Component buckets
 - **Presentational → `.astro`.** Golden pattern: `packages/ecology/src/components/esa-badge.astro`.
 - **Interactive → Lit Web Component (`.ts`).** Golden pattern: `esa-switch-toggle.ts`.
@@ -244,8 +398,25 @@ npm run a11y:live      # live-region structure audit (needs `npm run build` firs
 elements to upgrade (auditing pre-hydration HTML is how you get a meaningless
 all-clear on a kit that is half web components), and reports grouped by rule. It
 does NOT gate — pass `--strict` for that. `--url http://localhost:4322` audits the
-dev server instead, which is the only way to reach debug pages (they return `[]`
-from `getStaticPaths`, so the build contains none of them).
+dev server instead.
+
+**`/debug/tokens` and `/debug/components` now SHIP** (2026-08-16). They used to
+return `[]` from `getStaticPaths` in a production build, so the audit only saw
+them via `--url`; both are now in the 88-page build and in scope for `npm run
+a11y`. Two things that fell out of making them build, both easy to re-break:
+- **Their data modules must stay DYNAMIC imports** in `[view].astro`. Every
+  module under `apps/site/src/data/` finds the repo root by counting four levels
+  up from `import.meta.url`. A static import lets vite inline `token-graph.ts`
+  into the page module, which lands one directory deeper than `dist/chunks/`,
+  and the build dies with `packages/tokens/dist/tokens.css is missing`.
+- **`getStaticPaths` cannot read a frontmatter `const`.** Astro hoists it out of
+  the component scope and calls it first, so the view list is repeated inside it
+  (`VIEWS is not defined` otherwise).
+
+The three **naming audit** sections (tier 1/2/3 names against the 6-slot rubric)
+were removed from `/debug/tokens` in the same pass; `tier1-naming.ts` went with
+them. `tier2-naming.ts` and `tier3-naming.ts` stay because the semantic tables
+and `component-promises.ts` are built from their parsing, not their scoring.
 
 **The hydration guard is the load-bearing part.** This tool first shipped serving
 `dist` at root while the build sets `base: '/ecology/'`, so every script 404'd,
@@ -282,12 +453,15 @@ and VoiceOver/Safari.
 
 **Forced colors is the third thing axe cannot do**, and unlike the other two there is
 no script to run: axe-core has no forced-colors rule at all, so `npm run a11y` reports
-clean on a page that is unusable in Windows Contrast Themes. As of the 2026-08-16 audit
-the kit has **zero** forced-colors support — `forced-colors`, `forced-color-adjust` and
-every system-colour keyword appear 0 times across all 66 components and both token
-packages. The findings are logged in `docs/system-improvement-ledger.md` and deferred to
-the batched accessibility pass; the judgment layer is
+clean on a page that is unusable in Windows Contrast Themes. The judgment layer is
 `plugins/spoke-kit/skills/accessibility/forced-colors.md`.
+
+Support landed in two passes on 2026-08-16. The **focus** layer is a single global rule
+in `packages/tokens/src/a11y.css` — `:focus-visible { outline: 2px solid Highlight }` —
+which reaches shadow roots only because `a11y.ts` bridges the file into `static styles`.
+The **rest** is per-component: **24 components** now carry their own
+`@media (forced-colors: active)` block. There is no central lever for those, and the
+count is the point — do not go looking for one.
 
 Two things about it that surprise people, and that no token can fix:
 - **It overrides at the USED-VALUE layer, downstream of every token.** The
@@ -302,7 +476,7 @@ Two things about it that surprise people, and that no token can fix:
   most fixes need no media query at all. `esa-card--elevated` already does this.
 
 The one deterministic slice is enforced: `check-a11y` **check 9** blocks a focus ring
-painted only with `box-shadow`. It swept the 66 components at 0 flagged / 0 false
+painted only with `box-shadow`. It swept the 65 components at 0 flagged / 0 false
 positives, so it is a ratchet, not a cleanup.
 
 ## Status messages — there is ONE announcer, and it is the last resort

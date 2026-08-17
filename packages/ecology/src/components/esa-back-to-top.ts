@@ -163,7 +163,7 @@ export class EsaBackToTop extends LitElement {
       transform: scale(0.95);
     }
 
-    /* FORCED COLORS. The button declares `border: none` and leans entirely on
+    /* FORCED COLORS. The button declares 'border: none' and leans entirely on
        --_btt-bg + --_btt-shadow, both of which are gone here — it would float as
        a bare icon with no target edge. box-sizing is set alongside the border on
        purpose: --_btt-size is a hard 44px, the WCAG 2.5.5 target floor, and a

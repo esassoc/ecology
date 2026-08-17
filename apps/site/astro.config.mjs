@@ -73,5 +73,20 @@ const base = process.env.NODE_ENV === 'production' ? '/ecology/' : '/';
 export default defineConfig({
   site: 'https://esassoc.github.io',
   base,
-  vite: { plugins: [watchTokenSources()] },
+  vite: {
+    plugins: [watchTokenSources()],
+    resolve: {
+      /*
+       * The theme maker runs the SAME derivation in the browser that make-theme.mjs
+       * runs in node — one module, so a live preview cannot disagree with the file it
+       * writes. Those modules live in scripts/lib/ (outside this app), hence the alias;
+       * they are plain ESM with no `node:` imports precisely so they can be bundled.
+       *
+       * Do NOT point this at scripts/ generally. Everything under scripts/ except
+       * lib/{color,ramp,theme-recipe,contrast}.mjs reads the filesystem at module scope
+       * and cannot be bundled at all.
+       */
+      alias: { '@theme': path.join(ROOT, 'scripts', 'lib') },
+    },
+  },
 });

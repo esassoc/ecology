@@ -214,13 +214,13 @@ export class EsaDropdownMenu extends LitElement {
     /* FORCED COLORS. The panel keeps its real border, so only the interior needs
        work.
 
-       The DIVIDER is a 1px box painted with `background`, which flattens to
+       The DIVIDER is a 1px box painted with 'background', which flattens to
        Canvas — menu grouping disappears silently. Naming CanvasText explicitly
        brings it back.
 
        The --danger item is NOT repaired here, and that is deliberate: it differs
-       from a normal item by one `color` declaration, there is no system colour
-       that means "destructive", and the per-item `icon` string renders an
+       from a normal item by one 'color' declaration, there is no system colour
+       that means "destructive", and the per-item 'icon' string renders an
        anonymous bullet dot rather than a glyph (see the class docblock), so
        there is no shape channel to reach for either. Faking it with Highlight
        would say "selected", which is worse than saying nothing. The item's LABEL

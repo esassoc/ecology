@@ -24,15 +24,23 @@ import type { TokenGroup } from '../../data/token-graph';
 const VIEWS = ['tokens', 'components'] as const;
 
 export function getStaticPaths() {
-  return VIEWS.map((view) => ({ params: { view } }));
+  // The list is repeated rather than read off VIEWS above: Astro hoists this
+  // function out of the component scope and calls it before the frontmatter
+  // runs, so a module const is not defined yet ("VIEWS is not defined").
+  return ['tokens', 'components'].map((view) => ({ params: { view } }));
 }
 
 const view = Astro.params.view as (typeof VIEWS)[number];
 
-// Still a DYNAMIC import inside the component body rather than a static one at
-// the top: a static import is evaluated whenever Astro loads this module to
-// call getStaticPaths, so the filesystem scan would run once for routing and
-// again per render. The body runs only when a route actually renders.
+// DYNAMIC imports, and they have to stay that way. Static imports let vite
+// INLINE token-graph.ts into this page's module, which moves it from
+// dist/chunks/ to dist/pages/debug/ — one directory deeper. Every module under
+// src/data/ resolves the repo root by counting four levels up from
+// import.meta.url, so the inlined copy resolves one level short and the build
+// dies with "packages/tokens/dist/tokens.css is missing". Keeping the import
+// dynamic keeps the module in its own chunk at the depth that arithmetic
+// assumes. The vite warning about a module that cannot be split out is the
+// price, and it is only a warning.
 const {
   tierCounts,
   primitiveGroups,
@@ -163,7 +171,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but nothing reads it — no token, no component, and no other shipped surface (see the Scan coverage table above for exactly which files that means). Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below. Staged surfaces are excluded too — see the next check.', severity: 'warn' },
         { id: 'staged', label: 'Staged surfaces (component not built yet)', rows: stagedSurfaces, note: 'Unread because the component that will read them does not exist yet — the contract is declared first so it can be reviewed before code depends on it. Governed by STAGED_PREFIXES in token-graph.ts; each prefix must be documented in SPEC.md and have a component doc page. Removing a prefix from that list should mean the component landed, not that the finding got annoying.', severity: 'info' },
         { id: 'chrome', label: 'Chrome, exempt by decision (component EXISTS)', rows: chromeSurfaces, note: `Not staged and not dead: the component is built and these map onto real elements in it, and we are choosing not to wire them. Kept in its own bucket because --topbar-* spent months filed as "staged" — which reads as "arriving soon" — on the false premise that no component owned it. The "Where" column names the owner so that cannot recur. Governed by CHROME_EXEMPT in token-graph.ts; every entry states what a spoke loses. ${CHROME_EXEMPT.map((c) => `${c.prefix}* → ${c.owner}: ${c.cost}`).join(' ')}`, severity: 'info' },
-        { id: 'adhoc', label: 'Ad-hoc hooks — promotion candidates', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. Legitimate per SPEC.md: the component offers the hook via its fallback only. This is the working list for tier-3 surface work — promote into component-tokens.css, or fold away.', severity: 'info' },
+        { id: 'adhoc', label: 'Ad-hoc hooks — undeclared tier-3 (should be empty)', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. This note used to call that legitimate per SPEC.md; the spec says the opposite, giving two dispositions and no third — promote into component-tokens.css, or fold onto the role it aliases. An undeclared read is not a fourth tier, it is a tier-3 token missing its declaration: unguarded, absent from token-names.json, invisible to any spoke that has not read the component source. Resolved to zero on 2026-08-16 (9 declared, 24 folded), so a row here is a regression rather than a backlog.', severity: 'info' },
         { id: 'unused', label: 'Unused ramp steps (tier 1)', rows: unusedRampSteps, note: 'Primitive steps nothing references. Normal — a 12-step scale is a palette, not a checklist. Useful only for spotting a whole ramp that is carried but never used.', severity: 'info' },
       ].map((check) => (
         <details class={`check ${check.severity}`} open={check.rows.length > 0 && check.severity !== 'info'}>

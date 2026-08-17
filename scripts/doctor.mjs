@@ -157,6 +157,57 @@ if (srcVersion && cached.length) {
     `spoke-kit source (${srcVersion}) is ahead of the installed plugin (${highest}) — its hook/skill fixes are inert until you republish: push the hub, then run BOTH \`claude plugin marketplace update ecology\` AND \`claude plugin update spoke-kit@ecology\` (the first alone only refreshes the listing), then restart Claude Code.`);
 }
 
+// --- Accessibility assurance profile ------------------------------------------
+// Reported, never failed. Opting in is a PROJECT decision — most spokes have no
+// conformance obligation and a doctor that nags them about one is a doctor people
+// stop reading. What this does is make the state visible, because the failure mode
+// is silent in both directions: a project that believes it is assured and never set
+// the attribute looks identical to one that did.
+if (isSpoke) {
+  const tokensCss = path.join(CWD, 'node_modules', '@esa', 'tokens', 'dist', 'tokens.css');
+  const profiles = existsSync(tokensCss)
+    ? [...new Set([...readFileSync(tokensCss, 'utf8').matchAll(/\[data-assurance="([^"]+)"\]/g)].map((m) => m[1]))]
+    : [];
+
+  // Look for the attribute in the spoke's own layouts — that is where a spoke sets
+  // it, on <html>. Source text, not a render: doctor is a fast environment check and
+  // must not need a browser or a build.
+  let declared = null;
+  const layoutDir = path.join(CWD, 'src', 'layouts');
+  if (existsSync(layoutDir)) {
+    for (const f of readdirSync(layoutDir)) {
+      const m = readFileSync(path.join(layoutDir, f), 'utf8').match(/data-assurance=["']([^"']+)["']/);
+      if (m) { declared = m[1]; break; }
+    }
+  }
+
+  if (declared) {
+    // A typo here is the expensive case: the attribute is present, the project
+    // believes it is covered, and it matches no block so nothing at all applies.
+    warn(
+      `accessibility assurance profile: ${declared}`,
+      profiles.includes(declared),
+      `no [data-assurance="${declared}"] block exists in @esa/tokens${profiles.length ? ` — available: ${profiles.join(', ')}` : ''}. The attribute is set but matches nothing, so NO profile is applied and nothing says so.`,
+    );
+    if (profiles.includes(declared)) {
+      console.log(
+        `      verify it, do not assume it: \`node ../ecology/scripts/check-contrast.mjs src/styles/theme-*.css --assurance ${declared}\`\n` +
+          `      A theme's [data-theme] block loads after the profile at equal specificity, so YOUR brand colours still win — the profile cannot fix a brand it does not know about.`,
+      );
+    }
+  } else if (profiles.length) {
+    warn(
+      'accessibility assurance profile: not set (fine unless this project needs one)',
+      true,
+      null,
+    );
+    console.log(
+      `      If this project has a conformance obligation, set data-assurance="${profiles[0]}" on <html>\n` +
+        `      in your layouts, then verify with check-contrast.mjs --assurance. It is inert until set.`,
+    );
+  }
+}
+
 // --- Deprecated @esa/tokens names ---------------------------------------------
 // A rename in the hub reaches this spoke through the `file:` symlink with no
 // publish step to absorb it. Deprecated aliases keep the old names resolving, so

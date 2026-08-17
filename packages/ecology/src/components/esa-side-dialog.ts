@@ -193,14 +193,14 @@ export class EsaSideDialog extends LitElement {
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       flex: none;
     }
-    .title { margin: 0; color: var(--side-dialog-color, var(--color-content-default, #202020)); }
+    .title { margin: 0; color: var(--color-content-default, #202020); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
       border: 0; border-radius: var(--radius-sm, 0.25rem); background: none;
       color: var(--color-content-default-muted, #838383); cursor: pointer;
     }
     .close:hover { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default, #202020); }
-    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-content-default-secondary, #646464)); }
+    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--color-content-default-secondary, #646464); }
     .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: var(--border-width-default, 1px) solid var(--color-border-default, #cecece); }
     .footer:not(:has(*)) { display: none; }
 
@@ -214,7 +214,7 @@ export class EsaSideDialog extends LitElement {
 
     /* FORCED COLORS. This panel floats with a 16px inset on all four sides, so
        losing --elevation-5 leaves it with no edge at all against the scrim.
-       Width is `min(--_width, 100vw - inset*2)` on a content-box element; the
+       Width is 'min(--_width, 100vw - inset*2)' on a content-box element; the
        border is inside the query so that clamp keeps holding in normal mode. */
     @media (forced-colors: active) {
       .panel { border: 1px solid CanvasText; }

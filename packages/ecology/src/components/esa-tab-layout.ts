@@ -268,8 +268,8 @@ export class EsaTabLayout extends LitElement {
 
     /* FORCED COLORS. Both appearances lose their active marker, for different
        reasons. The default appearance paints .tab--active::after — a generated
-       box whose only paint is `background`, so it flattens to Canvas. The
-       segmented/pill appearances set that ::after to `display: none` and signal
+       box whose only paint is 'background', so it flattens to Canvas. The
+       segmented/pill appearances set that ::after to 'display: none' and signal
        with a background plus --elevation-1 instead, and the shadow is deleted.
 
        Fills rather than borders, same reason as esa-button-toggle: .tab has a

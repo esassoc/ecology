@@ -216,10 +216,10 @@ export class EsaErrorSummary extends LitElement {
         display: flex;
         gap: var(--spacing-300, 0.75rem);
         padding: var(--spacing-400, 1rem);
-        border: var(--error-summary-border-width, var(--border-width-200, 2px)) solid
-          var(--error-summary-border-color, var(--color-border-utility-danger, #fdbdbe));
-        border-radius: var(--error-summary-radius, var(--radius-md, 0.5rem));
-        background: var(--error-summary-bg, var(--color-background-utility-danger-subtle, #fff7f7));
+        border: var(--border-width-200, 2px) solid
+          var(--color-border-utility-danger, #fdbdbe);
+        border-radius: var(--radius-md, 0.5rem);
+        background: var(--color-background-utility-danger-subtle, #fff7f7);
         color: var(--color-content-default, #202020);
       }
 
@@ -236,7 +236,7 @@ export class EsaErrorSummary extends LitElement {
       .icon {
         flex: none;
         display: inline-flex;
-        color: var(--error-summary-icon-color, var(--color-content-utility-danger, #ce2c31));
+        color: var(--color-content-utility-danger, #ce2c31);
       }
 
       .body {
@@ -245,7 +245,7 @@ export class EsaErrorSummary extends LitElement {
 
       .heading {
         margin: 0;
-        color: var(--error-summary-heading-color, var(--color-content-utility-danger, #ce2c31));
+        color: var(--color-content-utility-danger, #ce2c31);
       }
 
       .list {
@@ -262,6 +262,16 @@ export class EsaErrorSummary extends LitElement {
            colour shift alone would be the SC 1.4.1 failure. */
         text-decoration: underline;
         text-underline-offset: 2px;
+        /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). These measure ~20-21px tall.
+           NOT exempt as an inline link: 2.5.8 spares a link inside a SENTENCE, whose
+           size the surrounding prose decides, and each of these is a standalone list
+           item. inline-flex + align-items so the floor grows the hit box without
+           moving the text off its own baseline; block-size only, since the text
+           already makes these far wider than the floor. Inert until the profile is
+           set. */
+        display: inline-flex;
+        align-items: center;
+        min-block-size: var(--target-size-min, 0px);
       }
       .link:hover {
         text-decoration-thickness: 2px;

@@ -439,7 +439,13 @@ export class EsaFilterDropdown extends LitElement {
     }
 
     .esa-filter-dropdown__label {
-      overflow: hidden;
+      /* clip/visible, not "overflow: hidden" — the trigger sets a microcopy composite,
+         whose line-height "none" (1) leaves the line box 1em against DM Sans's 1.30em
+         glyph box, so hiding the Y axis clips the descenders in a label like
+         "Category" or "Region type". Same fix as esa-file-list's .file__name, where
+         the arithmetic is written out. */
+      overflow-x: clip;
+      overflow-y: visible;
       text-overflow: ellipsis;
       max-width: 200px;
     }
@@ -592,6 +598,26 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__clear-link:disabled {
       color: var(--color-content-default-muted, #838383);
       cursor: not-allowed;
+    }
+
+    /* FORCED COLORS. This list is the one that mostly survives already: selection
+       is carried by a nested <esa-checkbox> with a real glyph and a real border,
+       not by a row tint. Only the keyboard cursor needs restoring.
+
+       The per-option colour dot is the exception — it is an inline
+       per-option background colour with no label of any kind, so it is content
+       rather than decoration and opts out. Without the opt-out every dot renders
+       identically and the colour dimension of the filter is simply gone. */
+    @media (forced-colors: active) {
+      .esa-filter-dropdown__option--highlighted {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+      .esa-filter-dropdown__option--disabled { color: GrayText; }
+      .esa-filter-dropdown__option-dot {
+        forced-color-adjust: none;
+        outline: 1px solid CanvasText;
+      }
     }
   `,
   ];

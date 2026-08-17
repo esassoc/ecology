@@ -144,14 +144,38 @@ export class EsaFileList extends LitElement {
     }
     .file__name {
       min-width: 0;
-      overflow: hidden;
+      /* CLIP THE X AXIS ONLY — "overflow: hidden" here sliced the descenders off
+         every g/j/p/q/y in a filename. The row carries .typography-microcopy-sm-subtle,
+         so line-height is "none" (1): the line box is exactly 1em tall while DM Sans's
+         glyph box needs 1.30em (0.99 ascent + 0.31 descent). Half-leading is therefore
+         NEGATIVE (-0.15em) and the baseline sits 0.16em off the bottom, but the
+         descender ink reaches 0.21em — ~1px of it below the box at 14px. Hiding both
+         axes clips that ink; hiding one and leaving the other visible does not.
+         clip/visible is the legal pair (hidden/visible is not — it computes to auto
+         and can grow a scrollbar), text-overflow: ellipsis still applies, and the box
+         height is unchanged, so nothing in the grid row moves. Verified truncating in
+         Chromium, WebKit and Firefox. Do not collapse this back to "overflow: hidden". */
+      overflow-x: clip;
+      overflow-y: visible;
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--color-content-default, #202020);
-      text-decoration: none;
+      /* Transparent, not 'none'. text-decoration-color IS force-adjusted, so the
+         underline comes back in forced colors and a linked filename stays
+         distinguishable from an unlinked one — which here is otherwise a pure
+         colour difference. Removing the decoration outright cannot come back. */
+      text-decoration-color: transparent;
     }
     a.file__name {
       color: var(--color-content-brand, #2a7e3b);
+      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). The filename measures ~14px tall.
+         A standalone row link, not an inline link in a sentence, so the 2.5.8 inline
+         exemption does not apply. Only the anchor form takes the floor: the
+         non-linked span at .file__name is not a target at all. Inert until the
+         profile is set. */
+      display: inline-flex;
+      align-items: center;
+      min-block-size: var(--target-size-min, 0px);
     }
     a.file__name:hover {
       text-decoration: underline;

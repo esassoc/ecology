@@ -2,7 +2,7 @@
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import Section from '@esa/docs/Section.astro';
 import { withBase } from '@esa/docs/base';
-import { catalog, componentCount, referenceCount } from '../../data/catalog';
+import { catalog, componentCount, referenceCount, deprecatedCount } from '../../data/catalog';
 
 const slugifyLabel = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const kindLabel = (kind: string) => (kind === '.astro' ? '.astro' : kind === 'wc' ? 'web component' : 'reference');
@@ -16,11 +16,21 @@ const kindLabel = (kind: string) => (kind === '.astro' ? '.astro' : kind === 'wc
     Generated at build time straight from the component sources
     (<code>packages/ecology/src/components/</code>) — names, summaries, and props
     come from the code, so this catalog <strong>cannot drift</strong> from what's installed.
-    {componentCount} components{referenceCount > 0 && <> + {referenceCount} reference wrappers</>}.
+    {componentCount} components
+    {deprecatedCount > 0 && <> (<a href="#deprecated">{deprecatedCount} deprecated</a>)</>}
+    {referenceCount > 0 && <> + {referenceCount} reference wrappers</>}.
   </aside>
 
   {catalog.map((group) => (
     <Section id={slugifyLabel(group.label)} title={group.label}>
+      {group.label === 'Deprecated' && (
+        <p class="cat__depnote">
+          Still shipped, still working — each is a shim that forwards to its replacement and warns
+          at build time, so a spoke that upgrades does not break. They are listed here rather than
+          in the group they used to sit in so nobody picks one by browsing. Migrate a spoke with
+          {' '}<code>/update-tokens</code>.
+        </p>
+      )}
       <table class="cat">
         <thead><tr><th>Component</th><th>Kind</th><th>What it is</th><th>Props</th></tr></thead>
         <tbody>
@@ -33,7 +43,10 @@ const kindLabel = (kind: string) => (kind === '.astro' ? '.astro' : kind === 'wc
                 <code>{e.slug}</code>
               </td>
               <td><span class={`kind kind--${e.kind === '.astro' ? 'astro' : e.kind}`}>{kindLabel(e.kind)}</span></td>
-              <td>{e.summary}{e.wraps && <span class="cat__wraps"> wraps {e.wraps}</span>}</td>
+              <td>
+                {e.supersededBy && <span class="cat__dep">use <code>{e.supersededBy}</code></span>}
+                {e.summary}{e.wraps && <span class="cat__wraps"> wraps {e.wraps}</span>}
+              </td>
               <td class="cat__props">
                 {e.props.length > 0
                   ? e.props.map((p, i) => (
@@ -70,6 +83,13 @@ const kindLabel = (kind: string) => (kind === '.astro' ? '.astro' : kind === 'wc
   .kind--astro { background: var(--color-background-brand-subtle, #eef6f6); border-color: var(--color-border-brand, #cfe5e5); }
   .kind--wc { background: var(--color-background-elevation-sunken, #f5f5f5); }
   .kind--reference { background: var(--color-background-utility-warning-subtle, #fdf6ec); }
+  .cat__depnote { color: var(--color-content-default-secondary, #444); max-width: 72ch; margin-top: 0; }
+  .cat__dep {
+    display: block; margin-bottom: 2px;
+    font-weight: var(--typography-font-weight-medium, 500);
+    color: var(--color-content-utility-warning, #8a5a00);
+  }
+  .cat__dep code { background: none; padding: 0; color: inherit; }
   .cat__props { font-size: 0.875rem; }
   .cat__props .prop { background: none; padding: 0; color: var(--color-content-default-secondary, #555); }
   .cat__wraps { color: var(--color-content-default-muted, #888); }

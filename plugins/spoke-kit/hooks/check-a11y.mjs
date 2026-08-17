@@ -187,6 +187,36 @@ if (runMarkup) {
     if (/\bid\s*=/i.test(attrs)) continue; // may be an aria-labelledby target
     if (/\[for\]|:for\b|v-bind|\bhtmlFor\b/i.test(attrs)) continue; // framework bindings
     if (/\{\s*\.\.\./.test(attrs)) continue; // spread props may carry for/id
+    // An element carrying an interactive ARIA role is NOT labelable — <label>
+    // associates only with form controls, and a role does not make a <span> into
+    // one. So this is PROVABLE regardless of what else is in the label, and it
+    // takes priority over every content exemption below.
+    //
+    // It has to, because those exemptions were letting the real thing through. The
+    // shape that shipped in esa-checkbox, esa-checkbox-group and esa-radio-group
+    // was a <label> wrapping <span role="checkbox">, and it was exempted by the
+    // "a CALL in an interpolation may return a control" rule — not because any
+    // call returned a control, but because `aria-checked=${String(this.checked)}`
+    // put a `(` inside an interpolation somewhere in the blob. Measured against
+    // Chrome's accessibility tree on 2026-08-16, all three options had NO
+    // accessible name; the synthetic test case was caught and the real files were
+    // not. Fix the association (aria-labelledby to the option's own text) rather
+    // than the role.
+    // ...unless that element names ITSELF. aria-labelledby pointing at the option's
+    // own text is the fix this rule is asking for, so it has to be the thing that
+    // clears it — otherwise the check fires forever on correct code, which is how a
+    // guard gets ignored.
+    const roleTag =
+      /<[a-z][a-z0-9-]*\b[^>]*\brole\s*=\s*["'](?:checkbox|radio|switch|slider|spinbutton|combobox|textbox|listbox|menuitemcheckbox|menuitemradio)["'][^>]*>/i.exec(inner);
+    const wrapsRealControl = /<(input|textarea|select)\b/i.test(inner);
+    if (roleTag && !wrapsRealControl) {
+      // A named role element is the fixed state — exempt, and skip the rest.
+      if (/\baria-label(?:ledby)?\s*=/i.test(roleTag[0])) continue;
+      // An unnamed one is the defect, and no content exemption below can excuse it.
+      seen.add(inner.replace(/\s+/g, ' ').trim().slice(0, 40));
+      continue;
+    }
+    {
     if (/<(input|textarea|select)\b/i.test(inner)) continue; // wraps a labelable element
     if (/<slot\b/i.test(inner)) continue; // control is projected in by the caller
     if (/<[a-z][a-z0-9]*-[a-z0-9-]*\b/i.test(inner)) continue; // form-associated custom element
@@ -194,6 +224,7 @@ if (runMarkup) {
     // template literal is NOT exempt — the tag scans above already read straight
     // through it, so `${html`<input>`}` is caught and `${html`<span>`}` is not.
     if (/\$?\{[^}]*\(/.test(inner)) continue;
+    }
     const shown = inner.replace(/\s+/g, ' ').trim().slice(0, 40);
     seen.add(shown);
   }

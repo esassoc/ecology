@@ -98,6 +98,17 @@ export class EsaColorPicker extends LitElement {
   }
 
   render() {
+    // Both inner controls need their OWN name. The visible span names the group,
+    // and a group name does not name the things inside it — measured 2026-08-16
+    // against Chrome's accessibility tree, the swatch came back role=ColorWell
+    // name="" and the hex field fell through to its placeholder, name="#000000".
+    //
+    // The label text is repeated into each name rather than left to the group.
+    // It is slightly verbose next to the group name, and it is what makes these
+    // pass SC 2.5.3 Label in Name: a speech-control user says what they SEE, and
+    // what they see is "Brand color".
+    const swatchName = this.label ? `${this.label} color swatch` : 'Color swatch';
+    const hexName = this.label ? `${this.label} hex value` : 'Hex value';
     return html`
       ${this.label
         ? html`<span id="label" class="label typography-${LABEL_TYPE[this.size]}"
@@ -115,6 +126,7 @@ export class EsaColorPicker extends LitElement {
             <input
               type="color"
               class="native"
+              aria-label=${swatchName}
               .value=${this.value}
               ?disabled=${this.disabled}
               @input=${this.onColorInput}
@@ -125,6 +137,7 @@ export class EsaColorPicker extends LitElement {
             ? html`<input
                 type="text"
                 class="hex-input typography-${CODE_TYPE[this.size]}"
+                aria-label=${hexName}
                 .value=${this.value}
                 ?disabled=${this.disabled}
                 @change=${this.onHexInput}
@@ -314,11 +327,11 @@ export class EsaColorPicker extends LitElement {
 
     /* FORCED COLORS. The one place in this kit where opting OUT is the correct
        answer: the colour IS the content. Both .preview and .swatch carry an
-       inline `background-color`, so force-adjusting them turns the picker into a
+       inline 'background-color', so force-adjusting them turns the picker into a
        row of identical empty squares and nothing can be chosen.
 
        The opt-out repairs selection as a side effect. The base .swatch is
-       `border: 2px solid transparent`, and forced colors makes transparent
+       'border: 2px solid transparent', and forced colors makes transparent
        borders VISIBLE — so without this, every swatch would gain the same 2px
        border that .swatch--selected uses to mark itself, and selection would be
        lost twice over. Under the opt-out the transparent border stays

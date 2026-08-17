@@ -308,7 +308,7 @@ export class EsaSearchPanel extends LitElement {
       width: var(--search-panel-width, 400px);
       max-width: 90vw;
       background: var(--color-background-elevation-floating, #fcfcfc);
-      box-shadow: var(--search-panel-shadow, var(--elevation-5, -4px 0 24px rgba(0, 0, 0, 0.1)));
+      box-shadow: var(--elevation-5, -4px 0 24px rgba(0, 0, 0, 0.1));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
@@ -321,7 +321,7 @@ export class EsaSearchPanel extends LitElement {
 
     .panel--left {
       left: 0;
-      box-shadow: var(--search-panel-shadow, var(--elevation-5, 4px 0 24px rgba(0, 0, 0, 0.1)));
+      box-shadow: var(--elevation-5, 4px 0 24px rgba(0, 0, 0, 0.1));
       animation: esa-search-slide-in-left var(--animation-overlay-enter, 250ms ease-out);
     }
 
@@ -450,7 +450,7 @@ export class EsaSearchPanel extends LitElement {
 
     /* FORCED COLORS. The panel is flush to the viewport edge with no radius, so
        only the INBOARD edge carries meaning — but that is the edge the shadow was
-       drawing, and box-shadow is forced to `none`. A full border is simpler than
+       drawing, and box-shadow is forced to 'none'. A full border is simpler than
        a side-specific one and costs nothing: the outboard edges are off-screen. */
     @media (forced-colors: active) {
       .panel { border: 1px solid CanvasText; }

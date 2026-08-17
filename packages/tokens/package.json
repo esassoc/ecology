@@ -14,6 +14,7 @@
     "./a11y.css": "./src/a11y.css",
     "./focus.css": "./src/focus.css",
     "./component-tokens.css": "./src/component-tokens.css",
+    "./assurance.css": "./src/assurance.css",
     "./migrations.json": "./migrations.json"
   },
   "files": [

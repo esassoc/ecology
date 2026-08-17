@@ -8,7 +8,8 @@ import { catalog } from './catalog';
 export interface NavItem {
   label: string;
   href: string;
-  status?: 'stable' | 'reference';
+  status?: 'stable' | 'reference' | 'deprecated';
+  supersededBy?: string;
 }
 export interface NavGroup {
   label: string;
@@ -21,6 +22,8 @@ export const guide: NavGroup = {
     { label: 'How it works', href: '/guide' },
     { label: 'Setup', href: '/guide/setup' },
     { label: 'Claude toolkit', href: '/guide/toolkit' },
+    { label: 'Theme maker', href: '/guide/theme-maker' },
+    { label: 'Accessibility assurance', href: '/guide/assurance' },
     { label: 'Keeping current', href: '/guide/updating' },
   ],
 };
@@ -51,13 +54,16 @@ export const foundations: NavGroup = {
 
 // Component groups are derived from the catalog — never hand-listed here. A
 // doc-less component links to its anchor on the catalog index, so the sidebar
-// lists every component the package ships with a valid destination.
+// lists every component the package ships with a valid destination. Group ORDER
+// is the catalog's, which is why "Deprecated" lands at the bottom of the rail
+// rather than needing a rule here.
 export const componentGroups: NavGroup[] = catalog.map((group) => ({
   label: group.label,
   items: group.entries.map((e) => ({
     label: e.name,
     href: e.href,
-    status: e.status === 'reference' ? 'reference' : undefined,
+    status: e.status === 'stable' ? undefined : e.status,
+    supersededBy: e.supersededBy,
   })),
 }));
 
@@ -66,4 +72,21 @@ export const components: NavGroup = {
   items: [{ label: 'Catalog', href: '/components' }],
 };
 
-export const allGroups: NavGroup[] = [guide, patterns, foundations, components, ...componentGroups];
+// Both views read the repo at build time and describe the system rather than
+// document it, so they sit last — after the components they are derived from.
+export const debug: NavGroup = {
+  label: 'Debug',
+  items: [
+    { label: 'Token graph', href: '/debug/tokens' },
+    { label: 'Component promises', href: '/debug/components' },
+  ],
+};
+
+export const allGroups: NavGroup[] = [
+  guide,
+  patterns,
+  foundations,
+  components,
+  ...componentGroups,
+  debug,
+];

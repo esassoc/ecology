@@ -216,6 +216,20 @@
   --form-label-color: var(--color-content-default-secondary);
   --form-help-color: var(--color-content-default-muted);
   --form-error-color: var(--color-content-utility-danger);
+  /* The prefix/suffix slab on a text field — a leading `$`, a trailing `.com`.
+     Read by esa-text-field, declared here rather than there because the affix is
+     part of the field's edge, not a component of its own: --form-affix-border-color
+     points at --form-border-color, its sibling two lines down, and that coupling
+     is the whole point. Stated in the token file a spoke opens, a theme that moves
+     the field edge moves the affix edge with it; buried in a fallback chain inside
+     the component, it moves only if you knew to look.
+
+     These read as `var(--form-affix-*, <chain>)` in the component and were declared
+     NOWHERE until 2026-08-16 — the tier the site called `ad-hoc`, which was never a
+     tier. See the note at the head of the HOOKIFY block below. */
+  --form-affix-bg: var(--color-background-elevation-sunken);
+  --form-affix-color: var(--color-content-default-secondary);
+  --form-affix-border-color: var(--form-border-color);
   /* structure */
   /* Every form edge, including the checkbox box and the radio circle. There was
      briefly a --form-indicator-border-width at --border-width-200, added because both
@@ -428,8 +442,37 @@
  * HOOKIFY (2026-06-12) — per-component theming surfaces added per
  * packages/tokens/SPEC.md. Each default = the exact chain the
  * component read before the hook existed (zero-regression rule).
- * Umbrella hooks with divergent per-read fallbacks stay ad-hoc
- * (documented on each component page) and are NOT declared here.
+ *
+ * THIS BLOCK USED TO END "umbrella hooks with divergent per-read
+ * fallbacks stay ad-hoc … and are NOT declared here", AND THAT
+ * INVENTED A FOURTH TIER. There are three. A token a component reads
+ * as `var(--x, <fallback>)` that no token file declares is not a
+ * category — it is a tier-3 token missing its declaration, sitting in
+ * the component-theming slot under a component-scoped name, absent
+ * from the one file a spoke author opens and from token-names.json,
+ * so nothing guards it and nothing records that it exists.
+ *
+ * The exemption came from a collision with the zero-regression rule
+ * above: when one name is read at several sites with DIFFERENT
+ * defaults, no single declaration reproduces them all. That
+ * divergence was the signal, not the obstacle — --confirm-dialog-color
+ * meant --color-content-default in one place and
+ * --color-content-default-secondary in another, one name standing for
+ * two roles, a worse form of the alias pattern the 2026-08-16 pass
+ * deleted 168 of.
+ *
+ * SPEC.md gives two dispositions and no third: promote into this file,
+ * or fold away. On 2026-08-16 the 30 remaining were resolved 3 / 27 —
+ * only --form-affix-* declared (it extends the --form-* category
+ * surface rather than opening a new one; see the FORMS section). The
+ * other 27 lost their outer wrapper and read their tier-2 role
+ * directly. No migrations.json rows: none had ever shipped in
+ * token-names.json, and a grep of all eight sibling spoke repos found
+ * zero references, so no override could be lost.
+ *
+ * The detector stays live at zero — /debug/components § "Under-promise"
+ * and /debug/tokens § "Ad-hoc hooks". Both render empty now; either
+ * one growing a row means someone added an undeclared read.
  * ============================================================ */
 :root {
 
@@ -456,11 +499,22 @@
   --avatar-size-md: 40px;
   --avatar-size-sm: 28px;
   --avatar-size-xs: 20px;
-  /* Initials type. One hook rather than four: each size rule repeats it with its
-     own literal default, so an override lands on whichever size is active. Left
-     UNSET here on purpose — declaring a value would pin every size to one number
-     and destroy the scale. Callers set it in their own scope; esa-header-nav
-     does, to hold 12px initials in a 32px face. */
+  /* Initials type, one per rung — matching --avatar-size-* directly above.
+     This WAS a single --avatar-font-size, declared nowhere, with the reason
+     written here: "declaring a value would pin every size to one number and
+     destroy the scale." True, and the conclusion drawn from it was that the
+     token had to stay undeclared — the fourth tier in miniature, argued for in
+     the file whose job is to declare things.
+
+     The objection only rules out ONE declaration. Four is what the size ramp
+     two lines up already does, and it costs nothing: an override still lands on
+     whichever size is active, and now it lands on a name that exists in this
+     file, is in token-names.json, and cannot be deleted without a migration row.
+     esa-header-nav sets the `sm` rung to hold 12px initials in a 32px face. */
+  --avatar-font-size-lg: var(--typography-title-font-size);
+  --avatar-font-size-md: var(--typography-label-md-strong-font-size);
+  --avatar-font-size-sm: var(--typography-label-xs-strong-font-size);
+  --avatar-font-size-xs: var(--typography-label-2xs-strong-font-size);
 
   /* esa-back-to-top */
   --back-to-top-size: 44px;
@@ -532,6 +586,19 @@
   /* esa-entity-search */
   --entity-search-max-height: 70vh;
   --entity-search-width: 600px;
+
+  /* esa-file-list */
+  /* Row density. The one hook in the 2026-08-16 sweep with a named human behind
+     it: added under a `hub-edit-approved:` note (Andrew, front-end architect) so
+     consumers could loosen file rows without restyling the shadow DOM. That is
+     the "a spoke asked" test passing outright, which is why these two are
+     declared rather than folded — every other undeclared hook in that pass was
+     offered on the strength of a fallback nobody had requested.
+
+     -y is a literal: 2px is below --spacing-050 and has no tier-1 home, so
+     demoting it would delete the knob and hardcode the number. */
+  --file-list-row-padding-y: 2px;
+  --file-list-row-padding-x: var(--spacing-300);
 
   /* DELETED (2026-08-16) — --fill-percent was never a theming token.
      esa-range-slider SETS it from JS on every render, as an inline style on its

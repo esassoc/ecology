@@ -1037,8 +1037,8 @@ export class EsaSelect extends LitElement {
        --active takes an inset outline. An inset outline is used so the cursor
        does not enlarge the row or clip against the panel edge.
 
-       This also repairs a normal-mode bug. `.option--selected` is declared after
-       `.option--active` at equal specificity, so today the keyboard cursor simply
+       This also repairs a normal-mode bug. '.option--selected' is declared after
+       '.option--active' at equal specificity, so today the keyboard cursor simply
        vanishes when it lands on the selected row. Here they compose. */
     @media (forced-colors: active) {
       .option--active {
