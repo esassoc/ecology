@@ -264,7 +264,7 @@ export class EsaDialog extends LitElement {
     }
     .esa-dialog__close:hover { background: var(--color-background-elevation-sunken, #f0f0f0); }
     .esa-dialog__close:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

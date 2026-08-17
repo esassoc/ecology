@@ -74,15 +74,23 @@ who most need to see it.
 Use `outline` as the floor. Its *color* is force-adjusted; the ring is not removed.
 It has also followed `border-radius` in every engine since 2021, so the rounded ring
 that made people reach for `box-shadow` in the first place is no longer a reason.
-Layering is the house pattern — outline for structure, box-shadow for the soft halo:
+`outline` is the house pattern, and on its own it is enough — three declarations, no
+`box-shadow` layer:
 
 ```css
 .control:focus-within {
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
-  box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo); /* decorative */
 }
 ```
+
+An earlier version of this example added
+`box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo)` as a decorative
+second band. Those two tokens were never shipped, so that line painted nothing — and
+because a `var()` with no fallback and nothing to resolve to is invalid at computed-value
+time, it was discarded silently, with no console warning. Which is the lesson twice over:
+the ring you can rely on in forced-colors is the `outline`, and a `box-shadow` band is
+never the part carrying the obligation.
 
 If you must suppress the default ring, make it **transparent** rather than absent —
 `outline-color: transparent`, never `outline: none`. Transparent gets force-adjusted

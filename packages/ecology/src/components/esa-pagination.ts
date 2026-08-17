@@ -241,7 +241,7 @@ export class EsaPagination extends LitElement {
       appearance: auto;
     }
     .page-size-select:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .page-size-select:disabled { cursor: default; opacity: 0.5; }
@@ -271,7 +271,7 @@ export class EsaPagination extends LitElement {
     .ic { display: flex; }
     .button:hover:not(:disabled) { background: var(--_pagination-button-hover-bg); }
     .button:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .button:disabled { color: var(--_pagination-button-disabled-color); cursor: default; }

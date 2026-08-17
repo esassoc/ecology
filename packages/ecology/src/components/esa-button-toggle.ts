@@ -375,7 +375,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
       position: relative;
       z-index: 1;

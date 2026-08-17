@@ -158,7 +158,7 @@ export class EsaSwitchToggle extends LitElement {
     :host([checked]) .thumb { left: calc(var(--_track-w) - var(--_thumb) - 2px); }
 
     .root:focus-visible .track {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

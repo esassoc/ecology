@@ -315,14 +315,20 @@ test('forced-colors ring: blocks a ring painted only with box-shadow', () => {
 });
 
 test('forced-colors ring: an outline on the SAME rule is the layered ring, and passes', () => {
-  // outline = the floor that survives; box-shadow = the soft halo on top.
+  // outline = the floor that survives forced-colors; a box-shadow beside it is extra.
+  // (This comment said "the soft halo" until 2026-08-17. The kit has no halo band — one
+  // was tried and reverted — but the CHECK is about layering in general, not that band,
+  // so the case is still the right one to cover.)
   const layered = '.btn:focus-visible { outline: 2px solid blue; box-shadow: 0 0 0 4px #eee; }';
   assert.equal(check(CSS, layered).blocked, false);
 });
 
 test('forced-colors ring: an outline on the same CLASS elsewhere pairs', () => {
-  // The error-state override only recolours the halo; the base rule's outline
-  // still paints. This is the shape of every *--error field rule in the kit.
+  // The error-state override only adds a box-shadow; the base rule's outline still
+  // paints. This is the shape of every *--error field rule in the kit — and note that
+  // the shape is itself a known defect (the outline is never reset, so a focused invalid
+  // field paints two rings in two colours). That is logged separately; what this test
+  // pins is only that the GUARD does not mistake the override for a removed ring.
   const paired =
     '.input:focus { outline: 2px solid blue; box-shadow: 0 0 0 4px #eee; }\n' +
     '.field--error .input:focus { box-shadow: 0 0 0 2px red; }';
@@ -357,8 +363,8 @@ test('forced-colors ring: `outline-offset` is not a ring either', () => {
 });
 
 test('forced-colors ring: `box-shadow: none` is a reset, not a ring', () => {
-  // esa-input-tag's .container--disabled:focus-within — clearing the halo on a
-  // disabled field must not read as painting one.
+  // esa-input-tag's .container--disabled:focus-within — clearing a box-shadow on a
+  // disabled field must not read as painting a ring.
   assert.equal(check(CSS, '.container--disabled:focus-within { box-shadow: none; }').blocked, false);
 });
 

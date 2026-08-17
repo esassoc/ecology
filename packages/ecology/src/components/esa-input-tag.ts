@@ -586,8 +586,8 @@ export class EsaInputTag extends LitElement {
     }
     .container:focus-within,
     .container--open {
-      --_field-border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -669,7 +669,7 @@ export class EsaInputTag extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.06));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 1px;
     }
 

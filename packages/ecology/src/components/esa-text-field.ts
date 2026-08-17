@@ -410,8 +410,8 @@ export class EsaTextField extends LitElement {
       --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .control:focus-within {
-      --_field-border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

@@ -155,7 +155,7 @@ The pipeline now has a middle: **`/guide/theme-maker`** (the editor) and
 `scripts/lib/theme-recipe.mjs`, with `theme-<slug>.json` as the durable artifact.
 `create-spoke.mjs --theme <recipe>` writes the real file. **Six seeds** (brand hex,
 neutral temperature, corner language, two font stacks, optional per-intention colours)
-produce ~95 light + ~91 dark declarations that pass 29/29 pairs in **both** schemes —
+produce ~95 light + ~92 dark declarations that pass 33/33 pairs in **both** schemes —
 against a hub whose own defaults fail 7 and whose dark block fails 5.
 
 Things that are easy to get wrong here:
@@ -172,12 +172,26 @@ Things that are easy to get wrong here:
 - **"Do not move the client's hex" is LIGHT-ONLY.** `rampFrom` deliberately does not
   anchor the seed in dark — a light-scheme brand glares on a near-black page — so the
   dark fill is the generator's own pick and is as movable as any utility colour.
-- **`--color-content-link` IS emitted, `--color-border-default-focus` is NOT.** The
-  tier-2 default sends links at the step-9 *fill*, which `color.json` itself calls
-  inherited rather than chosen and flags to re-point; a fill step is engineered for
-  3:1, so link text fails AA for most brands (measured: 3.42:1). The focus ring
-  genuinely wants the fill step and keeps its derivation — that chain is what stopped
-  cb-fish keeping Ecology-green rings on a navy brand.
+- **`--color-content-link` AND `--color-border-default-focus` are both emitted, and the
+  second one flipped on 2026-08-17.** This line used to say the focus ring "genuinely
+  wants the fill step and keeps its derivation". It does not: a step 9 is engineered to
+  clear 3:1 as a SOLID FILL, and a ring needs 3:1 as a 2px HAIRLINE on the same surfaces.
+  Measured, the hub's own ring came to 2.95:1 raised/canvas and **2.66:1 sunken** — a
+  Level AA failure (SC 1.4.11) that shipped for months. Links fail the same way for the
+  same reason (measured 3.42:1).
+  So the ring now **walks the brand's own ramp** — step 9, 10, 11, 12 — and takes the
+  first step clearing 3:1 on every surface in that scheme (`resolveFocusRing`). The hub
+  moves one step to `grass-10`; beacon and qanat already clear it at step 9 and are
+  untouched. Across 216 seeds every ramp had a usable step (worst best-available 9.55:1),
+  so **the ring is always the brand**; the neutral fallback under the walk never fires.
+  What this GAVE UP is the tier-2 derivation, which is what stopped cb-fish keeping
+  Ecology-green rings on a navy brand — a `var()` chain cannot express "the brand, unless
+  it cannot be seen", and CSS has no function that tests a colour's contrast. Three
+  things replace it: this generator emits the role for **every** theme in both schemes
+  even when the walk picks step 9; `packages/spoke-template` carries the declaration; and
+  `check-contrast.mjs` grades it at `fail` on all four surfaces. **A spoke must not
+  hand-declare `--color-border-default-focus`** — a theme file loads later at equal
+  specificity, so it would override the walk.
 - **Emit hex only.** `parseColor` reads `#rgb`/`#rrggbb`/`rgb()`/`white`/`black` and
   nothing else; an `oklch()` or `color-mix()` makes those pairs unauditable, and that
   script's history records the cost — it once checked 0 pairs and exited 0 with "All
@@ -470,6 +484,17 @@ effect and nobody noticed the pages were mislabelled.
 - Icons: inline Lucide SVGs (no icon dependency). When a `.ts` (Lit) component **injects** icon markup from a prop/string, use `unsafeSVG` (`lit/directives/unsafe-svg.js`) — **not** `unsafeHTML`. `unsafeHTML` parses in the XHTML namespace, so the `<path>`/`<rect>` children are created as unknown HTML elements and never paint. `unsafeHTML` is only for injecting real HTML (e.g. highlighted text into a `<span>`). Static SVG written literally in a Lit template is fine as-is.
 - No Tailwind. No dependencies beyond `lit`.
 - In `.astro` prose/`<code>`, never write bare `{ ... }` (Astro evaluates it). Use `{'{ ... }'}`.
+- **Prose that shows markup must be passed as a JS EXPRESSION, not an HTML attribute** —
+  `summary={'… <code>&lt;button&gt;</code> …'}`, never `summary="… &lt;button&gt; …"`.
+  Escaping in the attribute does not survive: Astro's attribute parser decodes
+  `&lt;` before the prop is read, and `ComponentDoc`/`PatternDoc` render `summary`
+  with `set:html` — so the entity round-trips back into a REAL element. Found
+  2026-08-16 by `npm run a11y`: `esa-switch-toggle`'s lede shipped a live,
+  nameless `<button role="switch">` and `esa-nav-dropdown`'s shipped a live
+  `<details>`, both looking correctly escaped in source. Inside an expression no
+  decoding happens, so the entity reaches `set:html` intact and renders as text.
+  Real `<a href>` links in the same string still work — they are markup either way.
+  Scan the BUILD, not the source: `grep -rhoE '<code><(button|input|details)' apps/site/dist`.
 
 ## Commands
 ```bash
@@ -480,7 +505,7 @@ npm run build:tokens   # just compile tokens → packages/tokens/dist/
 npm test               # token-name guard + hook regressions (scripts/**/*.test.mjs)
 npm run a11y           # axe-core over every built page (needs `npm run build` first)
 npm run a11y:live      # live-region structure audit (needs `npm run build` first)
-npm run contrast       # 29 AA pairs against the hub defaults — currently FAILS with 7
+npm run contrast       # 33 pairs against the hub defaults — currently FAILS with 7
 npm run contrast:dark  # the same pairs against the hub's dark block — fails with 5
 npm run theme:make     # recipe (or --brand/--slug) → theme-<slug>.css + .json
 npm run theme:curves   # regenerate scripts/lib/radix-curves.json from @radix-ui/colors
