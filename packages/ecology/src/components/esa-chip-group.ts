@@ -274,13 +274,6 @@ export class EsaChipGroup extends LitElement {
       box-sizing: border-box;
       padding-block: var(--_pad-y);
       padding-inline: var(--_pad-x);
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). A chip is interactive, and the
-         xs/sm steps land around 18-20px once padding and text resolve — the exact
-         observation carried forward when --chip-height-* was deleted, which noted
-         that padding sizing changes the numbers without raising them past 24. This
-         is what actions it. Inert until a page sets [data-assurance]; see
-         --target-size-min in tokens/semantic/size.json. */
-      min-block-size: var(--target-size-min, 0px);
       border-radius: var(--_radius, 0.25rem);
       border: var(--border-width-default, 1px) solid var(--_border);
       background: var(--_bg);

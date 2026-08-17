@@ -142,6 +142,69 @@ scope. Primitives never move; component internals are never touched.
 The full contract — naming, when a property earns a tier-3 hook, the
 zero-regression splice mechanic — is **`packages/tokens/SPEC.md`**.
 
+## A THEME IS GENERATED FROM A RECIPE, NOT HAND-FILLED (2026-08-16)
+`scripts/create-spoke.mjs` scaffolded a theme file full of `__FILL__` markers and
+`check-contrast.mjs` graded whatever came back; between them was a person with a hex
+code, and the record says that did not work. **No hand-filled theme has ever declared
+the eight `--color-content-on-*` foregrounds** — the template offered no slots and the
+gate blocks on all eight, which is why `beacon` failed `content-on-brand-secondary` at
+3.64:1 and why `cb-fish-design` still ships the template's placeholder grey ramp.
+
+The pipeline now has a middle: **`/guide/theme-maker`** (the editor) and
+**`scripts/make-theme.mjs`** (the writer), both over one pure derivation in
+`scripts/lib/theme-recipe.mjs`, with `theme-<slug>.json` as the durable artifact.
+`create-spoke.mjs --theme <recipe>` writes the real file. **Six seeds** (brand hex,
+neutral temperature, corner language, two font stacks, optional per-intention colours)
+produce ~95 light + ~91 dark declarations that pass 29/29 pairs in **both** schemes —
+against a hub whose own defaults fail 7 and whose dark block fails 5.
+
+Things that are easy to get wrong here:
+
+- **Edit the RECIPE, never the generated CSS.** A value the generator should not
+  choose goes in the recipe's `pinned` map. A pin on a FILL also re-picks that fill's
+  foreground — hand-editing the CSS does not, which silently reintroduces the exact
+  bug the tool exists to fix.
+- **The seed lands on step 9 and is copied through verbatim.** Steps 1–8 and 10–12 are
+  interpolated in OKLCH along the nearest Radix ramp's lightness/chroma curve
+  (`scripts/lib/radix-curves.json`, generated + committed; `npm run theme:curves`).
+  Radix's five bright scales (yellow, amber, lime, mint, sky) invert at step 9 by
+  design and that inversion is inherited, not flattened.
+- **"Do not move the client's hex" is LIGHT-ONLY.** `rampFrom` deliberately does not
+  anchor the seed in dark — a light-scheme brand glares on a near-black page — so the
+  dark fill is the generator's own pick and is as movable as any utility colour.
+- **`--color-content-link` IS emitted, `--color-border-default-focus` is NOT.** The
+  tier-2 default sends links at the step-9 *fill*, which `color.json` itself calls
+  inherited rather than chosen and flags to re-point; a fill step is engineered for
+  3:1, so link text fails AA for most brands (measured: 3.42:1). The focus ring
+  genuinely wants the fill step and keeps its derivation — that chain is what stopped
+  cb-fish keeping Ecology-green rings on a navy brand.
+- **Emit hex only.** `parseColor` reads `#rgb`/`#rrggbb`/`rgb()`/`white`/`black` and
+  nothing else; an `oklch()` or `color-mix()` makes those pairs unauditable, and that
+  script's history records the cost — it once checked 0 pairs and exited 0 with "All
+  text pairs pass AA".
+
+**Dark now works per theme, and the selector is the whole fix.** The hub's dark block
+is `html[data-scheme='dark']` — specificity (0,1,1) — so a plain
+`[data-theme="x"][data-scheme="dark"]` (0,2,0) still LOSES. Generated dark blocks are
+`html[data-scheme="dark"][data-theme="<slug>"]` (0,2,1). `check-contrast.mjs` gained
+`--scheme dark` for the same reason a profile has to be named: a file holding both
+blocks gets swept flat, the dark one wins on last-one-wins, and the audit grades dark
+values under a header claiming nothing about it. `apps/site/src/styles/themes.css` is
+now two `@import`s of generated files — **one theme per file, because the flat sweep
+meant two `[data-theme]` blocks in one file only ever graded the second one.**
+
+`scripts/lib/{color,ramp,theme-recipe,contrast}.mjs` are **isomorphic — no `node:`
+imports** — because the page bundles them (aliased `@theme` in `astro.config.mjs`) and
+a preview that disagrees with the file it writes is worse than no preview. Nothing
+else under `scripts/` can be bundled; the rest read the filesystem at module scope.
+
+**The theme-maker page is the documented exception to "the site ships zero client JS".**
+It also has to re-declare, on its preview container, every `:root` declaration
+containing a `var()` — 631 of 1,187. A custom property is substituted at
+computed-value time *on the element that declares it*, so `--button-radius-md:
+var(--radius-md)` resolves at `:root` and a container override of `--radius-md` cannot
+reach back into it. A spoke needs none of this; its theme block IS at `:root`.
+
 ## Assurance is a THIRD axis, orthogonal to the theme
 `data-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
 composes with `data-theme` (brand) and `data-scheme` (light/dark) — a project is
@@ -171,31 +234,56 @@ that return focus nowhere, or anything in forced colors. Setting the attribute i
 statement about DEFAULTS, never a certificate — `npm run a11y:assured` is what makes
 it more than a promise.
 
-**`--target-size-min` is a FLOOR, not the height ramp that was deleted twice.** The
-objection that killed `--control-height-*` was that a fixed px height cannot grow
-with its contents, so `esa-text-field` clipped rem text (SC 1.4.4). A
-`min-block-size` raises the bottom and does nothing to the top, so the box still
-grows; and it is ONE name, not a four-step ramp, so it cannot become the density
-lever. Components read it on their HIT AREA — for checkbox/radio that is the
-**label row, not the glyph** (measuring the 14–20px glyph reports the correct
-whole-row implementation as the defect). Measured: 33 component failures by default,
-**0** under the profile.
+**A PROFILE CHANGES COLOUR. IT NEVER CHANGES A COMPONENT.** Verified: geometry is
+byte-identical with and without `[data-assurance]` across all 91 built pages. Two
+attempts to bend this were made and both were withdrawn, so the rule is absolute
+rather than a preference. (1) `--target-size-min`, a 24px `min-block-size` read by 12
+components — measured 33 failures → 0, and made `xs` and `sm` render at the SAME
+height on chip-group, checkbox-group and radio-group. (2) A **type floor**, the eight
+`2xs` composites re-pointed one rung up to kill 8px text — no geometry token in it at
+all, and `esa-chip-group` still went `{xs:20, sm:22}` → `{xs:22, sm:22}` with layout
+moving on 9 of 25 routes. **"It is only typography" is not a defence: a box follows
+its contents.** The test is not which token you touched, it is whether any component
+renders differently. A colour role is a VALUE (re-point it and every call site still
+means what it meant); a size step is a CONTRACT, and redefining one lies silently to
+every call site that chose it. `--touch-target-min` (44px, tier 2, read by nothing)
+was removed alongside attempt 1 and RESTORED when it was withdrawn — it is the number
+written down where a spoke author will look, inert on purpose.
 
-`npm run a11y:targets` (`scripts/check-target-size.mjs`) renders every page and
-measures `getBoundingClientRect()` on the flattened tree. **axe is NOT blind here** —
-axe-core 4.13 ships a `target-size` rule, it is in the `wcag22aa` tag this repo
-already runs, and it sees into shadow roots. The difference is the **spacing
-exception**: 2.5.8 passes an undersized target whose 24px circle clears its
-neighbours', and axe implements that faithfully — measured, it returns 0 violations
-and 0 incomplete on the pages where this tool reports 16×16 controls. So axe answers
-*does this conform*, and this tool answers *how big is it actually*. The profile
-holds the stricter line because conformance-via-spacing is a property of the LAYOUT,
-not the component: move a button nearer its neighbour and a passing page silently
-starts failing with no code change. **This tool therefore over-reports against the
-letter of the spec, and says so in its own header line.** It also cannot be a
-source-text check, because since the height ramps went a control's height is EMERGENT
-(`2 × padding-y + font-size + border`, font size a viewport-dependent `clamp()`) —
-there is no number in any file to grep.
+**When an accessible option is needed there are exactly two answers**, and "quietly
+make the existing one bigger" is not a third: (1) a compliant option ALREADY EXISTS →
+guide the author to it; (2) it does NOT → build it as a real variant.
+`check-size-usage.mjs` reports those two cases separately, because only the second is
+a hub problem.
+
+**Target size is REPORTED, not patched.** `npm run a11y:sizes`
+(`scripts/check-size-usage.mjs`) lists every call site using a step that renders
+under the floor; the author changes `xs` → `sm` in their own source, so the ramp keeps
+its shape and the change lands in their diff. The map it lints against is MEASURED,
+not declared: `npm run a11y:floors` regenerates `packages/tokens/size-floors.json`
+from a real browser run, so a padding or type-rung change updates the lint. It
+resolves **aliased Astro imports** via `importedAs` (a fixed tag list cannot see
+`import Chip from '…/esa-chip-group.astro'`), and it flags call sites with **no
+`size` attribute** — every component defaults to `md`, so a bare `<esa-checkbox>` is
+a finding whenever md is in the map, which a `grep size="xs"` cannot see.
+
+**The lint found what a floor would have hidden:** `esa-checkbox`, `esa-input-tag`
+and `esa-range-slider` are under the floor at their **default** step, so no call-site
+change fixes them. They need a size variant that clears 24px — a `/request-lego`
+against the hub. The floor would have silently patched that and left the gap invisible.
+
+`npm run a11y:targets` (`scripts/check-target-size.mjs`) is the measurement behind
+all of it. **axe is NOT blind here** — axe-core 4.13 ships a `target-size` rule, it is
+in the `wcag22aa` tag this repo already runs, and it sees into shadow roots. The
+difference is the **spacing exception**: 2.5.8 passes an undersized target whose 24px
+circle clears its neighbours', and axe implements that faithfully — measured, it
+returns 0 violations and 0 incomplete on pages where this tool reports 16×16 controls.
+So axe answers *does this conform*, and this tool answers *how big is it actually*.
+**It therefore over-reports against the letter of the spec and says so in its own
+output**, which is why it is NOT in the `a11y:assured` gate — the actionable size lint
+is. It cannot be a source-text check either: since the height ramps went, a control's
+height is EMERGENT (`2 × padding-y + font-size + border`, font size a
+viewport-dependent `clamp()`), so there is no number in any file to grep.
 `--scope components` narrows only the EXIT CODE to the `esa-*` kit — the site's own
 prose links and debug `<summary>` rows are not what a spoke installs — and prints
 both counts, a visible flag rather than a silent carve-out.
@@ -392,7 +480,17 @@ npm run build:tokens   # just compile tokens → packages/tokens/dist/
 npm test               # token-name guard + hook regressions (scripts/**/*.test.mjs)
 npm run a11y           # axe-core over every built page (needs `npm run build` first)
 npm run a11y:live      # live-region structure audit (needs `npm run build` first)
+npm run contrast       # 29 AA pairs against the hub defaults — currently FAILS with 7
+npm run contrast:dark  # the same pairs against the hub's dark block — fails with 5
+npm run theme:make     # recipe (or --brand/--slug) → theme-<slug>.css + .json
+npm run theme:curves   # regenerate scripts/lib/radix-curves.json from @radix-ui/colors
 ```
+
+**`npm run contrast` exits 1 on the hub's own defaults and always has** — 7 AA
+failures, `content-on-brand` at 2.95:1 among them. That is not a regression to chase
+on sight; `npm run a11y:assured` passes because the assurance profile moves those
+fills from Radix step 9 to step 11, which is what the profile is for. A GENERATED
+theme passes 29/29 in both schemes, so a spoke can be cleaner than the hub.
 
 `npm run a11y` serves `apps/site/dist` on an ephemeral port, waits for custom
 elements to upgrade (auditing pre-hydration HTML is how you get a meaningless

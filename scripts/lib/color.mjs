@@ -6,11 +6,13 @@
  * import it in node, and they MUST agree — a live preview that disagrees with
  * the file it writes is worse than no preview.
  *
- * The luminance/ratio pair below is the third copy of that maths to exist here
- * (check-contrast.mjs and a11y-audit.mjs each had one) and is meant to be the
- * last. The 0.03928 threshold is WCAG 2.x's, NOT the 0.04045 used by the sRGB
- * transfer function further down — they differ in the 5th decimal and both are
- * correct for their own job. Do not "fix" one to match the other.
+ * The luminance/ratio pair below is now the ONLY copy of that maths in the repo —
+ * `grep -rn 0.03928` should return this file and nothing else. It was inlined in
+ * check-contrast.mjs before the extraction; keep it here.
+ *
+ * The 0.03928 threshold is WCAG 2.x's, NOT the 0.04045 used by the sRGB transfer
+ * function further down — they differ in the 5th decimal and both are correct for
+ * their own job. Do not "fix" one to match the other.
  */
 
 // --- sRGB <-> hex ------------------------------------------------------------

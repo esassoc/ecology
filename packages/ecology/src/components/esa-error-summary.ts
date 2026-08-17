@@ -216,7 +216,16 @@ export class EsaErrorSummary extends LitElement {
         display: flex;
         gap: var(--spacing-300, 0.75rem);
         padding: var(--spacing-400, 1rem);
-        border: var(--border-width-200, 2px) solid
+        /* The hairline role, not --border-width-200. This was 2px, reached via a
+           primitive — the last direct tier-1 width read in the kit, left behind
+           when --error-summary-border-width folded away. There is no tier-2
+           EMPHASIS width to fold onto (default is 1px, focus is 2px but means
+           the focus ring), so the choice was a heavier panel or the hairline
+           every other panel edge uses. The hairline: the danger COLOUR is what
+           marks this panel, and one component quietly running double-weight
+           chrome was the divergence nobody asked for. Renders 1px now, down
+           from 2px. */
+        border: var(--border-width-default, 1px) solid
           var(--color-border-utility-danger, #fdbdbe);
         border-radius: var(--radius-md, 0.5rem);
         background: var(--color-background-utility-danger-subtle, #fff7f7);
@@ -262,16 +271,6 @@ export class EsaErrorSummary extends LitElement {
            colour shift alone would be the SC 1.4.1 failure. */
         text-decoration: underline;
         text-underline-offset: 2px;
-        /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). These measure ~20-21px tall.
-           NOT exempt as an inline link: 2.5.8 spares a link inside a SENTENCE, whose
-           size the surrounding prose decides, and each of these is a standalone list
-           item. inline-flex + align-items so the floor grows the hit box without
-           moving the text off its own baseline; block-size only, since the text
-           already makes these far wider than the floor. Inert until the profile is
-           set. */
-        display: inline-flex;
-        align-items: center;
-        min-block-size: var(--target-size-min, 0px);
       }
       .link:hover {
         text-decoration-thickness: 2px;

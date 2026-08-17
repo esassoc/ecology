@@ -15,13 +15,15 @@
     "./focus.css": "./src/focus.css",
     "./component-tokens.css": "./src/component-tokens.css",
     "./assurance.css": "./src/assurance.css",
-    "./migrations.json": "./migrations.json"
+    "./migrations.json": "./migrations.json",
+    "./size-floors.json": "./size-floors.json"
   },
   "files": [
     "dist",
     "src",
     "tokens",
-    "migrations.json"
+    "migrations.json",
+    "size-floors.json"
   ],
   "scripts": {
     "build": "node build.js"

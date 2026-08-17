@@ -432,20 +432,6 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
        case is gone rather than generalised. */
     padding-block: var(--_btn-pad-y);
     padding-inline: var(--_btn-padding-x);
-    /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA), 24x24. Zero by default, so this
-       is inert in every build that does not set [data-assurance]; the measured
-       heights are 26/32/38/48px, so at AA only the tightest xs case is actually
-       raised. It reads a token rather than stating 24px because the floor is the
-       PROFILE's decision, not the button's — a spoke on the 2.5.5 AAA floor sets
-       --target-size-min: 44px and this line follows without an edit here.
-       This is a FLOOR, not the height ramp that was deleted on 2026-08-14: it
-       raises the bottom and does nothing to the top, so the box still grows with
-       the line box and cannot clip rem text the way a fixed height did (1.4.4).
-       min-inline-size matters for the icon-only case below, where aspect-ratio: 1
-       would otherwise let a raised height pull the width along without a floor of
-       its own. */
-    min-block-size: var(--target-size-min, 0px);
-    min-inline-size: var(--target-size-min, 0px);
     /* The label is white-space: nowrap, so it is one line always — leading here is
        pure box height, not typography. Deleted twice now on the reasoning that a
        flex-centred button never lets leading reach an edge; there is no fixed

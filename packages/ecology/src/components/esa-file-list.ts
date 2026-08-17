@@ -168,14 +168,6 @@ export class EsaFileList extends LitElement {
     }
     a.file__name {
       color: var(--color-content-brand, #2a7e3b);
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). The filename measures ~14px tall.
-         A standalone row link, not an inline link in a sentence, so the 2.5.8 inline
-         exemption does not apply. Only the anchor form takes the floor: the
-         non-linked span at .file__name is not a target at all. Inert until the
-         profile is set. */
-      display: inline-flex;
-      align-items: center;
-      min-block-size: var(--target-size-min, 0px);
     }
     a.file__name:hover {
       text-decoration: underline;

@@ -195,20 +195,65 @@ test('a disabled fill breaks from every surface it can land on', () => {
 
 // --- what must NOT be emitted ------------------------------------------------
 
-test('the three derived brand roles are left alone', () => {
-  // --color-content-link, -link-hover and --color-border-default-focus derive from
-  // --color-background-brand at tier 2. Emitting them here would flatten that chain and
-  // re-open the cb-fish bug: a navy brand with Ecology-green focus rings.
+test('the focus ring is left on its tier-2 derivation', () => {
+  // --color-border-default-focus derives from --color-background-brand at tier 2, and
+  // that derivation is what stopped cb-fish re-pointing its brand to navy and keeping
+  // Ecology-green focus rings. A ring wants the FILL step, so there is nothing to
+  // improve by emitting it and everything to break.
   const d = deriveTheme(recipe());
   for (const scheme of ['light', 'dark']) {
-    for (const name of [
-      '--color-content-link',
-      '--color-content-link-hover',
-      '--color-border-default-focus',
-    ]) {
-      assert.ok(!d[scheme].has(name), `${name} must not be declared by a generated theme`);
+    assert.ok(
+      !d[scheme].has('--color-border-default-focus'),
+      'the focus ring must keep following --color-background-brand',
+    );
+  }
+});
+
+test('links are re-pointed to the text step, and clear AA on the page', () => {
+  // The tier-2 default sends --color-content-link at the step-9 SOLID FILL. color.json
+  // calls that inherited rather than chosen and flags it as "a candidate to re-point";
+  // a fill step is engineered for 3:1, so link text fails AA for most brands. Measured
+  // on a generated purple spoke before this changed: 3.42:1 in dark, a `fail` row.
+  for (const brand of ['#7a3b9c', '#1f7a6d', '#1769aa', '#b3261e', '#101418']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    for (const scheme of ['light', 'dark']) {
+      assert.ok(d[scheme].has('--color-content-link'), `[${scheme}] link not emitted`);
+      // Still follows the brand — it just uses the brand ramp's TEXT step.
+      assert.match(d[scheme].get('--color-content-link'), /^var\(--testbrand-brand-\d+\)$/);
+      for (const surface of [
+        '--color-background-elevation-raised',
+        '--color-background-default',
+      ]) {
+        const r = contrastHex(
+          resolve(d[scheme], '--color-content-link'),
+          resolve(d[scheme], surface),
+        );
+        assert.ok(r >= 4.5, `${brand} [${scheme}] link on ${surface}: ${r.toFixed(2)}:1`);
+      }
     }
   }
+});
+
+test('a pinned FILL drives its own foreground', () => {
+  // The escape hatch must not reintroduce the bug the tool exists to fix. A pin wins in
+  // the emitted CSS, so a foreground measured against the DERIVED fill is measured
+  // against a colour that does not ship. Measured: pinning utility-info to #228be6 used
+  // to pick a foreground against a different blue, and passed by luck.
+  const pinned = '#228be6';
+  const d = deriveTheme(recipe({ pinned: { '--color-background-utility-info': pinned } }));
+  assert.equal(resolve(d.light, '--color-background-utility-info'), pinned);
+  const r = contrastHex(resolve(d.light, '--color-content-on-utility-info'), pinned);
+  assert.ok(r >= 4.5, `foreground on the pinned fill is ${r.toFixed(2)}:1`);
+
+  // And a pin that is not a literal hex is reported rather than silently mismeasured.
+  const chained = deriveTheme(
+    recipe({ pinned: { '--color-background-utility-info': 'var(--something-else)' } }),
+  );
+  assert.ok(
+    chained.warnings.some(
+      (w) => w.role === '--color-background-utility-info' && /not a literal hex/.test(w.message),
+    ),
+  );
 });
 
 test('no deleted or core token is ever emitted', () => {

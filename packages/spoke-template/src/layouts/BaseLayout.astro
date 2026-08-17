@@ -23,8 +23,16 @@ import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
 //   <html lang="en" data-theme="__SPOKE_SLUG__" data-assurance="wcag-aa">
 //
 // It ships inside @esa/tokens and is inert until set, so there is nothing to import.
-// What it moves: solid fills that carry text go to a contrast-safe step, the smallest
-// type rung is raised, and interactive controls take a 24x24 minimum hit area.
+//
+// IT CHANGES COLOUR AND NOTHING ELSE. Solid fills that carry text move to a
+// contrast-safe step. Your components do not change: not their size, not their type,
+// not one pixel of layout — verified across all 91 pages of the hub's own site. So
+// size="xs" still renders at xs, and your size ramp keeps all four distinct steps.
+//
+// Anything that WOULD require a component to change is reported instead, and names
+// the compliant option to use:
+//
+//   npm run a11y:sizes
 //
 // IT DOES NOT OVERRIDE YOUR THEME. Equal specificity, and theme-__SPOKE_SLUG__.css
 // loads after it, so any role your theme re-points still wins — including your brand.

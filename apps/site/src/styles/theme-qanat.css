@@ -1,0 +1,210 @@
+/*
+ * qanat theme — GENERATED from a recipe by scripts/make-theme.mjs.
+ *
+ * Do not hand-edit: the next regeneration overwrites it. To change a value,
+ * change the recipe. To keep a value the generator would not choose, add it to
+ * the recipe's "pinned" map — pins are applied last and survive regeneration.
+ *
+ * Brand seed #1769aa (curve: Radix blue), neutral cool,
+ * corners round.
+ *
+ * The brand hex sits EXACTLY on step 9 of the spoke ramp below; every other step
+ * is interpolated along the reference curve. Verify with:
+ *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-qanat.css
+ *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-qanat.css --scheme dark
+ */
+
+[data-theme="qanat"] {
+  --qanat-gray-1:                             #fcfcfd;
+  --qanat-gray-2:                             #f9f9fb;
+  --qanat-gray-3:                             #f0f0f3;
+  --qanat-gray-4:                             #e8e8ec;
+  --qanat-gray-5:                             #e0e1e6;
+  --qanat-gray-6:                             #d9d9e0;
+  --qanat-gray-7:                             #cdced6;
+  --qanat-gray-8:                             #b9bbc6;
+  --qanat-gray-9:                             #8b8d98;
+  --qanat-gray-10:                            #80838d;
+  --qanat-gray-11:                            #60646c;
+  --qanat-gray-12:                            #1c2024;
+  --qanat-brand-1:                            #fcfdfe;
+  --qanat-brand-2:                            #f4f8fb;
+  --qanat-brand-3:                            #e5eff5;
+  --qanat-brand-4:                            #d5e6f0;
+  --qanat-brand-5:                            #c0d8e8;
+  --qanat-brand-6:                            #a8c5db;
+  --qanat-brand-7:                            #88afca;
+  --qanat-brand-8:                            #598fb4;
+  --qanat-brand-9:                            #1769aa;
+  --qanat-brand-10:                           #1965a2;
+  --qanat-brand-11:                           #1c5a8f;
+  --qanat-brand-12:                           #1c3554;
+  --color-background-default:                 var(--qanat-gray-1);
+  --color-background-elevation-raised:        var(--qanat-gray-1);
+  --color-background-elevation-floating:      var(--qanat-gray-1);
+  --color-background-elevation-sunken:        var(--qanat-gray-3);
+  --color-background-default-hover:           var(--qanat-gray-4);
+  --color-background-disabled:                var(--qanat-gray-3);
+  --color-content-default:                    var(--qanat-gray-12);
+  --color-content-default-secondary:          var(--qanat-gray-11);
+  --color-content-default-tertiary:           var(--qanat-gray-11);
+  --color-content-default-muted:              var(--qanat-gray-10);
+  --color-content-disabled:                   var(--qanat-gray-9);
+  --color-border-default:                     var(--qanat-gray-7);
+  --color-border-default-subtle:              var(--qanat-gray-6);
+  --color-border-default-strong:              var(--qanat-gray-8);
+  --color-border-disabled:                    var(--qanat-gray-6);
+  --color-background-default-knockout:        var(--qanat-gray-12);
+  --color-background-default-knockout-hover:  var(--qanat-gray-11);
+  --color-content-default-knockout:           var(--qanat-gray-1);
+  --color-border-default-knockout:            #43484e;
+  --color-background-brand:                   var(--qanat-brand-9);
+  --color-background-brand-hover:             var(--qanat-brand-10);
+  --color-background-brand-active:            var(--qanat-brand-10);
+  --color-background-brand-subtle:            var(--qanat-brand-2);
+  --color-background-brand-muted:             var(--qanat-brand-3);
+  --color-background-brand-muted-hover:       var(--qanat-brand-4);
+  --color-background-brand-secondary:         var(--qanat-brand-8);
+  --color-background-brand-secondary-hover:   var(--qanat-brand-9);
+  --color-content-brand:                      var(--qanat-brand-11);
+  --color-content-brand-secondary:            var(--qanat-brand-11);
+  --color-content-link:                       var(--qanat-brand-11);
+  --color-content-link-hover:                 var(--qanat-brand-12);
+  --color-border-brand:                       var(--qanat-brand-6);
+  --color-content-on-brand:                   #fcfcfd;
+  --color-content-on-brand-secondary:         #1c2024;
+  --color-background-accent:                  #f76b15;
+  --color-background-accent-hover:            #ef5f00;
+  --color-content-on-accent:                  #1c2024;
+  --color-background-ai:                      #a18072;
+  --color-background-ai-hover:                #957468;
+  --color-content-on-ai:                      #1c2024;
+  --color-background-ai-subtle:               #fdf7f5;
+  --color-content-ai:                         #7d5e54;
+  --color-background-utility-info:            #0090ff;
+  --color-background-utility-info-hover:      #0588f0;
+  --color-content-on-utility-info:            #1c2024;
+  --color-background-utility-info-subtle:     #f4faff;
+  --color-content-utility-info:               #0d74ce;
+  --color-border-utility-info:                #acd8fc;
+  --color-background-utility-success:         #bdee63;
+  --color-background-utility-success-hover:   #b0e64c;
+  --color-content-on-utility-success:         #37401c;
+  --color-background-utility-success-subtle:  #f8faf3;
+  --color-content-utility-success:            #5c7c2f;
+  --color-border-utility-success:             #c2da91;
+  --color-background-utility-warning:         #ffc53d;
+  --color-background-utility-warning-hover:   #ffba18;
+  --color-content-on-utility-warning:         #4f3422;
+  --color-background-utility-warning-subtle:  #fefbe9;
+  --color-content-utility-warning:            #4f3422;
+  --color-border-utility-warning:             #f3d673;
+  --color-background-utility-danger:          #ce2c31;
+  --color-background-utility-danger-hover:    #641723;
+  --color-content-on-utility-danger:          #fcfcfd;
+  --color-background-utility-danger-subtle:   #fff7f7;
+  --color-content-utility-danger:             #ce2c31;
+  --color-border-utility-danger:              #fdbdbe;
+  --radius-xs:                                var(--radius-100);
+  --radius-sm:                                var(--radius-200);
+  --radius-md:                                var(--radius-400);
+  --radius-lg:                                var(--radius-500);
+}
+
+/*
+ * Dark scheme. The selector needs the element AND both attributes to outrank the
+ * hub's own html[data-scheme='dark'] block, which is (0,1,1) — see emitCss.
+ */
+html[data-scheme="dark"][data-theme="qanat"] {
+  --qanat-gray-0:                             #0d0d0f;
+  --qanat-gray-1:                             #111113;
+  --qanat-gray-2:                             #18191b;
+  --qanat-gray-3:                             #212225;
+  --qanat-gray-4:                             #272a2d;
+  --qanat-gray-5:                             #2e3135;
+  --qanat-gray-6:                             #363a3f;
+  --qanat-gray-7:                             #43484e;
+  --qanat-gray-8:                             #5a6169;
+  --qanat-gray-9:                             #696e77;
+  --qanat-gray-10:                            #777b84;
+  --qanat-gray-11:                            #b0b4ba;
+  --qanat-gray-12:                            #edeef0;
+  --qanat-brand-1:                            #0f151c;
+  --qanat-brand-2:                            #131922;
+  --qanat-brand-3:                            #16293c;
+  --qanat-brand-4:                            #163552;
+  --qanat-brand-5:                            #1d4262;
+  --qanat-brand-6:                            #284f73;
+  --qanat-brand-7:                            #365f87;
+  --qanat-brand-8:                            #4272a2;
+  --qanat-brand-9:                            #4994d8;
+  --qanat-brand-10:                           #5fa0dc;
+  --qanat-brand-11:                           #86b8e4;
+  --qanat-brand-12:                           #cce5f4;
+  --color-background-default:                 var(--qanat-gray-1);
+  --color-background-elevation-raised:        var(--qanat-gray-2);
+  --color-background-elevation-floating:      var(--qanat-gray-3);
+  --color-background-elevation-sunken:        var(--qanat-gray-0);
+  --color-background-default-hover:           var(--qanat-gray-5);
+  --color-background-disabled:                var(--qanat-gray-4);
+  --color-content-default:                    var(--qanat-gray-12);
+  --color-content-default-secondary:          var(--qanat-gray-11);
+  --color-content-default-tertiary:           var(--qanat-gray-11);
+  --color-content-default-muted:              var(--qanat-gray-10);
+  --color-content-disabled:                   var(--qanat-gray-9);
+  --color-border-default:                     var(--qanat-gray-7);
+  --color-border-default-subtle:              var(--qanat-gray-6);
+  --color-border-default-strong:              var(--qanat-gray-8);
+  --color-border-disabled:                    var(--qanat-gray-6);
+  --color-background-default-knockout:        var(--qanat-gray-12);
+  --color-background-default-knockout-hover:  var(--qanat-gray-11);
+  --color-content-default-knockout:           var(--qanat-gray-1);
+  --color-border-default-knockout:            #cdced6;
+  --color-background-brand:                   var(--qanat-brand-9);
+  --color-background-brand-hover:             var(--qanat-brand-10);
+  --color-background-brand-active:            var(--qanat-brand-10);
+  --color-background-brand-subtle:            var(--qanat-brand-2);
+  --color-background-brand-muted:             var(--qanat-brand-3);
+  --color-background-brand-muted-hover:       var(--qanat-brand-4);
+  --color-background-brand-secondary:         var(--qanat-brand-9);
+  --color-background-brand-secondary-hover:   var(--qanat-brand-10);
+  --color-content-brand:                      var(--qanat-brand-11);
+  --color-content-brand-secondary:            var(--qanat-brand-11);
+  --color-content-link:                       var(--qanat-brand-11);
+  --color-content-link-hover:                 var(--qanat-brand-12);
+  --color-border-brand:                       var(--qanat-brand-6);
+  --color-content-on-brand:                   #111113;
+  --color-content-on-brand-secondary:         #111113;
+  --color-background-accent:                  #f76b15;
+  --color-background-accent-hover:            #ff801f;
+  --color-content-on-accent:                  #111113;
+  --color-background-ai:                      #a18072;
+  --color-background-ai-hover:                #ae8c7e;
+  --color-content-on-ai:                      #111113;
+  --color-background-ai-subtle:               #1c1917;
+  --color-content-ai:                         #d4b3a5;
+  --color-background-utility-info:            #0090ff;
+  --color-background-utility-info-hover:      #3b9eff;
+  --color-content-on-utility-info:            #111113;
+  --color-background-utility-info-subtle:     #111927;
+  --color-content-utility-info:               #70b8ff;
+  --color-border-utility-info:                #104d87;
+  --color-background-utility-success:         #bdee63;
+  --color-background-utility-success-hover:   #d4ff70;
+  --color-content-on-utility-success:         #111113;
+  --color-background-utility-success-subtle:  #151a10;
+  --color-content-utility-success:            #bde56c;
+  --color-border-utility-success:             #3d522a;
+  --color-background-utility-warning:         #ffc53d;
+  --color-background-utility-warning-hover:   #ffd60a;
+  --color-content-on-utility-warning:         #111113;
+  --color-background-utility-warning-subtle:  #1d180f;
+  --color-content-utility-warning:            #ffca16;
+  --color-border-utility-warning:             #5c3d05;
+  --color-background-utility-danger:          #e5484d;
+  --color-background-utility-danger-hover:    #ec5d5e;
+  --color-content-on-utility-danger:          #111113;
+  --color-background-utility-danger-subtle:   #201314;
+  --color-content-utility-danger:             #ff9592;
+  --color-border-utility-danger:              #72232d;
+}

@@ -1,12 +1,49 @@
 # Brand Extraction — source tokens → ecology semantic re-points
 
-**Step zero that's always skipped.** If a SOURCE app repo is given (the real
-product the spoke mirrors, e.g. `~/Dev/Beacon`), READ its
-design tokens, DRAFT the `theme-<slug>.css` re-points, and **SURFACE for human
-review — never silently apply.** Flag every value as *sourced* vs *guessed*.
+**EXTRACT SEEDS, THEN GENERATE. Do not hand-fill a theme file.**
 
-If no source repo: leave the theme skeleton's `/* __FILL__ */` markers in place
-and tell the user the theme needs a human pass.
+The job here changed on 2026-08-16. It used to be "read fifty values out of the
+source and write fifty declarations", and the record says that did not work: the
+one local spoke still ships the template's placeholder grey ramp verbatim, and
+**no hand-filled theme has ever declared the eight `--color-content-on-*`
+foregrounds** — all eight of which are `fail`-level rows in `check-contrast.mjs`.
+That is why `beacon` fails `content-on-brand-secondary` at 3.64:1.
+
+So extract the **seeds** — the handful of things only the source repo knows —
+and let `make-theme.mjs` derive the rest and prove it against the gate:
+
+| Seed | What to read out of the source | Default if absent |
+|---|---|---|
+| `brand` | the primary brand hex, at its SOLID FILL step (see below) | required |
+| `neutral` | is the grey warm, cool or neutral? → `warm` / `cool` / `pure` | `pure` |
+| `corners` | the control radius → `flat` (0–4px) / `soft` (2–12px) / `round` (4–16px) | `soft` |
+| `fontSans`, `fontMono` | the `@font-face` / `$font-*` families | hub defaults |
+| `accent`, `ai`, `info`, `success`, `warning`, `danger` | only where the brand genuinely owns one | `derive` |
+
+```bash
+node ../ecology/scripts/make-theme.mjs --recipe theme-<slug>.json --out src/styles --force
+node ../ecology/scripts/check-contrast.mjs                                   # light
+node ../ecology/scripts/check-contrast.mjs src/styles/theme-<slug>.css --scheme dark
+```
+
+**Which step is the seed?** The generator puts your hex on **step 9** and
+interpolates the rest, so hand it the brand's SOLID FILL — the colour on a
+primary button, not the wash behind a selected row and not the darkest tint. A
+source ramp named `50…900` usually has it at `500`–`700`; Beacon's teal is the
+exception and sits at `900`. Get this wrong and every other step is wrong with it.
+
+**If a value the generator produced is not what the brand uses**, do not edit the
+CSS — add it to the recipe's `"pinned"` map. Pins are applied last, survive
+regeneration, and (for a fill) drive their own foreground. Editing the CSS instead
+means the next regeneration silently reverts it.
+
+If no source repo and no brand colour yet: leave the skeleton's `/* __FILL__ */`
+markers in place and tell the user the theme needs a human pass. Say plainly that
+the skeleton's eight `--color-content-on-*` slots are the ones that decide whether
+the contrast gate passes.
+
+Everything below is still how you find the seeds in a source repo — and how to
+hand-fill if you must.
 
 ## Where to read in the source (SCSS / theme files)
 
@@ -90,8 +127,27 @@ views reference them. See `theme-beacon.css` sections after (7) for examples.
 
 ## Review handoff
 
-Present the drafted theme as a diff/table to the user before writing the final
-file. For each value, state: the source value, the ecology token it maps to, and
-whether it was **sourced** (read from the repo) or **guessed** (sensible default).
-Address the (a)/(d)/(e)/(f) deltas explicitly — those are the ones that read
-"off-brand" when missed.
+**The review is still mandatory, and it got shorter.** Present the SEEDS, not the
+fifty declarations — a table nobody can check is a table nobody checks. For each
+seed state the source value, the recipe key, and whether it was **sourced** (read
+from the repo) or **guessed** (a sensible default):
+
+| Seed | Source value | Where it came from | sourced / guessed |
+|---|---|---|---|
+| `brand` | `$palette-teal-900: #00706b` | `_colors.scss:41` | sourced |
+| `neutral` | greys lean slightly warm | `_colors.scss` gray map | guessed |
+| `corners` | `$input-border-radius: 4px` | `_form-inputs.scss:12` | sourced |
+
+Then run the generator and **relay its notes verbatim**. They are the interesting
+part of the review:
+
+- a `note` line means the generator moved one of ITS OWN fills a step so the text
+  on it could reach AA — worth a glance, not a decision;
+- a `FAIL` line means it could not, and that is a fact about the brand the user
+  needs to hear: this colour cannot carry readable text as a solid fill. The fix
+  is theirs (a darker step for filled surfaces, or no text on it), not yours to
+  paper over.
+
+Finally show the **pinned vs derived** split — anything in the recipe's `pinned`
+map is a human decision overriding the generator, and it should be short and
+explicable. A long pin list means the seeds are wrong.
