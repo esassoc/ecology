@@ -1,0 +1,10 @@
+{
+  "$comment": "Seeds for the qanat demo theme. brand/#1769aa and the rounder corners are carried over verbatim from the hand-written themes.css block.",
+  "slug": "qanat",
+  "scope": "qanat",
+  "seeds": {
+    "brand": "#1769aa",
+    "neutral": "cool",
+    "corners": "round"
+  }
+}

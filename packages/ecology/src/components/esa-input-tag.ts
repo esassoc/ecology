@@ -653,11 +653,6 @@ export class EsaInputTag extends LitElement {
       justify-content: center;
       width: 18px;
       height: 18px;
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). An 18x18 button, so it fails at
-         AA by 6px; a min-* beats the width/height above when the profile raises it.
-         Inert until [data-assurance] is set. */
-      min-inline-size: var(--target-size-min, 0px);
-      min-block-size: var(--target-size-min, 0px);
       padding: 0;
       border: none;
       background: transparent;
@@ -682,13 +677,6 @@ export class EsaInputTag extends LitElement {
       flex: 1;
       min-width: 80px;
       padding: 0;
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). This input is 'padding: 0' inside
-         a padded wrapper, so its own box is only as tall as the line (16-20px) even
-         though the visible field is comfortably larger. A text input IS a target —
-         it is what a pointer clicks to place the caret — so the measurement is fair
-         and the wrapper's padding does not answer it. Inert until the profile is
-         set. */
-      min-block-size: var(--target-size-min, 0px);
       /* Leading is load-bearing on a content-sized box — see the long note in
          esa-select's .input. Single line, so the composite's relaxed leading only
          adds height. */
@@ -711,10 +699,6 @@ export class EsaInputTag extends LitElement {
       align-items: center;
       justify-content: center;
       padding: 0;
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). Measures 16x16: padding: 0 with
-         an icon inside, so the target IS the icon. Inert until the profile is set. */
-      min-inline-size: var(--target-size-min, 0px);
-      min-block-size: var(--target-size-min, 0px);
       background: transparent;
       border: none;
       color: var(--color-content-default-muted, #838383);

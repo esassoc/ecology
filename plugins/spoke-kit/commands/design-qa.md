@@ -33,9 +33,26 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
         weight, Tailwind-looking class, a page hand-rolling too much CSS) are
         Should-fix / judgment calls — never blockers.
    2. **Contrast** — if the theme file is in scope (or on first run in a spoke),
-      run `node ../ecology/scripts/check-contrast.mjs`. AA text failures are
-      Must-fix; warnings get listed with the affected pair in plain words
-      ("white text on the warning color is hard to read").
+      run it **twice**, once per scheme:
+
+      ```bash
+      node ../ecology/scripts/check-contrast.mjs
+      node ../ecology/scripts/check-contrast.mjs src/styles/theme-<slug>.css --scheme dark
+      ```
+
+      The dark run is not optional if the theme has a dark block: without
+      `--scheme dark` both blocks are swept flat, the dark one wins on
+      last-one-wins, and the audit grades dark values under a header claiming
+      nothing about it.
+
+      AA text failures are Must-fix; warnings get listed with the affected pair
+      in plain words ("white text on the warning color is hard to read").
+
+      **If the theme has a `theme-<slug>.json` recipe beside it, fix the RECIPE,
+      not the CSS.** The CSS is generated; an edit there is reverted by the next
+      regeneration. A value the generator should not choose belongs in the
+      recipe's `pinned` map — and pinning a fill re-picks its foreground, which
+      hand-editing does not.
 
    Report findings **by severity** (Must-fix first, then Should-fix, then
    judgment calls), translating each rule into plain words.

@@ -2040,3 +2040,68 @@ AXIS from the theme".
   and usually breaks the build loudly, whereas `${` compiles fine and fails at runtime.
   *Action:* fixed by rewording. *Sink:* `hub-fix`. *Priority:* done — but the guard is
   the finding: without it this was invisible.
+
+- **THE TARGET-SIZE FLOOR WAS WITHDRAWN THE DAY IT LANDED, and the reason is a design
+  rule worth more than the fix** · *Evidence:* `--target-size-min` (0px default, 24px
+  under `[data-assurance]`, read by 12 components as `min-block-size` on their hit area)
+  cleared every technical objection — a `min-*` raises the bottom and never caps the
+  top, so unlike `--control-height-*` it cannot clip rem text (1.4.4), and it was
+  verified to still double at 200% root font size. It measured 33 component failures →
+  0. It was withdrawn anyway: under the profile, `xs` and `sm` rendered at the SAME
+  height on chip-group, checkbox-group and radio-group. **The bottom of the ramp
+  silently collapsed**, `size="xs"` stopped meaning xs, and the author who wrote it was
+  never told. *The rule that came out of it:* a colour role is a VALUE and re-pointing
+  it is what a theme layer is for; a size step is a CONTRACT, and a profile that
+  redefines one lies to every call site that chose it. **A profile moves colours and
+  type rungs, never geometry.** *Action:* floor removed from all 12 components;
+  `--target-size-min` deleted; `--touch-target-min` (44px, tier 2, zero readers)
+  RESTORED, since the lever that justified removing it no longer exists and a dangling
+  `to` in a migrations row is worse than an inert constant. Replaced by
+  `scripts/check-size-usage.mjs`. *Sink:* `hub-fix`. *Priority:* done.
+
+- **The size lint is measured, not declared — and it found what the floor would have
+  hidden** · *Evidence:* `check-target-size.mjs --emit-floors` renders the specimen site
+  and writes `packages/tokens/size-floors.json` (11,857 targets across 91 routes), which
+  `check-size-usage.mjs` lints source against. Nothing hardcodes which steps are too
+  small, so a padding or type-rung change updates the lint on re-measure. Run against
+  `apps/site/src`: **68 call sites, 39 of them with NO size attribute** — every component
+  defaults to `md`, so a bare `<esa-checkbox>` is a finding that `grep size="xs"` cannot
+  see. *The finding that matters:* `esa-checkbox`, `esa-input-tag` and `esa-range-slider`
+  are under the floor at their **default** step, so no call-site change fixes them —
+  they need a size variant that clears 24px. A silent floor would have patched over that
+  and left the gap invisible. *Action:* the three components need a size variant. *Sink:*
+  `lego`. *Priority:* medium.
+
+- **`check-target-size.mjs` is deliberately NOT in the `a11y:assured` gate** ·
+  *Evidence:* it measures RAW size with no spacing exception, so it over-reports against
+  the letter of SC 2.5.8 (axe, which implements the exception, passes the same controls).
+  Gating on a tool that flags conformant markup produces a gate people bypass. The gate
+  runs the actionable size LINT instead, which is derived from the same measurement.
+  *Sink:* recorded. *Priority:* resolved.
+
+- **The TYPE floor was withdrawn too, and it is the more instructive of the two** ·
+  *Evidence:* after the target-size floor was pulled, the profile still re-pointed the
+  eight `2xs` typography composites one rung up (`--font-size-050` → `-100`) to kill 8px
+  text. It contained no geometry token at all, which is exactly why it looked safe. A
+  box follows its contents: `esa-chip-group` measured `{xs:20, sm:22}` by default and
+  `{xs:22, sm:22}` under the profile — the same ramp collapse — and geometry moved on 9
+  of 25 routes. **"It is only typography" is not a defence.** *The generalised rule,
+  now stated as absolute in three places:* the test is not which token you touched, it
+  is whether any component RENDERS differently. A profile changes colour. *Action:* the
+  eight declarations removed; the profile is now 13 colour roles plus
+  `--focus-scroll-margin` (a scroll offset, which cannot reflow anything). *Verified:*
+  geometry is byte-identical with and without `[data-assurance]` across **85 of 91**
+  routes, and the other 6 are unstable frame-to-frame WITHOUT the profile too — a
+  control run confirmed they carry spinners, progress bars and transitions, so the
+  difference is animation, not the profile. *Sink:* `hub-fix`. *Priority:* done.
+
+- **"Guide to the compliant option, or build one" — the two-answer rule** · *Evidence:*
+  the standing temptation each time was to make an existing size step bigger. That is
+  never an answer; there are exactly two. (1) A compliant option ALREADY EXISTS → guide
+  to it: `esa-checkbox`, `esa-input-tag` and `esa-range-slider` fail at `xs`, `sm` AND
+  their default `md`, but `lg` clears the floor, so `check-size-usage.mjs` names `lg`
+  and flags every call site that omits a size (39 of 70 in the hub's own site). (2) It
+  does NOT exist → build a real variant; the script reports that case in a separate
+  block because no call-site edit can fix it, and it is currently EMPTY — every
+  component in the floor map has at least one compliant step. *Sink:* recorded.
+  *Priority:* resolved.

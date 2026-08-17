@@ -155,22 +155,6 @@ export class EsaCheckbox extends LitElement {
       gap: var(--spacing-200, 8px);
       cursor: pointer;
       user-select: none;
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA), 24x24. Inert until a page sets
-         [data-assurance]; see --target-size-min in tokens/semantic/size.json.
-
-         ON THE WRAPPER, NOT ON .box, AND THAT IS THE WHOLE POINT. The glyph is
-         14/16/20px at xs/sm/md — three of four steps under the floor — but the
-         target is not the glyph: this wrapper is the <label> and it carries the
-         @click, so the row including the text is what a user can hit. Growing .box
-         to 24px would redraw the control (a checkbox is a specific size for a
-         reason) to fix a number that was never measuring the right box. forms.md
-         states this as the rule: bind the handler to the whole label row.
-
-         min-inline-size still earns its place, for the label-less case — render()
-         omits the <span> when 'label' is empty, and then the row IS just the glyph
-         with nothing to widen it. */
-      min-block-size: var(--target-size-min, 0px);
-      min-inline-size: var(--target-size-min, 0px);
     }
 
     .box {

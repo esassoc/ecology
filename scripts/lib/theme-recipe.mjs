@@ -152,8 +152,15 @@ export function validateRecipe(recipe) {
  * the exact hex a client pointed at and said "that is our blue". When that hex cannot
  * carry readable text we report it and leave it alone, because silently shifting a
  * brand colour is not a fix, it is a thing someone has to discover later.
+ *
+ * `pinnedFill` IS THE ONE THAT BITES. A pin on a fill wins in the emitted CSS, so a
+ * foreground measured against the DERIVED fill is a foreground measured against a colour
+ * that does not ship — which is this tool's own headline bug, reintroduced through the
+ * escape hatch. Measured for real: pinning `--color-background-utility-info` to #228be6
+ * produced a foreground chosen against a different blue, and it passed by luck. A pinned
+ * fill is therefore treated exactly like the brand's: authoritative, and not movable.
  */
-function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, movable }) {
+function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, movable, pinnedFill = null }) {
   const candidatesFor = (fillHex) =>
     [
       ['neutral step 1', step(neutral, 1)],
@@ -161,10 +168,14 @@ function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, movable }
       ['neutral step 12', step(neutral, 12)],
     ].map(([label, hex]) => ({ label, hex, ratio: contrastHex(hex, fillHex) }));
 
+  if (pinnedFill) {
+    movable = false;
+  }
+
   const attempts = [];
   const lastStep = movable ? 11 : fillStep;
   for (let s = fillStep; s <= lastStep; s++) {
-    const fillHex = step(ramp, s);
+    const fillHex = pinnedFill ?? step(ramp, s);
     const best = candidatesFor(fillHex).sort((a, b) => b.ratio - a.ratio)[0];
     const passing = candidatesFor(fillHex).find((c) => c.ratio >= AA_TEXT);
     attempts.push({ s, fillHex, best });
@@ -205,22 +216,27 @@ function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, movable }
   };
 }
 
-/** Coloured text on its own subtle tint: step 11, dropping to 12 if 11 does not read. */
-function resolveTintText({ role, ramp, tintHex }) {
+/**
+ * Coloured text on a surface: step 11, dropping to 12 if 11 does not read.
+ *
+ * Step 11 is Radix's step for coloured text on a surface, which is exactly this job.
+ * Used for the `-subtle` tint pairings AND for links, where the surface is the page.
+ */
+function resolveColouredText({ role, ramp, onHex, label = 'the subtle tint' }) {
   for (const s of [11, 12]) {
     const hex = step(ramp, s);
-    const r = contrastHex(hex, tintHex);
+    const r = contrastHex(hex, onHex);
     if (r >= AA_TEXT) return { hex, ratio: r, usedStep: s, warning: null };
   }
   const hex = step(ramp, 12);
   return {
     hex,
-    ratio: contrastHex(hex, tintHex),
+    ratio: contrastHex(hex, onHex),
     usedStep: 12,
     warning: {
       level: 'fail',
       role,
-      message: `step 12 still misses ${AA_TEXT}:1 on the subtle tint ${tintHex} (${contrastHex(hex, tintHex).toFixed(2)}:1)`,
+      message: `step 12 still misses ${AA_TEXT}:1 on ${label} ${onHex} (${contrastHex(hex, onHex).toFixed(2)}:1)`,
     },
   };
 }
@@ -243,6 +259,26 @@ export function deriveTheme(input) {
 
   for (const scheme of SCHEMES) {
     const t = new Map();
+
+    // Pins are APPLIED last (so a human edit always wins) but READ first (so anything
+    // measured against a pinned colour is measured against what actually ships). Only
+    // literal hexes are readable — a pin holding a var() chain cannot be resolved here,
+    // and the derivation says so rather than measuring the wrong thing.
+    const pins = { ...recipe.pinned, ...(scheme === 'dark' ? recipe.pinnedDark : {}) };
+    const pinnedHex = (name) => {
+      const v = pins[name];
+      if (v === undefined) return null;
+      if (HEX.test(v)) return v;
+      warnings.push({
+        level: 'info',
+        scheme,
+        role: name,
+        message:
+          `pinned to "${v}", which is not a literal hex — anything measured against it ` +
+          '(its foreground, its contrast pairs) falls back to the derived value. Pin a hex to be graded.',
+      });
+      return null;
+    };
     const neutral = neutralRamp(seeds.neutral, scheme);
     const neutralKnockout = neutralRamp(seeds.neutral, scheme === 'light' ? 'dark' : 'light');
     const brand = rampFrom(seeds.brand, { scheme });
@@ -320,23 +356,41 @@ export function deriveTheme(input) {
     t.set('--color-content-default-knockout', g(1));
     t.set('--color-border-default-knockout', step(neutralKnockout, 7));
 
-    // (4) Brand. NOTE WHAT IS ABSENT: --color-content-link, --color-content-link-hover
-    // and --color-border-default-focus are NOT emitted. They derive from
-    // --color-background-brand at tier 2 (semantic/color.json), and that derivation is
-    // load-bearing — it is what stopped cb-fish from re-pointing its brand to navy and
-    // keeping Ecology-green focus rings. Emitting them here would flatten the chain and
-    // re-open exactly that bug.
+    // (4) Brand. NOTE WHAT IS ABSENT: --color-border-default-focus is NOT emitted. It
+    // derives from --color-background-brand at tier 2 (semantic/color.json), and that
+    // derivation is load-bearing — it is what stopped cb-fish from re-pointing its brand
+    // to navy and keeping Ecology-green focus rings. A focus ring wants the FILL step, so
+    // there is nothing to improve here and everything to break.
+    // THE "DO NOT MOVE THE BRAND" RULE IS LIGHT-ONLY, and getting that wrong left a real
+    // failure on the table. The rule exists because the light fill IS the client's exact
+    // hex — not ours to shift. The DARK fill is not: rampFrom deliberately does not anchor
+    // the seed in dark (a light-scheme brand hex glares against a near-black page), so
+    // dark step 9 is the generator's own pick and is as movable as any utility colour.
+    // Measured on a purple spoke: dark brand sat at 4.43:1 and was reported as
+    // unresolvable, when moving one step up the dark ramp fixes it outright.
     const brandFill = resolveFillAndForeground({
       role: '--color-background-brand',
       ramp: brand,
       neutral,
-      movable: false,
+      movable: dark,
+      pinnedFill: pinnedHex('--color-background-brand'),
     });
+    if (brandFill.moved) {
+      warnings.push({
+        level: 'info',
+        scheme,
+        role: '--color-background-brand',
+        message:
+          `moved from step ${brandFill.movedFrom} to step ${brandFill.fillStep} of the dark ` +
+          `ramp so its foreground could reach AA (${brandFill.ratio.toFixed(2)}:1). The light ` +
+          'fill is untouched — it is the brand hex.',
+      });
+    }
     if (brandFill.warning) warnings.push({ scheme, ...brandFill.warning });
 
-    t.set('--color-background-brand', b(9));
-    t.set('--color-background-brand-hover', b(10));
-    t.set('--color-background-brand-active', b(10));
+    t.set('--color-background-brand', b(brandFill.fillStep));
+    t.set('--color-background-brand-hover', b(Math.min(12, brandFill.fillStep + 1)));
+    t.set('--color-background-brand-active', b(Math.min(12, brandFill.fillStep + 1)));
     t.set('--color-background-brand-subtle', b(2));
     t.set('--color-background-brand-muted', b(3));
     t.set('--color-background-brand-muted-hover', b(4));
@@ -347,6 +401,7 @@ export function deriveTheme(input) {
       neutral,
       fillStep: 8,
       movable: true,
+      pinnedFill: pinnedHex('--color-background-brand-secondary'),
     });
     if (secondary.warning) warnings.push({ scheme, ...secondary.warning });
     if (secondary.moved) {
@@ -363,14 +418,37 @@ export function deriveTheme(input) {
     t.set('--color-background-brand-secondary', b(secondary.fillStep));
     t.set('--color-background-brand-secondary-hover', b(Math.min(12, secondary.fillStep + 1)));
 
-    const brandText = resolveTintText({
+    const brandText = resolveColouredText({
       role: '--color-content-brand',
       ramp: brand,
-      tintHex: step(brand, 2),
+      onHex: pinnedHex('--color-background-brand-subtle') ?? step(brand, 2),
     });
     if (brandText.warning) warnings.push({ scheme, ...brandText.warning });
     t.set('--color-content-brand', b(brandText.usedStep));
     t.set('--color-content-brand-secondary', b(brandText.usedStep));
+
+    // (4b) LINKS, and this is a departure worth reading.
+    //
+    // `--color-content-link` derives from `--color-background-brand` at tier 2 — i.e. the
+    // step-9 SOLID FILL. color.json says outright that this was inherited rather than
+    // chosen ("value-neutral by design") and flags it as "a candidate to re-point", because
+    // step 11 is Radix's step for coloured text on a surface. It matters: a fill step is
+    // engineered for 3:1, so link text on the page fails AA for most brands. Measured on a
+    // generated purple spoke: 3.42:1 in dark, a `fail` row in the gate.
+    //
+    // So links ARE emitted here, at the text step of the spoke's OWN brand ramp. The
+    // intent of the tier-2 derivation is preserved — a link still follows the brand — it
+    // just stops borrowing a colour picked to be a button. The focus ring, which genuinely
+    // wants the fill step, is left on its derivation.
+    const linkText = resolveColouredText({
+      role: '--color-content-link',
+      ramp: brand,
+      onHex: pinnedHex('--color-background-elevation-raised') ?? step(neutral, dark ? 2 : 1),
+      label: 'the raised surface',
+    });
+    if (linkText.warning) warnings.push({ scheme, ...linkText.warning });
+    t.set('--color-content-link', b(linkText.usedStep));
+    t.set('--color-content-link-hover', b(Math.min(12, linkText.usedStep + 1)));
     t.set('--color-border-brand', b(6));
 
     // (5) The eight foregrounds. Emitted as literal hexes rather than var() because
@@ -391,7 +469,13 @@ export function deriveTheme(input) {
     ];
     for (const [key, fillName, subtleName] of intentions) {
       const ramp = R[key];
-      const r = resolveFillAndForeground({ role: fillName, ramp, neutral, movable: true });
+      const r = resolveFillAndForeground({
+        role: fillName,
+        ramp,
+        neutral,
+        movable: true,
+        pinnedFill: pinnedHex(fillName),
+      });
       if (r.warning) warnings.push({ scheme, ...r.warning });
       if (r.moved) {
         warnings.push({
@@ -404,17 +488,17 @@ export function deriveTheme(input) {
         });
       }
       const onName = fillName.replace('--color-background-', '--color-content-on-');
-      t.set(fillName, step(ramp, r.fillStep));
+      t.set(fillName, r.fill);
       t.set(`${fillName}-hover`, step(ramp, Math.min(12, r.fillStep + 1)));
       t.set(onName, r.fg);
       if (subtleName) {
-        const tint = step(ramp, 2);
-        t.set(subtleName, tint);
+        const tint = pinnedHex(subtleName) ?? step(ramp, 2);
+        t.set(subtleName, step(ramp, 2));
         // `accent` has no -subtle and no coloured-text role in the token set, so the
         // text/border pair below is scoped to the intentions that do.
         const textName =
           key === 'ai' ? '--color-content-ai' : `--color-content-utility-${key}`;
-        const text = resolveTintText({ role: textName, ramp, tintHex: tint });
+        const text = resolveColouredText({ role: textName, ramp, onHex: tint });
         if (text.warning) warnings.push({ scheme, ...text.warning });
         t.set(textName, text.hex);
         if (key !== 'ai') t.set(`--color-border-utility-${key}`, step(ramp, 6));
@@ -423,7 +507,10 @@ export function deriveTheme(input) {
 
     // (7) Body text on the brand tint — a `fail` row in check-contrast that nothing
     // else in this derivation covers.
-    const bodyOnTint = contrastHex(step(neutral, 12), step(brand, 2));
+    const bodyOnTint = contrastHex(
+      pinnedHex('--color-content-default') ?? step(neutral, 12),
+      pinnedHex('--color-background-brand-subtle') ?? step(brand, 2),
+    );
     if (bodyOnTint < AA_TEXT) {
       warnings.push({
         level: 'fail',

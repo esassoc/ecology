@@ -129,14 +129,6 @@ export class EsaSwitchToggle extends LitElement {
       font: inherit;
       color: var(--color-content-default, #202020);
       cursor: pointer;
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). On .root, which is the <button>
-         and therefore the target; the track is 16/18/22px tall at xs/sm/md — three
-         of four steps under the floor — but it is a graphic inside the button, not
-         the hit area. min-inline-size covers the label-less case, where the button
-         is only as wide as the track. Inert until [data-assurance] is set; see
-         --target-size-min in tokens/semantic/size.json. */
-      min-block-size: var(--target-size-min, 0px);
-      min-inline-size: var(--target-size-min, 0px);
     }
     .root:disabled { cursor: not-allowed; }
 

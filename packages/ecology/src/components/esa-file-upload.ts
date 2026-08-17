@@ -272,7 +272,13 @@ export class EsaFileUpload extends LitElement {
       justify-content: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
-      border: 2px dashed var(--form-border-color, #cecece);
+      /* The colour half was wired from the start; the width was a bare 2px until
+         2026-08-16, because no tier-2 width meant 2px (default is the 1px
+         hairline, focus means the ring). That literal is why the kit could keep
+         claiming no component needed an emphasis role — a hardcoded number does
+         not show up in a survey of token reads, so the one border that wanted
+         the role was the one border the survey could not see. */
+      border: var(--border-width-emphasis, 2px) dashed var(--form-border-color, #cecece);
       border-radius: var(--radius-md, 0.5rem);
       background: var(--color-background-field, transparent);
       cursor: pointer;

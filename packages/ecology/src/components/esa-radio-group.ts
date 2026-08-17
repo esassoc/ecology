@@ -331,13 +331,6 @@ export class EsaRadioGroup extends LitElement {
       gap: var(--spacing-200, 8px);
       cursor: pointer;
       user-select: none;
-      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). On the <label> row, not on
-         .circle: the row carries the @click, so it is the target, and the 14/16/20px
-         circle is a glyph inside it rather than the thing being measured. Same
-         reasoning as esa-checkbox's .wrapper — see the longer note there. Inert
-         until [data-assurance] is set. */
-      min-block-size: var(--target-size-min, 0px);
-      min-inline-size: var(--target-size-min, 0px);
     }
     .item--disabled {
       cursor: not-allowed;

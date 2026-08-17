@@ -218,18 +218,6 @@ const cls = [
     justify-content: center;
     width: 16px;
     height: 16px;
-    /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA), 24x24.
-       This button was the ledger's named example of a target that fails it: an
-       explicit 16x16 with padding: 0. The floor is 0 by default, so nothing moves
-       unless the page opts into [data-assurance="wcag-aa"]; there it wins over the
-       width/height above, because a min-* always beats the used value.
-       Deliberately NOT a ::after overlay. That technique keeps the visual identical
-       and is right for an isolated control, but pills sit shoulder to shoulder — an
-       invisible 24px target on each would overlap its neighbour's, which trades one
-       2.5.8 failure for a worse one. Growing the real box makes the row reflow, and
-       a slightly larger remove button is the trade an opt-in profile exists to make. */
-    min-inline-size: var(--target-size-min, 0px);
-    min-block-size: var(--target-size-min, 0px);
     padding: 0;
     border: none;
     border-radius: var(--radius-pill, 9999px);

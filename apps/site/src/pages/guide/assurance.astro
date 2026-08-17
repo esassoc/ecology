@@ -43,11 +43,11 @@ import Section from '@esa/docs/Section.astro';
         </tr>
         <tr>
           <td>Target size (SC 2.5.8)</td>
-          <td>Interactive controls take a 24&times;24 minimum hit area. <code>size="xs"</code> still renders; it just cannot come out smaller than the floor. This is deliberately <em>stricter</em> than the criterion — 2.5.8 also passes a small target with enough clear space around it, but that makes conformance a property of the layout, so moving a control nearer its neighbour breaks it with no code change.</td>
+          <td><strong>Nothing is resized.</strong> The profile never changes component geometry — see &ldquo;What happens to my <code>xs</code> components&rdquo; below. It is reported instead, and you change the call sites.</td>
         </tr>
         <tr>
           <td>Minimum type size</td>
-          <td>The smallest rung (8px at a narrow viewport) is raised one step, collapsing <code>2xs</code> onto <code>xs</code>. A house rule, not a WCAG requirement — there is no success criterion for a minimum font size.</td>
+          <td><strong>Nothing is resized.</strong> Raising the smallest type rung was tried and pulled — it moved layout on 9 of 25 pages, because a box follows its contents. Reported alongside target size instead.</td>
         </tr>
         <tr>
           <td>Focus not obscured (SC 2.4.11)</td>
@@ -60,6 +60,65 @@ import Section from '@esa/docs/Section.astro';
       structural, not stylistic: half the kit renders into shadow roots that no page-level
       stylesheet can reach, and inherited custom properties are the only channel that
       crosses a shadow boundary in every browser engine.
+    </p>
+  </Section>
+
+  <Section id="xs" title="What happens to my xs components?">
+    <p>
+      <strong>They keep rendering at <code>xs</code>.</strong> Nothing about them changes, and
+      that is deliberate. The profile does not touch component geometry at all.
+    </p>
+    <p>
+      Two versions tried to bend that, and both were pulled. The first carried a 24px minimum
+      hit area that every control read: it worked &mdash; 33 measured failures went to zero &mdash;
+      and under it <code>xs</code> and <code>sm</code> rendered at the <em>same</em> height on
+      chip-group, checkbox-group and radio-group. The bottom of the ramp quietly collapsed and
+      the developer who wrote <code>size="xs"</code> was never told.
+    </p>
+    <p>
+      The second is the instructive one, because it looked harmless: raise the smallest
+      <em>type</em> rung to kill 8px text. No size token anywhere in it. But a box follows its
+      contents &mdash; <code>esa-chip-group</code> went from <code>{'{xs: 20, sm: 22}'}</code> to
+      <code>{'{xs: 22, sm: 22}'}</code>, and layout moved on 9 of 25 pages.
+      <strong>&ldquo;It is only typography&rdquo; is not a defence.</strong> The test is not
+      which token you touched; it is whether any component renders differently.
+    </p>
+    <p>
+      A colour role is a <strong>value</strong>, and re-pointing a value is what a theme layer
+      is for. A size step is a <strong>contract</strong> &mdash; four deliberate steps that call
+      sites choose between. A profile that redefines one is lying to every call site that
+      chose it. So the profile reports, and you decide:
+    </p>
+    <pre><code>npm run a11y:sizes</code></pre>
+    <p>
+      It lists every call site using a step that renders under the floor, and what to use
+      instead. You change <code>size="xs"</code> to <code>size="sm"</code> in your own source,
+      the ramp keeps its shape at every step, and the change shows up in your diff rather
+      than hiding in a stylesheet you never opened.
+    </p>
+    <p>
+      There are only ever two answers, and &ldquo;quietly make the existing option bigger&rdquo;
+      is not one of them:
+    </p>
+    <ol>
+      <li><strong>A compliant option already exists</strong> &rarr; the report names it.</li>
+      <li><strong>It does not exist</strong> &rarr; it gets built, as a real variant. The report
+        flags that case separately, because no call-site edit can fix it.</li>
+    </ol>
+    <p>
+      The map it checks against is <em>measured</em>, not declared &mdash; regenerated from a
+      real browser run, so it stays correct when a component&rsquo;s padding or type rung
+      changes. It also catches the case a <code>grep</code> cannot: every component defaults
+      to <code>md</code>, so a bare <code>&lt;esa-checkbox&gt;</code> with no size attribute is
+      a finding too.
+    </p>
+    <p>
+      <strong>And it surfaces something a silent floor would have buried.</strong> Three
+      components &mdash; <code>esa-checkbox</code>, <code>esa-input-tag</code> and
+      <code>esa-range-slider</code> &mdash; are under the floor at <code>xs</code>,
+      <code>sm</code> <em>and</em> their default <code>md</code>. Only <code>lg</code> clears
+      it, so that is what the report tells you to use, and every call site that omits a size
+      is a finding too. A floor would have patched over all of that and left it invisible.
     </p>
   </Section>
 

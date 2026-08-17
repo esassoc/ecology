@@ -115,12 +115,6 @@ import '@esa/tokens/typography.css';
     align-items: center;
     justify-content: center;
     padding: 0;
-    /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). Same shape as esa-pill__remove:
-       `padding: 0` on the button with a 16x16 icon inside, so the target IS the
-       icon. Inert until [data-assurance] is set. See --target-size-min in
-       tokens/semantic/size.json. */
-    min-inline-size: var(--target-size-min, 0px);
-    min-block-size: var(--target-size-min, 0px);
     margin: 0;
     margin-inline-start: var(--spacing-050, 0.125rem);
     border: none;

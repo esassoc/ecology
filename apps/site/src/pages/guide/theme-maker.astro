@@ -78,31 +78,37 @@ const CORNERS = [
         <p class="hint" id="brand-hint">The exact hex lands on step 9.</p>
       </div>
 
-      <fieldset class="field">
-        <legend>Neutral temperature</legend>
-        <div class="choices" data-choice="neutral">
-          {NEUTRALS.map((n) => (
-            <label class="choice">
-              <input type="radio" name="neutral" value={n.value} checked={n.value === 'pure'} />
-              <span class="choice-label">{n.label}</span>
-              <span class="choice-hint">{n.hint}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {/* The two radio groups are wrapped so they always sit SIDE BY SIDE on their own
+          row. Left loose in the outer auto-fit grid they landed 3-up with the text
+          fields, which pushed "Corner language" onto a row of its own beside a column
+          of dead space. */}
+      <div class="seeds-choices">
+        <fieldset class="field">
+          <legend>Neutral temperature</legend>
+          <div class="choices" data-choice="neutral">
+            {NEUTRALS.map((n) => (
+              <label class="choice">
+                <input type="radio" name="neutral" value={n.value} checked={n.value === 'pure'} />
+                <span class="choice-label">{n.label}</span>
+                <span class="choice-hint">{n.hint}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
-      <fieldset class="field">
-        <legend>Corner language</legend>
-        <div class="choices" data-choice="corners">
-          {CORNERS.map((c) => (
-            <label class="choice">
-              <input type="radio" name="corners" value={c.value} checked={c.value === 'soft'} />
-              <span class="choice-label">{c.label}</span>
-              <span class="choice-hint">{c.hint}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+        <fieldset class="field">
+          <legend>Corner language</legend>
+          <div class="choices" data-choice="corners">
+            {CORNERS.map((c) => (
+              <label class="choice">
+                <input type="radio" name="corners" value={c.value} checked={c.value === 'soft'} />
+                <span class="choice-label">{c.label}</span>
+                <span class="choice-hint">{c.hint}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </div>
 
       <details class="more">
         <summary>Fonts and the non-brand intentions</summary>
@@ -168,12 +174,17 @@ const CORNERS = [
           <Button variant="ghost">Ghost</Button>
         </div>
 
+        {/* esa-badge takes `value` — it has NO slot, so children are silently dropped
+            and it renders an empty 20×6px bar. Its variants are primary | secondary |
+            success | warning | danger | info; there is no `brand` (primary IS the brand
+            fill), and an unknown variant also renders as an unstyled sliver. */}
         <div class="preview-row">
-          <Badge variant="info">Info</Badge>
-          <Badge variant="success">Success</Badge>
-          <Badge variant="warning">Warning</Badge>
-          <Badge variant="danger">Danger</Badge>
-          <Badge variant="brand">Brand</Badge>
+          <Badge value="Primary" variant="primary" />
+          <Badge value="Secondary" variant="secondary" />
+          <Badge value="Info" variant="info" />
+          <Badge value="Success" variant="success" />
+          <Badge value="Warning" variant="warning" />
+          <Badge value="Danger" variant="danger" />
         </div>
 
         <Card>
@@ -222,12 +233,12 @@ const CORNERS = [
       Save the recipe as <code id="recipe-name">theme-acme.json</code>, then either
       regenerate any time —
     </p>
-    <pre><code>node scripts/make-theme.mjs --recipe theme-acme.json --out ../acme-design/src/styles</code></pre>
+    <pre tabindex="0" role="group" aria-label="Command: regenerate the theme from its recipe"><code>node scripts/make-theme.mjs --recipe theme-acme.json --out ../acme-design/src/styles</code></pre>
     <p class="hint">— or scaffold a whole spoke from it:</p>
-    <pre><code>node scripts/create-spoke.mjs --name Acme --slug acme --dir acme-design --theme theme-acme.json</code></pre>
+    <pre tabindex="0" role="group" aria-label="Command: scaffold a spoke from the recipe"><code>node scripts/create-spoke.mjs --name Acme --slug acme --dir acme-design --theme theme-acme.json</code></pre>
     <details class="more">
       <summary>The generated CSS</summary>
-      <pre class="css-out"><code id="css-out">…</code></pre>
+      <pre class="css-out" tabindex="0" role="group" aria-label="The generated CSS"><code id="css-out">…</code></pre>
     </details>
   </Section>
 </DocsLayout>
@@ -239,7 +250,14 @@ const CORNERS = [
     grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
     align-items: start;
   }
-  .seeds > .more { grid-column: 1 / -1; }
+  .seeds > .more,
+  .seeds > .seeds-choices { grid-column: 1 / -1; }
+  .seeds-choices {
+    display: grid;
+    gap: var(--spacing-500, 1.25rem);
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    align-items: start;
+  }
 
   .field { display: grid; gap: var(--spacing-200, 0.5rem); border: 0; padding: 0; margin: 0; min-width: 0; }
   .field > label,
@@ -386,13 +404,54 @@ const CORNERS = [
   }
   .preview-help { margin: 0; color: var(--color-content-default-secondary); font-size: 0.875em; }
 
-  /* --- contrast ----------------------------------------------------------- */
+  /* --- contrast / derived: the STATIC halves only --------------------------- */
+  /* The rows inside these two containers are built in JS and are styled in the
+     is:global block below — see the note there before moving anything. */
 
   .contrast-summary { font-weight: 600; }
   .contrast-summary[data-state='fail'] { color: var(--color-content-utility-danger); }
   .contrast-summary[data-state='pass'] { color: var(--color-content-utility-success); }
   .contrast-rows { display: grid; gap: var(--spacing-100, 0.25rem); }
-  .crow {
+  .derived-groups { display: grid; gap: var(--spacing-300, 0.75rem); }
+
+  .output-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-300, 0.75rem); align-items: center; margin-block-end: var(--spacing-400, 1rem); }
+  .copy-status { color: var(--color-content-utility-success); font-weight: 600; }
+  .css-out { max-block-size: 30rem; overflow: auto; }
+
+  /* Long command lines must scroll INSIDE their block, not push the page sideways.
+     Without this the `create-spoke --theme …` line took the whole document to a
+     959px scrollWidth in a 700px viewport.
+
+     A scrollable box must also be REACHABLE BY KEYBOARD — making one scroll without
+     `tabindex="0"` on the element is SC 2.1.1, and axe flags it (`scrollable-region-
+     focusable`). The tabindex is in the markup; this is the half that creates the
+     obligation, so the two are noted together. */
+  .article pre,
+  pre {
+    overflow-x: auto;
+    max-inline-size: 100%;
+  }
+  pre:focus-visible {
+    outline: 2px solid var(--color-border-default-focus);
+    outline-offset: 2px;
+  }
+</style>
+
+<!--
+  RUNTIME-CREATED ELEMENTS NEED GLOBAL RULES, and this is not a style preference.
+
+  Astro scopes a component's <style> by appending a `data-astro-cid-<hash>` attribute
+  to the elements IN THE TEMPLATE and compiling every selector to `.crow[data-astro-cid-…]`.
+  Elements built later with document.createElement never get that attribute, so a scoped
+  rule cannot match them — every contrast row, derived row and warning rendered
+  completely unstyled: no grid, no swatch, no borders, values jammed against labels.
+
+  So these rules are is:global, and each one is anchored to a static container id
+  (#contrast-rows / #derived-groups) so the globalness cannot leak past this page's
+  own subtrees. If you add a class here, add it under one of those anchors.
+-->
+<style is:global>
+  #contrast-rows .crow {
     display: grid;
     grid-template-columns: 4.5rem 1fr auto;
     gap: var(--spacing-300, 0.75rem);
@@ -401,33 +460,70 @@ const CORNERS = [
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-border-default-subtle);
   }
-  .crow-chip {
+  #contrast-rows .crow-chip {
     display: grid;
     place-items: center;
     border-radius: var(--radius-sm);
-    padding: var(--spacing-100, 0.25rem);
+    padding: var(--spacing-200, 0.5rem);
     font-size: 0.75rem;
     font-weight: 700;
   }
-  .crow-names { font-family: var(--typography-font-family-mono, monospace); font-size: 0.8125rem; word-break: break-word; }
-  .crow-ratio { font-variant-numeric: tabular-nums; font-weight: 600; }
-  .crow[data-level='fail'] { border-color: var(--color-border-utility-danger); background: var(--color-background-utility-danger-subtle); }
-  .crow[data-level='warn'] { border-color: var(--color-border-utility-warning); background: var(--color-background-utility-warning-subtle); }
+  #contrast-rows .crow-names {
+    font-family: var(--typography-font-family-mono, monospace);
+    font-size: 0.8125rem;
+    word-break: break-word;
+  }
+  #contrast-rows .crow-ratio { font-variant-numeric: tabular-nums; font-weight: 600; }
+  #contrast-rows .crow[data-level='fail'] {
+    border-color: var(--color-border-utility-danger);
+    background: var(--color-background-utility-danger-subtle);
+  }
+  #contrast-rows .crow[data-level='warn'] {
+    border-color: var(--color-border-utility-warning);
+    background: var(--color-background-utility-warning-subtle);
+  }
 
-  /* --- derived ------------------------------------------------------------ */
-
-  .derived-groups { display: grid; gap: var(--spacing-300, 0.75rem); }
-  .dgroup > summary { cursor: pointer; font-weight: 600; padding: var(--spacing-250, 0.625rem) 0; min-block-size: var(--target-size-min, 0); }
-  .drow {
+  #contrast-rows .warnings {
     display: grid;
-    grid-template-columns: 1.5rem minmax(0, 1.6fr) minmax(0, 1fr) auto;
+    gap: var(--spacing-200, 0.5rem);
+    margin-block-start: var(--spacing-300, 0.75rem);
+  }
+  #contrast-rows .warn-row { padding: var(--spacing-250, 0.625rem); border-radius: var(--radius-sm); }
+  #contrast-rows .warn-row[data-level='fail'] {
+    background: var(--color-background-utility-danger-subtle);
+    color: var(--color-content-utility-danger);
+  }
+  #contrast-rows .warn-row[data-level='info'] {
+    background: var(--color-background-utility-info-subtle);
+    color: var(--color-content-utility-info);
+  }
+  #contrast-rows .hint { color: var(--color-content-default-secondary); margin: 0; }
+
+  #derived-groups .dgroup > summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: var(--spacing-250, 0.625rem) 0;
+    min-block-size: var(--target-size-min, 0);
+  }
+  #derived-groups .drow {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1.4fr) minmax(0, 1fr) 4.5rem;
     gap: var(--spacing-250, 0.625rem);
     align-items: center;
     padding: var(--spacing-100, 0.25rem) 0;
   }
-  .dswatch { inline-size: 1.5rem; block-size: 1.5rem; border-radius: var(--radius-xs); border: 1px solid var(--color-border-default); }
-  .dname { font-family: var(--typography-font-family-mono, monospace); font-size: 0.8125rem; word-break: break-all; }
-  .dvalue {
+  #derived-groups .dswatch {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--color-border-default);
+  }
+  #derived-groups .dname {
+    font-family: var(--typography-font-family-mono, monospace);
+    font-size: 0.8125rem;
+    word-break: break-all;
+  }
+  #derived-groups .dvalue {
     font: inherit;
     font-family: var(--typography-font-family-mono, monospace);
     font-size: 0.8125rem;
@@ -438,18 +534,43 @@ const CORNERS = [
     padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
     min-inline-size: 0;
   }
-  .drow[data-pinned='true'] .dvalue { border-color: var(--color-border-brand); background: var(--color-background-brand-subtle); }
-  .dpin { font-size: 0.75rem; color: var(--color-content-default-muted); }
-  .drow[data-pinned='true'] .dpin { color: var(--color-content-brand); font-weight: 600; }
+  #derived-groups .drow[data-pinned='true'] .dvalue {
+    border-color: var(--color-border-brand);
+    background: var(--color-background-brand-subtle);
+  }
+  /* `-muted` is the least prominent readable text and at 0.75rem it misses AA on the
+     page (axe flagged every row). This label carries the pinned/derived state, which is
+     the one thing in the row you cannot infer from anything else, so it takes the
+     secondary step instead. */
+  #derived-groups .dpin { font-size: 0.75rem; color: var(--color-content-default-secondary); }
+  #derived-groups .drow[data-pinned='true'] .dpin {
+    color: var(--color-content-brand);
+    font-weight: 600;
+  }
 
-  .output-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-300, 0.75rem); align-items: center; margin-block-end: var(--spacing-400, 1rem); }
-  .copy-status { color: var(--color-content-utility-success); font-weight: 600; }
-  .css-out { max-block-size: 30rem; overflow: auto; }
+  @media (max-width: 40rem) {
+    /* Four columns do not fit a phone, so each row becomes two lines: the name and its
+       pin state on top, the editable value beneath.
+       EVERY CELL IS PLACED EXPLICITLY. Left to auto-placement the pin label flowed into
+       the next available cell and rendered directly above the FOLLOWING row's name,
+       reading as that row's heading. The hairline is what makes the two lines read as
+       one row rather than four loose items. */
+    #derived-groups .drow {
+      grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+      row-gap: var(--spacing-150, 0.375rem);
+      padding-block: var(--spacing-250, 0.625rem);
+      border-block-end: 1px solid var(--color-border-default-subtle);
+    }
+    #derived-groups .dswatch { grid-column: 1; grid-row: 1; }
+    #derived-groups .dname { grid-column: 2; grid-row: 1; }
+    #derived-groups .dpin { grid-column: 3; grid-row: 1; text-align: end; }
+    #derived-groups .dvalue { grid-column: 2 / -1; grid-row: 2; }
 
-  .warnings { display: grid; gap: var(--spacing-200, 0.5rem); margin-block-start: var(--spacing-300, 0.75rem); }
-  .warn-row { padding: var(--spacing-250, 0.625rem); border-radius: var(--radius-sm); }
-  .warn-row[data-level='fail'] { background: var(--color-background-utility-danger-subtle); color: var(--color-content-utility-danger); }
-  .warn-row[data-level='info'] { background: var(--color-background-utility-info-subtle); color: var(--color-content-utility-info); }
+    #contrast-rows .crow { grid-template-columns: 3rem minmax(0, 1fr); row-gap: var(--spacing-100, 0.25rem); }
+    #contrast-rows .crow-chip { grid-column: 1; grid-row: 1; }
+    #contrast-rows .crow-names { grid-column: 2; grid-row: 1; }
+    #contrast-rows .crow-ratio { grid-column: 2; grid-row: 2; }
+  }
 </style>
 
 <script>
@@ -671,6 +792,17 @@ const CORNERS = [
     chip.style.background = toHex(r.bgRgb);
     chip.style.color = toHex(r.fgRgb);
     chip.textContent = 'Aa';
+    // DECORATIVE, and it has to be. This chip paints the pair AS IT ACTUALLY IS — so on
+    // a failing row it is deliberately unreadable, which is the whole point of showing
+    // it. The ratio beside it states the same fact as text, so nothing is lost by hiding
+    // the chip from assistive tech.
+    //
+    // NOTE: aria-hidden does NOT stop axe's color-contrast rule — measured, it still
+    // reports these. So `npm run a11y` will show up to a couple of color-contrast hits
+    // from this page, one per FAILING pair, and they are the tool working rather than
+    // the tool broken. Do not "fix" them by giving the chip readable colours; that would
+    // delete the only thing it is for.
+    chip.setAttribute('aria-hidden', 'true');
     const names = document.createElement('span');
     names.className = 'crow-names';
     names.textContent = `${r.fg} on ${r.bg}`;
