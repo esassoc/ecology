@@ -405,6 +405,25 @@ export class EsaCheckboxGroup extends LitElement {
       width: 1em;
       height: 1em;
     }
+
+    /* FORCED COLORS. Same shape as esa-checkbox — a <span role="checkbox"> gets
+       no system styling and `aria-disabled` is invisible here. The tick is a
+       currentColor SVG and survives; the fill behind it does not, so the
+       checked pair is named explicitly. See esa-checkbox for the full argument. */
+    @media (forced-colors: active) {
+      .box {
+        background: Canvas;
+        border-color: CanvasText;
+      }
+      .box--checked,
+      .box--indeterminate {
+        background: Highlight;
+        border-color: Highlight;
+        color: HighlightText;
+      }
+      .item--disabled .box { border-color: GrayText; }
+      .item--disabled { color: GrayText; }
+    }
   `,
   ];
 }

@@ -44,7 +44,12 @@ import '@esa/tokens/typography.css';
        size token, so unset it and the role decides. */
     font-size: var(--typography-label-md-font-size);
     color: inherit;
-    text-decoration: none;
+    /* Transparent, not `none`. This component is the worst case for it: both the
+       heading and the list items use `color: inherit`, so a linked item and an
+       unlinked one are pixel-identical at rest in EVERY colour mode — the only
+       tell is a hover underline, which a keyboard or touch user never sees.
+       Force-adjustment brings this underline back and separates them. */
+    text-decoration-color: transparent;
   }
   .esa-link-column__head[href]:hover { text-decoration: underline; }
   /* rule derived from currentColor → works on any background */
@@ -62,6 +67,13 @@ import '@esa/tokens/typography.css';
     font-size: var(--font-size-150, var(--typography-body-sm-font-size));
     margin-bottom: var(--spacing-100, 4px);
   }
-  .esa-link-column__list a { color: inherit; text-decoration: none; }
+  .esa-link-column__list a { color: inherit; text-decoration-color: transparent; }
   .esa-link-column__list a:hover { text-decoration: underline; }
+
+  /* FORCED COLORS. The rule is an <hr> with `border: 0` and a 1px background, so
+     it flattens to Canvas and the column loses its heading separator. Naming
+     CanvasText restores it; color-mix has nothing to mix in this mode anyway. */
+  @media (forced-colors: active) {
+    .esa-link-column__rule { background: CanvasText; }
+  }
 </style>

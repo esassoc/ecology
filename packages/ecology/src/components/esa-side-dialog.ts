@@ -211,6 +211,14 @@ export class EsaSideDialog extends LitElement {
     @keyframes slide-left { from { transform: translateX(calc(-100% - var(--_inset))); } }
     @keyframes slide-out-right { to { transform: translateX(calc(100% + var(--_inset))); } }
     @keyframes slide-out-left { to { transform: translateX(calc(-100% - var(--_inset))); } }
+
+    /* FORCED COLORS. This panel floats with a 16px inset on all four sides, so
+       losing --elevation-5 leaves it with no edge at all against the scrim.
+       Width is `min(--_width, 100vw - inset*2)` on a content-box element; the
+       border is inside the query so that clamp keeps holding in normal mode. */
+    @media (forced-colors: active) {
+      .panel { border: 1px solid CanvasText; }
+    }
   `,
   ];
 }

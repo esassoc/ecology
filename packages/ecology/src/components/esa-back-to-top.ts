@@ -162,6 +162,18 @@ export class EsaBackToTop extends LitElement {
     .button:active {
       transform: scale(0.95);
     }
+
+    /* FORCED COLORS. The button declares `border: none` and leans entirely on
+       --_btt-bg + --_btt-shadow, both of which are gone here — it would float as
+       a bare icon with no target edge. box-sizing is set alongside the border on
+       purpose: --_btt-size is a hard 44px, the WCAG 2.5.5 target floor, and a
+       content-box border would quietly move it to 46px. */
+    @media (forced-colors: active) {
+      .button {
+        box-sizing: border-box;
+        border: 1px solid ButtonText;
+      }
+    }
   `;
 }
 

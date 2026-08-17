@@ -210,6 +210,31 @@ export class EsaDropdownMenu extends LitElement {
       background: var(--color-border-default-subtle, #d9d9d9);
       margin: var(--spacing-100, 0.25rem) 0;
     }
+
+    /* FORCED COLORS. The panel keeps its real border, so only the interior needs
+       work.
+
+       The DIVIDER is a 1px box painted with `background`, which flattens to
+       Canvas — menu grouping disappears silently. Naming CanvasText explicitly
+       brings it back.
+
+       The --danger item is NOT repaired here, and that is deliberate: it differs
+       from a normal item by one `color` declaration, there is no system colour
+       that means "destructive", and the per-item `icon` string renders an
+       anonymous bullet dot rather than a glyph (see the class docblock), so
+       there is no shape channel to reach for either. Faking it with Highlight
+       would say "selected", which is worse than saying nothing. The item's LABEL
+       is what has to carry the warning — "Delete project", not "Delete". */
+    @media (forced-colors: active) {
+      .esa-dropdown-menu__divider { background: CanvasText; }
+      .esa-dropdown-menu__item:hover:not(:disabled),
+      .esa-dropdown-menu__item--danger:hover:not(:disabled) {
+        background: Highlight;
+        color: HighlightText;
+      }
+      .esa-dropdown-menu__item--disabled,
+      .esa-dropdown-menu__item:disabled { color: GrayText; }
+    }
   `,
   ];
 }

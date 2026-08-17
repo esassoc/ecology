@@ -11,6 +11,12 @@ interface Props {
   size?: 'xs' | 'sm' | 'md' | 'lg';
   variant?: 'primary' | 'success' | 'warning' | 'danger';
   label?: string;
+  /**
+   * Show the numeric percentage. Defaults to `true` as of 2026-08-16 (was `false`):
+   * the fill and the track differ ONLY by background colour, so in forced colors
+   * mode both flatten to Canvas and a bar with no readout is unreadable at every
+   * value. Opt out per instance where the bar is genuinely decorative.
+   */
   showValue?: boolean;
 }
 const {
@@ -19,7 +25,7 @@ const {
   size = 'md',
   variant = 'primary',
   label = '',
-  showValue = false,
+  showValue = true,
 } = Astro.props;
 
 // The header line (label + percentage) is UI text — the label composite, one rung
@@ -164,5 +170,25 @@ const showHeader = !!label || showValue;
     0% { transform: translateX(-100%); }
     50% { transform: translateX(150%); }
     100% { transform: translateX(-100%); }
+  }
+
+  /* FORCED COLORS. Track and fill are two backgrounds and nothing else — no
+     border on either — so both flatten to Canvas and the bar reads as empty at
+     every value, in every variant. The track takes a real edge, the fill takes
+     Highlight, and the two are distinguishable again.
+
+     The four variants (primary/success/warning/danger) differ only by
+     --_progress-fill-bg and cannot be told apart here; as with the badge dot,
+     there is no system colour that means "warning". `label` and the numeric
+     readout are what carry meaning, which is why showValue now defaults to true.
+
+     Indeterminate mode keeps its transform animation — transform is not
+     force-adjusted, so the motion survives once the fill is visible. */
+  @media (forced-colors: active) {
+    .esa-progress-bar__track {
+      border: 1px solid CanvasText;
+      background: Canvas;
+    }
+    .esa-progress-bar__fill { background: Highlight; }
   }
 </style>

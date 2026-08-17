@@ -2625,6 +2625,20 @@
           "--typography-font-weight-bold"
         ]
       ]
+    },
+    {
+      "id": "touch-target-min-to-target-size-min",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-16",
+      "to": "--target-size-min, which carries the role properly: it is DECLARED at 0px by default, re-pointed to 24px under [data-assurance=\"wcag-aa\"], and READ as min-block-size/min-inline-size by the interactive components. A spoke that wants the AAA floor sets --target-size-min: 44px in its own scope.",
+      "why": "STATED A CONSTANT AND ENFORCED NOTHING. --touch-target-min held 44px (the WCAG 2.5.5 AAA floor) and was read by ZERO components — grep across packages/ecology/src returned nothing. Its own $description called it 'a role, not a ramp step', which was the right instinct filed against the wrong mechanism: a role that nothing reads is not a role, it is a comment with a var() syntax. Meanwhile checkbox (14/16/20px), radio (14/16/20px) and switch (16/18/22px) shipped hardcoded px under the AA floor, and the token that named the problem sat inert one tier above them.\n\nRemoved rather than renamed, and rather than simply given readers, for two reasons. First, a rename emits `--touch-target-min: var(--target-size-min)` into tokens.css and keeps the dead name shipped in the baseline forever. Second and more important, the two names do not mean the same thing: 44px is a CONSTANT (what AAA asks for) and --target-size-min is a LEVER (what this build enforces, 0 unless a profile raises it). Aliasing a constant onto a lever would have shipped a 44px floor to every default build the day the readers landed, which is a kit-wide layout change nobody asked for. The number survives as documentation on --target-size-min; only the inert declaration goes.",
+      "pairs": [
+        [
+          "--touch-target-min",
+          "--target-size-min"
+        ]
+      ]
     }
   ]
 }

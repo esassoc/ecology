@@ -201,6 +201,34 @@ export class EsaCheckbox extends LitElement {
     .label {
       color: var(--color-content-default, #202020);
     }
+
+    /* FORCED COLORS. The box is a <span role="checkbox">, not an <input>, so it
+       gets none of the system styling a native checkbox does — no ButtonFace, and
+       no GrayText when disabled. `aria-disabled` is invisible to this mode; it
+       reads elements, never roles.
+
+       Checked survives on its own: the tick is a currentColor SVG, and a SHAPE
+       is not something force-adjustment can take away. What it can take away is
+       the brand fill behind it, which would leave a tick the same colour as the
+       box it sits in — hence the explicit Highlight/HighlightText pair.
+
+       Disabled is stated in GrayText because the custom grey above collapses onto
+       ordinary text colour. The opacity on the group wrapper does survive (opacity
+       is not force-adjusted), so this is belt and braces, not the only signal. */
+    @media (forced-colors: active) {
+      .box {
+        background: Canvas;
+        border-color: CanvasText;
+      }
+      :host([checked]) .box,
+      :host([indeterminate]) .box {
+        background: Highlight;
+        border-color: Highlight;
+        color: HighlightText;
+      }
+      :host([disabled]) .box { border-color: GrayText; }
+      :host([disabled]) .label { color: GrayText; }
+    }
   `,
   ];
 }

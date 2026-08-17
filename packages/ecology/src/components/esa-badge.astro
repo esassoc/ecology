@@ -8,13 +8,19 @@ interface Props {
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
   size?: 'xs' | 'sm' | 'md' | 'lg';
   dot?: boolean;
+  /** Accessible name for `dot` mode, which renders no visible text. Ignored otherwise. */
+  label?: string;
 }
-const { value, variant = 'primary', size = 'md', dot = false } = Astro.props;
+const { value, variant = 'primary', size = 'md', dot = false, label } = Astro.props;
 
 // Badge text is UI text at emphasis — the -strong label composite, one rung per size.
 // The import is the Astro half of the composite mechanism; Lit siblings get it via
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
+// `dot` mode renders no visible text, so its only channel is a background colour —
+// which reaches neither a screen reader nor a forced-colors user. `.visually-hidden`
+// carries the name for the first; the forced-colors block below handles the second.
+import '@esa/tokens/a11y.css';
 
 // A badge is microcopy: nowrap text in a padding-sized box. `-strong` because small
 // knocked-out text on a saturated fill needs the stroke — legibility, not emphasis.
@@ -37,6 +43,7 @@ const cls = [
 ---
 <span class={cls}>
   {!dot && <span class="esa-badge__text">{value}</span>}
+  {dot && label && <span class="visually-hidden">{label}</span>}
 </span>
 
 <style>
@@ -97,4 +104,27 @@ const cls = [
   .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning-hover,    #ffba18); }
   .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger-hover,     #dc3e42); }
   .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-background-utility-info-hover,       #0588f0); }
+
+  /* FORCED COLORS. A text badge survives: --_badge-bg and --_badge-text flatten,
+     but the NUMBER is still there, and a border keeps the pill readable as a pill.
+
+     Dot mode does not survive intact, and it is worth being exact about why. The
+     dot renders no text at all, so 100% of its meaning is one background colour —
+     and this mode replaces every background with the same system colour. There is
+     no honest repair: the eight system keywords mean canvas / button / selection /
+     disabled / link, and none of them means "warning". Painting the warning dot
+     Highlight would tell the user it is SELECTED, which is a different lie from
+     the one we started with.
+
+     So the dot is made VISIBLE (an outline, since the 8px box has no room for a
+     border) and its meaning is carried by the `label` prop's visually-hidden text
+     instead. Treat dot severity as decorative and always pass `label`. */
+  @media (forced-colors: active) {
+    .esa-badge { border: 1px solid CanvasText; }
+    .esa-badge--dot {
+      border: 0;
+      outline: 1px solid CanvasText;
+      background: CanvasText;
+    }
+  }
 </style>

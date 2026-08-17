@@ -2,6 +2,10 @@
 import '@esa/tokens/tokens.css';
 import '@esa/tokens/component-tokens.css';
 import '@esa/tokens/focus.css';
+// The spoke template has imported this since it was written; the hub's own site
+// had not, so `.visually-hidden` and the forced-colors focus fallback reached
+// every spoke and none of the specimen pages teams actually copy from.
+import '@esa/tokens/a11y.css';
 import '../styles/themes.css';
 import ThemeSwitcher from '../components/ThemeSwitcher.astro';
 

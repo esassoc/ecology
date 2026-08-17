@@ -265,6 +265,27 @@ export class EsaTabLayout extends LitElement {
     /* body-md is the panel's default type role — it inherits through the slot to
        light-DOM content, and any esa-* component slotted in names its own. */
     .panel { padding-top: var(--spacing-400, 16px); }
+
+    /* FORCED COLORS. Both appearances lose their active marker, for different
+       reasons. The default appearance paints .tab--active::after — a generated
+       box whose only paint is `background`, so it flattens to Canvas. The
+       segmented/pill appearances set that ::after to `display: none` and signal
+       with a background plus --elevation-1 instead, and the shadow is deleted.
+
+       Fills rather than borders, same reason as esa-button-toggle: .tab has a
+       fixed height inside a flex row, so a border on --active alone would make
+       the selected tab 2px taller than its neighbours and break the row.
+       The segmented .tabs container has a real border and survives on its own. */
+    @media (forced-colors: active) {
+      .tab--active::after { background: Highlight; }
+      :host([appearance='segmented']) .tab--active,
+      :host([variant='pill']) .tab--active {
+        background: Highlight;
+        color: HighlightText;
+      }
+      .tab--disabled,
+      .tab:disabled { color: GrayText; }
+    }
   `,
   ];
 }

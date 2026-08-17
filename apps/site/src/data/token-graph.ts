@@ -17,7 +17,9 @@
  * ([data-theme], [data-scheme="dark"]) deliberately do NOT feed this graph —
  * the point is to see the SHIPPED default chain, not one theme's overrides.
  *
- * Consumed only by /debug/tokens, which is excluded from production builds.
+ * Consumed by /debug/tokens, which IS emitted by `npm run build` — the scan
+ * runs once at build time and the page it produces is a snapshot of that
+ * checkout, not a live read.
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';

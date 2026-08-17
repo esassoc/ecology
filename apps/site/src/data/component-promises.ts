@@ -31,8 +31,8 @@
  * That split is derived, not authored: `missing-part` falls out of "are ALL of
  * this part's tokens unread", which is exactly the evidence a human uses.
  *
- * Consumed only by /debug/components, which is excluded from production builds.
- * Delete alongside token-graph.ts when the refinement work is done.
+ * Consumed by /debug/components, which IS emitted by `npm run build` — the scan
+ * runs once at build time, so the page is a snapshot of that checkout.
  */
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';

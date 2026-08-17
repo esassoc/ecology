@@ -161,6 +161,16 @@ export class EsaTooltip extends LitElement {
       top: 50%;
       margin-top: -4px;
     }
+
+    /* FORCED COLORS. This file ships no `border:` at all — the tooltip is a dark
+       knockout background and a shadow, and the mode flattens the first and
+       deletes the second. The ARROW is hidden rather than bordered: it is a
+       rotated 8px square, so a border round it renders as a diamond floating
+       outside the bubble, and the bubble's own edge already does the job. */
+    @media (forced-colors: active) {
+      .esa-tooltip { border: 1px solid CanvasText; }
+      .esa-tooltip__arrow { display: none; }
+    }
   `,
   ];
 }

@@ -1,0 +1,185 @@
+/*
+ * Ecology — the accessibility assurance profile.
+ *
+ * WHAT THIS IS, AND WHY IT IS NOT A THEME
+ *
+ * A theme is a brand re-skin: it re-points tier-2 colour and shape roles under
+ * `[data-theme="x"]` so a spoke looks like itself. Assurance is ORTHOGONAL to that.
+ * A project with a procurement obligation (Section 508, EN 301 549) needs defaults
+ * that are confirmed accessible, and it needs them WITHOUT surrendering its brand —
+ * cb-fish has to be able to be cb-fish *and* assured. So this is a third axis, and
+ * the three compose:
+ *
+ *   <html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa">
+ *
+ * Because it is a separate axis, it is maintained ONCE, here, rather than
+ * re-solved (and re-got-wrong) in every spoke's theme file. A spoke opts in by
+ * setting the attribute. It declares none of these names itself.
+ *
+ * WHY IT SHIPS INSIDE dist/tokens.css RATHER THAN AS AN OPT-IN IMPORT
+ *
+ * The focus-ring audit measured that spokes override 3 of 26 brand-derived roles:
+ * any rule of the form "a spoke must ALSO do X" gets forgotten. `focus.css` is the
+ * standing proof — three files in the world import it, and a spoke that does not
+ * silently falls back to browser-default focus rings. This block is inert unless
+ * the attribute is present, so shipping it unconditionally costs a spoke nothing
+ * and removes the step they would have skipped. build.js reads this file and
+ * appends it, so there is one definition rather than two that drift.
+ *
+ * NO SHADOW-DOM BRIDGE IS NEEDED, and that is not luck — it is the constraint the
+ * whole design is built around. A page-level stylesheet cannot reach a rule inside
+ * a shadow root, and 34 of the 66 components are Lit. `:host-context()` is
+ * Chromium-only and `@container style()` is not baseline. INHERITED CUSTOM
+ * PROPERTIES ARE THE ONLY CHANNEL THAT CROSSES A SHADOW BOUNDARY IN EVERY ENGINE.
+ * So everything below is a custom property and nothing below is a rule. Anything
+ * that cannot be expressed as a re-pointed token cannot be in this file at all —
+ * see WHAT THIS PROFILE CANNOT DO, at the bottom.
+ */
+
+[data-assurance="wcag-aa"] {
+  /* ---- Target size · WCAG 2.2 SC 2.5.8 (AA) ----
+     24x24 CSS px. Components read this as min-block-size / min-inline-size on
+     their HIT AREA, so `size="xs"` still renders — it just cannot come out
+     smaller than the floor. That is deliberately weaker than rejecting the prop
+     and deliberately more robust: it also catches a size chosen at runtime,
+     passed through a wrapper component, or written by someone who never read the
+     docs. The token is declared at 0px in tokens/semantic/size.json; read the
+     FLOOR IS NOT A RAMP note there before changing anything here. */
+  --target-size-min: 24px;
+
+  /* ---- Text contrast · SC 1.4.3 (AA) ----
+     THE ONE DECISION, made once. Seven pairs fail in the hub defaults and six
+     share a single cause: near-white text (gray-1) on a Radix STEP 9 fill. Step 9
+     is engineered for 3:1 — UI components and large text — not for the 4.5:1 body
+     text asks for. Fixing the seven independently produces seven different
+     answers, so this makes the one decision they all reduce to: under assurance a
+     SOLID FILL THAT CARRIES TEXT USES STEP 11, NOT STEP 9.
+
+     Measured, not assumed. The obvious alternative — keep the step-9 fill and
+     flip the foreground dark, which is what grass-8/lime-9/yellow-9 already do —
+     was tried first and FAILS on every scale in this set: step 12 on step 9 comes
+     to 3.99 (grass), 3.91 (orange), 3.45 (copper), 3.87 (blue), 3.18 (red). Mid
+     fills are too light for white and too dark for black; there is no foreground
+     that rescues them. Only moving the fill works.
+
+     Hue survives — step 11 is the same colour, darker. A brand button stays green.
+     That is the trade an opt-in profile exists to make. */
+
+  /* Brand: ONE line does four jobs, because four roles derive from it —
+     --color-content-link, --color-border-default-focus and the 3:1 UI check for
+     brand-on-raised all read --color-background-brand. Re-pointing the fill fixes
+     the lot; re-pointing them individually would have been four chances to move
+     three and miss one. Note this touches NO --focus-ring-* token: the ring's own
+     contrast work is a separate, in-flight pass. */
+  --color-background-brand: var(--color-grass-11);
+  /* Hover/active must move WITH the base or they invert — they were grass-10,
+     which is LIGHTER than grass-11 and would make hover read as a lift on a
+     control that is meant to darken. */
+  --color-background-brand-hover: var(--color-grass-12);
+  --color-background-brand-active: var(--color-grass-12);
+
+  /* Accent is the one exception, and it needs its own line rather than a silent
+     deviation: orange step 11 lands at 4.40:1 against gray-1 — the only scale in
+     this set whose step 11 misses. It is not a mistake in the ramp. Radix tunes
+     step 11 to ~4.5:1 against its OWN step 2, a warm off-white; against the
+     colder pure-ish gray-1 the same step falls just under. So accent goes to 12. */
+  --color-background-accent: var(--color-orange-12);
+  --color-background-accent-hover: var(--color-orange-12);
+
+  --color-background-ai: var(--color-copper-11);
+  --color-background-ai-hover: var(--color-copper-12);
+
+  --color-background-utility-info: var(--color-blue-11);
+  --color-background-utility-info-hover: var(--color-blue-12);
+
+  --color-background-utility-danger: var(--color-red-11);
+  --color-background-utility-danger-hover: var(--color-red-12);
+
+  /* Success and warning are NOT here on purpose. lime-9 and yellow-9 are bright
+     scales that already carry a dark step-12 foreground and already pass. Adding
+     them "for consistency" would darken two fills that were never broken. */
+
+  /* The seventh failure, and the only one that is not a fill: coloured text on its
+     own subtle tint. yellow-11 on yellow-2 is 4.43:1 — a miss of 0.07, which is
+     still a miss. Yellow is the scale where step 11 has the least room. */
+  --color-content-utility-warning: var(--color-yellow-12);
+
+  /* Not a failure, a warning that is real anyway: gray-10 is 3.70:1 on a raised
+     surface, and this token's own job description is "placeholders, timestamps,
+     help text" — all of which are text a user has to read. gray-11 is the
+     supporting-text step and clears 4.5:1. Under assurance, "least prominent
+     readable text" has to stay readable. */
+  --color-content-default-muted: var(--color-gray-11);
+
+  /* NOT FIXED, DELIBERATELY: --color-content-disabled is 2.91:1 on
+     --color-background-disabled and stays that way. WCAG 1.4.3 exempts inactive
+     controls from contrast, and raising it would make disabled read as enabled,
+     which is a worse accessibility outcome than the number it fixes. The contrast
+     audit reports it as a warning; that warning is expected output, not debt. */
+
+  /* ---- Minimum text size ----
+     HOUSE RULE, NOT A WCAG REQUIREMENT — said plainly because everything else in
+     this block cites a success criterion and this one cannot. There is no SC for
+     a minimum font size (1.4.4 is about whether text SURVIVES being resized, which
+     these clamps already do). But --font-size-050 is 8px at a narrow viewport,
+     which `size="xs"` resolves to on button, badge, pill, chip, text-field and
+     button-toggle, and the house floor in design-principles is 13px for genuine
+     meta text.
+
+     Raised ONE rung, to 050's neighbour rather than to the house floor. That
+     collapses 2xs onto xs — both land on --font-size-100 — and collapsing the
+     bottom rung IS the intended effect, exactly as the target-size floor collapses
+     `size="xs"` onto the 24px minimum. Jumping further would re-space the whole
+     ramp, which is a type decision, not an assurance one.
+
+     Retargeted at the COMPOSITE, which is the only layer that works. Not at the
+     primitive (--font-size-050 is tier 1; nothing at any scope may move a
+     primitive, and it would drag every other reader with it) and not at the
+     component (components hardcode composite NAMES in TS maps like LABEL_TYPE, so
+     there is nothing there to re-point). */
+  --typography-body-2xs-font-size: var(--font-size-100);
+  --typography-label-2xs-font-size: var(--font-size-100);
+  --typography-label-2xs-strong-font-size: var(--font-size-100);
+  --typography-microcopy-2xs-font-size: var(--font-size-100);
+  --typography-microcopy-2xs-subtle-font-size: var(--font-size-100);
+  --typography-microcopy-2xs-strong-font-size: var(--font-size-100);
+  --typography-code-2xs-font-size: var(--font-size-100);
+  --typography-eyebrow-sm-font-size: var(--font-size-100);
+
+  /* ---- Focus not obscured · SC 2.4.11 (AA) ----
+     focus.css ships `scroll-margin-block-start: var(--focus-scroll-margin, 0px)`,
+     which means conformance is opt-in per layout and every layout that forgets is
+     silently non-conformant. A sticky header parks a Tab-focused element
+     underneath itself. 76px is the hub app-shell's bar height and is a FLOOR that
+     covers the common case, not a measurement of any particular spoke's chrome —
+     a layout with taller chrome still has to set its own. Wrong-but-nonzero beats
+     zero here: too much scroll margin is a cosmetic jump, too little is a control
+     the keyboard user cannot see. */
+  --focus-scroll-margin: 76px;
+}
+
+/*
+ * WHAT THIS PROFILE CANNOT DO — read before claiming conformance.
+ *
+ * The attribute is a token scope. It re-points values; it cannot add behaviour,
+ * markup, or a rule inside a shadow root. Everything below is a real open failure
+ * in this kit that setting `data-assurance` does NOT fix, and each one is a
+ * component change tracked in docs/system-improvement-ledger.md:
+ *
+ *   - esa-date-picker has zero keydown handlers. The calendar cannot be opened,
+ *     navigated or dismissed from the keyboard — SC 2.1.1, LEVEL A. This is the
+ *     most serious open finding in the kit.
+ *   - Nine non-modal popups return focus nowhere; three have no Escape at all
+ *     (date-picker, nav-dropdown, tooltip). Tooltip is a named 1.4.13 AA failure.
+ *   - Forced colors overrides at the USED-VALUE layer, downstream of every token.
+ *     No value here can bring a deleted box-shadow back. The repair lives per
+ *     shadow root — see src/a11y.css.
+ *   - Reduced motion reaches tokenised call sites only; literal `transition:`
+ *     durations in components still animate.
+ *
+ * So the attribute is a statement about the DEFAULTS, not a certificate. What
+ * makes it more than a promise is the gate: `npm run a11y:assured` re-derives the
+ * contrast graph with this block composed over the active theme, measures rendered
+ * target geometry in a real browser, and runs the axe and live-region audits. An
+ * assurance claim sourced from anything other than a passing gate is a guess.
+ */
