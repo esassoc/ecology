@@ -281,6 +281,16 @@ export class EsaDialog extends LitElement {
       flex-shrink: 0;
     }
     .esa-dialog__footer:not(:has(*)) { display: none; }
+
+    /* FORCED COLORS. The panel's only edge is --_dialog-shadow, and box-shadow is
+       forced to `none` in this mode — without a border the dialog and the page
+       behind it become one undifferentiated Canvas. Scoped to the query rather
+       than shipping a transparent border unconditionally because .esa-dialog is
+       content-box with a fixed width, so an unconditional border would push it
+       2px past `max-width: 100vw` at every size. */
+    @media (forced-colors: active) {
+      .esa-dialog { border: 1px solid CanvasText; }
+    }
   `,
   ];
 }

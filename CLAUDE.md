@@ -247,13 +247,26 @@ does NOT gate — pass `--strict` for that. `--url http://localhost:4322` audits
 dev server instead, which is the only way to reach debug pages (they return `[]`
 from `getStaticPaths`, so the build contains none of them).
 
-**Treat green as evidence of nothing much.** On 2026-08-16 it reported 5 rules
-across 84 pages and found **zero** naming failures in the `esa-*` components —
-while a manual audit found orphaned `<label>`s in six of eight text-entry
-components and nameless options in every checkbox and radio group. axe cannot see
-a `<label>` wrapping a `<span role="checkbox">`, cannot see a name that vanishes
-when the user types, and cannot see the keyboard at all. The judgment layer is
-`plugins/spoke-kit/skills/accessibility/` (start at `forms.md`).
+**The hydration guard is the load-bearing part.** This tool first shipped serving
+`dist` at root while the build sets `base: '/ecology/'`, so every script 404'd,
+no custom element upgraded, and it cheerfully audited the pre-hydration shell —
+reporting a clean bill of health for components that were never on the page. It
+does not fail when that happens; it just reports nothing. If you ever see
+`HYDRATION FAILURE` in the output, **the numbers above it are void.**
+
+That guard immediately earned itself: on 2026-08-16 it flagged three pages whose
+elements never upgraded, and the cause was a real production bug — a backtick
+inside a comment in `esa-sidebar-nav.ts`'s `css` template closed the literal, so
+the module threw at runtime and the rail rendered nothing on its own doc page.
+Unlike the usual form of that mistake it still PARSED, so the build stayed green.
+See [[project-no-backticks-in-lit-css]]; the grep there finds them, but run it
+without `head` — the one that matters is rarely the first.
+
+**Treat green as evidence of nothing much.** axe catches maybe a third. It DOES
+catch a nameless `role="radio"` (`aria-toggle-field-name`) — once the page
+actually renders. What it cannot see is the keyboard (arrow keys, roving
+tabindex), a name that vanishes when the user types, and most of SC 1.3.5. The
+judgment layer is `plugins/spoke-kit/skills/accessibility/` (start at `forms.md`).
 
 `npm run a11y:live` is the second thing axe cannot do. axe validates a live
 region's ATTRIBUTES and has no opinion on whether it will ever announce anything

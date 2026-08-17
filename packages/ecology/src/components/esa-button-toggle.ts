@@ -387,6 +387,30 @@ export class EsaButtonToggle extends LitElement {
     .error {
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
+
+    /* FORCED COLORS. The .group track keeps its real border, so the frame
+       survives; what disappears is the SELECTED segment, whose whole treatment is
+       a background, a colour and a 1px shadow.
+
+       Highlight/HighlightText rather than a border, deliberately. `.option` is
+       intrinsically sized inside a fit-content flex row, so a border on
+       --selected alone would make that one segment 2px larger and shove its
+       siblings sideways on every selection change; reserving the border on the
+       base .option instead would outline all of them. A fill changes no boxes.
+
+       The type role already swaps to OPTION_SELECTED_TYPE (a weight change, which
+       survives force-adjustment), so this is the second channel, not the only. */
+    @media (forced-colors: active) {
+      .option--selected {
+        background: Highlight;
+        color: HighlightText;
+      }
+      .option:disabled { color: GrayText; }
+      .option--selected:disabled {
+        background: GrayText;
+        color: Canvas;
+      }
+    }
   `,
   ];
 }

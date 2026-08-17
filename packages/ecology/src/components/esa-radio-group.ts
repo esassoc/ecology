@@ -412,6 +412,28 @@ export class EsaRadioGroup extends LitElement {
       width: 1em;
       height: 1em;
     }
+
+    /* FORCED COLORS. The radio is worse off than the checkbox: the checkbox has a
+       tick, a real shape that survives, but selection here is a .dot that is
+       always in the DOM and differs ONLY by `background` (transparent vs brand).
+       Force-adjust both and selected and unselected become the same empty circle.
+       Nothing else changes — border-WIDTH is constant, only border-colour moves,
+       and colour is exactly what this mode overrides.
+
+       CanvasText rather than Highlight for the dot: the dot sits inside the
+       circle rather than replacing it, so it reads as a mark on the control, not
+       as a selection sweep across a row. Highlight is reserved for list rows. */
+    @media (forced-colors: active) {
+      .circle {
+        background: Canvas;
+        border-color: CanvasText;
+      }
+      .circle--selected { border-color: CanvasText; }
+      .circle--selected .dot { background: CanvasText; }
+      .item--disabled .circle { border-color: GrayText; }
+      .item--disabled .circle--selected .dot { background: GrayText; }
+      .item--disabled { color: GrayText; }
+    }
   `,
   ];
 }

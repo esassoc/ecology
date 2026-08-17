@@ -1,5 +1,10 @@
 /**
- * DEBUG-ONLY audit of tier-3 token NAMES against the 6-slot naming rubric.
+ * Audit of tier-3 token NAMES against the 6-slot naming rubric.
+ *
+ * The audit no longer renders anywhere — /debug/tokens dropped its three naming
+ * sections. This file survives because component-promises.ts imports `rows` to
+ * split each hook into component/part/property, which is what /debug/components
+ * groups its findings by.
  *
  * Sibling of tier2-naming.ts, same contract: everything countable is DERIVED
  * from the real token names at build time, never typed in. The vocabularies and
@@ -24,8 +29,8 @@
  * padding and width hooks, and so the variant slot can be measured against the
  * rubric's own worked example — a component with a real variant axis.
  *
- * Consumed only by /debug/tokens, which is excluded from production builds.
- * Delete alongside token-graph.ts when the refinement work is done.
+ * Consumed by component-promises.ts, and through it by /debug/components, which
+ * IS emitted by `npm run build`.
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';

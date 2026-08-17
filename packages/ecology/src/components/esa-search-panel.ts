@@ -447,6 +447,14 @@ export class EsaSearchPanel extends LitElement {
       text-align: center;
       color: var(--color-content-default-muted, #838383);
     }
+
+    /* FORCED COLORS. The panel is flush to the viewport edge with no radius, so
+       only the INBOARD edge carries meaning — but that is the edge the shadow was
+       drawing, and box-shadow is forced to `none`. A full border is simpler than
+       a side-specific one and costs nothing: the outboard edges are off-screen. */
+    @media (forced-colors: active) {
+      .panel { border: 1px solid CanvasText; }
+    }
   `,
   ];
 }

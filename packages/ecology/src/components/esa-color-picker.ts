@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
 
@@ -99,8 +99,17 @@ export class EsaColorPicker extends LitElement {
 
   render() {
     return html`
-      ${this.label ? html`<label class="label typography-${LABEL_TYPE[this.size]}">${this.label}</label>` : null}
-      <div class="controls">
+      ${this.label
+        ? html`<span id="label" class="label typography-${LABEL_TYPE[this.size]}"
+            >${this.label}</span
+          >`
+        : null}
+      <div
+        class="controls"
+        role="group"
+        aria-labelledby=${this.label ? 'label' : nothing}
+        aria-label=${this.label ? nothing : 'Color picker'}
+      >
         <div class="input-row">
           <label class="swatch-input">
             <input
@@ -301,6 +310,31 @@ export class EsaColorPicker extends LitElement {
     :host([disabled]) .preview {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+
+    /* FORCED COLORS. The one place in this kit where opting OUT is the correct
+       answer: the colour IS the content. Both .preview and .swatch carry an
+       inline `background-color`, so force-adjusting them turns the picker into a
+       row of identical empty squares and nothing can be chosen.
+
+       The opt-out repairs selection as a side effect. The base .swatch is
+       `border: 2px solid transparent`, and forced colors makes transparent
+       borders VISIBLE — so without this, every swatch would gain the same 2px
+       border that .swatch--selected uses to mark itself, and selection would be
+       lost twice over. Under the opt-out the transparent border stays
+       transparent and the selected swatch keeps both its border and its ring.
+
+       An outline (not a border) frames each swatch so the opted-out colours still
+       have an edge against the user's Canvas — outline sits outside the box, so
+       it does not disturb the 2px selection border underneath it. */
+    @media (forced-colors: active) {
+      .preview,
+      .swatch {
+        forced-color-adjust: none;
+      }
+      .swatch { outline: 1px solid CanvasText; }
+      .swatch--selected { outline: 2px solid Highlight; }
+      .preview { outline: 1px solid CanvasText; }
     }
   `,
   ];

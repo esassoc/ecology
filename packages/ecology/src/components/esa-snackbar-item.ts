@@ -179,6 +179,20 @@ export class EsaSnackbarItem extends LitElement {
       outline-offset: var(--focus-ring-offset, 2px);
       opacity: 1;
     }
+
+    /* FORCED COLORS. Two repairs. The toast itself is a knockout background plus
+       --elevation-4, so it needs a real edge. And the hardcoded #ffffff focus
+       ring above is force-adjusted to whatever the theme picks — which may be
+       the same colour as the toast's own background — so the ring is re-stated
+       in system colours rather than left to chance.
+       The four variants (success/warning/danger/info) differ only by background
+       and all collapse to Canvas; the per-variant ICON is what still separates
+       them, which is exactly why renderIcon() ships four distinct glyphs. */
+    @media (forced-colors: active) {
+      .esa-snackbar { border: 1px solid CanvasText; }
+      .esa-snackbar__action:focus-visible,
+      .esa-snackbar__close:focus-visible { outline-color: CanvasText; }
+    }
   `,
   ];
 }

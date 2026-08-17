@@ -340,6 +340,14 @@ export class EsaConfirmDialog extends LitElement {
       color: var(--color-content-default-knockout, #fcfcfc);
     }
     .esa-confirm-dialog__btn--warning:hover { background: #d97706; }
+
+    /* FORCED COLORS. box-shadow is forced to `none`, so the panel needs a real
+       edge. The danger/warning BUTTONS lose their tint here too and there is no
+       system colour that means "destructive" — the button's own label is what
+       carries that, which is why confirm dialogs must never ship a bare "OK". */
+    @media (forced-colors: active) {
+      .esa-confirm-dialog { border: 1px solid CanvasText; }
+    }
   `,
   ];
 }

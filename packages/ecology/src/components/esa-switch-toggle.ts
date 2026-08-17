@@ -166,6 +166,43 @@ export class EsaSwitchToggle extends LitElement {
        role leads at normal, which is what a one-word label beside a 22px track
        wants. This carried a line-height override back when body-md was relaxed
        (1.8) and the row outgrew the track; the role moved, so the override went. */
+
+    /* FORCED COLORS. The worst case in the kit: on/off is --_bg-on vs --_bg-off
+       (both force-adjusted to the same Canvas) and the thumb's ONLY separation
+       from the track is its background plus --elevation-1, which is deleted. The
+       control becomes an empty pill with an invisible thumb, and the position
+       channel is unreadable because the thing being positioned cannot be seen.
+       There is no "On"/"Off" text to fall back on — `label` is the field name and
+       is identical in both states.
+
+       Two channels are restored: the thumb FILL (Canvas when off, Highlight when
+       on) and its POSITION, which already worked.
+
+       The `left` re-declaration is not optional. `:host([checked]) .thumb` above
+       computes `--_track-w - --_thumb - 2px`, which assumes --_track-w is the
+       track's padding-box width. Adding a border under box-sizing: border-box
+       shrinks that box by 2px while the calc still uses the full value, so the
+       checked thumb would overshoot the right edge at every one of the four
+       sizes. -4px absorbs it. */
+    @media (forced-colors: active) {
+      .track {
+        box-sizing: border-box;
+        border: 1px solid CanvasText;
+        background: Canvas;
+      }
+      :host([checked]) .track { background: Canvas; }
+      .thumb {
+        box-sizing: border-box;
+        border: 1px solid CanvasText;
+        background: Canvas;
+      }
+      :host([checked]) .thumb {
+        left: calc(var(--_track-w) - var(--_thumb) - 4px);
+        background: Highlight;
+      }
+      :host([disabled]) .track,
+      :host([disabled]) .thumb { border-color: GrayText; }
+    }
   `,
   ];
 }
