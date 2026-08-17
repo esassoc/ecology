@@ -58,6 +58,7 @@
   --color-background-default-knockout-hover:  var(--beacon-gray-11);
   --color-content-default-knockout:           var(--beacon-gray-1);
   --color-border-default-knockout:            #43484e;
+  --color-border-default-focus:               var(--beacon-brand-9);
   --color-background-brand:                   var(--beacon-brand-9);
   --color-background-brand-hover:             var(--beacon-brand-10);
   --color-background-brand-active:            var(--beacon-brand-10);
@@ -160,6 +161,7 @@ html[data-scheme="dark"][data-theme="beacon"] {
   --color-background-default-knockout-hover:  var(--beacon-gray-11);
   --color-content-default-knockout:           var(--beacon-gray-1);
   --color-border-default-knockout:            #cdced6;
+  --color-border-default-focus:               var(--beacon-brand-9);
   --color-background-brand:                   var(--beacon-brand-9);
   --color-background-brand-hover:             var(--beacon-brand-10);
   --color-background-brand-active:            var(--beacon-brand-10);

@@ -238,7 +238,7 @@ export class EsaErrorSummary extends LitElement {
          :focus-visible heuristics can decide not to paint. Losing the ring here
          means the user is moved somewhere with no indication of where. */
       .root:focus {
-        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
         outline-offset: var(--focus-ring-offset, 2px);
       }
 
@@ -276,7 +276,7 @@ export class EsaErrorSummary extends LitElement {
         text-decoration-thickness: 2px;
       }
       .link:focus-visible {
-        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+        outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
         outline-offset: var(--focus-ring-offset, 2px);
       }
     `,

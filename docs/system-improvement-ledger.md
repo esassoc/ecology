@@ -11,6 +11,102 @@ component), `hub-fix`, `skill`, `workflow` (planner/gate defaults), `process`.
 
 ---
 
+## Source: the focus-ring contrast pass (2026-08-17)
+
+Closes the "contrast is UNRESOLVED" note that `component-tokens.css` and
+`semantic/color.json` had both carried since 2026-08-16. Every number below was run with
+`scripts/lib/color.mjs`, the repo's own WCAG maths.
+
+- **THE MEASUREMENT THAT SHAPED IT, and one correction to the earlier pass.** A ring taken
+  from the brand fill measures **2.95:1** on raised, canvas AND floating, and **2.66:1** on
+  sunken. The previously published "2.88:1 canvas" is **stale** — canvas and raised have both
+  been `gray-1` since the 2026-08-15 move, so they cannot differ. Scope of the live failure
+  was narrower than the docs implied: **hub default, light scheme only.** beacon measured
+  4.54:1, qanat 5.07:1, the spoke template 5.62:1, and every dark-scheme ring 4.93:1 or
+  better. The systemic risk — a future spoke picking a light brand — was the real exposure,
+  and it was ungated.
+
+- **WHY IT COULD NOT BE FIXED BY RE-POINTING.** A Radix step 9 is engineered to clear 3:1 as
+  a SOLID FILL carrying text; a ring needs 3:1 as a 2px HAIRLINE against the same surfaces.
+  Same number, harder job. And a brand hex is chosen for brand reasons and lands anywhere on
+  the luminance scale, so *"the ring is the brand"* and *"the ring always clears 3:1"* cannot
+  both be guaranteed by one flat value. **CSS cannot express the condition either:** Color 5's
+  `color-contrast()`, which tested a candidate against a target ratio, was cut down to
+  `contrast-color()`, which only returns black or white against a background. So the decision
+  cannot live in the cascade at all.
+
+- **WHAT LANDED: a ramp walk at theme-generation time, gated at `fail`.** `resolveFocusRing`
+  in `scripts/lib/theme-recipe.mjs` walks the brand's own ramp from step 9 up and takes the
+  first step clearing 3:1 on every surface *in that scheme, against that theme's own
+  neutrals*. Results: hub → **step 10** (`#3e9b4f`, 3.07:1 sunken / 3.91 elsewhere); beacon,
+  qanat and the spoke template → **step 9, untouched**. Regenerating both themes added exactly
+  one line per scheme block and changed no rendered colour, which is the evidence the walk is
+  a no-op for a brand that works. Pathological brands are rescued with their hue intact
+  (bright yellow 1.18 → 4.16 at step 11, pale pink 1.59 → 10.30 at step 12).
+
+- **THE NEUTRAL FALLBACK IS MEASURABLY DEAD CODE, and that is the strongest result.** Swept
+  216 seeds across the RGB cube in both schemes: every ramp had a usable step, worst
+  best-available **9.55:1**. Structural, not luck — step 12 of a light ramp is dark and step 12
+  of a dark ramp is light, so the far end of the curve is always usable. So the practical
+  guarantee is stronger than "accessible": **the ring is always the brand.** The fallback stays
+  as a floor (`ramp` is a parameter; not every caller is `rampFrom`), is reported at `fail`
+  because a ring that is no longer brand-coloured is something a spoke must be told about, and
+  is unit-tested directly since `deriveTheme` cannot reach it.
+
+- **WHAT IT COST: the tier-2 derivation.** `--color-border-default-focus` was
+  `{color.background-brand}` and is now `{color.grass.10}` — a *defining* token where a
+  *derived* one used to be, which `SPEC.md` names as the shape that shipped the cb-fish
+  navy-brand-with-green-rings bug. Accepted knowingly, with three replacements for what the
+  chain guaranteed: the generator emits the role for **every** theme in both schemes even when
+  the walk picks step 9, so a spoke can never inherit grass; `packages/spoke-template` carries
+  the declaration so a hand-authored theme has it in front of it; and `check-contrast.mjs`
+  grades it at `fail`. Teeth in the gate, not the cascade. **Residual risk, stated plainly:** a
+  hand-authored theme that declares this token still beats the walk on source order. That is by
+  design and is what the `fail` rows exist for · `lego` + `hub-fix` · **done**
+
+- **THE GATE WAS THE REAL HOLE.** The ring had ONE row in `contrast.mjs`:
+  `['--color-border-focus', '--color-background-raised', 3.0, 'warn']` — wrong three ways. It
+  named a **pre-rename** token resolving only through a compatibility alias; it was `warn`, so
+  it reported a Level AA failure to nobody; and it tested a single surface, never the sunken one
+  the ring is worst on. Replaced with four `fail` rows (raised, default, floating, sunken) plus
+  one `warn`. 29 → 33 pairs · `hub-fix` · **done**
+
+- **A PRE-EXISTING FAILURE THE NEW ROWS EXPOSED: the knockout app bar.** A knockout surface is
+  near-black in the **light** scheme and near-white in **dark**, so no brand-derived ring value
+  serves it and `#fcfcfc` at once. Measured 2026-08-17: hub dark **2.99:1** (0.01 short),
+  beacon dark 2.68, qanat light 2.84, qanat dark 2.78, spoke template light 2.54. Four of six
+  theme×scheme combinations. The walk **improved** the hub's case (2.59 → 2.99) without fixing
+  it. Carried at `warn`, not `fail`, because the remedy is not this token: a component on dark
+  ground re-points the tier-3 `--focus-ring-color` locally, as `esa-button variant="chrome"`
+  already does via `currentColor`. *Action:* promote to `fail` once the dark-chrome components
+  do it · `lego` · **open, medium**
+
+- **`esa-app-shell` was ringing from a FILL role, and the walk turned that from tidiness into
+  a bug** · *Evidence:* lines 233 and 248 painted `2px solid var(--color-background-brand)`,
+  omitting `--focus-ring-width` too. Invisible while the two tokens resolved identically — the
+  focus audit page correctly reported "nothing to see on screen". The moment the ring moved to
+  step 10 they diverged, leaving those two rings the only ones in the kit still at 2.66:1 on a
+  sunken surface. *Action:* both moved to the house shape · `lego` · **done**
+
+- **52 literal fallbacks encoded the failing value** · *Evidence:* `var(--focus-ring-color,
+  #46a758)` across 34 components, plus 17 `var(--form-border-color-focus, #46a758)`. The
+  fallback is load-bearing by convention (CLAUDE.md: "always with a literal fallback") and it
+  is what paints when a consumer loads `@esa/ecology` without `@esa/tokens/tokens.css` — so all
+  69 encoded a ring at 2.66:1. Retargeted to `#3e9b4f`. **The 39 `var(--color-background-brand,
+  #46a758)` fallbacks were deliberately NOT touched** — the brand fill is still grass-9, and a
+  blanket `sed` over the hex would have silently moved the brand · `hub-fix` · **done**
+
+- **The 0.07 margin is the thing to watch** · *Evidence:* grass step 10 clears 3:1 by 0.07
+  (3.07:1 on the sunken surface). The tokens also ship a P3 block whose `grass-10` is
+  `color(display-p3 0.344 0.598 0.342)`, which is not the sRGB value the gate measures.
+  *Action:* none taken — a bare 3:1 was the chosen rule and `AA_NON_TEXT` in
+  `theme-recipe.mjs` is a one-line change. Worth noting that a 3.5 threshold would send the hub
+  to step 11 (`#2a7e3b`, 4.44:1), which is the step `[data-assurance="wcag-aa"]` already picks,
+  so the two mechanisms would agree — and it would clear the hub's knockout row too · `hub-fix`
+  · **open, low**
+
+---
+
 ## Source: the tier-3 reduction pass (2026-08-16)
 Applied the three-tier framework's necessity test to all 306 tier-3 declarations:
 **306 → 116** (16 dead deleted, 3 misfiled relocated, 168 demoted to the tier-2 roles
@@ -59,7 +155,14 @@ pass but are not part of it, logged rather than fixed:
   *Impact:* the skill ships to spokes, so a spoke is being told to re-point a token that
   does not exist — and because the read sites carry fallbacks, doing so fails silently.
   *Action:* either land the halo tokens or strip all three references. Not touched by the
-  tier-3 pass — surfaced by its stale-reference sweep · `hub-fix` · **P1**
+  tier-3 pass — surfaced by its stale-reference sweep · `hub-fix` · **RESOLVED 2026-08-17**
+  — stripped, not landed. The halo will never ship: the contrast problem it existed for is
+  now solved by the ramp walk (see the focus-ring contrast entry below), so all references
+  were rewritten to describe that instead. Also found and fixed in the same sweep, beyond
+  the three named above: three test comments in `scripts/lib/check-a11y.test.mjs` and the
+  copyable house shape on `/foundations/focus`, whose fourth line
+  (`box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo)`) had been
+  telling every component author to write a declaration that paints nothing.
 
 - **The computed-style probe is too noisy to prove zero-regression** · *Evidence:* built
   the Playwright probe the plan called for; it reported 48 routes differing — and the

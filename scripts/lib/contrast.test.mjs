@@ -188,5 +188,46 @@ test('the pair table still covers all eight content-on-* foregrounds', () => {
   ]) {
     assert.ok(covered.has(name), `${name} is no longer in PAIRS`);
   }
-  assert.equal(PAIRS.length, 29);
+  assert.equal(PAIRS.length, 33);
+});
+
+test('the focus ring is graded on every surface, and it blocks', () => {
+  // The ring used to have ONE row: --color-border-focus (a pre-rename alias) against
+  // --color-background-raised, at 'warn'. So the surface it was worst on (sunken, 2.66:1
+  // vs 2.95 on raised) was never measured, and the surface it WAS measured on reported a
+  // Level AA failure as an advisory nobody reads.
+  const rows = PAIRS.filter(([fg]) => fg === '--color-border-default-focus');
+
+  // Every page surface the ring can land on, at `fail`. If a surface role is ever added,
+  // this list is the thing that has to grow with it.
+  const blocking = rows.filter(([, , , level]) => level === 'fail').map(([, bg]) => bg);
+  assert.deepEqual(
+    blocking.sort(),
+    [
+      '--color-background-default',
+      '--color-background-elevation-floating',
+      '--color-background-elevation-raised',
+      '--color-background-elevation-sunken',
+    ],
+    'the ring must block on all four page surfaces',
+  );
+
+  // The knockout bar is the one ground no brand-derived value can serve — near-black in
+  // LIGHT, near-white in DARK — so it is advisory, and deliberately so. Asserted rather
+  // than commented, because silently promoting it to `fail` would make the gate red for
+  // every theme with dark chrome and the remedy is a component-local --focus-ring-color.
+  const knockout = rows.filter(([, bg]) => bg === '--color-background-default-knockout');
+  assert.equal(knockout.length, 1);
+  assert.equal(knockout[0][3], 'warn');
+
+  for (const [, , min] of rows) assert.equal(min, 3, 'SC 1.4.11 is 3:1, not the 4.5 text bar');
+
+  // No focus row may name a pre-rename token. The old row did, so it resolved only
+  // through a compatibility alias and would have stopped covering anything the day those
+  // aliases were dropped.
+  for (const [fg] of rows) assert.equal(fg, '--color-border-default-focus');
+  assert.ok(
+    !PAIRS.some(([fg]) => fg === '--color-border-focus'),
+    'the pre-rename --color-border-focus row must be gone, not duplicated',
+  );
 });

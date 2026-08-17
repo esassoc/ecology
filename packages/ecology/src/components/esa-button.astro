@@ -454,7 +454,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     appearance: none;
   }
   .esa-button__native:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 
@@ -475,7 +475,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   summary.esa-button { list-style: none; cursor: pointer; }
   summary.esa-button::-webkit-details-marker { display: none; }
   summary.esa-button:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
     outline-offset: var(--focus-ring-offset, 2px);
     border-radius: var(--_btn-radius);
   }
@@ -486,7 +486,20 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
 
   /* Label + loading */
   .esa-button__label { white-space: nowrap; }
-  .esa-button__label--hidden { visibility: hidden; width: 0; overflow: hidden; }
+  /* Clipped, NOT `visibility: hidden`. The spinner replaces the label visually,
+     but `visibility: hidden` also removes it from the accessibility tree — and
+     since the spinner is aria-hidden, a loading button was left with NO
+     accessible name at all (axe `button-name`, measured 2026-08-16). Clipping
+     keeps the name while taking no layout space, so `aria-busy` describes a
+     button that still says what it does. */
+  .esa-button__label--hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
   .esa-button__spinner {
     display: inline-block; width: 1em; height: 1em;
     border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;

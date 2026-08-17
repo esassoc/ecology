@@ -83,26 +83,38 @@ Focus is the one visual state you never get to remove, and this skill owns how i
 LOOKS (the `accessibility` skill owns whether it is present at all — check-a11y
 blocks removal at write time). Full reference: `/foundations/focus` on the hub site.
 
-- **It is two bands, and that is not decoration.** A brand band (`--focus-ring-color`,
-  which chains off `--color-background-brand`) with a near-black halo outside it
-  (`--focus-ring-halo`). Re-point your brand and the inner band follows; the halo
-  deliberately does not.
-- **Never "fix" the ring by re-pointing the halo to your brand.** The halo is the
-  band that carries the 3:1 contrast obligation, and a brand colour is chosen for
-  brand reasons — it can land anywhere on the luminance scale. Measured in the hub
-  on 2026-08-16, the brand-only ring managed 2.95:1 / 2.88:1 / 2.66:1 against the
-  raised, canvas and sunken surfaces. All three fail. Re-point the halo ONLY when a
-  component sits on a genuinely dark ground, and then to a LIGHT value.
-- **`outline` for the ring, `box-shadow` only for the halo.** Forced-colors modes
-  replace box-shadows with system colours and keep outlines. A ring painted with
-  box-shadow alone disappears in Windows High Contrast Mode — that was fourteen
-  hub components, every form control, until it was caught.
+- **It is one band, and it is YOUR BRAND at the step that can be seen.** The ring is
+  `--focus-ring-color`, which chains off `--color-border-default-focus`. That token is
+  the first step of your brand ramp clearing 3:1 against every surface — usually your
+  brand fill itself, one step darker (light) or lighter (dark) when the fill cannot
+  carry a hairline. Your hue is preserved either way. `make-theme.mjs` picks it; if you
+  filled your theme in by hand, `check-contrast.mjs` grades it.
+- **Do NOT declare `--color-border-default-focus` in your theme file.** This is the one
+  role a theme should leave alone. Your theme loads after `tokens.css` at equal
+  specificity, so declaring it overrides the choice and hands you back the failure it
+  exists to prevent. Measured in the hub before this landed, a ring taken straight from
+  the brand fill managed 2.95:1 on the raised and canvas surfaces and 2.66:1 on the
+  sunken one — all short of the 3:1 SC 1.4.11 asks for, because a fill step is engineered
+  to carry text as a SOLID FILL, which is an easier job than reading as a 2px HAIRLINE.
+- **A ring that is wrong on ONE surface is a tier-3 fix, not a theme fix.** The real case
+  is a dark app bar: a near-black chrome surface in the LIGHT scheme is the one ground no
+  brand-derived ring can serve, since a colour dark enough for a white page is invisible
+  on it. Re-point `--focus-ring-color` on that component, locally —
+  `esa-button variant="chrome"` already takes it from `currentColor`.
+- **`outline` for the ring, never `box-shadow` alone.** Forced-colors modes replace
+  box-shadows with system colours and keep outlines. A ring painted with box-shadow
+  alone disappears in Windows High Contrast Mode — that was fourteen hub components,
+  every form control, until it was caught. (An earlier version of this section described
+  a second near-black "halo" band and named `--focus-ring-halo`. That was tried on
+  2026-08-16, reverted the same day for reading as a heavy slab, and its tokens were
+  never shipped. If you re-pointed it, the declaration did nothing.)
 - **`:focus-visible`, not `:focus`.** Two sanctioned exceptions: `:focus-within` on a
   text-entry wrapper (a ring on click is native there), and bare `:focus` where focus
   arrives programmatically after a user action, as `esa-error-summary` does.
-- **Do not restyle the ring per component.** The five tokens are the whole surface.
-  A component that needs a different ring is nearly always a component that should
-  be asking for a token — run **/request-lego**.
+- **Do not restyle the ring per component.** The three tokens — `--focus-ring-color`,
+  `--focus-ring-width`, `--focus-ring-offset` — are the whole surface. A component that
+  needs a different ring is nearly always a component that should be asking for a token —
+  run **/request-lego**. The dark-ground exception above is the one standing case.
 
 ## Mock data
 

@@ -357,7 +357,7 @@ export class EsaSearchPanel extends LitElement {
        behaviour and wanted. Inset so it cannot collide with the close button that
        shares the header row. */
     .search-box:focus-within {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
       border-radius: var(--radius-sm, 0.25rem);
     }
