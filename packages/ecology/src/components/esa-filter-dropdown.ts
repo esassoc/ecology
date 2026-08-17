@@ -423,7 +423,7 @@ export class EsaFilterDropdown extends LitElement {
       border-color: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* Weight comes from TRIGGER_ACTIVE_TYPE (label-*-strong) — same rung as the
@@ -523,8 +523,8 @@ export class EsaFilterDropdown extends LitElement {
        here even though it is a text input — engines match :focus-visible on text
        entry whether it was clicked or tabbed to. */
     .esa-filter-dropdown__search-input:focus-visible {
-      border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

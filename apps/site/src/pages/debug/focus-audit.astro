@@ -54,13 +54,31 @@ const offsets = [
     <h1>Focus audit</h1>
     <p class="lede">
       Five findings from reading every focus rule in the kit — 40 components plus
-      <code>packages/tokens/src/focus.css</code> and <code>a11y.css</code>. Nothing on this page is
-      fixed; it exists so you can point at which one you were seeing.
+      <code>packages/tokens/src/focus.css</code> and <code>a11y.css</code>.
+    </p>
+    <p class="hint">
+      <strong>Findings 1 and 5 were fixed on 2026-08-17</strong> and are kept below with their
+      original text struck through, because the measurements are still the reason. Findings
+      <strong>2, 3 and 4 are still open</strong> and are what this page is now for — each was scoped
+      out of the contrast fix deliberately, with reasons recorded in
+      <code>docs/system-improvement-ledger.md</code>. Delete this file once those three are
+      triaged too.
     </p>
 
     <!-- ================================================================== -->
     <section class="find">
-      <h2><span class="sev sev--p1">P1</span> 1 · The two-band ring was reverted. Three documents still describe it.</h2>
+      <h2><span class="sev sev--fixed">FIXED</span> 1 · The two-band ring was reverted. Three documents still described it.</h2>
+      <p class="hint">
+        <strong>Resolved 2026-08-17 by stripping, not by landing the halo.</strong> The contrast
+        problem the halo existed for is now solved by a ramp walk:
+        <code>--color-border-default-focus</code> takes the first step of the brand's own ramp that
+        clears 3:1 on every surface. The hub moved one step, <code>grass-9</code> →
+        <code>grass-10</code>, 2.66:1 → 3.07:1. All halo references were rewritten to describe that,
+        including two the original audit missed — three test comments in
+        <code>check-a11y.test.mjs</code>, and the token table on <code>/foundations/focus</code>.
+        The five-token table below is therefore <em>historical</em>: the probe now shows three
+        declared tokens and two undeclared, which is the state that was fixed.
+      </p>
       <p>
         <code>/foundations/focus</code> tells you the ring is a brand band plus a near-black
         <strong>halo</strong>, lists <strong>five</strong> tokens, and publishes a house shape for
@@ -260,21 +278,22 @@ const offsets = [
 
     <!-- ================================================================== -->
     <section class="find">
-      <h2><span class="sev sev--p3">P3</span> 5 · <code>esa-app-shell</code> rings from a fill role</h2>
+      <h2><span class="sev sev--fixed">FIXED</span> 5 · <code>esa-app-shell</code> rang from a fill role</h2>
       <p>
-        Lines 233 and 248 paint <code>2px solid var(--color-background-brand)</code> — the solid
-        <em>fill</em> role, not <code>--focus-ring-color</code>. They are also the only two focus
-        rules in the kit with no <code>--focus-ring-width</code>.
+        Lines 233 and 248 painted <code>2px solid var(--color-background-brand)</code> — the solid
+        <em>fill</em> role, not <code>--focus-ring-color</code> — and were the only two focus rules
+        in the kit with no <code>--focus-ring-width</code>. Both are now the house shape.
       </p>
-      <p class="note">
-        <strong>Nothing to see on screen today, and that is the point.</strong>
-        <code>--color-border-default-focus</code> is declared as
-        <code>var(--color-background-brand)</code>, so the two resolve identically in every theme
-        the hub ships — including <code>beacon</code> and <code>qanat</code>, which move the brand
-        and take the ring with it. This only becomes visible for a spoke that re-points
-        <code>--color-border-default-focus</code> on its own, which is exactly the escape hatch a
-        brand with a low-contrast fill needs. Discipline, not a live defect — the probe below shows
-        both values resolving the same right now.
+      <p class="hint">
+        <strong>This was filed as "nothing to see on screen", and the ramp walk is what made it
+        real.</strong> The two tokens used to resolve identically, so the defect was invisible. Now
+        <code>--color-border-default-focus</code> is <code>grass-10</code> while
+        <code>--color-background-brand</code> stays <code>grass-9</code> — so those two rings would
+        have been the only ones left in the kit at 2.66:1 on a sunken surface. <strong>The probe
+        below is the proof: the two rows must now differ.</strong> That is also why 52 literal
+        <code>var(--focus-ring-color, #46a758)</code> fallbacks across 34 components were retargeted
+        to <code>#3e9b4f</code> — while the 39 <code>var(--color-background-brand, #46a758)</code>
+        fallbacks were deliberately left alone, since the brand fill has not moved.
       </p>
       <table class="tbl">
         <thead><tr><th>Token</th><th>Computed on this page</th></tr></thead>
@@ -311,6 +330,7 @@ const offsets = [
   .sev--p1 { background: var(--color-background-utility-danger, #e5484d); }
   .sev--p2 { background: var(--color-background-utility-warning, #ffb224); color: var(--color-content-default, #202020); }
   .sev--p3 { background: var(--color-border-default-strong, #8d8d8d); }
+  .sev--fixed { background: var(--color-background-utility-success, #bdee63); color: var(--color-content-default, #202020); }
 
   .stage {
     display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-500, 1.5rem);

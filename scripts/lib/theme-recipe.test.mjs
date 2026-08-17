@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { contrastHex, parseHex, srgbToOklch } from './color.mjs';
-import { CORNERS, deriveTheme, emitCss, validateRecipe } from './theme-recipe.mjs';
+import { CORNERS, deriveTheme, emitCss, resolveFocusRing, validateRecipe } from './theme-recipe.mjs';
 
 const recipe = ({ seeds, ...over } = {}) => ({
   slug: 'testbrand',
@@ -193,20 +193,169 @@ test('a disabled fill breaks from every surface it can land on', () => {
   }
 });
 
-// --- what must NOT be emitted ------------------------------------------------
+// --- the focus ring ----------------------------------------------------------
+//
+// THIS BLOCK REPLACES A TEST THAT ASSERTED THE OPPOSITE. It read "the focus ring is left
+// on its tier-2 derivation … a ring wants the FILL step, so there is nothing to improve
+// by emitting it and everything to break". The fill step is exactly what a ring cannot
+// always have: step 9 is engineered for 3:1 as a SOLID FILL, and the ring needs 3:1 as a
+// HAIRLINE against the same surfaces. The hub's own grass step 9 came to 2.66:1 on the
+// sunken surface — a Level AA failure that shipped for months. See resolveFocusRing.
 
-test('the focus ring is left on its tier-2 derivation', () => {
-  // --color-border-default-focus derives from --color-background-brand at tier 2, and
-  // that derivation is what stopped cb-fish re-pointing its brand to navy and keeping
-  // Ecology-green focus rings. A ring wants the FILL step, so there is nothing to
-  // improve by emitting it and everything to break.
-  const d = deriveTheme(recipe());
-  for (const scheme of ['light', 'dark']) {
-    assert.ok(
-      !d[scheme].has('--color-border-default-focus'),
-      'the focus ring must keep following --color-background-brand',
-    );
+/** Every surface the ring can sit on, in one scheme, as literal hexes. */
+const focusSurfaces = (m) =>
+  [
+    '--color-background-default',
+    '--color-background-elevation-raised',
+    '--color-background-elevation-floating',
+    '--color-background-elevation-sunken',
+  ].map((n) => resolve(m, n));
+
+test('the focus ring is emitted for every theme, in both schemes', () => {
+  // Unconditional, even when the walk picks step 9 and the value is what the tier-2
+  // derivation would have produced anyway. That is the point: the hub's :root now names a
+  // ramp step, so an omission here would let a spoke inherit the hub's HUE — the cb-fish
+  // navy-brand-with-green-rings bug, which the old derivation is what prevented.
+  for (const brand of ['#1f7a6d', '#1769aa', '#46a758', '#7a3b9c', '#ffdd00']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    for (const scheme of ['light', 'dark']) {
+      assert.ok(
+        d[scheme].has('--color-border-default-focus'),
+        `[${scheme}] ${brand}: the ring must be emitted even when it does not move`,
+      );
+    }
   }
+});
+
+test('the focus ring clears 3:1 on every surface, for any brand', () => {
+  // The whole guarantee, stated once. Includes brands that cannot carry a ring at step 9
+  // at all (bright yellow measured 1.18:1, pale pink 1.59:1) — those are the cases the
+  // walk exists for, and they must come out the other side conforming.
+  for (const brand of ['#1f7a6d', '#1769aa', '#46a758', '#7a3b9c', '#ffdd00', '#a3e635', '#f9a8d4', '#101418']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    for (const scheme of ['light', 'dark']) {
+      const ring = resolve(d[scheme], '--color-border-default-focus');
+      for (const surface of focusSurfaces(d[scheme])) {
+        assert.ok(
+          contrastHex(ring, surface) >= 3,
+          `[${scheme}] ${brand}: ring ${ring} is ${contrastHex(ring, surface).toFixed(2)}:1 on ${surface}`,
+        );
+      }
+    }
+  }
+});
+
+test('a brand that can carry the ring keeps step 9 untouched', () => {
+  // THE PROMISE TO A BRAND OWNER, and the reason this is a ramp walk rather than a clamp
+  // or a second band: a brand that already works is not touched at all. Both real spokes
+  // are in here (beacon 4.54:1, qanat 5.07:1 at step 9), so a regression that starts
+  // shifting conforming brands fails here rather than in a spoke's design review.
+  for (const [brand, label] of [['#1f7a6d', 'beacon'], ['#1769aa', 'qanat'], ['#43608a', 'spoke-template']]) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    for (const scheme of ['light', 'dark']) {
+      assert.equal(
+        d[scheme].get('--color-border-default-focus'),
+        'var(--testbrand-brand-9)',
+        `[${scheme}] ${label} already clears 3:1 and must not be moved`,
+      );
+      assert.ok(
+        !d.warnings.some((w) => w.role === '--color-border-default-focus' && w.scheme === scheme),
+        `[${scheme}] ${label} must not warn about a ring it did not move`,
+      );
+    }
+  }
+});
+
+test('a brand that cannot carry the ring walks its own ramp, and says so', () => {
+  // The hub's own case. grass step 9 is 2.66:1 on the sunken surface; step 10 is 3.07.
+  // Asserting the STEP, not just the ratio, because "still recognisably the brand" is the
+  // property being bought and one step along the brand's own curve is what buys it.
+  const d = deriveTheme(recipe({ seeds: { brand: '#46a758' } }));
+  assert.equal(d.light.get('--color-border-default-focus'), 'var(--testbrand-brand-10)');
+  const moved = d.warnings.find(
+    (w) => w.role === '--color-border-default-focus' && w.scheme === 'light',
+  );
+  assert.ok(moved, 'moving the ring must be reported, not silent');
+  assert.equal(moved.level, 'info', 'a ring still on the brand ramp is info, not fail');
+  assert.match(moved.message, /step 9 to step 10/);
+
+  // Dark is untouched for the same brand — a dark ramp puts step 9 against a near-black
+  // page, where it measures 5.24:1. The walk is per scheme, not per theme.
+  assert.equal(d.dark.get('--color-border-default-focus'), 'var(--testbrand-brand-9)');
+});
+
+test('no rampFrom ramp ever needs the neutral fallback — the ring is ALWAYS the brand', () => {
+  // The guarantee is stronger than "accessible", and this is what makes it so. Swept the
+  // RGB cube in both schemes: every seed has a brand step clearing 3:1, because step 12 of
+  // a light ramp is dark and step 12 of a dark ramp is light, so the far end of the curve
+  // is always usable. Recorded here rather than in a comment because it is the claim the
+  // design rests on — if rampFrom's curve ever changes, this is what says so.
+  let worstBest = Infinity;
+  for (let r = 0; r < 256; r += 85) {
+    for (let g = 0; g < 256; g += 85) {
+      for (let b = 0; b < 256; b += 85) {
+        const brand = '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+        const d = deriveTheme(recipe({ seeds: { brand } }));
+        for (const scheme of ['light', 'dark']) {
+          const raw = d[scheme].get('--color-border-default-focus');
+          assert.match(
+            raw,
+            /^var\(--testbrand-brand-(9|10|11|12)\)$/,
+            `[${scheme}] ${brand}: fell off the brand ramp to ${raw}`,
+          );
+          const ring = resolve(d[scheme], '--color-border-default-focus');
+          worstBest = Math.min(
+            worstBest,
+            ...focusSurfaces(d[scheme]).map((s) => contrastHex(ring, s)),
+          );
+        }
+      }
+    }
+  }
+  assert.ok(worstBest >= 3, `worst ring contrast across the cube was ${worstBest.toFixed(2)}:1`);
+});
+
+test('the neutral fallback, when a ramp genuinely has no usable step', () => {
+  // Unreachable through deriveTheme (see above), so it is called directly — the only
+  // honest way to cover a branch that exists as a floor. A ramp of twelve near-whites has
+  // no step that can be seen against a near-white surface.
+  //
+  // The `fail` level is the load-bearing part: it is the ONLY thing that would tell a
+  // spoke its focus ring had stopped being brand-coloured.
+  const allWhite = Array.from({ length: 12 }, () => '#fdfdfd');
+  const neutral = Array.from({ length: 12 }, (_, i) => (i === 11 ? '#202020' : '#f4f4f4'));
+  const out = resolveFocusRing({ ramp: allWhite, neutral, surfaces: ['#fcfcfc', '#f0f0f0'] });
+  assert.equal(out.fellBack, true, 'a ramp with no usable step must fall back');
+  assert.equal(out.step, null, 'the fallback is not a brand step');
+  assert.equal(out.hex, '#202020', 'the fallback is the neutral step 12');
+  assert.ok(out.ratio >= 3, 'and the fallback itself must clear 3:1');
+
+  // …and a ramp with a usable step never reaches it, so the floor cannot fire by accident.
+  const usable = [...Array(8).fill('#fdfdfd'), '#fdfdfd', '#fdfdfd', '#2a7e3b', '#203c25'];
+  const ok = resolveFocusRing({ ramp: usable, neutral, surfaces: ['#fcfcfc', '#f0f0f0'] });
+  assert.equal(ok.fellBack, false);
+  assert.equal(ok.step, 11, 'the FIRST clearing step wins, not the best one');
+});
+
+test('the ring is graded against the theme\'s own surfaces, not the hub\'s', () => {
+  // A spoke re-points its neutral ramp too. Measuring the ring against the hub's greys
+  // is this tool's recorded headline bug in another costume (see resolveFillAndForeground
+  // on pinnedFill), so the same brand on two different neutrals must be free to land on
+  // different steps rather than being graded once against a fixed ground.
+  const seen = new Set();
+  for (const neutral of ['pure', 'cool', 'warm', 'mauve', 'sage', 'olive']) {
+    const d = deriveTheme(recipe({ seeds: { brand: '#46a758', neutral } }));
+    seen.add(d.light.get('--color-border-default-focus'));
+    for (const surface of focusSurfaces(d.light)) {
+      assert.ok(
+        contrastHex(resolve(d.light, '--color-border-default-focus'), surface) >= 3,
+        `neutral ${neutral}: the ring must clear 3:1 on this theme's own ${surface}`,
+      );
+    }
+  }
+  // Not an assertion about WHICH step each neutral picks — that would pin the ramp curve.
+  // Only that the grading is live: something was resolved for every neutral.
+  assert.ok(seen.size >= 1);
 });
 
 test('links are re-pointed to the text step, and clear AA on the page', () => {

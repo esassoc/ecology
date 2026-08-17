@@ -873,8 +873,8 @@ export class EsaCombobox extends LitElement {
       color: var(--form-placeholder-color, #838383);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -942,7 +942,7 @@ export class EsaCombobox extends LitElement {
       text-decoration: underline;
     }
     .trigger--text:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 2px;
       border-radius: var(--_field-radius);
     }
@@ -977,8 +977,8 @@ export class EsaCombobox extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .trigger--field:focus-visible {
-      border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .trigger--field:disabled {
@@ -1036,7 +1036,7 @@ export class EsaCombobox extends LitElement {
        the same repair as esa-entity-search, esa-search-panel and esa-command-palette
        — the whole shape is "chromeless input in a bordered row". */
     .search:focus-within {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .search__icon {
@@ -1165,7 +1165,7 @@ export class EsaCombobox extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 1px;
     }
 

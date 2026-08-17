@@ -304,7 +304,7 @@ export class EsaCommandPalette extends LitElement {
        Inset because the row runs edge to edge inside an overflow:hidden panel, so
        an outline at positive offset would be clipped on both sides. */
     .esa-command-palette__search:focus-within {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .esa-command-palette__search-icon {
@@ -358,7 +358,7 @@ export class EsaCommandPalette extends LitElement {
     .esa-command-palette__item--active { background: var(--color-background-elevation-sunken, #f0f0f0); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: -2px;
     }
 
