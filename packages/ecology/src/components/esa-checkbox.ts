@@ -1,4 +1,4 @@
-import { LitElement, html, css, svg } from 'lit';
+import { LitElement, html, css, svg, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
 
@@ -81,11 +81,24 @@ export class EsaCheckbox extends LitElement {
   };
 
   render() {
+    // A checkbox with no visible label is named from the HOST — <esa-checkbox
+    // aria-label="Select row">, the table-row usage. That attribute names the host,
+    // and the host is not the control: the role="checkbox" span inside is, and it
+    // was left nameless. Forward it. (Caught by axe's aria-toggle-field-name after
+    // the labelled cases were fixed — the one specimen on the page with no `label`.)
+    const hostLabel = this.getAttribute('aria-label');
     return html`
       <label class="wrapper" @keydown=${this.onKeydown} @click=${this.toggle}>
+        <!-- aria-labelledby, NOT the wrapping label. A label associates only with a
+             LABELABLE element — a form control — and an ARIA role does not make a
+             span into one. Measured 2026-08-16 against Chrome's accessibility tree:
+             this control's name was the empty string, with no name source at all.
+             The wrapping label still earns its keep for the click target. -->
         <span
           class="box"
           role="checkbox"
+          aria-labelledby=${this.label ? 'label' : nothing}
+          aria-label=${!this.label && hostLabel ? hostLabel : nothing}
           aria-checked=${this.indeterminate ? 'mixed' : String(this.checked)}
           aria-disabled=${String(this.disabled)}
           tabindex=${this.disabled ? -1 : 0}
@@ -99,7 +112,7 @@ export class EsaCheckbox extends LitElement {
               : null}
         </span>
         ${this.label
-          ? html`<span class="label typography-${VALUE_TYPE[this.size]}">${this.label}</span>`
+          ? html`<span id="label" class="label typography-${VALUE_TYPE[this.size]}">${this.label}</span>`
           : null}
       </label>
     `;
@@ -142,6 +155,22 @@ export class EsaCheckbox extends LitElement {
       gap: var(--spacing-200, 8px);
       cursor: pointer;
       user-select: none;
+      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA), 24x24. Inert until a page sets
+         [data-assurance]; see --target-size-min in tokens/semantic/size.json.
+
+         ON THE WRAPPER, NOT ON .box, AND THAT IS THE WHOLE POINT. The glyph is
+         14/16/20px at xs/sm/md — three of four steps under the floor — but the
+         target is not the glyph: this wrapper is the <label> and it carries the
+         @click, so the row including the text is what a user can hit. Growing .box
+         to 24px would redraw the control (a checkbox is a specific size for a
+         reason) to fix a number that was never measuring the right box. forms.md
+         states this as the rule: bind the handler to the whole label row.
+
+         min-inline-size still earns its place, for the label-less case — render()
+         omits the <span> when 'label' is empty, and then the row IS just the glyph
+         with nothing to widen it. */
+      min-block-size: var(--target-size-min, 0px);
+      min-inline-size: var(--target-size-min, 0px);
     }
 
     .box {
@@ -202,9 +231,9 @@ export class EsaCheckbox extends LitElement {
       color: var(--color-content-default, #202020);
     }
 
-    /* FORCED COLORS. The box is a <span role="checkbox">, not an <input>, so it
+    /* FORCED COLORS. The box is a span carrying role=checkbox, not an input, so it
        gets none of the system styling a native checkbox does — no ButtonFace, and
-       no GrayText when disabled. `aria-disabled` is invisible to this mode; it
+       no GrayText when disabled. aria-disabled is invisible to this mode; it
        reads elements, never roles.
 
        Checked survives on its own: the tick is a currentColor SVG, and a SHAPE

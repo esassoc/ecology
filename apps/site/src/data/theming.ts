@@ -21,8 +21,10 @@ export interface ThemingHook {
   token: string;
   /**
    * component/semantic/primitive = declared in the token files.
-   * ad-hoc = a hook the component offers via its inline fallback only —
-   * legitimate and settable, just not centrally declared.
+   * ad-hoc = read with an inline fallback but declared nowhere. Settable, and
+   * NOT a fourth tier — it is a tier-3 token missing its declaration, and wants
+   * either a line in component-tokens.css or a fold onto the role it aliases.
+   * Held at zero since 2026-08-16; a row here is a regression, not an inventory.
    * undefined = referenced with NO fallback and declared nowhere — a bug.
    */
   tier: 'component' | 'semantic' | 'primitive' | 'ad-hoc' | 'undefined';

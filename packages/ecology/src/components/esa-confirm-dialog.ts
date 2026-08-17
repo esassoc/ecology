@@ -284,10 +284,10 @@ export class EsaConfirmDialog extends LitElement {
     }
     .esa-confirm-dialog__title {
       margin: 0 0 var(--spacing-150, 0.375rem);
-      color: var(--confirm-dialog-color, var(--color-content-default, #202020));
+      color: var(--color-content-default, #202020);
     }
     .esa-confirm-dialog__message {
-      color: var(--confirm-dialog-color, var(--color-content-default-secondary, #646464));
+      color: var(--color-content-default-secondary, #646464);
       /* Leading comes from .typography-body-md. It carried an override back when
          body-md was relaxed (1.8); the role leads at normal now, so it went. */
       margin: 0;
@@ -334,7 +334,7 @@ export class EsaConfirmDialog extends LitElement {
     }
     .esa-confirm-dialog__btn--warning:hover { background: #d97706; }
 
-    /* FORCED COLORS. box-shadow is forced to `none`, so the panel needs a real
+    /* FORCED COLORS. box-shadow is forced to 'none', so the panel needs a real
        edge. The danger/warning BUTTONS lose their tint here too and there is no
        system colour that means "destructive" — the button's own label is what
        carries that, which is why confirm dialogs must never ship a bare "OK". */

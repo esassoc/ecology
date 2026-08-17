@@ -129,6 +129,14 @@ export class EsaSwitchToggle extends LitElement {
       font: inherit;
       color: var(--color-content-default, #202020);
       cursor: pointer;
+      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). On .root, which is the <button>
+         and therefore the target; the track is 16/18/22px tall at xs/sm/md — three
+         of four steps under the floor — but it is a graphic inside the button, not
+         the hit area. min-inline-size covers the label-less case, where the button
+         is only as wide as the track. Inert until [data-assurance] is set; see
+         --target-size-min in tokens/semantic/size.json. */
+      min-block-size: var(--target-size-min, 0px);
+      min-inline-size: var(--target-size-min, 0px);
     }
     .root:disabled { cursor: not-allowed; }
 
@@ -172,14 +180,14 @@ export class EsaSwitchToggle extends LitElement {
        from the track is its background plus --elevation-1, which is deleted. The
        control becomes an empty pill with an invisible thumb, and the position
        channel is unreadable because the thing being positioned cannot be seen.
-       There is no "On"/"Off" text to fall back on — `label` is the field name and
+       There is no "On"/"Off" text to fall back on — 'label' is the field name and
        is identical in both states.
 
        Two channels are restored: the thumb FILL (Canvas when off, Highlight when
        on) and its POSITION, which already worked.
 
-       The `left` re-declaration is not optional. `:host([checked]) .thumb` above
-       computes `--_track-w - --_thumb - 2px`, which assumes --_track-w is the
+       The 'left' re-declaration is not optional. ':host([checked]) .thumb' above
+       computes '--_track-w - --_thumb - 2px', which assumes --_track-w is the
        track's padding-box width. Adding a border under box-sizing: border-box
        shrinks that box by 2px while the calc still uses the full value, so the
        checked thumb would overshoot the right edge at every one of the four

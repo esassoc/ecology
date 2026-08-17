@@ -236,7 +236,7 @@ export class EsaSidebarNav extends LitElement {
 
     :host {
       /* Renamed from --sidebar-width / --sidebar-width-collapsed on 2026-08-15:
-         one component read them, and the name collided with the `.sidebar`
+         one component read them, and the name collided with the .sidebar
          layout primitive's own knob at a different value. The 260/56 fallbacks
          that sat here did not match the 280/72 the tokens ship — dead code,
          since the token always resolves, but it stated a default the rail never
@@ -416,7 +416,13 @@ export class EsaSidebarNav extends LitElement {
     .label {
       flex: 1;
       text-align: left;
-      overflow: hidden;
+      /* clip/visible, not "overflow: hidden" — .link carries a microcopy composite,
+         whose line-height "none" (1) leaves the line box 1em against DM Sans's 1.30em
+         glyph box, so hiding the Y axis clips the descenders in nav items like
+         "Mapping" or "Projects". Same fix as esa-file-list's .file__name, where the
+         arithmetic is written out. */
+      overflow-x: clip;
+      overflow-y: visible;
       text-overflow: ellipsis;
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }
@@ -442,6 +448,30 @@ export class EsaSidebarNav extends LitElement {
 
     .item--disabled,
     .child--disabled { opacity: 0.5; pointer-events: none; }
+
+    /* FORCED COLORS. The active row's marker is an INSET box-shadow — chosen so
+       switching it on cannot shift the row's box — and inset or not, box-shadow
+       is deleted here. Its other two signals, background and colour, are
+       force-adjusted to the same values as an inactive row.
+
+       Worse, --sidenav-active-border-width defaults to 0, so out of the box that
+       marker paints nothing even in normal mode: the DEFAULT configuration has no
+       forced-colors-durable active indicator at all. font-weight survives and is
+       real but weak on its own.
+
+       A fill is used rather than restoring the rail as a real border-left,
+       because this component IS box-sizing: border-box (see the reset above), so
+       a left border would shrink the content box and slide the icon and label of
+       active rows right relative to inactive ones — the exact shift the inset
+       shadow was written to avoid. */
+    @media (forced-colors: active) {
+      .link--active {
+        background: Highlight;
+        color: HighlightText;
+      }
+      .link--disabled,
+      .child--disabled { color: GrayText; }
+    }
   `,
   ];
 }

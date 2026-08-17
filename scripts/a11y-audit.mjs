@@ -30,8 +30,8 @@
 // Note the dist caveat: debug pages return [] from getStaticPaths, so they are
 // not in the build and cannot be audited this way — use --url against the dev
 // server for those.
-import { createReadStream, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { createServer } from 'node:http';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { discoverRoutes, detectBase, serve, AWAIT_UPGRADE } from './lib/site-harness.mjs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -56,77 +56,11 @@ const concurrency = Number(flag('--concurrency') || 1);
 // excluded — it flags stylistic opinions and would bury the conformance failures.
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
-const MIME = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon',
-};
-
-/** Every route in the build, derived from the index.html files it emitted. */
-function discoverRoutes(dir, prefix = '') {
-  const routes = [];
-  for (const entry of readdirSync(dir)) {
-    const full = path.join(dir, entry);
-    if (statSync(full).isDirectory()) routes.push(...discoverRoutes(full, `${prefix}/${entry}`));
-    else if (entry === 'index.html') routes.push(prefix === '' ? '/' : `${prefix}/`);
-  }
-  return routes.sort();
-}
-
-/**
- * The production build sets `base: '/ecology/'`, so emitted HTML references
- * `/ecology/_astro/…` while the files sit at `dist/_astro/…`. Serving dist at
- * root therefore 404s every script and NOTHING HYDRATES — which does not fail,
- * it just quietly audits the pre-hydration shell and reports a clean bill of
- * health for components that never rendered. Detect the base from the build's
- * own markup and strip it. (This is not hypothetical; it shipped that way for
- * one afternoon and produced a confidently wrong result.)
+/*
+ * The static server, route discovery, base detection and the custom-element upgrade
+ * wait all moved to ./lib/site-harness.mjs when check-target-size.mjs needed the same
+ * hydration guard. One copy on purpose — see the header there.
  */
-function detectBase(root) {
-  try {
-    const html = readFileSync(path.join(root, 'index.html'), 'utf8');
-    const m = html.match(/(?:src|href)="(\/[^/"]+\/)_astro\//);
-    return m ? m[1] : '/';
-  } catch {
-    return '/';
-  }
-}
-
-/** Minimal static server for dist — no dependency, and it dies with the process. */
-function serve(root, base = '/') {
-  const server = createServer((req, res) => {
-    let url = decodeURIComponent((req.url ?? '/').split('?')[0]);
-    if (base !== '/' && url.startsWith(base)) url = '/' + url.slice(base.length);
-    let file = path.join(root, url);
-    if (existsSync(file) && statSync(file).isDirectory()) file = path.join(file, 'index.html');
-    if (!file.startsWith(root) || !existsSync(file)) {
-      res.writeHead(404).end('not found');
-      return;
-    }
-    res.writeHead(200, { 'content-type': MIME[path.extname(file)] ?? 'application/octet-stream' });
-    createReadStream(file).pipe(res);
-  });
-  return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port }));
-  });
-}
-
-/**
- * Wait for every custom element on the page to upgrade. Without this we audit
- * the pre-hydration HTML — which for a kit that is half web components means
- * auditing empty tags and getting a meaningless all-clear.
- */
-const AWAIT_UPGRADE = `(async () => {
-  const tags = [...new Set([...document.querySelectorAll('*')]
-    .map((el) => el.tagName.toLowerCase()).filter((t) => t.includes('-')))];
-  await Promise.race([
-    Promise.all(tags.map((t) => customElements.whenDefined(t))),
-    new Promise((r) => setTimeout(r, 3000)),
-  ]);
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-  // Report back so a page that never hydrated cannot pass as clean.
-  return { tags, notUpgraded: tags.filter((t) => !customElements.get(t)) };
-})()`;
 
 async function main() {
   if (!existsSync(AXE)) {

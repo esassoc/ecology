@@ -218,9 +218,17 @@ export class EsaRadioGroup extends LitElement {
                 : null}
             </legend>`
           : null}
-        ${this.options.map((option) => {
+        ${this.options.map((option, i) => {
           const selected = this.isSelected(option.value);
           const disabled = option.disabled ?? false;
+          // aria-labelledby, NOT the wrapping label. A label associates only with a
+          // LABELABLE element, and role="radio" does not make a span into one — so
+          // every option here had NO accessible name until 2026-08-16, measured
+          // against Chrome's own accessibility tree. The legend named the group and
+          // nothing named the choices inside it, which is the worst shape: the user
+          // is told what is being asked and not what the answers are.
+          // Indexed because the ids must be unique within this shadow root.
+          const labelId = `opt-${i}-label`;
           return html`
             <label
               class="item ${disabled ? 'item--disabled' : ''}"
@@ -230,13 +238,16 @@ export class EsaRadioGroup extends LitElement {
               <span
                 class="circle ${selected ? 'circle--selected' : ''}"
                 role="radio"
+                aria-labelledby=${labelId}
                 aria-checked=${String(selected)}
                 aria-disabled=${String(disabled)}
                 tabindex=${disabled ? -1 : 0}
               >
                 <span class="dot"></span>
               </span>
-              <span class="item-label typography-${VALUE_TYPE[this.size]}">${option.label}</span>
+              <span id=${labelId} class="item-label typography-${VALUE_TYPE[this.size]}"
+                >${option.label}</span
+              >
             </label>
           `;
         })}
@@ -320,6 +331,13 @@ export class EsaRadioGroup extends LitElement {
       gap: var(--spacing-200, 8px);
       cursor: pointer;
       user-select: none;
+      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). On the <label> row, not on
+         .circle: the row carries the @click, so it is the target, and the 14/16/20px
+         circle is a glyph inside it rather than the thing being measured. Same
+         reasoning as esa-checkbox's .wrapper — see the longer note there. Inert
+         until [data-assurance] is set. */
+      min-block-size: var(--target-size-min, 0px);
+      min-inline-size: var(--target-size-min, 0px);
     }
     .item--disabled {
       cursor: not-allowed;
@@ -415,7 +433,7 @@ export class EsaRadioGroup extends LitElement {
 
     /* FORCED COLORS. The radio is worse off than the checkbox: the checkbox has a
        tick, a real shape that survives, but selection here is a .dot that is
-       always in the DOM and differs ONLY by `background` (transparent vs brand).
+       always in the DOM and differs ONLY by 'background' (transparent vs brand).
        Force-adjust both and selected and unselected become the same empty circle.
        Nothing else changes — border-WIDTH is constant, only border-colour moves,
        and colour is exactly what this mode overrides.

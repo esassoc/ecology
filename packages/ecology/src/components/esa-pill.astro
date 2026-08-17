@@ -11,8 +11,15 @@ interface Props {
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
   removable?: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg';
+  /**
+   * Project vocabulary this pill labels — a permit type, a survey stage, a species.
+   * Emits `data-category`, which a spoke's theme scopes a colour ramp to. `variant`
+   * is for the six SYSTEM intents and cannot express an open set; this is the axis
+   * for the open set. See the "Custom colors" section on the doc page.
+   */
+  category?: string;
 }
-const { label, variant = 'default', removable = true, size = 'md' } = Astro.props;
+const { label, variant = 'default', removable = true, size = 'md', category } = Astro.props;
 
 // Pill text is UI text — the label composite, one rung per size. The import is the
 // Astro half of the composite mechanism; Lit siblings get it via
@@ -29,7 +36,7 @@ const cls = [
   `typography-${LABEL_TYPE[size]}`,
 ].join(' ');
 ---
-<span class={cls}>
+<span class={cls} data-category={category}>
   {hasIconSlot && (
     <span class="esa-pill__icon">
       <slot name="icon" />
@@ -164,6 +171,39 @@ const cls = [
     --_pill-border: var(--color-border-utility-danger, var(--color-red-6));
   }
 
+  /* ---------- CATEGORY COLOUR ----------
+     For a label whose colour is PROJECT VOCABULARY — "Permit expired", "Awaiting
+     survey", a species, a funding source. `variant` covers the six system intents
+     and is deliberately closed; this axis is open, because the set is the spoke's
+     and the hub cannot enumerate it.
+
+     THE THREE NAMES BELOW ARE NOT HUB TOKENS AND MUST NOT BECOME ONE. They are
+     declared by the SPOKE, scoped to its own vocabulary, and read here — the
+     inverse of every other var() in this file. That is the whole point: the
+     mechanism is ours, the values are the project's, so there is nothing for
+     component-tokens.css to hold and no row in token-names.json. Each read keeps
+     the default pill's own chain as its fallback, so a category with no ramp
+     defined (or a typo in the name) renders an ordinary pill rather than losing
+     the declaration.
+
+     STEPS 2 / 6 / 11, matching the semantic variants above line for line — fill,
+     border, text. That is not a coincidence to preserve loosely: it is what makes
+     a project's own category read as a native member of the set beside
+     `success` and `info` rather than a foreign object. Radix's custom-palette
+     generator emits --accent-1..12 in exactly this scale, so a pasted ramp needs
+     only the prefix renamed.
+
+     CONTRAST: step 11 on step 2 is the pairing Radix tunes for legible text, and
+     is why the ramp is generated rather than hand-picked — a fill and a text
+     colour chosen independently is how #6b21a8 ends up on #202020. It is a good
+     default, not a guarantee; bright hues are where it gets tight, and that
+     verification belongs in the batched contrast pass. */
+  .esa-pill[data-category] {
+    --_pill-bg:     var(--category-2,  var(--color-background-elevation-sunken, #f0f0f0));
+    --_pill-border: var(--category-6,  var(--color-border-default-subtle, #d9d9d9));
+    --_pill-text:   var(--category-11, var(--color-content-default, #202020));
+  }
+
   .esa-pill__icon {
     flex-shrink: 0;
     display: inline-flex;
@@ -178,6 +218,18 @@ const cls = [
     justify-content: center;
     width: 16px;
     height: 16px;
+    /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA), 24x24.
+       This button was the ledger's named example of a target that fails it: an
+       explicit 16x16 with padding: 0. The floor is 0 by default, so nothing moves
+       unless the page opts into [data-assurance="wcag-aa"]; there it wins over the
+       width/height above, because a min-* always beats the used value.
+       Deliberately NOT a ::after overlay. That technique keeps the visual identical
+       and is right for an isolated control, but pills sit shoulder to shoulder — an
+       invisible 24px target on each would overlap its neighbour's, which trades one
+       2.5.8 failure for a worse one. Growing the real box makes the row reflow, and
+       a slightly larger remove button is the trade an opt-in profile exists to make. */
+    min-inline-size: var(--target-size-min, 0px);
+    min-block-size: var(--target-size-min, 0px);
     padding: 0;
     border: none;
     border-radius: var(--radius-pill, 9999px);

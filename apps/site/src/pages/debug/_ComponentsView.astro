@@ -354,10 +354,22 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   <Section id="adhoc" title="Under-promise — read, declared nowhere">
     <p>
       The inverse failure. These hooks <em>work</em> — the component reads them with an inline
-      fallback, and <code>SPEC.md</code> permits the pattern — but no token file declares them, so
-      nothing outside the component&rsquo;s own source records that they exist. They show on the
-      component&rsquo;s Theming surface table as tier <code>ad-hoc</code>; they do not show in
-      <code>component-tokens.css</code>, which is where a spoke author looks first.
+      fallback — but no token file declares them, so nothing outside the component&rsquo;s own
+      source records that they exist. They show on the component&rsquo;s Theming surface table as
+      tier <code>ad-hoc</code>; they do not show in <code>component-tokens.css</code>, which is
+      where a spoke author looks first.
+    </p>
+    <p>
+      This panel used to add &ldquo;and <code>SPEC.md</code> permits the pattern&rdquo;. It does
+      not. Its only mention of ad-hoc gives two dispositions and no third — <em>promote into
+      <code>component-tokens.css</code>, or fold away</em> — and reading a permission into that
+      turned a missing declaration into a fourth tier. There are three. An undeclared read is a
+      tier-3 token that never got its line written.
+    </p>
+    <p>
+      <strong>Empty is the expected state.</strong> The 30 that stood here were resolved on
+      2026-08-16 (9 declared, 24 folded). A row below means someone has added an undeclared read
+      since — it wants one of the same two answers, not a third.
     </p>
     {adHoc.map((g) => (
       <details class="ns">

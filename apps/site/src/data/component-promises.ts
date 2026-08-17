@@ -343,10 +343,24 @@ export interface AdHocGroup {
 }
 
 /**
- * Hooks a component reads but no token file declares. These WORK — the inline
- * fallback carries them, and SPEC.md permits the pattern — but they are absent
- * from the declared surface, so nothing but the component's own source records
- * that they exist. The opposite failure to a gap: under-promised, not over.
+ * Hooks a component reads but no token file declares. The opposite failure to a
+ * gap: under-promised, not over.
+ *
+ * THIS USED TO SAY "SPEC.md permits the pattern". It does not, and never did —
+ * its only mention of ad-hoc (§ "When a property earns a hook") gives two
+ * dispositions and no third: *"`ad-hoc` rows are candidates to either promote
+ * into `component-tokens.css` or fold away."* Both terminal. The permission was
+ * read into the spec here, and repeated in two debug views and in
+ * component-tokens.css's own HOOKIFY header, until it read as a fourth tier.
+ *
+ * There are three. An undeclared read is a tier-3 token missing its declaration:
+ * a component-scoped name in the component-theming slot, absent from the file a
+ * spoke author opens and from token-names.json, so no guard protects it and
+ * nothing outside the component's own source records that it exists.
+ *
+ * Resolved to zero on 2026-08-16 — 9 declared, 24 folded. This list is now a
+ * ratchet, not an inventory: a row appearing means someone added an undeclared
+ * read, and it wants one of the same two answers.
  */
 export const adHoc: AdHocGroup[] = Object.entries(themingSurface)
   .map(([slug, hooks]) => ({

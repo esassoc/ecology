@@ -87,10 +87,10 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`, `typog
 <style>
   .esa-avatar {
     --_avatar-size: var(--avatar-size-md, 40px);
-    /* Public so initials type can be re-pointed per instance. Each size rule
-       below repeats the hook with its own literal, so an override wins whichever
-       size is active rather than only at md. */
-    --_avatar-font-size: var(--avatar-font-size, var(--typography-label-md-strong-font-size, var(--font-size-200, 0.9375rem)));
+    /* Public so initials type can be re-pointed per instance — one hook per rung,
+       mirroring --avatar-size-*. Each size rule below reads its own, so an
+       override wins whichever size is active rather than only at md. */
+    --_avatar-font-size: var(--avatar-font-size-md, var(--typography-label-md-strong-font-size, var(--font-size-200, 0.9375rem)));
     --_avatar-radius: var(--radius-pill, 9999px);
     --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
     --_avatar-text: var(--color-content-default-knockout, #fcfcfc);
@@ -104,8 +104,8 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`, `typog
     background: var(--_avatar-bg);
     color: var(--_avatar-text);
     /* The rest of the type comes from .typography-*-strong on this element. Only
-       font-size stays, because --avatar-font-size is public and esa-header-nav
-       sets it — the composite token is its fallback, one rung per size below. */
+       font-size stays, because --avatar-font-size-* is public and esa-header-nav
+       sets the sm rung — the composite token is its fallback, one per size below. */
     font-size: var(--_avatar-font-size);
     overflow: hidden;
     flex-shrink: 0;
@@ -113,9 +113,9 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`, `typog
     box-sizing: border-box;
   }
 
-  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size, var(--typography-label-2xs-strong-font-size, var(--font-size-050, 0.625rem))); }
-  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, var(--typography-label-xs-strong-font-size, var(--font-size-100, 0.75rem))); }
-  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, var(--typography-title-font-size, var(--font-size-400, 1.25rem))); }
+  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size-xs, var(--typography-label-2xs-strong-font-size, var(--font-size-050, 0.625rem))); }
+  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size-sm, var(--typography-label-xs-strong-font-size, var(--font-size-100, 0.75rem))); }
+  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size-lg, var(--typography-title-font-size, var(--font-size-400, 1.25rem))); }
 
   .esa-avatar--square { --_avatar-radius: var(--radius-md, 0.5rem); }
 

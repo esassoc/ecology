@@ -408,7 +408,7 @@ export class EsaButtonToggle extends LitElement {
        survives; what disappears is the SELECTED segment, whose whole treatment is
        a background, a colour and a 1px shadow.
 
-       Highlight/HighlightText rather than a border, deliberately. `.option` is
+       Highlight/HighlightText rather than a border, deliberately. '.option' is
        intrinsically sized inside a fit-content flex row, so a border on
        --selected alone would make that one segment 2px larger and shove its
        siblings sideways on every selection change; reserving the border on the

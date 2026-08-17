@@ -159,6 +159,15 @@ export class EsaRangeSlider extends LitElement {
     .input {
       width: 100%;
       height: var(--_thumb-size);
+      /* TARGET-SIZE FLOOR — WCAG 2.2 SC 2.5.8 (AA). The element is as tall as the
+         thumb: 14/16/20px at xs/sm/md, all under the floor. The thumb itself is
+         drawn by the UA via ::-webkit-slider-thumb and friends, and 2.5.8 exempts a
+         UA-DETERMINED size — but this kit sizes the thumb itself, so the exemption
+         does not apply and the number is ours to answer for. Raising the input's own
+         box widens the draggable strip without redrawing the thumb, which is the
+         cheap half of the fix; a thumb that is itself 24px is a design change and is
+         out of scope for a token. Inert until the profile is set. */
+      min-block-size: var(--target-size-min, 0px);
       margin: 0;
       appearance: none;
       -webkit-appearance: none;
@@ -234,7 +243,7 @@ export class EsaRangeSlider extends LitElement {
     }
 
     /* FORCED COLORS. This is the kit's ONLY gradient, and it is the value fill —
-       non-url() background-image is forced to `none`, so the slider would read as
+       non-url() background-image is forced to 'none', so the slider would read as
        empty at every position. The thumb survives on its own (real 2px border).
 
        The track opts OUT and re-states the fill in system colours, rather than
@@ -247,7 +256,7 @@ export class EsaRangeSlider extends LitElement {
        Gecko splits the same job across two pseudo-elements (-moz-range-track is
        the trough, -moz-range-progress the fill), so it needs no gradient at all.
 
-       The `forced-color-adjust: none` on a UA pseudo-element is the part of this
+       The 'forced-color-adjust: none' on a UA pseudo-element is the part of this
        file to re-check in a real contrast theme. If it does not take, the fill is
        lost but the component still reports its value: showValue defaults to true
        and .value is real text. That fallback is why this is safe to ship. */

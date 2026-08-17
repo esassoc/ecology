@@ -1,0 +1,869 @@
+---
+/*
+ * The theme maker — six brand decisions in, a complete two-scheme theme out.
+ *
+ * THIS PAGE IS THE DOCUMENTED EXCEPTION to "the site ships zero client JS" (see
+ * astro.config.mjs). Everything else here is a specimen, and a specimen is better as
+ * static HTML. This is a tool: the whole value is watching the kit re-skin while you
+ * move a colour, and grading contrast on values that do not exist until you pick them.
+ *
+ * It runs the SAME derivation the CLI runs — scripts/lib/theme-recipe.mjs, aliased to
+ * @theme — so what you see is what make-theme.mjs writes. A preview with its own copy
+ * of the logic is a preview that eventually lies.
+ */
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Section from '@esa/docs/Section.astro';
+import { withBase } from '@esa/docs/base';
+
+import Button from '@esa/ecology/esa-button.astro';
+import Badge from '@esa/ecology/esa-badge.astro';
+import Card from '@esa/ecology/esa-card.astro';
+
+const NEUTRALS = [
+  { value: 'pure', label: 'Pure', hint: 'Radix gray — no tint' },
+  { value: 'cool', label: 'Cool', hint: 'Radix slate — blue-leaning' },
+  { value: 'warm', label: 'Warm', hint: 'Radix sand — yellow-leaning' },
+];
+const CORNERS = [
+  { value: 'flat', label: 'Flat', hint: '0 / 2 / 4 / 8px' },
+  { value: 'soft', label: 'Soft', hint: '2 / 4 / 8 / 12px — the hub default' },
+  { value: 'round', label: 'Round', hint: '4 / 8 / 12 / 16px' },
+];
+---
+
+<DocsLayout title="Theme maker — Ecology" activeHref="/guide/theme-maker">
+  <nav class="crumbs">
+    <a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span>
+    <span>Theme maker</span>
+  </nav>
+  <h1>Theme maker</h1>
+  <p class="lede">
+    Pick a brand colour, a neutral temperature and a corner language. Everything else —
+    two twelve-step ramps, the whole neutral chain, both schemes, and all eight
+    <code>--color-content-on-*</code> foregrounds — is derived and checked against WCAG AA
+    before you see it. The output is a recipe you can hand to
+    <code>create-spoke</code>.
+  </p>
+
+  <Section id="why" title="Why a generator rather than a form">
+    <p>
+      The interesting part is not the colour picker. It is that a hand-filled theme has
+      never once declared the eight <code>--color-content-on-*</code> foregrounds — the
+      spoke template offers no slots for them, and the contrast gate blocks on all eight.
+      That is why <code>beacon</code> fails
+      <code>content-on-brand-secondary</code> at 3.64:1, and why the hub's own defaults
+      fail seven pairs today. Choosing a foreground that reads on the fill you just
+      generated is the job here; the swatches are incidental.
+    </p>
+    <p>
+      Your exact brand hex lands on <strong>step 9</strong> of the generated ramp and is
+      copied through untouched. The other eleven steps are interpolated in OKLCH along the
+      lightness and chroma curve of the nearest Radix ramp, so they inherit that ramp's
+      tuning without approximating your colour.
+    </p>
+  </Section>
+
+  <Section id="seeds" title="Seeds">
+    <form id="seed-form" class="seeds" novalidate>
+      <div class="field">
+        <label for="slug">Spoke slug</label>
+        <input id="slug" name="slug" type="text" value="acme" spellcheck="false"
+               pattern="[a-z][a-z0-9-]*" />
+        <p class="hint">Lowercase; becomes <code>[data-theme="…"]</code> and the file name.</p>
+      </div>
+
+      <div class="field">
+        <label for="brand">Brand colour</label>
+        <esa-color-picker id="brand" value="#1f7a6d" label="Brand colour" size="md"></esa-color-picker>
+        <p class="hint" id="brand-hint">The exact hex lands on step 9.</p>
+      </div>
+
+      <fieldset class="field">
+        <legend>Neutral temperature</legend>
+        <div class="choices" data-choice="neutral">
+          {NEUTRALS.map((n) => (
+            <label class="choice">
+              <input type="radio" name="neutral" value={n.value} checked={n.value === 'pure'} />
+              <span class="choice-label">{n.label}</span>
+              <span class="choice-hint">{n.hint}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>Corner language</legend>
+        <div class="choices" data-choice="corners">
+          {CORNERS.map((c) => (
+            <label class="choice">
+              <input type="radio" name="corners" value={c.value} checked={c.value === 'soft'} />
+              <span class="choice-label">{c.label}</span>
+              <span class="choice-hint">{c.hint}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <details class="more">
+        <summary>Fonts and the non-brand intentions</summary>
+        <p class="hint">
+          Leave any of these empty to keep the hub default. Status colours are deliberately
+          <strong>not</strong> derived from your brand hue — a green brand must not make
+          <code>danger</code> green.
+        </p>
+        <div class="field">
+          <label for="fontSans">Sans stack</label>
+          <input id="fontSans" name="fontSans" type="text" spellcheck="false"
+                 placeholder="'DM Sans', system-ui, sans-serif" />
+        </div>
+        <div class="field">
+          <label for="fontMono">Mono stack</label>
+          <input id="fontMono" name="fontMono" type="text" spellcheck="false"
+                 placeholder="'DM Mono', ui-monospace, monospace" />
+        </div>
+        <div class="swatch-seeds">
+          {[
+            ['accent', 'Accent', '#f76b15'],
+            ['ai', 'AI', '#a18072'],
+            ['info', 'Info', '#0090ff'],
+            ['success', 'Success', '#bdee63'],
+            ['warning', 'Warning', '#ffc53d'],
+            ['danger', 'Danger', '#e5484d'],
+          ].map(([key, label, fallback]) => (
+            <label class="swatch-seed">
+              <span>{label}</span>
+              <input type="color" name={key} value={fallback} data-default={fallback} />
+              <button type="button" class="reset" data-reset={key} title={`Reset ${label} to the hub default`}>reset</button>
+            </label>
+          ))}
+        </div>
+      </details>
+    </form>
+  </Section>
+
+  <Section id="preview" title="Preview">
+    <p class="hint">
+      Scoped to this container, not the page — the docs chrome around it stays put so you
+      can still read while you edit. Custom properties inherit through shadow boundaries,
+      so the web components below pick them up with no per-component wiring.
+    </p>
+    <div class="preview-toolbar">
+      <label class="inline">
+        <input type="checkbox" id="preview-dark" />
+        <span>Show the dark scheme</span>
+      </label>
+    </div>
+
+    <div id="theme-preview" class="preview">
+      <div class="preview-page">
+        <div class="preview-head">
+          <strong class="preview-title">Reach assessment</strong>
+          <span class="preview-sub">Sacramento&ndash;San Joaquin Delta</span>
+        </div>
+
+        <div class="preview-row">
+          <Button variant="primary">Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="ghost">Ghost</Button>
+        </div>
+
+        <div class="preview-row">
+          <Badge variant="info">Info</Badge>
+          <Badge variant="success">Success</Badge>
+          <Badge variant="warning">Warning</Badge>
+          <Badge variant="danger">Danger</Badge>
+          <Badge variant="brand">Brand</Badge>
+        </div>
+
+        <Card>
+          <p class="preview-card-title">Survey 2026-03</p>
+          <p class="preview-card-body">
+            Flows were within the modelled envelope for eleven of twelve reaches. The
+            twelfth is <a href="#preview">flagged for review</a>.
+          </p>
+        </Card>
+
+        <div class="preview-well">
+          <label class="preview-label" for="preview-input">Reach identifier</label>
+          <input id="preview-input" class="preview-input" type="text" value="DLT-114" />
+          <p class="preview-help">A sunken well, a field, and a link — the surfaces most themes get wrong.</p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <Section id="contrast" title="Contrast">
+    <p class="hint">
+      The same 29 pairs <code>check-contrast.mjs</code> gates on, resolved through the same
+      reader. A <strong>fail</strong> here is a fail in CI.
+    </p>
+    <p id="contrast-summary" class="contrast-summary">…</p>
+    <div id="contrast-rows" class="contrast-rows"></div>
+  </Section>
+
+  <Section id="derived" title="Derived values">
+    <p class="hint">
+      Everything the seeds produced. Edit any value to <strong>pin</strong> it — pins are
+      recorded in the recipe and applied last, so regenerating never clobbers them. Reset a
+      pin to hand the value back to the generator.
+    </p>
+    <div id="derived-groups" class="derived-groups"></div>
+  </Section>
+
+  <Section id="output" title="Output">
+    <div class="output-actions">
+      <button type="button" id="copy-css" class="action">Copy CSS</button>
+      <button type="button" id="download-recipe" class="action">Download recipe JSON</button>
+      <button type="button" id="download-css" class="action">Download CSS</button>
+      <span id="copy-status" class="copy-status" role="status"></span>
+    </div>
+    <p class="hint">
+      Save the recipe as <code id="recipe-name">theme-acme.json</code>, then either
+      regenerate any time —
+    </p>
+    <pre><code>node scripts/make-theme.mjs --recipe theme-acme.json --out ../acme-design/src/styles</code></pre>
+    <p class="hint">— or scaffold a whole spoke from it:</p>
+    <pre><code>node scripts/create-spoke.mjs --name Acme --slug acme --dir acme-design --theme theme-acme.json</code></pre>
+    <details class="more">
+      <summary>The generated CSS</summary>
+      <pre class="css-out"><code id="css-out">…</code></pre>
+    </details>
+  </Section>
+</DocsLayout>
+
+<style>
+  .seeds {
+    display: grid;
+    gap: var(--spacing-500, 1.25rem);
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    align-items: start;
+  }
+  .seeds > .more { grid-column: 1 / -1; }
+
+  .field { display: grid; gap: var(--spacing-200, 0.5rem); border: 0; padding: 0; margin: 0; min-width: 0; }
+  .field > label,
+  .field > legend {
+    font: inherit;
+    font-weight: 600;
+    color: var(--color-content-default);
+    padding: 0;
+  }
+  .field input[type='text'] {
+    font: inherit;
+    color: var(--color-content-default);
+    background: var(--color-background-field, transparent);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-250, 0.625rem) var(--spacing-300, 0.75rem);
+    min-width: 0;
+  }
+  .field input[type='text']:focus-visible {
+    outline: 2px solid var(--color-border-default-focus);
+    outline-offset: 1px;
+  }
+  .hint {
+    color: var(--color-content-default-secondary);
+    margin: 0;
+  }
+
+  .choices { display: grid; gap: var(--spacing-100, 0.25rem); }
+  /* The whole row is the target, label and hint included — a radio dot is not a
+     reasonable thing to ask anyone to hit. */
+  .choice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 var(--spacing-250, 0.625rem);
+    align-items: baseline;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-250, 0.625rem);
+    border: 1px solid var(--color-border-default-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    min-block-size: var(--target-size-min, 0);
+  }
+  .choice:hover { background: var(--color-background-default-hover); }
+  .choice:has(input:checked) {
+    border-color: var(--color-border-brand);
+    background: var(--color-background-brand-subtle);
+  }
+  .choice:has(input:focus-visible) {
+    outline: 2px solid var(--color-border-default-focus);
+    outline-offset: 1px;
+  }
+  .choice-label { font-weight: 600; }
+  .choice-hint {
+    grid-column: 2;
+    color: var(--color-content-default-secondary);
+    font-size: 0.875em;
+  }
+
+  .swatch-seeds {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--spacing-300, 0.75rem);
+    margin-block-start: var(--spacing-400, 1rem);
+  }
+  .swatch-seed {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-250, 0.625rem);
+    min-block-size: var(--target-size-min, 0);
+  }
+  .swatch-seed > span { flex: 1; }
+  .swatch-seed input[type='color'] {
+    inline-size: 2.5rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: none;
+  }
+  .reset,
+  .action {
+    font: inherit;
+    font-size: 0.875em;
+    color: var(--color-content-brand);
+    background: none;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-100, 0.25rem) var(--spacing-250, 0.625rem);
+    cursor: pointer;
+    min-block-size: var(--target-size-min, 0);
+  }
+  .action { font-size: 1em; padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem); }
+  .reset:hover, .action:hover { background: var(--color-background-default-hover); }
+
+  .more > summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: var(--spacing-200, 0.5rem) 0;
+    min-block-size: var(--target-size-min, 0);
+  }
+
+  /* --- preview ------------------------------------------------------------ */
+
+  .preview-toolbar { margin-block-end: var(--spacing-300, 0.75rem); }
+  .inline { display: inline-flex; gap: var(--spacing-200, 0.5rem); align-items: center; cursor: pointer; min-block-size: var(--target-size-min, 0); }
+
+  /* The scoping boundary. Every generated custom property is set on THIS element, so
+     it and its descendants re-skin while the surrounding docs page does not. */
+  .preview {
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    color-scheme: light;
+  }
+  .preview[data-preview-scheme='dark'] { color-scheme: dark; }
+  .preview-page {
+    background: var(--color-background-default);
+    color: var(--color-content-default);
+    padding: var(--spacing-600, 1.5rem);
+    display: grid;
+    gap: var(--spacing-500, 1.25rem);
+  }
+  .preview-head { display: grid; gap: var(--spacing-100, 0.25rem); }
+  .preview-title { font-size: 1.25rem; }
+  .preview-sub { color: var(--color-content-default-secondary); }
+  .preview-row { display: flex; flex-wrap: wrap; gap: var(--spacing-300, 0.75rem); align-items: center; }
+  .preview-card-title { font-weight: 600; margin: 0 0 var(--spacing-200, 0.5rem); }
+  .preview-card-body { margin: 0; color: var(--color-content-default-secondary); }
+  .preview-card-body a { color: var(--color-content-link); }
+  .preview-well {
+    background: var(--color-background-elevation-sunken);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-400, 1rem);
+    display: grid;
+    gap: var(--spacing-200, 0.5rem);
+  }
+  .preview-label { font-weight: 600; }
+  .preview-input {
+    font: inherit;
+    color: var(--color-content-default);
+    background: var(--color-background-field, transparent);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-250, 0.625rem) var(--spacing-300, 0.75rem);
+  }
+  .preview-help { margin: 0; color: var(--color-content-default-secondary); font-size: 0.875em; }
+
+  /* --- contrast ----------------------------------------------------------- */
+
+  .contrast-summary { font-weight: 600; }
+  .contrast-summary[data-state='fail'] { color: var(--color-content-utility-danger); }
+  .contrast-summary[data-state='pass'] { color: var(--color-content-utility-success); }
+  .contrast-rows { display: grid; gap: var(--spacing-100, 0.25rem); }
+  .crow {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr auto;
+    gap: var(--spacing-300, 0.75rem);
+    align-items: center;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-250, 0.625rem);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-default-subtle);
+  }
+  .crow-chip {
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-100, 0.25rem);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .crow-names { font-family: var(--typography-font-family-mono, monospace); font-size: 0.8125rem; word-break: break-word; }
+  .crow-ratio { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .crow[data-level='fail'] { border-color: var(--color-border-utility-danger); background: var(--color-background-utility-danger-subtle); }
+  .crow[data-level='warn'] { border-color: var(--color-border-utility-warning); background: var(--color-background-utility-warning-subtle); }
+
+  /* --- derived ------------------------------------------------------------ */
+
+  .derived-groups { display: grid; gap: var(--spacing-300, 0.75rem); }
+  .dgroup > summary { cursor: pointer; font-weight: 600; padding: var(--spacing-250, 0.625rem) 0; min-block-size: var(--target-size-min, 0); }
+  .drow {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1.6fr) minmax(0, 1fr) auto;
+    gap: var(--spacing-250, 0.625rem);
+    align-items: center;
+    padding: var(--spacing-100, 0.25rem) 0;
+  }
+  .dswatch { inline-size: 1.5rem; block-size: 1.5rem; border-radius: var(--radius-xs); border: 1px solid var(--color-border-default); }
+  .dname { font-family: var(--typography-font-family-mono, monospace); font-size: 0.8125rem; word-break: break-all; }
+  .dvalue {
+    font: inherit;
+    font-family: var(--typography-font-family-mono, monospace);
+    font-size: 0.8125rem;
+    color: var(--color-content-default);
+    background: var(--color-background-field, transparent);
+    border: 1px solid var(--color-border-default-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+    min-inline-size: 0;
+  }
+  .drow[data-pinned='true'] .dvalue { border-color: var(--color-border-brand); background: var(--color-background-brand-subtle); }
+  .dpin { font-size: 0.75rem; color: var(--color-content-default-muted); }
+  .drow[data-pinned='true'] .dpin { color: var(--color-content-brand); font-weight: 600; }
+
+  .output-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-300, 0.75rem); align-items: center; margin-block-end: var(--spacing-400, 1rem); }
+  .copy-status { color: var(--color-content-utility-success); font-weight: 600; }
+  .css-out { max-block-size: 30rem; overflow: auto; }
+
+  .warnings { display: grid; gap: var(--spacing-200, 0.5rem); margin-block-start: var(--spacing-300, 0.75rem); }
+  .warn-row { padding: var(--spacing-250, 0.625rem); border-radius: var(--radius-sm); }
+  .warn-row[data-level='fail'] { background: var(--color-background-utility-danger-subtle); color: var(--color-content-utility-danger); }
+  .warn-row[data-level='info'] { background: var(--color-background-utility-info-subtle); color: var(--color-content-utility-info); }
+</style>
+
+<script>
+  import '@esa/ecology/esa-color-picker';
+
+  import { deriveTheme, emitCss } from '@theme/theme-recipe.mjs';
+  import { PAIRS, auditPairs, parseDeclarations } from '@theme/contrast.mjs';
+  import { toHex } from '@theme/color.mjs';
+
+  /*
+   * The token graph the grading runs against needs the HUB DEFAULTS underneath the
+   * generated theme — check-contrast.mjs reads dist/tokens.css for exactly this, and
+   * several PAIRS rows name pre-rename tokens that only resolve through the aliases in
+   * that file. Rather than ship a copy, read the stylesheets the page has already
+   * loaded: @esa/tokens is one of them.
+   *
+   * Same-origin only, and wrapped, because a cross-origin sheet throws on .cssRules.
+   * If this comes up empty the grading would silently under-resolve, which auditPairs
+   * reports as `underResolved` rather than as a pass — the one thing that must never
+   * look clean.
+   */
+  function hubTokenCss(): string {
+    let css = '';
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        for (const rule of Array.from(sheet.cssRules)) {
+          const text = rule.cssText;
+          // :root and the assurance/scheme scopes; parseDeclarations does the filtering.
+          if (/^(:root|html|\[data-)/.test(text)) css += text + '\n';
+        }
+      } catch {
+        /* cross-origin sheet — nothing to read, and nothing we need */
+      }
+    }
+    return css;
+  }
+
+  const baseCss = hubTokenCss();
+
+  /*
+   * THE ALIAS RE-DECLARATION, and the preview is wrong without it.
+   *
+   * A custom property whose value contains var() is substituted at COMPUTED-VALUE TIME
+   * ON THE ELEMENT THAT DECLARES IT. `--button-radius-md: var(--radius-md)` is declared
+   * on :root, so it resolves there, to the hub's 8px, and inherits down as the literal
+   * 8px. Re-pointing --radius-md on a descendant container cannot reach back and change
+   * it: the substitution already happened.
+   *
+   * That is not a corner case — 631 of the 1,187 shipped declarations contain a var(),
+   * which is the entire tier-3 surface plus every typography composite. Without this the
+   * preview would move the roles and leave every component reading a hook exactly where
+   * it was, and "corners: round" would visibly do nothing to a button.
+   *
+   * So every aliasing declaration is re-declared on the container, where its var() chain
+   * re-resolves against the generated values. Literal declarations are left alone —
+   * re-stating them would be a no-op with a cost.
+   *
+   * A spoke does not need any of this: its theme block IS at :root, so substitution
+   * happens after the override, once, for free. This is the price of previewing a
+   * :root-scoped mechanism inside a page that must not itself change.
+   */
+  function aliasesFor(scheme: string): [string, string][] {
+    const m = new Map<string, string>();
+    parseDeclarations(baseCss, m, { scheme });
+    return [...m].filter(([, v]) => v.includes('var('));
+  }
+  const ALIASES: Record<string, [string, string][]> = {
+    light: aliasesFor('light'),
+    dark: aliasesFor('dark'),
+  };
+
+  type Recipe = {
+    slug: string;
+    seeds: Record<string, string>;
+    pinned: Record<string, string>;
+    pinnedDark: Record<string, string>;
+  };
+
+  const state: Recipe = {
+    slug: 'acme',
+    seeds: { brand: '#1f7a6d', neutral: 'pure', corners: 'soft' },
+    pinned: {},
+    pinnedDark: {},
+  };
+
+  const $ = <T extends Element>(sel: string) => document.querySelector(sel) as T;
+  const preview = $<HTMLElement>('#theme-preview');
+  const previewDark = $<HTMLInputElement>('#preview-dark');
+
+  /** Which scheme the preview, the grading and the derived list are showing. */
+  const activeScheme = () => (previewDark.checked ? 'dark' : 'light');
+
+  let latest: ReturnType<typeof deriveTheme> | null = null;
+  let latestCss = '';
+
+  // --- render ---------------------------------------------------------------
+
+  function render() {
+    let derived;
+    try {
+      derived = deriveTheme({
+        slug: state.slug || 'theme',
+        seeds: state.seeds,
+        pinned: state.pinned,
+        pinnedDark: state.pinnedDark,
+      });
+    } catch (e) {
+      $<HTMLElement>('#contrast-summary').dataset.state = 'fail';
+      $<HTMLElement>('#contrast-summary').textContent = String((e as Error).message);
+      return;
+    }
+    latest = derived;
+    latestCss = emitCss(derived);
+
+    applyPreview(derived);
+    renderContrast(derived);
+    renderDerived(derived);
+
+    $<HTMLElement>('#css-out').textContent = latestCss;
+    $<HTMLElement>('#recipe-name').textContent = `theme-${derived.meta.slug}.json`;
+    $<HTMLElement>('#brand-hint').textContent =
+      `${derived.meta.seeds.brand} lands on step 9 — interpolated along the Radix ${derived.meta.brandScale} curve.`;
+  }
+
+  /*
+   * Write every generated property onto the preview CONTAINER.
+   *
+   * Not documentElement: editing a brand colour should not re-skin the page you are
+   * reading it on. A container works because custom properties inherit, and inheritance
+   * is the one channel that crosses a shadow boundary in every engine — so the esa-*
+   * web components inside pick these up with no per-component wiring.
+   *
+   * Properties from the PREVIOUS render are cleared first. Without that, switching a
+   * seed that stops producing some token (a font stack emptied, say) would leave the old
+   * value stuck on the element with nothing to overwrite it.
+   */
+  let applied: string[] = [];
+  let aliasScheme: string | null = null;
+  function applyPreview(derived: ReturnType<typeof deriveTheme>) {
+    for (const name of applied) preview.style.removeProperty(name);
+    applied = [];
+    const scheme = activeScheme();
+
+    // The aliases only change when the SCHEME changes, and there are hundreds of them,
+    // so they are not rewritten on every keystroke. They are also not in `applied`:
+    // clearing them would leave the components reading :root again for one frame.
+    if (aliasScheme !== scheme) {
+      for (const [name, value] of ALIASES[scheme]) preview.style.setProperty(name, value);
+      aliasScheme = scheme;
+    }
+
+    // The light block is the base in both schemes — dark only re-points colours, and
+    // shape and type are declared once, in light.
+    const maps = scheme === 'dark' ? [derived.light, derived.dark] : [derived.light];
+    for (const map of maps) {
+      for (const [name, value] of map) {
+        preview.style.setProperty(name, value);
+        applied.push(name);
+      }
+    }
+    preview.dataset.previewScheme = scheme;
+  }
+
+  // --- contrast -------------------------------------------------------------
+
+  function renderContrast(derived: ReturnType<typeof deriveTheme>) {
+    const map = new Map<string, string>();
+    parseDeclarations(baseCss, map, { scheme: activeScheme() });
+    for (const [k, v] of derived.light) map.set(k, v);
+    if (activeScheme() === 'dark') for (const [k, v] of derived.dark) map.set(k, v);
+
+    const { rows, manual, checked, failures, underResolved } = auditPairs(map);
+
+    const summary = $<HTMLElement>('#contrast-summary');
+    if (underResolved) {
+      // An audit that resolved almost nothing is BROKEN, not clean — never render it green.
+      summary.dataset.state = 'fail';
+      summary.textContent =
+        `Only ${checked}/${PAIRS.length} pairs resolved — this grading is not reporting on your theme.`;
+    } else if (failures) {
+      summary.dataset.state = 'fail';
+      summary.textContent = `${failures} AA failure${failures === 1 ? '' : 's'} of ${checked} pairs checked (${activeScheme()}).`;
+    } else {
+      summary.dataset.state = 'pass';
+      summary.textContent = `All ${checked} pairs pass AA (${activeScheme()}).`;
+    }
+
+    const host = $<HTMLElement>('#contrast-rows');
+    host.textContent = '';
+
+    // Failures and warnings first — a list where you have to hunt for the red is a list
+    // nobody reads to the end.
+    const shown = rows.filter((r) => !r.ok).sort((a, b) => (a.level === b.level ? 0 : a.level === 'fail' ? -1 : 1));
+    for (const r of shown) host.append(contrastRow(r));
+    for (const m of manual) {
+      const el = document.createElement('div');
+      el.className = 'crow';
+      el.dataset.level = 'warn';
+      el.innerHTML = `<span class="crow-chip">?</span><span class="crow-names"></span><span class="crow-ratio">manual</span>`;
+      el.querySelector('.crow-names')!.textContent = m.text;
+      host.append(el);
+    }
+    if (!shown.length && !manual.length) {
+      const el = document.createElement('p');
+      el.className = 'hint';
+      el.textContent = 'Nothing to report — every pair clears its threshold.';
+      host.append(el);
+    }
+
+    renderWarnings(derived, host);
+  }
+
+  function contrastRow(r: { fg: string; bg: string; min: number; level: string; ratio: number; fgRgb: number[]; bgRgb: number[] }) {
+    const el = document.createElement('div');
+    el.className = 'crow';
+    el.dataset.level = r.level;
+    const chip = document.createElement('span');
+    chip.className = 'crow-chip';
+    chip.style.background = toHex(r.bgRgb);
+    chip.style.color = toHex(r.fgRgb);
+    chip.textContent = 'Aa';
+    const names = document.createElement('span');
+    names.className = 'crow-names';
+    names.textContent = `${r.fg} on ${r.bg}`;
+    const ratio = document.createElement('span');
+    ratio.className = 'crow-ratio';
+    ratio.textContent = `${r.ratio.toFixed(2)}:1 / ${r.min}`;
+    el.append(chip, names, ratio);
+    return el;
+  }
+
+  function renderWarnings(derived: ReturnType<typeof deriveTheme>, host: HTMLElement) {
+    const ws = derived.warnings.filter((w) => w.scheme === activeScheme());
+    if (!ws.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'warnings';
+    for (const w of ws) {
+      const el = document.createElement('div');
+      el.className = 'warn-row';
+      el.dataset.level = w.level;
+      el.textContent = `${w.role} — ${w.message}`;
+      wrap.append(el);
+    }
+    host.append(wrap);
+  }
+
+  // --- derived list ---------------------------------------------------------
+
+  const GROUPS: [string, RegExp][] = [
+    ['Spoke ramps', /^--[a-z0-9-]+-(gray|brand)-\d+$/],
+    ['Surfaces and neutrals', /^--color-(background-default|background-elevation|background-disabled|content-default|content-disabled|border-default|border-disabled)/],
+    ['Brand', /^--color-(background-brand|content-brand|content-on-brand|border-brand)/],
+    ['Utility, accent and AI', /^--color-(background-(utility|accent|ai)|content-(utility|ai)|content-on-(utility|accent|ai)|border-utility)/],
+    ['Shape and type', /^--(radius|typography)-/],
+  ];
+
+  function renderDerived(derived: ReturnType<typeof deriveTheme>) {
+    const scheme = activeScheme();
+    const map = scheme === 'dark' ? derived.dark : derived.light;
+    const pins = scheme === 'dark' ? state.pinnedDark : state.pinned;
+    const host = $<HTMLElement>('#derived-groups');
+
+    // Preserve which groups the reader had open — re-rendering on every keystroke
+    // otherwise snaps them all shut mid-edit.
+    const open = new Set(
+      Array.from(host.querySelectorAll('details[open]')).map((d) => (d as HTMLElement).dataset.group!),
+    );
+    host.textContent = '';
+
+    const seen = new Set<string>();
+    for (const [title, re] of GROUPS) {
+      const entries = [...map].filter(([name]) => re.test(name));
+      entries.forEach(([name]) => seen.add(name));
+      if (!entries.length) continue;
+      host.append(group(title, entries, pins, open.has(title)));
+    }
+    const rest = [...map].filter(([name]) => !seen.has(name));
+    if (rest.length) host.append(group('Everything else', rest, pins, open.has('Everything else')));
+  }
+
+  function group(title: string, entries: [string, string][], pins: Record<string, string>, isOpen: boolean) {
+    const d = document.createElement('details');
+    d.className = 'dgroup';
+    d.dataset.group = title;
+    d.open = isOpen;
+    const s = document.createElement('summary');
+    const pinned = entries.filter(([n]) => n in pins).length;
+    s.textContent = `${title} — ${entries.length}${pinned ? ` (${pinned} pinned)` : ''}`;
+    d.append(s);
+
+    for (const [name, value] of entries) {
+      const row = document.createElement('div');
+      row.className = 'drow';
+      row.dataset.pinned = String(name in pins);
+
+      const sw = document.createElement('span');
+      sw.className = 'dswatch';
+      // A var() chain has no colour of its own to show; resolve it against the preview,
+      // which already has every generated property set on it.
+      sw.style.background = value.startsWith('var(')
+        ? getComputedStyle(preview).getPropertyValue(value.slice(4, -1).trim()).trim() || 'transparent'
+        : value;
+
+      const label = document.createElement('span');
+      label.className = 'dname';
+      label.textContent = name;
+
+      const input = document.createElement('input');
+      input.className = 'dvalue';
+      input.value = value;
+      input.setAttribute('aria-label', `Value for ${name}`);
+      input.addEventListener('change', () => {
+        const v = input.value.trim();
+        if (v && v !== value) pins[name] = v;
+        else delete pins[name];
+        render();
+      });
+
+      const pin = document.createElement('span');
+      pin.className = 'dpin';
+      pin.textContent = name in pins ? 'pinned' : 'derived';
+
+      row.append(sw, label, input, pin);
+      d.append(row);
+    }
+    return d;
+  }
+
+  // --- wiring ---------------------------------------------------------------
+
+  const form = $<HTMLFormElement>('#seed-form');
+
+  form.addEventListener('input', (e) => {
+    const t = e.target as HTMLInputElement;
+    if (t.name === 'slug') state.slug = t.value.trim() || 'theme';
+    else if (t.name === 'neutral' || t.name === 'corners') state.seeds[t.name] = t.value;
+    else if (t.name === 'fontSans' || t.name === 'fontMono') {
+      const v = t.value.trim();
+      if (v) state.seeds[t.name] = v;
+      else delete state.seeds[t.name];
+    } else if (t.type === 'color') {
+      state.seeds[t.name] = t.value;
+    }
+    render();
+  });
+
+  form.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-reset]');
+    if (!btn) return;
+    const key = btn.dataset.reset!;
+    delete state.seeds[key];
+    const input = form.querySelector<HTMLInputElement>(`input[name="${key}"]`);
+    if (input) input.value = input.dataset.default!;
+    render();
+  });
+
+  const brandPicker = $<HTMLElement & { value: string }>('#brand');
+  brandPicker.addEventListener('change', () => {
+    state.seeds.brand = brandPicker.value;
+    render();
+  });
+  // esa-color-picker is form-associated and also fires `input` while dragging.
+  brandPicker.addEventListener('input', () => {
+    state.seeds.brand = brandPicker.value;
+    render();
+  });
+
+  previewDark.addEventListener('change', render);
+
+  // --- output ---------------------------------------------------------------
+
+  function recipeJson() {
+    const r: Record<string, unknown> = {
+      slug: latest!.meta.slug,
+      scope: latest!.meta.scope,
+      seeds: latest!.meta.seeds,
+    };
+    if (Object.keys(state.pinned).length) r.pinned = state.pinned;
+    if (Object.keys(state.pinnedDark).length) r.pinnedDark = state.pinnedDark;
+    return JSON.stringify(r, null, 2) + '\n';
+  }
+
+  function say(msg: string) {
+    const el = $<HTMLElement>('#copy-status');
+    el.textContent = msg;
+    setTimeout(() => {
+      if (el.textContent === msg) el.textContent = '';
+    }, 4000);
+  }
+
+  function download(name: string, text: string, type: string) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+    say(`Downloaded ${name}`);
+  }
+
+  $('#copy-css').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(latestCss);
+      say('CSS copied');
+    } catch {
+      say('Clipboard blocked — use Download CSS');
+    }
+  });
+  $('#download-recipe').addEventListener('click', () =>
+    download(`theme-${latest!.meta.slug}.json`, recipeJson(), 'application/json'),
+  );
+  $('#download-css').addEventListener('click', () =>
+    download(`theme-${latest!.meta.slug}.css`, latestCss, 'text/css'),
+  );
+
+  render();
+</script>

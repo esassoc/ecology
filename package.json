@@ -18,7 +18,13 @@
     "preview": "npm run preview --workspace=@esa/site",
     "deploy": "npm run build:tokens && npm run deploy --workspace=@esa/site",
     "a11y": "node scripts/a11y-audit.mjs",
-    "a11y:live": "node scripts/live-region-audit.mjs"
+    "a11y:live": "node scripts/live-region-audit.mjs",
+    "a11y:targets": "node scripts/check-target-size.mjs",
+    "a11y:assured": "node scripts/check-contrast.mjs --hub --assurance wcag-aa && node scripts/check-target-size.mjs --assurance wcag-aa --scope components --strict && node scripts/a11y-audit.mjs --strict && node scripts/live-region-audit.mjs --strict",
+    "contrast": "node scripts/check-contrast.mjs --hub",
+    "contrast:dark": "node scripts/check-contrast.mjs apps/site/src/styles/docs-dark.css --scheme dark",
+    "theme:make": "node scripts/make-theme.mjs",
+    "theme:curves": "node scripts/gen-radix-curves.mjs"
   },
   "dependencies": {
     "@radix-ui/colors": "^3.0.0"

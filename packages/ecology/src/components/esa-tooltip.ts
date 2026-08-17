@@ -162,7 +162,7 @@ export class EsaTooltip extends LitElement {
       margin-top: -4px;
     }
 
-    /* FORCED COLORS. This file ships no `border:` at all — the tooltip is a dark
+    /* FORCED COLORS. This file ships no 'border:' at all — the tooltip is a dark
        knockout background and a shadow, and the mode flattens the first and
        deletes the second. The ARROW is hidden rather than bordered: it is a
        rotated 8px square, so a border round it renders as a diamond floating

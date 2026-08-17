@@ -734,3 +734,72 @@ values, by hand, because nothing else will. Absent someone willing to own that,
 Never re-point a primitive; never style `.esa-*` internals from a theme. If a
 theme finds itself wanting to move `--radius-200` or `--shadow-blur-300`, the real
 problem is a missing semantic role — add the role, don't move the ingredient.
+
+## Assurance is a SEPARATE AXIS from the theme
+
+`data-theme` is the brand. `data-assurance` is a conformance profile — the
+defaults a project takes on when it has an accessibility obligation (Section 508,
+EN 301 549). They are orthogonal and they compose, because a project is entitled
+to be on-brand **and** assured:
+
+```html
+<html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa">
+```
+
+The profile is authored ONCE, in `src/assurance.css`, and `build.js` appends it to
+`dist/tokens.css`. It is **not** an opt-in import. That is deliberate: spokes
+override 3 of 26 brand-derived roles, so any rule of the form "a spoke must ALSO
+import X" gets forgotten — `focus.css` is the standing proof. The block is inert
+unless the attribute is present, so shipping it always costs nothing.
+
+**A spoke never declares these names itself.** It sets the attribute. If a spoke
+finds itself writing `--target-size-min` into its theme file, the profile is
+missing something and the fix belongs here.
+
+### The thing everyone gets wrong: the profile does NOT beat your theme
+
+`[data-theme="x"]` and `[data-assurance="y"]` have **identical specificity**
+(0,1,0) — a pseudo-class and an attribute selector weigh the same — and a spoke's
+theme stylesheet loads *after* `tokens.css`. So on any role a theme re-points, the
+theme wins, profile or no profile.
+
+This is the right outcome and not a loophole. The hub cannot know a spoke's brand
+ramp, and silently repainting a brand with hub green would be a worse failure than
+the contrast number it fixes. **The teeth are in the gate, not the cascade:**
+
+```bash
+node scripts/check-contrast.mjs src/styles/theme-*.css --assurance wcag-aa
+```
+
+composes them in the browser's own order and fails the spoke whose brand does not
+clear AA. Measured against the demo themes: `beacon` still fails
+`content-on-brand-secondary` at 3.64:1 with the profile on. That failure is the
+feature — it is the spoke being told which of its own colours to darken.
+
+### What may go in a profile, and what may not
+
+A profile is a **token scope**. It re-points values; it cannot add behaviour,
+markup, or a rule inside a shadow root. That boundary is not stylistic:
+`:host-context()` is Chromium-only and `@container style()` is not baseline, so
+**inherited custom properties are the only channel that crosses a shadow boundary
+in every engine** — and 34 of the 66 components live in one. Anything that cannot
+be expressed as a re-pointed token cannot be in a profile at all.
+
+Which means a profile can fix contrast, ring weight, minimum type size and the
+target-size floor, and can fix **none** of: `esa-date-picker`'s missing keyboard
+handling (SC 2.1.1, Level A), the nine popups that return focus nowhere, or any
+forced-colors gap (that overrides at the used-value layer, downstream of every
+token). Those are component fixes. Setting the attribute is a statement about the
+DEFAULTS, never a certificate — `npm run a11y:assured` is what makes it more than
+a promise.
+
+### A size FLOOR is allowed; a size RAMP is still not
+
+`--target-size-min` is the one size token in the system, and it does not reopen
+the question the height ramps closed. The objection that killed `--control-height-*`
+was that a fixed px height cannot grow with its contents, so `esa-text-field`
+clipped rem text under `overflow: hidden` (SC 1.4.4). A `min-block-size` floor has
+the opposite failure mode by construction — it raises the bottom and does nothing
+to the top, so the box still grows. It is also ONE name rather than a four-step
+ramp, so it cannot be used as the density lever the ramps were misused as.
+"Make the controls tighter" is still a `/request-lego`.
