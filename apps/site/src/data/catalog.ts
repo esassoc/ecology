@@ -95,7 +95,15 @@ const CATEGORIES: CategorySpec[] = [
     ['esa-filter-pills', 'Filter Pills'], ['esa-filter-clear-button', 'Filter Clear Button'],
   ] },
   { label: 'Data & Editors', items: [
-    ['esa-grid', 'Data Grid'], ['esa-map', 'Map'], ['esa-rich-text-editor', 'Rich Text Editor'],
+    ['esa-chart', 'Chart'], ['esa-grid', 'Data Grid'], ['esa-rich-text-editor', 'Rich Text Editor'],
+  ] },
+  // Maps earned their own group once esa-map stopped being a lone reference page:
+  // the host plus the three things that mount into it read as a family, and
+  // burying four entries in "Data & Editors" hid the relationship.
+  // Host first — the others are meaningless without it.
+  { label: 'Maps', items: [
+    ['esa-map', 'Map'], ['esa-map-geojson', 'Map GeoJSON Layer'],
+    ['esa-map-marker', 'Map Marker'], ['esa-map-popup', 'Map Popup'],
   ] },
   // Kept LAST on purpose: a deprecated component is still shipped and still
   // documented (spokes need the page to migrate off it), but it must not sit in

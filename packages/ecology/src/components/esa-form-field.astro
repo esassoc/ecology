@@ -123,6 +123,31 @@ const cls = [
   .esa-form-field__help { color: var(--_help-color); }
   .esa-form-field__error { color: var(--_error-color); }
 
+  /* THE FOCUS RING GOES RED FOR WHATEVER IS SLOTTED IN HERE, and re-pointing the token is
+     the only way this component can do it.
+
+     This wrapper does not own its control — it owns a label, a help line, an error line, and
+     a <slot>. Until 2026-08-17 `--error` coloured the error TEXT and nothing else, so the
+     documented usage on this component's own doc page — a native <input> inside a FormField
+     carrying errorText — rendered an invalid field with a BRAND-COLOURED focus ring. The red
+     border in that demo comes from a class in the doc page's own <style> block, not from here.
+
+     A custom property is the one mechanism that reaches slotted content:
+       - Astro scopes this component's selectors to elements in ITS OWN template, and slotted
+         content carries the PARENT's scope, so no descendant selector here can style it;
+       - the slotted thing might be a native <input> (rung by @esa/tokens/focus.css, which
+         reads exactly this token), or an esa-* web component whose ring lives inside a shadow
+         root that no stylesheet can cross.
+     Inherited custom properties solve both at once, and they are the ONLY channel that
+     crosses a shadow boundary in every engine.
+
+     Graded: --form-error-border-color is a `fail`-level row in check-contrast.mjs on all four
+     surfaces — red-9 at 3.43:1 worst, red-11 at 4.57:1 under the assurance profile. See
+     esa-text-field for the full account of the error ring. */
+  .esa-form-field--error {
+    --focus-ring-color: var(--form-error-border-color, #e5484d);
+  }
+
   .esa-form-field--disabled {
     opacity: 0.5;
     pointer-events: none;
