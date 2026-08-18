@@ -43,6 +43,13 @@ import { findMapHost, type LngLat, type MapHost, type MarkerInstance } from '../
  * is the API. `markermove` is emitted because a drag is otherwise unobservable.
  */
 /**
+ * Unique ids for tooltips, so `aria-describedby` resolves to the right one.
+ * A module counter rather than a random string: it stays stable across a render
+ * and is legible when debugging a tree of markers.
+ */
+let tipSeq = 0;
+
+/**
  * Is this node another map component rather than marker content?
  *
  * Tag-prefix based on purpose: it has to cover `esa-map-popup` today and
@@ -61,6 +68,10 @@ export class EsaMapMarker extends LitElement {
     draggable: { type: Boolean },
     selected: { type: Boolean, reflect: true },
     anchor: { type: String },
+    label: { type: String },
+    labelPosition: { type: String, attribute: 'label-position' },
+    tooltip: { type: String },
+    interactive: { type: Boolean },
   };
 
   /** Where the marker sits, `[lng, lat]`. Longitude first, as in GeoJSON. */
@@ -71,11 +82,53 @@ export class EsaMapMarker extends LitElement {
   declare selected: boolean;
   /** Which part of the marker sits on the coordinate. */
   declare anchor: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  /**
+   * A caption rendered beside the pin, always visible.
+   *
+   * A LABEL AND A TOOLTIP ARE NOT THE SAME CONTROL, and choosing by "how much
+   * room do I have" gets it wrong. A label is part of the map's information —
+   * it is readable without interacting, it is there for someone who cannot
+   * hover, and it costs space on every pin whether or not anyone wants it. Use
+   * it when the name IS the point (a few named sites). A tooltip is a
+   * progressive disclosure for a pin whose identity is otherwise a guess.
+   *
+   * The label is rendered and styled by `esa-map`, which owns the shadow root
+   * this ends up in — hand-rolling it as slotted content means writing the
+   * positioning yourself AND discovering that page CSS cannot reach it.
+   */
+  declare label: string;
+  /** Which side of the pin the label sits on. */
+  declare labelPosition: 'bottom' | 'top' | 'left' | 'right';
+  /**
+   * Text shown on hover AND on focus.
+   *
+   * Setting it makes the marker interactive, because a hover-only tooltip is
+   * unreachable by keyboard — SC 2.1.1, Level A. It is also dismissible with
+   * Escape while the pointer stays put, which is the part of SC 1.4.13 that
+   * hand-rolled tooltips almost always miss.
+   */
+  declare tooltip: string;
+  /**
+   * Make the pin a real focus target with `role="button"` and Enter/Space.
+   *
+   * IMPLIED, not usually written: a marker with a `tooltip`, or with a nested
+   * `esa-map-popup`, is interactive by definition and turns this on itself. It
+   * exists as a prop for the marker whose click is handled by the page, which
+   * this component cannot detect — a `click` listener is invisible to it.
+   *
+   * It is NOT applied when slotted content already contains something
+   * focusable: that would nest one interactive control inside another, which
+   * axe flags and screen readers announce as a single confused control. The
+   * author's own button wins.
+   */
+  declare interactive: boolean;
 
   private host: MapHost | null = null;
   private marker: MarkerInstance | null = null;
   /** The element the ENGINE owns and positions. Never this component. */
   private contentEl: HTMLDivElement | null = null;
+  private tipEl: HTMLSpanElement | null = null;
+  private tipVisible = false;
 
   constructor() {
     super();
@@ -83,6 +136,10 @@ export class EsaMapMarker extends LitElement {
     this.draggable = false;
     this.selected = false;
     this.anchor = 'bottom';
+    this.label = '';
+    this.labelPosition = 'bottom';
+    this.tooltip = '';
+    this.interactive = false;
   }
 
   disconnectedCallback(): void {
@@ -158,6 +215,7 @@ export class EsaMapMarker extends LitElement {
       this.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
     });
     this.contentEl = el;
+    this.decorate(el);
     this.syncContentState();
 
     this.marker = new ready.lib.Marker({ element: el, anchor: this.anchor, draggable: this.draggable })
@@ -177,6 +235,134 @@ export class EsaMapMarker extends LitElement {
         }),
       );
     });
+  }
+
+  /**
+   * Add the label, the tooltip, and keyboard access to the engine-owned div.
+   *
+   * All of it goes HERE rather than into slotted content, because this div ends
+   * up in `esa-map`'s shadow root: the host's stylesheet is the only thing that
+   * can style it, and `aria-describedby` only resolves between elements in the
+   * same root. A hand-rolled label is the author writing positioning by hand and
+   * then discovering their CSS does not apply.
+   */
+  private decorate(el: HTMLDivElement): void {
+    if (this.label) {
+      const label = document.createElement('span');
+      label.className =
+        `esa-marker__label esa-marker__label--${this.labelPosition} typography-label-xs`;
+      label.textContent = this.label;
+      /*
+       * Hidden from assistive tech when the pin is interactive, because the
+       * label is already the pin's accessible NAME there — exposing both makes
+       * a screen reader read the place twice. A non-interactive marker is not
+       * announced at all, so the text has to stay in the tree.
+       */
+      if (this.isInteractive()) label.setAttribute('aria-hidden', 'true');
+      el.appendChild(label);
+    }
+
+    if (this.tooltip) {
+      const tip = document.createElement('span');
+      tip.className = 'esa-marker__tip typography-label-xs';
+      tip.id = `esa-marker-tip-${++tipSeq}`;
+      /*
+       * The tooltip text is folded into the pin's NAME rather than referenced
+       * as a description, so it is marked away from assistive tech here.
+       *
+       * A description is the wrong slot for it. `label` is a category
+       * ("Landmark") repeated across every pin, so a name of `label` alone
+       * identifies nothing — three pins all called "Landmark, button" — and a
+       * description is announced late, or not at all depending on verbosity
+       * settings. The tooltip carries the only text that says WHICH pin this
+       * is, so it belongs in the name. See `accessibleName`.
+       */
+      tip.setAttribute('aria-hidden', 'true');
+      tip.textContent = this.tooltip;
+      el.appendChild(tip);
+      this.tipEl = tip;
+      // Focus as well as hover: a tooltip only a pointer can reach is SC 2.1.1.
+      for (const evt of ['pointerenter', 'focus']) {
+        el.addEventListener(evt, () => this.showTip(true));
+      }
+      for (const evt of ['pointerleave', 'blur']) {
+        el.addEventListener(evt, () => this.showTip(false));
+      }
+      /*
+       * Escape dismisses it WITHOUT moving the pointer, which is the half of
+       * SC 1.4.13 hand-rolled tooltips miss. Stopped here so it does not also
+       * close a dialog the map happens to sit inside.
+       */
+      el.addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key !== 'Escape' || !this.tipVisible) return;
+        e.stopPropagation();
+        this.showTip(false);
+      });
+    }
+
+    if (!this.isInteractive()) return;
+    /*
+     * `role="button"` on the wrapper rather than a real <button> element
+     * wrapping the content: wrapping would put the author's slotted markup
+     * inside a control they did not write, and a slotted link or button would
+     * become a nested interactive. The cost is that forced-colors gives this no
+     * system styling — hence the explicit border in `esa-map`'s stylesheet.
+     */
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    const name = this.accessibleName();
+    if (name) el.setAttribute('aria-label', name);
+    else {
+      console.warn(
+        '[esa-map-marker] interactive with no `label`, `tooltip` or aria-label. It will ' +
+          'announce as an unnamed button — a pin on a map has no text of its own to fall ' +
+          'back to.',
+      );
+    }
+    el.addEventListener('keydown', (e) => {
+      const key = (e as KeyboardEvent).key;
+      if (key !== 'Enter' && key !== ' ') return;
+      // Space scrolls the page otherwise, which moves the map out from under
+      // the user at the moment they act on it.
+      e.preventDefault();
+      el.click();
+    });
+  }
+
+  /**
+   * What an interactive pin announces as.
+   *
+   * The VISIBLE label leads, which is SC 2.5.3 (Label in Name): someone saying
+   * "click Landmark" to a voice-control tool has to hit this. The tooltip
+   * follows, because it is the part that says which pin. An explicit
+   * `aria-label` on the element beats both — the author has said what they
+   * want and this must not overwrite it.
+   */
+  private accessibleName(): string {
+    const authored = this.getAttribute('aria-label');
+    if (authored) return authored;
+    if (this.label && this.tooltip) return `${this.label}: ${this.tooltip}`;
+    return this.label || this.tooltip;
+  }
+
+  /**
+   * Is this marker something a user acts on?
+   *
+   * A nested popup counts because it IS the interaction; a tooltip counts
+   * because it has to be reachable by keyboard. A page-attached `click`
+   * listener cannot be detected from here, which is what the explicit prop is
+   * for. Slotted focusable content opts out — see `interactive`.
+   */
+  private isInteractive(): boolean {
+    if (this.contentEl?.querySelector('a[href], button, input, select, textarea, [tabindex]')) {
+      return false;
+    }
+    return this.interactive || !!this.tooltip || !!this.querySelector('esa-map-popup');
+  }
+
+  private showTip(visible: boolean): void {
+    this.tipVisible = visible;
+    this.tipEl?.classList.toggle('esa-marker__tip--visible', visible);
   }
 
   /** Mirror state onto the engine-owned div, which CSS here cannot reach. */

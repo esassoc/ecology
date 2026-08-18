@@ -15,6 +15,7 @@
 // actual `dispatchEvent` calls.
 import PropsTable from '@esa/docs/PropsTable.astro';
 import { componentApi, reportApiDrift } from '../data/component-api';
+import { isCustomElement } from '../data/angular-snippet';
 
 interface EventRow { name: string; type: string; description: string }
 interface Props {
@@ -36,13 +37,31 @@ const rows = (api?.props ?? []).map((p) => {
   // Without this note a reader would try to write it as an attribute in HTML
   // and get silence.
   const only = p.propertyOnly ? ' Set as a JS property — there is no attribute.' : '';
+  // A boolean attribute is normally presence-based, so `="false"` reads as TRUE.
+  // These six declare `boolish` precisely so it does not, and a reader has no way
+  // to know that from the type. Generated, so it appears exactly where it is true.
+  const offable = p.hasConverter && p.litType === 'Boolean' && p.default === 'true'
+    ? ' On by default. Write `="false"` to turn it off — unusually for a boolean attribute, this one reads the value.'
+    : '';
   return {
     name: p.name,
     type: p.type,
     // A required prop has no default precisely because you must pass one.
     default: p.required ? 'required' : p.default,
-    description: prose + alias + only,
+    description: prose + alias + only + offable,
   };
+});
+
+// The Angular binding form for every event this component actually dispatches.
+// Generated from source, not from the authored `events` array, so it cannot
+// document a binding for an event that no longer exists — and it is the ONE place
+// the general question is answered. The code samples above deliberately never
+// invent an event binding, only mirroring listeners a sample really shows.
+//
+// Only for web components: an .astro component has no custom element to bind to.
+const angularEvents = !isCustomElement(slug) ? [] : (api?.eventNames ?? []).map((name) => {
+  const handler = name.replace(/[^a-z0-9]+(.)?/gi, (_, c) => (c ? c.toUpperCase() : ''));
+  return `(${name})="on${handler.charAt(0).toUpperCase()}${handler.slice(1)}($event.detail)"`;
 });
 ---
 {rows.length > 0 && <PropsTable rows={rows} nameHeader="Prop" />}
@@ -66,8 +85,34 @@ const rows = (api?.props ?? []).map((p) => {
   </>
 )}
 
+{angularEvents.length > 0 && (
+  <details class="api-ng">
+    <summary>Binding these events from Angular</summary>
+    <p>
+      Every one of these is a <code>CustomEvent</code>, so the payload is on
+      <code>$event.detail</code> — <code>$event.target.value</code> reads empty, with no
+      error. The names are lowercase and Angular passes them to
+      <code>addEventListener</code> verbatim, so camel-casing one means it never fires.
+    </p>
+    <ul>
+      {angularEvents.map((e) => <li><code>{e}</code></li>)}
+    </ul>
+  </details>
+)}
+
 <style>
   .api-sub { font-size: 16px; font-weight: 600; margin: var(--spacing-400, 1rem) 0 var(--spacing-250, 0.625rem); color: var(--color-content-default, #171717); }
   .api-note, .api-empty { font-size: 14.5px; color: var(--color-content-default-secondary, #525252); margin: 0 0 var(--spacing-300, 0.75rem); }
   .api-note code, .api-empty code { font-family: var(--typography-font-family-mono, monospace); font-size: 13px; background: var(--color-background-elevation-sunken, #f3f7fc); padding: 1px 6px; border-radius: 5px; }
+  .api-ng {
+    border: 1px solid var(--color-border-default, #dcdcdc);
+    border-radius: 12px;
+    padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
+    margin-bottom: var(--spacing-300, 0.75rem);
+  }
+  .api-ng summary { font-size: 14.5px; font-weight: 600; cursor: pointer; color: var(--color-content-default, #171717); }
+  .api-ng p { font-size: 14.5px; color: var(--color-content-default-secondary, #525252); }
+  .api-ng ul { margin: 0; padding-left: var(--spacing-500, 1.5rem); }
+  .api-ng li { margin-bottom: var(--spacing-100, 0.25rem); }
+  .api-ng code { font-family: var(--typography-font-family-mono, monospace); font-size: 13px; background: var(--color-background-elevation-sunken, #f3f7fc); padding: 1px 6px; border-radius: 5px; color: var(--color-content-default, #171717); }
 </style>

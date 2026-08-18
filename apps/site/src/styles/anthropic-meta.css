@@ -8,30 +8,18 @@
  * global rules win on source order. Warm-palette rules are scoped to
  * [data-scheme="light"] so dark mode (docs-dark.css) is untouched.
  *
- * Fonts are Anthropic's proprietary typefaces (Sans / Serif / Mono), variable
- * woff2. Use plain font-weight (400/500/700) — never font-variation-settings.
+ * MONO is the only Anthropic proprietary face left here — variable woff2 served
+ * from ./fonts. The SANS (Public Sans) and display SERIF (Libre Baskerville) are
+ * Google Fonts (OFL), linked from DocsLayout's head alongside DM Sans / DM Mono
+ * — so the `<link>` and this file have to move together. Both are variable and
+ * both carry real italics, so any weight in range is a true master rather than a
+ * synthesised smear. Use plain font-weight, never font-variation-settings.
+ * Libre Baskerville is variable in name only as far as the API is concerned —
+ * it still reads as the two static styles in most listings, so CHECK the served
+ * @font-face descriptors (`font-weight: 400 700` on one face = variable, two
+ * faces at 400 and 700 = static) before trusting a mid weight to render.
  */
 
-@font-face {
-  font-family: 'Anthropic Sans';
-  src: url('./fonts/AnthropicSans-Variable.woff2') format('woff2-variations');
-  font-weight: 300 800; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Anthropic Sans';
-  src: url('./fonts/AnthropicSans-Italic-Variable.woff2') format('woff2-variations');
-  font-weight: 300 800; font-style: italic; font-display: swap;
-}
-@font-face {
-  font-family: 'Anthropic Serif';
-  src: url('./fonts/AnthropicSerif-Variable.woff2') format('woff2-variations');
-  font-weight: 300 800; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Anthropic Serif';
-  src: url('./fonts/AnthropicSerif-Italic-Variable.woff2') format('woff2-variations');
-  font-weight: 300 800; font-style: italic; font-display: swap;
-}
 @font-face {
   font-family: 'Anthropic Mono';
   src: url('./fonts/AnthropicMono-Variable.woff2') format('woff2-variations');
@@ -39,8 +27,15 @@
 }
 
 :root {
-  --meta-serif: 'Anthropic Serif', Georgia, serif;
-  --meta-sans: 'Anthropic Sans', system-ui, -apple-system, sans-serif;
+  --meta-serif: 'Libre Baskerville', Georgia, serif;
+  /* ONE knob — the landing page's own scoped rules read it too, so change it
+     here and every serif site follows. 400 is the FLOOR, not a midpoint: Libre
+     Baskerville's linked variable range is 400..700, and asking for less does
+     not get a lighter master, it gets the browser synthesising a smear. If this
+     still reads too heavy the fix is size or colour, not a smaller number —
+     the face has a large x-height and sets dark by design. */
+  --meta-serif-weight: 400;
+  --meta-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
   --meta-mono: 'Anthropic Mono', ui-monospace, monospace;
 }
 
@@ -56,7 +51,7 @@
 .app .brand b,
 .app .hero h1,
 .app .hero .tagline,
-.app .block-title { font-family: var(--meta-serif); font-weight: 400; }
+.app .block-title { font-family: var(--meta-serif); font-weight: var(--meta-serif-weight, 400); }
 
 .app .article h1 { letter-spacing: -0.015em; }
 .app .article h2 { letter-spacing: -0.01em; border-bottom-color: var(--color-border-default); }

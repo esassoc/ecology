@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 type ConfirmVariant = 'default' | 'danger' | 'warning';
 
@@ -24,7 +25,7 @@ export class EsaConfirmDialog extends LitElement {
     variant: { type: String, reflect: true },
     confirmLabel: { type: String, attribute: 'confirm-label' },
     cancelLabel: { type: String, attribute: 'cancel-label' },
-    showIcon: { type: Boolean, attribute: 'show-icon' },
+    showIcon: { type: Boolean, attribute: 'show-icon', converter: boolish },
     // hub-edit-approved: user approved (2026-06-29) — confirm dialogs need an X close.
     showCloseButton: { type: Boolean, attribute: 'show-close-button' },
   };

@@ -9,6 +9,8 @@ const describe = {
   'close-button': 'Show the engine&rsquo;s dismiss button. On by default: a toggletip owes one.',
   'close-on-click': 'Dismiss when the user clicks the map. <strong>Off by default</strong>, to avoid a race with layer-driven opening &mdash; see below.',
   'max-width': 'Caps the bubble width so long prose wraps instead of stretching the map.',
+  'min-width': 'Floor for the bubble width, measured on the <strong>same box</strong> as <code>max-width</code> &mdash; the two are a range. Defaulted, because a bubble that sizes purely to its content collapses; set it to <code>0</code> to opt out.',
+  'min-height': 'Floor for the bubble height. Unset by default &mdash; a height floor pads short content with empty space, which is only wanted when several popups must match exactly.',
 };
 
 const events = [
@@ -90,6 +92,43 @@ const events = [
       prefix your selectors. <code>is:inline</code> is required: Astro hoists a normal
       <code>&lt;style&gt;</code> into the page bundle, which is the case that does not work.
       See the <a href="/components/esa-map#rich-popups">rich popups example</a>.
+    </p>
+  </Section>
+
+  <Section id="sizing" title="Sizing: a range, not a cap">
+    <p>
+      A popup sized purely by its content collapses, and the result reads as broken rather
+      than as compact. Measured on this kit&rsquo;s own examples before the floor existed:
+    </p>
+    <div class="api-table">
+      <table>
+        <thead><tr><th>Content</th><th>Bubble was</th><th>Now</th></tr></thead>
+        <tbody>
+          <tr><td>&ldquo;Redding / pop. 93k&rdquo;</td><td>84px</td><td>180px</td></tr>
+          <tr><td>&ldquo;Alameda County / One boundary here&rdquo;</td><td>147px</td><td>180px</td></tr>
+          <tr><td>A rich card with <code>max-width: 264px</code></td><td>172px</td><td>264px, set explicitly</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Three popups on one map at 84, 147 and 172px is the same control at three sizes, which
+      makes a set of them look accidental. So <code>min-width</code> defaults to
+      <strong>180px</strong> &mdash; roughly one line of 28 characters at the body size, which
+      is where a caption stops looking like a fragment. A bubble that genuinely should hug one
+      word sets <code>min-width="0"</code>.
+    </p>
+    <p>
+      <code>min-height</code> is <strong>unset</strong> by default. A width floor stops a
+      bubble collapsing sideways, which is disfiguring; a height floor pads short content with
+      empty space, which is only wanted when several popups have to match exactly.
+    </p>
+    <p class="meta">
+      Both are applied to the same box <code>max-width</code> governs, so they read as a range.
+      Putting the minimum on the inner content element instead would measure them against
+      different boxes &mdash; the engine adds its own padding between the two &mdash; so
+      <code>min-width</code> and <code>max-width</code> at the same value would silently
+      disagree. A minimum above the maximum is not an error the browser reports; the minimum
+      just wins, so this warns instead.
     </p>
   </Section>
 
@@ -189,4 +228,11 @@ popup.open = true;</code></pre>
 
 <style>
   .meta { color: var(--color-content-default-secondary, #646464); max-width: 72ch; }
+  .api-table table { width: 100%; border-collapse: collapse; }
+  .api-table th, .api-table td {
+    text-align: left;
+    padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
+    border-bottom: 1px solid var(--color-border-default-subtle, #efefef);
+    vertical-align: top;
+  }
 </style>

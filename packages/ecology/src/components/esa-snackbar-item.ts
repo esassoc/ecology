@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 export type EsaSnackbarVariant = 'info' | 'success' | 'warning' | 'danger';
 
@@ -20,7 +21,7 @@ export class EsaSnackbarItem extends LitElement {
     message: { type: String },
     variant: { type: String, reflect: true },
     action: { type: String },
-    dismissable: { type: Boolean },
+    dismissable: { type: Boolean, converter: boolish },
     icon: { type: String },
   };
 

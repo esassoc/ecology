@@ -11,12 +11,50 @@
 // authored, keyed by prop name — see `_ApiTable.astro`.
 //
 // Sibling of `theming.ts`, which does the same for the theming surface.
+//
+// THE PARSERS THEMSELVES LIVE IN `scripts/lib/component-api.mjs`. This file is
+// the filesystem half: the directory walk, the repo-root arithmetic, and the
+// drift guard. The split exists so the Angular snippet transform and its corpus
+// test can run against the real parse of the real components — a test cannot
+// import an Astro data module, and a fixture would drift from the thing it
+// stands for. Imported relatively rather than through the `@theme` alias: that
+// alias exists so theme-maker's CLIENT script can be bundled, and nothing here
+// ever reaches a browser.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseAstro, parseLit } from '../../../../scripts/lib/component-api.mjs';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-const COMPONENTS = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
+/**
+ * Find the repo root by SEARCHING for it, not by counting directories up.
+ *
+ * Counting is what every other data module here does, and it is a trap this repo
+ * has already sprung twice. The module's own location is not stable: vite decides
+ * whether to inline it into a page chunk or emit it separately, and that decision
+ * changes with who imports it. The moment `angular-snippet.ts` imported this file,
+ * the pair landed one directory shallower and the build died looking for
+ * `apps/packages/ecology/src/components` — a path that has never existed.
+ *
+ * Walking up until the components directory actually appears cannot be wrong
+ * about that, wherever the module ends up.
+ */
+function findRoot(): string {
+  let dir = path.dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 12; i++) {
+    if (existsSync(path.join(dir, 'packages', 'ecology', 'src', 'components'))) return dir;
+    const up = path.dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  throw new Error(
+    'component-api: could not find packages/ecology/src/components above ' +
+      fileURLToPath(import.meta.url),
+  );
+}
+
+const ROOT = findRoot();
+/** Absolute path to the component sources. Shared with `angular-snippet.ts`. */
+export const COMPONENTS = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
 
 export interface ApiProp {
   /** What the consumer writes: a prop name (.astro) or an attribute name (wc). */
@@ -35,6 +73,20 @@ export interface ApiProp {
   /** JSDoc / `//` comment attached to the declaration in source, if any. */
   description?: string;
   required: boolean;
+  /**
+   * The declared Lit converter type (`String` | `Boolean` | `Number` | `Array` |
+   * `Object`), for web components only. Shown in no table — it is what tells the
+   * Angular transform that `options` is an Array and therefore wants a property
+   * binding rather than an attribute.
+   */
+  litType?: string;
+  /**
+   * The prop declares its own `converter`, so it does NOT use Lit's presence-based
+   * Boolean parsing. For the six default-true props that carry `boolish`, this is
+   * what lets the table tell a reader that `="false"` genuinely works — it is not
+   * true of a boolean attribute in general, so it has to be said.
+   */
+  hasConverter?: boolean;
 }
 
 export interface ComponentApi {
@@ -43,277 +95,6 @@ export interface ComponentApi {
   eventNames: string[];
   /** True when the component forwards unknown attributes to its native element. */
   passthrough: boolean;
-}
-
-// ── Small helpers ──────────────────────────────────────────────────────────
-
-/** Strip a `/** … *\/` or `// …` comment block down to one line of prose. */
-function cleanComment(raw: string): string {
-  return raw
-    .replace(/\/\*\*?/g, '')
-    .replace(/\*\//g, '')
-    .split('\n')
-    .map((l) => l.replace(/^\s*\*\s?/, '').replace(/^\s*\/\/\s?/, '').trim())
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/**
- * Read the comment (JSDoc block or `//` run) immediately above `lines[i]`.
- * Returns '' when the preceding line is code or blank.
- */
-function commentAbove(lines: string[], i: number): string {
-  const buf: string[] = [];
-  let j = i - 1;
-  // A closing `*/` means walk back to the matching `/**`.
-  if (j >= 0 && lines[j].trim().endsWith('*/')) {
-    while (j >= 0) {
-      buf.unshift(lines[j]);
-      if (lines[j].trim().startsWith('/*')) break;
-      j--;
-    }
-    return cleanComment(buf.join('\n'));
-  }
-  while (j >= 0 && lines[j].trim().startsWith('//')) {
-    buf.unshift(lines[j]);
-    j--;
-  }
-  return buf.length ? cleanComment(buf.join('\n')) : '';
-}
-
-/** Extract `{ … }` starting at `from`, balancing braces so nested types survive. */
-function balancedBlock(src: string, from: number): string | null {
-  const open = src.indexOf('{', from);
-  if (open === -1) return null;
-  let depth = 0;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
-    else if (src[i] === '}') {
-      depth--;
-      if (depth === 0) return src.slice(open + 1, i);
-    }
-  }
-  return null;
-}
-
-/**
- * Split a destructuring / object body on top-level commas only, so defaults
- * like `options = []` or `cols = { sm: 1 }` are not cut in half.
- */
-function splitTopLevel(body: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let quote: string | null = null;
-  let buf = '';
-  for (let i = 0; i < body.length; i++) {
-    const c = body[i];
-    if (quote) {
-      buf += c;
-      if (c === quote && body[i - 1] !== '\\') quote = null;
-      continue;
-    }
-    if (c === "'" || c === '"' || c === '`') { quote = c; buf += c; continue; }
-    if (c === '{' || c === '[' || c === '(') depth++;
-    if (c === '}' || c === ']' || c === ')') depth--;
-    if (c === ',' && depth === 0) { parts.push(buf); buf = ''; continue; }
-    buf += c;
-  }
-  if (buf.trim()) parts.push(buf);
-  return parts;
-}
-
-/**
- * Expand local `type X = 'a' | 'b'` aliases in place.
- *
- * This matters more than it looks: `esa-button` declares `appearance?:
- * EsaButtonAppearance`, and the whole point of generating the table is that the
- * reader sees the FOUR values that alias actually holds. Printing the alias
- * name would reintroduce exactly the drift we are removing. Only unions of
- * literals/primitives are expanded — an alias pointing at an interface stays a
- * name, since a whole object shape does not belong in a table cell.
- */
-function aliasExpander(src: string): (type: string) => string {
-  const aliases = new Map<string, string>();
-  for (const m of src.matchAll(/^\s*(?:export\s+)?type\s+([A-Za-z0-9_$]+)\s*=\s*([^;{]+);/gm)) {
-    aliases.set(m[1], m[2].replace(/\s+/g, ' ').trim());
-  }
-  return function expand(type: string, depth = 0): string {
-    if (depth > 4) return type;
-    const bare = type.replace(/\[\]$/, '');
-    const suffix = type.endsWith('[]') ? '[]' : '';
-    const hit = aliases.get(bare);
-    if (!hit) return type;
-    return expand(hit, depth + 1) + suffix;
-  };
-}
-
-/** Every event name the component dispatches, deduped and sorted. */
-function dispatchedEvents(src: string): string[] {
-  const names = new Set<string>();
-  for (const m of src.matchAll(/new (?:Custom)?Event\(\s*['"`]([^'"`]+)['"`]/g)) names.add(m[1]);
-  return [...names].sort();
-}
-
-// ── .astro components ──────────────────────────────────────────────────────
-
-/**
- * `interface Props { … }` is the declared surface; `const { x = 1 } = Astro.props`
- * supplies the defaults. Both live in the frontmatter of the same file, so the
- * two halves of every row come from the same source of truth.
- */
-function parseAstro(src: string): ComponentApi {
-  const events = dispatchedEvents(src);
-  const ifaceAt = src.search(/interface Props\s*\{/);
-  if (ifaceAt === -1) return { props: [], eventNames: events, passthrough: false };
-  const block = balancedBlock(src, ifaceAt);
-  if (block === null) return { props: [], eventNames: events, passthrough: false };
-
-  // An index signature (`[attr: string]: unknown`) means unknown attributes are
-  // forwarded to the native element — a real part of the contract, surfaced as
-  // a note rather than a row.
-  const passthrough = /\[\s*\w+\s*:\s*string\s*\]\s*:/.test(block);
-
-  const defaults = new Map<string, string>();
-  const destructureAt = src.search(/const\s*\{[\s\S]*?\}\s*=\s*Astro\.props/);
-  if (destructureAt !== -1) {
-    const d = balancedBlock(src, destructureAt);
-    if (d) {
-      for (const part of splitTopLevel(d)) {
-        // `class: className = ''` → key is the source-side name (`class`).
-        const m = part.trim().match(/^([a-zA-Z0-9_$]+)\s*(?::\s*[a-zA-Z0-9_$]+\s*)?=\s*([\s\S]+)$/);
-        if (m) defaults.set(m[1], m[2].trim());
-      }
-    }
-  }
-
-  const expand = aliasExpander(src);
-  const lines = block.split('\n');
-  const props: ApiProp[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line || line.startsWith('*') || line.startsWith('/') || line.startsWith('[')) continue;
-    const m = line.match(/^([a-zA-Z0-9_$]+)(\?)?\s*:\s*([\s\S]+?);?$/);
-    if (!m) continue;
-    props.push({
-      name: m[1],
-      type: expand(m[3].trim().replace(/;$/, '')),
-      default: defaults.get(m[1]),
-      description: commentAbove(lines, i) || undefined,
-      required: !m[2],
-    });
-  }
-  return { props, eventNames: events, passthrough: false || passthrough };
-}
-
-// ── Lit web components ─────────────────────────────────────────────────────
-
-/**
- * `static properties` is the public reactive surface (entries flagged
- * `state: true` are internal and excluded); `declare x: T` carries the precise
- * TS type and its JSDoc; the constructor carries the defaults. Docs show the
- * ATTRIBUTE name, since that is what a consumer writes in HTML.
- */
-function parseLit(src: string): ComponentApi {
-  const events = dispatchedEvents(src);
-  const propsAt = src.search(/static\s+properties\s*=\s*\{/);
-  if (propsAt === -1) return { props: [], eventNames: events, passthrough: false };
-  const block = balancedBlock(src, propsAt);
-  if (block === null) return { props: [], eventNames: events, passthrough: false };
-
-  // name → attribute name, in declaration order, skipping internal state.
-  const declared: Array<{ prop: string; attr: string; litType: string; propertyOnly: boolean }> = [];
-  for (const part of splitTopLevel(block)) {
-    const m = part.trim().match(/^([a-zA-Z0-9_$]+)\s*:\s*\{([\s\S]*)\}$/);
-    if (!m) continue;
-    const opts = m[2];
-    if (/\bstate\s*:\s*true\b/.test(opts)) continue;
-    if (m[1].startsWith('_')) continue;
-    // `attribute: false` means there is NO attribute — the prop is assignable
-    // from JS only, so the docs must show the property name, not a lowercased
-    // pseudo-attribute a reader would try (and fail) to write in HTML.
-    const propertyOnly = /\battribute\s*:\s*false\b/.test(opts);
-    const attr = propertyOnly
-      ? m[1]
-      : opts.match(/attribute\s*:\s*['"]([^'"]+)['"]/)?.[1] ?? m[1].toLowerCase();
-    const litType = opts.match(/type\s*:\s*([A-Za-z]+)/)?.[1] ?? 'String';
-    declared.push({ prop: m[1], attr, litType, propertyOnly });
-  }
-
-  // `declare` gives the real TS type + JSDoc.
-  const srcLines = src.split('\n');
-  const declTypes = new Map<string, { type: string; description: string }>();
-  for (let i = 0; i < srcLines.length; i++) {
-    const m = srcLines[i].match(/^\s*declare\s+([a-zA-Z0-9_$]+)\s*:\s*([\s\S]+?);\s*$/);
-    if (!m) continue;
-    declTypes.set(m[1], { type: m[2].trim(), description: commentAbove(srcLines, i) });
-  }
-
-  // Constructor assignments are the defaults.
-  const defaults = new Map<string, string>();
-  const ctorAt = src.search(/\bconstructor\s*\([^)]*\)\s*\{/);
-  if (ctorAt !== -1) {
-    const body = balancedBlock(src, ctorAt) ?? '';
-    for (const line of body.split('\n')) {
-      const m = line.trim().match(/^this\.([a-zA-Z0-9_$]+)\s*=\s*([\s\S]+?);\s*$/);
-      if (m && !defaults.has(m[1])) defaults.set(m[1], m[2].trim());
-    }
-  }
-
-  const LIT_FALLBACK: Record<string, string> = {
-    String: 'string', Boolean: 'boolean', Number: 'number', Array: 'unknown[]', Object: 'object',
-  };
-
-  const expand = aliasExpander(src);
-  const props: ApiProp[] = declared.map(({ prop, attr, litType, propertyOnly }) => {
-    const d = declTypes.get(prop);
-    return {
-      name: attr,
-      propertyName: attr === prop ? undefined : prop,
-      propertyOnly: propertyOnly || undefined,
-      type: expand(d?.type ?? LIT_FALLBACK[litType] ?? 'unknown'),
-      default: defaults.get(prop),
-      description: d?.description || undefined,
-      // Lit props are all optional — a constructor default always exists in
-      // practice, and an attribute is never "required" at the HTML level.
-      required: false,
-    };
-  });
-
-  // Public get/set accessors are API too. Form controls expose their value this
-  // way (`set value(v) { … }`) rather than as a reactive property, so a
-  // properties-only reading of the class would drop the single most important
-  // member of every form component.
-  const seen = new Set(props.map((p) => p.propertyName ?? p.name));
-  const accessors = new Map<string, { type?: string; description: string; i: number }>();
-  for (let i = 0; i < srcLines.length; i++) {
-    const m = srcLines[i].match(
-      /^  (?!private|protected|static)(get|set)\s+([a-zA-Z0-9_$]+)\s*\(([^)]*)\)\s*(?::\s*([^{]+?)\s*)?\{/,
-    );
-    if (!m) continue;
-    const [, kind, name, param, returnType] = m;
-    if (name.startsWith('_') || seen.has(name)) continue;
-    const prev = accessors.get(name);
-    // The setter's parameter type is what a consumer may ASSIGN — prefer it
-    // over the getter's return type, which can be narrower.
-    const type = kind === 'set' ? param.split(':').slice(1).join(':').trim() : returnType?.trim();
-    accessors.set(name, {
-      type: (kind === 'set' ? type : prev?.type ?? type) || prev?.type,
-      description: prev?.description || commentAbove(srcLines, i),
-      i: prev?.i ?? i,
-    });
-  }
-  for (const [name, a] of accessors) {
-    props.push({
-      name,
-      propertyOnly: true,
-      type: expand(a.type || 'unknown'),
-      description: a.description || undefined,
-      required: false,
-    });
-  }
-
-  return { props, eventNames: events, passthrough: false };
 }
 
 // ── Build the map ──────────────────────────────────────────────────────────

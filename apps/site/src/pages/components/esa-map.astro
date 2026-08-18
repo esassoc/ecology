@@ -1,7 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import { withBase } from '@esa/docs/base';
 
@@ -33,24 +33,16 @@ const PLACES = [
  * prefixed because they land in the map's root, not the popup's.
  */
 const RICH_POPUP_CSS = `
-  /* The PIN is styled here too. Marker content is moved into the same shadow
-     root as the popup content, so one style block covers both — a second one
-     inside each marker would be three duplicate sheets in one root. */
+  /* The PIN is styled here too — marker content lands in the same shadow root.
+     Its LABEL and TOOLTIP are not: those are marker props, rendered and themed
+     by esa-map, so there is nothing to write for them here. */
   .rich-pin {
-    display: grid; place-items: center; gap: var(--spacing-050, 0.125rem);
+    display: block;
     inline-size: 1.125rem; block-size: 1.125rem; border-radius: 999px;
     background: var(--color-background-brand, #2f6f4f);
     border: 2px solid var(--color-background-elevation-raised, #fff);
     box-shadow: var(--elevation-2, 0 1px 3px rgb(0 0 0 / 0.24));
     cursor: pointer;
-  }
-  .rich-pin__label {
-    position: absolute; inset-block-start: 1.5rem;
-    padding: 0 var(--spacing-100, 0.25rem); border-radius: var(--radius-xs, 2px);
-    background: var(--color-background-elevation-raised, #fff);
-    color: var(--color-content-default-secondary, #646464);
-    font-size: 0.625rem; line-height: 1.4; white-space: nowrap;
-    box-shadow: var(--elevation-2, 0 1px 3px rgb(0 0 0 / 0.24));
   }
   .rich-pin[data-kind='Park'] { background: #2d6a4f; }
   .rich-pin[data-kind='Reserve'] { background: #14505c; }
@@ -248,9 +240,13 @@ const events = [
     <Preview align="start" code={`<esa-map label="Landmarks" tile-url="…">
   <style is:inline>{'{ .card__title { margin: 0 } /* see “page CSS does not” below */ }'}</style>
 
-  <esa-map-marker lng-lat="[-121.4934, 38.5767]">
+  <esa-map-marker
+    lng-lat="[-121.4934, 38.5767]"
+    label="Landmark"                                      <!-- always visible -->
+    tooltip="California State Capitol"                    <!-- hover and focus -->
+  >
     <span class="rich-pin" data-kind="Landmark"></span>   <!-- the pin -->
-    <esa-map-popup max-width="264px">                     <!-- its card -->
+    <esa-map-popup max-width="264px" min-width="264px">   <!-- its card -->
       <div class="card__media" aria-hidden="true"></div>
       <p class="card__kicker typography-label-2xs">Landmark</p>
       <h3 class="card__title typography-heading-xs">California State Capitol</h3>
@@ -271,11 +267,9 @@ const events = [
       >
         <style is:inline set:html={RICH_POPUP_CSS}></style>
         {PLACES.map((p) => (
-          <esa-map-marker lng-lat={JSON.stringify(p.lngLat)}>
-            <span class="rich-pin" data-kind={p.kind}>
-              <span class="rich-pin__label">{p.kind}</span>
-            </span>
-            <esa-map-popup max-width="264px" close-button>
+          <esa-map-marker lng-lat={JSON.stringify(p.lngLat)} label={p.kind} tooltip={p.name}>
+            <span class="rich-pin" data-kind={p.kind}></span>
+            <esa-map-popup max-width="264px" min-width="264px" close-button>
               <div class="card">
                 <div class="card__media" data-kind={p.kind} aria-hidden="true"></div>
                 <div class="card__body">

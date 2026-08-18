@@ -1,0 +1,183 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+import { componentApi } from '../../data/component-api';
+import { isCustomElement } from '../../data/angular-snippet';
+
+// Counted, not asserted. The split between "real custom element" and
+// "compile-time only" is the single fact this page exists to convey, and a
+// hand-typed number here would be wrong within a month.
+const slugs = Object.keys(componentApi);
+const elementCount = slugs.filter(isCustomElement).length;
+const astroCount = slugs.length - elementCount;
+
+// The names a reader is most likely to reach for and find in the wrong bucket.
+const NOTABLE_ASTRO = ['esa-button', 'esa-badge', 'esa-icon', 'esa-form-field', 'esa-card']
+  .filter((s) => componentApi[s] && !isCustomElement(s));
+---
+<DocsLayout title="Using Ecology from Angular — Ecology" activeHref="/guide/angular">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Angular</span></nav>
+  <h1>Using Ecology from Angular</h1>
+  <p class="lede">
+    Most ESA apps are Angular. The interactive half of this kit is standards-based Web
+    Components, which Angular can consume directly — so component pages show the Angular
+    binding beside the HTML one. This page is the part that does not fit on a component
+    page: which components you can actually use, and what does not work yet.
+  </p>
+
+  <Section id="two-halves" title="Only half the kit is an element you can use">
+    <p>
+      This is the first thing to get straight, because the names run against intuition.
+      Of the {slugs.length} components, <strong>{elementCount}</strong> are Lit web
+      components that register a real custom element, and <strong>{astroCount}</strong>
+      are <code>.astro</code> — compiled to HTML at build time, with
+      <em>no runtime element behind them at all</em>. Writing
+      <code>&lt;esa-badge&gt;</code> in an Angular template does not render a badge. It
+      renders nothing, and reports no error.
+    </p>
+    <p>
+      The presentational ones are the ones you would reach for first:
+      {NOTABLE_ASTRO.map((s, i) => (
+        <>{i > 0 && ', '}<code>{s}</code></>
+      ))} are all in that bucket.
+    </p>
+    <p>
+      So the Angular tab appears only on pages for components that really are elements.
+      Its absence is information: that component is a markup-and-tokens contract to
+      reproduce, not a package to import. The rest of this kit — the tokens — is plain
+      CSS and works in any stack today.
+    </p>
+  </Section>
+
+  <Section id="binding" title="Binding: attributes, properties, events">
+    <p>
+      Add <code>CUSTOM_ELEMENTS_SCHEMA</code> to the component that hosts the element, and
+      import the element once for its side effect — each one self-registers, so there is
+      no module to configure and no <code>customElements.define</code> to call.
+    </p>
+    {/* tabindex + role + label because the block scrolls horizontally, and a
+        scrollable region a keyboard cannot reach is an axe failure the house
+        pattern already solves this way. */}
+    <pre tabindex="0" role="group" aria-label="Angular component consuming esa-select"><code>{`import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@esa/ecology/esa-select';
+
+@Component({
+  selector: 'app-region-picker',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: \`
+    <esa-select label="Region" [options]="regions" (change)="onChange($event)"></esa-select>
+  \`,
+})
+export class RegionPicker {
+  regions = [{ value: 'n', label: 'North' }];
+  onChange(event: Event) {
+    const { value } = (event as CustomEvent).detail;
+  }
+}`}</code></pre>
+
+    <p>Three rules cover almost everything, and each one fails silently when broken:</p>
+    <table class="tk">
+      <thead><tr><th>Rule</th><th>Why it bites</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Read the payload from <code>$event.detail</code></td>
+          <td>
+            These are <code>CustomEvent</code>s, including the ones named
+            <code>change</code>. <code>$event.target.value</code> is empty — no error,
+            just nothing.
+          </td>
+        </tr>
+        <tr>
+          <td>Write event names exactly as documented</td>
+          <td>
+            They are lowercase, even when multi-word: <code>pagechange</code>,
+            <code>tabchange</code>, <code>featureselect</code>. Angular passes the name
+            straight to <code>addEventListener</code>, so <code>(pageChange)</code> binds
+            a listener that never fires.
+          </td>
+        </tr>
+        <tr>
+          <td>Arrays and objects need <code>[property]</code> binding</td>
+          <td>
+            <code>[options]</code>, <code>[items]</code>, <code>[data]</code>. Each
+            component page's API table names the property and says when it has no
+            attribute at all.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      One caution about <code>CUSTOM_ELEMENTS_SCHEMA</code>: it silences unknown-element
+      errors <em>and</em> unknown-attribute errors. A typo in an attribute name compiles
+      clean and does nothing, so check names against the API table rather than the
+      compiler.
+    </p>
+  </Section>
+
+  <Section id="installability" title="What does not work yet">
+    <p>
+      <strong>You cannot <code>npm install</code> this into a stock Angular CLI build
+      today.</strong> The snippets on the component pages are the interop
+      <em>contract</em> — element name, attribute versus property, event name and
+      <code>detail</code> shape — and they are generated from the live specimen beside
+      them, so they cannot drift from what the component really does. They are not yet a
+      copy-paste install. Four things are in the way:
+    </p>
+    <ul>
+      <li>
+        <code>@esa/ecology</code> publishes raw TypeScript from <code>src/</code> with no
+        build output and no <code>tsconfig</code>, and the Angular compiler does not
+        compile TypeScript inside <code>node_modules</code>.
+      </li>
+      <li>
+        Its relative imports carry <code>.js</code> extensions — correct ESM, and
+        awkward for an unbuilt package.
+      </li>
+      <li>
+        <code>astro</code> is a hard peer dependency of the package, even for the Lit
+        half that has nothing to do with Astro.
+      </li>
+      <li>
+        <code>esa-map</code> imports its stylesheet with Vite's <code>?inline</code>
+        suffix, which no other bundler resolves.
+      </li>
+    </ul>
+    <p>
+      None of this is Angular-specific and none of it is in the components themselves —
+      the elements are standards-only and self-registering. It is a packaging job on the
+      hub: a real build step, a loosened peer dependency, and a different way to reach
+      that one stylesheet. Until then, treat the Angular tab as the specification you are
+      implementing against.
+    </p>
+  </Section>
+
+  <Section id="migrating" title="Migrating an existing Angular app">
+    <p>
+      Adopting the design system across an app that already exists is a different job from
+      using one element, and it has its own tooling: the
+      <code>migrate-kit</code> plugin (<code>plugins/migrate-kit/</code>) — an audit, a
+      per-component playbook, a per-screen playbook, and a verify stage, driven by the
+      app's design spoke.
+    </p>
+    <p>
+      It takes the opposite approach to this page on purpose. Rather than importing the
+      Lit elements, it has the app build its own permanent Angular component library
+      against the same token and structure contract. That suits a large app with an
+      established component layer; importing the elements suits a new surface or a
+      gradual adoption. Both target the same tokens, so they converge.
+    </p>
+  </Section>
+</DocsLayout>
+
+<style>
+  .tk { width: 100%; border-collapse: collapse; font-size: 14.5px; margin-bottom: var(--spacing-400, 1rem); }
+  .tk th { text-align: left; font-weight: 600; font-size: 13px; padding: 10px var(--spacing-400, 1rem); background: var(--color-background-elevation-sunken, #f3f7fc); border-bottom: 1px solid var(--color-border-default, #dcdcdc); }
+  .tk td { padding: 11px var(--spacing-400, 1rem); border-bottom: 1px solid var(--color-border-default-subtle, #efefef); vertical-align: top; color: var(--color-content-default-secondary, #525252); }
+  .tk tr:last-child td { border-bottom: 0; }
+  pre { background: var(--color-background-elevation-sunken, #f3f7fc); border: 1px solid var(--color-border-default, #dcdcdc); border-radius: 12px; padding: var(--spacing-400, 1rem); overflow-x: auto; font-size: 13.5px; line-height: 1.7; }
+  code { font-family: var(--typography-font-family-mono, monospace); font-size: 13px; }
+  :not(pre) > code { background: var(--color-background-elevation-sunken, #f3f7fc); padding: 1px 6px; border-radius: 5px; color: var(--color-content-default, #171717); }
+  li { margin-bottom: var(--spacing-150, 0.375rem); }
+</style>

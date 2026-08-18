@@ -3,20 +3,46 @@
 // with a bar to reveal the code string and copy it. One delegated click handler
 // serves every instance on the page. Token-driven — re-skins under any theme.
 import { Code } from 'astro:components';
-interface Props { code: string; lang?: string; align?: 'center' | 'start' }
-const { code, lang = 'astro', align = 'center' } = Astro.props;
+interface Props {
+  code: string;
+  lang?: string;
+  align?: 'center' | 'start';
+  /**
+   * The same sample written as an Angular component. Optional and INERT when
+   * absent: a spoke passes only `code` and gets byte-identical output to before
+   * this prop existed. Nothing is computed here — the caller hands over a
+   * finished string (the hub generates one; see apps/site/src/components/Preview.astro).
+   */
+  angular?: string | null;
+}
+const { code, lang = 'astro', align = 'center', angular = null } = Astro.props;
 ---
-<figure class="preview" data-open="false">
+<figure class="preview" data-open="false" data-has-angular={angular ? '' : undefined}>
   <div class={`preview__canvas preview__canvas--${align}`}>
     <slot />
   </div>
   <div class="preview__bar">
     <button class="pv-toggle" type="button" aria-expanded="false">Show code</button>
-    <button class="pv-copy" type="button" data-code={code}>Copy</button>
+    {angular && (
+      /* Two buttons in a labelled group, NOT role="tablist". Real tab semantics
+         carry an APG keyboard contract — arrow keys, roving tabindex — that axe
+         does not check and that we would then owe. `aria-pressed` is the honest
+         shape for a two-state control, and native Tab/Enter already work. */
+      <div class="pv-langs" role="group" aria-label="Code language">
+        <button class="pv-lang" type="button" data-lang="astro" aria-pressed="true">HTML</button>
+        <button class="pv-lang" type="button" data-lang="angular" aria-pressed="false">Angular</button>
+      </div>
+    )}
+    <button class="pv-copy" type="button" data-code={code} data-code-angular={angular ?? undefined}>Copy</button>
   </div>
-  <div class="preview__code">
+  <div class="preview__code" data-lang="astro">
     <Code code={code} lang={lang as any} theme="vitesse-dark" />
   </div>
+  {angular && (
+    <div class="preview__code" data-lang="angular">
+      <Code code={angular} lang="ts" theme="vitesse-dark" />
+    </div>
+  )}
 </figure>
 
 <style>
@@ -63,13 +89,36 @@ const { code, lang = 'astro', align = 'center' } = Astro.props;
     cursor: pointer;
   }
   .preview__bar button:hover { background: var(--color-background-elevation-sunken, #f3f7fc); color: var(--color-content-default, #171717); }
+  /* The language pair sits apart from the toggle/copy verbs — it selects, it does
+     not act. `margin-inline-end: auto` pushes Copy to the far edge. */
+  .pv-langs { display: flex; gap: 2px; margin-inline-end: auto; }
+  /* The pair only means something once there is code on screen. While the panel
+     is closed, clicking one would change a document attribute and show the reader
+     nothing — so it is not offered, and `display: none` takes it out of the tab
+     order too rather than leaving an invisible stop. */
+  .preview[data-open='false'] .pv-langs { display: none; }
+  .pv-lang[aria-pressed='true'] {
+    background: var(--color-background-elevation-sunken, #f3f7fc);
+    color: var(--color-content-default, #171717);
+  }
   .preview__code {
     display: none;
     border-top: 1px solid var(--color-border-default, #dcdcdc);
     border-radius: 0 0 11px 11px;
     overflow: hidden; /* clips the shiki <pre>'s dark fill to the frame's bottom corners */
   }
-  .preview[data-open='true'] .preview__code { display: block; }
+  /* Which panel shows is pure CSS off ONE document attribute, so a click switches
+     every preview on the page at once and no instance carries its own state.
+     `display: none` rather than a visually-hidden class on purpose: the inactive
+     snippet must be out of the a11y tree AND out of find-in-page, or a reader
+     searching the page hits code they cannot see.
+
+     A preview with no `data-has-angular` matches neither angular rule, so it
+     always shows the HTML panel — which is the whole degradation story for
+     spokes, and for the samples the transform declines. */
+  .preview[data-open='true'] .preview__code[data-lang='astro'] { display: block; }
+  html[data-code-lang='angular'] .preview[data-has-angular][data-open='true'] .preview__code[data-lang='astro'] { display: none; }
+  html[data-code-lang='angular'] .preview[data-has-angular][data-open='true'] .preview__code[data-lang='angular'] { display: block; }
   .preview__code :global(pre) { margin: 0; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); font-size: 13.5px; line-height: 1.7; overflow-x: auto; }
 </style>
 
@@ -86,9 +135,25 @@ const { code, lang = 'astro', align = 'center' } = Astro.props;
       toggle.textContent = open ? 'Show code' : 'Hide code';
       return;
     }
+    const lang = t.closest('.pv-lang') as HTMLElement;
+    if (lang) {
+      const choice = lang.getAttribute('data-lang') || 'astro';
+      document.documentElement.dataset.codeLang = choice;
+      try { localStorage.setItem('esa-code-lang', choice); } catch {}
+      // Repaint every pair on the page — the CSS switched them all, so the
+      // pressed state has to follow or the other previews would lie.
+      document.querySelectorAll('.pv-lang').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === choice));
+      });
+      return;
+    }
+
     const copy = t.closest('.pv-copy') as HTMLElement;
     if (copy) {
-      navigator.clipboard?.writeText(copy.getAttribute('data-code') || '');
+      // Copy what the reader is LOOKING AT, not always the HTML.
+      const angular = copy.getAttribute('data-code-angular');
+      const showingAngular = document.documentElement.dataset.codeLang === 'angular' && angular;
+      navigator.clipboard?.writeText((showingAngular ? angular : copy.getAttribute('data-code')) || '');
       const prev = copy.textContent;
       copy.textContent = 'Copied';
       setTimeout(() => { copy.textContent = prev; }, 1200);

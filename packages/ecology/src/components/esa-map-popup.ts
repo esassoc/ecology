@@ -1,4 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
+import { boolish } from '../boolish.js';
 import {
   findMapHost,
   type LngLat,
@@ -60,9 +61,11 @@ export class EsaMapPopup extends LitElement {
   static properties = {
     lngLat: { type: Array, attribute: 'lng-lat' },
     open: { type: Boolean, reflect: true },
-    closeButton: { type: Boolean, attribute: 'close-button' },
+    closeButton: { type: Boolean, attribute: 'close-button', converter: boolish },
     closeOnClick: { type: Boolean, attribute: 'close-on-click' },
     maxWidth: { type: String, attribute: 'max-width' },
+    minWidth: { type: String, attribute: 'min-width' },
+    minHeight: { type: String, attribute: 'min-height' },
   };
 
   /** Where the popup points, `[lng, lat]`. */
@@ -88,6 +91,30 @@ export class EsaMapPopup extends LitElement {
   declare closeOnClick: boolean;
   /** Caps the bubble width so long prose wraps instead of stretching the map. */
   declare maxWidth: string;
+  /**
+   * Floor for the bubble width. Measured on the SAME box as `maxWidth`, so the
+   * two read as a range rather than as two numbers about different things.
+   *
+   * It has a default because a bubble that sizes purely to its content
+   * collapses, and the result reads as broken rather than as compact: measured
+   * on this kit's own examples, a popup holding "Redding / pop. 93k" rendered
+   * **84px** wide. Popups in one map also came out at 84, 147 and 172px — the
+   * same control at three sizes, which makes a set of them look accidental.
+   *
+   * 180px is one line of ~28 characters at the body size, which is where a
+   * caption stops looking like a fragment. Set it wider for cards that should
+   * all match; set it to `0` for a bubble that genuinely should hug one word.
+   */
+  declare minWidth: string;
+  /**
+   * Floor for the bubble height. **Unset by default, deliberately.**
+   *
+   * A width floor stops a bubble collapsing sideways, which is disfiguring. A
+   * height floor pads short content with empty space, which is only ever wanted
+   * when several popups must match exactly — so it is opt-in rather than a
+   * default that quietly adds whitespace to every popup on the map.
+   */
+  declare minHeight: string;
 
   private host: MapHost | null = null;
   private popup: PopupInstance | null = null;
@@ -194,6 +221,8 @@ export class EsaMapPopup extends LitElement {
     this.closeButton = true;
     this.closeOnClick = false;
     this.maxWidth = '280px';
+    this.minWidth = '180px';
+    this.minHeight = '';
   }
 
   disconnectedCallback(): void {
@@ -277,11 +306,58 @@ export class EsaMapPopup extends LitElement {
     this.closePeers();
     this.returnFocusTo = (document.activeElement as HTMLElement) ?? null;
     this.popup?.addTo(map);
+    this.applySize();
     // Focus lands on the content so a keyboard user is where the new content is,
     // and so Escape reaches the handler above.
     this.contentEl?.focus({ preventScroll: true });
-    // After a frame, so the bubble has been laid out and can be measured.
+    // After a frame, so the bubble has been laid out and can be measured — and
+    // after `applySize`, or it would pan a bubble that is about to change size.
     requestAnimationFrame(() => this.panIntoView(map));
+  }
+
+  /**
+   * Put the size floors on the bubble, not on our own content div.
+   *
+   * `maxWidth` is an engine option and lands on `.maplibregl-popup-content`.
+   * Applying the minimum to the inner div instead would measure the two against
+   * DIFFERENT boxes — the content box adds the engine's ~20px of padding — so
+   * `min-width: 180px` with `max-width: 180px` would be a contradiction that
+   * silently resolves in the minimum's favour. Same box, so they read as a
+   * range.
+   *
+   * Set as inline style rather than through a custom property: an
+   * `--esa-popup-*` name read with a fallback and declared in no token file is
+   * exactly the ad-hoc tier-3 hook this repo holds at zero.
+   */
+  private applySize(): void {
+    const box = this.contentEl?.closest('.maplibregl-popup-content') as HTMLElement | null;
+    if (!box) return;
+    box.style.minInlineSize = this.minWidth || '';
+    box.style.minBlockSize = this.minHeight || '';
+    this.warnIfImpossible();
+  }
+
+  /**
+   * A minimum above the maximum is not an error the browser reports — the
+   * minimum simply wins, and the author sees a bubble wider than the cap they
+   * set with nothing to explain it. Only checked for plain `px` on both sides,
+   * because comparing `40ch` with `18rem` needs layout, and a warning that
+   * guesses is worse than none.
+   */
+  private warnIfImpossible(): void {
+    const px = (v: string): number | null => {
+      const m = /^(-?[\d.]+)px$/.exec(v.trim());
+      return m ? Number(m[1]) : null;
+    };
+    const min = px(this.minWidth);
+    const max = px(this.maxWidth);
+    if (min !== null && max !== null && min > max) {
+      console.warn(
+        `[esa-map-popup] min-width (${this.minWidth}) is greater than max-width ` +
+          `(${this.maxWidth}). The minimum wins, so the bubble will be ${this.minWidth} ` +
+          'wide and the cap has no effect.',
+      );
+    }
   }
 
   /**
@@ -328,6 +404,9 @@ export class EsaMapPopup extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     if (!this.popup || !this.host) return;
+    // Only meaningful while open — the bubble does not exist otherwise, and
+    // `show` applies the floors on every open anyway.
+    if (changed.has('minWidth') || changed.has('minHeight')) this.applySize();
     if (changed.has('lngLat')) this.popup.setLngLat(this.lngLat);
     if (changed.has('open')) {
       if (this.open) {

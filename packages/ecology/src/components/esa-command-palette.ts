@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
 import { announce } from '../announcer.js';
+import { boolish } from '../boolish.js';
 
 export interface EsaCommand {
   id: string;
@@ -36,7 +37,7 @@ export class EsaCommandPalette extends LitElement {
   static properties = {
     commands: { type: Array },
     open: { type: Boolean, reflect: true },
-    hotkey: { type: Boolean },
+    hotkey: { type: Boolean, converter: boolish },
     query: { state: true },
     activeId: { state: true },
   };

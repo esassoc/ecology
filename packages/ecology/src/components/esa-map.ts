@@ -1,5 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 import {
   readColor,
   onThemeChange,
@@ -127,7 +128,7 @@ export class EsaMap extends LitElement {
     tileUrlDark: { type: String, attribute: 'tile-url-dark' },
     tileSize: { type: Number, attribute: 'tile-size' },
     attribution: { type: String },
-    interactive: { type: Boolean },
+    interactive: { type: Boolean, converter: boolish },
     controls: { type: String },
     height: { type: String, reflect: true },
   };
@@ -817,6 +818,15 @@ export class EsaMap extends LitElement {
         border-radius: var(--radius-md, 0.5rem);
         box-shadow: var(--elevation-8, 0 8px 24px -6px rgb(0 0 0 / 0.18));
         padding: var(--spacing-300, 0.75rem);
+        /*
+         * So a popup's min-width and max-width mean the BUBBLE, which is the
+         * only width their author can see. This element is content-box by
+         * default, and the padding above is ours — so a requested 180px
+         * measured 204px on screen, off by exactly the 24px this rule adds. An
+         * author reconciling that has to know both that the padding exists and
+         * what it is set to.
+         */
+        box-sizing: border-box;
       }
       /* The tail is drawn as a border triangle, so its colour has to match the
          bubble's background on whichever side the engine placed it. */
@@ -885,6 +895,78 @@ export class EsaMap extends LitElement {
         inline-size: 36px;
         block-size: 36px;
       }
+      /*
+       * A marker's label and tooltip are rendered by esa-map-marker but
+       * styled HERE, because they land in this shadow root and a child's
+       * stylesheet cannot reach one tree up. Both are absolutely positioned off
+       * the pin so neither changes its hit box: a caption that made the pin
+       * wider would move the thing it names.
+       *
+       * DO NOT ADD position:relative HERE to make that work. The engine
+       * already sets position: absolute on this element, from a rule of the
+       * SAME specificity (0,1,0) in a sheet that loads first — so a rule here
+       * silently wins and takes the marker out of absolute positioning. It
+       * then stretches to the container's full width, and a label anchored at
+       * 50% of that lands hundreds of pixels away from its own pin. Measured:
+       * a 22px marker became 616px wide, with the caption 275px off. The
+       * engine's own absolute positioning is already the containing block
+       * these two need.
+       */
+      .esa-marker__label,
+      .esa-marker__tip {
+        position: absolute;
+        z-index: 1;
+        padding: 0 var(--spacing-100, 0.25rem);
+        border-radius: var(--radius-xs, 0.125rem);
+        /* Type comes from the composite class the marker sets, not from raw
+           size/weight declarations here — a composite IS the type role. */
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .esa-marker__label {
+        background: var(--color-background-elevation-raised, #fff);
+        color: var(--color-content-default-secondary, #646464);
+        box-shadow: var(--elevation-2, 0 1px 2px rgb(0 0 0 / 0.24));
+      }
+      .esa-marker__label--bottom {
+        inset-block-start: calc(100% + var(--spacing-050, 0.125rem));
+        inset-inline-start: 50%;
+        translate: -50% 0;
+      }
+      .esa-marker__label--top {
+        inset-block-end: calc(100% + var(--spacing-050, 0.125rem));
+        inset-inline-start: 50%;
+        translate: -50% 0;
+      }
+      .esa-marker__label--left {
+        inset-inline-end: calc(100% + var(--spacing-100, 0.25rem));
+        inset-block-start: 50%;
+        translate: 0 -50%;
+      }
+      .esa-marker__label--right {
+        inset-inline-start: calc(100% + var(--spacing-100, 0.25rem));
+        inset-block-start: 50%;
+        translate: 0 -50%;
+      }
+      /*
+       * The tooltip is INVERTED, and that is the difference the eye reads. A
+       * label is part of the map; a tooltip is a temporary overlay on top of
+       * it, and giving them the same chrome makes a transient thing look
+       * permanent.
+       */
+      .esa-marker__tip {
+        inset-block-end: calc(100% + var(--spacing-100, 0.25rem));
+        inset-inline-start: 50%;
+        translate: -50% 0;
+        background: var(--color-background-inverse, #202020);
+        color: var(--color-content-inverse, #fff);
+        opacity: 0;
+        transition: opacity 120ms ease;
+      }
+      .esa-marker__tip--visible {
+        opacity: 1;
+      }
+
       /* The engine gives a marker no focus affordance at all. */
       .esa-marker:focus-visible {
         outline: 2px solid var(--focus-ring-color, var(--color-border-default-focus, #2a6f97));

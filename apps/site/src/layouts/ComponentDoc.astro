@@ -71,6 +71,10 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
     {type !== 'reference' && <span class="pill">{type}</span>}
     {wraps && <span class="pill">wraps {wraps}</span>}
     {importLine && <code class="imp">{importLine}</code>}
+    {/* Only on `wc` pages, because only those have an Angular tab to explain. The
+        caveat that the package is not yet installable from a stock Angular build
+        is stated ONCE, there — repeating it under 101 snippets would be noise. */}
+    {type === 'wc' && <a class="ng-link" href={withBase('/guide/angular')}>Angular usage</a>}
   </div>
 
   {resolved === 'deprecated' && (
@@ -185,6 +189,16 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
 </DocsLayout>
 
 <style>
+  /* Sits beside .imp in the meta row and deliberately looks quieter than it —
+     the import line is what you need on this page; this is a pointer off it. */
+  .ng-link {
+    font-size: 12.5px;
+    color: var(--color-content-default-muted, #7c7c7c);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-default, #dcdcdc);
+  }
+  .ng-link:hover { color: var(--color-content-default, #171717); }
+
   /* Deprecation banner. The status pill is defined in DocsShell's global block
      alongside pill--stable, so only the page-level banner is scoped here. */
   .dep {

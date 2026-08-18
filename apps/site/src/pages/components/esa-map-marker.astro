@@ -8,6 +8,10 @@ const describe = {
   draggable: 'Let the user move the pin. Emits <code>markermove</code> when they let go.',
   selected: 'Grows the default pin. Reflected, so page CSS can react with an <code>esa-map-marker[selected]</code> rule.',
   anchor: 'Which part of the marker sits on the coordinate.',
+  label: 'A caption beside the pin, <strong>always visible</strong>. Rendered and themed by <code>esa-map</code>, so there is no CSS to write &mdash; and none you could write, since page CSS cannot reach it.',
+  'label-position': 'Which side of the pin the label sits on.',
+  tooltip: 'Text shown on hover <strong>and on focus</strong>. Setting it makes the marker interactive, because a hover-only tooltip is unreachable by keyboard.',
+  interactive: 'Make the pin focusable, with <code>role="button"</code> and Enter/Space. Implied by <code>tooltip</code> or a nested <code>esa-map-popup</code> &mdash; set it explicitly only when the page handles the click itself.',
 };
 
 const events = [
@@ -26,6 +30,42 @@ const events = [
     <p>
       Live examples are on the <a href="/components/esa-map#markers">Map page</a>: labelled cities
       with popups, and a draggable pin with a coordinate readout.
+    </p>
+  </Section>
+
+  <Section id="label-vs-tooltip" title="Label or tooltip — they are not the same control">
+    <p>
+      Both put a name next to a pin, and choosing between them by &ldquo;how much room have
+      I got&rdquo; gets it wrong. The difference is whether the name is
+      <strong>information on the map</strong> or a <strong>disclosure about one pin</strong>.
+    </p>
+    <div class="api-table">
+      <table>
+        <thead><tr><th></th><th><code>label</code></th><th><code>tooltip</code></th></tr></thead>
+        <tbody>
+          <tr><td>Visible</td><td>Always</td><td>On hover and on focus</td></tr>
+          <tr><td>Costs space</td><td>On every pin, always</td><td>Only while shown</td></tr>
+          <tr><td>Readable without interacting</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Makes the pin focusable</td><td>No</td><td>Yes &mdash; it has to</td></tr>
+          <tr><td>Use when</td><td>A few named sites where the name <em>is</em> the point</td><td>Many pins whose identity is otherwise a guess</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      A tooltip <strong>makes the marker interactive on its own</strong>, and that is not a
+      convenience: a tooltip only a pointer can reach is SC 2.1.1, Level A. So the pin becomes
+      a real focus target with <code>role="button"</code> and Enter/Space, and the tooltip
+      shows on focus as well as hover. It is also dismissible with <kbd>Escape</kbd> while the
+      pointer stays where it is &mdash; the half of SC 1.4.13 that hand-rolled tooltips
+      almost always miss.
+    </p>
+    <p class="meta">
+      Both are rendered by this component but <strong>styled by <code>esa-map</code></strong>,
+      because that is the shadow root they land in. That is also why they are props rather
+      than something you slot: a hand-rolled caption means writing the positioning yourself
+      and then finding that your CSS does not apply. Interactivity is skipped when your
+      slotted content already contains something focusable &mdash; your own button wins,
+      rather than being nested inside a second control.
     </p>
   </Section>
 

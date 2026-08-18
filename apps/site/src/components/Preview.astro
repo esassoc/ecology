@@ -1,0 +1,52 @@
+---
+// The hub's Preview — `@esa/docs/Preview.astro` plus the generated Angular tab.
+//
+// WHY A WRAPPER RATHER THAN PUTTING THIS IN THE SHARED COMPONENT: `@esa/docs` is
+// installed by every spoke, and a spoke has no hub component sources to parse —
+// `component-api.ts` finds them by counting four directories up from itself,
+// which means nothing outside this repo. So the shared component stays dumb and
+// takes a finished string; the knowledge of how to produce one lives here.
+//
+// Pages import THIS instead of `@esa/docs/Preview.astro`. That one-line swap is
+// the whole opt-in — no page passes a slug, an api, or a second code string.
+// The slug comes from the page's own URL and the sample names its own tags.
+//
+// An alias that quietly redirected `@esa/docs/Preview.astro` to this file would
+// have saved the 39 import edits and was rejected: an import that resolves
+// somewhere other than where it points is exactly the kind of magic that makes a
+// codebase unreadable six months later.
+import DocsPreview from '@esa/docs/Preview.astro';
+import { angularFor } from '../data/angular-snippet';
+
+interface Props {
+  code: string;
+  lang?: string;
+  align?: 'center' | 'start';
+  /**
+   * Escape hatch. A string hand-writes the Angular tab for a sample the
+   * transform declines (imperative demo JS, mostly); `false` suppresses the tab
+   * for a sample that has no meaningful Angular form at all.
+   *
+   * Both are reported at build time — an override the transform already agrees
+   * with is flagged as dead, because a second copy of a generated string is a
+   * second thing to keep in step.
+   */
+  angular?: string | false;
+}
+
+const { code, lang, align, angular } = Astro.props;
+
+// `/components/esa-switch-toggle/` → `esa-switch-toggle`.
+const slug = Astro.url.pathname.split('/').filter(Boolean).pop() ?? '';
+const angularCode = angularFor(code, slug, angular);
+---
+{/*
+  THE SLOT MUST BE FORWARDED. `DocsPreview` renders the live demo from its
+  default slot; a self-closing tag here passes it no children, so every live
+  example on every page that imports this wrapper silently disappears — the
+  code tab still renders, which is what makes it look fine. Measured: zero
+  live `esa-map` elements in the built map page.
+*/}
+<DocsPreview code={code} lang={lang} align={align} angular={angularCode}>
+  <slot />
+</DocsPreview>

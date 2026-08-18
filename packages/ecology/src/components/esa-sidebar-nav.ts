@@ -4,6 +4,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
 import { iconSvg } from './icon-registry';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-sidebar-nav — Lit Web Component.
@@ -51,7 +52,7 @@ export class EsaSidebarNav extends LitElement {
   static properties = {
     items: { type: Array },
     collapsed: { type: Boolean, reflect: true },
-    collapsible: { type: Boolean },
+    collapsible: { type: Boolean, converter: boolish },
     _expanded: { state: true },
   };
 

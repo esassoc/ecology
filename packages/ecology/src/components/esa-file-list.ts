@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 export interface EsaFile {
   /** File name shown in the row. */
@@ -29,7 +30,7 @@ export class EsaFileList extends LitElement {
   static properties = {
     files: { type: Array },
     removable: { type: Boolean, reflect: true },
-    downloadable: { type: Boolean, reflect: true },
+    downloadable: { type: Boolean, reflect: true, converter: boolish },
   };
 
   declare files: EsaFile[];
