@@ -391,8 +391,16 @@ export class EsaRadioGroup extends LitElement {
       color: var(--color-content-default, #202020);
     }
 
-    /* An invalid group reddens its legend — the group is what is invalid, and there is
-       no single box to outline the way a text field has. */
+    /* An invalid group reddens its legend — the group is what is invalid. This comment used
+       to add "and there is no single box to outline the way a text field has", and gave that
+       as the reason the ring stayed brand-coloured. The premise was right and the conclusion
+       was not: there is no single circle, so DO NOT outline one — re-point the token instead
+       and all N circles follow. That is the house mechanism for the error ring as of
+       2026-08-17 (see esa-text-field), and a group is the case that makes it obviously
+       correct rather than merely tidier. */
+    .items--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
+    }
     .items--error .group-label {
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }

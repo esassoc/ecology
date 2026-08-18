@@ -1,80 +1,424 @@
 {
   "color": {
-    "background-default": { "$value": "{color.gray.1}", "$type": "color", "$description": "The page canvas. Neutral is the DEFAULT intention, so it carries no intention word — every other background names its intention (`-brand`, `-danger`).\n\nMOVED gray-2 -> gray-1 on 2026-08-15, which UNDOES a deliberate inversion and is worth understanding before moving it back. This used to sit one step BELOW `background-elevation-raised` so cards read as lifted off the page by value alone. It now sits AT gray-1, the same value as `background-raised` and `background-floating` — the orientation Radix actually recommends, canvas lightest with elements stepping darker from it.\n\nWHAT THAT COSTS: a card no longer separates from the page by value at all (contrast 1.00). `esa-card` carries a 1px `--color-border-default` by default so the outlined and default variants still read — but `esa-card--elevated` has NO border and leans entirely on `--elevation-2`, a 4%-opacity shadow. Check that variant against this before trusting it.\n\nWHAT IT BUYS: the surface ramp now runs in one direction. Canvas gray-1, wells gray-3, hover gray-4 — every step away from the page is a step darker, instead of the page being darker than the things on it. (A resting field is `transparent` and takes no step at all; only a DISABLED one takes gray-3.)" },
-    "background-elevation-raised": { "$value": "{color.gray.1}", "$type": "color", "$description": "Cards, panels, anything sitting ON the canvas — one step up from the page.\n\nONE OF THREE RUNGS ON THE ELEVATION AXIS, with `background-elevation-sunken` below the canvas and `background-elevation-floating` above it. They carried three unrelated-looking names until 2026-08-15, which is why nothing said that re-pointing one leaves the ramp with a step missing. The intention slot names the AXIS; the variant slot names the rung.\n\nPAIRS WITH `--elevation-3` on the shadow ramp, which describes itself in the same words ('a surface sitting above the page but still part of it'). The two ramps are one concept expressed as value and as shadow, and the shared word is how you know which rungs go together." },
-    "background-elevation-floating": { "$value": "{color.gray.1}", "$type": "color", "$description": "Layers that float ABOVE the page, out of flow — dialogs, dropdown menus, command palettes, popovers. The top rung of the elevation axis; `background-elevation-raised` is the rung below it and `background-elevation-sunken` the one below the canvas.\n\nEQUAL TO `background-elevation-raised` IN THIS PALETTE and that is not a reason to merge them: identical default values do not make two tokens redundant at a layer whose whole job is being re-pointed. The dark scheme already separates them (gray-dark-2 vs gray-dark-3), which is the proof the roles are real.\n\nIT DOES NOT DERIVE FROM `background-elevation-raised`, and that was a decision rather than an omission. While the two looked like a base and its variant, deriving floating FROM raised was the obvious fix — a spoke re-points the card surface and gets dialogs for free. Reading them as SIBLINGS on one ramp says otherwise: siblings each own their step (`background-brand-subtle` does not derive from `background-brand`). The shared `elevation` prefix does that job instead, weakly but honestly, by putting the other rungs next to it in any theme file.\n\nPAIRS WITH `--elevation-4` through `--elevation-6` on the shadow ramp." },
-    "background-elevation-sunken": { "$value": "{color.gray.3}", "$type": "color", "$description": "The bottom rung of the elevation axis — below the canvas, where `background-elevation-raised` and `background-elevation-floating` are above it. Wells and inset areas. Step 3 = Radix resting UI-element background. Shares its step with `background-field` but NOT its role — see there for why they are two tokens." },
-    "background-field": { "$value": "transparent", "$type": "color", "$description": "The surface of an editable field — text inputs, textareas, selects, comboboxes, date pickers, the checkbox box and the radio circle. Promoted from the tier-3 `--form-bg` on 2026-08-14, which 13 components read: a surface shared by 13 components is an intent, not one component's override.\n\nTRANSPARENT, DELIBERATELY. A FIELD IS THE COLOUR OF WHATEVER CONTAINS IT. This is the only value that is correct in every container — a card, a dialog, a sunken well, the sidenav rail, a brand-tinted panel, light scheme or dark — because it is not a colour at all, it is the absence of one.\n\nHOW IT GOT HERE, so the greys are not retried: it pointed at `background-raised` (the CARD surface, renamed `background-elevation-raised` on 2026-08-15) until 2026-08-14, then gray-3, then gray-2 on 2026-08-15. Every one of those measured 1.00 to 1.11 against the surface it sat on. THE FILL WAS NEVER DOING THE WORK — the border always was. Each fixed grey was also wrong somewhere: correct on the canvas and inverted on a sunken well, where the field rendered LIGHTER than its own container. `background-hover` and `gray-a-*` alphas were both considered; the alpha adapts but still needs a dark-scheme counterpart, because black-alpha darkens an already-dark surface. Transparent needs nothing.\n\nREST, HOVER, FOCUS AND ERROR ARE ALL BORDER STATES, not fills: rest `border`, hover `border-strong` (via `--form-border-color-hover`), focus `border-focus` plus the ring, error `--form-error-border-color`. `esa-input-tag` had done hover this way all along and was the model.\n\nDISABLED IS THE EXCEPTION AND IT IS A FILL — `background-disabled` plus `border-disabled` plus `content-disabled`, the complete tier-2 triple. A disabled field is the one that SHOULD break from its container: it is no longer editable, so it stops belonging to the surface. Transparency is the RESTING contract, not a rule against fills.\n\nIT MUST BE WRITTEN, NOT OMITTED. Dropping the `background` declaration does not give transparency on a native element — the UA stylesheet paints `<input>`/`<textarea>`/`<select>` with `field` (about white) and `<button>` with `ButtonFace` (about #efefef). Six of the kit's fifteen field surfaces are native, so omitting would render a transparent wrapper beside a white textarea beside a grey combobox trigger, varying by browser, in a colour no theme can reach.\n\nTHE TOKEN SURVIVES ITS OWN DEFAULT. A spoke that wants filled inputs — a Material-ish house style — sets this one line and gets them back everywhere. Deleting the token would have made that a `/request-lego`.\n\nACCESSIBILITY, recorded not fixed: a transparent field introduces NO new contrast pair, which is a genuine simplification — the border against the parent is the only thing to check, and `--color-border-default` on `--color-background-default` is 1.53. Batched pass." },
-    "background-default-hover": { "$value": "{color.gray.4}", "$type": "color", "$description": "Step 4 = Radix hovered UI-element background. The neutral counterpart to `background-brand-muted-hover`." },
-    "background-default-knockout": { "$value": "{color.gray.12}", "$type": "color", "$description": "Darkest chrome surface — top app bars, dark navigation. Pairs with `content-inverse`. A spoke re-points this to its darkest brand shade." },
-    "border-default-knockout": { "$value": "{color.gray-dark.7}", "$type": "color", "$description": "The default hairline inside a knocked-out region. #484848 on #202020. A divider in a dark app bar had NO token before this and every component that needed one either hardcoded a value or read a light-theme border that vanished into the ground.\n\nTHE KNOCKOUT VARIANT means the reverse of whatever ground this theme sits on — NOT \"the dark value\". A theme whose default is already dark re-points this to a LIGHT value, and the name stays true. That is why the variant is not called `-dark`. See the `inverse-to-knockout` row in migrations.json." },
-    "background-default-knockout-hover": { "$value": "{color.gray.11}", "$type": "color", "$description": "Hover/active state for `background-default-knockout`.\n\nZERO READERS, and it had none under its previous name (`background-inverse-hover`) either — the orphan predates the 2026-08-15 rename and was carried across rather than quietly dropped, because deleting a SHIPPED name is a `removed: true` row and a separate decision from renaming one. Logged for that call, not fixed here." },
-    "background-disabled": { "$value": "{color.gray.3}", "$type": "color", "$description": "The fill of a disabled field — input, textarea, select, combobox, date picker, colour hex field, tag container, unchecked checkbox box, radio circle, file dropzone.\n\nDisabled sits at the INTENTION level, not the state level: one disabled definition per property instead of a disabled variant of every intention. This is one third of a complete triple — `background-disabled`, `border-disabled`, `content-disabled` — and a disabled field reads all three.\n\nTHIS IS THE ONE STATE WHERE A FIELD IS NOT THE COLOUR OF ITS CONTAINER, and that is deliberate. `background-field` is `transparent` so a resting field belongs to whatever holds it; a disabled field BREAKS from the surface, and the break is the signal that it is no longer editable. Rest, hover, focus and error are all border states; disabled is the fill state.\n\nIT WAS BRIEFLY UNREAD, on 2026-08-15, and that is the error worth recording. When fields went transparent every disabled fill came out with them and the state was re-expressed as a hardcoded `opacity: 0.5`. That invented a mechanism next to a token built for the job, and left two of the three disabled roles with zero readers. A declared token naming the exact intention is the answer; an opacity is what you reach for when no such token exists.\n\nIT ALSO STOPPED CHASING. Through 2026-08-14/15 this tracked `background-field` step for step (gray-3 -> gray-2 -> gray-1) so a disabled field would not match a resting one. It is back at gray-3 and stays there: a role whose value is derived from ANOTHER role’s value is not a role, it is a calculation. Now that resting fields have no fill, this has nothing to chase and stands on its own.\n\nWHERE IT DOES NOT APPLY: a CHECKED checkbox or a selected radio keeps its brand fill when disabled — grey over it would erase the selection. Those dim via `opacity` on the row, which is the right tool for dimming a fill this token cannot name." },
-
-    "background-brand": { "$value": "{color.grass.9}", "$type": "color", "$description": "The brand solid fill. Step 9 = Radix solid fill, the canonical interactive fill. Named `brand` rather than `primary` because `primary` is already spoken for one tier down the same word: `content-primary` means the most prominent TEXT, not brand-coloured text." },
-    "background-brand-hover": { "$value": "{color.grass.10}", "$type": "color", "$description": "Step 10 = Radix hovered solid fill." },
-    "background-brand-active": { "$value": "{color.grass.10}", "$type": "color", "$description": "The PRESSED fill. Equal to `-hover` in this palette, and briefly deleted for that reason — a mistake. Identical default values do not make two tokens redundant at a layer whose whole job is being re-pointed; `background-elevation-raised` and `background-elevation-floating` are both gray-1 and stay separate on exactly this reasoning. cb-fish proved it by giving hover and active distinct navy steps. A token earns its slot by naming a real role, not by holding a distinct value. NOTE: 34 of 35 components style `:hover` and only one styles `:active`, so this role is declared but barely delivered — that gap is the real work, not this token." },
-    "background-brand-subtle": { "$value": "{color.grass.2}", "$type": "color", "$description": "Step 2 = subtle brand-tinted surface. Section backgrounds, card tints." },
-    "background-brand-muted": { "$value": "{color.grass.3}", "$type": "color", "$description": "Step 3 = brand-tinted UI element at rest. Chips, tags, active filter pills." },
-    "background-brand-muted-hover": { "$value": "{color.grass.4}", "$type": "color", "$description": "Step 4 = brand-tinted UI element, hovered." },
-    "background-brand-secondary": { "$value": "{color.grass.8}", "$type": "color", "$description": "A second brand fill, for the `secondary` button and badge variants. A VARIANT of brand rather than its own intention — a spoke that wants a genuinely different hue here (cb-fish uses blue) overrides this one token." },
-    "background-brand-secondary-hover": { "$value": "{color.grass.9}", "$type": "color" },
-
-    "background-accent": { "$value": "{color.orange.9}", "$type": "color", "$description": "Decorative highlight, currently only used for map pins and motion demos. Thin surface area — treat a new reader as the first real use." },
-    "background-accent-hover": { "$value": "{color.orange.10}", "$type": "color" },
-
-    "background-ai": { "$value": "{color.copper.9}", "$type": "color", "$description": "Reserved for AI-generated or AI-assisted UI, so it never collides with brand or status." },
-    "background-ai-hover": { "$value": "{color.copper.10}", "$type": "color" },
-    "background-ai-subtle": { "$value": "{color.copper.2}", "$type": "color" },
-
-    "background-utility-info": { "$value": "{color.blue.9}", "$type": "color", "$description": "Step 9 = Radix solid fill." },
-    "background-utility-info-hover": { "$value": "{color.blue.10}", "$type": "color" },
-    "background-utility-info-subtle": { "$value": "{color.blue.2}", "$type": "color", "$description": "Step 2 = subtle tinted surface. The usual alert/banner background." },
-    "background-utility-success": { "$value": "{color.lime.9}", "$type": "color" },
-    "background-utility-success-hover": { "$value": "{color.lime.10}", "$type": "color" },
-    "background-utility-success-subtle": { "$value": "{color.lime.2}", "$type": "color" },
-    "background-utility-warning": { "$value": "{color.yellow.9}", "$type": "color" },
-    "background-utility-warning-hover": { "$value": "{color.yellow.10}", "$type": "color" },
-    "background-utility-warning-subtle": { "$value": "{color.yellow.2}", "$type": "color" },
-    "background-utility-danger": { "$value": "{color.red.9}", "$type": "color", "$description": "Error and destructive intent." },
-    "background-utility-danger-hover": { "$value": "{color.red.10}", "$type": "color" },
-    "background-utility-danger-subtle": { "$value": "{color.red.2}", "$type": "color" },
-
-    "content-default": { "$value": "{color.gray.12}", "$type": "color", "$description": "Body text and icons. `content` rather than `text` because these are read by icons and SVG strokes too — that was already happening under the old `--color-text-*` names, which made those call sites read wrong." },
-    "content-default-secondary": { "$value": "{color.gray.11}", "$type": "color", "$description": "Supporting text." },
-    "content-default-tertiary": { "$value": "{color.gray.11}", "$type": "color", "$description": "A third prominence level. Equal to `-secondary` in the hub's neutral ramp, and briefly deleted for that reason — same mistake as `background-brand-active`. cb-fish runs a four-step grey ramp (900/700/600/500) where this is a distinct step, so the level is real even though this palette does not separate it." },
-    "content-default-muted": { "$value": "{color.gray.10}", "$type": "color", "$description": "The least prominent readable text. Placeholders, timestamps, help text." },
-    "content-default-knockout": { "$value": "{color.gray.1}", "$type": "color", "$description": "Content on `background-inverse`." },
-    "content-disabled": { "$value": "{color.gray.9}", "$type": "color" },
-    "content-link": { "$value": "{color.background-brand}", "$type": "color", "$description": "Points at the step-9 SOLID FILL, not step 11. That is inherited, not chosen — it is what `--color-text-link` already resolved to, and this rename was value-neutral by design. `content-brand` (step 11) is the step Radix intends for coloured text on a surface, so this is a candidate to re-point." },
-    "content-link-hover": { "$value": "{color.background-brand-hover}", "$type": "color" },
-
-    "content-brand": { "$value": "{color.grass.11}", "$type": "color", "$description": "Brand-coloured TEXT on a surface — link-style buttons, outline button labels. Step 11 is Radix's step for exactly this. Formerly `--color-primary-strong`, a name that read like a bolder fill and got used as one." },
-    "content-brand-secondary": { "$value": "{color.grass.11}", "$type": "color" },
-    "content-ai": { "$value": "{color.copper.11}", "$type": "color" },
-    "content-utility-info": { "$value": "{color.blue.11}", "$type": "color", "$description": "Step 11 = coloured text on a surface." },
-    "content-utility-success": { "$value": "{color.lime.11}", "$type": "color" },
-    "content-utility-warning": { "$value": "{color.yellow.11}", "$type": "color" },
-    "content-utility-danger": { "$value": "{color.red.11}", "$type": "color" },
-
-    "content-on-brand": { "$value": "{color.gray.1}", "$type": "color", "$description": "Foreground ON the matching solid fill. There is now one of these per intention, because five of them were missing and components hardcoded #fff instead — which silently fails contrast on the bright scales. Grass 9 is not bright, so light text is correct here; override if your brand ramp is." },
-    "content-on-brand-secondary": { "$value": "{color.grass.12}", "$type": "color", "$description": "Grass 8 is a bright fill — light text fails contrast, so this is dark. Override when your secondary fill is a dark scale." },
-    "content-on-accent": { "$value": "{color.gray.1}", "$type": "color" },
-    "content-on-ai": { "$value": "{color.gray.1}", "$type": "color" },
-    "content-on-utility-info": { "$value": "{color.gray.1}", "$type": "color" },
-    "content-on-utility-success": { "$value": "{color.lime.12}", "$type": "color", "$description": "Lime is one of Radix's bright scales — its step 9 needs DARK text. Override when your success colour is not a bright scale." },
-    "content-on-utility-warning": { "$value": "{color.yellow.12}", "$type": "color", "$description": "Yellow is a bright scale — step 9 needs dark text." },
-    "content-on-utility-danger": { "$value": "{color.gray.1}", "$type": "color" },
-
-    "border-default": { "$value": "{color.gray.7}", "$type": "color", "$description": "The default border. Step 7 = Radix element border." },
-    "border-default-subtle": { "$value": "{color.gray.6}", "$type": "color", "$description": "Step 6 = Radix subtle border. Was `--color-border-light`, which described lightness rather than prominence and so did not invert sensibly in a dark theme." },
-    "border-default-strong": { "$value": "{color.gray.8}", "$type": "color", "$description": "Step 8 = Radix stronger border / hovered element border." },
-    "border-default-focus": { "$value": "{color.grass.10}", "$type": "color", "$description": "The focus ring — THE BRAND, AT THE FIRST RAMP STEP THAT CAN BE SEEN. Step 10 rather than the step-9 brand fill, and a primitive reference rather than {color.background-brand}. Both of those shipped here and both were wrong in instructive ways, so the history is written out.\n\nIT USED TO BE {color.grass.8}, and because spokes re-point semantics and never primitives, the override could not reach it: cb-fish re-pointed the brand to navy and kept Ecology-green focus rings, while its links went navy correctly (those already chained off the semantic). That failure is exactly why this token pointing at a primitive AGAIN needs the justification below — read it before deciding this is the same mistake.\n\nTHEN IT WAS {color.background-brand}, which fixed reachability and could not fix contrast. SC 1.4.11 asks the indicator for 3:1 against adjacent colours; the brand fill managed 2.95:1 on the raised and canvas surfaces and 2.66:1 on the sunken one. A note here once recorded 'moving from step 8 to step 9 lifts focus-ring contrast from 2.32:1 to 2.95:1 against a raised surface' as a win — it recorded a smaller FAILURE as a win. Nor could re-pointing fix it: whatever colour a spoke's brand is, it is chosen for brand reasons and may land anywhere on the luminance scale. Step 9 is engineered to clear 3:1 as a SOLID FILL; a ring needs 3:1 as a HAIRLINE against the same surfaces, which is a different and harder ask.\n\nA SECOND, NON-BRAND CONTRAST BAND was tried on 2026-08-16 and reverted the same day — it read as a heavy near-black slab around every focused control. DO NOT RE-ADD A BAND without agreeing the requirement and the weight first. The three tokens it needed (--focus-ring-halo, --focus-ring-halo-spread, --color-border-default-focus-halo) were never committed to this package in any commit; if you find them named in a document, that document is stale.\n\nWHAT LANDED INSTEAD: walk the brand's own ramp from step 9 upward and take the first step clearing 3:1 on every surface in that scheme. grass step 10 measures 3.07:1 on the sunken surface and 3.91:1 on the other three — still the brand, one step along its own curve. The walk is resolveFocusRing in scripts/lib/theme-recipe.mjs and runs per theme per scheme; this value is the hub's own answer to it, which is why it names a step rather than a role. Measured across 216 seeds in both schemes, every brand ramp has a usable step (worst best-available 9.55:1), so in practice THE RING IS ALWAYS THE BRAND.\n\nWHY A PRIMITIVE REFERENCE IS ACCEPTED, given the cb-fish history above. A var() chain that always resolves cannot express 'the brand, unless the brand cannot be seen' — CSS has no function that tests a candidate colour's contrast (Color 5's color-contrast() was cut down to contrast-color(), which only returns black or white against a background), so the condition cannot live in the cascade at all. Three things replace what the chain used to guarantee: theme-recipe.mjs emits this role for EVERY generated theme in both schemes, even when the walk picks step 9 and the value is unchanged, so a spoke can never inherit grass; packages/spoke-template carries the declaration so a hand-authored theme has it in front of it; and check-contrast.mjs grades it at level `fail` against all four surfaces in both schemes, so a theme that does neither is told. Teeth in the gate, not the cascade — the shape SPEC.md already states for the assurance axis. A SPOKE SHOULD NOT DECLARE THIS TOKEN BY HAND: a theme file loads after tokens.css at equal specificity, so declaring it overrides the walk and hands back the failure it exists to prevent.\n\nDOWNSTREAM, and not obvious from either name: --form-border-color-focus (component-tokens.css) chains off this token, so the focused FIELD BORDER moves with the ring. --focus-ring-color is the tier-3 hook and is where a per-surface exception belongs — a dark app bar is the real case, because a near-black chrome surface in the LIGHT scheme is the one ground no brand-derived ring value can serve." },
-    "border-disabled": { "$value": "{color.gray.6}", "$type": "color" },
-    "border-brand": { "$value": "{color.grass.6}", "$type": "color" },
-    "border-utility-info": { "$value": "{color.blue.6}", "$type": "color" },
-    "border-utility-success": { "$value": "{color.lime.6}", "$type": "color" },
-    "border-utility-warning": { "$value": "{color.yellow.6}", "$type": "color" },
-    "border-utility-danger": { "$value": "{color.red.6}", "$type": "color" }
+    "background-default": {
+      "$value": "{color.gray.1}",
+      "$type": "color",
+      "$description": "The page canvas. Neutral is the DEFAULT intention, so it carries no intention word — every other background names its intention (`-brand`, `-danger`).\n\nMOVED gray-2 -> gray-1 on 2026-08-15, which UNDOES a deliberate inversion and is worth understanding before moving it back. This used to sit one step BELOW `background-elevation-raised` so cards read as lifted off the page by value alone. It now sits AT gray-1, the same value as `background-raised` and `background-floating` — the orientation Radix actually recommends, canvas lightest with elements stepping darker from it.\n\nWHAT THAT COSTS: a card no longer separates from the page by value at all (contrast 1.00). `esa-card` carries a 1px `--color-border-default` by default so the outlined and default variants still read — but `esa-card--elevated` has NO border and leans entirely on `--elevation-2`, a 4%-opacity shadow. Check that variant against this before trusting it.\n\nWHAT IT BUYS: the surface ramp now runs in one direction. Canvas gray-1, wells gray-3, hover gray-4 — every step away from the page is a step darker, instead of the page being darker than the things on it. (A resting field is `transparent` and takes no step at all; only a DISABLED one takes gray-3.)"
+    },
+    "background-elevation-raised": {
+      "$value": "{color.gray.1}",
+      "$type": "color",
+      "$description": "Cards, panels, anything sitting ON the canvas — one step up from the page.\n\nONE OF THREE RUNGS ON THE ELEVATION AXIS, with `background-elevation-sunken` below the canvas and `background-elevation-floating` above it. They carried three unrelated-looking names until 2026-08-15, which is why nothing said that re-pointing one leaves the ramp with a step missing. The intention slot names the AXIS; the variant slot names the rung.\n\nPAIRS WITH `--elevation-3` on the shadow ramp, which describes itself in the same words ('a surface sitting above the page but still part of it'). The two ramps are one concept expressed as value and as shadow, and the shared word is how you know which rungs go together."
+    },
+    "background-elevation-floating": {
+      "$value": "{color.gray.1}",
+      "$type": "color",
+      "$description": "Layers that float ABOVE the page, out of flow — dialogs, dropdown menus, command palettes, popovers. The top rung of the elevation axis; `background-elevation-raised` is the rung below it and `background-elevation-sunken` the one below the canvas.\n\nEQUAL TO `background-elevation-raised` IN THIS PALETTE and that is not a reason to merge them: identical default values do not make two tokens redundant at a layer whose whole job is being re-pointed. The dark scheme already separates them (gray-dark-2 vs gray-dark-3), which is the proof the roles are real.\n\nIT DOES NOT DERIVE FROM `background-elevation-raised`, and that was a decision rather than an omission. While the two looked like a base and its variant, deriving floating FROM raised was the obvious fix — a spoke re-points the card surface and gets dialogs for free. Reading them as SIBLINGS on one ramp says otherwise: siblings each own their step (`background-brand-subtle` does not derive from `background-brand`). The shared `elevation` prefix does that job instead, weakly but honestly, by putting the other rungs next to it in any theme file.\n\nPAIRS WITH `--elevation-4` through `--elevation-6` on the shadow ramp."
+    },
+    "background-elevation-sunken": {
+      "$value": "{color.gray.3}",
+      "$type": "color",
+      "$description": "The bottom rung of the elevation axis — below the canvas, where `background-elevation-raised` and `background-elevation-floating` are above it. Wells and inset areas. Step 3 = Radix resting UI-element background. Shares its step with `background-field` but NOT its role — see there for why they are two tokens."
+    },
+    "background-field": {
+      "$value": "transparent",
+      "$type": "color",
+      "$description": "The surface of an editable field — text inputs, textareas, selects, comboboxes, date pickers, the checkbox box and the radio circle. Promoted from the tier-3 `--form-bg` on 2026-08-14, which 13 components read: a surface shared by 13 components is an intent, not one component's override.\n\nTRANSPARENT, DELIBERATELY. A FIELD IS THE COLOUR OF WHATEVER CONTAINS IT. This is the only value that is correct in every container — a card, a dialog, a sunken well, the sidenav rail, a brand-tinted panel, light scheme or dark — because it is not a colour at all, it is the absence of one.\n\nHOW IT GOT HERE, so the greys are not retried: it pointed at `background-raised` (the CARD surface, renamed `background-elevation-raised` on 2026-08-15) until 2026-08-14, then gray-3, then gray-2 on 2026-08-15. Every one of those measured 1.00 to 1.11 against the surface it sat on. THE FILL WAS NEVER DOING THE WORK — the border always was. Each fixed grey was also wrong somewhere: correct on the canvas and inverted on a sunken well, where the field rendered LIGHTER than its own container. `background-hover` and `gray-a-*` alphas were both considered; the alpha adapts but still needs a dark-scheme counterpart, because black-alpha darkens an already-dark surface. Transparent needs nothing.\n\nREST, HOVER, FOCUS AND ERROR ARE ALL BORDER STATES, not fills: rest `border`, hover `border-strong` (via `--form-border-color-hover`), focus `border-focus` plus the ring, error `--form-error-border-color`. `esa-input-tag` had done hover this way all along and was the model.\n\nDISABLED IS THE EXCEPTION AND IT IS A FILL — `background-disabled` plus `border-disabled` plus `content-disabled`, the complete tier-2 triple. A disabled field is the one that SHOULD break from its container: it is no longer editable, so it stops belonging to the surface. Transparency is the RESTING contract, not a rule against fills.\n\nIT MUST BE WRITTEN, NOT OMITTED. Dropping the `background` declaration does not give transparency on a native element — the UA stylesheet paints `<input>`/`<textarea>`/`<select>` with `field` (about white) and `<button>` with `ButtonFace` (about #efefef). Six of the kit's fifteen field surfaces are native, so omitting would render a transparent wrapper beside a white textarea beside a grey combobox trigger, varying by browser, in a colour no theme can reach.\n\nTHE TOKEN SURVIVES ITS OWN DEFAULT. A spoke that wants filled inputs — a Material-ish house style — sets this one line and gets them back everywhere. Deleting the token would have made that a `/request-lego`.\n\nACCESSIBILITY, recorded not fixed: a transparent field introduces NO new contrast pair, which is a genuine simplification — the border against the parent is the only thing to check, and `--color-border-default` on `--color-background-default` is 1.53. Batched pass."
+    },
+    "background-default-hover": {
+      "$value": "{color.gray.4}",
+      "$type": "color",
+      "$description": "Step 4 = Radix hovered UI-element background. The neutral counterpart to `background-brand-muted-hover`."
+    },
+    "background-default-knockout": {
+      "$value": "{color.gray.12}",
+      "$type": "color",
+      "$description": "Darkest chrome surface — top app bars, dark navigation. Pairs with `content-inverse`. A spoke re-points this to its darkest brand shade."
+    },
+    "border-default-knockout": {
+      "$value": "{color.gray-dark.7}",
+      "$type": "color",
+      "$description": "The default hairline inside a knocked-out region. #484848 on #202020. A divider in a dark app bar had NO token before this and every component that needed one either hardcoded a value or read a light-theme border that vanished into the ground.\n\nTHE KNOCKOUT VARIANT means the reverse of whatever ground this theme sits on — NOT \"the dark value\". A theme whose default is already dark re-points this to a LIGHT value, and the name stays true. That is why the variant is not called `-dark`. See the `inverse-to-knockout` row in migrations.json."
+    },
+    "background-default-knockout-hover": {
+      "$value": "{color.gray.11}",
+      "$type": "color",
+      "$description": "Hover/active state for `background-default-knockout`.\n\nZERO READERS, and it had none under its previous name (`background-inverse-hover`) either — the orphan predates the 2026-08-15 rename and was carried across rather than quietly dropped, because deleting a SHIPPED name is a `removed: true` row and a separate decision from renaming one. Logged for that call, not fixed here."
+    },
+    "background-disabled": {
+      "$value": "{color.gray.3}",
+      "$type": "color",
+      "$description": "The fill of a disabled field — input, textarea, select, combobox, date picker, colour hex field, tag container, unchecked checkbox box, radio circle, file dropzone.\n\nDisabled sits at the INTENTION level, not the state level: one disabled definition per property instead of a disabled variant of every intention. This is one third of a complete triple — `background-disabled`, `border-disabled`, `content-disabled` — and a disabled field reads all three.\n\nTHIS IS THE ONE STATE WHERE A FIELD IS NOT THE COLOUR OF ITS CONTAINER, and that is deliberate. `background-field` is `transparent` so a resting field belongs to whatever holds it; a disabled field BREAKS from the surface, and the break is the signal that it is no longer editable. Rest, hover, focus and error are all border states; disabled is the fill state.\n\nIT WAS BRIEFLY UNREAD, on 2026-08-15, and that is the error worth recording. When fields went transparent every disabled fill came out with them and the state was re-expressed as a hardcoded `opacity: 0.5`. That invented a mechanism next to a token built for the job, and left two of the three disabled roles with zero readers. A declared token naming the exact intention is the answer; an opacity is what you reach for when no such token exists.\n\nIT ALSO STOPPED CHASING. Through 2026-08-14/15 this tracked `background-field` step for step (gray-3 -> gray-2 -> gray-1) so a disabled field would not match a resting one. It is back at gray-3 and stays there: a role whose value is derived from ANOTHER role’s value is not a role, it is a calculation. Now that resting fields have no fill, this has nothing to chase and stands on its own.\n\nWHERE IT DOES NOT APPLY: a CHECKED checkbox or a selected radio keeps its brand fill when disabled — grey over it would erase the selection. Those dim via `opacity` on the row, which is the right tool for dimming a fill this token cannot name."
+    },
+    "background-brand": {
+      "$value": "{color.grass.9}",
+      "$type": "color",
+      "$description": "The brand solid fill. Step 9 = Radix solid fill, the canonical interactive fill. Named `brand` rather than `primary` because `primary` is already spoken for one tier down the same word: `content-primary` means the most prominent TEXT, not brand-coloured text."
+    },
+    "background-brand-hover": {
+      "$value": "{color.grass.10}",
+      "$type": "color",
+      "$description": "Step 10 = Radix hovered solid fill."
+    },
+    "background-brand-active": {
+      "$value": "{color.grass.10}",
+      "$type": "color",
+      "$description": "The PRESSED fill. Equal to `-hover` in this palette, and briefly deleted for that reason — a mistake. Identical default values do not make two tokens redundant at a layer whose whole job is being re-pointed; `background-elevation-raised` and `background-elevation-floating` are both gray-1 and stay separate on exactly this reasoning. cb-fish proved it by giving hover and active distinct navy steps. A token earns its slot by naming a real role, not by holding a distinct value. NOTE: 34 of 35 components style `:hover` and only one styles `:active`, so this role is declared but barely delivered — that gap is the real work, not this token."
+    },
+    "background-brand-subtle": {
+      "$value": "{color.grass.2}",
+      "$type": "color",
+      "$description": "Step 2 = subtle brand-tinted surface. Section backgrounds, card tints."
+    },
+    "background-brand-muted": {
+      "$value": "{color.grass.3}",
+      "$type": "color",
+      "$description": "Step 3 = brand-tinted UI element at rest. Chips, tags, active filter pills."
+    },
+    "background-brand-muted-hover": {
+      "$value": "{color.grass.4}",
+      "$type": "color",
+      "$description": "Step 4 = brand-tinted UI element, hovered."
+    },
+    "background-brand-secondary": {
+      "$value": "{color.grass.8}",
+      "$type": "color",
+      "$description": "A second brand fill, for the `secondary` button and badge variants. A VARIANT of brand rather than its own intention — a spoke that wants a genuinely different hue here (cb-fish uses blue) overrides this one token."
+    },
+    "background-brand-secondary-hover": {
+      "$value": "{color.grass.9}",
+      "$type": "color"
+    },
+    "background-accent": {
+      "$value": "{color.orange.9}",
+      "$type": "color",
+      "$description": "Decorative highlight, currently only used for map pins and motion demos. Thin surface area — treat a new reader as the first real use."
+    },
+    "background-accent-hover": {
+      "$value": "{color.orange.10}",
+      "$type": "color"
+    },
+    "background-ai": {
+      "$value": "{color.copper.9}",
+      "$type": "color",
+      "$description": "Reserved for AI-generated or AI-assisted UI, so it never collides with brand or status."
+    },
+    "background-ai-hover": {
+      "$value": "{color.copper.10}",
+      "$type": "color"
+    },
+    "background-ai-subtle": {
+      "$value": "{color.copper.2}",
+      "$type": "color"
+    },
+    "background-utility-info": {
+      "$value": "{color.blue.9}",
+      "$type": "color",
+      "$description": "Step 9 = Radix solid fill."
+    },
+    "background-utility-info-hover": {
+      "$value": "{color.blue.10}",
+      "$type": "color"
+    },
+    "background-utility-info-subtle": {
+      "$value": "{color.blue.2}",
+      "$type": "color",
+      "$description": "Step 2 = subtle tinted surface. The usual alert/banner background."
+    },
+    "background-utility-success": {
+      "$value": "{color.lime.9}",
+      "$type": "color"
+    },
+    "background-utility-success-hover": {
+      "$value": "{color.lime.10}",
+      "$type": "color"
+    },
+    "background-utility-success-subtle": {
+      "$value": "{color.lime.2}",
+      "$type": "color"
+    },
+    "background-utility-warning": {
+      "$value": "{color.yellow.9}",
+      "$type": "color"
+    },
+    "background-utility-warning-hover": {
+      "$value": "{color.yellow.10}",
+      "$type": "color"
+    },
+    "background-utility-warning-subtle": {
+      "$value": "{color.yellow.2}",
+      "$type": "color"
+    },
+    "background-utility-danger": {
+      "$value": "{color.red.9}",
+      "$type": "color",
+      "$description": "Error and destructive intent."
+    },
+    "background-utility-danger-hover": {
+      "$value": "{color.red.10}",
+      "$type": "color"
+    },
+    "background-utility-danger-subtle": {
+      "$value": "{color.red.2}",
+      "$type": "color"
+    },
+    "content-default": {
+      "$value": "{color.gray.12}",
+      "$type": "color",
+      "$description": "Body text and icons. `content` rather than `text` because these are read by icons and SVG strokes too — that was already happening under the old `--color-text-*` names, which made those call sites read wrong."
+    },
+    "content-default-secondary": {
+      "$value": "{color.gray.11}",
+      "$type": "color",
+      "$description": "Supporting text."
+    },
+    "content-default-tertiary": {
+      "$value": "{color.gray.11}",
+      "$type": "color",
+      "$description": "A third prominence level. Equal to `-secondary` in the hub's neutral ramp, and briefly deleted for that reason — same mistake as `background-brand-active`. cb-fish runs a four-step grey ramp (900/700/600/500) where this is a distinct step, so the level is real even though this palette does not separate it."
+    },
+    "content-default-muted": {
+      "$value": "{color.gray.10}",
+      "$type": "color",
+      "$description": "The least prominent readable text. Placeholders, timestamps, help text."
+    },
+    "content-default-knockout": {
+      "$value": "{color.gray.1}",
+      "$type": "color",
+      "$description": "Content on `background-inverse`."
+    },
+    "content-disabled": {
+      "$value": "{color.gray.9}",
+      "$type": "color"
+    },
+    "content-link": {
+      "$value": "{color.background-brand}",
+      "$type": "color",
+      "$description": "Points at the step-9 SOLID FILL, not step 11. That is inherited, not chosen — it is what `--color-text-link` already resolved to, and this rename was value-neutral by design. `content-brand` (step 11) is the step Radix intends for coloured text on a surface, so this is a candidate to re-point."
+    },
+    "content-link-hover": {
+      "$value": "{color.background-brand-hover}",
+      "$type": "color"
+    },
+    "content-brand": {
+      "$value": "{color.grass.11}",
+      "$type": "color",
+      "$description": "Brand-coloured TEXT on a surface — link-style buttons, outline button labels. Step 11 is Radix's step for exactly this. Formerly `--color-primary-strong`, a name that read like a bolder fill and got used as one."
+    },
+    "content-brand-secondary": {
+      "$value": "{color.grass.11}",
+      "$type": "color"
+    },
+    "content-ai": {
+      "$value": "{color.copper.11}",
+      "$type": "color"
+    },
+    "content-utility-info": {
+      "$value": "{color.blue.11}",
+      "$type": "color",
+      "$description": "Step 11 = coloured text on a surface."
+    },
+    "content-utility-success": {
+      "$value": "{color.lime.11}",
+      "$type": "color"
+    },
+    "content-utility-warning": {
+      "$value": "{color.yellow.11}",
+      "$type": "color"
+    },
+    "content-utility-danger": {
+      "$value": "{color.red.11}",
+      "$type": "color"
+    },
+    "content-on-brand": {
+      "$value": "{color.gray.1}",
+      "$type": "color",
+      "$description": "Foreground ON the matching solid fill. There is now one of these per intention, because five of them were missing and components hardcoded #fff instead — which silently fails contrast on the bright scales. Grass 9 is not bright, so light text is correct here; override if your brand ramp is."
+    },
+    "content-on-brand-secondary": {
+      "$value": "{color.grass.12}",
+      "$type": "color",
+      "$description": "Grass 8 is a bright fill — light text fails contrast, so this is dark. Override when your secondary fill is a dark scale."
+    },
+    "content-on-accent": {
+      "$value": "{color.gray.1}",
+      "$type": "color"
+    },
+    "content-on-ai": {
+      "$value": "{color.gray.1}",
+      "$type": "color"
+    },
+    "content-on-utility-info": {
+      "$value": "{color.gray.1}",
+      "$type": "color"
+    },
+    "content-on-utility-success": {
+      "$value": "{color.lime.12}",
+      "$type": "color",
+      "$description": "Lime is one of Radix's bright scales — its step 9 needs DARK text. Override when your success colour is not a bright scale."
+    },
+    "content-on-utility-warning": {
+      "$value": "{color.yellow.12}",
+      "$type": "color",
+      "$description": "Yellow is a bright scale — step 9 needs dark text."
+    },
+    "content-on-utility-danger": {
+      "$value": "{color.gray.1}",
+      "$type": "color"
+    },
+    "border-default": {
+      "$value": "{color.gray.7}",
+      "$type": "color",
+      "$description": "The default border. Step 7 = Radix element border."
+    },
+    "border-default-subtle": {
+      "$value": "{color.gray.6}",
+      "$type": "color",
+      "$description": "Step 6 = Radix subtle border. Was `--color-border-light`, which described lightness rather than prominence and so did not invert sensibly in a dark theme."
+    },
+    "border-default-strong": {
+      "$value": "{color.gray.8}",
+      "$type": "color",
+      "$description": "Step 8 = Radix stronger border / hovered element border."
+    },
+    "border-default-focus": {
+      "$value": "{color.grass.10}",
+      "$type": "color",
+      "$description": "The focus ring — THE BRAND, AT THE FIRST RAMP STEP THAT CAN BE SEEN. Step 10 rather than the step-9 brand fill, and a primitive reference rather than {color.background-brand}. Both of those shipped here and both were wrong in instructive ways, so the history is written out.\n\nIT USED TO BE {color.grass.8}, and because spokes re-point semantics and never primitives, the override could not reach it: cb-fish re-pointed the brand to navy and kept Ecology-green focus rings, while its links went navy correctly (those already chained off the semantic). That failure is exactly why this token pointing at a primitive AGAIN needs the justification below — read it before deciding this is the same mistake.\n\nTHEN IT WAS {color.background-brand}, which fixed reachability and could not fix contrast. SC 1.4.11 asks the indicator for 3:1 against adjacent colours; the brand fill managed 2.95:1 on the raised and canvas surfaces and 2.66:1 on the sunken one. A note here once recorded 'moving from step 8 to step 9 lifts focus-ring contrast from 2.32:1 to 2.95:1 against a raised surface' as a win — it recorded a smaller FAILURE as a win. Nor could re-pointing fix it: whatever colour a spoke's brand is, it is chosen for brand reasons and may land anywhere on the luminance scale. Step 9 is engineered to clear 3:1 as a SOLID FILL; a ring needs 3:1 as a HAIRLINE against the same surfaces, which is a different and harder ask.\n\nA SECOND, NON-BRAND CONTRAST BAND was tried on 2026-08-16 and reverted the same day — it read as a heavy near-black slab around every focused control. DO NOT RE-ADD A BAND without agreeing the requirement and the weight first. The three tokens it needed (--focus-ring-halo, --focus-ring-halo-spread, --color-border-default-focus-halo) were never committed to this package in any commit; if you find them named in a document, that document is stale.\n\nWHAT LANDED INSTEAD: walk the brand's own ramp from step 9 upward and take the first step clearing 3:1 on every surface in that scheme. grass step 10 measures 3.07:1 on the sunken surface and 3.91:1 on the other three — still the brand, one step along its own curve. The walk is resolveFocusRing in scripts/lib/theme-recipe.mjs and runs per theme per scheme; this value is the hub's own answer to it, which is why it names a step rather than a role. Measured across 216 seeds in both schemes, every brand ramp has a usable step (worst best-available 9.55:1), so in practice THE RING IS ALWAYS THE BRAND.\n\nWHY A PRIMITIVE REFERENCE IS ACCEPTED, given the cb-fish history above. A var() chain that always resolves cannot express 'the brand, unless the brand cannot be seen' — CSS has no function that tests a candidate colour's contrast (Color 5's color-contrast() was cut down to contrast-color(), which only returns black or white against a background), so the condition cannot live in the cascade at all. Three things replace what the chain used to guarantee: theme-recipe.mjs emits this role for EVERY generated theme in both schemes, even when the walk picks step 9 and the value is unchanged, so a spoke can never inherit grass; packages/spoke-template carries the declaration so a hand-authored theme has it in front of it; and check-contrast.mjs grades it at level `fail` against all four surfaces in both schemes, so a theme that does neither is told. Teeth in the gate, not the cascade — the shape SPEC.md already states for the assurance axis. A SPOKE SHOULD NOT DECLARE THIS TOKEN BY HAND: a theme file loads after tokens.css at equal specificity, so declaring it overrides the walk and hands back the failure it exists to prevent.\n\nDOWNSTREAM, and not obvious from either name: --form-border-color-focus (component-tokens.css) chains off this token, so the focused FIELD BORDER moves with the ring. --focus-ring-color is the tier-3 hook and is where a per-surface exception belongs — a dark app bar is the real case, because a near-black chrome surface in the LIGHT scheme is the one ground no brand-derived ring value can serve."
+    },
+    "border-disabled": {
+      "$value": "{color.gray.6}",
+      "$type": "color"
+    },
+    "border-brand": {
+      "$value": "{color.grass.6}",
+      "$type": "color"
+    },
+    "border-utility-info": {
+      "$value": "{color.blue.6}",
+      "$type": "color"
+    },
+    "border-utility-success": {
+      "$value": "{color.lime.6}",
+      "$type": "color"
+    },
+    "border-utility-warning": {
+      "$value": "{color.yellow.6}",
+      "$type": "color"
+    },
+    "border-utility-danger": {
+      "$value": "{color.red.6}",
+      "$type": "color"
+    },
+    "background-dataviz-categorical-1": {
+      "$value": "{color.grass.10}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 1 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-2": {
+      "$value": "{color.indigo.9}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 2 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-3": {
+      "$value": "{color.orange.10}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 3 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-4": {
+      "$value": "{color.blue.9}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 4 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-5": {
+      "$value": "{color.crimson.11}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 5 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-6": {
+      "$value": "{color.cyan.10}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 6 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-7": {
+      "$value": "{color.violet.11}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 7 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-categorical-8": {
+      "$value": "{color.teal.10}",
+      "$type": "color",
+      "$description": "Series identity — which series is this. Assigned in FIXED ORDER and never cycled: a ninth series folds into \"Other\", small multiples or facets rather than reusing slot 1. The ORDER is the colour-vision-safety mechanism, not cosmetics — it is SEARCHED by scripts/lib/dataviz.mjs, not chosen. Slot 8 of 8. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-1": {
+      "$value": "#75c183",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 1 of 7. NO PRIMITIVE, and that is correct rather than a gap: this ramp is derived from the BRAND, and a brand ramp is never a primitive — rampFrom lands the client hex exactly on step 9, so no Radix ramp matches it. It is also INTERPOLATED, because only ~4 steps of a Radix light ramp clear 2:1 against the surface and sampling 7 bins from those produced literal duplicates. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-2": {
+      "$value": "#50ae64",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 2 of 7. NO PRIMITIVE, and that is correct rather than a gap: this ramp is derived from the BRAND, and a brand ramp is never a primitive — rampFrom lands the client hex exactly on step 9, so no Radix ramp matches it. It is also INTERPOLATED, because only ~4 steps of a Radix light ramp clear 2:1 against the surface and sampling 7 bins from those produced literal duplicates. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-3": {
+      "$value": "#389850",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 3 of 7. NO PRIMITIVE, and that is correct rather than a gap: this ramp is derived from the BRAND, and a brand ramp is never a primitive — rampFrom lands the client hex exactly on step 9, so no Radix ramp matches it. It is also INTERPOLATED, because only ~4 steps of a Radix light ramp clear 2:1 against the surface and sampling 7 bins from those produced literal duplicates. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-4": {
+      "$value": "#288240",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 4 of 7. NO PRIMITIVE, and that is correct rather than a gap: this ramp is derived from the BRAND, and a brand ramp is never a primitive — rampFrom lands the client hex exactly on step 9, so no Radix ramp matches it. It is also INTERPOLATED, because only ~4 steps of a Radix light ramp clear 2:1 against the surface and sampling 7 bins from those produced literal duplicates. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-5": {
+      "$value": "#266a36",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 5 of 7. NO PRIMITIVE, and that is correct rather than a gap: this ramp is derived from the BRAND, and a brand ramp is never a primitive — rampFrom lands the client hex exactly on step 9, so no Radix ramp matches it. It is also INTERPOLATED, because only ~4 steps of a Radix light ramp clear 2:1 against the surface and sampling 7 bins from those produced literal duplicates. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-6": {
+      "$value": "#24522e",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 6 of 7. NO PRIMITIVE, and that is correct rather than a gap: this ramp is derived from the BRAND, and a brand ramp is never a primitive — rampFrom lands the client hex exactly on step 9, so no Radix ramp matches it. It is also INTERPOLATED, because only ~4 steps of a Radix light ramp clear 2:1 against the surface and sampling 7 bins from those produced literal duplicates. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-sequential-7": {
+      "$value": "{color.grass.12}",
+      "$type": "color",
+      "$description": "Magnitude — how much. One hue, low (1) to high (7), wearing the brand: a single-hue ramp stays separable for every kind of colour vision because LIGHTNESS carries it, not hue. Interpolated rather than sampled, which is why this is the one data-viz scale with no primitive behind it — see the note on slot 1. Slot 7 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-1": {
+      "$value": "{color.blue.11}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 1 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-2": {
+      "$value": "{color.blue.9}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 2 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-3": {
+      "$value": "{color.blue.7}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 3 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-4": {
+      "$value": "{color.gray.3}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 4 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-5": {
+      "$value": "{color.red.7}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 5 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-6": {
+      "$value": "{color.red.9}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 6 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "background-dataviz-diverging-7": {
+      "$value": "{color.red.11}",
+      "$type": "color",
+      "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 7 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    }
   }
 }

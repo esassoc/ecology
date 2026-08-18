@@ -369,8 +369,11 @@ export class EsaTextarea extends LitElement {
     .field--error .input {
       --_field-border-color: var(--form-error-border-color, #e5484d);
     }
-    .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override — the house mechanism, so every focusable part inside the field follows with one
+       declaration. See esa-text-field for the full account and the contrast numbers. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
 
     /* Type comes from .typography-body-sm on the element.

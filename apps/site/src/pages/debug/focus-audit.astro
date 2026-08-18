@@ -29,15 +29,18 @@ const claimedTokens = [
   { token: '--focus-ring-halo-spread', maps: 'derived', declared: false },
 ];
 
-// Finding 2 — every component whose error state ADDS a box-shadow ring without
-// resetting the outline the base focus rule already painted.
+// Finding 2 — the six components whose error state ADDED a box-shadow ring instead of
+// overriding the outline the base focus rule already painted.
+// FIXED 2026-08-17. `was` is the token each one painted the second band from, and it is the
+// column that mattered: red-6 is a subtle BORDER step at 1.40:1, so three of these rings were
+// nearly invisible even when the token resolved. `now` is the single line that replaced it.
 const doubleRing = [
-  { file: 'esa-text-field.ts', base: '412 · .control:focus-within', err: '483 · .field--error .control:focus-within', shadow: '--form-error-border-color' },
-  { file: 'esa-textarea.ts', base: '336 · .input:focus', err: '362 · .field--error .input:focus', shadow: '--form-error-border-color' },
-  { file: 'esa-input-tag.ts', base: '587 · .container:focus-within', err: '612 · .field--error .container:focus-within', shadow: '--form-error-border-color' },
-  { file: 'esa-select.ts', base: '854 · .input:focus', err: '1016 · .field--error .input:focus', shadow: '--color-border-utility-danger' },
-  { file: 'esa-combobox.ts', base: '820 · .input:focus', err: '1131 · .field--error .input:focus', shadow: '--color-border-utility-danger' },
-  { file: 'esa-date-picker.ts', base: '334 · .input:focus', err: '363 · .field--error .input:focus', shadow: '--color-border-utility-danger' },
+  { file: 'esa-text-field.ts', base: '412 · .control:focus-within', err: '515 · outline-color', was: '--form-error-border-color (red-9, 3.43:1)' },
+  { file: 'esa-textarea.ts', base: '336 · .input:focus', err: '367 · outline-color', was: '--form-error-border-color (red-9, 3.43:1)' },
+  { file: 'esa-input-tag.ts', base: '587 · .container:focus-within', err: '619 · outline-color', was: '--form-error-border-color (red-9, 3.43:1)' },
+  { file: 'esa-select.ts', base: '854 · .input:focus', err: '1023 · outline-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
+  { file: 'esa-combobox.ts', base: '820 · .input:focus', err: '1139 · outline-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
+  { file: 'esa-date-picker.ts', base: '334 · .input:focus', err: '369 · outline-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
 ];
 
 // Finding 4 — every outline-offset in the kit, grouped by the value it uses.
@@ -57,11 +60,10 @@ const offsets = [
       <code>packages/tokens/src/focus.css</code> and <code>a11y.css</code>.
     </p>
     <p class="hint">
-      <strong>Findings 1 and 5 were fixed on 2026-08-17</strong> and are kept below with their
-      original text struck through, because the measurements are still the reason. Findings
-      <strong>2, 3 and 4 are still open</strong> and are what this page is now for — each was scoped
-      out of the contrast fix deliberately, with reasons recorded in
-      <code>docs/system-improvement-ledger.md</code>. Delete this file once those three are
+      <strong>Findings 1, 2 and 5 were fixed on 2026-08-17</strong> and are kept below because the
+      measurements are still the reason. Findings <strong>3 and 4 are still open</strong> and are
+      what this page is now for — both were scoped out deliberately, with reasons recorded in
+      <code>docs/system-improvement-ledger.md</code>. Delete this file once those two are
       triaged too.
     </p>
 
@@ -138,11 +140,18 @@ const offsets = [
 
     <!-- ================================================================== -->
     <section class="find">
-      <h2><span class="sev sev--p2">P2</span> 2 · A focused error field paints two rings in two colours</h2>
-      <p>
-        The base rule paints the brand outline at <code>outline-offset: 2px</code>. The error rule
-        <em>adds</em> a red <code>box-shadow</code> at offset 0 and never resets that outline. You get
-        red border → red ring → 2px gap → brand ring, concentric.
+      <h2><span class="sev sev--fixed">FIXED</span> 2 · A focused error field painted two rings in two colours</h2>
+      <p class="hint">
+        <strong>Resolved 2026-08-17.</strong> All six error rules are now
+        <code>outline-color: var(--form-error-border-color)</code> — a genuine override on the same
+        property the base rule uses, so it is one red band, not a second one. The cells below now
+        show a single red ring. <strong>This was originally an override</strong> (both rules used
+        <code>box-shadow</code>); the 2026-08-16 forced-colors pass converted the base rule to
+        <code>outline</code> and left the error rule behind, which is what split them into two
+        bands. Error red is now gated at 3:1 on all four surfaces like the brand ring. And the
+        colour-column split flagged below turned out to be the worse half of the finding:
+        <code>--color-border-utility-danger</code> is <strong>red-6</strong>, a subtle border step
+        at <strong>1.40:1</strong>, so three of the six error rings were nearly invisible.
       </p>
       <p class="hint">
         <strong>Click into the right-hand field.</strong> No keyboard needed — these use
@@ -150,53 +159,64 @@ const offsets = [
       </p>
       <div class="grid2">
         <div class="cell">
-          <div class="cell__cap">valid — one ring</div>
+          <div class="cell__cap">valid — one brand ring</div>
           <esa-text-field label="Email" value="ok@esassoc.com"></esa-text-field>
         </div>
         <div class="cell cell--bad">
-          <div class="cell__cap">error — two rings</div>
+          <div class="cell__cap">error — one RED ring</div>
           <esa-text-field label="Email" value="nope" error-text="Enter a valid address"></esa-text-field>
         </div>
 
         <div class="cell">
-          <div class="cell__cap">valid — one ring</div>
+          <div class="cell__cap">valid — one brand ring</div>
           <esa-textarea label="Notes"></esa-textarea>
         </div>
         <div class="cell cell--bad">
-          <div class="cell__cap">error — two rings</div>
+          <div class="cell__cap">error — one RED ring</div>
           <esa-textarea label="Notes" error-text="Required"></esa-textarea>
         </div>
 
         <div class="cell">
-          <div class="cell__cap">valid — one ring</div>
+          <div class="cell__cap">valid — one brand ring</div>
           <esa-date-picker label="Start date"></esa-date-picker>
         </div>
         <div class="cell cell--bad">
-          <div class="cell__cap">error — two rings</div>
+          <div class="cell__cap">error — one RED ring</div>
           <esa-date-picker label="Start date" error-text="Required"></esa-date-picker>
         </div>
       </div>
       <p>Same shape in all six form components:</p>
       <table class="tbl">
-        <thead><tr><th>Component</th><th>Base rule (paints the outline)</th><th>Error rule (adds the shadow)</th><th>Shadow colour</th></tr></thead>
+        <thead><tr><th>Component</th><th>Base rule (owns the geometry)</th><th>Error rule, now</th><th>Second band it used to paint</th></tr></thead>
         <tbody>
           {doubleRing.map((d) => (
-            <tr>
+            <tr class={d.was.includes('red-6') ? 'row--bad' : ''}>
               <td><code>{d.file}</code></td>
               <td><code>{d.base}</code></td>
               <td><code>{d.err}</code></td>
-              <td><code>{d.shadow}</code></td>
+              <td><code>{d.was}</code></td>
             </tr>
           ))}
         </tbody>
       </table>
       <p class="note">
-        Two separate problems in one table. The doubling is the first. The second is the
-        <strong>colour column</strong>: three components use <code>--form-error-border-color</code>
-        (a solid red) and three use <code>--color-border-utility-danger</code> with a
-        <em>translucent</em> literal fallback, <code>rgba(211, 47, 47, 0.25)</code>. Where the token
-        resolves they agree; where it does not, three fields ring solid red and three ring a faint
-        smear.
+        Two separate problems in one table, and <strong>the second turned out to be the worse
+        one.</strong> The doubling was the visible symptom. The <strong>colour column</strong> was
+        the real defect: three components used <code>--form-error-border-color</code> and three used
+        <code>--color-border-utility-danger</code>. I originally read that as "solid red vs a
+        translucent fallback". It is worse than that —
+        <code>--color-border-utility-danger</code> resolves to <strong>red-6</strong>
+        (<code>#fdbdbe</code>), a subtle <em>border</em> step, measuring <strong>1.55:1</strong>
+        raised and <strong>1.40:1</strong> sunken against the 3:1 an indicator owes. So the token
+        resolving correctly was not the safe case: three components shipped an error ring that was
+        very nearly invisible, and nothing measured it because the ring had no gated row at all.
+      </p>
+      <p class="hint">
+        All six now read <code>--form-error-border-color</code> — red-9, 3.43:1 on the worst surface,
+        and the same token <code>--_field-border-color</code> already uses, so the ring and the border
+        are the same red by construction. Four <code>fail</code> rows now grade it.
+        <code>--color-border-utility-danger</code> keeps its one correct reader:
+        <code>esa-error-summary</code>'s 1px panel border, which is what a step 6 is for.
       </p>
     </section>
 

@@ -107,6 +107,77 @@ export const PAIRS = [
   // ground re-points the tier-3 --focus-ring-color locally, as esa-button variant="chrome"
   // already does via currentColor. Promote to `fail` once the dark-chrome components do.
   ['--color-border-default-focus', '--color-background-default-knockout', 3.0, 'warn'],
+
+  // ---- SC 1.4.11 · THE FOCUS RING ON AN INVALID FIELD ----
+  //
+  // The ring turns red on a field in its error state — the same band, same width, same
+  // offset, `outline-color` overridden. Six components do it (text-field, textarea, select,
+  // combobox, date-picker, input-tag), so the ring has TWO colours to guarantee, not one,
+  // and this is the second. Same four surfaces, same 3:1, same `fail`.
+  //
+  // Naming the TIER-3 token, unlike every other row in this list, because tier 3 is what
+  // the components actually paint and it is declared in component-tokens.css, which this
+  // script parses. It chains to --color-background-utility-danger, so a spoke re-pointing
+  // the tier-2 role is still caught. Resolves to red-9 (#e5484d, 3.43:1 worst) by default
+  // and red-11 (4.57:1) under [data-assurance="wcag-aa"].
+  //
+  // WHAT THESE ROWS WOULD HAVE CAUGHT: until 2026-08-17 three of the six painted this ring
+  // from --color-border-utility-danger, which is red-6 — a SUBTLE BORDER step, 1.40:1 on a
+  // sunken surface, with a literal fallback of rgba(211, 47, 47, 0.25) at 1.26:1. Three
+  // components shipped an error ring that was very nearly invisible, and nothing measured
+  // it, because the ring had no gated row at all.
+  ['--form-error-border-color', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--form-error-border-color', '--color-background-default', 3.0, 'fail'],
+  ['--form-error-border-color', '--color-background-elevation-floating', 3.0, 'fail'],
+  ['--form-error-border-color', '--color-background-elevation-sunken', 3.0, 'fail'],
+  // ---- SC 1.4.11 · DATA-VIZ MARKS ----
+  //
+  // A series colour IS a meaningful graphic — it is the only thing saying which series
+  // a bar belongs to — so every slot owes 3:1 against the surfaces a chart is drawn on.
+  // Two surfaces, not four: `esa-chart` paints its own card at
+  // --color-background-elevation-raised, and a chart dropped straight onto the page
+  // sits on --color-background-default. Charts do not render inside popovers.
+  //
+  // Endpoints only for the magnitude scales. A sequential ramp SPANS the lightness
+  // band by design — its low end is meant to recede toward the surface — so grading
+  // every step at 3:1 would fail a ramp for doing its job. The ends carry the range.
+  //
+  // THE LOW END OF SEQUENTIAL IS GRADED AT 2:1, NOT 3:1 — a different bar, not a
+  // relaxed one. Slot 1 means "near zero" and is meant to sit close to the surface;
+  // 3:1 is the bar for a mark that must be seen against it, 2:1 the bar for the
+  // lightest bin of an ORDINAL ramp, which still has to be distinguishable from blank
+  // paper. The derivation walks the low end up until it clears exactly this.
+  //
+  // THE DIVERGING MIDPOINT IS `warn`, NOT `fail`, and that is deliberate. Slot 4 is a
+  // near-neutral grey meaning "no divergence"; it is SUPPOSED to sit close to the
+  // surface. Grading it `fail` would block the gate on the one value in the scale whose
+  // job is to disappear — the same treatment --color-content-muted already gets.
+  ['--color-background-dataviz-categorical-1', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-1', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-2', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-2', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-3', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-3', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-4', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-4', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-5', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-5', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-6', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-6', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-7', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-7', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-8', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-categorical-8', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-sequential-1', '--color-background-elevation-raised', 2.0, 'fail'],
+  ['--color-background-dataviz-sequential-1', '--color-background-default', 2.0, 'fail'],
+  ['--color-background-dataviz-sequential-7', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-sequential-7', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-diverging-1', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-diverging-1', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-diverging-7', '--color-background-elevation-raised', 3.0, 'fail'],
+  ['--color-background-dataviz-diverging-7', '--color-background-default', 3.0, 'fail'],
+  ['--color-background-dataviz-diverging-4', '--color-background-elevation-raised', 3.0, 'warn'],
+  ['--color-background-dataviz-diverging-4', '--color-background-default', 3.0, 'warn'],
 ];
 
 // --- token graph -------------------------------------------------------------

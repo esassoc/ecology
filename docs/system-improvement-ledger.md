@@ -96,6 +96,101 @@ Closes the "contrast is UNRESOLVED" note that `component-tokens.css` and
   #46a758)` fallbacks were deliberately NOT touched** — the brand fill is still grass-9, and a
   blanket `sed` over the hex would have silently moved the brand · `hub-fix` · **done**
 
+- **THE ERROR RING WAS AN OVERRIDE THAT A REFACTOR TURNED INTO AN ADDITION** · *Evidence:*
+  the six value-collecting components painted a red error ring with
+  `box-shadow: 0 0 0 var(--focus-ring-width) <red>`. In Andy's original (`6779655`, 2026-07-01)
+  the BASE rule painted the ring with `box-shadow` too, so this was a true override — same
+  property, same geometry, red replacing brand, **one ring**. The 2026-08-16 forced-colors pass
+  converted the base rule to `outline` (box-shadow is force-adjusted away, so a box-shadow-only
+  ring vanishes in Windows High Contrast) and did not convert the error rule. The two stopped
+  sharing a property, so the override became an addition: a focused invalid field painted red
+  border → red shadow flush → 2px gap → brand outline, **three bands in two colours**.
+  `check-a11y` check 9 cannot see it — it asks whether a ring is PRESENT, and two rings pass
+  that as easily as one. *Action:* restored as a genuine override —
+  `outline-color: var(--form-error-border-color)` — in all six. Andy's intent was reinstated
+  rather than deleted, which is the choice worth recording: the alternative on the table was
+  dropping the red ring entirely and letting the border plus the error text carry the state,
+  since SC 1.4.1/3.3.1 are already satisfied by `aria-invalid` and the visible message. Red
+  was kept as a design position, and the cost of keeping it is the row below · `lego` · **done**
+
+- **KEEPING THE RED RING PUT A SECOND COLOUR UNDER THE 3:1 GUARANTEE** · *Evidence:* the ring
+  now has two colours, so grading only the brand one would leave half the indicator unmeasured.
+  *Action:* four `fail` rows added for `--form-error-border-color` on the same four surfaces;
+  33 → 37 pairs. Named at TIER 3 deliberately — unlike every other row in `PAIRS` — because
+  tier 3 is what the components paint and it is declared in `component-tokens.css`, which the
+  gate parses; it chains to `--color-background-utility-danger`, so a spoke re-pointing the
+  tier-2 role is still caught. Measured: red-9 **3.43:1** worst by default, red-11 **4.57:1**
+  under `[data-assurance="wcag-aa"]`. Both pass · `hub-fix` · **done**
+
+- **THREE OF THE SIX ERROR RINGS WERE ALL BUT INVISIBLE, and this is what the new rows would
+  have caught** · *Evidence:* `esa-select`, `esa-combobox` and `esa-date-picker` painted the
+  error ring from `--color-border-utility-danger`, which is **red-6 — a subtle BORDER step**,
+  not a fill. Measured `#fdbdbe` at **1.55:1** raised and **1.40:1** sunken, against the 3:1
+  the indicator owes. The literal fallback beside it, `rgba(211, 47, 47, 0.25)`, composites to
+  **1.26:1**. The other three used `--form-error-border-color` (red-9, 3.43:1), so the kit had
+  two different error rings and one of them could barely be seen. Nothing measured either,
+  because the ring had no gated row at all before this pass. *Action:* all six unified on
+  `--form-error-border-color`, which is what `--_field-border-color` already uses in the same
+  components — so the ring and the border are now the same red by construction rather than
+  coincidence. `--color-border-utility-danger` keeps its one correct reader,
+  `esa-error-summary`'s 1px panel border, which is exactly what a step 6 is for · `lego` · **done**
+
+- **"SIX COMPONENTS" WAS WRONG: TEN HAVE AN ERROR STATE, AND FOUR HAD NO ERROR RING AT ALL** ·
+  *Evidence:* found by opening `/components/esa-form-field` and asking why the Permit ID field —
+  marked invalid — showed a brand-coloured focus ring. The six counted above were the ones that
+  HAD a (broken) error ring. Four more have an error state and never had a ring: `esa-form-field`
+  (colours the error text only), `esa-checkbox-group` and `esa-radio-group` (colour the group
+  legend only), `esa-button-toggle` (moves the option border only). `esa-form-field` is the worst
+  case, because the documented usage on its own doc page is a native `<input>` slotted into a
+  `FormField` carrying `errorText` — so the combination the docs teach had no error ring, and the
+  red border in that demo comes from a class in the doc page's own stylesheet, not from the kit.
+  Both group components even carried a comment giving the reason: *"there is no single box to
+  outline the way a text field has."* The premise was right and the conclusion was backwards —
+  there is no single box, so do not outline one. *Action:* all ten now re-point the token ·
+  `lego` · **done**
+
+- **THE MECHANISM CHANGED: re-point the TOKEN, do not override the property** · *Evidence:* the
+  `outline-color` override landed earlier the same day was correct for `esa-text-field`, which
+  has one focusable part, and does not generalise. `esa-combobox` has FIVE things that read
+  `--focus-ring-color` (autocomplete input, text trigger, field trigger, the dropdown's own
+  search box, every chip remove button); `esa-select` three; `esa-input-tag` three;
+  `esa-checkbox-group` N boxes; `esa-radio-group` N circles; and `esa-form-field` does not own
+  its control at all. A property override is one rule per part, and a missed part keeps ringing
+  brand-green inside a field that is telling the user it is invalid. *Action:* every error
+  wrapper now sets `--focus-ring-color: var(--form-error-border-color)` — one declaration,
+  inherited. Three things this buys beyond brevity: it reaches **slotted** content (Astro scopes
+  a component's selectors to its own template, so no descendant selector in `esa-form-field`
+  could ever style what it wraps); it reaches **into a shadow root**, which no stylesheet can
+  cross and inherited custom properties are the only channel for in every engine; and it cannot
+  fall out of step with the base rule the way the box-shadow did, because there is no second
+  property. It also removed the `(0,3,0)` specificity trick the `outline-color` form needed in
+  `esa-input-tag` · `lego` · **done**
+
+- **RECORDED CONSEQUENCE: a dropdown panel inside the field inherits the red ring** ·
+  *Evidence:* `esa-select` and `esa-combobox` both render their panel inside `.container`, which
+  is inside `.field`, so the search box in an invalid combobox's dropdown rings red too.
+  *Action:* accepted — it is all one field and it is consistent — but written into the component
+  comment and the `/foundations/focus` page, because it is not predictable from reading the rule
+  and would otherwise be discovered as a surprise · `lego` · **done, documented**
+
+- **A dead reset had to move with the property** · *Evidence:* `esa-input-tag` carried
+  `.container--disabled:focus-within { box-shadow: none }` to stop a disabled field wearing the
+  error ring. It is **unreachable by construction** — the inner input and every chip button take
+  the native `disabled` attribute, so `:focus-within` cannot match — but it still had to move to
+  `outline-color`, or it would have stopped cancelling the rule it exists to cancel. *Action:*
+  rewritten as an `outline-color` reset at (0,3,0) so it beats the error rule, resetting the
+  COLOUR rather than removing the outline (an element that can take focus still owes SC 2.4.7 a
+  ring even when inert). Kept, with its unreachability written down, because the day someone
+  swaps `disabled` for `aria-disabled` it becomes load-bearing · `lego` · **done**
+
+- **The Lit-template ratchet earned its keep on this change** · *Evidence:* the first draft of
+  the six comments used backticks around property names, which is normal prose style everywhere
+  else in the repo. Inside a Lit ``css` ` `` template a backtick CLOSES the literal: four
+  components would have thrown at load and never upgraded. `npm test` named all four files and
+  the exact opening line. *Action:* none needed — the guard did its job. Logged because it is
+  the 7th occurrence, and the lesson is that the trap is in the COMMENTS, not the CSS ·
+  `process` · **P3**
+
 - **The 0.07 margin is the thing to watch** · *Evidence:* grass step 10 clears 3:1 by 0.07
   (3.07:1 on the sunken surface). The tokens also ship a P3 block whose `grass-10` is
   `color(display-p3 0.344 0.598 0.342)`, which is not the sRGB value the gate measures.
@@ -246,9 +341,20 @@ browser-stacking OOM, (d) high token cost. Fix the composition layer and all fou
 - **Omnibox search** promoted from cb-fish-design · *Evidence:* our search was weak; the good
   pattern exists but is undiscoverable · *Action:* port cb-fish omnibox → `esa-omnibox` with
   live typeahead/results; make it the default shell search · `lego` · **P1**
-- **`esa-map`** (Leaflet wrapper) · *Evidence:* schematic plot was a workaround for my
-  "no map lib" constraint · *Action:* Leaflet-based map lego, token-themed markers,
-  data-driven pins · `lego` · **P1**
+- ~~**`esa-map`** (Leaflet wrapper)~~ · **DONE 2026-08-17, on a different engine.**
+  *Evidence:* schematic plot was a workaround for my "no map lib" constraint ·
+  *Shipped:* `esa-map.ts`, a **MapLibre GL** host — not Leaflet. The requirement set
+  that arrived with it (cycling overlays that intersect one click point,
+  `feature-state` hover at scale, GL-rendered point layers) has no Leaflet path, and
+  the "a MapLibre GL backend would satisfy the same API" line on the old reference
+  page was only ever true of the narrow API that page documented. Many ESA apps run
+  Leaflet; that constrains those apps, not what the hub prototypes in. Optional peer
+  dep — engine AND its 83KB stylesheet both lazily imported, so the absent-engine
+  placeholder survives a build with the peer missing (verified by hiding it).
+  **Zero tier-3 tokens**: the JS theme bridge (`src/token-bridge.ts`, extracted from
+  `esa-chart`) reads tier-2 roles directly. Markers, popups, GeoJSON layers,
+  clustering and routes are NOT built — the host's API was shaped to keep them
+  possible · `lego` · **DONE**
 
 ## B. Hub component fixes
 
