@@ -44,8 +44,7 @@ const angularCode = angularFor(code, slug, angular);
   THE SLOT MUST BE FORWARDED. `DocsPreview` renders the live demo from its
   default slot; a self-closing tag here passes it no children, so every live
   example on every page that imports this wrapper silently disappears — the
-  code tab still renders, which is what makes it look fine. Measured: zero
-  live `esa-map` elements in the built map page.
+  code tab still renders, which is what makes it look fine.
 */}
 <DocsPreview code={code} lang={lang} align={align} angular={angularCode}>
   <slot />

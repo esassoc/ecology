@@ -55,9 +55,12 @@ const { api, elements, samples } = loadCorpus();
 
 /**
  * Raise this when coverage improves; never lower it to make a change pass.
- * 101/113 at the time of writing.
+ * 96/106 at the time of writing — it was 101/113 until the map components moved to
+ * the `map-work` branch, which took 7 samples out of the corpus. Lowering it is
+ * legitimate ONLY when the corpus itself shrinks; a drop at a constant sample count
+ * is the regression this guard exists to catch.
  */
-const FLOOR = 101;
+const FLOOR = 96;
 
 /** Refusal reasons we have deliberately accepted. A NEW one is a review prompt. */
 const KNOWN_REASONS = new Set([

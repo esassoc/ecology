@@ -1,770 +1,179 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '../../components/Preview.astro';
-import ApiTable from '../../components/ApiTable.astro';
-import { withBase } from '@esa/docs/base';
-
-// Real coordinates, so the demo is a map rather than a diagram. Population is
-// 2020 census, kept only to give the popups something worth reading.
-const CITIES = [
-  { name: 'Sacramento', lngLat: [-121.4944, 38.5816], note: 'State capital · pop. 524k' },
-  { name: 'San Francisco', lngLat: [-122.4194, 37.7749], note: 'pop. 874k' },
-  { name: 'Fresno', lngLat: [-119.7871, 36.7378], note: 'pop. 542k' },
-  { name: 'Los Angeles', lngLat: [-118.2437, 34.0522], note: 'pop. 3.90m' },
-  { name: 'San Diego', lngLat: [-117.1611, 32.7157], note: 'pop. 1.39m' },
-  { name: 'Redding', lngLat: [-122.3917, 40.5865], note: 'pop. 93k' },
-];
-const COUNTIES = withBase('/data/ca-counties.geojson');
-
-// The rich-popup demo. Ratings and hours are invented — they exist to give the
-// card the shape of a real place card (kicker, title, metric, hours, action),
-// not to be facts about these sites.
-const PLACES = [
-  { name: 'California State Capitol', kind: 'Landmark', rating: 4.6, reviews: 12453, hours: '9:00 AM – 5:00 PM', lngLat: [-121.4934, 38.5767], href: '#rich-popups' },
-  { name: 'Yosemite Valley', kind: 'Park', rating: 4.9, reviews: 38210, hours: 'Open 24 hours', lngLat: [-119.5383, 37.7459], href: '#rich-popups' },
-  { name: 'Monterey Bay', kind: 'Reserve', rating: 4.8, reviews: 8234, hours: '10:00 AM – 6:00 PM', lngLat: [-121.9018, 36.6177], href: '#rich-popups' },
-];
-
-/*
- * These styles are moved INTO the map's shadow root with the popup content, which
- * is the only reason they apply at all — a page stylesheet cannot reach in there.
- * See the "Popup content crosses a shadow boundary" table below. Selectors are
- * prefixed because they land in the map's root, not the popup's.
- */
-const RICH_POPUP_CSS = `
-  /* The PIN is styled here too — marker content lands in the same shadow root.
-     Its LABEL and TOOLTIP are not: those are marker props, rendered and themed
-     by esa-map, so there is nothing to write for them here. */
-  .rich-pin {
-    display: block;
-    inline-size: 1.125rem; block-size: 1.125rem; border-radius: 999px;
-    background: var(--color-background-brand, #2f6f4f);
-    border: 2px solid var(--color-background-elevation-raised, #fff);
-    box-shadow: var(--elevation-2, 0 1px 3px rgb(0 0 0 / 0.24));
-    cursor: pointer;
-  }
-  .rich-pin[data-kind='Park'] { background: #2d6a4f; }
-  .rich-pin[data-kind='Reserve'] { background: #14505c; }
-
-  .card { display: grid; }
-  .card__media {
-    block-size: 5.5rem;
-    border-radius: var(--radius-sm, 4px) var(--radius-sm, 4px) 0 0;
-    background: linear-gradient(140deg,
-      var(--color-background-brand, #2f6f4f), var(--color-background-brand-secondary, #7fb069));
-  }
-  .card__media[data-kind='Park'] { background: linear-gradient(140deg, #2d6a4f, #95d5b2); }
-  .card__media[data-kind='Reserve'] { background: linear-gradient(140deg, #14505c, #79c2d0); }
-  .card__body { display: grid; gap: var(--spacing-100, 0.25rem); padding: var(--spacing-300, 0.75rem); }
-  .card__kicker {
-    margin: 0; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--color-content-default-secondary, #646464);
-  }
-  .card__title { margin: 0; color: var(--color-content-default, #202020); }
-  .card__meta { margin: 0; color: var(--color-content-default-secondary, #646464); }
-  .card__action { margin: var(--spacing-100, 0.25rem) 0 0; }
-  .card__button {
-    display: inline-block; text-decoration: none;
-    padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
-    border-radius: var(--radius-sm, 4px);
-    background: var(--color-background-brand, #2f6f4f);
-    color: var(--color-content-on-brand, #fff);
-  }
-  .card__button:hover { background: var(--color-background-brand-hover, #285f43); }
-`;
-
-// Prose only — names, types and defaults are generated from the component
-// source by src/data/component-api.ts, so this table cannot drift.
-const describe = {
-  label: 'The map&rsquo;s accessible name. Required — without it MapLibre announces the generic word &ldquo;Map&rdquo;, which names the shape of the thing rather than what it shows.',
-  center: 'Initial centre as <code>[lng, lat]</code>. Note the order: longitude first, the GeoJSON convention, not Leaflet&rsquo;s <code>[lat, lng]</code>. Ignored when <code>bounds</code> is set.',
-  zoom: 'Initial zoom level. Roughly: 3 a country, 10 a city, 15 a neighbourhood, 18 a building.',
-  'min-zoom': 'How far out the user may zoom.',
-  'max-zoom': 'How far in the user may zoom.',
-  bearing: 'Map rotation in degrees, clockwise from north.',
-  pitch: 'Camera tilt in degrees, 0 being straight down.',
-  bounds: 'A <code>[west, south, east, north]</code> box to fit. Applied at construction, so it wins over <code>center</code>/<code>zoom</code> with no initial-frame flash.',
-  'style-url': 'A MapLibre style JSON URL, or the keyword <code>blank</code> for a token-painted empty style that makes no network requests.',
-  'tile-url': 'An XYZ raster tile template &mdash; <code>https://host/{z}/{x}/{y}.png</code> &mdash; which is the shortest route to a basemap of Earth. Wins over <code>style-url</code>. <strong><code>{s}</code> is Leaflet syntax and is not substituted</strong>; see below.',
-  'tile-url-dark': 'A second template used under <code>data-scheme=&quot;dark&quot;</code>. Swapped in place on the existing source, so overlays survive the switch.',
-  'tile-size': 'Pixel size of one tile. 256 unless the service says otherwise; guessing wrong renders the basemap a zoom level off rather than failing.',
-  attribution: 'Credit line for a <code>tile-url</code> basemap. A template carries no metadata to infer one from, and most services require it by licence &mdash; so this warns when it is missing.',
-  interactive: 'Whether the user can pan and zoom at all. A static locator map sets this false.',
-  controls: 'Space-separated opt-ins, any of <code>zoom</code>, <code>scale</code>, <code>fullscreen</code>, <code>locate</code>. Attribution is always present — it is a licensing requirement of every tile source, not a preference.',
-  height: 'Frame height. The map fills its container&rsquo;s width.',
-};
-
-const events = [
-  { name: 'mapload', type: '{ center, zoom, bearing, pitch, bounds }', description: 'The style finished loading and the first frame is painted. Anything that adds sources or layers waits for this.' },
-  { name: 'moveend', type: '{ center, zoom, bearing, pitch, bounds }', description: 'The camera came to rest. The payload is plain numbers — no engine objects cross this boundary.' },
-  { name: 'mapclick', type: '{ lngLat: [number, number] }', description: 'The user clicked the map surface. Deliberately not named <code>click</code> — see the note below the table.' },
-];
 ---
-<ComponentDoc name="Map" category="Maps" slug="esa-map" type="wc" status="stable"
-  summary={'A token-themed host for <strong>MapLibre GL</strong>, or a themed placeholder when the engine is absent. Props take primitives and GeoJSON, events carry plain data, and this is the only file in the kit that imports a mapping engine — so the surface stays portable even though the implementation is not.'}>
+<ComponentDoc name="Map" category="Maps" slug="esa-map" type="reference" wraps="Leaflet"
+  summary="<code>esa-map</code> renders an interactive slippy map with markers, or a themed placeholder when the mapping library is absent. In the Angular source it is designed to wrap <strong>Leaflet</strong> (via <code>@asymmetrik/ngx-leaflet</code>), defaulting to OpenStreetMap tiles — a MapLibre GL backend would satisfy the same API.">
 
-  <Section id="preview" title="Preview">
-    <p>
-      All 58 California counties as an <code>esa-map-geojson</code> layer on a blank style.
-      Hover a county to highlight it, click to select. The card is an
-      <code>esa-map-popup</code> driven by the layer&rsquo;s <code>featureselect</code> event
-      &mdash; the layer <em>emits</em>, the page decides a popup is how to show it.
-    </p>
-    <p class="meta">
-      The readout says &ldquo;1 of 1&rdquo; here because <strong>counties tile</strong> &mdash;
-      they share borders but never overlap, so one point is inside exactly one of them.
-      <code>featureselect</code> still carries the full ordered array, and a repeat click in the
-      same spot advances through it, which is what makes genuinely stacked overlays (a buffer
-      over a parcel over a watershed) reachable. Cycling <em>across separate layers</em> is not
-      built: each layer queries only its own, and a shared stack belongs on the host.
-      See <a href="#roadmap">What this does not do yet</a>.
-    </p>
-    <Preview align="start" code={`<esa-map label="California counties" style-url="blank" height="460px">
-  <esa-map-geojson
-    src="/data/ca-counties.geojson"
-    label="California counties"
-    hoverable selectable fit-bounds
-  ></esa-map-geojson>
-  <esa-map-popup id="county-popup"></esa-map-popup>
-</esa-map>
-
-<script>
-  // Layers EMIT; the page drives the popup.
-  layer.addEventListener('featureselect', (e) => {
-    const { feature, lngLat, index, count } = e.detail;
-    popup.lngLat = lngLat;
-    popup.open = true;
-  });
-</script>`}>
-      <esa-map
-        id="counties-map"
-        label="California counties"
-        style-url="blank"
-        height="460px"
-        controls="zoom scale"
-      >
-        <esa-map-geojson
-          id="counties-layer"
-          src={COUNTIES}
-          label="California counties"
-          name-property="name"
-          hoverable
-          selectable
-          fit-bounds
-        ></esa-map-geojson>
-        <esa-map-popup id="counties-popup">
-          <div class="pop">
-            <p class="pop__name typography-label-md-strong" data-county>&nbsp;</p>
-            <p class="pop__meta typography-body-xs" data-stack></p>
-          </div>
-        </esa-map-popup>
-      </esa-map>
-    </Preview>
-    <p class="meta">
-      Every county is also a real focusable button in a visually-hidden list inside the layer,
-      so the boundaries are reachable by keyboard and screen reader. A shape drawn by WebGL is
-      a pixel &mdash; it has no role, no name and no focus &mdash; so without that mirror this
-      map would be entirely unavailable non-visually, and <strong>axe would report nothing</strong>,
-      because there is no markup to be wrong.
-    </p>
-  </Section>
-
-  <Section id="markers" title="Markers and popups">
-    <p>
-      <code>esa-map-marker</code> is a <strong>DOM</strong> marker, which is what lets it hold
-      arbitrary slotted content and be dragged. Click a pin to open its card.
-    </p>
-    <Preview align="start" code={`<esa-map
-  label="California cities"
-  zoom="4.6"
-  tile-url="https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-  tile-url-dark="https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-  attribution="© OpenStreetMap contributors © CARTO"
->
-  <esa-map-marker lng-lat="[-121.4944, 38.5816]"></esa-map-marker>
-  <esa-map-marker lng-lat="[-122.4194, 37.7749]">
-    <esa-badge>SF</esa-badge>          <!-- any markup you like -->
-  </esa-map-marker>
-  <esa-map-popup id="city-popup"></esa-map-popup>
-</esa-map>`}>
-      <esa-map
-        id="cities-map"
-        label="Major California cities"
-        tile-url="https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-        tile-url-dark="https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-        attribution="© OpenStreetMap contributors © CARTO"
-        center="[-119.6, 37.2]"
-        zoom="4.6"
-        height="420px"
-        controls="zoom"
-      >
-        <esa-map-geojson
-          src={COUNTIES}
-          label="California counties, as context"
-          name-property="name"
-        ></esa-map-geojson>
-        {CITIES.map((c) => (
-          <esa-map-marker data-city={c.name} data-note={c.note} lng-lat={JSON.stringify(c.lngLat)}></esa-map-marker>
-        ))}
-        <esa-map-popup id="cities-popup">
-          <div class="pop">
-            <p class="pop__name typography-label-md-strong" data-city-name>&nbsp;</p>
-            <p class="pop__meta typography-body-xs" data-city-note></p>
-          </div>
-        </esa-map-popup>
-      </esa-map>
-    </Preview>
-    <p class="meta">
-      This one is on a <strong>real basemap</strong> &mdash; a <code>tile-url</code>, with the
-      counties still drawn over it as an overlay. A pin needs geography under it to mean
-      anything, which is the argument the lead example above does not need. Switch the site to
-      dark and the tiles switch with it: <code>tile-url-dark</code> is a second service, swapped
-      on the existing source so the counties layer survives the change.
-    </p>
-    <p class="meta">
-      Six markers here. <strong>Past roughly 200&ndash;500 DOM markers a page gets slow</strong>,
-      because each is a real element laid out and composited on every camera move. Nothing
-      auto-switches to a GL layer at a threshold: crossing it would delete the ability to put a
-      badge in a marker, which is the only reason to use this component. Past the ceiling the
-      answer is a GL point layer, chosen deliberately.
-    </p>
-  </Section>
-
-  <Section id="rich-popups" title="Rich popups">
-    <p>
-      The example above drives <strong>one</strong> popup from JavaScript and rewrites its text
-      per marker &mdash; right when every pin shows the same fields. When each place has its own
-      content, nest the popup inside its marker instead and write the markup where it belongs:
-    </p>
-    <Preview align="start" code={`<esa-map label="Landmarks" tile-url="…">
-  <style is:inline>{'{ .card__title { margin: 0 } /* see “page CSS does not” below */ }'}</style>
-
-  <esa-map-marker
-    lng-lat="[-121.4934, 38.5767]"
-    label="Landmark"                                      <!-- always visible -->
-    tooltip="California State Capitol"                    <!-- hover and focus -->
-  >
-    <span class="rich-pin" data-kind="Landmark"></span>   <!-- the pin -->
-    <esa-map-popup max-width="264px" min-width="264px">   <!-- its card -->
-      <div class="card__media" aria-hidden="true"></div>
-      <p class="card__kicker typography-label-2xs">Landmark</p>
-      <h3 class="card__title typography-heading-xs">California State Capitol</h3>
-      <p class="card__meta typography-body-xs">★ 4.6 · 12,453 reviews</p>
-      <a class="card__button typography-label-sm-strong" href="/directions">Directions</a>
-    </esa-map-popup>
-  </esa-map-marker>
-</esa-map>`}>
-      <esa-map
-        label="California landmarks with detail cards"
-        tile-url="https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-        tile-url-dark="https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-        attribution="© OpenStreetMap contributors © CARTO"
-        center="[-120.6, 37.6]"
-        zoom="5.4"
-        height="500px"
-        controls="zoom scale"
-      >
-        <style is:inline set:html={RICH_POPUP_CSS}></style>
-        {PLACES.map((p) => (
-          <esa-map-marker lng-lat={JSON.stringify(p.lngLat)} label={p.kind} tooltip={p.name}>
-            <span class="rich-pin" data-kind={p.kind}></span>
-            <esa-map-popup max-width="264px" min-width="264px" close-button>
-              <div class="card">
-                <div class="card__media" data-kind={p.kind} aria-hidden="true"></div>
-                <div class="card__body">
-                  <p class="card__kicker typography-label-2xs">{p.kind}</p>
-                  <h3 class="card__title typography-heading-xs">{p.name}</h3>
-                  <p class="card__meta typography-body-xs">
-                    ★ {p.rating} · {p.reviews.toLocaleString('en-US')} reviews
-                  </p>
-                  <p class="card__meta typography-body-xs">{p.hours}</p>
-                  <p class="card__action">
-                    <a class="card__button typography-label-sm-strong" href={p.href}>Directions</a>
-                  </p>
-                </div>
-              </div>
-            </esa-map-popup>
-          </esa-map-marker>
-        ))}
-      </esa-map>
-    </Preview>
-    <p class="meta">
-      No wiring script at all &mdash; the whole example above is markup. Clicking a pin toggles
-      its card, opening one closes the others, and dragging a pin would take its card with it.
-      The coordinate is <strong>inherited from the marker</strong> rather than repeated, because
-      a marker popup that can point somewhere else is a pair of numbers waiting to drift apart.
-    </p>
-
-    <h3 class="typography-heading-sm">Popup content crosses a shadow boundary, and page CSS does not</h3>
-    <p>
-      This is the one thing to know before authoring a rich popup, because nothing warns you.
-      The engine <strong>moves</strong> your content into its bubble, which lives inside
-      <code>esa-map</code>&rsquo;s shadow root &mdash; so it stops being page content the moment
-      it appears. What survives the move, and what does not, was measured rather than assumed:
-    </p>
-    <div class="api-table">
-      <table>
-        <thead><tr><th>In popup content</th><th></th><th>Why</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><code>typography-*</code> role classes</td>
-            <td>✅ works</td>
-            <td><code>esa-map</code> already adopts the typography sheet into its own root, so the classes resolve there.</td>
-          </tr>
-          <tr>
-            <td>Token <code>var()</code> reads</td>
-            <td>✅ works</td>
-            <td>Custom properties inherit, and inheritance crosses a shadow boundary in every engine.</td>
-          </tr>
-          <tr>
-            <td><code>&lt;style is:inline&gt;</code> inside <code>&lt;esa-map&gt;</code></td>
-            <td>✅ works</td>
-            <td>The host moves it into its own root at mount, so it is in scope for every marker and popup on that map.</td>
-          </tr>
-          <tr>
-            <td>Your page&rsquo;s own CSS</td>
-            <td>❌ silently ignored</td>
-            <td>A document stylesheet does not reach into a shadow root. Measured: a <code>.pop {'{ display: grid }'}</code> rule computed to <code>display: block</code>.</td>
-          </tr>
-          <tr>
-            <td><code>.astro</code> components (<code>esa-badge</code>, <code>esa-button</code>)</td>
-            <td>❌ renders unstyled</td>
-            <td>Their styles are Astro-scoped page CSS, which is the row above. Lit components are fine &mdash; they carry their own.</td>
-          </tr>
-        </tbody>
-      </table>
+  <Section id="overview" title="Overview">
+    <div class="ref-banner">
+      Non-functional reference. This page documents the production component, which
+      embeds a real mapping engine behind the inputs below. The frame further down
+      is a static, token-styled mock of the map surface and its placeholder state —
+      it does not pan, zoom, or load tiles.
     </div>
-    <p class="meta">
-      Two details make that row work. <code>is:inline</code> is required because Astro hoists a
-      normal <code>&lt;style&gt;</code> out of the markup into the page bundle &mdash; precisely
-      the case that does not work; <code>is:inline</code> leaves it where you wrote it. And it
-      goes on <strong><code>esa-map</code>, not on the popup</strong>: a style block inside a
-      popup only reaches the root when that popup first <em>opens</em>, so pins styled from one
-      render naked until something is clicked. Found by measuring &mdash; the first version of
-      this demo did exactly that.
-    </p>
-    <p class="meta">
-      It scopes to the whole map root, chrome included, so prefix your selectors &mdash; hence
-      <code>.card__*</code> and <code>.rich-pin</code> above. The action is a real
-      <code>&lt;a&gt;</code> rather than <code>esa-button</code> for the last row&rsquo;s reason:
-      an <code>.astro</code> component would arrive with none of its styling.
-    </p>
-  </Section>
-
-  <Section id="draggable" title="Draggable marker">
-    <p>
-      <code>draggable</code> lets the user move a pin; <code>markermove</code> reports where
-      they left it. This is the shape an area-of-interest picker is built from &mdash; drag to
-      place, read the coordinate back out.
-    </p>
-    <Preview align="start" code={`<esa-map-marker lng-lat="[-119.6, 37.2]" draggable></esa-map-marker>
-
-marker.addEventListener('markermove', (e) => {
-  const [lng, lat] = e.detail.lngLat;   // plain numbers, no engine objects
-});`}>
-      <div class="drag-demo">
-        <esa-map
-          label="Draggable pin"
-          style-url="blank"
-          center="[-119.6, 37.2]"
-          zoom="4.6"
-          height="360px"
-          controls="zoom"
-        >
-          <esa-map-geojson src={COUNTIES} label="California counties, as context" name-property="name"></esa-map-geojson>
-          <esa-map-marker id="drag-pin" lng-lat="[-119.6, 37.2]" draggable></esa-map-marker>
-        </esa-map>
-        <p class="readout typography-body-sm">
-          Pin at <code id="drag-readout">-119.6000, 37.2000</code>
-        </p>
-      </div>
-    </Preview>
-  </Section>
-
-  <Section id="basemap" title="A basemap of Earth">
-    <p>
-      A basemap is not a component &mdash; it is <strong>the bottom layer of the style</strong>,
-      and there are exactly three ways to get one. They differ in what you have to supply, and
-      the middle one is what most people mean when they ask.
-    </p>
-    <div class="api-table">
-      <table>
-        <thead>
-          <tr><th>Route</th><th>What you supply</th><th>Use it when</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>style-url="blank"</code></td>
-            <td>Nothing. No network request at all.</td>
-            <td>Your data <em>is</em> the map &mdash; a choropleth, a boundary set, anything where cartography underneath would compete.</td>
-          </tr>
-          <tr>
-            <td><code>tile-url</code></td>
-            <td>One URL template.</td>
-            <td>You want Earth under your data. This is the shape every ArcGIS, WMTS and internal tile cache already publishes.</td>
-          </tr>
-          <tr>
-            <td><code>style-url</code></td>
-            <td>A whole style JSON &mdash; sources, sprites, glyphs, a hundred-odd layers.</td>
-            <td>You are using somebody&rsquo;s designed cartography, or your own.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p>
-      <code>tile-url</code> is the one worth knowing about, because it needs no style document,
-      no account and no API key. Give it a template and the style is generated for you: a
-      token-painted background, with the tiles drawn on top.
-    </p>
-    <Preview align="start" code={`<esa-map
-  label="San Francisco Bay"
-  center="[-122.35, 37.78]"
-  zoom="9"
-  tile-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-  attribution="© OpenStreetMap contributors"
-></esa-map>`}>
-      <esa-map
-        label="San Francisco Bay on OpenStreetMap tiles"
-        center="[-122.35, 37.78]"
-        zoom="9"
-        height="360px"
-        controls="zoom scale fullscreen"
-        tile-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="© OpenStreetMap contributors"
-      ></esa-map>
-    </Preview>
-    <p class="meta">
-      OpenStreetMap&rsquo;s own tiles are keyless and fine for a prototype, but their
-      <a href="https://operations.osmfoundation.org/policies/tiles/">tile usage policy</a> rules
-      out shipping a product on them. A real project points this at its own tile server, an
-      ArcGIS service, or a provider.
-    </p>
-
-    <h3 class="typography-heading-sm">Three things that will bite</h3>
+    <h3 class="sub">What it wraps</h3>
     <ul>
-      <li>
-        <strong><code>{'{s}'}</code> is Leaflet&rsquo;s, not MapLibre&rsquo;s.</strong> The
-        engine substitutes <code>{'{z}'}</code>, <code>{'{x}'}</code>, <code>{'{y}'}</code>,
-        <code>{'{quadkey}'}</code>, <code>{'{bbox-epsg-3857}'}</code> and
-        <code>{'{ratio}'}</code> &mdash; and nothing else. A Leaflet-shaped URL requests a
-        literal <code>{'{s}'}</code> host, so every tile 404s and you get an empty frame with a
-        console full of network errors that name the URL but not the cause. This is the likely
-        failure here: every ESA Leaflet app&rsquo;s tile URL is written that way. The component
-        says so rather than rewriting it &mdash; picking a subdomain would be guessing at
-        someone&rsquo;s infrastructure.
-      </li>
-      <li>
-        <strong>Attribution is yours to supply.</strong> A style JSON declares its own; a
-        template carries no metadata at all. Nearly every service requires credit by licence,
-        so a <code>tile-url</code> without <code>attribution</code> warns.
-      </li>
-      <li>
-        <strong>A raster basemap does not follow the theme.</strong> It is a picture of
-        somebody&rsquo;s cartography and nothing on this side can darken it &mdash;
-        <code>raster-brightness</code> only produces grey fog. So a theme-aware basemap means a
-        second service: set <code>tile-url-dark</code> and the tiles are swapped in place under
-        <code>data-scheme="dark"</code>. In place matters &mdash; restyling the map would
-        discard every layer your overlays added.
-      </li>
-    </ul>
-    <p class="meta">
-      The generated background sits <em>under</em> the tiles on purpose. Tiles arrive over the
-      network, every service has a maximum zoom and an edge to its coverage, and connections
-      drop &mdash; in all four cases something shows through. Left to the engine that is opaque
-      white, which flashes on load and is simply wrong in dark mode. Painted from
-      <code>--color-background-elevation-sunken</code>, the gaps look like this system instead.
-    </p>
-  </Section>
-
-  <Section id="styles" title="The other two, and what they look like">
-    <p>
-      The default style, if you set neither, is MapLibre&rsquo;s keyless demo source. It is
-      worth seeing exactly because it is <strong>not</strong> a basemap of Earth in any useful
-      sense: Natural Earth country outlines, <strong>topping out at zoom 6</strong>. Zoom in and
-      it simply stops adding detail. That is the honest signal that a real project needs a real
-      tile source &mdash; it is a live map, not a mock, and not a basemap.
-    </p>
-    <Preview code={`<esa-map label="Northern California" center="[-122.27, 37.87]" zoom="6"></esa-map>`}>
-      <esa-map label="Northern California" center="[-122.27, 37.87]" zoom="6" height="320px" controls="zoom scale fullscreen"></esa-map>
-    </Preview>
-    <p class="meta">
-      These tiles are fetched over the network. Offline, this frame stays empty while the
-      blank style below still works.
-    </p>
-
-    <p>
-      <code>style-url="blank"</code> makes <strong>no network requests at all</strong>. Its
-      background is painted from <code>--color-background-elevation-sunken</code> through the
-      JS theme bridge, so it follows the active theme &mdash; switch themes and watch it
-      re-paint. <strong>It is deliberately empty:</strong> there is nothing to see until a
-      layer is added, and that is the point &mdash; it exists so a GeoJSON overlay reads
-      against this system&rsquo;s own surface rather than somebody&rsquo;s cartography.
-    </p>
-    <Preview code={`<esa-map label="Blank canvas" style-url="blank" height="320px"></esa-map>`}>
-      <esa-map label="Blank canvas" style-url="blank" height="320px" controls="zoom scale"></esa-map>
-    </Preview>
-    <p class="meta">
-      A vendor style URL is the third route, and this kit <strong>does not restyle a
-      vendor&rsquo;s layers</strong>. It does not know their names, and guessing would break the
-      basemap. A vendor basemap is the vendor&rsquo;s; theme your overlays, not their
-      cartography.
-    </p>
-  </Section>
-
-  <Section id="engine" title="Why MapLibre, and not Leaflet">
-    <p>
-      This page previously documented a Leaflet wrapper and claimed a MapLibre backend
-      &ldquo;would satisfy the same API&rdquo;. That is true of the narrow API it described
-      &mdash; centre, zoom, tile URL, markers &mdash; and stops being true at the first real
-      requirement:
-    </p>
-    <ul>
-      <li>
-        <strong><code>queryRenderedFeatures()</code></strong> &mdash; cycling through the
-        overlays that intersect one click point. Leaflet has no analogue; you hand-roll
-        point-in-polygon across layers.
-      </li>
-      <li>
-        <strong><code>feature-state</code></strong> &mdash; per-feature hover on a layer of
-        thousands of shapes, without re-rendering the layer.
-      </li>
-      <li>
-        <strong>GL-rendered point layers</strong> &mdash; <code>L.geoJSON</code> creates one
-        SVG path per feature and falls over on large sets.
-      </li>
-    </ul>
-    <p>
-      Many existing ESA applications run Leaflet. That constrains those applications, not
-      what this kit prototypes in. Two costs come with the choice, and are worth stating
-      plainly rather than discovering later:
-    </p>
-    <ul>
-      <li>
-        <strong>Theming needs a JS bridge.</strong> MapLibre paint properties cannot read CSS
-        custom properties. See <a href="#theming-notes">Theming</a>.
-      </li>
-      <li>
-        <strong>WebGL features are pixels.</strong> A shape drawn on the GL canvas is
-        structurally invisible to a screen reader. See <a href="#accessibility">Accessibility</a>.
-      </li>
+      <li><strong>Third-party library:</strong> Leaflet, mounted through <code>@asymmetrik/ngx-leaflet</code>. The config shape (<code>center</code>, <code>zoom</code>, <code>tileUrl</code>, <code>attribution</code>, <code>scrollWheelZoom</code>) maps directly onto Leaflet map options; MapLibre GL is a drop-in alternative for vector tiles.</li>
+      <li><strong>Graceful fallback:</strong> until the engine is installed, the component renders a placeholder (map-pin icon + install hint + marker count) so layouts compile and reserve space without a hard dependency.</li>
+      <li><strong>Tiles:</strong> defaults to OpenStreetMap raster tiles (<code>https://{`{s}`}.tile.openstreetmap.org/{`{z}`}/{`{x}`}/{`{y}`}.png</code>).</li>
     </ul>
   </Section>
 
   <Section id="api" title="API">
-    <ApiTable slug="esa-map" describe={describe} events={events} />
-    <p class="meta">
-      <strong>Why <code>mapclick</code> and not <code>click</code>.</strong> A composed
-      <code>CustomEvent</code> named <code>click</code> is indistinguishable from a real one at
-      the listener &mdash; and a real <code>MouseEvent</code>&rsquo;s <code>detail</code> is the
-      click <em>count</em>, a number. So <code>e.detail.lngLat</code> would be
-      <code>undefined</code> on every genuine click, silently, with both events landing on the
-      same handler. <code>moveend</code> keeps its bare name because the platform does not use
-      it and MapLibre already does.
-    </p>
-  </Section>
-
-  <Section id="theming-notes" title="Theming">
-    <p>
-      A WebGL surface is a bitmap. No custom property, no <code>@media</code> block and no
-      assurance profile reaches inside it &mdash; the same constraint
-      <a href="/components/esa-chart">esa-chart</a> has with a canvas. Three surfaces, and only
-      two of them are ours:
-    </p>
+    <h3 class="sub">Inputs</h3>
     <div class="api-table">
       <table>
-        <thead><tr><th>Surface</th><th>How it themes</th></tr></thead>
+        <thead><tr><th>Input</th><th>Type</th><th>Default</th><th>Purpose</th></tr></thead>
         <tbody>
-          <tr>
-            <td>The component&rsquo;s own frame and placeholder</td>
-            <td>Ordinary CSS reading tier-2 roles. Themes for free.</td>
-          </tr>
-          <tr>
-            <td>MapLibre&rsquo;s control chrome</td>
-            <td>DOM inside this component&rsquo;s shadow root, so the overrides in the component stylesheet re-theme it for free too.</td>
-          </tr>
-          <tr>
-            <td>The map style itself</td>
-            <td><strong>JS only.</strong> For <code>blank</code> the background is resolved from tokens and re-resolved whenever the theme moves. For a vendor style, nothing &mdash; deliberately.</td>
-          </tr>
+          <tr><td><code>config</code></td><td><code>EsaMapConfig</code></td><td><code>{'{}'}</code></td><td>Map options, merged with <code>ESA_MAP_DEFAULTS</code>.</td></tr>
+          <tr><td><code>markers</code></td><td><code>EsaMapMarker[]</code></td><td><code>[]</code></td><td>Pins to place on the map.</td></tr>
+          <tr><td><code>height</code></td><td><code>string</code></td><td><code>'400px'</code></td><td>Container height.</td></tr>
+          <tr><td><code>disabled</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Dims and blocks interaction.</td></tr>
         </tbody>
       </table>
     </div>
-    <p>
-      <strong>No tier-3 tokens.</strong> The bridge reads tier-2 roles directly, exactly as
-      <code>esa-chart</code> does. A hook is earned by demonstrated divergence, not provided in
-      anticipation of it &mdash; and no spoke has yet themed a map. If one needs to, that is a
-      <code>/request-lego</code>, not a surface carried on the chance someone wants it.
-    </p>
-  </Section>
 
-  <Section id="accessibility" title="Accessibility">
-    <p>What the component handles, and what is genuinely still open:</p>
+    <h3 class="sub">Outputs</h3>
     <div class="api-table">
       <table>
-        <thead><tr><th>Concern</th><th>State</th></tr></thead>
+        <thead><tr><th>Output</th><th>Payload</th></tr></thead>
         <tbody>
-          <tr>
-            <td>Accessible name</td>
-            <td>Handled. <code>label</code> replaces MapLibre&rsquo;s generic &ldquo;Map&rdquo; through the <code>Map.Title</code> locale string. Warns at runtime when absent rather than shipping the generic name silently.</td>
-          </tr>
-          <tr>
-            <td>Keyboard pan and zoom</td>
-            <td>Handled by the library. The canvas is focusable, arrows pan, <kbd>+</kbd>/<kbd>-</kbd> zoom, and focus is not trapped.</td>
-          </tr>
-          <tr>
-            <td><code>prefers-reduced-motion</code></td>
-            <td>Handled by the library, unusually. MapLibre checks it and skips camera animation unless a move is marked <code>essential</code>. This component&rsquo;s obligation is the inverse of <code>esa-chart</code>&rsquo;s: never mark a decorative move essential, and so never override the preference.</td>
-          </tr>
-          <tr>
-            <td>Forced colors</td>
-            <td>Partially. The frame border is force-adjusted so the map&rsquo;s bounds stay visible, and the blank style&rsquo;s background resolves through <code>Canvas</code> rather than a token. A vendor basemap cannot be reached.</td>
-          </tr>
-          <tr>
-            <td>Control hit targets</td>
-            <td>MapLibre&rsquo;s buttons measure 29px, clear of the 24px floor (SC 2.5.8). Rebuilding them from <code>esa-button variant="chrome"</code> would mean reimplementing the fullscreen and geolocation permission flows for cosmetic parity.</td>
-          </tr>
-          <tr>
-            <td><strong>Features drawn on the GL canvas</strong></td>
-            <td><strong>Open, and structural.</strong> A shape rendered by WebGL is a pixel &mdash; invisible to assistive tech, unreachable by keyboard. The fix is a parallel DOM mirror per data layer, and it lands with the layer components that need it rather than as a later pass, because it changes what those components <em>render</em>, not what colour they render in.</td>
-          </tr>
+          <tr><td><code>markerClick</code></td><td><code>EsaMapMarker</code></td></tr>
+          <tr><td><code>mapClick</code></td><td><code>{`{ lat: number; lng: number }`}</code></td></tr>
         </tbody>
       </table>
     </div>
   </Section>
 
-  <Section id="install" title="Installing">
-    <p>
-      <code>maplibre-gl</code> is an <strong>optional peer dependency</strong>. Both halves
-      &mdash; the engine and its 83&nbsp;KB stylesheet &mdash; are loaded by dynamic import on
-      first render, so a spoke that never maps pays for neither and
-      <code>@esa/ecology</code>&rsquo;s own dependency list stays at <code>lit</code> alone.
-    </p>
-    <pre tabindex="0" role="group" aria-label="Command: install the mapping engine"><code>npm install maplibre-gl</code></pre>
-    <p>
-      Without it the component renders a <strong>themed placeholder</strong> at the right size,
-      so a layout still compiles and reserves space. That is why the stylesheet import is
-      dynamic too: a static one would fail the <em>build</em> when the peer is absent, which
-      would destroy exactly the guarantee the placeholder exists to make.
-    </p>
-    <p class="meta">
-      The stylesheet is adopted into this component&rsquo;s shadow root rather than
-      <code>document.head</code>. That was measured, not assumed: unlike AG Charts, the
-      MapLibre bundle contains zero <code>document.head</code> writes and zero
-      <code>createElement</code> style calls, and v6 dropped the &ldquo;missing CSS
-      declarations&rdquo; canary that Mapbox GL JS logs &mdash; so there is no document-level
-      probe to fail, and no <code>.maplibregl-*</code> rules leak onto the page.
-    </p>
+  <Section id="config" title="EsaMapConfig & EsaMapMarker">
+    <div class="api-table">
+      <table>
+        <thead><tr><th>EsaMapConfig key</th><th>Type</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td><code>center</code></td><td><code>[lat, lng]</code></td><td><code>[39.8283, -98.5795]</code> (center of US)</td></tr>
+          <tr><td><code>zoom</code></td><td><code>number</code></td><td><code>5</code></td></tr>
+          <tr><td><code>minZoom</code> / <code>maxZoom</code></td><td><code>number</code></td><td><code>2</code> / <code>18</code></td></tr>
+          <tr><td><code>tileUrl</code></td><td><code>string</code></td><td>OpenStreetMap tile template</td></tr>
+          <tr><td><code>attribution</code></td><td><code>string</code></td><td><code>'© OpenStreetMap contributors'</code></td></tr>
+          <tr><td><code>scrollWheelZoom</code></td><td><code>boolean</code></td><td><code>true</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="api-table">
+      <table>
+        <thead><tr><th>EsaMapMarker key</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td><code>string</code></td><td>Required identifier.</td></tr>
+          <tr><td><code>position</code></td><td><code>[lat, lng]</code></td><td>Required coordinates.</td></tr>
+          <tr><td><code>title</code></td><td><code>string</code></td><td>Hover / aria label.</td></tr>
+          <tr><td><code>popup</code></td><td><code>string</code></td><td>HTML content for the popup bubble.</td></tr>
+          <tr><td><code>icon</code></td><td><code>string</code></td><td>Custom marker icon URL.</td></tr>
+          <tr><td><code>draggable</code></td><td><code>boolean</code></td><td>Allow the user to move the pin.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </Section>
 
-  <Section id="roadmap" title="What this does not do yet">
-    <p>
-      Three components mount into this host today &mdash;
-      <a href="/components/esa-map-geojson">esa-map-geojson</a>,
-      <a href="/components/esa-map-marker">esa-map-marker</a> and
-      <a href="/components/esa-map-popup">esa-map-popup</a>. These are not built:
-    </p>
-    <ul>
-      <li>
-        <strong>Clustering.</strong> The engine has it natively
-        (<code>cluster: true</code> plus <code>getClusterExpansionZoom</code>); it needs a
-        component around it and a count-bubble size ramp.
-      </li>
-      <li>
-        <strong>Routes.</strong> A LineString layer with casing for legibility, numbered stops as
-        a symbol layer, and multi-route selection via feature state. Fetching directions (OSRM or
-        similar) stays app code, not component code.
-      </li>
-      <li>
-        <strong>A GL point layer</strong> for the tens-of-thousands case that
-        <code>esa-map-marker</code> deliberately does not cover.
-      </li>
-      <li>
-        <strong>Cycling across separate layers.</strong> Each layer queries only its own ids, so
-        a stack spanning two layers cannot currently be walked. A shared stack belongs on this
-        host rather than in any one layer &mdash; which is a real design change, not a gap to
-        patch.
-      </li>
+  <Section id="anatomy" title="Anatomy & key states">
+    <h3 class="mock-label">Ready state (engine loaded) — static mock</h3>
+    <div class="map-mock" style="--_h: 320px;">
+      <div class="map-tiles"></div>
+      <div class="map-attribution">© OpenStreetMap contributors</div>
+      <div class="map-zoom"><button>+</button><button>−</button></div>
+      <span class="pin" style="left: 38%; top: 44%;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-background-brand, #43608a)" stroke="var(--color-content-default-knockout, #fff)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-content-default-knockout, #fff)" stroke="none"/></svg>
+      </span>
+      <span class="pin" style="left: 60%; top: 56%;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--color-background-accent, #f9a134)" stroke="var(--color-content-default-knockout, #fff)" stroke-width="1.5"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/><circle cx="12" cy="9" r="2.5" fill="var(--color-content-default-knockout, #fff)" stroke="none"/></svg>
+        <span class="popup">Cedar Creek Outfall</span>
+      </span>
+    </div>
+
+    <h3 class="mock-label">Placeholder state (engine not installed) — actual source markup</h3>
+    <div class="map-mock map-mock--placeholder" style="--_h: 220px;">
+      <div class="ph">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p class="ph-title">Map Component</p>
+        <p class="ph-text">Install <code>leaflet</code> and <code>@asymmetrik/ngx-leaflet</code> to enable interactive maps.</p>
+        <p class="ph-markers">2 marker(s) configured</p>
+      </div>
+    </div>
+    <p class="meta"><strong>Disabled state:</strong> host receives <code>opacity: 0.5; pointer-events: none</code>.</p>
+  </Section>
+
+  <Section id="tokens" title="Tokens">
+    <ul class="tokens">
+      <li><strong>Frame:</strong> <code>--color-border</code> (1px border), <code>--radius-200</code> (corner radius), overflow clipped.</li>
+      <li><strong>Placeholder surface:</strong> <code>--color-background-elevation-sunken</code> background, <code>--color-content-default-muted</code> body, <code>--color-content-default-secondary</code> title.</li>
+      <li><strong>Spacing:</strong> <code>--spacing-200</code> stack gap, <code>--spacing-500</code> padding.</li>
+      <li><strong>Marker / popup chrome (handoff):</strong> derive from <code>--color-background-brand</code>, <code>--color-background-accent</code>, <code>--color-background-elevation-raised</code>, <code>--elevation-4</code>, and <code>--radius-200</code> so pins and popups match the active theme.</li>
     </ul>
   </Section>
 </ComponentDoc>
 
 <style>
-  .api-table table { width: 100%; border-collapse: collapse; }
-  .meta { color: var(--color-content-default-secondary, #646464); max-width: 72ch; }
+  .sub { font-size: var(--font-size-300, 1.125rem); font-weight: var(--typography-font-weight-semibold, 550); margin: var(--spacing-500, 1.5rem) 0 var(--spacing-200, 0.5rem); }
+  .lede { max-width: 70ch; }
+  .ref-banner {
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
+    border: 1px solid var(--color-border-utility-warning, #fde68a);
+    border-radius: var(--radius-200, 8px);
+    color: var(--color-content-default-secondary, #525252);
+    font-size: var(--font-size-150, 0.875rem);
+    margin-bottom: var(--spacing-400, 1rem);
+  }
+  .meta { color: var(--color-content-default-muted, #737373); font-size: var(--font-size-150, 0.875rem); max-width: 72ch; }
+  .mock-label { font-size: var(--font-size-300, 1.125rem); font-weight: var(--typography-font-weight-semibold, 550); margin: var(--spacing-400, 1rem) 0 var(--spacing-200, 0.5rem); }
 
-  /* Popup bodies. The bubble, tail and close button are the engine's own DOM and
-     are themed from esa-map's stylesheet — this is only the content inside. */
-  .pop { display: grid; gap: var(--spacing-100, 0.25rem); min-width: 9rem; }
-  .pop__name { margin: 0; color: var(--color-content-default, #202020); }
-  .pop__meta { margin: 0; color: var(--color-content-default-secondary, #646464); }
+  .api-table { overflow-x: auto; border: 1px solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-200, 8px); margin-bottom: var(--spacing-300, 0.75rem); }
+  .api-table table { border-collapse: collapse; width: 100%; font-size: var(--font-size-150, 0.875rem); }
+  .api-table th, .api-table td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-default-subtle, #efefef); vertical-align: top; }
+  .api-table th { background: var(--color-background-elevation-sunken, #efefef); font-weight: var(--typography-font-weight-semibold, 550); }
+  .api-table tr:last-child td { border-bottom: 0; }
 
-  .drag-demo { display: grid; gap: var(--spacing-200, 0.5rem); width: 100%; }
-  .readout { margin: 0; color: var(--color-content-default-secondary, #646464); }
-  .readout code { font-variant-numeric: tabular-nums; }
-</style>
-
-<script>
-  import '@esa/ecology/esa-map';
-  import '@esa/ecology/esa-map-geojson';
-  import '@esa/ecology/esa-map-marker';
-  import '@esa/ecology/esa-map-popup';
-
-  type Popup = HTMLElement & {
-    lngLat: [number, number];
-    open: boolean;
-    /* The popup's content, once the engine has relocated it into the bubble.
-       `document.querySelector` cannot reach in there — the bubble lives inside
-       esa-map's shadow root — so every content update goes through `body`. */
-    body: HTMLElement | null;
-  };
-
-  /*
-   * COUNTIES — the emit-and-drive contract. The layer reports what was selected;
-   * this page decides that a popup is how to show it. The layer never owns a
-   * popup, which is what keeps one selection model working across several layers.
-   */
-  const layer = document.getElementById('counties-layer');
-  const popup = document.getElementById('counties-popup') as Popup | null;
-
-  layer?.addEventListener('featureselect', (e) => {
-    const { feature, lngLat, index, count } = (e as CustomEvent).detail;
-    if (!popup) return;
-    const nameEl = popup.body?.querySelector('[data-county]');
-    const stackEl = popup.body?.querySelector('[data-stack]');
-    if (!nameEl || !stackEl) return;
-    nameEl.textContent = `${feature?.properties?.name ?? 'Unnamed'} County`;
-    // Surfacing the cycle position is the whole point of exposing an ordered
-    // array: without it, a second click on the same spot looks like a bug.
-    stackEl.textContent =
-      count > 1 ? `${index + 1} of ${count} boundaries here — click again to cycle` : 'One boundary here';
-    popup.lngLat = lngLat;
-    popup.open = true;
-  });
-
-  /* CITIES — markers are real DOM, so a plain click listener is all it takes.
-     The marker element itself stays in the light DOM (only its CONTENT is
-     relocated), which is why getElementById/querySelectorAll still find it. */
-  const cityPopup = document.getElementById('cities-popup') as Popup | null;
-
-  for (const marker of document.querySelectorAll('esa-map-marker[data-city]')) {
-    marker.addEventListener('click', () => {
-      if (!cityPopup) return;
-      const nameEl = cityPopup.body?.querySelector('[data-city-name]');
-      const noteEl = cityPopup.body?.querySelector('[data-city-note]');
-      if (!nameEl || !noteEl) return;
-      nameEl.textContent = marker.getAttribute('data-city') ?? '';
-      noteEl.textContent = marker.getAttribute('data-note') ?? '';
-      cityPopup.lngLat = JSON.parse(marker.getAttribute('lng-lat') ?? '[0,0]');
-      cityPopup.open = true;
-    });
+  .map-mock {
+    position: relative;
+    height: var(--_h, 320px);
+    border: 1px solid var(--color-border-default, #e5e5e5);
+    border-radius: var(--radius-200, 8px);
+    overflow: hidden;
+  }
+  .map-tiles {
+    position: absolute; inset: 0;
+    background-color: var(--color-blue-2);
+    background-image:
+      linear-gradient(var(--color-blue-4) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-blue-4) 1px, transparent 1px),
+      radial-gradient(circle at 30% 40%, var(--color-green-4) 0 60px, transparent 90px),
+      radial-gradient(circle at 70% 65%, var(--color-green-3) 0 50px, transparent 80px);
+    background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
+  }
+  .map-attribution {
+    position: absolute; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.8);
+    color: var(--color-content-default-muted, #737373);
+    font-size: var(--font-size-100, 0.75rem);
+    padding: 2px 6px;
+    border-top-left-radius: var(--radius-100, 4px);
+  }
+  .map-zoom { position: absolute; left: var(--spacing-300, 0.75rem); top: var(--spacing-300, 0.75rem); display: flex; flex-direction: column; box-shadow: var(--elevation-3, 0 4px 20px -4px rgba(0,0,0,0.06)); border-radius: var(--radius-100, 4px); overflow: hidden; }
+  .map-zoom button { width: 30px; height: 30px; border: 0; border-bottom: 1px solid var(--color-border-default, #e5e5e5); background: var(--color-background-elevation-raised, #fff); color: var(--color-content-default, #171717); font-size: 1.1rem; cursor: default; }
+  .map-zoom button:last-child { border-bottom: 0; }
+  .pin { position: absolute; transform: translate(-50%, -100%); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
+  .pin .popup {
+    position: absolute; left: 50%; bottom: calc(100% + 4px); transform: translateX(-50%);
+    background: var(--color-background-elevation-raised, #fff); color: var(--color-content-default, #171717);
+    border: 1px solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-200, 8px);
+    box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0,0,0,0.07));
+    padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
+    font-size: var(--font-size-150, 0.875rem); white-space: nowrap;
   }
 
-  /* DRAGGABLE — markermove carries plain numbers, never an engine object. */
-  const pin = document.getElementById('drag-pin');
-  const readout = document.getElementById('drag-readout');
-  pin?.addEventListener('markermove', (e) => {
-    const [lng, lat] = (e as CustomEvent).detail.lngLat;
-    if (readout) readout.textContent = `${lng.toFixed(4)}, ${lat.toFixed(4)}`;
-  });
-</script>
+  .map-mock--placeholder { background: var(--color-background-elevation-sunken, #efefef); }
+  .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-200, 0.5rem); color: var(--color-content-default-muted, #737373); text-align: center; padding: var(--spacing-500, 1.5rem); }
+  .ph-title { font-size: 1rem; font-weight: var(--typography-font-weight-semibold, 550); color: var(--color-content-default-secondary, #525252); margin: 0; }
+  .ph-text { font-size: var(--font-size-150, 0.875rem); max-width: 320px; margin: 0; }
+  .ph-markers { font-size: var(--font-size-100, 0.75rem); background: var(--color-background-elevation-raised, #fff); padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem); border-radius: var(--radius-full, 9999px); margin: 0; }
+</style>

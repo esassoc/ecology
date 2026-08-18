@@ -341,20 +341,9 @@ browser-stacking OOM, (d) high token cost. Fix the composition layer and all fou
 - **Omnibox search** promoted from cb-fish-design · *Evidence:* our search was weak; the good
   pattern exists but is undiscoverable · *Action:* port cb-fish omnibox → `esa-omnibox` with
   live typeahead/results; make it the default shell search · `lego` · **P1**
-- ~~**`esa-map`** (Leaflet wrapper)~~ · **DONE 2026-08-17, on a different engine.**
-  *Evidence:* schematic plot was a workaround for my "no map lib" constraint ·
-  *Shipped:* `esa-map.ts`, a **MapLibre GL** host — not Leaflet. The requirement set
-  that arrived with it (cycling overlays that intersect one click point,
-  `feature-state` hover at scale, GL-rendered point layers) has no Leaflet path, and
-  the "a MapLibre GL backend would satisfy the same API" line on the old reference
-  page was only ever true of the narrow API that page documented. Many ESA apps run
-  Leaflet; that constrains those apps, not what the hub prototypes in. Optional peer
-  dep — engine AND its 83KB stylesheet both lazily imported, so the absent-engine
-  placeholder survives a build with the peer missing (verified by hiding it).
-  **Zero tier-3 tokens**: the JS theme bridge (`src/token-bridge.ts`, extracted from
-  `esa-chart`) reads tier-2 roles directly. Markers, popups, GeoJSON layers,
-  clustering and routes are NOT built — the host's API was shaped to keep them
-  possible · `lego` · **DONE**
+- **`esa-map`** (Leaflet wrapper) · *Evidence:* schematic plot was a workaround for my
+  "no map lib" constraint · *Action:* Leaflet-based map lego, token-themed markers,
+  data-driven pins · `lego` · **P1**
 
 ## B. Hub component fixes
 
