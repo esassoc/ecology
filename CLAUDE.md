@@ -464,6 +464,81 @@ Express a prop's default in the `Astro.props` destructuring (`variant = 'primary
 never in a fallback chain below it — the extractor reads defaults from the
 destructuring, so any other form silently drops the default from the docs.
 
+## The Angular tab is GENERATED from the HTML sample beside it (2026-08-17)
+Every `<Preview>` on a `type="wc"` page renders a second, Angular code panel,
+derived from the sample already there. **103 of 113 covered — 101 generated, 2
+authored.** Most ESA apps are Angular, and none of what an Angular developer gets
+wrong here is visible on a component page otherwise.
+
+Three layers, and the split is what keeps spokes working:
+`scripts/lib/angular-snippet.mjs` (the pure, isomorphic transform — tokenizer,
+attribute classifier, `<script>` translator), `apps/site/src/data/angular-snippet.ts`
+(the hub oracle: which tags are real elements, memoization, the coverage report),
+and `apps/site/src/components/Preview.astro` (a thin wrapper). **`@esa/docs/Preview.astro`
+computes NOTHING** — it takes a finished `angular?: string | null` and is inert
+without it, because a spoke has no hub sources to parse. Pages opt in by swapping
+one import line; **an alias silently redirecting `@esa/docs/Preview.astro` was
+rejected** — an import that resolves somewhere other than where it points is
+exactly the magic this repo spends paragraphs warning about.
+
+**`ok: false` is a normal result.** Anything the transform cannot do with certainty
+emits no tab plus a line in the build's coverage report. The 10 remaining refusals
+are correct: 5 samples are data fragments with no markup at all, 4 are imperative
+demos (`whenDefined`, a `checkValidity()` loop) with no faithful Angular form.
+
+Four rules that look like bugs and are not:
+- **Never "fix" an attribute.** `center="[-122.35, 37.78]"` is `type: Array` WITH an
+  attribute, so Lit's JSON converter parses it. `[center]` would make the two tabs
+  disagree, which is the one thing generating from the sample exists to prevent.
+  `[prop]` is only for `attribute: false`, accessors, and script-assigned props.
+- **Never invent an event binding.** `(change)` appears only if the sample shows a
+  listener. The general question is answered once, in the generated block under
+  each events table.
+- **An implicit handle binds to the sample's SOLE custom element.** Real samples
+  write `el.options = […]` and `chart.data = […]`; refusing them cost a third of
+  the corpus. More than one element is ambiguous and refused.
+- **Only 39 of 70 components are real elements.** The rest are `.astro`, and
+  `<esa-badge>` in an Angular template renders nothing with no error — so those
+  pages get NO tab. Its absence is information. `/guide/angular` states that, plus
+  the fact that **`@esa/ecology` is not yet installable into a stock Angular build**
+  (raw `.ts` from `node_modules`, `.js`-extensioned specifiers, a hard `astro` peer,
+  and `esa-map`'s Vite-only `?inline`). That caveat is stated ONCE, not per snippet.
+
+**`="false"` ON A BOOLEAN PROP IS `true` UNDER LIT'S DEFAULT CONVERTER, and six
+props were quietly broken by it.** The default is `value !== null`, which is the
+right reading for a prop defaulting to FALSE — `disabled` is off until you write
+it. For a prop defaulting to TRUE it collapses: `collapsible="false"` set it to
+`true`, and so did omitting the attribute, so **no markup turned it off at all**
+while the attribute sat there looking like it worked. Five doc pages documented it
+for months. Nothing objected — not the build, not the types, not axe, which cannot
+see an attribute that does nothing.
+
+Fixed 2026-08-18 with `packages/ecology/src/boolish.ts`, a converter reading
+`false`/`0`/`off`/`no` as false, on the six: `esa-color-picker show-input`,
+`esa-file-list downloadable`, `esa-pagination
+show-{page-size-selector,first-last-buttons}`, `esa-range-slider show-value`,
+`esa-sidebar-nav collapsible`. Verified in a real browser — `="false"` and `="0"`
+turn them off, absent and bare stay on, so the default and normal presence
+semantics both survive.
+
+**Use `boolish` ONLY for a prop that defaults to `true`.** A default-false prop must
+keep presence semantics; `<esa-x disabled="false">` reading as "enabled" would be its
+own surprise. `toAttribute` removes the attribute for `false` rather than writing
+`="false"`, so a reflected prop round-trips. Inverting the six names
+(`no-collapse`, `hide-input`, …) is more idiomatic HTML and was rejected as six prop
+renames, six `migrations.json` rows and six shims, to fix markup already written.
+The `="false"` ratchet in `angular-snippet.corpus.test.mjs` stays live for every prop
+WITHOUT a converter, and `ApiTable` generates the "write `=\"false\"` to turn it off"
+note only where one is declared.
+
+`scripts/lib/component-api.mjs` was split out of the data module so the corpus test
+could run against the real parse (and so two parsers backing every API table finally
+got tests). It **finds the repo root by SEARCHING for `packages/ecology/src/components`,
+not by counting directories up** — vite decides whether to inline the module, and the
+moment `angular-snippet.ts` imported it the pair landed one level shallower and the
+build died on `apps/packages/…`, a path that never existed. Every other data module
+here still counts, and is still exposed to that.
+
 ## Renaming or deleting a token — the row is enforced, not remembered
 `packages/tokens/token-names.json` is a **committed baseline** of every name the
 package ships (1,028). `npm test` fails when one disappears without a
@@ -790,6 +865,30 @@ whose only child is a nested popup still has two text nodes from indentation, an
 `childNodes.length` test silently deleted the default pin), and the coordinate falls back
 to the marker's **attribute** because upgrade order is not guaranteed — a marker whose
 definition has not run yet has no `lngLat` property, and the popup would inherit `[0, 0]`.
+
+**A MARKER'S `label` AND `tooltip` ARE PROPS, NOT SLOTTED CONTENT**, and that follows
+directly from the rule above: hand-rolling a caption means writing the positioning yourself
+and then finding your CSS cannot reach it. They are rendered by `esa-map-marker` and styled
+by `esa-map`, which owns the root they land in. They are **not two sizes of the same
+control** — a label is information on the map (always visible, costs space on every pin,
+readable without interacting), a tooltip is a disclosure about one pin.
+
+**A tooltip therefore makes the marker interactive on its own**, because a hover-only
+tooltip is unreachable by keyboard — SC 2.1.1, Level A. So is a nested `esa-map-popup`; the
+explicit `interactive` prop exists only for the marker whose click the page handles, which
+this component cannot detect. `role="button"` on the wrapper rather than a real `<button>`
+around it: wrapping would put the author's slotted markup inside a control they did not
+write, and a slotted link would become a nested interactive. Interactivity is **skipped
+entirely** when slotted content already contains something focusable — the author's own
+button wins. The cost of `role` over an element is forced-colors, which reads the HTML
+element and gives this nothing, hence the explicit border.
+
+**The tooltip text goes in the NAME, not `aria-describedby`.** `label` is a category
+repeated across pins ("Landmark"), so a name of `label` alone identifies nothing — three
+pins all announcing "Landmark, button" — and a description is announced late or not at all
+depending on verbosity. The visible label still leads (`"Landmark: California State
+Capitol"`) because SC 2.5.3 requires it to be in the name, and the tip element is
+`aria-hidden` since its text is already there.
 
 **MAPLIBRE POPUPS DO NOT AUTO-PAN.** There is no option for it — Leaflet's `autoPan` has
 no counterpart — so a popup near an edge is clipped by the frame. Invisible on a two-line

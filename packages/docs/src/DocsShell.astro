@@ -56,6 +56,14 @@ const showToggle = colorScheme === 'toggle';
         document.documentElement.setAttribute('data-scheme', s);
       </script>
     )}
+    {/* The code-language choice (HTML vs Angular) persists across pages, so it
+        has to be applied BEFORE first paint or every navigation flashes the HTML
+        panel before switching. Ungated by `showToggle` — a spoke with no scheme
+        toggle still has previews. Harmless when nothing was ever stored. */}
+    <script is:inline>
+      const cl = localStorage.getItem('esa-code-lang');
+      if (cl) document.documentElement.setAttribute('data-code-lang', cl);
+    </script>
     <slot name="head" />
     <style is:global>
       *, *::before, *::after { box-sizing: border-box; }

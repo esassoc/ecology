@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
+import { boolish } from '../boolish.js';
 
 /** The label is UI text. The hex field is the one value slot in the kit set in the
     MONO face — a hex code is tabular, so it reads code-* rather than body-*. */
@@ -28,7 +29,7 @@ export class EsaColorPicker extends LitElement {
     swatches: { type: Array },
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
-    showInput: { type: Boolean, attribute: 'show-input' },
+    showInput: { type: Boolean, attribute: 'show-input', converter: boolish },
     value: { type: String },
   };
 

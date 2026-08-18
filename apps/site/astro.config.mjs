@@ -33,6 +33,13 @@ function watchTokenSources() {
     'tier2-naming.ts',
     'tier3-naming.ts',
     'component-promises.ts',
+    // These two were MISSING until 2026-08-17, and the symptom was subtler than a
+    // stale debug page: `component-api.ts` backs every API table on the site, so
+    // editing a component's props left the dev server serving the previous parse —
+    // a table that looks authoritative and describes the file as it was an hour
+    // ago. `angular-snippet.ts` derives from that same parse.
+    'component-api.ts',
+    'angular-snippet.ts',
   ].map((f) => path.join(ROOT, 'apps', 'site', 'src', 'data', f));
 
   return {

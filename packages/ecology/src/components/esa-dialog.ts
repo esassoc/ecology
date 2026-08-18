@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-dialog — modal dialog [wc].
@@ -20,7 +21,7 @@ export class EsaDialog extends LitElement {
   static properties = {
     open: { type: Boolean, reflect: true },
     heading: { type: String },
-    showCloseButton: { type: Boolean, attribute: 'show-close-button' },
+    showCloseButton: { type: Boolean, attribute: 'show-close-button', converter: boolish },
     size: { type: String, reflect: true },
   };
 

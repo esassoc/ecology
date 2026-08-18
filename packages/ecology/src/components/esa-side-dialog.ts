@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-side-dialog — a slide-in drawer / side sheet (Ecology's first).
@@ -16,7 +17,7 @@ export class EsaSideDialog extends LitElement {
     heading: { type: String },
     position: { type: String, reflect: true },
     size: { type: String, reflect: true },
-    showCloseButton: { type: Boolean, attribute: 'show-close-button' },
+    showCloseButton: { type: Boolean, attribute: 'show-close-button', converter: boolish },
     // Internal: keeps the panel mounted through the slide-out so close animates.
     closing: { state: true },
   };

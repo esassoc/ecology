@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 type PopoverPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -20,7 +21,7 @@ export class EsaPopover extends LitElement {
   static properties = {
     position: { type: String, reflect: true },
     trigger: { type: String },
-    hasArrow: { type: Boolean, attribute: 'has-arrow' },
+    hasArrow: { type: Boolean, attribute: 'has-arrow', converter: boolish },
     offset: { type: Number },
     open: { type: Boolean, reflect: true },
     appearance: { type: String, reflect: true },
