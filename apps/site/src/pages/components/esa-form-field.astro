@@ -1,5 +1,6 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
@@ -31,6 +32,18 @@ const describe = {
 
   <Section id="states" title="States">
     <p>Mark a field <code>required</code>, surface an <code>errorText</code> in place of help text, or <code>disabled</code> the whole field.</p>
+    <p class="caveat">
+      <strong>The control is yours to style — this wrapper only owns the label, help and error
+      text.</strong> The plain <code>&lt;input&gt;</code> below is demo markup: its border comes
+      from a class in this page's own stylesheet, not from the design system. What the wrapper
+      <em>does</em> give a slotted control is the <strong>focus ring</strong> — an
+      <code>errorText</code> re-points <code>--focus-ring-color</code> to the error red, and
+      because custom properties inherit, that reaches a native control and an
+      <code>esa-*</code> component in a shadow root alike. Tab into Permit ID to see it.
+      For a real form, reach for <a href={withBase('/components/esa-text-field')}>Text Field</a>
+      instead: it owns its label, help text, error text and border states, so you are not
+      hand-rolling three of the four.
+    </p>
     <Preview code={`<FormField label="Project name" required>
   <input type="text" aria-label="Project name" />
 </FormField>
@@ -98,6 +111,15 @@ const describe = {
 
 </ComponentDoc>
 
+<style>
+  .caveat {
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border-inline-start: var(--border-width-200, 2px) solid var(--color-border-utility-info, #8ec8f6);
+    background: var(--color-background-utility-info-subtle, #f0f7ff);
+    border-radius: var(--radius-sm, 0.25rem);
+    max-width: 72ch;
+  }
+</style>
 <style>
   .col { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); width: 100%; max-width: 360px; }
   .demo-input {

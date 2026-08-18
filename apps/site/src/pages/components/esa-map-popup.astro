@@ -1,0 +1,192 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import ApiTable from '../../components/ApiTable.astro';
+
+const describe = {
+  'lng-lat': 'Where the popup points, as <code>[lng, lat]</code>.',
+  open: 'Whether it is showing. Set it to open and close the popup &mdash; this is the whole control surface.',
+  'close-button': 'Show the engine&rsquo;s dismiss button. On by default: a toggletip owes one.',
+  'close-on-click': 'Dismiss when the user clicks the map. <strong>Off by default</strong>, to avoid a race with layer-driven opening &mdash; see below.',
+  'max-width': 'Caps the bubble width so long prose wraps instead of stretching the map.',
+};
+
+const events = [
+  {
+    name: 'popupclose',
+    type: '{ lngLat: [number, number] }',
+    description:
+      'The popup closed, by any route &mdash; the close button, Escape, or <code>open</code> being set false. Focus has been handed back by the time this fires.',
+  },
+];
+---
+<ComponentDoc name="Map Popup" category="Maps" slug="esa-map-popup" type="wc" status="stable"
+  summary={'A popup anchored to any coordinate inside <a href="/components/esa-map">esa-map</a>, opened programmatically. Not owned by a marker &mdash; which is what lets it describe a polygon, where there is no pin to attach to.'}>
+
+  <Section id="preview" title="Preview">
+    <p>
+      Live examples are on the <a href="/components/esa-map#preview">Map page</a>: one driven by a
+      GeoJSON layer&rsquo;s selection, one by a marker click.
+    </p>
+  </Section>
+
+  <Section id="nesting" title="Two ways to use it">
+    <p>
+      <strong>Nested inside a marker</strong>, when each pin has its own content. No script at
+      all: the coordinate is inherited, clicking the pin toggles the card, opening one closes
+      the others, and dragging the pin takes the card with it.
+    </p>
+    <pre tabindex="0" role="group" aria-label="A popup nested in a marker"><code>{`<esa-map-marker lng-lat="[-121.4934, 38.5767]">
+  <span class="pin"></span>
+  <esa-map-popup max-width="264px">
+    <h3 class="typography-heading-xs">California State Capitol</h3>
+    <p class="typography-body-xs">★ 4.6 · 12,453 reviews</p>
+  </esa-map-popup>
+</esa-map-marker>`}</code></pre>
+    <p>
+      <strong>Standalone</strong>, when one popup serves many things &mdash; a layer&rsquo;s
+      selection, several markers showing the same fields. The page sets <code>lngLat</code> and
+      <code>open</code>, and rewrites the content through <a href="#body"><code>body</code></a>.
+    </p>
+    <p class="meta">
+      The coordinate is inherited rather than repeated because a marker popup that <em>can</em>
+      point somewhere else is a pair of numbers waiting to drift apart. An explicit
+      <code>lng-lat</code> still wins &mdash; offsetting a card off its pin is legitimate.
+      Nesting works because <code>esa-map-marker</code> declines to swallow other
+      <code>esa-map-*</code> children into its pin; without that the popup would be relocated
+      into the map&rsquo;s shadow root and <code>document.getElementById</code> would stop
+      finding it.
+    </p>
+  </Section>
+
+  <Section id="styling-content" title="Page CSS does not reach popup content">
+    <p>
+      Read this before authoring a rich popup, because nothing warns you. The engine
+      <strong>moves</strong> your content into its bubble, inside <code>esa-map</code>&rsquo;s
+      shadow root, so it stops being page content the moment it appears. A document stylesheet
+      does not cross that boundary &mdash; measured, a rule declaring
+      <code>display: grid</code> computed to <code>display: block</code>, silently.
+    </p>
+    <p>
+      What still works: <code>typography-*</code> role classes (the host adopts that sheet),
+      token <code>var()</code> reads (custom properties inherit across shadow boundaries), and
+      Lit components, which carry their own styles. What does not: your page&rsquo;s CSS, and
+      any <code>.astro</code> component &mdash; <code>esa-badge</code> and
+      <code>esa-button</code> arrive with none of their styling, because Astro-scoped CSS is
+      page CSS.
+    </p>
+    <p>
+      The supported route is a <code>&lt;style is:inline&gt;</code> on the
+      <strong>map</strong>, which the host moves into its own root at mount:
+    </p>
+    <pre tabindex="0" role="group" aria-label="Styling popup content"><code>{`<esa-map label="Landmarks">
+  <style is:inline>{ '.card__title { margin: 0 }' }</style>
+  <esa-map-marker …>…</esa-map-marker>
+</esa-map>`}</code></pre>
+    <p class="meta">
+      On the map rather than in the popup, because a style block inside a popup only reaches
+      the root when that popup first <em>opens</em> &mdash; so anything styled from one renders
+      naked until something is clicked. It scopes to the whole map root, chrome included, so
+      prefix your selectors. <code>is:inline</code> is required: Astro hoists a normal
+      <code>&lt;style&gt;</code> into the page bundle, which is the case that does not work.
+      See the <a href="/components/esa-map#rich-popups">rich popups example</a>.
+    </p>
+  </Section>
+
+  <Section id="autopan" title="It pans itself into view">
+    <p>
+      MapLibre&rsquo;s popup has <strong>no auto-pan option at all</strong> &mdash;
+      Leaflet&rsquo;s <code>autoPan</code> has no counterpart &mdash; so a popup opened near an
+      edge is clipped by the map frame. Invisible on a two-line popup, obvious the moment
+      content gets rich: measured, a 260px card on a marker in the lower half of the map had
+      its action button cut off, with nothing wrong anywhere in the DOM.
+    </p>
+    <p>
+      So this component measures the bubble against the frame after it opens and pans the
+      least amount that clears it. <code>panBy</code>, not a re-centre on the marker: centring
+      throws away the surroundings, which on a map is most of the information. The move is not
+      marked <code>essential</code>, so a reduced-motion preference still turns the animation
+      off. A bubble taller than the frame cannot fit, and in that case the <em>top</em> is what
+      gets shown &mdash; that is where the title is.
+    </p>
+  </Section>
+
+  <Section id="standalone" title="Standalone, and why that matters">
+    <p>
+      Most map kits attach popups to markers. This one does not, because the case that actually
+      needs solving has no marker in it: a click on a <strong>polygon</strong>. A county, a parcel,
+      a habitat boundary &mdash; there is no pin to hang a popup from, only a coordinate.
+      <code>esa-map-geojson</code> emits <code>featureselect</code> with one; you feed it straight in.
+    </p>
+    <p>
+      Pairing it with a marker is then a composition rather than a second component &mdash; and the
+      same popup can serve several layers, which is what keeps one selection model working across a
+      whole map.
+    </p>
+  </Section>
+
+  <Section id="toggletip" title="A toggletip, not a tooltip">
+    <p>
+      A tooltip describes its trigger and appears on hover. A toggletip is opened deliberately and
+      holds real content the user may want to read, copy or click &mdash; so hover would be wrong
+      here, and the interaction contract is different:
+    </p>
+    <ul>
+      <li><strong>Escape dismisses it</strong>, and the key is stopped there so it does not also close a dialog the map happens to sit inside.</li>
+      <li><strong>A close button</strong>, enlarged to the 24px SC 2.5.8 floor from the engine&rsquo;s 12px &mdash; a dismiss control is the last thing that should be hard to hit.</li>
+      <li><strong>Focus moves in</strong> when it opens, so a keyboard user is where the new content is, and <strong>comes back out</strong> to wherever they were when it closes.</li>
+    </ul>
+    <p class="meta">
+      Focus restore is <em>recorded</em>, not configured. A popup openable from anywhere has no
+      single trigger to hand focus back to, so there is nothing to declare &mdash; what is always
+      true is where focus was at the moment it opened.
+    </p>
+  </Section>
+
+  <Section id="close-on-click" title="Why close-on-click defaults to off">
+    <p>
+      The engine implements dismiss-on-map-click as a listener on the map&rsquo;s click event
+      &mdash; the very same event a layer&rsquo;s <code>selectable</code> handler uses to
+      <em>open</em> a popup. Both are registered asynchronously, so their relative order is
+      undefined: a click selecting a new feature could open the popup and then immediately close it,
+      <strong>intermittently</strong>, depending on which listener happened to attach first.
+    </p>
+    <p>
+      That race was measured, not theorised. So the layer-driven case &mdash; the common one &mdash;
+      has it off, and dismissal comes from the close button, Escape, or setting <code>open</code>
+      false. Turn it on only for a popup that nothing else opens.
+    </p>
+  </Section>
+
+  <Section id="body" title="Updating the contents: use body, not document.querySelector">
+    <p>
+      The content you author inside <code>&lt;esa-map-popup&gt;</code> is moved once, into the
+      engine&rsquo;s bubble, which lives inside <code>esa-map</code>&rsquo;s shadow root. Document
+      queries do not cross a shadow boundary, so
+      <code>document.querySelector('[data-name]')</code> returns <strong>null</strong> afterwards
+      &mdash; even though the markup is on screen and working. That is not a bug to route around;
+      it is where the content now lives.
+    </p>
+    <pre tabindex="0" role="group" aria-label="Updating popup content"><code>popup.body?.querySelector('[data-name]').textContent = feature.properties.name;
+popup.lngLat = lngLat;
+popup.open = true;</code></pre>
+    <p class="meta">
+      <code>body</code> is null until the engine is ready &mdash; or permanently, if the optional
+      <code>maplibre-gl</code> peer is absent.
+    </p>
+  </Section>
+
+  <Section id="api" title="API">
+    <ApiTable slug="esa-map-popup" describe={describe} events={events} />
+    <p class="meta">
+      The bubble, tail and close button are the engine&rsquo;s own DOM inside the host&rsquo;s shadow
+      root, so they are themed from <code>esa-map</code>&rsquo;s stylesheet. Nothing in this
+      component can reach them &mdash; which is why popup theming is documented on the
+      <a href="/components/esa-map#theming-notes">Map page</a>.
+    </p>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .meta { color: var(--color-content-default-secondary, #646464); max-width: 72ch; }
+</style>

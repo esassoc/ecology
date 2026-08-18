@@ -65,6 +65,21 @@ blocks removal at write time). Full reference: `/foundations/focus` on the hub s
   the brand fill managed 2.95:1 on the raised and canvas surfaces and 2.66:1 on the
   sunken one — all short of the 3:1 SC 1.4.11 asks for, because a fill step is engineered
   to carry text as a SOLID FILL, which is an easier job than reading as a 2px HAIRLINE.
+- **The ring has a SECOND colour: red, on an invalid field.** All ten components with an error
+  state re-point ONE TOKEN on their error wrapper — `--focus-ring-color:
+  var(--form-error-border-color)` — and that is the pattern to copy in a `bcn-`/`<spoke>-`
+  component too. Do **not** override `outline-color` per focusable part: a field is not one
+  focusable thing (a combobox has five things that read the ring colour, a checkbox group has
+  N), and every part you miss keeps ringing brand-green inside a field that is telling the user
+  it is invalid. Custom properties inherit, so one declaration reaches all of them — including
+  a slotted native control and an `esa-*` component in a shadow root. Both ring colours are
+  gated to 3:1; if you re-point `--color-background-utility-danger`, run `check-contrast.mjs`,
+  because the error ring chains off it.
+  (Two failure modes the hub shipped and this mechanism prevents: a `box-shadow` error rule
+  left behind when the base ring became an `outline`, so a focused invalid field wore three
+  bands in two colours; and three components painting the ring from
+  `--color-border-utility-danger`, which is red-**6** — a subtle *border* step at 1.40:1, so
+  the ring was nearly invisible. Never reach for a step-6 role as a ring colour.)
 - **A ring that is wrong on ONE surface is a tier-3 fix, not a theme fix.** The real case
   is a dark app bar: a near-black chrome surface in the LIGHT scheme is the one ground no
   brand-derived ring can serve, since a colour dark enough for a white page is invisible

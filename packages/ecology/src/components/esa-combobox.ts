@@ -1128,10 +1128,20 @@ export class EsaCombobox extends LitElement {
     .field--error .trigger--field {
       --_field-border-color: var(--form-error-border-color, #e5484d);
     }
-    .field--error .input:focus,
-    .field--error .trigger--field:focus-visible {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
-        var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override. THIS COMPONENT IS THE STRONGEST CASE for the token: five things in here read
+       --focus-ring-color — the autocomplete input, the text trigger, the field trigger, the
+       dropdown's own search box, and every chip remove button. Naming each in an
+       outline-color override is five rules to keep in step, and any one missed keeps ringing
+       brand-green inside a field that is telling the user it is invalid. One declaration on
+       the error wrapper reaches all five, because custom properties inherit. The dropdown
+       panel is included by the same inheritance — see esa-text-field, where that consequence
+       is recorded as a decision rather than left to be discovered.
+       Two fixes here on 2026-08-17: it was a box-shadow, which stacked a second band once the
+       base rings became outlines; and it read --color-border-utility-danger, which is red-6,
+       a SUBTLE BORDER step measuring 1.40:1 on a sunken surface. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
 
     /* FORCED COLORS. Same treatment as esa-select, whose option CSS this file

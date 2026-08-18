@@ -609,13 +609,34 @@ export class EsaInputTag extends LitElement {
     .field--error .container:hover:not(.container--disabled) {
       --_field-border-color: var(--form-error-border-color, #e5484d);
     }
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override — the house mechanism. It covers the container AND every chip remove button
+       with one declaration, which an outline-color override on .container would have missed.
+       See esa-text-field for the full account and the contrast numbers. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
+    }
     .field--error .container:focus-within,
     .field--error .container.container--open {
       --_field-border-color: var(--form-error-border-color, #e5484d);
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
+    }
+    /* A disabled field must not wear the error ring.
+       UNREACHABLE BY CONSTRUCTION — the inner input and every chip button take the native
+       disabled attribute (see render), so :focus-within cannot match and this never fires.
+       It is kept as the belt to that braces: the day someone swaps disabled for
+       aria-disabled to keep the field focusable, this is what stops an inert field rendering
+       as invalid.
+       IT HAS NOW BEEN REWRITTEN TWICE FOR THE SAME REASON, which is the lesson: it was
+       box-shadow: none, then outline-color, and it is now a token re-point, because a
+       cancelling rule has to name whatever the rule it cancels names. Re-pointing the token
+       back is also the version that needs no specificity trick — the old outline-color form
+       needed a .field--error in the selector to reach (0,3,0) and beat the error rule.
+       Restoring the NORMAL ring colour rather than removing the outline, because an element
+       that CAN take focus still owes SC 2.4.7 a visible ring even when it is inert. */
+    .container--disabled {
+      --focus-ring-color: var(--color-border-default-focus, #3e9b4f);
     }
     .container--disabled:focus-within {
-      box-shadow: none;
       --_field-border-color: var(--form-border-color, #cecece);
     }
 

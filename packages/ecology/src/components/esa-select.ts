@@ -1013,9 +1013,17 @@ export class EsaSelect extends LitElement {
     .field--error .input {
       --_field-border-color: var(--form-error-border-color, #e5484d);
     }
-    .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
-        var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override. THIS COMPONENT IS WHY the mechanism is the token: there are three focusable
+       parts here — the tags wrapper, the input, and every chip remove button — and an
+       outline-color override would have to name each one. Re-pointing --focus-ring-color on
+       the error wrapper covers all three, and the dropdown panel too (it renders inside
+       .container, so it inherits; see esa-text-field on why that is recorded as a decision).
+       Two fixes here on 2026-08-17: it was a box-shadow, which stacked a second band once the
+       base ring became an outline; and it read --color-border-utility-danger, which is red-6,
+       a SUBTLE BORDER step measuring 1.40:1 on a sunken surface. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
 
     /* FORCED COLORS. Three of this listbox's states are backgrounds and nothing

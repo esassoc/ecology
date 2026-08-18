@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Ecology \u2014 the framework-agnostic design system hub (tokens + specs + Astro specimens).",
+  "description": "Ecology — the framework-agnostic design system hub (tokens + specs + Astro specimens).",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -20,11 +20,13 @@
     "a11y": "node scripts/a11y-audit.mjs",
     "a11y:live": "node scripts/live-region-audit.mjs",
     "a11y:targets": "node scripts/check-target-size.mjs",
+    "a11y:charts": "node scripts/check-chart-a11y.mjs",
     "a11y:assured": "node scripts/check-contrast.mjs --hub --assurance wcag-aa && node scripts/check-size-usage.mjs --dir apps/site/src --strict && node scripts/a11y-audit.mjs --strict && node scripts/live-region-audit.mjs --strict",
     "contrast": "node scripts/check-contrast.mjs --hub",
     "contrast:dark": "node scripts/check-contrast.mjs apps/site/src/styles/docs-dark.css --scheme dark",
     "theme:make": "node scripts/make-theme.mjs",
     "theme:curves": "node scripts/gen-radix-curves.mjs",
+    "tokens:primitives": "node scripts/gen-radix-primitives.mjs",
     "a11y:sizes": "node scripts/check-size-usage.mjs",
     "a11y:floors": "node scripts/check-target-size.mjs --assurance wcag-aa --emit-floors packages/tokens/size-floors.json"
   },
