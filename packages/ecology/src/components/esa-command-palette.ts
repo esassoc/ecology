@@ -373,7 +373,7 @@ export class EsaCommandPalette extends LitElement {
       /* STAYS -muted, unlike the six text rules around it. An icon is non-text
          content: SC 1.4.11 asks 3:1, not 4.5:1, and gray-10 on the dialog surface
          measures 3.70:1. Raising it would be consistency for its own sake. */
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       flex-shrink: 0;
     }
     .esa-command-palette__input {

@@ -89,7 +89,6 @@
      what warms or cools the entire UI vs the hub default. */
   --color-content-default:   var(--__SCOPE__-neutral-12);
   --color-content-default-secondary:  var(--__SCOPE__-neutral-11);
-  --color-content-default-muted:     var(--__SCOPE__-neutral-10);
   --color-border-default:         var(--__SCOPE__-neutral-7);
   --color-border-default-subtle:   var(--__SCOPE__-neutral-6);
   --color-border-default-strong:  var(--__SCOPE__-neutral-8);

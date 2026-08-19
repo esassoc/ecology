@@ -190,11 +190,6 @@
       "$type": "color",
       "$description": "A third prominence level. Equal to `-secondary` in the hub's neutral ramp, and briefly deleted for that reason — same mistake as `background-brand-active`. cb-fish runs a four-step grey ramp (900/700/600/500) where this is a distinct step, so the level is real even though this palette does not separate it."
     },
-    "content-default-muted": {
-      "$value": "{color.gray.10}",
-      "$type": "color",
-      "$description": "The least prominent readable text. Placeholders, timestamps, help text."
-    },
     "content-default-knockout": {
       "$value": "{color.gray.1}",
       "$type": "color",

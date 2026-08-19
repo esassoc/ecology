@@ -223,7 +223,7 @@ export class EsaSideDialog extends LitElement {
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
       border: 0; border-radius: var(--radius-sm, 0.25rem); background: none;
-      color: var(--color-content-default-muted, #838383); cursor: pointer;
+      color: var(--color-content-default-secondary, #646464); cursor: pointer;
     }
     .close:hover { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default, #202020); }
     .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--color-content-default-secondary, #646464); }

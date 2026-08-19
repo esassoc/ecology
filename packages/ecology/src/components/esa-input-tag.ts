@@ -732,7 +732,7 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       background: transparent;
       border: none;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       cursor: pointer;
     }
     .toggle:hover:not(:disabled) {
@@ -805,7 +805,7 @@ export class EsaInputTag extends LitElement {
 
     .empty {
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }

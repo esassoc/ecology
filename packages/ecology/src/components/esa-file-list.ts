@@ -137,7 +137,7 @@ export class EsaFileList extends LitElement {
     }
     .file__icon {
       display: inline-flex;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
     .file__icon svg {
       width: 16px;
@@ -187,7 +187,7 @@ export class EsaFileList extends LitElement {
       padding: 0;
       border: 0;
       background: transparent;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       border-radius: var(--radius-sm, 0.25rem);
       cursor: pointer;
       flex-shrink: 0;

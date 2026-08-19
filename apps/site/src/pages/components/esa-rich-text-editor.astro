@@ -102,7 +102,7 @@ import Section from '@esa/docs/Section.astro';
     <ul class="tokens">
       <li><strong>Shell:</strong> <code>--form-border-color → --color-border</code>, <code>--form-radius-medium → --radius-200</code>; focus uses <code>--form-border-color-focus → --color-background-brand</code> + <code>--form-focus-ring-width</code>.</li>
       <li><strong>Toolbar:</strong> <code>--color-background-elevation-sunken</code> background, buttons <code>--color-content-default-secondary</code> hovering to <code>--color-background-elevation-raised</code>; dividers <code>--color-border</code>; gap <code>--spacing-050</code>.</li>
-      <li><strong>Content:</strong> <code>--color-background-elevation-raised</code> background, <code>--color-content-default</code> text, padding <code>--spacing-300</code>; placeholder <code>--color-content-default-muted</code>.</li>
+      <li><strong>Content:</strong> <code>--color-background-elevation-raised</code> background, <code>--color-content-default</code> text, padding <code>--spacing-300</code>; placeholder <code>--color-content-default-secondary</code>.</li>
       <li><strong>Label / required:</strong> <code>--color-content-default</code> label, <code>--color-background-utility-danger</code> asterisk.</li>
       <li><strong>Focus rings:</strong> <code>--focus-ring-width</code> / <code>--focus-ring-color</code> on toolbar buttons.</li>
     </ul>
@@ -121,7 +121,7 @@ import Section from '@esa/docs/Section.astro';
     font-size: var(--font-size-150, 0.875rem);
     margin-bottom: var(--spacing-400, 1rem);
   }
-  .meta { color: var(--color-content-default-muted, #737373); font-size: var(--font-size-150, 0.875rem); max-width: 72ch; }
+  .meta { color: var(--color-content-default-secondary, #646464); font-size: var(--font-size-150, 0.875rem); max-width: 72ch; }
   .mock-label { font-size: var(--font-size-300, 1.125rem); font-weight: var(--typography-font-weight-semibold, 550); margin: var(--spacing-400, 1rem) 0 var(--spacing-200, 0.5rem); }
 
   .api-table { overflow-x: auto; border: 1px solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-200, 8px); }
@@ -142,7 +142,7 @@ import Section from '@esa/docs/Section.astro';
   .ed-divider { width: 1px; height: 20px; background: var(--color-border-default, #e5e5e5); margin: 0 var(--spacing-100, 0.25rem); }
   .ed-content { min-height: 200px; padding: var(--spacing-300, 0.75rem); background: var(--color-background-elevation-raised, #fff); font-size: var(--font-size-150, 0.875rem); line-height: var(--line-height-normal, 1.6); color: var(--color-content-default, #171717); }
   .ed-content--sm { min-height: 120px; }
-  .ed-empty { color: var(--color-content-default-muted, #737373); }
+  .ed-empty { color: var(--color-content-default-secondary, #646464); }
   .ed-content p { margin: 0 0 var(--spacing-300, 0.75rem); }
   .ed-content ul { margin: 0 0 var(--spacing-300, 0.75rem); padding-left: 1.4rem; }
   .ed-content a { color: var(--color-content-link, #43608a); }

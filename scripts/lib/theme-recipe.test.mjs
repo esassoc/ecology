@@ -876,16 +876,30 @@ test('a brand with no chroma to lend still gets a palette, and says so', () => {
 
 // --- the assurance variant ---------------------------------------------------
 
-test('every theme carries an assurance variant, in both schemes', () => {
-  // The floor is the muted-text rung: neutral step 10 is the muted-text step and lands
-  // under 4.5:1 on every surface it sits on, so every theme has at least this one row.
-  // A theme with an EMPTY variant would mean the block silently stopped being emitted.
-  for (const brand of ['#1f7a6d', '#1769aa', '#e5399f', '#101418', '#ffe629']) {
+test('an AA theme emits an EMPTY assurance variant; only a failing brand earns rows', () => {
+  // THIS TEST USED TO ASSERT THE OPPOSITE, and that assertion was resting on a bug.
+  // Its floor was the muted-text rung — `--color-content-default-muted` at neutral step 10,
+  // which misses 4.5:1 on every surface, for every brand, in both schemes — so it guaranteed
+  // every theme at least one row. A profile row that fires unconditionally is not a
+  // conformance profile; it is the base value being wrong. That role has since been merged
+  // into `--color-content-default-secondary` (migrations.json § content-default-muted-to-secondary),
+  // and with it gone a well-formed generated theme has NOTHING to move — a generated theme is
+  // already 64/64 in both schemes.
+  //
+  // So the shape of the check inverts: emptiness is the expected result, and the mechanism
+  // still has to EXIST, which is what the hostile brand below proves.
+  for (const brand of ['#1f7a6d', '#1769aa', '#101418', '#ffe629', '#46a758']) {
     const d = deriveTheme(recipe({ seeds: { brand } }));
     for (const scheme of ['light', 'dark']) {
-      assert.ok(d.assurance[scheme].size > 0, `${brand} / ${scheme} has an empty assurance block`);
-      assert.equal(d.assurance[scheme].get('--color-content-default-muted'), 'var(--testbrand-neutral-11)');
+      assert.equal(d.assurance[scheme].size, 0, `${brand} / ${scheme} moved a role in an already-AA theme`);
     }
+  }
+  // #e5399f is the case the mechanism exists for: the brand hex is the one fill the base
+  // derivation is forbidden to move, so it fails at 4.20:1 in light and the profile rescues it.
+  const hostile = deriveTheme(recipe({ seeds: { brand: '#e5399f' } }));
+  for (const scheme of ['light', 'dark']) {
+    assert.ok(hostile.assurance[scheme].size > 0, `#e5399f / ${scheme} has an empty assurance block`);
+    assert.ok(hostile.assurance[scheme].has('--color-background-brand'));
   }
 });
 
@@ -910,7 +924,9 @@ test('the assurance selectors outrank the base blocks AND the hub\'s own profile
   // Specificity is (ids, attributes+classes, elements). The hub's profile is a bare
   // [data-a11y-assurance="wcag-aa"] — (0,1,0) — which TIES with [data-theme="x"] and loses to it
   // on source order. That is why a generated theme has to carry its own; see section (9.5).
-  const css = emitCss(deriveTheme(recipe({ slug: 'qanat' })));
+  // A HOSTILE BRAND, because the blocks are only emitted when they have something to say —
+  // the default seed is already AA and now emits no assurance block at all (see above).
+  const css = emitCss(deriveTheme(recipe({ slug: 'qanat', seeds: { brand: '#e5399f' } })));
   const spec = (sel) => [
     (sel.match(/\[/g) || []).length,
     /^html/.test(sel) ? 1 : 0,
@@ -976,12 +992,11 @@ test('the profile never overrules a pin', () => {
   const pinned = '#e5399f';
   const d = deriveTheme(recipe({
     seeds: { brand: pinned },
-    pinned: { '--color-background-brand': pinned, '--color-content-default-muted': '#123456' },
+    pinned: { '--color-background-brand': pinned },
   }));
   for (const scheme of ['light', 'dark']) {
     assert.equal(d[scheme].get('--color-background-brand'), pinned);
     assert.ok(!d.assurance[scheme].has('--color-background-brand'), 'the profile moved a pinned fill');
-    assert.ok(!d.assurance[scheme].has('--color-content-default-muted'), 'the profile moved a pinned role');
   }
 });
 

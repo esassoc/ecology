@@ -372,7 +372,7 @@ export class EsaSearchPanel extends LitElement {
       display: flex;
       align-items: center;
       gap: var(--spacing-200, 8px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     /* The ring goes on the search BOX, not the input — the input is chromeless, so
@@ -397,7 +397,7 @@ export class EsaSearchPanel extends LitElement {
     }
 
     .input::placeholder {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .close {
@@ -425,7 +425,7 @@ export class EsaSearchPanel extends LitElement {
 
     .category {
       padding: var(--spacing-300, 12px) var(--spacing-200, 8px) var(--spacing-100, 4px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .result {
@@ -453,7 +453,7 @@ export class EsaSearchPanel extends LitElement {
     }
 
     .result-subtitle {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .empty {
@@ -462,14 +462,14 @@ export class EsaSearchPanel extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-700, 48px) var(--spacing-400, 16px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       text-align: center;
     }
 
     .loading {
       padding: var(--spacing-500, 24px);
       text-align: center;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     /* FORCED COLORS. The panel is flush to the viewport edge with no radius, so

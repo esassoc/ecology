@@ -125,6 +125,10 @@ function grade(file, scheme, profile) {
 const COLUMNS = ['standard', ...profiles];
 const W = Math.max(...COLUMNS.map((c) => c.length)) + 2;
 let bad = 0;
+// Which files failed their STANDARD column — read by the no-assurance-block note below,
+// which needs to distinguish "no block because nothing needed moving" from "no block and
+// something did". `bad` is a count and cannot answer that.
+const failedStandard = new Set();
 
 for (const file of themes) {
   console.log(`\n${show(file)}`);
@@ -134,7 +138,10 @@ for (const file of themes) {
     const cells = [];
     for (const scheme of SCHEMES) {
       const r = grade(file, scheme, profile);
-      if (r.status !== 'pass') bad++;
+      if (r.status !== 'pass') {
+        bad++;
+        if (profile === null) failedStandard.add(file);
+      }
       const cell =
         r.status === 'pass' ? `${r.checked} ok`
           : r.status === 'fail' ? `${r.checked} ✗${r.failures}`
@@ -166,12 +173,29 @@ if (profiles.length) {
     /\[data-a11y-assurance="[^"]+"\][^{}]*\{/.test(readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
   const flat = themes.filter((f) => !hasBlock(f));
   if (flat.length) {
+    // AN ABSENT BLOCK IS THE NORMAL RESULT, and this note used to say the opposite.
+    // It read "regenerate to get one" — advice that was already true when the only row
+    // the generator emitted was `--color-content-default-muted` (step 10 -> 11), which
+    // fired for every brand in both schemes. That role has since been merged into
+    // `-secondary`, so a well-formed theme has nothing left to move and regenerating
+    // produces the same empty block. Telling the reader to regenerate would send them
+    // round a loop that cannot terminate.
+    //
+    // The profile columns still are not evidence — that part was and is correct, because
+    // the hub's own profile cannot move a spoke's brand (equal specificity, and the theme
+    // stylesheet loads later). So the note keeps the caveat and drops the instruction.
+    const allPass = flat.every((f) => !failedStandard.has(f));
     console.log(
       `\nnote: ${flat.length} theme(s) declare no [data-a11y-assurance] block, so the profile\n` +
         '  columns above grade the base values twice. The hub\'s own profile cannot move a\n' +
         '  spoke\'s brand (equal specificity, theme loads later), so those columns are not\n' +
-        '  evidence of anything. Regenerate with `npm run theme:make --recipe <file>.json`\n' +
-        `  to get one: ${flat.map((f) => path.basename(f)).join(', ')}`,
+        `  evidence of anything: ${flat.map((f) => path.basename(f)).join(', ')}\n` +
+        (allPass
+          ? '  Those themes pass their standard columns, so an empty block is the CORRECT\n' +
+            '  output rather than a missing one — it says the base theme is already AA.\n' +
+            '  A block is only emitted when a brand fails something the profile can move.'
+          : '  At least one of them FAILS a standard column, which a profile block could have\n' +
+            '  rescued. Regenerate with `npm run theme:make --recipe <file>.json`.'),
     );
   }
 }

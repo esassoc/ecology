@@ -143,12 +143,14 @@
      room, which is why this row predates the three above. */
   --color-content-utility-warning: var(--color-yellow-12);
 
-  /* Not a failure, a warning that is real anyway: gray-10 is 3.70:1 on a raised
-     surface, and this token's own job description is "placeholders, timestamps,
-     help text" — all of which are text a user has to read. gray-11 is the
-     supporting-text step and clears 4.5:1. Under assurance, "least prominent
-     readable text" has to stay readable. */
-  --color-content-default-muted: var(--color-gray-11);
+  /* --color-content-default-muted USED TO BE MOVED HERE, from gray-10 to gray-11,
+     because "the least prominent readable text" was valued at 3.70:1. That row is
+     gone because the ROLE is: this block's fix WAS gray-11, which is exactly
+     --color-content-default-secondary, so the profile was silently making the two
+     tokens one value. A profile that has to re-point a role on every theme, in both
+     schemes, is reporting that the base value is wrong rather than that the theme is
+     unassured. The role was merged into -secondary instead; see migrations.json
+     § content-default-muted-to-secondary. Nothing replaces it here. */
 
   /* NOT FIXED, DELIBERATELY: --color-content-disabled is 2.91:1 on
      --color-background-disabled and stays that way. WCAG 1.4.3 exempts inactive

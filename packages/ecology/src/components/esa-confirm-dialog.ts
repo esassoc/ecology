@@ -266,7 +266,7 @@ export class EsaConfirmDialog extends LitElement {
       border: none;
       border-radius: var(--radius-md, 0.5rem);
       background: transparent;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease), color var(--transition-fast, 150ms ease);
     }
