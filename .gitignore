@@ -11,3 +11,7 @@ dist/
 
 # Client-adjacent material (mining reports quote internal sessions) — never committed
 /docs/private/
+
+# Scratch: one-off patches and throwaway probe scripts (scripts/.try6.mjs etc.)
+*.patch
+scripts/.*.mjs
