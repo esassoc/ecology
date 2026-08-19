@@ -1,0 +1,1 @@
+import"./esa-pagination.D0LnRSF4.js";import"./lit-element.D8DSg5zn.js";const e=document.getElementById("p1");e&&(e.pageSizeOptions=[10,25,50,100],e.addEventListener("pagechange",t=>console.log("pagechange",t.detail)));
