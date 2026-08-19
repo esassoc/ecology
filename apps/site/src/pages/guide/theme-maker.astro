@@ -19,7 +19,8 @@ import Button from '@esa/ecology/esa-button.astro';
 import Badge from '@esa/ecology/esa-badge.astro';
 import Card from '@esa/ecology/esa-card.astro';
 
-import { CHROMATIC_SCALES } from '@theme/ramp.mjs';
+import { CHROMATIC_SCALES, NEUTRAL_SCALES, NEUTRAL_TEMPERATURES, neutralRamp } from '@theme/ramp.mjs';
+import { DEFAULT_INTENTION_SEEDS } from '@theme/theme-recipe.mjs';
 import { parseHex, srgbToOklch } from '@theme/color.mjs';
 import primitiveColor from '../../../../../packages/tokens/tokens/primitive/color.json';
 
@@ -48,11 +49,75 @@ const BRAND_SWATCHES = CHROMATIC_SCALES.filter((scale: string) => scale !== 'yel
   .sort((a, b) => srgbToOklch(parseHex(a.value)).h - srgbToOklch(parseHex(b.value)).h)
   .map(({ scale, value }) => ({ value, label: scale[0].toUpperCase() + scale.slice(1) }));
 
-const NEUTRALS = [
-  { value: 'pure', label: 'Pure', hint: 'Radix gray — no tint' },
-  { value: 'cool', label: 'Cool', hint: 'Radix slate — blue-leaning' },
-  { value: 'warm', label: 'Warm', hint: 'Radix sand — yellow-leaning' },
-];
+/*
+ * The neutral temperatures, DERIVED from the list the recipe validates against.
+ *
+ * This was a hardcoded array of three until 2026-08-18, while `NEUTRAL_TEMPERATURES` held
+ * six. `mauve`, `sage` and `olive` were fully supported, fully tested and completely
+ * unreachable from the editor — the generator would happily produce them from a
+ * hand-written recipe or the CLI, and this page silently pretended they did not exist.
+ *
+ * Only the PROSE lives here. The scale word is data: `NEUTRAL_SCALES.cool` IS `slate`,
+ * and copying it into a label is how the list drifted in the first place.
+ *
+ * THE COPY LOOKUP IS A FALLBACK, NOT A REQUIREMENT. A seventh temperature added to
+ * radix-curves.json shows up immediately — unprettified, but present and selectable.
+ * That is the right failure mode: the bug being fixed here was invisibility, and a
+ * missing label is loud in a way a missing option never was.
+ */
+const NEUTRAL_COPY: Record<string, { label: string; tint: string }> = {
+  pure: { label: 'Pure', tint: 'no tint' },
+  cool: { label: 'Cool', tint: 'blue-leaning' },
+  warm: { label: 'Warm', tint: 'yellow-leaning' },
+  mauve: { label: 'Mauve', tint: 'violet-leaning' },
+  sage: { label: 'Sage', tint: 'green-leaning' },
+  olive: { label: 'Olive', tint: 'yellow-green' },
+};
+
+/*
+ * The chip steps, chosen by measurement rather than taste.
+ *
+ * Minimum pairwise OKLab separation across the six ramps, light (×10⁻³):
+ *   step:      1    2    3    4    5    6    7    8    9   10   11   12
+ *   minPair: 1.3  1.3  1.8  1.8  1.4  2.8  1.8  3.0  5.5  6.5  6.4  5.9
+ *
+ * Every neutral is near-white at step 1 (#fcfcfc … #fbfdfc), so a single light chip
+ * renders six identical squares. Steps 9 and 12 carry the discrimination; step 6 is
+ * there so the chip reads as a RAMP rather than a colour — it is doing shape work, not
+ * identifying work, and should not be mistaken for the latter.
+ *
+ * Read from `neutralRamp` — the exact function the generator calls — for the same reason
+ * this page runs the real `theme-recipe.mjs` instead of a copy. BRAND_SWATCHES keeps
+ * reading the primitive JSON, because there the primitive genuinely IS the seed on offer.
+ */
+const CHIP_STEPS = [6, 9, 12];
+
+/*
+ * The six non-brand intentions, read from the generator's own defaults.
+ *
+ * These were six hardcoded hexes, and one of them had gone stale: `success` still showed
+ * `#bdee63` (lime-9) months after DEFAULT_INTENTION_SEEDS moved to green. Reset worked —
+ * it deletes the key and the recipe falls back — so nothing failed. But the swatch DISPLAYED
+ * lime, and anyone who nudged it from there was pinning a seed derived from a default that
+ * no longer existed. Same class of bug as the three-of-six neutral list, same fix.
+ */
+const INTENTION_LABELS: Record<string, string> = {
+  accent: 'Accent', ai: 'AI', info: 'Info', success: 'Success', warning: 'Warning', danger: 'Danger',
+};
+const INTENTION_SEEDS: [string, string, string][] = Object.entries(DEFAULT_INTENTION_SEEDS).map(
+  ([key, hex]) => [key, INTENTION_LABELS[key] ?? key, hex as string],
+);
+
+const NEUTRALS = NEUTRAL_TEMPERATURES.map((value: string) => {
+  const copy = NEUTRAL_COPY[value];
+  const ramp = neutralRamp(value, 'light');
+  return {
+    value,
+    label: copy?.label ?? value[0].toUpperCase() + value.slice(1),
+    hint: `Radix ${NEUTRAL_SCALES[value]}${copy ? ` — ${copy.tint}` : ''}`,
+    chip: CHIP_STEPS.map((n) => ramp[n - 1]),
+  };
+});
 const CORNERS = [
   { value: 'flat', label: 'Flat', hint: '0 / 2 / 4 / 8px' },
   { value: 'soft', label: 'Soft', hint: '2 / 4 / 8 / 12px — the hub default' },
@@ -124,6 +189,12 @@ const CORNERS = [
             {NEUTRALS.map((n) => (
               <label class="choice">
                 <input type="radio" name="neutral" value={n.value} checked={n.value === 'pure'} />
+                {/* aria-hidden because the hint beside it already names the scale AND the
+                    tint direction — the chip repeats that visually and conveys nothing on
+                    its own, so there is no colour-only information here (SC 1.4.1). */}
+                <span class="choice-chip" aria-hidden="true">
+                  {n.chip.map((hex) => <span style={`background:${hex}`}></span>)}
+                </span>
                 <span class="choice-label">{n.label}</span>
                 <span class="choice-hint">{n.hint}</span>
               </label>
@@ -163,14 +234,7 @@ const CORNERS = [
                  placeholder="'DM Mono', ui-monospace, monospace" />
         </div>
         <div class="swatch-seeds">
-          {[
-            ['accent', 'Accent', '#f76b15'],
-            ['ai', 'AI', '#a18072'],
-            ['info', 'Info', '#0090ff'],
-            ['success', 'Success', '#bdee63'],
-            ['warning', 'Warning', '#ffc53d'],
-            ['danger', 'Danger', '#e5484d'],
-          ].map(([key, label, fallback]) => (
+          {INTENTION_SEEDS.map(([key, label, fallback]) => (
             <label class="swatch-seed">
               <span>{label}</span>
               <input type="color" name={key} value={fallback} data-default={fallback} />
@@ -348,6 +412,36 @@ const CORNERS = [
     grid-column: 2;
     color: var(--color-content-default-secondary);
     font-size: 0.875em;
+  }
+
+  /* The neutral chips.
+   *
+   * SCOPED TO [data-choice="neutral"] ON PURPOSE. The corners group shares .choice and
+   * has no chip, so an unguarded third column would auto-place its label into column 2
+   * while the neutral labels sat in column 3, and the two fieldsets' text would stop
+   * lining up across the row.
+   *
+   * These are TEMPLATE elements, so Astro's scoped <style> reaches them normally. The
+   * is:global requirement documented further down applies only to nodes built at runtime
+   * with createElement under #contrast-rows / #derived-groups — do not "fix" this by
+   * moving it there.
+   *
+   * Six neutrals separate by as little as 5.5×10⁻³ OKLab at step 9, which is discriminable
+   * WHEN ADJACENT and marginal when not. The single-column .choices stack is what makes
+   * the comparison work; do not reflow this group into columns. */
+  .choices[data-choice='neutral'] .choice { grid-template-columns: auto auto 1fr; }
+  .choices[data-choice='neutral'] .choice-hint { grid-column: 3; }
+  .choice-chip {
+    display: flex;
+    grid-row: 1 / -1;
+    align-self: center;
+    overflow: hidden;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+  }
+  .choice-chip > span {
+    inline-size: 0.75rem;
+    block-size: 1.5rem;
   }
 
   .swatch-seeds {
@@ -866,7 +960,11 @@ const CORNERS = [
   // --- derived list ---------------------------------------------------------
 
   const GROUPS: [string, RegExp][] = [
-    ['Spoke ramps', /^--[a-z0-9-]+-(gray|brand)-\d+$/],
+    // `neutral`, not `gray` — the scoped ramp was renamed on 2026-08-18 because five of
+    // the six temperatures are not gray. This regex is the only executable reader of that
+    // segment outside the generator, and it fails SILENTLY: a stale word drops all 25 rows
+    // into "Everything else" with no error anywhere.
+    ['Spoke ramps', /^--[a-z0-9-]+-(neutral|brand)-\d+$/],
     ['Surfaces and neutrals', /^--color-(background-default|background-elevation|background-disabled|content-default|content-disabled|border-default|border-disabled)/],
     ['Brand', /^--color-(background-brand|content-brand|content-on-brand|border-brand)/],
     ['Utility, accent and AI', /^--color-(background-(utility|accent|ai)|content-(utility|ai)|content-on-(utility|accent|ai)|border-utility)/],

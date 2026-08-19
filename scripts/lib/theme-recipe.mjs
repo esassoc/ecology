@@ -19,6 +19,7 @@
 
 import { contrastHex } from './color.mjs';
 import {
+  NEUTRAL_SCALES,
   NEUTRAL_TEMPERATURES,
   belowFirstStep,
   nearestChromaticScale,
@@ -29,7 +30,7 @@ import {
 import { datavizDeclarations, deriveDataviz } from './dataviz.mjs';
 
 export const SCHEMES = ['light', 'dark'];
-export { NEUTRAL_TEMPERATURES };
+export { NEUTRAL_SCALES, NEUTRAL_TEMPERATURES };
 
 /**
  * Corner languages. `soft` reproduces the hub defaults exactly (050/100/200/400), so
@@ -344,7 +345,6 @@ export function deriveTheme(input) {
       return null;
     };
     const neutral = neutralRamp(seeds.neutral, scheme);
-    const neutralKnockout = neutralRamp(seeds.neutral, scheme === 'light' ? 'dark' : 'light');
     const brand = rampFrom(seeds.brand, { scheme });
     const R = {
       brand,
@@ -364,11 +364,32 @@ export function deriveTheme(input) {
     // 50/100/…/900 web-palette names, which brand-extraction.md already warns "resolve
     // to nothing" against hub primitives — a spoke reading its own -500 next to the
     // hub's -9 had two step vocabularies for one idea.
-    if (scheme === 'dark') t.set(`--${scope}-gray-0`, belowFirstStep(neutral));
-    for (let i = 1; i <= 12; i++) t.set(`--${scope}-gray-${i}`, step(neutral, i));
+    //
+    // IT IS `neutral`, NOT `gray`, AND THE OLD NAME WAS WRONG FIVE TIMES OUT OF SIX.
+    // The temperature picks a Radix scale (`cool` -> slate, `sage` -> sage), and only
+    // `pure` is actually gray — so theme-beacon.css shipped `--beacon-gray-7: #cdced6`,
+    // which is slate-7, under a name claiming otherwise. `neutral` is the ROLE, which is
+    // what the rest of this file already calls it, and it survives a temperature change:
+    // moving a spoke cool -> warm re-points twelve values instead of renaming twelve
+    // properties out from under whatever reads them.
+    //
+    // THE STEPS POINT AT TIER 1 rather than copying the hex. `neutralRamp` reproduces a
+    // Radix scale verbatim, and the hub ships all six of them — so a copied hex was a
+    // second, unlabelled transcription of a value already on disk under its real name.
+    // The hub's own semantic layer has always done it this way
+    // (`--color-background-default: var(--color-gray-1)`); generated themes were the
+    // outlier. The scoped name survives as the spoke's tuning surface — overriding
+    // `--<scope>-neutral-7` still works and still moves every role that reads it. Only
+    // the default moved, from a copy to a reference.
+    const nScale = NEUTRAL_SCALES[seeds.neutral];
+    const nPrimitive = scheme === 'dark' ? `${nScale}-dark` : nScale;
+    // Step 0 is the exception and has to be: belowFirstStep() is step 1 darkened by an
+    // OKLCH factor, a rung that exists in no Radix scale, so there is nothing to point at.
+    if (scheme === 'dark') t.set(`--${scope}-neutral-0`, belowFirstStep(neutral));
+    for (let i = 1; i <= 12; i++) t.set(`--${scope}-neutral-${i}`, `var(--color-${nPrimitive}-${i})`);
     for (let i = 1; i <= 12; i++) t.set(`--${scope}-brand-${i}`, step(brand, i));
 
-    const g = (n) => `var(--${scope}-gray-${n})`;
+    const g = (n) => `var(--${scope}-neutral-${n})`;
     const b = (n) => `var(--${scope}-brand-${n})`;
 
     /*
@@ -378,8 +399,8 @@ export function deriveTheme(input) {
      * return the colour rather than the step they found it at. Emitted raw, that breaks
      * the one property this file exists to preserve: a tier-2 role points at tier 1, and
      * re-pointing a ramp step moves every role that reads it. `--color-content-on-brand:
-     * #fcfcfc` is stranded — it happens to BE `--<scope>-gray-1`, and nothing says so, so
-     * a spoke tuning its neutral moves the surface and leaves the text behind.
+     * #fcfcfc` is stranded — it happens to BE `--<scope>-neutral-1`, and nothing says so,
+     * so a spoke tuning its neutral moves the surface and leaves the text behind.
      *
      * So: if a searched hex is exactly a step of a ramp this block DECLARES, emit the
      * var() instead. Exact match only — no nearest-step rounding, because a value that is
@@ -387,18 +408,13 @@ export function deriveTheme(input) {
      * it on the next regeneration.
      *
      * The utility, accent and AI families deliberately do NOT get this. Their ramps are
-     * computed and thrown away; only gray and brand are emitted as variables, so there is
-     * nothing to point at. Emitting six more 12-step ramps to give six roles a var() is a
-     * worse trade than the literals — that is 72 names for 18 declarations.
-     *
-     * --color-border-default-knockout is the other deliberate literal, and it must stay
-     * one: it reads step 7 of the OPPOSITE scheme's neutral, which this block does not
-     * declare. var(--<scope>-gray-7) would resolve to this scheme's step 7, which is the
-     * wrong colour and would look like it worked.
+     * computed and thrown away; only neutral and brand are emitted as variables, so there
+     * is nothing to point at. Emitting six more 12-step ramps to give six roles a var() is
+     * a worse trade than the literals — that is 72 names for 18 declarations.
      */
     const rampVar = new Map();
     for (let i = 1; i <= 12; i++) {
-      // Brand first, then gray, so a brand ramp that happens to collide with a neutral
+      // Brand first, then neutral, so a brand ramp that happens to collide with a neutral
       // step still reads as the brand — a brand role is the one a spoke re-points.
       if (!rampVar.has(step(brand, i))) rampVar.set(step(brand, i), b(i));
     }
@@ -420,7 +436,7 @@ export function deriveTheme(input) {
     // separation "the proof the roles are real". Flattening dark would erase the proof.
     //
     // Dark's sunken well sits BELOW the canvas, and a 12-step ramp has no room under
-    // its own step 1 — hence the derived gray-0. Dark also moves hover and disabled up
+    // its own step 1 — hence the derived neutral-0. Dark also moves hover and disabled up
     // (5 and 4) because they must read against any of the three surfaces above them,
     // not just the canvas.
     const dark = scheme === 'dark';
@@ -454,7 +470,15 @@ export function deriveTheme(input) {
     t.set('--color-background-default-knockout', g(12));
     t.set('--color-background-default-knockout-hover', g(11));
     t.set('--color-content-default-knockout', g(1));
-    t.set('--color-border-default-knockout', step(neutralKnockout, 7));
+    // THIS BECAME EXPRESSIBLE ON 2026-08-18 and had been a stranded literal until then.
+    // It reads the OPPOSITE scheme's step 7, and the scoped ramp only ever declares THIS
+    // scheme's — so `var(--<scope>-neutral-7)` would have resolved to the wrong colour
+    // while looking like it worked. Tier 1 has no such problem: `--color-slate-7` and
+    // `--color-slate-dark-7` are flat `:root` names, not scheme-scoped blocks, so the
+    // light block can name the dark scale outright. The hub's own semantic layer already
+    // does exactly this — `--color-border-default-knockout: {color.gray-dark.7}`.
+    const nKnockout = scheme === 'dark' ? nScale : `${nScale}-dark`;
+    t.set('--color-border-default-knockout', `var(--color-${nKnockout}-7)`);
 
     // (4) Brand.
     //
@@ -814,7 +838,8 @@ export function emitCss(derived, { schemes = SCHEMES } = {}) {
     ' * change the recipe. To keep a value the generator would not choose, add it to',
     ` * the recipe's "pinned" map — pins are applied last and survive regeneration.`,
     ' *',
-    ` * Brand seed ${meta.seeds.brand} (curve: Radix ${meta.brandScale}), neutral ${meta.seeds.neutral},`,
+    ` * Brand seed ${meta.seeds.brand} (curve: Radix ${meta.brandScale}), neutral ${meta.seeds.neutral}`
+      + ` (Radix ${NEUTRAL_SCALES[meta.seeds.neutral]}),`,
     ` * corners ${meta.seeds.corners}${meta.pinnedCount ? `, ${meta.pinnedCount} pinned value(s)` : ''}.`,
     ' *',
     ' * The brand hex sits EXACTLY on step 9 of the spoke ramp below; every other step',

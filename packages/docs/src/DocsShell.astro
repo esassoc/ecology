@@ -229,10 +229,23 @@ const showToggle = colorScheme === 'toggle';
       @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
 
       /* ---------- Shared content typography ---------- */
-      .article h1 { font-family: var(--typography-font-family-display, var(--typography-font-family-sans)); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--spacing-200, 0.5rem); line-height: 1.2; }
-      .article .lede { font-size: 18px; color: var(--color-content-default-secondary, #525252); margin: 0 0 var(--spacing-600, 2rem); line-height: 1.55; }
-      .article h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-background-brand, #1e5386); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border-default, #dcdcdc); scroll-margin-top: 76px; }
-      .article h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-content-default, #171717); }
+      /* PROSE TYPOGRAPHY STOPS AT THE SPECIMEN BOUNDARY. Every one of these
+         selectors is (0,1,1) — one class plus a type selector — which beats a
+         component's own composite class (.typography-title-sm-strong, (0,1,0)).
+         So a heading rendered INSIDE a <Preview> was taking the doc column's
+         type instead of its own: measured, esa-card's title came out 16px/600
+         here against the 17px/550 the same component renders in a real app, and
+         under anthropic-meta.css it was Libre Baskerville as well — a serif this
+         design system does not define, on five component pages.
+         `:not(.preview__canvas *)` is the fix rather than a stronger counter-rule
+         in the guard below: a counter-rule has to name every property it wants
+         back and guess the value, where not matching at all leaves the specimen
+         governed by the component's own CSS, which is the whole point of a
+         specimen. Complex selectors inside :not() are Baseline. */
+      .article h1:not(.preview__canvas *) { font-family: var(--typography-font-family-display, var(--typography-font-family-sans)); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--spacing-200, 0.5rem); line-height: 1.2; }
+      .article .lede:not(.preview__canvas *) { font-size: 18px; color: var(--color-content-default-secondary, #525252); margin: 0 0 var(--spacing-600, 2rem); line-height: 1.55; }
+      .article h2:not(.preview__canvas *) { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-background-brand, #1e5386); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border-default, #dcdcdc); scroll-margin-top: 76px; }
+      .article h3:not(.preview__canvas *) { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-content-default, #171717); }
       .article p { color: var(--color-content-default-secondary, #525252); }
       /* INLINE code only — `:not(pre) >` is load-bearing. Shiki gives a fenced
          block a dark background via inline style, and colors each token with its

@@ -198,17 +198,25 @@ export class EsaSidebarNav extends LitElement {
   render() {
     return html`
       <nav class="nav typography-label-md" aria-label="Sidebar navigation">
-        <slot name="header"></slot>
-        ${this.collapsible
-          ? html`<button
-              class="toggle"
-              type="button"
-              aria-label=${this.collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              @click=${this.toggleCollapse}
-            >
-              <span .innerHTML=${this.collapsed ? CHEVRONS_RIGHT : CHEVRONS_LEFT}></span>
-            </button>`
-          : null}
+        <!-- The header slot and the collapse toggle share ONE row, so a rail
+             carrying a brand puts the toggle beside it rather than stranding it
+             on a full-width row of its own underneath. With no header content
+             the row holds only the toggle, which its auto margin keeps at the
+             trailing edge. Collapsed, the row stacks (see the CSS) - 32px of
+             toggle will not fit next to a mark in a 72px rail. -->
+        <div class="rail-head">
+          <slot name="header"></slot>
+          ${this.collapsible
+            ? html`<button
+                class="toggle"
+                type="button"
+                aria-label=${this.collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                @click=${this.toggleCollapse}
+              >
+                <span .innerHTML=${this.collapsed ? CHEVRONS_RIGHT : CHEVRONS_LEFT}></span>
+              </button>`
+            : null}
+        </div>
         <ul class="list" role="list">
           ${this.groupedSections.map(
             (section) => html`
@@ -292,11 +300,37 @@ export class EsaSidebarNav extends LitElement {
       flex: none;
       min-width: 0;
       padding: 0;
+      /* And ZERO the margins. NO BACKTICKS IN HERE — this is a Lit css template.
+         .chevron carries margin-left: auto, and an auto margin absorbs the row's
+         free space BEFORE justify-content:center gets to act — so a parent row
+         (one with children) centred its icon inside what was left AFTER the
+         chevron ate the slack, landing it 10.5px left of every leaf row's.
+         Measured on the app-shell specimen: leaves at 35.5px from the rail edge,
+         Reports at 25px. Width 0 alone does not fix it; an auto margin on a
+         zero-width box still absorbs everything. */
+      margin: 0;
       overflow: hidden;
       white-space: nowrap;
     }
     :host([collapsed]) .link { justify-content: center; gap: 0; padding-inline: var(--spacing-200, 8px); }
     :host([collapsed]) .children { display: none; }
+
+    /* COLLAPSED GROUP HEADINGS. The label is zeroed by the rule above, but the
+       heading's own box stayed — 35px of unexplained blank rail between icon
+       clusters, which reads as a rendering fault rather than a group break. The
+       label goes out of flow (height 0; it is already width 0 + overflow hidden,
+       so nothing about the collapse transition changes) and the heading becomes
+       a hairline, which is the icon-rail convention for the same information. */
+    :host([collapsed]) .group-label { height: 0; }
+    :host([collapsed]) .group-heading {
+      padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
+    }
+    :host([collapsed]) .group-heading::after {
+      content: '';
+      display: block;
+      height: var(--border-width-default, 1px);
+      background: var(--_sidenav-border);
+    }
 
     /* label-md on the rail is the default the slotted header inherits — every
        link, group label and badge below names its own role and overrides it. */
@@ -307,21 +341,37 @@ export class EsaSidebarNav extends LitElement {
       padding: var(--spacing-200, 8px);
     }
 
+    /* Brand and toggle on one row. min-width:0 so a long wordmark ellipsises
+       instead of shoving the toggle out of the rail. */
+    .rail-head {
+      display: flex;
+      align-items: center;
+      gap: var(--_sidenav-icon-gap);
+      min-width: 0;
+      margin-bottom: var(--spacing-200, 8px);
+    }
     ::slotted([slot='header']) {
       display: block;
+      min-width: 0;
       padding: var(--spacing-300, 12px) var(--_sidenav-item-padding);
-      margin-bottom: var(--spacing-200, 8px);
       overflow: hidden;
       white-space: nowrap;
     }
+    /* COLLAPSED: 22px of mark plus 32px of toggle plus a gap does not fit in a
+       72px rail, so the row becomes a column and both centre on the same axis
+       the nav icons use. */
+    :host([collapsed]) .rail-head { flex-direction: column; gap: 0; }
+    :host([collapsed]) .toggle { width: 100%; margin-left: 0; }
 
     .toggle {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
+      flex: none;
+      /* Trailing edge whether or not a brand is slotted beside it. */
+      margin-left: auto;
+      width: 32px;
       height: 32px;
-      margin-bottom: var(--spacing-200, 8px);
       border: none;
       border-radius: var(--_sidenav-item-radius);
       background: transparent;
@@ -472,6 +522,10 @@ export class EsaSidebarNav extends LitElement {
       }
       .link--disabled,
       .child--disabled { color: GrayText; }
+      /* The collapsed group rule is a painted background, so it is force-adjusted
+         to Canvas and vanishes — the one signal a collapsed rail has left for
+         where one group ends and the next begins. */
+      :host([collapsed]) .group-heading::after { background: CanvasText; }
     }
   `,
   ];

@@ -44,17 +44,26 @@
 .app .topbar,
 .app .article { font-family: var(--meta-sans); }
 
-.app .article h1,
-.app .article h2,
-.app .article h3,
-.app .article .lede,
+/* THE DISPLAY SERIF IS DOCUMENTATION CHROME. The design system defines no serif
+   — Libre Baskerville exists to make the docs read as paper, and it must never
+   reach a component specimen, where the reader is being told "this is what you
+   get". `:not(.preview__canvas *)` keeps it out. The guard at the bottom of this
+   file was already trying to do that and could not: it is `.app .preview__canvas *`
+   at (0,2,0), and these selectors are (0,2,1) — the type selector breaks the tie
+   for the chrome. Measured before the fix: h3.esa-card__title rendered Libre
+   Baskerville 16px/400 inside a Preview and DM Sans 17px/550 in a real app, on
+   esa-card, esa-danger-zone, esa-empty-state, esa-page-header and esa-app-shell. */
+.app .article h1:not(.preview__canvas *),
+.app .article h2:not(.preview__canvas *),
+.app .article h3:not(.preview__canvas *),
+.app .article .lede:not(.preview__canvas *),
 .app .brand b,
 .app .hero h1,
 .app .hero .tagline,
 .app .block-title { font-family: var(--meta-serif); font-weight: var(--meta-serif-weight, 400); }
 
-.app .article h1 { letter-spacing: -0.015em; }
-.app .article h2 { letter-spacing: -0.01em; border-bottom-color: var(--color-border-default); }
+.app .article h1:not(.preview__canvas *) { letter-spacing: -0.015em; }
+.app .article h2:not(.preview__canvas *) { letter-spacing: -0.01em; border-bottom-color: var(--color-border-default); }
 .app .article .lede { color: var(--color-content-default-secondary); }
 .app .brand b { font-size: 17px; letter-spacing: -0.01em; }
 
@@ -98,6 +107,12 @@ html[data-scheme='light'] .toc a.active { color: var(--color-content-default); b
 
 .app .article h2 { color: var(--color-content-default); }
 
-/* ---- Keep component specimens true: previews use the SYSTEM font, not the serif ---- */
+/* ---- Keep component specimens true: previews use the SYSTEM font, not the serif ----
+   A backstop for anything in a preview that names no type role of its own. It is
+   deliberately NOT the primary defence — at (0,2,0) it loses to every `.article h*`
+   rule, which is how the serif reached five specimens for months while this rule
+   sat here looking like it covered them. The real fix is upstream: the chrome's
+   own selectors now carry `:not(.preview__canvas *)`. Keep this rule anyway; it
+   costs nothing and catches bare text nodes in a canvas. */
 .app .preview__canvas,
 .app .preview__canvas * { font-family: var(--typography-font-family-sans, system-ui, sans-serif); }

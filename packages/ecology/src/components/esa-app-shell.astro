@@ -2,15 +2,25 @@
 // esa-app-shell — CANONICAL application shell (.astro).
 //
 // The house chrome: NEUTRAL off-white surfaces layered by value (canvas < bar <
-// rail), a sidebar toggle in the TOP-LEFT corner, the logo at the TOP OF THE
-// SIDENAV, a compact CENTERED omnibox, and a profile dropdown. A composition of
+// rail), a FULL-HEIGHT sidenav carrying the logo and its own collapse toggle, a
+// compact CENTERED omnibox, and a profile dropdown. A composition of
 // esa-app-bar + esa-sidebar-nav + esa-search-panel + esa-dropdown-menu — it owns
 // no new visual primitives.
 //
 // HOUSE DECISIONS baked in: brand color never fills the chrome (only the active
 // nav item + primary actions); the wordmark lives in the SIDENAV (not the top
-// bar); the top-bar left corner is the collapse toggle. `accent` (off by default)
-// adds a faint brand-TINTED neutral wash to the bar (a color-mix, not a fill).
+// bar); the SIDENAV RUNS THE FULL HEIGHT and the collapse toggle belongs to it.
+// `accent` (off by default) adds a faint brand-TINTED neutral wash to the bar
+// (a color-mix, not a fill).
+//
+// THE TOGGLE USED TO BE A BUTTON IN THE TOP-LEFT OF THE BAR, and this component
+// re-implemented one — 20 lines of markup, CSS and wiring — while setting
+// `nav.collapsible = false` to suppress the toggle esa-sidebar-nav already
+// ships. Two costs beyond the duplication: the shell's button carried a static
+// `aria-label="Toggle sidebar"` where the component's says which way it goes
+// ("Expand sidebar" / "Collapse sidebar"), and it needed `aria-controls` to
+// point at a rail it sat outside of. A toggle INSIDE the region it collapses
+// needs no such reference.
 //
 // LAYOUT-AGNOSTIC: does not wrap BaseLayout / <html>. Render it inside a parent
 // with a fixed height (e.g. height:100dvh); the frame fills its parent and only
@@ -120,38 +130,37 @@ const searchEntities = searchIndex.map((e, i) => ({ id: `e-${i}`, title: e.title
 const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: userMenu, entities: searchEntities, scopes: searchScopes });
 ---
 <div class={shellCls} data-shell={uid}>
-  <EsaAppBar tone="surface" as="header" class="esa-app-shell__bar">
-    <button slot="start" class="esa-app-shell__toggle" data-shell-toggle={uid} type="button" aria-label="Toggle sidebar" aria-controls={navId}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
-    </button>
+  {/* The rail is a SIBLING of the bar, not a child of a row beneath it — that is
+      what makes it full-height. It comes first in the DOM as well as in the
+      layout, so the reading order matches the visual order with no tabindex. */}
+  <esa-sidebar-nav id={navId} class="esa-app-shell__nav" collapsed={collapsed ? '' : undefined}>
+    {/* Logo lives at the TOP OF THE SIDENAV. Content is rendered DIRECTLY here
+        (mark via set:html + wordmark, or a `logo` slot) — never a nested <slot>,
+        so it projects cleanly into esa-sidebar-nav's shadow `header` slot. */}
+    <a slot="header" class="esa-app-shell__brand" href={brandHref}>
+      {hasLogoSlot ? <slot name="logo" /> : (
+        <Fragment>
+          {mark && <span class="esa-app-shell__mark" set:html={mark} />}
+          <span class="esa-app-shell__wordmark">{title}</span>
+        </Fragment>
+      )}
+    </a>
+  </esa-sidebar-nav>
 
-    {hasSearch && (
-      <button class="esa-app-shell__search typography-microcopy-sm-subtle" data-shell-search={uid} type="button" aria-label="Search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <span class="esa-app-shell__search-label">{searchPlaceholder}</span>
-        <kbd class="esa-app-shell__search-kbd typography-microcopy-xs">/</kbd>
-      </button>
-    )}
+  <div class="esa-app-shell__frame">
+    <EsaAppBar tone="surface" as="header" class="esa-app-shell__bar">
+      {hasSearch && (
+        <button class="esa-app-shell__search typography-microcopy-sm-subtle" data-shell-search={uid} type="button" aria-label="Search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="esa-app-shell__search-label">{searchPlaceholder}</span>
+          <kbd class="esa-app-shell__search-kbd typography-microcopy-xs">/</kbd>
+        </button>
+      )}
 
-    <esa-dropdown-menu slot="end" id={menuId} position="below-end">
-      <EsaButton variant="chrome" icon="circle-user" iconRight="chevron-down" size="sm">{userName}</EsaButton>
-    </esa-dropdown-menu>
-  </EsaAppBar>
-
-  <div class="esa-app-shell__body">
-    <esa-sidebar-nav id={navId} class="esa-app-shell__nav">
-      {/* Logo lives at the TOP OF THE SIDENAV. Content is rendered DIRECTLY here
-          (mark via set:html + wordmark, or a `logo` slot) — never a nested <slot>,
-          so it projects cleanly into esa-sidebar-nav's shadow `header` slot. */}
-      <a slot="header" class="esa-app-shell__brand" href={brandHref}>
-        {hasLogoSlot ? <slot name="logo" /> : (
-          <Fragment>
-            {mark && <span class="esa-app-shell__mark" set:html={mark} />}
-            <span class="esa-app-shell__wordmark">{title}</span>
-          </Fragment>
-        )}
-      </a>
-    </esa-sidebar-nav>
+      <esa-dropdown-menu slot="end" id={menuId} position="below-end">
+        <EsaButton variant="chrome" icon="circle-user" iconRight="chevron-down" size="sm">{userName}</EsaButton>
+      </esa-dropdown-menu>
+    </EsaAppBar>
 
     {/* `body-md` is the default for whatever the app renders here — a page that
         composes esa-* legos has each of them override it with their own role. */}
@@ -186,16 +195,11 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     const menu = document.getElementById(cfg.menuId) as AnyEl | null;
     const panel = document.getElementById(cfg.searchId) as AnyEl | null;
 
-    if (nav) { nav.collapsible = false; nav.items = cfg.nav; }
+    // `collapsible` is deliberately NOT set here. It defaults to true, and the
+    // rail's own toggle is now the only one — this used to read
+    // `nav.collapsible = false` to make room for a button in the top bar.
+    if (nav) nav.items = cfg.nav;
     if (menu) menu.items = cfg.menu;
-
-    const toggle = document.querySelector(`[data-shell-toggle="${uid}"]`);
-    if (toggle && nav) {
-      toggle.addEventListener('click', () => {
-        (nav as AnyEl).collapsed = !(nav as AnyEl).collapsed;
-        toggle.classList.toggle('is-collapsed', !!(nav as AnyEl).collapsed);
-      });
-    }
 
     if (panel) {
       panel.entities = cfg.entities || [];
@@ -223,8 +227,11 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     --sidenav-bg: var(--color-background-default, #fcfcfc);
     --sidenav-border-color: var(--color-border-default, #cecece);
 
+    /* A ROW, not a column: the rail is the first child and stretches to the
+       shell's full height, and the bar spans only the content beside it. When
+       the bar owned the top edge this was `column` with a nested `__body` row. */
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     height: 100%;
     min-height: 0;
     overflow: hidden;
@@ -236,31 +243,19 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 
   .esa-app-shell__bar { flex: none; border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-strong, #bbbbbb); }
 
-  .esa-app-shell__toggle {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; padding: 0; border: 0;
-    border-radius: var(--radius-sm, 0.25rem);
-    background: transparent; color: var(--color-content-default-secondary, #646464);
-    cursor: pointer; transition: background 150ms ease, color 150ms ease;
-  }
-  .esa-app-shell__toggle:hover { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-brand, #2a7e3b); }
-  .esa-app-shell__toggle.is-collapsed svg { transform: scaleX(-1); }
-  /* The house shape. These two rules used to read `2px solid
-     var(--color-background-brand)` — the brand FILL role, not the ring's own token, and
-     with the width hardcoded. That was invisible for as long as the two resolved to the
-     same colour, and stopped being invisible on 2026-08-17: --color-border-default-focus
-     is now the first brand ramp step that clears 3:1, so a ring painted from the fill
-     step is the one ring in the kit still at 2.66:1 on a sunken surface. */
-  .esa-app-shell__toggle:focus-visible {
-    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
-    outline-offset: var(--focus-ring-offset, 2px);
-  }
-
   /* Compact, CENTERED omnibox trigger. */
   .esa-app-shell__search {
     margin-inline: auto;
     display: inline-flex; align-items: center; gap: var(--spacing-200, 8px);
-    width: clamp(180px, 30vw, 340px); height: 34px; padding: 0 var(--spacing-300, 12px);
+    /* SHRINKABLE, and sized against the BAR rather than the window. This was
+       `width: clamp(180px, 30vw, 340px)` — 30vw is the VIEWPORT, which says
+       nothing about how much room the bar has. It did not matter while the bar
+       spanned the whole window; once the full-height rail took 236-280px off the
+       left, a shell embedded in a doc column asked for 340px inside a 498px row
+       that also had to hold a 142px profile button, and the overflow went out
+       through the right edge. A flex basis with min-width: 0 lets it give way,
+       and the label already ellipsises. */
+    flex: 0 1 340px; min-width: 0; height: 34px; padding: 0 var(--spacing-300, 12px);
     border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece); border-radius: var(--radius-md, 0.5rem);
     background: var(--color-background-elevation-raised, #fcfcfc); color: var(--color-content-default-muted, #838383);
     /* Kept: a UA reset on a native <button>, not a type role — the rest of the type
@@ -311,12 +306,16 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     line-height: var(--line-height-none, 1);
   }
 
-  .esa-app-shell__body { display: flex; flex: 1; min-height: 0; }
+  /* The rail sizes itself (esa-sidebar-nav's :host carries the width and
+     `height: 100%`); the frame takes the rest. `min-height: 0` on the frame is
+     load-bearing — without it the flex column refuses to shrink below its
+     content and `__content` never scrolls, it just overflows the shell. */
   .esa-app-shell__nav { flex: none; }
-  .esa-app-shell__content { flex: 1; min-width: 0; overflow-y: auto; padding: var(--spacing-500, 1.5rem); }
+  .esa-app-shell__frame { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+  .esa-app-shell__content { flex: 1; min-height: 0; overflow-y: auto; padding: var(--spacing-500, 1.5rem); }
 
   @media (max-width: 720px) {
     .esa-app-shell__search-label, .esa-app-shell__search-kbd { display: none; }
-    .esa-app-shell__search { width: 34px; padding: 0; justify-content: center; }
+    .esa-app-shell__search { flex: none; width: 34px; padding: 0; justify-content: center; }
   }
 </style>

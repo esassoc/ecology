@@ -8,6 +8,12 @@ import { withBase } from '@esa/docs/base';
 import AppShell from '@esa/ecology/esa-app-shell.astro';
 import Stat from '@esa/ecology/esa-stat.astro';
 import Card from '@esa/ecology/esa-card.astro';
+import Badge from '@esa/ecology/esa-badge.astro';
+
+// The sidenav logo mark, as `mark` takes it: a raw inline <svg> string. Passing one
+// is what the collapsed rail has to show — with no mark the header collapses to an
+// empty row, which reads as a bug rather than as "this app has no logo".
+const mark = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`;
 
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
@@ -49,39 +55,73 @@ const navItems = [
 const searchIndex = [
   { id: '#preview', title: 'Carquinez Strait', subtitle: 'Shoreline stabilization', category: 'Sites' },
   { id: '#preview', title: 'Tomales Bay', subtitle: 'Eelgrass restoration', category: 'Sites' },
+  { id: '#preview', title: 'Suisun Marsh', subtitle: 'Sediment sampling', category: 'Sites' },
   { id: '#preview', title: 'Permit 2026-118', subtitle: 'Renewal due in 12 days', category: 'Permits' },
+  { id: '#preview', title: 'Permit 2026-094', subtitle: 'Awaiting agency review', category: 'Permits' },
+];
+
+// Enough rows that the content region has something to scroll — the layout
+// contract's whole claim is that the chrome stays put while this does not.
+const activity = [
+  { date: 'Jun 24', site: 'Petaluma River mouth', task: 'Water quality sampling', state: 'Scheduled', variant: 'info' as const },
+  { date: 'Jun 19', site: 'Hamilton Wetlands', task: 'Avian nesting survey', state: 'In progress', variant: 'warning' as const },
+  { date: 'Jun 16', site: 'Suisun Marsh', task: 'Sediment sampling', state: 'Complete', variant: 'success' as const },
+  { date: 'Jun 11', site: 'Mare Island', task: 'Maintenance dredging', state: 'Complete', variant: 'success' as const },
+  { date: 'Jun 04', site: 'Tomales Bay', task: 'Eelgrass transect', state: 'Complete', variant: 'success' as const },
 ];
 ---
 <ComponentDoc name="App Shell" category="Layout & Sections" slug="esa-app-shell" type=".astro" status="stable"
-  summary="The canonical application chrome: neutral off-white surfaces layered by value, a sidebar toggle in the top-left corner, the wordmark at the top of the sidenav, a centered omnibox, and a profile dropdown. A composition of esa-app-bar + esa-sidebar-nav + esa-entity-search + esa-dropdown-menu — it owns no new visual primitives.">
+  summary="The canonical application chrome: neutral off-white surfaces layered by value, a full-height sidenav carrying the wordmark and its own collapse toggle, a centered omnibox, and a profile dropdown. A composition of esa-app-bar + esa-sidebar-nav + esa-entity-search + esa-dropdown-menu — it owns no new visual primitives.">
 
   <Section id="preview" title="Preview">
     <p>
-      The miniature below is the real composition, framed at a fixed height. Toggle the sidebar from
-      the square button in the top-left, expand <strong>Reports</strong> for accordion children, open
-      the omnibox, and scroll the content region — the chrome never moves.
+      The frame below is the real composition, running at the largest size this column allows.
+      Collapse the rail from the chevrons beside the wordmark, expand <strong>Reports</strong> for
+      accordion children, open the omnibox, and scroll the content region — the chrome never moves.
+    </p>
+    <p class="shell-cta">
+      <a class="shell-cta__link" href={withBase('/demos/app-shell')} target="_blank" rel="noreferrer">
+        Open the demo at full size
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      </a>
+      <span class="shell-cta__note">Opens in a new tab at <code>height: 100dvh</code> — an app shell judged in a doc column is judged at the one size it is never used at.</span>
     </p>
     <Preview align="start" code={`<AppShell
   title="Estuary"
   active="dashboard"
   items={navItems}
   searchIndex={searchIndex}
+  mark={mark}
   userName="Maya Okafor"
 >
   <h1>Dashboard</h1>
   <!-- page content -->
 </AppShell>`}>
       <div class="shell-frame">
-        <AppShell id="doc-shell" title="Estuary" active="dashboard" items={navItems}
+        <AppShell id="doc-shell" title="Estuary" active="dashboard" items={navItems} mark={mark}
           searchIndex={searchIndex} searchPlaceholder="Search sites and permits…" userName="Maya Okafor">
           <div class="shell-page">
-            <h3 class="shell-page__title">Dashboard</h3>
+            <h3 class="shell-page__title typography-heading-md">Dashboard</h3>
             <div class="shell-page__stats">
               <Stat value="14" label="Monitored sites" sub="across 3 counties" />
               <Stat value="1,284" label="Active permits" sub="+12 this quarter" />
               <Stat value="3" label="Needs attention" accent />
             </div>
-            <Card title="Recent activity" subtitle="Last 7 days">
+            <Card title="Field activity" subtitle="Last 30 days">
+              <ul class="shell-rows">
+                {activity.map((row) => (
+                  <li class="shell-row">
+                    <span class="shell-row__date">{row.date}</span>
+                    <span class="shell-row__task">
+                      <strong>{row.site}</strong>
+                      <span class="shell-row__sub">{row.task}</span>
+                    </span>
+                    <Badge value={row.state} variant={row.variant} size="sm" />
+                  </li>
+                ))}
+              </ul>
+            </Card>
+            <Card title="Layout contract" subtitle="Why the frame holds">
               <p style="margin: 0;">Only this region scrolls — the bar and the rail are fixed to the frame.</p>
             </Card>
           </div>
@@ -99,7 +139,7 @@ const searchIndex = [
     <ul class="a11y">
       <li><strong>Brand color never fills the chrome.</strong> Surfaces are neutral off-whites layered by value (canvas &lt; bar &lt; rail). Brand appears on the active nav item and primary actions only. <code>accent</code> adds a faint brand-<em>tinted</em> neutral wash to the bar — a <code>color-mix</code>, not a fill.</li>
       <li><strong>The wordmark lives in the sidenav</strong>, at the top of the rail — not in the top bar.</li>
-      <li><strong>The top-left corner is the collapse toggle</strong>, where a user reaches for it.</li>
+      <li><strong>The sidenav runs the full height and owns its own collapse toggle.</strong> The rail is a sibling of the bar, not a region beneath it, so the wordmark sits at the top-left of the window and the bar spans only the content. The toggle rides in the rail's header row beside the wordmark — it used to be a separate button in the top-left of the bar, which meant this component re-implemented a control <code>esa-sidebar-nav</code> already ships.</li>
       <li><strong>The omnibox is compact and centered</strong>, not a full-width search bar spanning the chrome.</li>
     </ul>
   </Section>
@@ -134,6 +174,8 @@ const searchIndex = [
       <code>&lt;html&gt;</code>. Render it inside a parent with a fixed height and the frame fills that
       parent, with only <code>&lt;main&gt;</code> scrolling. Give it no height and the whole page
       scrolls, chrome included — which is the one way to make it look broken.
+      <a href={withBase('/demos/app-shell')} target="_blank" rel="noreferrer">The full-size demo</a> is
+      exactly this markup with <code>&lt;body&gt;</code> as the fixed-height parent.
     </p>
     <Preview align="start" code={`<div style="height: 100dvh;">
   <AppShell title="Estuary" items={items}>
@@ -167,7 +209,7 @@ const searchIndex = [
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
       <li>The content region is a real <code>&lt;main&gt;</code> and the bar renders as <code>&lt;header&gt;</code>, so the landmarks are correct without anything added at the call site. Don't nest another <code>&lt;main&gt;</code> in the slot.</li>
-      <li>The collapse toggle carries <code>aria-label="Toggle sidebar"</code> and <code>aria-controls</code> pointing at the nav. Collapsing to the icon rail keeps every item reachable — labels move to tooltips, they are not dropped.</li>
+      <li>The collapse toggle is <code>esa-sidebar-nav</code>'s own, and it sits <em>inside</em> the region it collapses — so it needs no <code>aria-controls</code>, and its label states the direction (<code>Expand sidebar</code> / <code>Collapse sidebar</code>) rather than the ambiguous <code>Toggle sidebar</code>. Collapsing to the icon rail keeps every item reachable — labels move to tooltips, they are not dropped.</li>
       <li>The omnibox binds <code>/</code> as a <strong>document-level</strong> hotkey, skipped while focus is in an editable field. It is document-level by design (a global shortcut), so a page hosting a shell has given that key away — worth knowing before embedding one inside a larger document.</li>
       <li>Nav items with <code>children</code> render as expandable parents rather than links. Give a parent both a <code>href</code> and children only if the parent is genuinely a destination.</li>
       <li>Set <code>id</code> when a page carries more than one shell — the nav, menu, and search ids derive from it, and duplicates break both the wiring and the <code>aria-controls</code> reference.</li>
@@ -178,24 +220,91 @@ const searchIndex = [
 
 <style>
   /* The framed miniature: the shell fills a parent with a fixed height, exactly
-     as the layout contract requires. */
+     as the layout contract requires.
+
+     It BLEEDS through the Preview canvas's own 2rem padding — the only specimen
+     on the site that does. Measured before: the frame came out 702px wide and
+     the content region 421px of it, which is narrower than a phone; the stat row
+     wrapped 2+1 and the card copy broke mid-sentence, so the reader was judging
+     the shell at a width no application is ever used at. `width: 100%` resolves
+     against the canvas's PADDED content box, so adding the padding back and
+     pulling the box out with an equal negative margin lands it flush against the
+     frame's own border — which also reads as an application window rather than a
+     card floating inside one. The full-size answer is /demos/app-shell; this is
+     the biggest honest version that fits in a doc column. */
   .shell-frame {
-    width: 100%;
-    height: 520px;
+    width: calc(100% + 2 * var(--spacing-600, 2rem));
+    margin: calc(-1 * var(--spacing-600, 2rem));
+    height: 620px;
     overflow: hidden;
-    border: 1px solid var(--color-border-default, #e5e5e5);
-    border-radius: 10px;
+    /* No border and no bottom radius: the Preview's own frame supplies the outer
+       edge, and its code bar supplies the rule underneath. 11px is the frame's
+       12px radius minus its 1px border — the inner curve. */
+    border: 0;
+    border-radius: 11px 11px 0 0;
+    /* A narrower rail leaves the content region room to be a page. This is the
+       documented tier-3 re-skin path (the same knob /patterns/app-shell uses),
+       not a patch on the component. */
+    --sidenav-width: 236px;
   }
   .shell-page {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-500, 1.25rem);
-    padding: var(--spacing-500, 1.25rem);
   }
-  .shell-page__title { margin: 0; font-size: var(--font-size-400, 1.25rem); }
+  /* Type comes from .typography-heading-md on the element — a role, not a raw
+     step. It has to name one now: the docs chrome used to reach in here and
+     supply a size (in the documentation serif), and it no longer does. */
+  .shell-page__title { margin: 0; }
   .shell-page__stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: var(--spacing-500, 1.25rem);
   }
+
+  /* Activity rows — plain composition space inside an esa-card, which is the
+     point the layout contract makes: the shell assumes nothing about content. */
+  .shell-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .shell-row {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--spacing-300, 0.75rem);
+    padding: var(--spacing-250, 0.625rem) 0;
+    border-bottom: 1px solid var(--color-border-default-subtle, #ececec);
+  }
+  .shell-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .shell-row__date {
+    font-size: var(--font-size-100, 0.75rem);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-content-default-muted, #838383);
+  }
+  .shell-row__task { display: flex; flex-direction: column; min-width: 0; }
+  .shell-row__task strong { font-weight: var(--typography-font-weight-semibold, 550); font-size: var(--font-size-150, 0.875rem); }
+  .shell-row__sub { font-size: var(--font-size-100, 0.75rem); color: var(--color-content-default-secondary, #525252); }
+
+  /* The escape hatch out of the doc column, offered before the miniature rather
+     than after it — a reader who wants the real thing should not have to scroll
+     past the small one to find out it exists. */
+  .shell-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
+    margin: 0 0 var(--spacing-400, 1rem);
+  }
+  .shell-cta__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-200, 0.5rem);
+    padding: 7px var(--spacing-300, 0.75rem);
+    border: 1px solid var(--color-border-default, #dcdcdc);
+    border-radius: 9px;
+    background: var(--color-background-elevation-raised, #fff);
+    color: var(--color-content-default, #171717);
+    font-size: var(--font-size-150, 0.875rem);
+    text-decoration: none;
+  }
+  .shell-cta__link:hover { border-color: var(--color-border-default-strong, #bbb); }
+  .shell-cta__note { flex: 1 1 20ch; font-size: var(--font-size-150, 0.875rem); color: var(--color-content-default-secondary, #525252); }
 </style>

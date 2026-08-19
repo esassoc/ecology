@@ -1,0 +1,236 @@
+---
+// /demos/app-shell — esa-app-shell at the size it is actually used at.
+//
+// NOT a doc page and NOT BaseLayout. Both wrap their content in chrome of their
+// own, and BaseLayout specifically renders `<main class="page">` — nesting the
+// shell's own `<main>` inside that is a duplicate-landmark failure. The layout
+// contract the component documents is "render me inside a parent with a fixed
+// height", so this page IS that parent: <body> at 100dvh and nothing else.
+//
+// It exists because a 700px-wide miniature in a doc column is the one width an
+// application shell is never used at. The component page keeps the miniature and
+// links here; this is where you judge the proportions.
+import '@esa/tokens/tokens.css';
+import '@esa/tokens/component-tokens.css';
+import '@esa/tokens/focus.css';
+import '@esa/tokens/a11y.css';
+import '@esa/tokens/typography.css';
+import '../../styles/themes.css';
+import { withBase } from '@esa/docs/base';
+import AppShell from '@esa/ecology/esa-app-shell.astro';
+import Stat from '@esa/ecology/esa-stat.astro';
+import Card from '@esa/ecology/esa-card.astro';
+import Badge from '@esa/ecology/esa-badge.astro';
+
+const mark = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`;
+
+const navItems = [
+  { key: 'dashboard', label: 'Dashboard', href: '#', icon: 'layout-dashboard', group: 'Monitoring' },
+  { key: 'sites', label: 'Sites', href: '#', icon: 'map-pin', badge: 14, group: 'Monitoring' },
+  { key: 'permits', label: 'Permits', href: '#', icon: 'notepad-text', badge: 6, group: 'Monitoring' },
+  {
+    key: 'reports', label: 'Reports', icon: 'file-text', group: 'Monitoring',
+    children: [
+      { key: 'monthly', label: 'Monthly monitoring', href: '#' },
+      { key: 'annual', label: 'Annual compliance', href: '#' },
+    ],
+  },
+  { key: 'team', label: 'Team', href: '#', icon: 'users', group: 'Workspace' },
+  { key: 'settings', label: 'Settings', href: '#', icon: 'settings', group: 'Workspace' },
+];
+
+const searchIndex = [
+  { id: '#', title: 'Carquinez Strait', subtitle: 'Shoreline stabilization', category: 'Sites' },
+  { id: '#', title: 'Tomales Bay', subtitle: 'Eelgrass restoration', category: 'Sites' },
+  { id: '#', title: 'Suisun Marsh', subtitle: 'Sediment sampling', category: 'Sites' },
+  { id: '#', title: 'Permit 2026-118', subtitle: 'Renewal due in 12 days', category: 'Permits' },
+  { id: '#', title: 'Permit 2026-094', subtitle: 'Awaiting agency review', category: 'Permits' },
+];
+
+const activity = [
+  { date: 'Jun 24', site: 'Petaluma River mouth', task: 'Water quality sampling', state: 'Scheduled', variant: 'info' as const },
+  { date: 'Jun 19', site: 'Hamilton Wetlands', task: 'Avian nesting survey', state: 'In progress', variant: 'warning' as const },
+  { date: 'Jun 16', site: 'Suisun Marsh', task: 'Sediment sampling', state: 'Complete', variant: 'success' as const },
+  { date: 'Jun 11', site: 'Mare Island', task: 'Maintenance dredging', state: 'Complete', variant: 'success' as const },
+  { date: 'Jun 04', site: 'Tomales Bay', task: 'Eelgrass transect', state: 'Complete', variant: 'success' as const },
+  { date: 'May 30', site: 'Napa–Sonoma Marsh', task: 'Vegetation transect', state: 'Complete', variant: 'success' as const },
+  { date: 'May 22', site: 'China Camp', task: 'Shoreline photo points', state: 'Complete', variant: 'success' as const },
+];
+
+const permits = [
+  { id: '2026-118', site: 'Carquinez Strait', agency: 'BCDC', due: '12 days', state: 'Renewal due', variant: 'warning' as const },
+  { id: '2026-094', site: 'Tomales Bay', agency: 'CDFW', due: '38 days', state: 'In review', variant: 'info' as const },
+  { id: '2026-071', site: 'Mare Island', agency: 'USACE', due: '—', state: 'Issued', variant: 'success' as const },
+  { id: '2026-063', site: 'Suisun Marsh', agency: 'RWQCB', due: '—', state: 'Issued', variant: 'success' as const },
+];
+---
+<!doctype html>
+<html lang="en" data-theme="default" data-scheme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>App shell — full-size demo — Ecology</title>
+    <meta name="description" content="esa-app-shell running at full viewport height, as an application uses it." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <AppShell
+      id="demo-shell"
+      title="Estuary"
+      active="dashboard"
+      items={navItems}
+      mark={mark}
+      searchIndex={searchIndex}
+      searchPlaceholder="Search sites and permits…"
+      userName="Maya Okafor"
+    >
+      <div class="page">
+        <header class="page__head">
+          <div>
+            <h1 class="page__title typography-heading-lg">Dashboard</h1>
+            <p class="page__sub">Site and permit monitoring across the North Bay programme.</p>
+          </div>
+          <a class="page__back" href={withBase('/components/esa-app-shell')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            Back to the component docs
+          </a>
+        </header>
+
+        <div class="page__stats">
+          <Stat value="14" label="Monitored sites" sub="across 3 counties" />
+          <Stat value="1,284" label="Active permits" sub="+12 this quarter" />
+          <Stat value="3" label="Needs attention" accent />
+          <Stat value="96%" label="Reports on time" sub="rolling 12 months" />
+        </div>
+
+        <div class="page__cols">
+          <Card title="Field activity" subtitle="Last 30 days">
+            <ul class="rows">
+              {activity.map((row) => (
+                <li class="row">
+                  <span class="row__date">{row.date}</span>
+                  <span class="row__main">
+                    <strong>{row.site}</strong>
+                    <span class="row__sub">{row.task}</span>
+                  </span>
+                  <Badge value={row.state} variant={row.variant} size="sm" />
+                </li>
+              ))}
+            </ul>
+          </Card>
+
+          <Card title="Permits" subtitle="Open and recently issued">
+            <ul class="rows">
+              {permits.map((p) => (
+                <li class="row">
+                  <span class="row__date">{p.id}</span>
+                  <span class="row__main">
+                    <strong>{p.site}</strong>
+                    <span class="row__sub">{p.agency} · due in {p.due}</span>
+                  </span>
+                  <Badge value={p.state} variant={p.variant} size="sm" />
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+
+        <Card title="Why this page exists" subtitle="Layout contract">
+          <p style="margin: 0;">
+            The shell is layout-agnostic: it owns no <code>&lt;html&gt;</code> and wraps no layout. Here
+            <code>&lt;body&gt;</code> is the fixed-height parent (<code>height: 100dvh</code>), so the bar and
+            the rail are pinned and only this region scrolls. The rail is a sibling of the bar rather than a
+            region under it, which is what lets it run the full height. Collapse it from the chevrons beside
+            the wordmark, expand <strong>Reports</strong>, or press <kbd>/</kbd> for the omnibox.
+          </p>
+        </Card>
+      </div>
+    </AppShell>
+  </body>
+</html>
+
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; }
+  /* The fixed-height parent the layout contract asks for — and the reason this
+     page cannot be BaseLayout, which supplies a <main> and a max-width column. */
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    height: 100dvh;
+    overflow: hidden;
+    font-family: var(--typography-font-family-sans, system-ui, sans-serif);
+    background: var(--color-background-default, #fcfcfc);
+    color: var(--color-content-default, #171717);
+  }
+</style>
+
+<style>
+  .page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-500, 1.5rem);
+    max-width: 1180px;
+  }
+  .page__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-400, 1rem);
+  }
+  /* .typography-heading-lg carries family, size, weight, leading and tracking.
+     Spelling those out one property at a time is exactly the composite this
+     class already is. */
+  .page__title { margin: 0; }
+  .page__sub { margin: var(--spacing-100, 0.25rem) 0 0; color: var(--color-content-default-secondary, #525252); }
+  .page__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-200, 0.5rem);
+    padding: 7px var(--spacing-300, 0.75rem);
+    border: 1px solid var(--color-border-default, #dcdcdc);
+    border-radius: 9px;
+    background: var(--color-background-elevation-raised, #fff);
+    color: var(--color-content-default-secondary, #525252);
+    font-size: var(--font-size-150, 0.875rem);
+    text-decoration: none;
+  }
+  .page__back:hover { color: var(--color-content-default, #171717); border-color: var(--color-border-default-strong, #bbb); }
+  .page__back:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+
+  .page__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-500, 1.5rem);
+  }
+  .page__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: var(--spacing-500, 1.5rem);
+    align-items: start;
+  }
+
+  .rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--spacing-300, 0.75rem);
+    padding: var(--spacing-250, 0.625rem) 0;
+    border-bottom: 1px solid var(--color-border-default-subtle, #ececec);
+  }
+  .row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .row__date {
+    font-size: var(--font-size-100, 0.75rem);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-content-default-muted, #838383);
+  }
+  .row__main { display: flex; flex-direction: column; min-width: 0; }
+  .row__main strong { font-weight: var(--typography-font-weight-semibold, 550); font-size: var(--font-size-150, 0.875rem); }
+  .row__sub { font-size: var(--font-size-100, 0.75rem); color: var(--color-content-default-secondary, #525252); }
+</style>

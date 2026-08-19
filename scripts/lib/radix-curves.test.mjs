@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import curves from './radix-curves.json' with { type: 'json' };
+import { NEUTRAL_SCALES, NEUTRAL_TEMPERATURES } from './ramp.mjs';
 
 const HUB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -39,13 +40,24 @@ test('every scale carries 12 steps in both schemes', () => {
   }
 });
 
-test('the three named neutral temperatures are the documented Radix scales', () => {
-  // The recipe seeds say "warm | cool | pure"; these are what those words resolve to.
-  assert.equal(curves.neutrals.pure, 'gray');
-  assert.equal(curves.neutrals.cool, 'slate');
-  assert.equal(curves.neutrals.warm, 'sand');
+test('the six named neutral temperatures are the documented Radix scales', () => {
+  // These are what the recipe's `seeds.neutral` words resolve to. There are SIX, not the
+  // three this test and the theme maker both used to name — mauve, sage and olive shipped
+  // curves and primitives while nothing asserted they were reachable.
+  assert.deepEqual(curves.neutrals, {
+    pure: 'gray',
+    cool: 'slate',
+    warm: 'sand',
+    mauve: 'mauve',
+    sage: 'sage',
+    olive: 'olive',
+  });
+  assert.deepEqual(NEUTRAL_SCALES, curves.neutrals, 'the export must BE the table, not a copy');
+  assert.deepEqual(NEUTRAL_TEMPERATURES, Object.keys(curves.neutrals));
   for (const scale of Object.values(curves.neutrals)) {
-    assert.ok(curves.curves.light[scale], `neutral ${scale} has no curve`);
+    for (const scheme of ['light', 'dark']) {
+      assert.ok(curves.curves[scheme][scale], `neutral ${scale} has no ${scheme} curve`);
+    }
     assert.ok(!curves.chromatic.includes(scale), `${scale} must not be offered as a brand curve`);
   }
 });

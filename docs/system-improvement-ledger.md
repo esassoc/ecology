@@ -2303,3 +2303,84 @@ AXIS from the theme".
   block because no call-site edit can fix it, and it is currently EMPTY — every
   component in the floor map has at least one compliant step. *Sink:* recorded.
   *Priority:* resolved.
+
+---
+
+## Source: the neutral core colour (2026-08-18)
+
+The theme maker was supposed to let a spoke choose its neutral. It offered three of six,
+and the ramp it generated was called `gray` whichever one you picked.
+
+- **THE PICKER OFFERED HALF THE OPTIONS, and nothing could see that it did.**
+  `theme-maker.astro` hardcoded a three-entry `NEUTRALS` array beside the imported
+  `NEUTRAL_TEMPERATURES` it should have derived from. `mauve`, `sage` and `olive` had
+  curves, primitives, CLI flags and validation — they were generated, gradeable and
+  completely unreachable from the editor. *Evidence:* swept all six × three brands through
+  `deriveTheme` + `auditPairs`: identical shapes (114 light / 111 dark) and identical
+  grades, 60/60 checked pairs in both schemes. The three "new" ones were never risky; they
+  were just invisible. *Action:* the page derives its list, and a test asserts its prose
+  map covers `NEUTRAL_TEMPERATURES`. *Sink:* `hub-fix`. *Priority:* resolved.
+
+- **THE RAMP'S NAME WAS A LIE FOR FIVE OF THE SIX.** `theme-beacon.css` is a `cool` theme
+  and shipped `--beacon-gray-7: #cdced6`, which is Radix **slate**-7. The only clue in the
+  file was the word "cool" in a header comment. *Action:* `--<scope>-neutral-*`, a role
+  name parallel to `--<scope>-brand-*`. Naming it after the resolved scale
+  (`--beacon-slate-*`) was rejected: it makes a NAME a function of a SEED, so switching
+  cool→warm renames every declaration and a spoke reading `var(--bcn-slate-7)` loses the
+  property outright rather than getting a new value. *Sink:* `hub-fix`. *Priority:* resolved.
+
+- **NO MIGRATIONS ROW, verified three ways rather than assumed.** `token-names.json` holds
+  zero scoped names, so the snapshot guard cannot fire; `build.js` cannot emit an alias for
+  a scope the hub does not know; and `token-rename.test.mjs` would FAIL such a row, because
+  its destination does not resolve in the hub. Regeneration is the channel. *Sink:*
+  `process`. *Priority:* recorded.
+
+- **THE RAMP NOW POINTS AT TIER 1, and this is the hub's own pattern rather than a new
+  one.** `--<scope>-neutral-7: var(--color-slate-7)`. The hub's semantic layer has always
+  read `--color-background-default: var(--color-gray-1)`; generated themes were the outlier,
+  interposing a literal copy of a value already on disk under its real name. The scoped name
+  survives as the spoke's tuning surface — only its default moved, from a copy to a
+  reference. *Bonus:* `--color-border-default-knockout` stopped being a stranded literal.
+  It reads the OPPOSITE scheme's step 7, which the scoped ramp never declared; tier-1 dark
+  scales are flat `:root` names, so the light block can say `var(--color-slate-dark-7)` —
+  which is what the hub's own `{color.gray-dark.7}` already did. *Sink:* `hub-fix`.
+  *Priority:* resolved.
+
+- **IT IS NOT VALUE-PRESERVING, and the one change hides in the default.**
+  `radix-curves.json` and `primitive/color.json` are two independent transcriptions of
+  Radix. Compared all 144 neutral steps: **143 byte-identical**. The exception is `pure` /
+  dark / step 12 — curve `#eeeeee` (real Radix) vs primitive `#ededef` (PRESERVEd, already
+  marked "Unresolved"). Step 12 is `--color-content-default` and `pure` is the DEFAULT
+  temperature. Measured on the dark canvas: **16.275:1 → 16.150:1**, Δ0.125 on a 16:1 pair.
+  Both shipped themes are `cool` and did not move — all **4,040** role resolutions across
+  beacon and qanat, both schemes, unchanged. *Action:* a test pins the 144-step comparison
+  with that single documented exception, so it is known rather than rediscovered; resolving
+  the `gray-dark` pin is a separate change that moves every hub dark surface reading
+  `gray-dark-12`. *Sink:* `hub-fix`. *Priority:* **open** — the pin, not this.
+
+- **A DERIVED THEME NO LONGER RESOLVES ON ITS OWN.** Chains end one hop outside the derived
+  map — exactly as `check-contrast.mjs` has always seen it, since it loads `dist/tokens.css`
+  first and overlays the theme. `theme-recipe.test.mjs`'s local resolver needed a tier-1
+  fallback, read from the **committed DTCG JSON** rather than the gitignored
+  `dist/tokens.css`: `token-rename.test.mjs` has to guard its equivalent with
+  `if (!existsSync(dist)) return`, and a neutral-contrast test that silently skips on an
+  unbuilt checkout is worth very little. *Sink:* `hub-fix`. *Priority:* resolved.
+
+- **NO NPM SCRIPT GRADES THE TWO GENERATED THEME FILES.** `npm run contrast` is `--hub`
+  only; `contrast:dark` targets `docs-dark.css`. Grading `theme-beacon.css` /
+  `theme-qanat.css` in either scheme has to be run by hand, which is how a regression in a
+  generated theme would reach a spoke unnoticed. Not introduced by this pass; found by it.
+  *Sink:* `workflow`. *Priority:* **open**.
+
+- **THE SPOKE TEMPLATE WAS FURTHER OUT THAN THE NAME.** Both its ramps used the
+  50/100/…/1000 **web-palette** vocabulary, so the hand-fill path and `make-theme.mjs`
+  disagreed on the step SCALE as well as the word — `theme-recipe.mjs` had already flagged
+  those rungs as "resolving to nothing" against hub primitives. Both are 1–12 now, with the
+  brand seed on step 9. *Sink:* `hub-fix`. *Priority:* resolved.
+
+- **A STALE DEFAULT IN THE SAME FILE, fixed at the root.** The theme maker's intention
+  swatches hardcoded `success: #bdee63` — lime-9 — months after `DEFAULT_INTENTION_SEEDS`
+  moved to green. Reset worked (it deletes the key and the recipe falls back), so nothing
+  failed; but the swatch DISPLAYED lime, and nudging it from there pinned a seed derived
+  from a default that no longer existed. Same class as the three-of-six list: a hardcoded
+  copy of exported data. Now derived. *Sink:* `hub-fix`. *Priority:* resolved.

@@ -155,11 +155,19 @@ export class EsaEntitySearch extends LitElement {
     this.query = '';
     this.activeScope = '';
     this.activeId = null;
-    requestAnimationFrame(() => {
-      (this.renderRoot as ShadowRoot)
-        .querySelector<HTMLInputElement>('.esa-entity-search__input')
-        ?.focus();
-    });
+    requestAnimationFrame(() => this.focusInput());
+  }
+
+  /**
+   * The input is the overlay's ONLY tab stop, so every other control returns focus
+   * here after a click. Without this, clicking a facet left focus on that button —
+   * and onKeydown was bound to the input, so Tab stopped being intercepted and
+   * walked the facets, the rows and then straight out of the dialog, ringless.
+   */
+  private focusInput(): void {
+    (this.renderRoot as ShadowRoot)
+      .querySelector<HTMLInputElement>('.esa-entity-search__input')
+      ?.focus();
   }
 
   close(): void {
@@ -217,6 +225,7 @@ export class EsaEntitySearch extends LitElement {
   private setScope(scopeId: string): void {
     this.activeScope = scopeId;
     this.activeId = null;
+    this.focusInput();
     this.emit('scope-change', { scope: scopeId });
   }
 
@@ -276,6 +285,7 @@ export class EsaEntitySearch extends LitElement {
 
   private onRowAction(event: Event, action: EsaSearchRowAction, entity: EsaSearchEntity): void {
     event.stopPropagation();
+    this.focusInput();
     this.emit('row-action', { action: action.id, entity });
   }
 
@@ -296,6 +306,7 @@ export class EsaEntitySearch extends LitElement {
       <button
         class="esa-entity-search__row ${entity.id === this.activeId ? 'esa-entity-search__row--active' : ''}"
         role="option"
+        tabindex="-1"
         aria-selected=${entity.id === this.activeId}
         @click=${() => this.selectEntity(entity)}
         @mouseenter=${() => (this.activeId = entity.id)}
@@ -314,6 +325,7 @@ export class EsaEntitySearch extends LitElement {
                 (a) => html`<button
                   class="esa-entity-search__row-action typography-body-xs"
                   type="button"
+                  tabindex="-1"
                   title=${a.label}
                   aria-label=${a.label}
                   @click=${(e: Event) => this.onRowAction(e, a, entity)}
@@ -357,7 +369,7 @@ export class EsaEntitySearch extends LitElement {
 
     return html`
       <div class="esa-entity-search__backdrop" @click=${this.close}></div>
-      <div class="esa-entity-search" role="dialog" aria-label="Search">
+      <div class="esa-entity-search" role="dialog" aria-label="Search" @keydown=${this.onKeydown}>
         <div class="esa-entity-search__search">
           <svg class="esa-entity-search__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <!-- The input had NO accessible name: no label, no aria-label, only a
@@ -373,7 +385,6 @@ export class EsaEntitySearch extends LitElement {
             placeholder=${this.placeholder}
             .value=${this.query}
             @input=${this.onSearch}
-            @keydown=${this.onKeydown}
             autocomplete="off"
           />
           <span class="visually-hidden" id="cue"
@@ -388,6 +399,7 @@ export class EsaEntitySearch extends LitElement {
               <button
                 class="esa-entity-search__scope typography-body-xs ${this.activeScope === '' ? 'esa-entity-search__scope--active' : ''}"
                 role="tab"
+                tabindex="-1"
                 aria-selected=${this.activeScope === ''}
                 @click=${() => this.setScope('')}
               >
@@ -397,6 +409,7 @@ export class EsaEntitySearch extends LitElement {
                 (s) => html`<button
                   class="esa-entity-search__scope typography-body-xs ${this.activeScope === s.id ? 'esa-entity-search__scope--active' : ''}"
                   role="tab"
+                  tabindex="-1"
                   aria-selected=${this.activeScope === s.id}
                   @click=${() => this.setScope(s.id)}
                 >
@@ -482,6 +495,15 @@ export class EsaEntitySearch extends LitElement {
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
+      /* The panel is --radius-lg (12px) with overflow: hidden, so its inner clip
+         curve is (12 - 1px border) = 11px. A SQUARE row inside it puts the focus
+         ring's corner at (2,2) from the padding box, which is 12.7px from the
+         curve's centre and therefore outside it — ~4.7px was bitten off each end
+         of the ring's top edge. Matching the inner radius makes the outline follow
+         the curve instead; at outline-offset -2px the browser draws it 2px smaller,
+         which is exactly the curve 2px in, so nothing is clipped. */
+      border-radius: calc(var(--radius-lg, 0.75rem) - var(--border-width-default, 1px))
+        calc(var(--radius-lg, 0.75rem) - var(--border-width-default, 1px)) 0 0;
     }
     /* The ring goes on the ROW, not the input. The input is chromeless by design
        (it has no border of its own), so a ring drawn on it would float around bare
@@ -540,6 +562,12 @@ export class EsaEntitySearch extends LitElement {
       transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
     }
     .esa-entity-search__scope:hover { border-color: var(--color-border-brand, #b2ddb5); color: var(--color-content-default, #202020); }
+    /* Outward, per /foundations/focus: inset the ring only where the box is
+       clipped. These pills sit inside a padded row, so nothing clips them. */
+    .esa-entity-search__scope:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
     .esa-entity-search__scope--active {
       background: var(--color-background-brand, #46a758);
       border-color: var(--color-background-brand, #46a758);
@@ -577,6 +605,10 @@ export class EsaEntitySearch extends LitElement {
       text-align: left;
       transition: background 80ms ease;
     }
+    .esa-entity-search__row:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
     .esa-entity-search__row--active { background: var(--color-background-elevation-sunken, #f0f0f0); }
     .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-default-muted, #838383); }
     .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-content-brand, #2a7e3b); }
@@ -607,6 +639,10 @@ export class EsaEntitySearch extends LitElement {
       cursor: pointer;
     }
     .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #46a758); color: var(--color-background-brand, #46a758); }
+    .esa-entity-search__row-action:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
 
     .esa-entity-search__empty {
       padding: var(--spacing-700, 3rem) var(--spacing-600, 2rem);
