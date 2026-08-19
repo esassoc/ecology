@@ -32,7 +32,7 @@ export class EsaConfirmDialog extends LitElement {
     cancelLabel: { type: String, attribute: 'cancel-label' },
     showIcon: { type: Boolean, attribute: 'show-icon', converter: boolish },
     // hub-edit-approved: user approved (2026-06-29) — confirm dialogs need an X close.
-    showCloseButton: { type: Boolean, attribute: 'show-close-button' },
+    showCloseButton: { type: Boolean, attribute: 'show-close-button', converter: boolish },
   };
 
   declare open: boolean;

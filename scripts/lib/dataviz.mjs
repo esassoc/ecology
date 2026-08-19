@@ -353,10 +353,22 @@ export function deriveDataviz({ seedHex, neutral = 'pure', surfaces }) {
    * seats, and report where it landed. A series palette exists to be told apart; a brand
    * with no chroma to lend has no opinion to impose here.
    */
+  const distinctHues = (vs) => new Set(vs.map((v) => v.scale)).size;
   let ratio = chromaRatio;
   let variants = WHEEL.flatMap((scale) => hueVariants(scale, surfaces, ratio));
-  while (!variants.length && ratio < 1) {
-    ratio = Math.min(1, ratio + 0.1);
+  /*
+   * RELAX UNTIL THE POOL CAN SEAT THE CONTRACT, NOT MERELY UNTIL IT IS NON-EMPTY.
+   * `!variants.length` was the original condition and it is half a bar. A pool of 5
+   * hues is not empty, so the walk stopped — and then NOTHING downstream could
+   * recover, because both the ladder and the pad block below draw from this same
+   * pool. Measured before this: #f9a8d4 emitted 5 categorical slots of 8, #101418
+   * and #0f172a emitted 7. The token contract is 8, esa-chart's palette() needs all
+   * 8 to resolve, so those themes fell back to the built-in ramp while warning the
+   * tokens were MISSING when five of them were present — the least useful place to
+   * end up, since the theme looks generated and the chart is not using it.
+   */
+  while (distinctHues(variants) < DATAVIZ_LENGTHS.categorical && ratio < 1) {
+    ratio = Math.min(1, ratio + 0.05);
     variants = WHEEL.flatMap((scale) => hueVariants(scale, surfaces, ratio));
   }
   if (!variants.length) throw new Error('deriveDataviz: no hue clears the contrast, band and chroma bars');
