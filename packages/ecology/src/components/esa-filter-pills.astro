@@ -126,10 +126,10 @@ const { filters = [] } = Astro.props;
     outline-offset: 1px;
   }
 
+  /* No line-height: the box is an explicit 16×16, so leading cannot change it. */
   .esa-filter-pills__remove-icon {
     width: 16px;
     height: 16px;
-    line-height: var(--line-height-none, 1);
   }
 </style>
 

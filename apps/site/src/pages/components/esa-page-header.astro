@@ -2,18 +2,20 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import PageHeader from '@esa/ecology/esa-page-header.astro';
-import Button from '@esa/ecology/esa-button.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 
-const props = [
-  { name: 'title', type: 'string', description: 'The page’s name, as it appears in navigation and breadcrumbs (required). Rendered as the <h1>.' },
-  { name: 'eyebrow', type: 'string', description: 'The named thing this page sits inside — a section, a report, a person, a record id. A proper noun or a short label, never a sentence.' },
-  { name: 'icon', type: 'string', description: 'esa-icon registry name for the eyebrow’s leading glyph, e.g. "award" (eyebrow only).' },
-  { name: 'prominence', type: "'page-title' | 'display'", default: "'page-title'", description: 'Title scale: the page-title role (default) or the oversized display role for a hero.' },
-  { name: 'as', type: "'header' | 'div' | 'section'", default: "'header'", description: 'The host element tag.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  title: "The page title (required). Rendered as the <h1>.",
+  eyebrow: "Small kicker above the title — e.g. a section or award name.",
+  icon: "esa-icon registry name for the eyebrow’s leading glyph, e.g. \"award\" (eyebrow only).",
+  prominence: "Title scale: the page-title role (default) or the oversized display role for a hero.",
+  as: "The host element tag.",
+};
 
 const slots = [
   { name: 'breadcrumbs', type: 'slot', description: 'Above the title — host an esa-breadcrumbs here. Mutually exclusive in spirit with eyebrow.' },
@@ -26,11 +28,11 @@ const slots = [
   <Section id="preview" title="Preview">
     <p>The default form: a page-title-scale heading with an actions slot. The container is neutral and transparent — color is the consumer’s job.</p>
     <Preview align="start" code={`<PageHeader title="Requirements">
-  <Button slot="actions" color="primary" icon="plus">New requirement</Button>
+  <EsaButton slot="actions" variant="primary" icon="plus">New requirement</EsaButton>
 </PageHeader>`}>
       <div style="width: 100%;">
         <PageHeader title="Requirements">
-          <Button slot="actions" color="primary" icon="plus">New requirement</Button>
+          <EsaButton slot="actions" variant="primary" icon="plus">New requirement</EsaButton>
         </PageHeader>
       </div>
     </Preview>
@@ -48,13 +50,13 @@ const slots = [
   icon="award"
   prominence="display"
   title="2026 in Review">
-  <Button slot="actions" color="primary" href="/report">Read the report</Button>
-  <Button slot="actions" color="ghost" appearance="outline" href="/data">View the data</Button>
+  <EsaButton slot="actions" variant="primary" href="/report">Read the report</EsaButton>
+  <EsaButton slot="actions" variant="ghost" appearance="outline" href="/data">View the data</EsaButton>
 </PageHeader>`}>
       <div style="width: 100%;">
         <PageHeader eyebrow="Annual Report" icon="award" prominence="display" title="2026 in Review">
-          <Button slot="actions" color="primary" href="#">Read the report</Button>
-          <Button slot="actions" color="ghost" appearance="outline" href="#">View the data</Button>
+          <EsaButton slot="actions" variant="primary" href="#">Read the report</EsaButton>
+          <EsaButton slot="actions" variant="ghost" appearance="outline" href="#">View the data</EsaButton>
         </PageHeader>
       </div>
     </Preview>
@@ -64,19 +66,19 @@ const slots = [
     <p>Host an <code>esa-breadcrumbs</code> in the <code>breadcrumbs</code> slot for a record or nested page.</p>
     <Preview align="start" code={`<PageHeader title="Permit #4471" eyebrow="Filed 12 days ago">
   <nav slot="breadcrumbs">Permits / Active / #4471</nav>
-  <Button slot="actions" color="ghost" appearance="outline" icon="pencil">Edit</Button>
+  <EsaButton slot="actions" variant="ghost" appearance="outline" icon="pencil">Edit</EsaButton>
 </PageHeader>`}>
       <div style="width: 100%;">
         <PageHeader title="Permit #4471" eyebrow="Filed 12 days ago">
           <nav slot="breadcrumbs" style="font-size: 0.875rem; color: var(--color-content-secondary, #555);">Permits / Active / #4471</nav>
-          <Button slot="actions" color="ghost" appearance="outline" icon="pencil">Edit</Button>
+          <EsaButton slot="actions" variant="ghost" appearance="outline" icon="pencil">Edit</EsaButton>
         </PageHeader>
       </div>
     </Preview>
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-page-header" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} />
   </Section>

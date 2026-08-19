@@ -2,38 +2,19 @@
 import ComponentDoc from "../../layouts/ComponentDoc.astro";
 import Section from "@esa/docs/Section.astro";
 import Preview from "@esa/docs/Preview.astro";
-import Api from "@esa/docs/Api.astro";
+import ApiTable from '../../components/ApiTable.astro';
 import EsaAppBar from "@esa/ecology/esa-app-bar.astro";
 import EsaIconLink from "@esa/ecology/esa-icon-link.astro";
 import EsaIconButton from "@esa/ecology/esa-icon-button.astro";
 
-const props = [
-  {
-    name: "tone",
-    type: "'surface' | 'brand' | 'brand-strong'",
-    default: "'surface'",
-    description:
-      "Color context. surface → --color-background-raised/text-primary; brand → --color-background-brand/text-inverse; brand-strong → --color-background-inverse/text-inverse. Children inherit the text color.",
-  },
-  {
-    name: "contained",
-    type: "boolean",
-    default: "false",
-    description: "Constrain the inner row to maxWidth and center it.",
-  },
-  {
-    name: "maxWidth",
-    type: "string",
-    default: "'1556px'",
-    description: "Inner row max-width when contained.",
-  },
-  {
-    name: "as",
-    type: "'header' | 'nav' | 'footer' | 'div'",
-    default: "'div'",
-    description: "Semantic host element.",
-  },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  tone: "Color context. surface → --color-background-raised/text-primary; brand → --color-background-brand/text-inverse; brand-strong → --color-background-inverse/text-inverse. Children inherit the text color.",
+  contained: "Constrain the inner row to maxWidth and center it.",
+  maxWidth: "Inner row max-width when contained.",
+  as: "Semantic host element.",
+};
 const tokens = [
   {
     name: "--app-bar-gap",
@@ -107,32 +88,32 @@ const tokens = [
       align="start"
       code={`<EsaAppBar tone="brand" as="header">
   <span slot="start"><strong>CB Fish</strong></span>
-  <EsaIconLink icon="trees" trailing="chevron-down">Mitigation work</EsaIconLink>
-  <EsaIconLink icon="trending-up" trailing="chevron-down">Reporting</EsaIconLink>
-  <EsaIconLink icon="credit-card" trailing="chevron-down">Funding</EsaIconLink>
+  <EsaIconLink icon="trees" iconRight="chevron-down">Mitigation work</EsaIconLink>
+  <EsaIconLink icon="trending-up" iconRight="chevron-down">Reporting</EsaIconLink>
+  <EsaIconLink icon="credit-card" iconRight="chevron-down">Funding</EsaIconLink>
   <EsaIconButton slot="end" icon="search" label="Search" />
   <EsaIconLink slot="end" href="/dashboard" icon="layout-dashboard">Dashboard</EsaIconLink>
-  <EsaIconLink slot="end" icon="circle-user" trailing="chevron-down">Angela Zhao</EsaIconLink>
+  <EsaIconLink slot="end" icon="circle-user" iconRight="chevron-down">Angela Zhao</EsaIconLink>
 </EsaAppBar>`}
     >
       <EsaAppBar tone="brand" as="header">
         <span slot="start" style="font-weight:700;font-size:18px"
           >CB&nbsp;Fish</span
         >
-        <EsaIconLink icon="trees" trailing="chevron-down"
+        <EsaIconLink icon="trees" iconRight="chevron-down"
           >Mitigation work</EsaIconLink
         >
-        <EsaIconLink icon="trending-up" trailing="chevron-down"
+        <EsaIconLink icon="trending-up" iconRight="chevron-down"
           >Reporting</EsaIconLink
         >
-        <EsaIconLink icon="credit-card" trailing="chevron-down"
+        <EsaIconLink icon="credit-card" iconRight="chevron-down"
           >Funding</EsaIconLink
         >
         <EsaIconButton slot="end" icon="search" label="Search" />
         <EsaIconLink slot="end" href="/dashboard" icon="layout-dashboard"
           >Dashboard</EsaIconLink
         >
-        <EsaIconLink slot="end" icon="circle-user" trailing="chevron-down"
+        <EsaIconLink slot="end" icon="circle-user" iconRight="chevron-down"
           >Angela Zhao</EsaIconLink
         >
       </EsaAppBar>
@@ -140,6 +121,6 @@ const tokens = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-app-bar" describe={describe} />
   </Section>
 </ComponentDoc>

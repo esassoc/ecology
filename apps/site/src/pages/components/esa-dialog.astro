@@ -3,14 +3,17 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Set imperatively via show() / close().' },
-  { name: 'heading', type: 'string', default: "''", description: 'Title shown in the header and used as the dialog accessible name.' },
-  { name: 'show-close-button', type: 'boolean', default: 'true', description: 'Renders the header close (×) button.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'fullscreen'", default: "'md'", description: 'Panel width: 280 / 360 / 480 / 640px, or edge-to-edge.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  open: "Reflected attribute that drives visibility. Set imperatively via show() / close().",
+  heading: "Title shown in the header and used as the dialog accessible name.",
+  "show-close-button": "Renders the header close (×) button.",
+  size: "Panel width: 280 / 360 / 480 / 640px, or edge-to-edge.",
+};
 
 const methods = [
   { name: 'show()', type: 'method', description: 'Opens the dialog and traps focus.' },
@@ -76,7 +79,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-dialog" describe={describe} />
     <h3>Methods</h3>
     <PropsTable rows={methods} />
     <Api events={events} />

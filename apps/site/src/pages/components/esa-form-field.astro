@@ -2,17 +2,19 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import FormField from '@esa/ecology/esa-form-field.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Label rendered above the control slot.' },
-  { name: 'helpText', type: 'string', default: "''", description: 'Helper text shown below the control.' },
-  { name: 'errorText', type: 'string', default: "''", description: 'Error message; replaces help text when present.' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Renders an asterisk on the label.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Dims the field and blocks pointer events.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Scales the label font size.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Label rendered above the control slot.",
+  helpText: "Helper text shown below the control.",
+  errorText: "Error message; replaces help text when present.",
+  required: "Renders an asterisk on the label.",
+  disabled: "Dims the field and blocks pointer events.",
+  size: "Scales the label font size.",
+};
 ---
 <ComponentDoc name="Form Field" category="Forms" slug="esa-form-field" type=".astro" status="stable"
   summary="A presentational layout wrapper — label row, control slot, and hint/error text. Pure <code>.astro</code> with no runtime JS; drop any control into the slot. Error text replaces help text when present.">
@@ -78,7 +80,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-form-field" describe={describe} />
     <p>The control goes in the default slot — the wrapper makes no assumptions about it.</p>
   </Section>
 

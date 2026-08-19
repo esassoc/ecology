@@ -8,6 +8,9 @@
 
 const esc = (name) => name.replace(/[-]/g, '\\-');
 
+/** Full regex escape — module specifiers carry `.` and `/`, which `esc` leaves live. */
+const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\/-]/g, '\\$&');
+
 /**
  * Matches a CSS custom-property name (`--color-primary`) where it is genuinely a
  * token reference — inside `var()`, in a declaration, in a quoted string.
@@ -32,6 +35,80 @@ export const tokenPattern = (name) => new RegExp(`(?<![\\w-])${esc(name)}(?![\\w
  * `type-body-small` or inside a spoke's own `cbf-type-body`.
  */
 export const classPattern = (name) => new RegExp(`(?<![\\w-])${esc(name)}(?![\\w-])`, 'g');
+
+/**
+ * Local names a file binds to `moduleSpec` via a default import.
+ *
+ * Matched by SUFFIX, so `@esa/ecology/esa-button.astro` also resolves a relative
+ * path to the same file. Only default imports are read — that is the whole of
+ * how an .astro component can be imported.
+ */
+export function importedAs(src, moduleSpec) {
+  // The basename is the identifying part; any directory prefix is allowed, but it
+  // must be a WHOLE path segment so `foo/my-esa-button.astro` does not match.
+  const basename = escRe(moduleSpec.split('/').pop());
+  const re = new RegExp(
+    `import\\s+([A-Za-z_$][\\w$]*)\\s+from\\s*['"](?:[^'"]*/)?${basename}['"]`,
+    'g',
+  );
+  return [...src.matchAll(re)].map((m) => m[1]);
+}
+
+/**
+ * Rename a COMPONENT PROP, scoped to that component's own tags.
+ *
+ * Unlike a token or a class, a prop name is not globally unique — it only means
+ * anything relative to the component it sits on. `color` is the case in point:
+ * it is the prop being renamed on `esa-button`, AND a genuine CSS-colour prop on
+ * `esa-loading-spinner`, AND the most common declaration in any stylesheet.
+ * A global find-and-replace would rewrite all three and break two of them.
+ *
+ * So the rewrite runs INSIDE the opening tag and nowhere else: find
+ * `<EsaButton …>` / `<esa-button …>`, then swap the attribute within that span.
+ * Both spellings are needed — spokes write the Astro wrapper in `.astro` files
+ * and the custom element in plain markup, and doc pages print both inside
+ * template-literal code samples, which are rewritten too because they are the
+ * copy-paste source a reader actually uses.
+ *
+ * The component boundary `(?![\w-])` stops `<esa-button` matching
+ * `<esa-button-group`; the attribute boundary `(?<![\w-])` stops `color` matching
+ * `data-color` or `text-color`.
+ *
+ * Under-application is the designed failure mode: an attribute value containing
+ * a literal `>` truncates the tag match, so a prop after it is left alone rather
+ * than mangled.
+ *
+ * ALIASED IMPORTS are resolved per file, via `module`. `import Button from
+ * '@esa/ecology/esa-button.astro'` renders `<Button …>`, which a fixed tag list
+ * cannot match — and hard-coding `Button` into that list would rewrite any
+ * component in any spoke that happens to share the name. Reading the local
+ * binding out of the FILE'S OWN imports gets both: the alias is rewritten here,
+ * and a spoke's unrelated `<Button>` (imported from somewhere else, or not
+ * imported at all) is untouched, because this file never bound that name to the
+ * component being renamed. The hub's own esa-page-header page was this case.
+ *
+ * What still escapes it: a binding no import statement reveals — re-exported
+ * through a barrel file, or chosen at runtime. The component keeping the old
+ * prop and warning at build time is what covers that remainder, which is why a
+ * prop rename always needs both halves.
+ *
+ * @returns { text, count }
+ */
+export function renameProp(src, { components, from, to, module: moduleSpec }) {
+  const tags = [...new Set([...components, ...(moduleSpec ? importedAs(src, moduleSpec) : [])])]
+    .map(esc)
+    .join('|');
+  const openingTag = new RegExp(`<(?:${tags})(?![\\w-])[^>]*>`, 'g');
+  const attr = new RegExp(`(?<![\\w-])${esc(from)}(?=\\s*=)`, 'g');
+  let count = 0;
+  const text = src.replace(openingTag, (tag) =>
+    tag.replace(attr, () => {
+      count++;
+      return to;
+    }),
+  );
+  return { text, count };
+}
 
 /**
  * Find MANY-TO-ONE renames that would collide inside a single file.

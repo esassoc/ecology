@@ -2,14 +2,16 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import Pillbox from '@esa/ecology/esa-pillbox.astro';
 import Pill from '@esa/ecology/esa-pill.astro';
 
-const props = [
-  { name: 'gap', type: "'small' | 'medium' | 'large'", default: "'small'", description: 'Spacing between pills.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  gap: "Spacing between pills.",
+};
 
 const slots = [
   { name: 'default', type: 'slot', description: 'Any number of pills (or other inline tags) to lay out.' },
@@ -77,7 +79,7 @@ const slots = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-pillbox" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
     <PropsTable rows={slots} />
   </Section>

@@ -16,6 +16,9 @@ import { execFileSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Resolves against THIS script's path, not the spoke's cwd — spokes run the
+// hub's copy directly as `../ecology/scripts/doctor.mjs`.
+import { renameProp } from './lib/token-rename.mjs';
 
 const HUB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CWD = process.cwd();
@@ -163,7 +166,9 @@ if (isSpoke) {
   const manifest = path.join(CWD, 'node_modules', '@esa', 'tokens', 'migrations.json');
   if (existsSync(manifest)) {
     const { migrations } = readJson(manifest) ?? { migrations: [] };
-    const names = migrations.flatMap((m) => m.pairs.map(([from]) => ({ from, kind: m.kind })));
+    const names = migrations.flatMap((m) =>
+      m.pairs.map(([from]) => ({ from, kind: m.kind, components: m.components ?? [], module: m.module })),
+    );
     const srcDir = path.join(CWD, 'src');
     let hits = 0;
     const seen = new Set();
@@ -173,12 +178,16 @@ if (isSpoke) {
         if (e.isDirectory()) { walk(fp); continue; }
         if (!/\.(astro|ts|tsx|js|mjs|css|scss|svelte|vue)$/.test(e.name)) continue;
         const src = readFileSync(fp, 'utf8');
-        for (const { from, kind } of names) {
-          const re = kind === 'token'
-            ? new RegExp(`${from}(?![\\w-])`, 'g')
-            : new RegExp(`(?<![\\w-])${from}(?![\\w-])`, 'g');
-          const n = (src.match(re) ?? []).length;
-          if (n) { hits += n; seen.add(from); }
+        for (const { from, kind, components, module: moduleSpec } of names) {
+          // A prop has to be counted INSIDE its component's tag. Counting `color`
+          // as a bare word would flag every CSS `color:` declaration in the spoke
+          // and bury the real finding under hundreds of false positives.
+          const n = kind === 'prop'
+            ? renameProp(src, { components, from, to: from, module: moduleSpec }).count
+            : (src.match(kind === 'token'
+                ? new RegExp(`${from}(?![\\w-])`, 'g')
+                : new RegExp(`(?<![\\w-])${from}(?![\\w-])`, 'g')) ?? []).length;
+          if (n) { hits += n; seen.add(kind === 'prop' ? `${from}=` : from); }
         }
       }
     };

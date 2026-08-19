@@ -129,7 +129,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     )}
 
     <esa-dropdown-menu slot="end" id={menuId} position="below-end">
-      <EsaIconLink icon="circle-user" trailing="chevron-down" size="sm">{userName}</EsaIconLink>
+      <EsaIconLink icon="circle-user" iconRight="chevron-down" size="sm">{userName}</EsaIconLink>
     </esa-dropdown-menu>
   </EsaAppBar>
 
@@ -207,7 +207,7 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     --app-bar-pad-x: var(--spacing-400, 16px);
     --app-bar-gap: var(--spacing-300, 12px);
     --sidenav-bg: var(--color-background, #fafafa);
-    --sidenav-border: var(--color-border, #e5e5e5);
+    --sidenav-border-color: var(--color-border, #e5e5e5);
 
     display: flex;
     flex-direction: column;

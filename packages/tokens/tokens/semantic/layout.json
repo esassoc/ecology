@@ -1,13 +1,14 @@
 {
+  "$description": "Layout dimensions that more than one thing must agree on. ONLY THE SIDEBAR IS LEFT.\n\nFive siblings were deleted on 2026-08-14 — header.height, footer.height, content.max-width, content.narrow-width, content.wide-width — because every one had zero readers: not a component, not layouts.css, not the docs site, not the spoke template, not cb-fish. A dimension token nothing reads cannot be re-pointed to any effect, so it was a theming surface that only appeared to exist (system-improvement-ledger.md, P2).\n\nThey were not superseded by a rename; they were never wired up, and the components that would have used them answered the question differently:\n\n  - Header and footer heights: esa-app-bar and esa-app-shell set no height at all. They are content-sized, which is the kit's model as of Change 9 — a px height cannot grow with rem text, so re-introducing one here would re-create the defect that change removed.\n  - Content widths: esa-container and esa-app-bar each take a maxWidth PROP defaulting to a hardcoded 1556px, which matches none of the deleted 1200/800/1440. The token layer lost that argument long ago; deleting it stops the system claiming a lever it does not have.\n\nNOTE that 1556px is now the only answer, and it is a literal in four places across two components. That is a real defect and it OUTLIVED this deletion — see the ledger.",
   "sidebar": {
-    "width":           { "$value": "280px", "$type": "dimension" },
-    "width-collapsed": { "$value": "72px",  "$type": "dimension" }
-  },
-  "header": { "height": { "$value": "52px", "$type": "dimension" } },
-  "footer": { "height": { "$value": "52px", "$type": "dimension" } },
-  "content": {
-    "max-width":    { "$value": "1200px", "$type": "dimension" },
-    "narrow-width": { "$value": "800px",  "$type": "dimension" },
-    "wide-width":   { "$value": "1440px", "$type": "dimension" }
+    "width": {
+      "$value": "280px",
+      "$type": "dimension",
+      "$description": "15 readers. A real agreement: the rail, the content offset and the collapse transition all have to land on the same number."
+    },
+    "width-collapsed": {
+      "$value": "72px",
+      "$type": "dimension"
+    }
   }
 }

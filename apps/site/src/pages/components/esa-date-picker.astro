@@ -2,20 +2,22 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Field label above the input.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
-  { name: 'value', type: 'string', default: "''", description: 'ISO date value (YYYY-MM-DD).' },
-  { name: 'min', type: 'string', default: "''", description: 'Earliest selectable date (YYYY-MM-DD).' },
-  { name: 'max', type: 'string', default: "''", description: 'Latest selectable date (YYYY-MM-DD).' },
-  { name: 'placeholder', type: 'string', default: "'Select date...'", description: 'Placeholder text.' },
-  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the input.' },
-  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (renders a * after the label).' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Field label above the input.",
+  size: "Control size (reflected attribute).",
+  value: "ISO date value (YYYY-MM-DD).",
+  min: "Earliest selectable date (YYYY-MM-DD).",
+  max: "Latest selectable date (YYYY-MM-DD).",
+  placeholder: "Placeholder text.",
+  "help-text": "Helper text below the input.",
+  "error-text": "Error message; sets the error state when present.",
+  required: "Marks the field required (renders a * after the label).",
+  disabled: "Disables interaction (reflected attribute).",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired on input. Value is an ISO YYYY-MM-DD string. Composed and bubbles.' },
@@ -58,7 +60,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-date-picker" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

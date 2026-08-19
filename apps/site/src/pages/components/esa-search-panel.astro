@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Toggle by setting the property.' },
-  { name: 'placeholder', type: 'string', default: "'Search...'", description: 'Input placeholder text.' },
-  { name: 'results', type: 'EsaSearchResult[]', default: '[]', description: 'Results to render, set as a property. Each: { id, title, subtitle?, icon?, category? }. Same-category items are grouped.' },
-  { name: 'loading', type: 'boolean', default: 'false', description: 'Reflected; shows a loading message instead of results.' },
-  { name: 'position', type: "'right' | 'left'", default: "'right'", description: 'Side the panel slides in from.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  open: "Reflected attribute that drives visibility. Toggle by setting the property.",
+  placeholder: "Input placeholder text.",
+  results: "Results to render, set as a property. Each: { id, title, subtitle?, icon?, category? }. Same-category items are grouped.",
+  loading: "Reflected; shows a loading message instead of results.",
+  position: "Side the panel slides in from.",
+};
 
 const events = [
   { name: 'search', type: 'CustomEvent<{ value: string }>', description: 'Fired on each input change with the current query.' },
@@ -50,7 +52,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-search-panel" describe={describe} events={events} />
     <p>The live query also participates in the enclosing <code>&lt;form&gt;</code> via <code>ElementInternals</code>.</p>
   </Section>
 

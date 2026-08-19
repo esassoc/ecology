@@ -2,16 +2,18 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'position', type: "'top' | 'bottom' | 'left' | 'right'", default: "'bottom'", description: 'Side the panel opens on, relative to the trigger.' },
-  { name: 'trigger', type: "'click' | 'hover'", default: "'click'", description: 'Click toggles and closes on outside-click + Esc; hover opens after a 200ms delay.' },
-  { name: 'has-arrow', type: 'boolean', default: 'true', description: 'Renders the pointer arrow toward the trigger.' },
-  { name: 'offset', type: 'number', default: '8', description: 'Gap in pixels between trigger and panel.' },
-  { name: 'appearance', type: "'default' | 'inverse'", default: "'default'", description: 'Panel style (aligned to Beacon): default is a light surface; inverse is a dark panel with light text, for documentation/help content. Reflected as an attribute.' },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  position: "Side the panel opens on, relative to the trigger.",
+  trigger: "Click toggles and closes on outside-click + Esc; hover opens after a 200ms delay.",
+  "has-arrow": "Renders the pointer arrow toward the trigger.",
+  offset: "Gap in pixels between trigger and panel.",
+  appearance: "Panel style (aligned to Beacon): default is a light surface; inverse is a dark panel with light text, for documentation/help content. Reflected as an attribute.",
+  open: "Reflected open state.",
+};
 ---
 <ComponentDoc name="Popover" category="Overlays" slug="esa-popover" type="wc" status="stable"
   summary="Anchored floating panel. The trigger goes in the default slot and the panel content in <code>slot=&quot;content&quot;</code>. Click mode closes on outside-click and Esc; hover mode opens after a short delay.">
@@ -83,7 +85,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-popover" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

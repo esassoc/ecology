@@ -213,8 +213,8 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'typography',
-    count: t2Count(/^--font-size-ui-/),
-    how: 'Three sets. `--typography-<role>[-<size>]-<property>` are the composite PROSE roles (66 tokens); `--font-{sans,mono,display}` and `--font-weight-*` are the faces and weights they are assembled from; `--font-size-ui-{xs,sm,md,lg}` is chrome text, aligned step-for-step with `--control-height-*` and referenced by no composite. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.',
+    count: t2Count(/^--typography-|^--font-/),
+    how: `Two sets now, not three. \`--typography-<intention>[-<size>]-<property>\` are the COMPOSITES (${semantic.filter((t) => t.name.startsWith('--typography-')).length} of them — derived, because this said 66 for long enough to outlive being true); \`--font-{sans,mono,display}\` and \`--font-weight-*\` are the faces and weights they are assembled from. The third set, \`--font-size-ui-{xs,sm,md,lg}\`, was deleted on 2026-08-14 (D1 of docs/typography-adoption-plan.md): a size-only ramp parallel to the composites is the shortcut that lets a component pick a size without adopting a composite. A tier-2 replacement was proposed and rejected the same day for being the same construct renamed — the size-step→composite mapping lives in the FORMS header of component-tokens.css instead, as documentation rather than as a token. Prose used to have no tokens at all — only the CSS classes in typography.css, which Figma cannot consume and a spoke cannot re-point. The classes still ship, but they now read the composites, so overriding a token moves the class.`,
   },
   {
     category: 'spacing',
@@ -224,12 +224,12 @@ export const categoryRows: CategoryRow[] = [
   {
     category: 'border',
     count: colorRows.filter((r) => r.surface === 'border').length,
-    how: 'Border COLOURS only. No border-width and no border-style at any tier.',
+    how: 'Border COLOURS, plus two widths. `--border-width-default` is the hairline every edge reads; `--border-width-focus` is the focus ring\'s weight, added 2026-08-14 once it was clear the ring is read by more components than any other tier-3 token and had no tier-2 role behind it. No border-style at any tier.',
   },
   {
     category: 'width',
     count: t2Count(/width|height/),
-    how: 'Splits in two. `--control-height-*` and `--chip-height-*` are proper roles. The layout.json set (`--sidebar-width`, `--header-height`) still leads with a region rather than the category — and `height` has no home in the rubric, which lists width but not height.',
+    how: 'Splits in two. `--chip-height-*` is a proper role. The layout.json set (`--sidebar-width`, `--header-height`) still leads with a region rather than the category — and `height` has no home in the rubric, which lists width but not height.',
   },
   {
     category: 'radius',
@@ -286,7 +286,7 @@ export const variantVocab: VocabRow[] = [
   { rubric: 'utility-warning', current: 'warning', status: 'renamed', note: 'As above.' },
   { rubric: 'utility-information', current: 'info', status: 'renamed', note: 'Abbreviated.' },
   { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed at the intention level, not as a state, which is the de-duplication the rubric recommends. The slot order used to be inverted (`--color-disabled-bg`); it now reads `--color-background-disabled` like everything else.' },
-  { rubric: 'sizes lg / md / sm', current: '--control-height-*, --chip-height-*, --font-size-ui-*', status: 'match', note: 'The size axis used to skip tier 2 entirely. It now has three ramps: control height, chip height, and the chrome text size that tracks them. Tier 3 narrows them per family (`--form-height-md` → `--control-height-md`). Padding is still tier 1 by design — spacing is a measure, not an intent.' },
+  { rubric: 'sizes lg / md / sm', current: '--chip-height-*', status: 'partial', note: 'One ramp left, and it is the exception. The size axis briefly had three: a text ramp (`--font-size-ui-*`, deleted 2026-08-14, then a proposed `--control-font-size-*` reverted the same day — both were size-only scales running parallel to the composites), and a height ramp for inputs and buttons (`--control-height-*`, deleted the same day). A px height cannot grow with rem text, so it clipped; those elements are now as tall as their padding plus their text. The padding hook that briefly inherited the density job (`--form-padding-{y,x}-*`) was deleted hours later for being a flat passthrough — sixteen names for four spacing rungs, identical on both axes — so there is no size lever left at any tier for inputs and buttons. `--chip-height-*` stays fixed because a badge is a shape more than a box of text — see its description. Padding is tier 1 by design: spacing is a measure, not an intent, and it is CORE, so components read it directly.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
   { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; the rubric explicitly expects teams to add their own. `ai` earns its place by never colliding with brand or status; `accent` has thin surface area and is worth watching.' },
   { rubric: '—', current: 'link, inverse, raised, floating, sunken, muted, subtle', status: 'extra', note: 'Variant words with no rubric equivalent, all describing prominence or elevation. `strong` used to head this list and was the worst offender — it marked step-11 tokens that are TEXT on a surface, so it read like a bolder fill and got used as one. Those are now `--color-content-*` and the word is gone from colour entirely.' },
@@ -304,8 +304,8 @@ export const compositeMapping = [
   { rubric: 'display', current: '.typography-display', status: 'match' as const },
   { rubric: 'heading', current: '.typography-heading-lg, .typography-heading-md', status: 'renamed' as const },
   { rubric: 'title', current: '.typography-title', status: 'match' as const },
-  { rubric: 'label', current: '.typography-label', status: 'match' as const },
-  { rubric: 'body', current: '.typography-body-lg, -md, -sm', status: 'match' as const },
+  { rubric: 'label', current: '.typography-label-2xs, -xs, -sm, -md, -lg (+ -strong at each)', status: 'match' as const },
+  { rubric: 'body', current: '.typography-body-2xs, -xs, -sm, -md, -lg', status: 'match' as const },
   { rubric: 'accent', current: '—', status: 'missing' as const },
   { rubric: '—', current: '.typography-meta, .typography-eyebrow, .typography-code', status: 'extra' as const },
 ];
@@ -523,7 +523,6 @@ type PropertyPosition = 'first' | 'last' | 'none';
 /** What each family's names lead with — the claim the summary table makes. */
 const FAMILY_LEADS: Record<string, string> = {
   'typography — faces & weights': 'the CSS property (font-family, font-weight)',
-  'font-size-ui (chrome text)': 'the CSS property (font-size)',
   'border-radius': 'the property, abbreviated (radius)',
   'border-width': 'the property',
   'box-shadow': 'a scale name (elevation), not the property',
@@ -542,17 +541,9 @@ const NON_COLOR_FAMILIES: {
 }[] = [
   {
     label: 'typography — faces & weights',
-    // Excludes --font-size-ui-* explicitly rather than relying on match order, so the
-    // families can be listed ingredient-next-to-composite for reading.
-    match: /^--font-(?!size-ui-)/,
+    match: /^--font-/,
     property: 'first',
-    note: 'semantic/typography.json — the INGREDIENT layer the composites are assembled from, within the same tier. `--typography-display-font-family` resolves to `--font-display`; `--typography-display-font-weight` to `--font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (`--font-sans` 69 reads, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38). Chrome legitimately reaches for a weight without wanting a whole prose composite — there is a `--font-size-ui-*` ramp but no matching weight token, which is why. `--font-display` is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to `--font-sans` so the slot exists for a spoke to swap in a distinct headline face.',
-  },
-  {
-    label: 'font-size-ui (chrome text)',
-    match: /^--font-size-ui-/,
-    property: 'first',
-    note: 'semantic/typography.json. Text inside interface furniture — control labels, table headers, pills, pagination — aligned step-for-step with `--control-height-*`, so a component rendered at `md` reads `--font-size-ui-md`. NOT an ingredient of any composite: zero composites reference it, because prose sizing goes through the roles above. It sits apart from the faces and weights for that reason.',
+    note: 'semantic/typography.json — the INGREDIENT layer the composites are assembled from, within the same tier. `--typography-display-font-family` resolves to `--font-display`; `--typography-display-font-weight` to `--font-weight-bold`. Listed separately rather than folded into the composites because they are not only ingredients: they are among the most directly-read tokens in the system (`--font-sans` 69 reads, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38). Those direct reads are the very thing the component migration is closing — a component reaching for a weight without a composite is how the vocabulary stops meaning anything (D2), and the count above is the size of that job, not a justification for it. `--font-display` is the exception that IS mostly an ingredient: 3 composites use it against 5 direct reads, and it defaults to `--font-sans` so the slot exists for a spoke to swap in a distinct headline face.',
   },
   {
     label: 'border-radius',
@@ -586,9 +577,9 @@ const NON_COLOR_FAMILIES: {
   },
   {
     label: 'width / height',
-    match: /^--(sidebar|header|footer|content|control-height|chip-height)/,
+    match: /^--(sidebar|header|footer|content|chip-height)/,
     property: 'last',
-    note: 'semantic/layout.json and size.json, and really two families. `--control-height-*` and `--chip-height-*` are proper size ROLES on a shared scale. The layout set (`--sidebar-width`, `--header-height`, `--content-max-width`) leads with a REGION and puts the property last — the same shape colour had before it was flipped, where `--color-danger-border` became `--color-border-danger`. Flipping these would scatter a region across the file for no gain: a sidebar has one dimension that matters, so there is no cross-product to group by. What is genuinely inconsistent is the content trio — `--content-max-width` names the CSS property, `--content-narrow-width` and `--content-wide-width` put a variant where the property word sits, so a reader cannot tell whether they are max-widths or fixed widths.',
+    note: 'semantic/layout.json and size.json, and really two families. `--chip-height-*` is a proper size ROLE (its sibling `--control-height-*` was deleted 2026-08-14 — inputs and buttons are sized by padding now). The layout set is down to `--sidebar-width` and `--sidebar-width-collapsed`: it leads with a REGION and puts the property last — the same shape colour had before it was flipped, where `--color-danger-border` became `--color-border-danger`. Flipping it would scatter a region across the file for no gain, since a sidebar has one dimension that matters and there is no cross-product to group by. The five siblings that WERE inconsistent (`--header-height`, `--footer-height`, and the `--content-*-width` trio that spelled its property three different ways) were deleted on 2026-08-14 rather than renamed — every one had zero readers, so the naming question resolved itself.',
   },
   {
     label: 'touch target',

@@ -2,18 +2,20 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Field label above the track.' },
-  { name: 'value', type: 'number', default: '0', description: 'Current value.' },
-  { name: 'min', type: 'number', default: '0', description: 'Minimum value.' },
-  { name: 'max', type: 'number', default: '100', description: 'Maximum value.' },
-  { name: 'step', type: 'number', default: '1', description: 'Step increment.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Track/thumb size (reflected attribute).' },
-  { name: 'show-value', type: 'boolean', default: 'true', description: 'Show the live value readout beside the track.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Field label above the track.",
+  value: "Current value.",
+  min: "Minimum value.",
+  max: "Maximum value.",
+  step: "Step increment.",
+  size: "Track/thumb size (reflected attribute).",
+  "show-value": "Show the live value readout beside the track.",
+  disabled: "Disables interaction (reflected attribute).",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: number }>', description: 'Fired on input as the thumb moves. Value is a number. Composed and bubbles.' },
@@ -52,7 +54,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-range-slider" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

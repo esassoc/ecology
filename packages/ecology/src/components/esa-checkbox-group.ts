@@ -1,4 +1,10 @@
 import { LitElement, html, css, svg } from 'lit';
+import { typography } from '../typography.js';
+
+/** The group heading is UI text (label-*, medium); each option's own text is prose
+    (body-*, regular). See the FORMS header in component-tokens.css for the mapping. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaOption {
   label: string;
@@ -30,7 +36,7 @@ export class EsaCheckboxGroup extends LitElement {
     label: { type: String },
     size: { type: String, reflect: true },
     orientation: { type: String, reflect: true },
-    name: { type: String },
+    name: { type: String, reflect: true },
     value: { type: Array },
   };
 
@@ -38,7 +44,8 @@ export class EsaCheckboxGroup extends LitElement {
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare orientation: 'vertical' | 'horizontal';
-  declare name: string;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare value: string[];
 
   private internals: ElementInternals;
@@ -49,7 +56,6 @@ export class EsaCheckboxGroup extends LitElement {
     this.label = '';
     this.size = 'md';
     this.orientation = 'vertical';
-    this.name = '';
     this.value = [];
     this.internals = this.attachInternals();
   }
@@ -63,6 +69,11 @@ export class EsaCheckboxGroup extends LitElement {
         this.options = [];
       }
     }
+    // A value set from SCRIPT (el.value = [...]) has to reach the form too. Only
+    // the toggle handler used to call syncFormValue, so a programmatically
+    // checked box rendered as checked and submitted as empty. `name` is in here
+    // because it is the FormData key — changing it has to rewrite the entries.
+    if (changed.has('value') || changed.has('name')) this.syncFormValue();
   }
 
   connectedCallback(): void {
@@ -101,7 +112,7 @@ export class EsaCheckboxGroup extends LitElement {
 
   render() {
     return html`
-      ${this.label ? html`<span class="group-label">${this.label}</span>` : null}
+      ${this.label ? html`<span class="group-label typography-${LABEL_TYPE[this.size]}">${this.label}</span>` : null}
       <div class="items" role="group" aria-label=${this.label}>
         ${this.options.map((option) => {
           const checked = this.isChecked(option.value);
@@ -124,7 +135,7 @@ export class EsaCheckboxGroup extends LitElement {
                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${checkIcon}</svg>`
                   : null}
               </span>
-              <span class="item-label">${option.label}</span>
+              <span class="item-label typography-${VALUE_TYPE[this.size]}">${option.label}</span>
             </label>
           `;
         })}
@@ -132,39 +143,34 @@ export class EsaCheckboxGroup extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       --_checkbox-size: 20px;
       --_checkbox-radius: var(--form-radius-md, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
       --_checkbox-icon-size: 16px;
       display: block;
     }
     :host([size='xs']) {
       --_checkbox-size: 14px;
       --_checkbox-radius: var(--form-radius-xs, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
       --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
       --_checkbox-radius: var(--form-radius-sm, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-sm, 0.875rem);
       --_checkbox-icon-size: 12px;
     }
     :host([size='lg']) {
       --_checkbox-size: 24px;
       --_checkbox-radius: var(--form-radius-lg, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-lg, 1.125rem);
       --_checkbox-icon-size: 20px;
     }
 
     .group-label {
       display: block;
       margin-bottom: var(--spacing-200, 8px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_checkbox-font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-primary, #171717);
     }
 
@@ -198,7 +204,7 @@ export class EsaCheckboxGroup extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--form-bg, #fff);
       color: var(--color-content-inverse, #fff);
@@ -224,12 +230,10 @@ export class EsaCheckboxGroup extends LitElement {
     }
 
     .item-label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_checkbox-font-size);
       color: var(--color-content-primary, #171717);
-      line-height: var(--line-height-tight, 1.3);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-checkbox-group')) {

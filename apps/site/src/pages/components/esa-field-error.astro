@@ -2,13 +2,15 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaFieldError from '@esa/ecology/esa-field-error.astro';
 
-const props = [
-  { name: 'message', type: 'string | null', default: "''", description: 'Resolved error message. Renders nothing when null or empty.' },
-  { name: 'icon', type: 'boolean', default: 'false', description: 'Show a small leading alert icon before the message.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  message: "Resolved error message. Renders nothing when null or empty.",
+  icon: "Show a small leading alert icon before the message.",
+};
 ---
 <ComponentDoc name="Field Error" category="Forms" slug="esa-field-error" type=".astro" status="stable"
   summary="A presentational error line that sits under any input. Pass a resolved <code>message</code> string — it renders a danger-colored line (matching esa-form-field's error styling) or nothing when empty.">
@@ -50,7 +52,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-field-error" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

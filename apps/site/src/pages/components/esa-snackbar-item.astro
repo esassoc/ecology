@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import { withBase } from '@esa/docs/base';
 
-const props = [
-  { name: 'message', type: 'string', default: "''", description: 'Toast body text.' },
-  { name: 'variant', type: "'info' | 'success' | 'warning' | 'danger'", default: "'info'", description: 'Background color and leading icon.' },
-  { name: 'action', type: 'string', default: "''", description: 'Optional action button label. Omit to hide it.' },
-  { name: 'dismissable', type: 'boolean', default: 'true', description: 'Renders the close (×) button.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  message: "Toast body text.",
+  variant: "Background color and leading icon.",
+  action: "Optional action button label. Omit to hide it.",
+  dismissable: "Renders the close (×) button.",
+};
 
 const events = [
   { name: 'action', type: 'CustomEvent', description: 'Fired when the action button is pressed; the item also dismisses itself.' },
@@ -54,7 +56,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-snackbar-item" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

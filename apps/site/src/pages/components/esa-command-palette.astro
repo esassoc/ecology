@@ -2,14 +2,16 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'commands', type: 'EsaCommand[]', default: '[]', description: 'Command registry, set as a property. Each: { id, label, description?, shortcut?, group?, keywords?, disabled?, action }.' },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-  { name: 'hotkey', type: 'boolean', default: 'true', description: 'Registers the global Cmd/Ctrl+K toggle listener.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  commands: "Command registry, set as a property. Each: { id, label, description?, shortcut?, group?, keywords?, disabled?, action }.",
+  open: "Reflected open state.",
+  hotkey: "Registers the global Cmd/Ctrl+K toggle listener.",
+};
 
 const methods = [
   { name: 'show()', type: 'method', description: 'Opens the palette, clears the query, and focuses the input.' },
@@ -32,7 +34,7 @@ const methods = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-command-palette" describe={describe} />
     <h3>Methods</h3>
     <PropsTable rows={methods} />
     <p>Selecting a command runs its <code>action</code> callback, then closes the palette — there is no separate event.</p>

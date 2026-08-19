@@ -37,6 +37,13 @@ surfaced the gaps below. Cost: 22 agents · 1.3M tokens · ~79 min.
 - ✅ **Dashboard rebuilt** as a lego manifest: `<style>` 280→27 lines, file 477→189,
   0 adherence errors/warnings. Chrome neutralized (faint brand-tinged top bar).
 
+- ✅ **`--font-size-ui-*` deleted** — a size-only ramp running parallel to the typography
+  composites, and the shortcut that let a component pick a size without adopting one. Its 9
+  tier-3 consumers now point at the composite whose job matches; value-neutral, since the
+  ramp was a pure passthrough. Had been logged as blocked on the tier-3 pass — wrongly. A
+  hook carrying one property can point at that property's token; the open tier-3 question is
+  about adopting a composite CLASS, which is different. Needed one new composite,
+  `label-2xs` at font-size-050, because the control ramp descends below the prose family.
 ### Still open
 - Propagate the lego+utility pattern to the other 5 pages (teams/players/stats/map/history).
 - Adopt `esa-app-shell` in the spoke (delivers 2a toggle / 2b logo / 2c omnibox / 2d user menu).
@@ -228,6 +235,74 @@ codemod rather than a flag day.
   default chain, and `--transition-fast` must keep resolving as 150ms, not 0ms. Scoped
   exactly: 7 new edges, all onto `--duration-0`; the P3 block adds none, its 120 declarations
   being literals.
+- ✅ **`orphan` was lying again, and much louder — the scanner only ever opened one directory**
+  — the entry above fixed at-rule readers *inside the two files the module already read*. It
+  never asked whether there were files it wasn't opening at all, which is the whole of this
+  one. `componentUse` was built solely from `packages/ecology/src/components`, so
+  `packages/tokens/src/typography.css` — an authored partial the package **exports**, reading
+  113 distinct tokens across 169 `var()` sites — was invisible. **102 of the 125 reported
+  orphans were `--typography-*` tokens that file reads.** `healthTotal` read 126 where the
+  real number is 23. Third occurrence of the class (`--duration-0`, `--topbar-*`, this), so
+  the fix is the class, not the instance: scan roots are now an explicit exported
+  `SCAN_ROOTS` roster (ecology, tokens/src, docs, spoke-template) with a sibling
+  `READ_SCAN_EXEMPT` carrying a written reason for each surface deliberately not scanned, and
+  both are **rendered on the page** so the frontier is visible rather than assumed. Reader
+  identity is split — `usedByFiles` is a new field, kept out of `usedByComponents` because
+  `tier3-naming`'s `reach` counts components to tell a category namespace from an oddly-named
+  component, and `component-promises` slug-matches; a path in either would corrupt both while
+  still type-checking. The guard is derived from `@esa/tokens`'s own `exports` map: a `.css`
+  it ships from a location no root covers becomes a health finding and turns the tally red.
+  Two things caught while building it — the local-declaration filter that `layouts.css` needs
+  (it bare-reads nine knobs it declares itself) must **not** apply to components, because
+  `esa-range-slider` legitimately sets `--fill-percent` inline and reads it back, and
+  filtering there invented a fresh orphan out of a token with two live readers; and
+  `--sidebar-width` is declared at 18rem inside `layouts.css` while the semantic layer ships
+  a differently-valued token of the same name (logged below).
+- ✅ **`parseDefs` treated prose about a token as a declaration of it** — the value pattern
+  is `[^;]+`, which spans newlines, and comments were never stripped. So a comment merely
+  *mentioning* a token with a colon matched from inside the comment through to the next real
+  semicolon and registered a declaration that does not exist. Found the hard way: a comment
+  added in the same session explaining why `--filter-dropdown-border` had been renamed
+  promptly resurrected it as a fully-fledged ORPHAN — declared, unread, "safe to delete".
+  Comments are stripped first now, the way the read scan already did.
+- ✅ **The three tier-3 colour defects, and the first tier-3 rows in `migrations.json`** —
+  all three were recorded on the tier-3 colour page and left open; closed now, 8 renames,
+  every value untouched. (1) **`border` named two different property types**:
+  `--sidenav-border` and `--topbar-border` held a plain colour while
+  `--filter-dropdown-border` held a whole `1px solid …` shorthand, so two of the three were
+  re-pointable and the third was not — a theme could not touch its colour without restating a
+  width and style it had no reason to care about. All three are `-border-color` now, matching
+  the 27 border hooks that already were, with `esa-filter-dropdown` composing the shorthand
+  from `--border-width-default` (value-neutral — that role is 1px, the literal the shorthand
+  carried). (2) **Variant after property**: `esa-snackbar-item`'s four hooks, the only
+  component in the kit that exposes its colour-variant axis at tier 3 at all, now read
+  `--snackbar-item-danger-bg` like `--app-bar-brand-bg`. (3) **A variant in the state slot**:
+  `--form-border-color-error` → `--form-error-border-color`, which also pairs it with the
+  existing `--form-error-color`. The derived audit confirms all three: one border spelling
+  (29 tokens), zero shorthands, zero inverted variants, `error` gone from the state vocabulary.
+
+  Two things worth keeping from doing it. **The tier-3 alias is only half a rescue** —
+  `build.js` emits `--old: var(--new)`, which saves a spoke that READS an old name, but tier 3
+  is the surface a spoke DECLARES, and an alias cannot rescue a declaration. A spoke that
+  overrode `--sidenav-border` keeps setting a token nothing reads: it loses the override,
+  renders the hub default, and nothing errors. So `/update-tokens` is mandatory here in a way
+  it is not for tier 1/2, and SPEC.md now says so. **And one of the eight is not a rename at
+  all** — `--filter-dropdown-border` → `--filter-dropdown-border-color` changes the value
+  *shape*, shorthand to colour, so a spoke writing `border: var(--filter-dropdown-border)`
+  gets a bare colour where a shorthand was. Split into its own row marked `exact: false`, the
+  mechanism the file already had for "changes rendering, not just the name", so
+  `/update-tokens` surfaces it by name instead of burying it among the safe seven.
+- ✅ **The motion adoption figure was a hardcoded claim nobody could reproduce** — the
+  Animation category's `adoption` prose asserted "42 of the 73 `transition:` declarations
+  still hold literals". Re-counting produced four different answers depending on the method,
+  because prose cannot carry a counting rule. Now derived at build time with the rule stated
+  in one place: **20 of 73** hold literals (the "73" was right; the "42" had simply gone
+  stale), and all **22** `animation:` call sites are on tokens. A first pass at the
+  derivation counted `@keyframes` *bodies* rather than `animation:` *call sites* and reported
+  16/0 — wrong denominator, wrong question; the declaration is where a duration and easing
+  get chosen, so that is the thing that can be on a token. Two more stale counts fixed the
+  same way: the typography composites are 113, not the 66 recorded in `tier2-naming`, and
+  `typography.css` assembles `.typography-*` classes, not the deprecated `.type-*` aliases.
 - ✅ **A file-level `$description` collides in Style Dictionary** — it treats the root key as
   a token node, so a second tokens file carrying one silently emitted
   `Token collisions detected (1)`. Group-level descriptions are fine; noted in
@@ -274,6 +349,14 @@ codemod rather than a flag day.
   visibly deeper (`0 4px 20px -4px / 0.06` → `0 6px 24px -6px / 0.07`); the FAB is lighter.
 
 ### Still open
+- **`layouts.css` shadows a semantic token name at a different value** · *Evidence:*
+  `packages/tokens/src/layouts.css:83` declares `--sidebar-width: 18rem` on `.sidebar` as a
+  per-primitive knob, while `dist/tokens.css:380` ships a semantic `--sidebar-width: 280px`
+  (17.5rem). Two different constructs — an element-scoped knob and a layout role — competing
+  for one name, and whichever wins is decided by cascade position rather than by intent ·
+  *Action:* rename the primitive's knob (`--sidebar-basis`?) or point it at the semantic
+  token. Found while adding the scan-root roster, which had to special-case the collision to
+  avoid crediting the file with reading a token it shadows · `hub-fix` · **P2**
 - **Contrast, as ONE batched pass** · *Evidence:* `check-contrast.mjs --hub` reports 7 AA
   failures sharing a root cause — Radix step-9 fills are built for ~3:1 with white, not the
   4.5:1 body text needs, so `content-on-brand` on `background-brand` is 2.95:1 and the focus
@@ -300,8 +383,15 @@ codemod rather than a flag day.
   `claude plugin marketplace update ecology` AND `claude plugin update spoke-kit@ecology`,
   then restart · `process` · **P0**
 - **Run `/update-tokens` in both spokes** · *Evidence:* cb-fish 1,706 replacements/115 files,
-  air-exchange 280/12; both dry-run clean · *Action:* one commit per repo, separate from
-  feature work. Needs authorisation — separate repos · `process` · **P1**
+  air-exchange 280/12; both dry-run clean. **Now upgraded from housekeeping to load-bearing:**
+  the 8 tier-3 renames added this session are the first rows in `migrations.json` whose old
+  names a spoke may have *declared* rather than read, and the emitted alias cannot rescue a
+  declaration — such a spoke silently loses its override and renders the hub default with no
+  error. One row (`filter-dropdown-border-shorthand-to-colour`) is `exact: false` and needs a
+  human read. Neither spoke is checked out beside this repo, so the dry-run could not be
+  re-verified here · *Action:* one commit per repo, separate from feature work; confirm
+  `npm run doctor` comes back clean after. Needs authorisation — separate repos ·
+  `process` · **P1**
 - **Tokens the spokes read that nothing declares** · *Evidence:* 7 in cb-fish
   (`--color-gold-50/900`, `--color-gray-50`, `--color-green-700`, `--spacing-50`,
   `--easing-out`, `--gap`), 6 in air-exchange · *Action:* these are **broken today** — the
@@ -331,6 +421,17 @@ codemod rather than a flag day.
   to composite tokens — preserves the surface but puts components back to per-property
   wiring, which is the thing being removed; (c) keep only the hooks a spoke plausibly
   needs (form controls, data grid) and drop the rest · `hub-fix` · **P1**
+- **12 Lit components hand-roll label markup because they cannot compose `esa-form-field`**
+  · *Evidence:* 14 components render their own `<label>` and the kit carries 23 separate
+  `__label` style blocks. `esa-form-field` already does this job — label row, control slot,
+  hint/error, size variants driving the label size — but it is an `.astro` wrapper, and 12
+  of the 14 are Lit rendering into shadow DOM, where an Astro component cannot wrap their
+  internals. Only `esa-text-field`, `esa-textarea` and the form-section pattern use it ·
+  *Action:* do NOT build an `esa-label` — that would be the 15th label implementation. The
+  fix is giving the Lit half a way to consume the existing one: a shared `CSSResult` (the
+  same mechanism `packages/ecology/src/typography.ts` now uses for composites), or markup
+  the component renders itself from a shared helper. Same shadow-boundary root cause as the
+  typography work, so worth solving once for both · `lego` · **P1**
 - **Typography is assembled from parts at 200+ call sites** · *Evidence:* the composite roles
   exist, but components read the ingredients directly far more than they read a role —
   `--font-sans` 69, `--font-mono` 60, `--font-weight-medium` 45, `--font-weight-semibold` 38 ·
@@ -339,20 +440,61 @@ codemod rather than a flag day.
   raw weight. Adding `--font-weight-ui-*` (or documenting chrome as a composite role of its
   own) would convert most of these. Audit which reads are chrome versus prose before moving
   any — prose reads are the ones that should have been a role · `hub-fix` · **P2**
-- **5 of the 7 layout dimension tokens have no readers** · *Evidence:* `--header-height`,
-  `--footer-height`, `--content-max-width`, `--content-narrow-width`, `--content-wide-width`
-  are read by nothing — not a component, not `layouts.css`, not the site. Only
-  `--sidebar-width` (2 files) and `--sidebar-width-collapsed` (1) are live · *Action:* either
-  wire them into the shell components that clearly want them (`esa-app-shell`, page layouts
-  currently sizing chrome by hand) or delete them. A dimension token nothing reads cannot be
-  re-pointed to any effect, so it is a theming surface that only appears to exist ·
-  `hub-fix` · **P2**
-- **The `--content-*-width` trio is named three different ways** · *Evidence:*
-  `--content-max-width` names the CSS property; `--content-narrow-width` and
-  `--content-wide-width` put a variant where the property word sits, so a reader cannot tell
-  whether they are max-widths or fixed widths (all three are max-widths) · *Action:* settle on
-  one shape — `--content-max-width-{narrow,default,wide}` reads correctly and keeps the family
-  together. Cheap now: nothing reads them · `hub-fix` · **P2**
+- ✅ **5 of the 7 layout dimension tokens had no readers — DELETED 2026-08-14.**
+  `--header-height`, `--footer-height`, `--content-max-width`, `--content-narrow-width`,
+  `--content-wide-width` were read by nothing: no component, no authored partial, not the
+  site, not the spoke template, not cb-fish. Deleted rather than wired, for two reasons.
+  The heights: `esa-app-bar` and `esa-app-shell` set no height at all, and after Change 9
+  a px height is the pattern this kit *removed* — re-adding one for chrome would re-create
+  the defect. The widths: they had already lost to a hardcoded 1556px. `--sidebar-width`
+  (15 readers) and `--sidebar-width-collapsed` (1) stay — those are a real agreement.
+  `migrations.json` row `layout-orphans-removed`.
+- ✅ **The `--content-*-width` trio was named three different ways — MOOT 2026-08-14.**
+  Resolved by deletion rather than by renaming; the three tokens no longer exist. Recorded
+  because the reasoning still applies to any future family: `--content-max-width` named the
+  CSS property while `--content-narrow-width` and `--content-wide-width` put a variant where
+  the property word sits, so a reader could not tell whether they were max-widths or fixed
+  widths. `--content-max-width-{narrow,default,wide}` would have been the right shape.
+- **There is no WIDTH scale, so every width in the kit is a bare literal** ·
+  *Evidence:* the size axis has a height ramp for badges (`--chip-height-*`) and nothing for
+  width. Tier 3 carries **18 width tokens, every one a hardcoded px value**: 160, 200, 240,
+  280, 320, 360, 400, 420, 480, 520, 560, 600, 640. Four of those values are duplicated
+  across unrelated components that never agreed on anything — 280 is both
+  `--dialog-width-xs` and `--dropdown-menu-max-width`; 360 is both `--confirm-dialog-width`
+  and `--dialog-width-sm`; 400 is both `--search-panel-width` and `--side-dialog-width`; 240
+  is both `--nav-dropdown-panel-min-width` and `--tooltip-max-width`. Three components have
+  already invented their OWN t-shirt ramp on top (`--dialog-width-{xs,sm,lg}`,
+  `--side-dialog-width-{sm,lg}`), which is the shape of a scale that should exist one tier
+  up. Separately, `1556px` — the kit's actual content width — is a literal in four places
+  across `esa-container` and `esa-app-bar`, and matches none of the 1200/800/1440 tokens
+  deleted 2026-08-14, which is exactly why those were dead ·
+  *Action:* **NOT a tier-2 width scale — that was the first proposal here and it is
+  withdrawn.** The stated position (2026-08-14) is that a component needing a hard ceiling
+  declares `max-width` on itself when it is built; a width is a decision about one
+  component's shape, not a shared agreement, and `esa-page-header` (`70ch`) and
+  `esa-empty-state` (`360px`) already work that way. Change 10 is the cautionary precedent:
+  `--form-padding-*` was a ramp of tier-3 tokens over values nobody ever re-pointed, and
+  every argument for building it applied equally here. So the work is to **decide which of
+  the 18 earn a hook at all** — a dialog width plausibly does, since SPEC.md names "dialog
+  width" as earning one; a tooltip's max-width plausibly does not — then delete the rest in
+  favour of a literal in the component, and give the page width one name so `esa-container`
+  and `esa-app-bar` stop each spelling 1556 twice. The duplicated values are evidence of
+  components not coordinating, which a scale would paper over rather than resolve. Note the
+  Change 9 caveat if a ramp is ever revisited: a fixed width is safe where a fixed height was
+  not — it does not clip growing text, it wraps it · `hub-fix` · **P2**
+- **`theming.ts` calls every primitive read "moves the whole system", including the CORE
+  sets it is safe to read** · *Evidence:* `apps/site/src/data/theming.ts` maps tier
+  `primitive` → scope `system`, warning that re-pointing it moves everything. That is right
+  for `--radius-200` and wrong for `--spacing-300`: SPEC.md:87-106 defines spacing and the
+  neutral palette as CORE — universal, never re-pointed by a theme, *meant* to be consumed
+  directly — and `token-graph.ts` (`CORE_SETS`) already encodes exactly which tokens those
+  are. `theming.ts` does not import it. The badge was already wrong on the 31 components that
+  read `--spacing-*` for padding; Change 10 makes it 42, and now it sits on the most visible
+  geometry row of every input and button page. So the docs site tells a spoke its controls
+  are un-themeable-without-consequence in the one place SPEC.md goes out of its way to say
+  the opposite · *Action:* give `theming.ts` a fourth scope, `core`, driven by importing
+  `CORE_SETS` rather than re-listing it — "shared by every theme; read it directly, never
+  re-point it." Pre-existing, surfaced by Change 10, not caused by it · `hub-fix` · **P2**
 - **Motion has no tier-3 surface** · *Evidence:* every other family exposes component tokens;
   motion exposes none, so `esa-sidebar-nav` invented a private `--_sidenav-transition` and a
   spoke cannot re-time anything · *Action:* decide whether motion earns hooks at all — SPEC's
@@ -365,15 +507,18 @@ codemod rather than a flag day.
 - **Deferred from the tier-1 audit** · the namespace/tier prefix straddle (a ramp step and a
   semantic role are both `--color-*`, indistinguishable in a diff), the `--radius-200`/`-300`
   duplicate, and ~1,250 fallback-literal mismatches (mostly tier-2 colour) · `hub-fix` · **P2**
-- **Checkbox and radio borders went 1px → 2px in every spoke** · *Evidence:* both read
-  `var(--form-border-width, 2px)`, but `--form-border-width` has always been declared in
-  `component-tokens.css`, so the 2px fallback could never fire and the controls silently
-  rendered 1px against their author's intent. Now on `--form-indicator-border-width` (2px),
-  with `box-sizing: border-box` added so re-pointing the width thickens the edge instead of
-  resizing the control. cb-fish uses these in 7+ components and overrides neither token, so it
-  takes the change wholesale on its next dev tick · *Action:* tell the spoke owners before they
-  meet it in a review; if that is not wanted yet, defaulting the hook to
-  `var(--border-width-default)` holds at 1px and keeps the surface · `process` · **P1**
+- **Checkbox/radio border widths — RESOLVED, reverted** · *Evidence:* commit `67a93a4` moved
+  `esa-checkbox` and `esa-radio-group` onto a new `--form-indicator-border-width` (2px),
+  on the reasoning that both had asked for 2px via `var(--form-border-width, 2px)`. But
+  `--form-border-width` has always been declared, so that fallback could never fire: the
+  kit shipped, was reviewed and was signed off at **1px for its whole life**. The 2px was
+  an intent living in dead code that nobody ever saw rendered. The sweep also missed
+  `esa-checkbox-group`, leaving a checkbox-in-a-group at 1px next to a standalone one at
+  2px · *Action:* DONE — all three now read `--form-border-width` → `--border-width-default`,
+  and the hook is deleted. It never reached `main`, so no spoke ever saw it and no
+  migration row was needed. Two things it would otherwise have cost: an `emphasis` role at
+  tier 2 invented to justify a change that came from a bug, and a tier skip — the hook read
+  `--border-width-200` directly, bypassing tier 2 · `hub-fix` · **resolved 2026-08-14**
 - **`migrations.json` has no row type for a behaviour change** · *Evidence:* the entry above is
   precisely what `/update-tokens` tells people not to bury ("NOT an exact alias — those change
   rendering, not just the name"), but it has no rename to hang off, so `build.js`,
@@ -391,6 +536,63 @@ the easy part; the parsers, audits and gates that consume them are where a renam
 goes wrong, and they fail silently by default. Where it mattered these now assert instead:
 `color-other` must stay empty, `inferred` must stay 0, and a contrast run that cannot resolve
 its pairs exits non-zero.
+
+---
+
+## Source: form-control API audit (2026-08-14)
+Prompted by reading `esa-button-toggle`'s generated API table the way a consumer would.
+The generated tables removed *drift* — a documented prop that no longer exists — but they
+check **names, not meaning**, so a prop can be real in source, rendered in the table, and
+still not do what it says. Every finding below is that shape.
+
+- **A prop can be declared, typed, defaulted, reflected, documented — and read by nothing**
+  · *Evidence:* `esa-button-toggle` `size` (fixed the day before) was inert; the drift guard
+  is structurally blind to it because the name resolves. *Action:* when auditing a component,
+  grep each prop for a READ in `render()`/`static styles`, not just a declaration · `process`
+  · **resolved 2026-08-14**
+- **`hint` vs `helpText` — one concept, two spellings** · *Evidence:* five controls
+  (select, text-field, textarea, combobox, date-picker) named the helper line `helpText` and
+  paired it with `errorText`; `esa-button-toggle` and `esa-input-tag` called it `hint` and had
+  **no error channel at all**. Both rendered the identical `typography-body-sm` span in the
+  identical slot. Failure mode was silence: writing `help-text` on a button-toggle set an
+  unknown attribute Lit ignores — no error, no warning, no text · *Action:* renamed to
+  `helpText` + added `errorText` to both; `migrations.json: form-hint-to-help-text` with a
+  runtime-warning shim · `lego` · **resolved 2026-08-14**
+- **`required` was cosmetic in all 7 controls that offered it** · *Evidence:* `setValidity`
+  appeared **zero** times in the entire kit. `required` drew an asterisk and set
+  `aria-required`, and the form submitted empty anyway — `checkValidity()` returned `true`.
+  The docs said "marks the field required", which a reader reasonably reads as "enforced"
+  · *Action:* every one now reports `valueMissing` through `ElementInternals`, anchored to a
+  focusable node so the browser can place its bubble · `lego` · **resolved 2026-08-14**
+- **A scripted `value` never reached the form in 8 of 12 controls** · *Evidence:* found while
+  verifying the row above — `el.value = 'x'` rendered correctly and submitted `""`. Only the
+  *event handlers* called `setFormValue`; nothing synced on a property change. Worse after
+  the validity fix, which reads `this.value` directly: the control would report VALID while
+  submitting empty. Affected text-field, textarea, date-picker, radio-group, checkbox-group,
+  chip-group, range-slider, color-picker · *Action:* each syncs on `changed.has('value')`
+  · `lego` · **resolved 2026-08-14**
+- **`name` worked everywhere and was documented nowhere** · *Evidence:* doc pages demoed
+  `name="view"` (correctly — form-associated elements get it natively), but only 4 of 16
+  controls declared it, so 12 API tables omitted a real part of the contract. The 4 that DID
+  declare it lacked `reflect`, so `el.name = 'x'` never reached the form, which submits from
+  the content attribute · *Action:* declared on all 16 with `reflect: true` · `lego`
+  · **resolved 2026-08-14**
+- **A codemod left three malformed CSS declarations in `esa-input-tag`** · *Evidence:* the
+  typography migration stripped `font-size:` from `--_chip-font-size: …` and left the bare
+  prefix `--_chip-`, which swallowed the NEXT declaration as its value — so `--_chip-bg` was
+  never declared and every chip lost its tint. Silent: `--_chip-` is a valid custom-property
+  name, so nothing errored · *Action:* repaired; a `grep -E '^\s*--[\w-]+\s*(/\*|\}|$)'` over
+  `src` finds this class of damage and found nothing else · `hub-fix` · **resolved 2026-08-14**
+
+### Root cause (the through-line)
+**Generating the API table proves the docs match the source; it cannot prove the source does
+what the name says.** Every finding here passed the drift guard. The three failure shapes worth
+watching: a prop nothing reads (`size`), a prop that does *part* of its job (`required` drew the
+asterisk but skipped the enforcement), and a prop that works only on the path someone happened
+to test (`value` via click, never via script). Names are now mechanised; **behaviour is still
+checked by reading**. The cheapest instrument found this round was a headless browser asserting
+the contract from the OUTSIDE — set the value, submit the form, compare — which caught the two
+findings no amount of source-reading had.
 
 ---
 

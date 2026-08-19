@@ -2,7 +2,7 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaBreadcrumbs from '@esa/ecology/esa-breadcrumbs.astro';
 
 const homeIcon =
@@ -20,10 +20,12 @@ const withIcon = [
   { label: 'NPDES-2024-118' },
 ];
 
-const props = [
-  { name: 'items', type: 'EsaBreadcrumbItem[]', description: 'Trail of crumbs. Each item is { label; href?; icon? }. The last item is rendered as the current page.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Type scale of the trail.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  items: "Trail of crumbs. Each item is { label; href?; icon? }. The last item is rendered as the current page.",
+  size: "Type scale of the trail.",
+};
 ---
 <ComponentDoc name="Breadcrumbs" category="Navigation" slug="esa-breadcrumbs" type=".astro" status="stable"
   summary="Presentational breadcrumb trail showing the path to the current page. The last item is treated as the current page and is not a link.">
@@ -65,7 +67,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-breadcrumbs" describe={describe} />
     <p>Each <code>EsaBreadcrumbItem</code> is <code>{'{ label: string; href?: string; icon?: string }'}</code>. Omit <code>href</code> on the final item; <code>icon</code> is a raw inline SVG string.</p>
   </Section>
 

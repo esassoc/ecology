@@ -1,4 +1,10 @@
 import { LitElement, html, css, nothing } from 'lit';
+import { typography } from '../typography.js';
+
+/** Label / trigger text is UI text (label-*, medium); typed values, options and
+    chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaInputTagOption {
   value: string;
@@ -39,6 +45,8 @@ export class EsaInputTag extends LitElement {
   static properties = {
     /** The name of the value being collected. */
     label: { type: String },
+    helpText: { type: String, attribute: 'help-text' },
+    errorText: { type: String, attribute: 'error-text' },
     /**
      * The non-obvious interaction this control requires, stated as an
      * instruction — a keyboard or entry mechanic the user can't infer on
@@ -56,7 +64,7 @@ export class EsaInputTag extends LitElement {
     required: { type: Boolean },
     strict: { type: Boolean },
     tagsBelow: { type: Boolean, attribute: 'tags-below' },
-    name: { type: String },
+    name: { type: String, reflect: true },
     _values: { state: true },
     _search: { state: true },
     _open: { state: true },
@@ -64,6 +72,11 @@ export class EsaInputTag extends LitElement {
   };
 
   declare label: string;
+  /** Helper text below the field. */
+  declare helpText: string;
+  /** Validation message below the field; replaces `helpText` and reddens the border. */
+  declare errorText: string;
+  /** DEPRECATED — renamed to `helpText`. Still honoured; warns at runtime. */
   declare hint: string;
   declare placeholder: string;
   declare options: EsaInputTagOption[];
@@ -72,13 +85,15 @@ export class EsaInputTag extends LitElement {
   declare required: boolean;
   declare strict: boolean;
   declare tagsBelow: boolean;
-  declare name: string;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   private declare _values: string[];
   private declare _search: string;
   private declare _open: boolean;
   private declare _active: number;
 
   private internals: ElementInternals;
+  private warnedHint = false;
   private onDocClick = (e: MouseEvent): void => {
     if (!this._open) return;
     if (!e.composedPath().includes(this)) this.closeDropdown();
@@ -87,6 +102,8 @@ export class EsaInputTag extends LitElement {
   constructor() {
     super();
     this.label = '';
+    this.helpText = '';
+    this.errorText = '';
     this.hint = '';
     this.placeholder = 'Search or add...';
     this.options = [];
@@ -95,7 +112,6 @@ export class EsaInputTag extends LitElement {
     this.required = false;
     this.strict = false;
     this.tagsBelow = false;
-    this.name = '';
     this._values = [];
     this._search = '';
     this._open = false;
@@ -103,10 +119,53 @@ export class EsaInputTag extends LitElement {
     this.internals = this.attachInternals();
   }
 
+  /**
+   * `hint` was renamed to `helpText` (migrations.json: form-hint-to-help-text) so
+   * this control names the axis the way esa-select / esa-text-field / esa-textarea
+   * already did. Explicit `helpText` WINS, so a spoke mid-migration can pass both
+   * without the stale one overriding the fixed one.
+   */
+  private get resolvedHelpText(): string {
+    if (this.hint && !this.helpText) {
+      if (!this.warnedHint) {
+        this.warnedHint = true;
+        console.warn(
+          `⚠️  esa-input-tag: \`hint="${this.hint}"\` is deprecated — renamed to ` +
+            `\`help-text="${this.hint}"\`. Run \`node ../ecology/scripts/migrate-tokens.mjs --write\` ` +
+            `in your spoke (migrations.json: form-hint-to-help-text).`,
+        );
+      }
+      return this.hint;
+    }
+    return this.helpText;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener('click', this.onDocClick);
     this.syncFormValue();
+  }
+
+  updated(): void {
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required. "Empty" here means no tokens — a
+   * half-typed search term that was never committed does not count.
+   */
+  private syncValidity(): void {
+    if (!this.required || this._values.length > 0) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.input') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Add at least one ${this.label}.` : 'Add at least one value.',
+      anchor,
+    );
   }
 
   disconnectedCallback(): void {
@@ -271,7 +330,7 @@ export class EsaInputTag extends LitElement {
 
   private renderChips() {
     return this._values.map(
-      (value) => html`<span class="chip">
+      (value) => html`<span class="chip typography-body-sm">
         <span class="chip__label">${this.labelFor(value)}</span>
         ${!this.disabled
           ? html`<button
@@ -288,10 +347,15 @@ export class EsaInputTag extends LitElement {
   }
 
   render() {
+    const hasError = !!this.errorText;
+    const help = this.resolvedHelpText;
+    // Error replaces help — same precedence as esa-select / esa-text-field, so
+    // only one of the two ever occupies the slot below the control.
+    const describedBy = hasError ? 'error' : help ? 'help' : nothing;
     return html`
-      <div class="field">
+      <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label">
+          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
               ${this.label}${this.required ? html`<span class="field__required" aria-hidden="true">*</span>` : null}
             </label>`
           : null}
@@ -300,13 +364,15 @@ export class EsaInputTag extends LitElement {
           <div class="chips">
             ${this.tagsBelow ? null : this.renderChips()}
             <input
-              class="input"
+              class="input typography-${VALUE_TYPE[this.size]}"
               type="text"
               role="combobox"
               aria-haspopup="listbox"
               aria-expanded=${this._open}
               aria-autocomplete="list"
               aria-required=${this.required ? 'true' : nothing}
+              aria-invalid=${hasError ? 'true' : nothing}
+              aria-describedby=${describedBy}
               placeholder=${this._values.length ? '' : this.placeholder}
               .value=${this._search}
               ?disabled=${this.disabled}
@@ -335,7 +401,11 @@ export class EsaInputTag extends LitElement {
         ${this.tagsBelow && this._values.length
           ? html`<div class="chips chips--below">${this.renderChips()}</div>`
           : null}
-        ${this.hint ? html`<span class="field__hint">${this.hint}</span>` : null}
+        ${hasError
+          ? html`<span class="field__error typography-body-sm" id="error">${this.errorText}</span>`
+          : help
+            ? html`<span class="field__help typography-body-sm" id="help">${help}</span>`
+            : null}
       </div>
     `;
   }
@@ -346,14 +416,14 @@ export class EsaInputTag extends LitElement {
     const addIndex = opts.length;
     if (opts.length === 0 && !canAdd) {
       return html`<div class="dropdown" role="listbox">
-        <div class="empty">${this._search ? 'No matches found' : 'Type a value and press Enter to add'}</div>
+        <div class="empty typography-${VALUE_TYPE[this.size]}">${this._search ? 'No matches found' : 'Type a value and press Enter to add'}</div>
       </div>`;
     }
     return html`<div class="dropdown" role="listbox">
       ${opts.map(
         (option, i) => html`<button
           type="button"
-          class="option ${i === this._active ? 'option--active' : ''}"
+          class="option typography-${VALUE_TYPE[this.size]} ${i === this._active ? 'option--active' : ''}"
           role="option"
           aria-selected=${i === this._active}
           @mousedown=${(e: Event) => e.preventDefault()}
@@ -366,7 +436,7 @@ export class EsaInputTag extends LitElement {
       ${canAdd
         ? html`<button
             type="button"
-            class="option option--add ${this._active === addIndex ? 'option--active' : ''}"
+            class="option option--add typography-${LABEL_TYPE[this.size]} ${this._active === addIndex ? 'option--active' : ''}"
             role="option"
             aria-selected=${this._active === addIndex}
             @mousedown=${(e: Event) => e.preventDefault()}
@@ -393,16 +463,15 @@ export class EsaInputTag extends LitElement {
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>`;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
-      --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-min-height: var(--form-height-md, 40px);
+      --_field-padding-y: var(--spacing-300, 0.75rem);
+      --_field-padding-x: var(--spacing-300, 0.75rem);
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
-      --_chip-font-size: var(--font-size-150, 12px);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
       --_chip-bg: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
@@ -410,28 +479,19 @@ export class EsaInputTag extends LitElement {
       --_chip-radius: var(--radius-pill, 9999px);
     }
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
-      --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-min-height: var(--form-height-xs, 28px);
+      --_field-padding-y: var(--spacing-200, 0.5rem);
+      --_field-padding-x: var(--spacing-200, 0.5rem);
       --_field-radius: var(--form-radius-xs, 4px);
-      --_chip-font-size: var(--font-size-100, 11px);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
-      --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-min-height: var(--form-height-sm, 32px);
+      --_field-padding-y: var(--spacing-250, 0.625rem);
+      --_field-padding-x: var(--spacing-250, 0.625rem);
       --_field-radius: var(--form-radius-sm, 6px);
-      --_chip-font-size: var(--font-size-100, 11px);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
-      --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-min-height: var(--form-height-lg, 48px);
+      --_field-padding-y: var(--spacing-400, 1rem);
+      --_field-padding-x: var(--spacing-400, 1rem);
       --_field-radius: var(--form-radius-lg, 10px);
-      --_chip-font-size: var(--font-size-200, 14px);
     }
 
     .field {
@@ -440,18 +500,17 @@ export class EsaInputTag extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #525252);
     }
     .field__required {
       color: var(--color-content-danger, #ce2c31);
       margin-left: 2px;
     }
-    .field__hint {
-      font-size: var(--font-size-150, 12px);
+    .field__help {
       color: var(--form-help-color, #737373);
+    }
+    .field__error {
+      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
     }
 
     .container {
@@ -459,7 +518,6 @@ export class EsaInputTag extends LitElement {
       display: flex;
       align-items: center;
       gap: var(--spacing-200, 8px);
-      min-height: var(--_field-min-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
       background: var(--form-bg, #fff);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
@@ -480,6 +538,19 @@ export class EsaInputTag extends LitElement {
     .container--disabled {
       background: var(--form-bg-disabled, #efefef);
       cursor: not-allowed;
+    }
+    /* Hover/focus/open each re-point --_field-border-color at higher specificity
+       than a bare ".field--error .container" selector, so the error state has to
+       restate them or the border reverts to neutral the moment the pointer lands
+       on it. */
+    .field--error .container,
+    .field--error .container:hover:not(.container--disabled) {
+      --_field-border-color: var(--form-error-border-color, #ef4444);
+    }
+    .field--error .container:focus-within,
+    .field--error .container.container--open {
+      --_field-border-color: var(--form-error-border-color, #ef4444);
+      box-shadow: 0 0 0 var(--focus-ring-width) var(--form-error-border-color, #ef4444);
     }
     .container--disabled:focus-within {
       box-shadow: none;
@@ -505,9 +576,6 @@ export class EsaInputTag extends LitElement {
       align-items: center;
       gap: var(--spacing-050, 2px);
       padding: 2px var(--spacing-100, 4px) 2px var(--spacing-200, 8px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_chip-font-size);
-      line-height: var(--line-height-tight, 1.3);
       background: var(--_chip-bg);
       color: var(--_chip-color);
       border-radius: var(--_chip-radius);
@@ -550,8 +618,6 @@ export class EsaInputTag extends LitElement {
       background: transparent;
       border: none;
       outline: none;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--form-text-color, #171717);
     }
     .input::placeholder {
@@ -614,8 +680,6 @@ export class EsaInputTag extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: transparent;
       border: none;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
       color: var(--color-content-primary, #171717);
       text-align: left;
       cursor: pointer;
@@ -635,7 +699,6 @@ export class EsaInputTag extends LitElement {
     }
     .option--add {
       color: var(--color-content-brand, #3a7c59);
-      font-weight: var(--font-weight-medium, 500);
       border-top: var(--form-border-width, 1px) solid var(--color-border-subtle, #efefef);
     }
     .option__icon {
@@ -647,11 +710,11 @@ export class EsaInputTag extends LitElement {
     .empty {
       padding: var(--spacing-300, 12px);
       color: var(--color-content-muted, #737373);
-      font-size: var(--_field-font-size);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-input-tag')) {

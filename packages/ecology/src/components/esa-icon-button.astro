@@ -39,14 +39,24 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
 
 <style>
   .esa-icon-button {
-    --_ib-size: var(--form-height-md, 40px);
+    /* ONE value spends on all four sides. It names the same spacing rung a text
+       button's padding-inline does, so the two still agree on a row — but that
+       agreement used to be carried by --form-padding-y-* and -x-* being equal
+       tokens, and since 2026-08-14 it is carried only by both sites naming
+       --spacing-300. If the axes ever need to diverge, this is a site that will
+       not follow on its own. */
+    --_ib-pad: var(--spacing-300, 0.75rem);
     --_ib-bg-hover: var(--icon-button-bg-hover, color-mix(in srgb, currentColor 14%, transparent));
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--_ib-size);
-    height: var(--_ib-size);
-    padding: 0;
+    /* Square by ratio, not by a height token. There is no text to set the height,
+       so the icon plus this padding IS the size — which is why padding had to be
+       ADDED here rather than re-plumbed: at padding:0 the element would collapse
+       to the bare icon. Recorded for the batched a11y pass: at xs this lands
+       around 32px, under the 44px AAA target though clear of the 24px AA floor. */
+    aspect-ratio: 1;
+    padding: var(--_ib-pad);
     border: 0;
     border-radius: var(--radius-surface, 8px);
     background: transparent;
@@ -56,9 +66,9 @@ const cls = ['esa-icon-button', `esa-icon-button--${size}`].join(' ');
     -webkit-appearance: none;
     appearance: none;
   }
-  .esa-icon-button--xs { --_ib-size: var(--form-height-xs, 28px); }
-  .esa-icon-button--sm { --_ib-size: var(--form-height-sm, 32px); }
-  .esa-icon-button--lg { --_ib-size: var(--form-height-lg, 48px); }
+  .esa-icon-button--xs { --_ib-pad: var(--spacing-200, 0.5rem); }
+  .esa-icon-button--sm { --_ib-pad: var(--spacing-250, 0.625rem); }
+  .esa-icon-button--lg { --_ib-pad: var(--spacing-400, 1rem); }
 
   .esa-icon-button:hover { background: var(--_ib-bg-hover); }
   .esa-icon-button:focus-visible {

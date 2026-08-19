@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-file-upload — form-associated Lit Web Component.
@@ -22,7 +23,7 @@ export class EsaFileUpload extends LitElement {
     multiple: { type: Boolean },
     maxSizeMb: { type: Number, attribute: 'max-size-mb' },
     disabled: { type: Boolean, reflect: true },
-    name: { type: String },
+    name: { type: String, reflect: true },
     _isDragging: { state: true },
     _files: { state: true },
     _error: { state: true },
@@ -33,6 +34,7 @@ export class EsaFileUpload extends LitElement {
   declare multiple: boolean;
   declare maxSizeMb: number;
   declare disabled: boolean;
+  /** Form field name — the key each selected file is appended under. */
   declare name: string;
   private declare _isDragging: boolean;
   private declare _files: File[];
@@ -164,22 +166,22 @@ export class EsaFileUpload extends LitElement {
         @keydown=${this.onZoneKeydown}
       >
         ${this.uploadIcon()}
-        <span class="zone__label">${this.label}</span>
-        <span class="zone__hint">Drag &amp; drop or <span class="browse">browse</span></span>
+        <span class="zone__label typography-label-md">${this.label}</span>
+        <span class="zone__hint typography-body-sm">Drag &amp; drop or <span class="browse">browse</span></span>
         ${this.maxSizeMb
-          ? html`<span class="zone__limit">Max ${this.maxSizeMb} MB per file</span>`
+          ? html`<span class="zone__limit typography-body-sm">Max ${this.maxSizeMb} MB per file</span>`
           : null}
       </div>
 
-      ${this._error ? html`<div class="error">${this._error}</div>` : null}
+      ${this._error ? html`<div class="error typography-body-sm">${this._error}</div>` : null}
 
       ${this._files.length > 0
         ? html`<ul class="files">
             ${this._files.map(
               (file, i) => html`<li class="file">
                 ${this.fileIcon()}
-                <span class="file__name">${file.name}</span>
-                <span class="file__size">${this.formatFileSize(file.size)}</span>
+                <span class="file__name typography-body-sm">${file.name}</span>
+                <span class="file__size typography-body-sm">${this.formatFileSize(file.size)}</span>
                 <button
                   type="button"
                   class="file__remove"
@@ -217,7 +219,9 @@ export class EsaFileUpload extends LitElement {
       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>`;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
     }
@@ -282,14 +286,9 @@ export class EsaFileUpload extends LitElement {
     }
 
     .zone__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-md, 14px);
-      font-weight: var(--font-weight-medium, 500);
       color: var(--color-content-primary, #171717);
     }
     .zone__hint {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-sm, 12px);
       color: var(--color-content-muted, #737373);
     }
     .browse {
@@ -297,15 +296,11 @@ export class EsaFileUpload extends LitElement {
       text-decoration: underline;
     }
     .zone__limit {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--font-size-100, 11px);
       color: var(--color-content-muted, #737373);
     }
 
     .error {
       margin-top: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-sm, 12px);
       color: var(--color-content-danger, #ce2c31);
     }
 
@@ -328,16 +323,12 @@ export class EsaFileUpload extends LitElement {
     }
     .file__name {
       flex: 1;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-font-size-sm, 12px);
       color: var(--color-content-primary, #171717);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .file__size {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--font-size-100, 11px);
       color: var(--color-content-muted, #737373);
       white-space: nowrap;
     }
@@ -364,7 +355,8 @@ export class EsaFileUpload extends LitElement {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-file-upload')) {

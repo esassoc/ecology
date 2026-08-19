@@ -2,7 +2,7 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import FilterContainer from '@esa/ecology/esa-filter-container.astro';
 import FilterPills from '@esa/ecology/esa-filter-pills.astro';
 import FilterClearButton from '@esa/ecology/esa-filter-clear-button.astro';
@@ -12,10 +12,12 @@ const sampleFilters = [
   { name: 'dept', label: 'Department', value: 'water', displayValue: 'Water Quality' },
 ];
 
-const props = [
-  { name: 'gap', type: 'string', default: "'300'", description: 'Spacing-token step for the horizontal (column) gap between children.' },
-  { name: 'rowGap', type: 'string', default: "'200'", description: 'Spacing-token step for the vertical (row) gap when children wrap.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  gap: "Spacing-token step for the horizontal (column) gap between children.",
+  rowGap: "Spacing-token step for the vertical (row) gap when children wrap.",
+};
 ---
 <ComponentDoc name="Filter Container" category="Filters" slug="esa-filter-container" type=".astro" status="stable"
   summary="Layout wrapper that lays out filter dropdowns, pills, and the clear button in a wrapping flex row with consistent gap. A pure layout primitive — it carries no runtime logic.">
@@ -49,7 +51,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-filter-container" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

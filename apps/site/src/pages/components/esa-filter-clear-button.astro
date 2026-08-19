@@ -3,13 +3,16 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import FilterClearButton from '@esa/ecology/esa-filter-clear-button.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "'Clear all'", description: 'Visible button text.' },
-  { name: 'showIcon', type: 'boolean', default: 'true', description: 'Show the leading filter-x icon.' },
-  { name: 'hidden', type: 'boolean', default: 'false', description: 'Suppress rendering entirely (renders no DOM).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Visible button text.",
+  showIcon: "Show the leading filter-x icon.",
+  hidden: "Suppress rendering entirely (renders no DOM).",
+};
 
 const events = [
   { name: 'esa-filter-clear', type: '(no detail)', description: 'Bubbling/composed. Fires on click so a parent container can clear all active filters.' },
@@ -34,7 +37,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-filter-clear-button" describe={describe} />
   </Section>
 
   <Section id="events" title="Events">

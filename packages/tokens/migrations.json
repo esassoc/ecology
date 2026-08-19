@@ -2,15 +2,26 @@
   "$schema": "./migrations.schema.md",
   "$comment": [
     "The renames this package has made, as DATA. Three things read this file, which is",
-    "the point \u2014 the hub declares a rename once and everything else follows:",
+    "the point — the hub declares a rename once and everything else follows:",
     "",
     "  1. build.js       emits a deprecated alias for every `token` entry, so spoke source",
     "                    keeps resolving the moment the rename lands.",
     "  2. migrate-tokens.mjs  rewrites a spoke's source from `from` to `to`.",
+    "",
     "  3. doctor.mjs     warns a spoke that it is still on deprecated names.",
     "",
+    "KINDS: `token` (a custom property), `class` (a composite utility class), and",
+    "`prop` (a component prop). A `prop` row MUST carry `components`, because a prop",
+    "name means nothing on its own — `color` is a button prop, the spinner's genuine",
+    "CSS-colour prop, and the commonest declaration in any stylesheet. It SHOULD also",
+    "carry `module` (the import specifier), which lets the codemod resolve whatever",
+    "local name each file imported the component as — without it, `import Button from",
+    "'@esa/ecology/esa-button.astro'` is invisible and the spoke gets a false all-clear.",
+    "Only `token` rows get an emitted alias; a prop's compatibility shim is the",
+    "component itself accepting the old name and warning.",
+    "",
     "WHY THIS EXISTS: spokes consume this package through a `file:` symlink, so a rename",
-    "here reaches every spoke on their next dev tick \u2014 there is no publish step to absorb",
+    "here reaches every spoke on their next dev tick — there is no publish step to absorb",
     "it, and a bare `var(--old-name)` does not fall back, it drops the whole declaration.",
     "A rename used to be tribal knowledge in one person's head. Now it is a row here.",
     "",
@@ -94,7 +105,7 @@
       "id": "shadow-composites-to-elevation",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "The composite `--shadow-050\u2026500` were ordinal names for intents living in tier 1 \u2014 the same misfiling that put `--transition-fast` there. Tier 1 now holds only the raw axes (offset-x / offset-y / blur / spread / color); clustering them into a usable box-shadow is the semantic act, so the composites are `--elevation-1\u20266` at tier 2. The old names also formed a 1:1 passthrough \u2014 six primitives, six roles, no reuse \u2014 so nothing was lost by collapsing them. A spoke should read the tier-2 role, which is the one it is allowed to override. NOTE: `--shadow-50` (the earlier `shadow-50-padding` row) still points at `--shadow-050` and resolves through this row's alias \u2014 custom-property resolution is order-independent, so the two-hop chain holds.",
+      "why": "The composite `--shadow-050…500` were ordinal names for intents living in tier 1 — the same misfiling that put `--transition-fast` there. Tier 1 now holds only the raw axes (offset-x / offset-y / blur / spread / color); clustering them into a usable box-shadow is the semantic act, so the composites are `--elevation-1…6` at tier 2. The old names also formed a 1:1 passthrough — six primitives, six roles, no reuse — so nothing was lost by collapsing them. A spoke should read the tier-2 role, which is the one it is allowed to override. NOTE: `--shadow-50` (the earlier `shadow-50-padding` row) still points at `--shadow-050` and resolves through this row's alias — custom-property resolution is order-independent, so the two-hop chain holds.",
       "pairs": [
         [
           "--shadow-050",
@@ -126,7 +137,7 @@
       "id": "status-colors-to-semantic",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead \u2014 that is the one it is allowed to override.",
+      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead — that is the one it is allowed to override.",
       "pairs": [
         [
           "--color-status-info",
@@ -255,7 +266,7 @@
       "id": "color-tier2-property-first",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things \u2014 the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted \u2014 identical defaults do not make a themeable token redundant, and a spoke had already separated both.",
+      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things — the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted — identical defaults do not make a themeable token redundant, and a spoke had already separated both.",
       "pairs": [
         [
           "--color-primary-bg-hover",
@@ -551,7 +562,7 @@
       "id": "typography-eyebrow-sized",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "The caps treatment exists at two sizes \u2014 the page-level eyebrow and the menu group heading one step up. Same intention, so one role with a size variant rather than two roles.",
+      "why": "The caps treatment exists at two sizes — the page-level eyebrow and the menu group heading one step up. Same intention, so one role with a size variant rather than two roles.",
       "pairs": [
         [
           "--typography-eyebrow-font-family",
@@ -592,6 +603,299 @@
         [
           "typography-eyebrow",
           "typography-eyebrow-sm"
+        ]
+      ]
+    },
+    {
+      "id": "font-size-ui-to-composites",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "A size-only ramp running parallel to the typography composites. It let a component pick a size without adopting a composite, which is how the kit ended up with 100 tier-1 font-size reads and no shared typographic vocabulary. Its nine tier-3 consumers now point at the composite whose job matches — form control text at label, the large step at body-lg — so the size travels with a weight, a line-height and a face instead of alone.",
+      "pairs": [
+        [
+          "--font-size-ui-xs",
+          "--typography-label-2xs-font-size"
+        ],
+        [
+          "--font-size-ui-sm",
+          "--typography-label-xs-font-size"
+        ],
+        [
+          "--font-size-ui-md",
+          "--typography-label-md-font-size"
+        ],
+        [
+          "--font-size-ui-lg",
+          "--typography-body-lg-font-size"
+        ]
+      ]
+    },
+    {
+      "id": "tier3-border-to-border-color",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "The word `border` named two different things at tier 3. These two held a plain colour; --filter-dropdown-border held a whole `1px solid …` shorthand (see the row below, which is NOT an exact alias). All three are now `-border-color`, matching the 27 border hooks in the file that already were. Names only, values untouched. FIRST TIER-3 ROWS IN THIS FILE — note the asymmetry: the emitted alias rescues a spoke that READS an old name, but tier 3 is the surface a spoke DECLARES, and an alias cannot rescue a declaration. A spoke that overrode --sidenav-border silently loses that override and renders the hub default with no error, so /update-tokens has to run in every spoke rather than the alias being left to absorb it.",
+      "pairs": [
+        [
+          "--sidenav-border",
+          "--sidenav-border-color"
+        ],
+        [
+          "--topbar-border",
+          "--topbar-border-color"
+        ]
+      ]
+    },
+    {
+      "id": "filter-dropdown-border-shorthand-to-colour",
+      "kind": "token",
+      "since": "2026-08-14",
+      "exact": false,
+      "why": "NOT an exact alias — the VALUE SHAPE changed, not just the name. --filter-dropdown-border held `1px solid var(--color-border)`; --filter-dropdown-border-color holds the colour alone, and esa-filter-dropdown now composes the shorthand from --border-width-default. The hub renders identically (that role is 1px, the same literal the shorthand carried), but a spoke is NOT safe by construction here: anything that wrote `border: var(--filter-dropdown-border)` now gets a bare colour where a shorthand was, which is not a valid border. That is the whole reason the token changed — a theme could not re-point this colour without restating a width and style it had no reason to care about. Rewrite such a site as `border: var(--border-width-default, 1px) solid var(--filter-dropdown-border-color)`.",
+      "pairs": [
+        [
+          "--filter-dropdown-border",
+          "--filter-dropdown-border-color"
+        ]
+      ]
+    },
+    {
+      "id": "tier3-variant-before-property",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "Five tokens put their variant AFTER the property, where the rest of the file puts it before (--app-bar-brand-bg, --app-bar-brand-strong-text). Four were esa-snackbar-item's colour-variant surface — the only component in the kit that exposes its variant axis at tier 3 at all — and the fifth, --form-border-color-error, put a validation VARIANT in the trailing slot reserved for interaction states, beside hover and focus. Renaming it also pairs it with the existing --form-error-color: one error treatment, two properties. Names only; every value is untouched. Same tier-3 declaration caveat as the border row above.",
+      "pairs": [
+        [
+          "--snackbar-item-bg-danger",
+          "--snackbar-item-danger-bg"
+        ],
+        [
+          "--snackbar-item-bg-info",
+          "--snackbar-item-info-bg"
+        ],
+        [
+          "--snackbar-item-bg-success",
+          "--snackbar-item-success-bg"
+        ],
+        [
+          "--snackbar-item-bg-warning",
+          "--snackbar-item-warning-bg"
+        ],
+        [
+          "--form-border-color-error",
+          "--form-error-border-color"
+        ]
+      ]
+    },
+    {
+      "id": "button-color-to-variant",
+      "kind": "prop",
+      "since": "2026-08-14",
+      "components": [
+        "EsaButton",
+        "esa-button"
+      ],
+      "module": "@esa/ecology/esa-button.astro",
+      "why": "FIRST `prop` ROW IN THIS FILE. `color` named the implementation — which accent token gets picked — rather than the choice being made, and half its values are not colours: `ghost` is transparent, `primary`/`secondary` are emphasis, `ai` is a context. Every other component carrying this axis already calls it `variant` (alert-box, badge, pill, progress-bar, snackbar-item, confirm-dialog), and `color` was ALREADY TAKEN by esa-loading-spinner's genuine CSS-colour prop — one name meaning two things in one system. The name arrived verbatim with Beacon's UiButton model (docs/beacon-gap-analysis.md:22); the two-axis `color × appearance` split was the right call, the axis name was not. NOTE the asymmetry vs a token row: no alias is emitted into tokens.css, because a prop is not a custom property. The component itself accepts `color` and warns, which is the compatibility shim — so a spoke keeps rendering, but only until that fallback is dropped. The rewrite is TAG-SCOPED (see scripts/lib/token-rename.mjs renameProp): a global find-and-replace would rewrite the spinner's colour prop and every `color:` declaration in the spoke.",
+      "pairs": [
+        [
+          "color",
+          "variant"
+        ]
+      ]
+    },
+    {
+      "id": "form-font-size-to-composites",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "The four --form-font-size-* hooks are deleted. They were a size-only ramp with no weight, leading or face behind them — the same defect D1 of docs/typography-adoption-plan.md deleted --font-size-ui-* for, one tier down, and they could not survive the component migration for a second reason: each control step now uses TWO composites (the label at label-*, the value at body-*), and one hook cannot narrow both. Each pair below maps a step to the size token of the composite it already resolved to, so a spoke reading an old name renders exactly what it rendered before. NOTE the letters do not line up — `sm` maps to the `-xs` rung — because the control ramp lands on 050·100·200·300 while the type families walk 050·100·150·200·300; see control-height in semantic/size.json. TIER-3 CAVEAT: the alias rescues a spoke that READS these names, not one that DECLARED them to re-skin its controls. A spoke doing that should move to overriding the composite instead.",
+      "pairs": [
+        [
+          "--form-font-size-xs",
+          "--typography-label-2xs-font-size"
+        ],
+        [
+          "--form-font-size-sm",
+          "--typography-label-xs-font-size"
+        ],
+        [
+          "--form-font-size-md",
+          "--typography-label-md-font-size"
+        ],
+        [
+          "--form-font-size-lg",
+          "--typography-label-lg-font-size"
+        ]
+      ]
+    },
+    {
+      "id": "form-label-typography-to-composites",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "--form-label-font-weight and --form-label-font-size are deleted with the ramp. The weight hook existed only because the `label` intention once shipped at a single weight; the family now has `medium` plus a `-strong` semibold tier at every rung, so a spoke wanting heavier labels re-points the composite or the component names the -strong variant. The size hook was never declared at :root at all — it resolved to a component PRIVATE, so every consumer was already running on its own fallback. IMPORTANT, this is why the pairs point at the `md` rung specifically: both hooks were size-AGNOSTIC, one name covering all four steps, and a composite property token is not. Rewriting a spoke to the md rung therefore PINS all four sizes to md's value, which is a real behaviour change and not a pure rename — review the call site rather than accepting the codemod blind.",
+      "pairs": [
+        [
+          "--form-label-font-weight",
+          "--typography-label-md-font-weight"
+        ],
+        [
+          "--form-label-font-size",
+          "--typography-label-md-font-size"
+        ]
+      ]
+    },
+    {
+      "id": "form-height-to-control-height",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "--form-height-* was a pure passthrough to --control-height-* at all four steps — same value, one extra name. What it added was a NARROWING, and that narrowing is a footgun rather than a feature: --control-height exists so inputs, buttons, selects and icon buttons line up on a row, and a spoke using --form-height-* to resize its form controls alone would break precisely that invariant. It also never bounded its readers — esa-button, esa-icon-button, esa-button-toggle and esa-chip-group read it and are not forms, the same complaint that retired --form-font-size-* the same day. Value-neutral: every pair below resolves to the identical px. CORRECTION, same day: this row originally read 'NOTE that --form-radius-* and --form-padding-* deliberately DO NOT follow: radius encodes a real xs/sm→control, md/lg→surface mapping, and padding has no tier-2 role behind it at all.' Half of that stands and half had the reason backwards. --form-radius-* does not follow, for exactly the mapping reason given. --form-padding-* DID follow, hours later, under form-padding-to-spacing — 'no tier-2 role behind it' was never an argument for keeping the hook. Having nothing behind it is precisely what made it a flat passthrough: sixteen names for four numbers, identical on both axes. See the FORMS header in component-tokens.css.",
+      "pairs": [
+        [
+          "--form-height-xs",
+          "--control-height-xs"
+        ],
+        [
+          "--form-height-sm",
+          "--control-height-sm"
+        ],
+        [
+          "--form-height-md",
+          "--control-height-md"
+        ],
+        [
+          "--form-height-lg",
+          "--control-height-lg"
+        ]
+      ]
+    },
+    {
+      "id": "form-padding-to-spacing",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "The eight --form-padding-{y,x}-{xs,sm,md,lg} are deleted. Every one was a FLAT passthrough to --spacing-200/250/300/400, and after Change 9 moved padding up a rung, x and y were IDENTICAL at every step — sixteen names for four numbers. Nothing ever re-pointed one: not themes.css, not cb-fish-design, not air-exchange-tool. Meanwhile 31 of 66 components already ramped padding straight off --spacing-* with no hook at all (esa-pill, esa-badge, esa-tab-layout and esa-filter-dropdown each walk a full xs/sm/md/lg ramp that way), so the kit was carrying two patterns to express one idea. The eleven form controls now read --spacing-* directly, which SPEC.md already blesses: spacing is one of the two CORE sets — universal, shared by every theme, meant to be consumed directly — which is why tier 2 has no spacing layer for a --control-padding-* role to live in. The error was never the tier-1 read; it was putting a hook in front of it. VALUE-IDENTICAL: every pair below resolves to the exact rem it resolved to before, so an alias is safe here in a way the control-height one was not, and a spoke READING an old name keeps rendering unchanged. WHAT THIS COSTS, stated plainly: this was the last one-line density lever a spoke had, and there is no successor token. A spoke wanting tighter controls cannot get them from its theme file — re-declaring --form-padding-y-md does nothing because nothing reads it, and re-pointing --spacing-* moves every gap, grid and stack in the kit. That is a /request-lego, not an override. READ TWICE IF YOUR THEME DECLARES ONE: the alias rescues a READER, never a DECLARER (see SPEC.md), and this is the first row where THE HUB ITSELF INVITED THE DECLARATION — packages/spoke-template shipped four __FILL__ slots for --form-padding-y-*, with defaults one rung TIGHTER than the hub's, so a scaffolded-but-unfilled spoke has been running denser than the hub and will get roomier when its declarations go inert. That slot is deleted in the same commit. Two more things the tooling cannot tell you. This collapses 8 names into 4, so if your theme gave y and x different values on the same step, migrate-tokens.mjs will REFUSE to run and list them — that is findCollapseCollisions doing its job, and only you can decide which value survives. And check-adherence.mjs builds its vocabulary from dist/tokens.css, which now contains these aliases, so Gate 1 will NOT flag a spoke still reading an old name: /update-tokens and doctor are the only enforcement.",
+      "pairs": [
+        [
+          "--form-padding-y-xs",
+          "--spacing-200"
+        ],
+        [
+          "--form-padding-x-xs",
+          "--spacing-200"
+        ],
+        [
+          "--form-padding-y-sm",
+          "--spacing-250"
+        ],
+        [
+          "--form-padding-x-sm",
+          "--spacing-250"
+        ],
+        [
+          "--form-padding-y-md",
+          "--spacing-300"
+        ],
+        [
+          "--form-padding-x-md",
+          "--spacing-300"
+        ],
+        [
+          "--form-padding-y-lg",
+          "--spacing-400"
+        ],
+        [
+          "--form-padding-x-lg",
+          "--spacing-400"
+        ]
+      ]
+    },
+    {
+      "id": "icon-link-trailing-to-icon-right",
+      "kind": "prop",
+      "since": "2026-08-14",
+      "components": [
+        "EsaIconLink",
+        "esa-icon-link"
+      ],
+      "module": "@esa/ecology/esa-icon-link.astro",
+      "why": "`trailing` only names the concept if you already know the term, and it did not read as a pair with `icon` — two string props on the same axis with nothing shared between the names, where `trailing` alone could plausibly be a boolean. `iconRight` pairs visibly with `icon`, sorts beside it, and needs no vocabulary. The test that settled it: what would someone type WITHOUT reading the docs? Nobody guesses `trailing`. The usual defence of the logical name is RTL, but this repo has no RTL anywhere — no dir, no i18n, no locale handling — so it was protecting a case that does not exist. If RTL ever arrives, renaming a physical name costs one row here plus a shim, which is the cheap half of what this file already does. esa-button gained the same prop as `iconRight` from the start and needs NO row: it was never released under the old name.",
+      "pairs": [
+        [
+          "trailing",
+          "iconRight"
+        ]
+      ]
+    },
+    {
+      "id": "form-hint-to-help-text",
+      "kind": "prop",
+      "since": "2026-08-14",
+      "components": [
+        "esa-button-toggle",
+        "esa-input-tag"
+      ],
+      "why": "One concept, two spellings. Five form controls (esa-select, esa-text-field, esa-textarea, esa-combobox, esa-date-picker) call the helper line below a field `helpText` and pair it with an `errorText`; these two called it `hint` and had no error channel at all. Both rendered the identical `typography-body-sm` span in the identical slot, so this was never two ideas — it was the minority spelling of one. The cost was silent: a spoke moving from esa-text-field to esa-button-toggle writes `help-text=\"…\"`, Lit ignores the unknown attribute, and NOTHING renders — no error, no warning, just a missing line. `helpText` won over `hint` because the majority already used it and because `hint` does not pair with `errorText` the way `helpText` does; the two now read as one axis with two states. NOTE the `to` is the ATTRIBUTE spelling `help-text`, not the property `helpText` — renameProp rewrites inside opening tags, which is where the attribute form appears. A spoke assigning the PROPERTY in script (`el.hint = '…'`) is NOT reachable by any static scan; the component's runtime warning is what covers that case, which is the second half every prop row needs. Both components also gained `errorText` in the same change — the rename only pays off if the thing it pairs with exists.",
+      "pairs": [
+        [
+          "hint",
+          "help-text"
+        ]
+      ]
+    },
+    {
+      "id": "control-height-removed",
+      "kind": "token",
+      "since": "2026-08-14",
+      "why": "--control-height-{xs,sm,md,lg} is DELETED WITH NO REPLACEMENT NAME. An input, a button or a select is now as tall as its padding plus its text; no token states a height. A fixed px height cannot grow with rem text — a user's browser font-size preference, a spoke's taller face, or a wrapped translation all outgrow it, and esa-text-field paired it with overflow:hidden so the excess was silently cut (WCAG 1.4.4). Padding carries the height now — but as of form-padding-to-spacing, hours later the same day, there is no padding TOKEN either: the eleven controls read --spacing-200/250/300/400 directly. So a spoke that re-pointed --control-height-md to make its inputs shorter has NO token-layer successor at all. Do not reach for --spacing-* as one: it is a CORE set, and moving a rung moves every gap, grid and stack in the kit, not just the controls. If this spoke genuinely needs a density lever, that is a /request-lego against the hub, not an override. The arithmetic also changed and is worth knowing before you argue for one: height = 2*padding + font-size + border. Heights are fluid now, because the type is — expect roughly 38px on a phone and 41px on a wide monitor where 40px used to be constant. The pairs below carry an empty destination on purpose: this was replaced by a capability, not by a name.",
+      "pairs": [
+        [
+          "--control-height-xs",
+          ""
+        ],
+        [
+          "--control-height-sm",
+          ""
+        ],
+        [
+          "--control-height-md",
+          ""
+        ],
+        [
+          "--control-height-lg",
+          ""
+        ]
+      ],
+      "removed": true,
+      "exact": false,
+      "to": "nothing. Padding carries the height, and as of form-padding-to-spacing (same day) there is no padding token either — the rungs live in the components."
+    },
+    {
+      "id": "layout-orphans-removed",
+      "kind": "token",
+      "removed": true,
+      "exact": false,
+      "since": "2026-08-14",
+      "to": "nothing — these were never wired to anything",
+      "why": "Five layout dimension tokens deleted with no replacement: they had ZERO readers anywhere — no component, no authored partial, not the docs site, not the spoke template, not cb-fish. Logged as P2 in system-improvement-ledger.md with the choice 'wire them up or delete them'; deleted. Header and footer heights were not wired because the shell is content-sized, and after Change 9 a px height is the pattern this kit removed rather than one to re-add. The content widths lost to a hardcoded 1556px that esa-container and esa-app-bar each carry as a prop default. If a spoke declared any of these it was overriding a token nothing read, so the override was already inert.",
+      "pairs": [
+        [
+          "--header-height",
+          ""
+        ],
+        [
+          "--footer-height",
+          ""
+        ],
+        [
+          "--content-max-width",
+          ""
+        ],
+        [
+          "--content-narrow-width",
+          ""
+        ],
+        [
+          "--content-wide-width",
+          ""
         ]
       ]
     }

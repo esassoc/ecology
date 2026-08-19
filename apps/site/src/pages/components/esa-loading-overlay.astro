@@ -2,14 +2,16 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import LoadingOverlay from '@esa/ecology/esa-loading-overlay.astro';
 
-const props = [
-  { name: 'active', type: 'boolean', default: 'false', description: 'When false the overlay renders nothing.' },
-  { name: 'message', type: 'string', description: 'Optional caption shown under the spinner.' },
-  { name: 'transparent', type: 'boolean', default: 'false', description: 'Semi-transparent backdrop instead of an opaque one.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  active: "When false the overlay renders nothing.",
+  message: "Optional caption shown under the spinner.",
+  transparent: "Semi-transparent backdrop instead of an opaque one.",
+};
 ---
 <ComponentDoc name="Loading Overlay" category="Display" slug="esa-loading-overlay" type=".astro" status="stable"
   summary="Covers its positioned parent with a centered spinner and optional message while a region is busy. Opaque or semi-transparent backdrop.">
@@ -45,7 +47,7 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-loading-overlay" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

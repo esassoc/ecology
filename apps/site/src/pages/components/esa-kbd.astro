@@ -1,0 +1,95 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import PropsTable from '@esa/docs/PropsTable.astro';
+import Kbd from '@esa/ecology/esa-kbd.astro';
+
+const slots = [
+  { name: 'default', type: 'slot', description: 'The key label — a character, a word (Esc, Tab), or a glyph (↑ ↓ ↵ ⌘).' },
+];
+---
+<ComponentDoc name="Keycap" category="Display" slug="esa-kbd" type=".astro" status="stable"
+  summary="A keycap for rendering keyboard hints — <code>/</code>, Tab, Esc, ↑ ↓ ↵. Renders a real &lt;kbd&gt;, token-driven, so it re-skins with the active theme.">
+
+  <Section id="preview" title="Preview">
+    <Preview code={`<Kbd>/</Kbd>`}>
+      <Kbd>/</Kbd>
+    </Preview>
+  </Section>
+
+  <Section id="labels" title="Labels">
+    <p>
+      The cap sizes to its content from a 19px square minimum, so single characters stay square and
+      words stretch. No <code>size</code> prop: keycaps sit inline with body or meta text and take
+      their scale from <code>--font-size-100</code>.
+    </p>
+    <Preview code={`<Kbd>/</Kbd>
+<Kbd>K</Kbd>
+<Kbd>Esc</Kbd>
+<Kbd>Tab</Kbd>
+<Kbd>Enter</Kbd>
+<Kbd>↑</Kbd>
+<Kbd>↓</Kbd>
+<Kbd>↵</Kbd>`}>
+      <Kbd>/</Kbd>
+      <Kbd>K</Kbd>
+      <Kbd>Esc</Kbd>
+      <Kbd>Tab</Kbd>
+      <Kbd>Enter</Kbd>
+      <Kbd>↑</Kbd>
+      <Kbd>↓</Kbd>
+      <Kbd>↵</Kbd>
+    </Preview>
+  </Section>
+
+  <Section id="chords" title="Chords">
+    <p>
+      A chord is separate caps with a literal separator between them — not one cap reading
+      <code>Cmd+K</code>. Each cap is a key the user physically presses; the <code>+</code> is prose.
+    </p>
+    <Preview code={`<Kbd>⌘</Kbd> + <Kbd>K</Kbd>
+<Kbd>Shift</Kbd> + <Kbd>?</Kbd>`}>
+      <span style="display: inline-flex; align-items: center; gap: 4px;"><Kbd>⌘</Kbd> + <Kbd>K</Kbd></span>
+      <span style="display: inline-flex; align-items: center; gap: 4px;"><Kbd>Shift</Kbd> + <Kbd>?</Kbd></span>
+    </Preview>
+  </Section>
+
+  <Section id="in-context" title="In context">
+    <p>
+      Keycaps are hints, not controls — they belong beside the thing the key operates: a search
+      trigger, a menu row, a footer legend in a dialog.
+    </p>
+    <Preview align="start" code={`<p>Press <Kbd>/</Kbd> to search.</p>
+
+<div class="legend">
+  <span><Kbd>↑</Kbd><Kbd>↓</Kbd> navigate</span>
+  <span><Kbd>↵</Kbd> select</span>
+  <span><Kbd>Esc</Kbd> close</span>
+</div>`}>
+      <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+        <p style="margin: 0;">Press <Kbd>/</Kbd> to search.</p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.8125rem; color: var(--color-content-muted, #737373);">
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><Kbd>↑</Kbd><Kbd>↓</Kbd> navigate</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><Kbd>↵</Kbd> select</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><Kbd>Esc</Kbd> close</span>
+        </div>
+      </div>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <p>No props — the key label is the slot.</p>
+    <PropsTable rows={slots} nameHeader="Slot" />
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <ul class="a11y">
+      <li>Renders a real <code>&lt;kbd&gt;</code>, so assistive tech announces it as keyboard input rather than as a decorative box.</li>
+      <li>A keycap documents a shortcut — it never <em>provides</em> one. The shortcut must be bound and reachable without it; the cap is not focusable and not a button.</li>
+      <li>Prefer word labels over bare glyphs where a glyph is ambiguous read aloud: <code>Enter</code> announces better than <code>↵</code>, and <code>⌘</code> is announced inconsistently across screen readers.</li>
+      <li>Don't state a platform-specific chord unconditionally — a Windows user reading <code>⌘</code> has no such key. Branch on platform, or say "Ctrl/⌘".</li>
+    </ul>
+  </Section>
+
+</ComponentDoc>

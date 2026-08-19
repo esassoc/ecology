@@ -54,6 +54,9 @@ const {
   coreCategory,
   coreSetNotes,
   themePrimitiveOverrides,
+  scanCoverage,
+  scanCoverageGaps,
+  READ_SCAN_EXEMPT,
 } = await import('../../data/token-graph');
 
 const t2 = await import('../../data/tier2-naming');
@@ -115,14 +118,49 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         and therefore ignorable.
       </p>
 
+      <h3 class="sub">Scan coverage — where &ldquo;nothing reads this&rdquo; is measured from</h3>
+      <p class="cat-note">
+        Every check below that says a token is unread is only as good as the set of files this
+        module opens. That set is now explicit and rendered here, because it has been wrong three
+        times: <code>--duration-0</code> (its only reader was an <code>@media</code> block),
+        <code>--topbar-*</code> (filed &ldquo;staged&rdquo; for months), and most recently
+        <b>102 <code>--typography-*</code> tokens</b> reported as orphans while
+        <code>packages/tokens/src/typography.css</code> read them 169 times. An unscanned surface
+        that ships is now itself a health finding.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Root</th><th>Kind</th><th>Files</th><th>Tokens read</th><th>Why</th></tr></thead>
+        <tbody>
+          {scanCoverage.map((r) => (
+            <tr>
+              <td><code>{r.rel}</code></td>
+              <td><span class={`slot-flag f-${r.kind === 'component' ? 'match' : 'extra'}`}>{r.kind}</span></td>
+              <td class="num">{r.files}</td>
+              <td class="num">{r.tokens}</td>
+              <td class="dim">{r.why}</td>
+            </tr>
+          ))}
+          {READ_SCAN_EXEMPT.map((e) => (
+            <tr class="row-zero">
+              <td><code>{e.rel}</code></td>
+              <td><span class="slot-flag f-absent">not scanned</span></td>
+              <td class="num">—</td>
+              <td class="num">—</td>
+              <td class="dim">{e.why}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       {[
+        { id: 'scancov', label: 'Shipped surfaces nobody scans', rows: scanCoverageGaps, note: 'A .css file @esa/tokens exports that no scan root covers and no exemption names. Every token it reads will report as an ORPHAN, and orphan on this page reads as “delete it”. Derived from the package’s own exports map rather than a hand-kept list, so adding a partial without rostering it turns this red on the next build. Third occurrence of this class — see the SCAN_ROOTS comment in token-graph.ts.', severity: 'bad' },
         { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
         { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead — which is what both shipped themes now do, re-skinning shape through --radius-surface rather than --radius-200.', severity: 'bad' },
         { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
         { id: 'hardcode', label: 'Semantic colour hardcodes', rows: semanticHardcodes, note: 'A tier-2 COLOUR terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer, off the palette and unconstrained by it.', severity: 'warn' },
         { id: 'dimroles', label: 'Dimension roles (tier 2, no ramp behind them)', rows: dimensionRoles, note: 'Tier-2 dimension tokens that hold a literal rather than aliasing a primitive — control heights, chip heights, layout widths. Not a defect: no tier-1 ramp exists for these, so tier 2 is where the definition belongs. Inventory, so that if one ever grows a ramp it can move onto it.', severity: 'info' },
-        { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but no token and no component reads it. Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below. Staged surfaces are excluded too — see the next check.', severity: 'warn' },
+        { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but nothing reads it — no token, no component, and no other shipped surface (see the Scan coverage table above for exactly which files that means). Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below. Staged surfaces are excluded too — see the next check.', severity: 'warn' },
         { id: 'staged', label: 'Staged surfaces (component not built yet)', rows: stagedSurfaces, note: 'Unread because the component that will read them does not exist yet — the contract is declared first so it can be reviewed before code depends on it. Governed by STAGED_PREFIXES in token-graph.ts; each prefix must be documented in SPEC.md and have a component doc page. Removing a prefix from that list should mean the component landed, not that the finding got annoying.', severity: 'info' },
         { id: 'chrome', label: 'Chrome, exempt by decision (component EXISTS)', rows: chromeSurfaces, note: `Not staged and not dead: the component is built and these map onto real elements in it, and we are choosing not to wire them. Kept in its own bucket because --topbar-* spent months filed as "staged" — which reads as "arriving soon" — on the false premise that no component owned it. The "Where" column names the owner so that cannot recur. Governed by CHROME_EXEMPT in token-graph.ts; every entry states what a spoke loses. ${CHROME_EXEMPT.map((c) => `${c.prefix}* → ${c.owner}: ${c.cost}`).join(' ')}`, severity: 'info' },
         { id: 'adhoc', label: 'Ad-hoc hooks — promotion candidates', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. Legitimate per SPEC.md: the component offers the hook via its fallback only. This is the working list for tier-3 surface work — promote into component-tokens.css, or fold away.', severity: 'info' },
@@ -408,8 +446,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-note">
         The shape of the gap is the mirror image of tier 2. There, everything left of
         <em>variant</em> was missing. Here slot 3 is solid and slots 4–5 are inverted: we write
-        <code>--form-padding-x-md</code> where the rubric writes
-        <code>--eco-component-form-md-padding-x</code>. Same information, opposite order.
+        <code>--form-radius-md</code> where the rubric writes
+        <code>--eco-component-form-md-radius</code>. Same information, opposite order.
       </p>
 
       <h3 class="sub">Slot by slot</h3>
@@ -615,7 +653,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         The size axis that tier 2 skips entirely lands here instead, on
         {t3.sizeRows.scales.length} separate per-component scales — every one of them with the size
         trailing the property. <code>default</code> is correctly omitted throughout: there is no
-        <code>--form-padding-x-default</code>, the unsuffixed name <em>is</em> the default.
+        <code>--form-radius-default</code>, the unsuffixed name <em>is</em> the default.
       </p>
       <table class="findings">
         <thead><tr><th>Dialect</th><th>Tokens</th><th>Where</th></tr></thead>
@@ -661,11 +699,25 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           ))}
         </tbody>
       </table>
-      <p class="cat-gap">
-        <b>One suffix, two property types.</b> <code>-border</code> holds a colour on
-        {t3.borderSplit.colour.length} tokens and a full shorthand on {t3.borderSplit.shorthand.length}.
-        A theme overriding <code>--sidenav-border</code> changes a colour; overriding
-        <code>--grid-row-border</code> means restating the width and style to change one.
+      <p class={t3.borderSplit.shorthand.length ? 'cat-gap' : 'cat-note'}>
+        {t3.borderSplit.shorthand.length ? (
+          <>
+            <b>One suffix, two property types.</b> <code>-border</code> holds a colour on
+            {t3.borderSplit.colour.length} tokens and a full shorthand on {t3.borderSplit.shorthand.length}.
+            Overriding the first changes a colour; overriding the second means restating the width
+            and style to change one.
+          </>
+        ) : (
+          <>
+            <b>Closed.</b> <code>-border</code> used to name two different property types —
+            a colour on <code>--sidenav-border</code> and <code>--topbar-border</code>, a whole
+            <code>1px solid …</code> shorthand on <code>--filter-dropdown-border</code> — so two of
+            the three were re-pointable and the third was not. All three are now
+            <code>-border-color</code> holding a colour, and esa-filter-dropdown composes the
+            shorthand from <code>--border-width-default</code>. The table below is derived, so it
+            repopulates the moment a shorthand reappears.
+          </>
+        )}
       </p>
       <table class="findings">
         <thead><tr><th>Token</th><th>Holds</th><th>Value</th></tr></thead>
@@ -750,6 +802,139 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         </tbody>
       </table>
 
+      <h3 class="sub">Colour · the narrower rubric</h3>
+      <p class="cat-note">
+        Colour gets its own shape, and it is stricter in two ways: the property is one of
+        <em>three</em> rather than any CSS property, and <code>disabled</code> sits in the state slot
+        alongside hover and focus. Measured against the {t3.colourTally.total} tier-3 tokens that
+        actually hold a colour — a <code>1px solid …</code> shorthand and an
+        <code>--elevation-*</code> shadow are both excluded, because neither is a name for a colour.
+      </p>
+
+      <div class="grammar">
+        <div>
+          <span class="grammar-label">Rubric</span>
+          <code>{t3.colourGrammars.rubric}</code>
+        </div>
+        <div>
+          <span class="grammar-label">What we ship</span>
+          <code>{t3.colourGrammars.current}</code>
+        </div>
+      </div>
+
+      <div class="tally">
+        <div class="tally-cell t3"><b>{t3.colourTally.total}</b><span>colour tokens</span></div>
+        <div class="tally-cell warn"><b>{t3.colourTally.qualified}</b><span>qualified <code>color-</code></span></div>
+        <div class="tally-cell"><b>{t3.colourTally.background}</b><span>background</span></div>
+        <div class="tally-cell"><b>{t3.colourTally.content}</b><span>content</span></div>
+        <div class="tally-cell"><b>{t3.colourTally.border}</b><span>border</span></div>
+        <div class="tally-cell warn"><b>{t3.colourTally.varianted}</b><span>carry a variant</span></div>
+      </div>
+
+      <table class="findings slots">
+        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.colourSlots.map((s) => (
+            <tr class={`slot-${s.status}`}>
+              <td class="slot-n">{s.n}</td>
+              <td class="slot-name">
+                {s.name}
+                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
+              </td>
+              <td><code class="spec">{s.spec}</code></td>
+              <td>{s.verdict}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h4 class="sub2">The property, in {t3.colourPropVocab.reduce((n, p) => n + p.words.length, 0)} words instead of 3</h4>
+      <table class="findings">
+        <thead><tr><th>Rubric property</th><th>Our words</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.colourPropVocab.map((p) => (
+            <tr>
+              <td><code class="spec">{p.rubric}</code></td>
+              <td>
+                {p.words.map((w) => (
+                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="dim">×{w.count}</span></code>
+                ))}
+              </td>
+              <td class="num">{p.total}</td>
+              <td>{p.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {t3.colourUnnamedProp.length > 0 && (
+        <p class="cat-gap">
+          <b>{t3.colourUnnamedProp.length} colour tokens name no property at all</b> — the value is the
+          only way to know what they paint:
+          {t3.colourUnnamedProp.map((r) => <code class="vocab warnv">{r.name}</code>)}
+        </p>
+      )}
+
+      <h4 class="sub2">The variant slot · {t3.axisUnexposed.length} of {t3.intentionAxis.length} axes unexposed</h4>
+      <p class="cat-note">
+        The rubric&rsquo;s worked example is a button with primary / secondary / tertiary variants, each
+        with its own background and its own states. So the real test is not whether any token carries a
+        variant word — it is whether a component that <em>has</em> a colour-variant axis can be themed
+        along it. <b>Intentions</b> is derived from the component source (which tier-2 roles the file
+        reads); <b>varianted hooks</b> from the token names.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Component</th><th>Variant axis</th><th>Colour hooks</th><th>…varianted</th></tr></thead>
+        <tbody>
+          {t3.intentionAxis.map((a) => (
+            <tr>
+              <td><code>esa-{a.component}</code></td>
+              <td>{a.intentions.map((i) => <code class="vocab">{i}</code>)}</td>
+              <td class="num">{a.hooks}</td>
+              <td class="num">
+                {a.varianted === 0
+                  ? <span class="slot-flag f-absent">none</span>
+                  : a.varianted}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="cat-gap">
+        <b>This is a cost, not a bug.</b> Those components express their variants by reading tier-2
+        intentions directly, which is legal and keeps the surface small — the whole kit&rsquo;s danger
+        moves as one. What it forecloses is the other direction: a spoke cannot make its danger
+        <em>button</em> differ from its danger <em>badge</em>, because there is no hook between them.
+        {t3.colourVariantInverted.length > 0 && (
+          <>
+            {' '}The {t3.colourVariantInverted.length} tokens that do carry a variant put it after the
+            property, which is the rubric&rsquo;s order reversed:
+            {t3.colourVariantInverted.map((r) => <code class="vocab warnv">{r.name}</code>)}
+          </>
+        )}
+      </p>
+
+      <h4 class="sub2">The state slot</h4>
+      <table class="findings">
+        <thead><tr><th>State</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.colourStateVocab.map((s) => (
+            <tr class={s.tokens.length === 0 ? 'row-zero' : undefined}>
+              <td>
+                <code class="vocab st">{s.state}</code>
+                <span class={`slot-flag f-${s.inRubric ? 'match' : 'extra'}`}>
+                  {s.inRubric ? 'rubric' : 'ours'}
+                </span>
+              </td>
+              <td class="num">{s.tokens.length}</td>
+              <td>
+                {s.note && <div class="detail">{s.note}</div>}
+                {s.tokens.map((n) => <code class="vocab">{n}</code>)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       <details class="tok-group" data-group>
         <summary>
           <code class="group-label">Every tier-3 token, parsed into slots</code>
@@ -805,6 +990,48 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           </tbody>
         </table>
       </details>
+
+      <h3 class="sub">Typography · the third narrow rubric</h3>
+      <p class="cat-note">
+        Colour is not the only family with its own shape. Typography gets one too —
+        <code class="spec">--&lt;component&gt;-&lt;variant&gt;-&lt;font-size|font-weight|font-style|line-height&gt;</code>
+        — and it differs from colour in the direction it wants to be measured. The model is explicit
+        that components should wire to the tier-2 typography <em>composites</em>, and that tier 3 is
+        for the exceptions only: <q>most of the use cases for this are either tweaking a font size, or
+        setting a line height to one in order to remove white space above and below a text</q>. So a
+        <em>small</em> number here is the healthy result. A large tier-3 type surface would mean
+        components are re-deriving type instead of reading a role.
+      </p>
+      <div class="tally">
+        <div class="tally-cell t3"><b>{t3.typeTally.total}</b><span>typographic tier-3 tokens</span></div>
+        <div class="tally-cell ok"><b>{t3.typeTally.rubricSpelled}</b><span>spelled the rubric&rsquo;s way</span></div>
+        <div class="tally-cell warn"><b>{t3.typeTally.total - t3.typeTally.rubricSpelled - t3.typeTally.outside}</b><span>abbreviated</span></div>
+        <div class="tally-cell warn"><b>{t3.typeTally.outside}</b><span>property outside the four</span></div>
+      </div>
+      <table class="findings">
+        <thead><tr><th>Rubric property</th><th>Our words</th><th>Tokens</th><th>Where we are</th></tr></thead>
+        <tbody>
+          {t3.typePropVocab.map((p) => (
+            <tr>
+              <td><code class="spec">{p.rubric}</code></td>
+              <td>
+                {p.words.length === 0 ? <span class="dim">—</span> : p.words.map((w) => (
+                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="dim">×{w.count}</span></code>
+                ))}
+              </td>
+              <td class="num">{p.total}</td>
+              <td>{p.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {t3.typeOutsideRubric.length > 0 && (
+        <p class="cat-gap">
+          <b>{t3.typeOutsideRubric.length} outside the model&rsquo;s four properties</b> — the rubric closes
+          the list at font-size, font-weight, font-style and line-height, so these have no slot to sit in:
+          {t3.typeOutsideRubric.map((t) => <code class="vocab warnv">{t.row.name}</code>)}
+        </p>
+      )}
     </Section>
 
     <Section id="tier1-naming" title="Tier 1 · Naming audit">
@@ -1339,16 +1566,18 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                             <span class="dim"> · {node?.resolved}</span>
                           </td>
                           <td class="c-used">
-                            {node && node.usedByTokens.length === 0 && node.usedByComponents.length === 0 ? (
+                            {node && node.usedByTokens.length === 0 && node.usedByComponents.length === 0 && node.usedByFiles.length === 0 ? (
                               <span class="orphan-flag">orphan</span>
                             ) : (
                               <details class="uses">
                                 <summary>
                                   {node && node.usedByTokens.length > 0 && <span class="pill">{node.usedByTokens.length} tok</span>}
                                   {node && node.usedByComponents.length > 0 && <span class="pill">{node.usedByComponents.length} comp</span>}
+                                  {node && node.usedByFiles.length > 0 && <span class="pill">{node.usedByFiles.length} file</span>}
                                 </summary>
                                 {node && node.usedByTokens.length > 0 && <p><b>Tokens:</b> {node.usedByTokens.join(', ')}</p>}
                                 {node && node.usedByComponents.length > 0 && <p><b>Components:</b> {node.usedByComponents.join(', ')}</p>}
+                                {node && node.usedByFiles.length > 0 && <p><b>Files:</b> {node.usedByFiles.join(', ')}</p>}
                               </details>
                             )}
                           </td>
@@ -1835,6 +2064,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     margin: var(--spacing-600, 24px) 0 var(--spacing-250, 10px);
     padding-bottom: var(--spacing-200, 8px);
     border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
+  }
+  /* One level under h3.sub — the colour rubric's slots are subsections OF the
+     tier-3 audit, not siblings of it, so they get a quieter rule. */
+  .tokens-debug h4.sub2 {
+    font-size: 0.85rem;
+    margin: var(--spacing-500, 20px) 0 var(--spacing-200, 8px);
+    color: var(--color-content-secondary, #525252);
   }
   /* The two grammars side by side — the whole finding in one glance. */
   .tokens-debug .grammar {

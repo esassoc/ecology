@@ -107,8 +107,34 @@
   letter-spacing: var(--typography-body-sm-letter-spacing);
 }
 
-/* UI TEXT. Three sizes × two weights. The sizes share the body ramp on purpose —
-   label-md and body-md are the same size doing different jobs. */
+.typography-body-xs {
+  font-family: var(--typography-body-xs-font-family);
+  font-size: var(--typography-body-xs-font-size);
+  font-weight: var(--typography-body-xs-font-weight);
+  line-height: var(--typography-body-xs-line-height);
+  letter-spacing: var(--typography-body-xs-letter-spacing);
+}
+
+.typography-body-2xs {
+  font-family: var(--typography-body-2xs-font-family);
+  font-size: var(--typography-body-2xs-font-size);
+  font-weight: var(--typography-body-2xs-font-weight);
+  line-height: var(--typography-body-2xs-line-height);
+  letter-spacing: var(--typography-body-2xs-letter-spacing);
+}
+
+/* UI TEXT. The middle sizes share the body ramp on purpose — label-md and
+   body-md are the same size doing different jobs. `2xs` and `lg` bracket them
+   for the control ramp, which runs wider than prose does; the `-strong` variants
+   are a weight axis, not more sizes. */
+.typography-label-2xs {
+  font-family: var(--typography-label-2xs-font-family);
+  font-size: var(--typography-label-2xs-font-size);
+  font-weight: var(--typography-label-2xs-font-weight);
+  line-height: var(--typography-label-2xs-line-height);
+  letter-spacing: var(--typography-label-2xs-letter-spacing);
+}
+
 .typography-label-xs {
   font-family: var(--typography-label-xs-font-family);
   font-size: var(--typography-label-xs-font-size);
@@ -133,6 +159,22 @@
   letter-spacing: var(--typography-label-md-letter-spacing);
 }
 
+.typography-label-lg {
+  font-family: var(--typography-label-lg-font-family);
+  font-size: var(--typography-label-lg-font-size);
+  font-weight: var(--typography-label-lg-font-weight);
+  line-height: var(--typography-label-lg-line-height);
+  letter-spacing: var(--typography-label-lg-letter-spacing);
+}
+
+.typography-label-2xs-strong {
+  font-family: var(--typography-label-2xs-strong-font-family);
+  font-size: var(--typography-label-2xs-strong-font-size);
+  font-weight: var(--typography-label-2xs-strong-font-weight);
+  line-height: var(--typography-label-2xs-strong-line-height);
+  letter-spacing: var(--typography-label-2xs-strong-letter-spacing);
+}
+
 .typography-label-xs-strong {
   font-family: var(--typography-label-xs-strong-font-family);
   font-size: var(--typography-label-xs-strong-font-size);
@@ -155,6 +197,14 @@
   font-weight: var(--typography-label-md-strong-font-weight);
   line-height: var(--typography-label-md-strong-line-height);
   letter-spacing: var(--typography-label-md-strong-letter-spacing);
+}
+
+.typography-label-lg-strong {
+  font-family: var(--typography-label-lg-strong-font-family);
+  font-size: var(--typography-label-lg-strong-font-size);
+  font-weight: var(--typography-label-lg-strong-font-weight);
+  line-height: var(--typography-label-lg-strong-line-height);
+  letter-spacing: var(--typography-label-lg-strong-letter-spacing);
 }
 
 .typography-title-strong {
@@ -213,6 +263,22 @@
   font-weight: var(--typography-code-sm-font-weight);
   line-height: var(--typography-code-sm-line-height);
   letter-spacing: var(--typography-code-sm-letter-spacing);
+}
+
+.typography-code-xs {
+  font-family: var(--typography-code-xs-font-family);
+  font-size: var(--typography-code-xs-font-size);
+  font-weight: var(--typography-code-xs-font-weight);
+  line-height: var(--typography-code-xs-line-height);
+  letter-spacing: var(--typography-code-xs-letter-spacing);
+}
+
+.typography-code-2xs {
+  font-family: var(--typography-code-2xs-font-family);
+  font-size: var(--typography-code-2xs-font-size);
+  font-weight: var(--typography-code-2xs-font-weight);
+  line-height: var(--typography-code-2xs-line-height);
+  letter-spacing: var(--typography-code-2xs-letter-spacing);
 }
 
 /* ---------------------------------------------------------------------------
@@ -346,3 +412,4 @@
   line-height: var(--typography-code-sm-line-height);
   letter-spacing: var(--typography-code-sm-letter-spacing);
 }
+

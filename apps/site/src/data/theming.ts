@@ -26,6 +26,30 @@ export interface ThemingHook {
    * undefined = referenced with NO fallback and declared nowhere — a bug.
    */
   tier: 'component' | 'semantic' | 'primitive' | 'ad-hoc' | 'undefined';
+  /**
+   * BLAST RADIUS — the question `tier` can't answer: if I re-point this, what
+   * else moves? Tier says which file declares a token; scope says how many
+   * components read it. They are NOT the same axis, and conflating them
+   * misleads: every tier-3 token `esa-text-field` reads is a `--form-*`
+   * shared by 16 other controls, so a "component tier" badge there reads as
+   * "your private hook" when it is nothing of the kind.
+   *
+   * exclusive = this is the only component that reads it — turn it freely.
+   * shared    = a tier-3 token a FAMILY of components reads (see `alsoReadBy`).
+   * system    = tier-2/tier-1; re-pointing it moves the whole system.
+   */
+  scope: 'exclusive' | 'shared' | 'system';
+  /** Other components reading this token — populated only when scope=shared. */
+  alsoReadBy: string[];
+  /** Group surface a shared token belongs to, e.g. `--form-bg` → `forms`. */
+  family: string | null;
+  /**
+   * The component that OWNS a shared token, when another one declared it —
+   * `esa-loading-overlay` reading `--loading-spinner-color`. Distinct from
+   * `family`: this is one component borrowing another's hook, which is worth
+   * seeing, where a family surface is shared by design.
+   */
+  ownedBy: string | null;
   fallback: string | null;
   /**
    * The token's real resolution chain, walked from its DEFINITION (not its
@@ -79,6 +103,41 @@ const readTier = (dir: string): Set<string> => {
 const primitiveSrc = readTier('primitive');
 const isPrimitive = (t: string) => primitiveSrc.has(t);
 
+// --- Declared ownership ----------------------------------------------------
+// WHICH COMPONENT IS A TIER-3 TOKEN FOR? Not inferable from the component's
+// source — a source scan only sees what a component READS, and reading
+// `--color-content-primary` is tier-2 working correctly, not a leak. Ownership
+// is AUTHORED, in component-tokens.css: the HOOKIFY block groups declarations
+// under `/* esa-badge */` comments, and the older top block groups them under
+// `/* ===== FORMS ===== */` family headers. We read those markers rather than
+// pattern-matching names, for the same reason the tier split reads directories.
+export interface TokenOwner {
+  /** `esa-badge`, or a family label like `forms`. */
+  label: string;
+  kind: 'component' | 'family';
+}
+const OWNER_COMMENT = /^\s*\/\*\s*(esa-[a-z0-9-]+)\s*\*\/\s*$/;
+const SECTION_HEADER = /^\s*\/\*\s*=+\s*(.+?)\s*=+/;
+const DECLARATION = /^\s*(--[a-zA-Z0-9-]+)\s*:/;
+
+const owners = new Map<string, TokenOwner>();
+{
+  let owner: TokenOwner | null = null;
+  for (const line of componentCss.split('\n')) {
+    const byComponent = line.match(OWNER_COMMENT);
+    if (byComponent) { owner = { label: byComponent[1], kind: 'component' }; continue; }
+    const bySection = line.match(SECTION_HEADER);
+    if (bySection) {
+      // "NAVIGATION — SIDEBAR", "DATA GRID (STAGED)" → a readable family label.
+      const label = bySection[1].replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
+      owner = { label, kind: 'family' };
+      continue;
+    }
+    const decl = line.match(DECLARATION);
+    if (decl && owner && !owners.has(decl[1])) owners.set(decl[1], owner);
+  }
+}
+
 const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
   componentTier.has(t) ? 'component'
   : baseTier.has(t) ? (isPrimitive(t) ? 'primitive' : 'semantic')
@@ -129,6 +188,11 @@ const lineageOf = (start: string | null): LineageLink[] => {
 
 export const themingSurface: Record<string, ThemingHook[]> = {};
 
+// PASS 1 — scan every component for the tokens it reads. Kept separate from
+// hook construction because `scope` needs the FULL reverse index (who else
+// reads this token?), which isn't known until every file has been scanned.
+const readsBySlug = new Map<string, Map<string, string | null>>();
+
 for (const file of readdirSync(COMPONENTS)) {
   if (!/\.(astro|ts)$/.test(file)) continue;
   const slug = file.replace(/\.(astro|ts)$/, '');
@@ -154,18 +218,62 @@ for (const file of readdirSync(COMPONENTS)) {
   }
   if (!hooks.size) continue;
   // esa-foo.astro + esa-foo.ts both contribute to one slug — merge.
-  for (const prior of themingSurface[slug] ?? []) {
-    if (!hooks.has(prior.token)) hooks.set(prior.token, prior.fallback);
+  const prior = readsBySlug.get(slug);
+  if (prior) for (const [token, fallback] of prior) {
+    if (!hooks.has(token)) hooks.set(token, fallback);
   }
+  readsBySlug.set(slug, hooks);
+}
+
+// PASS 2 — reverse index: token → the components that read it. Only `esa-*`
+// slugs count as readers; internal helpers (`_inject-styles`, `icon-registry`)
+// aren't components a spoke themes, so they must not inflate a blast radius.
+const readersOf = new Map<string, Set<string>>();
+for (const [slug, hooks] of readsBySlug) {
+  if (!slug.startsWith('esa-')) continue;
+  for (const token of hooks.keys()) {
+    let set = readersOf.get(token);
+    if (!set) readersOf.set(token, (set = new Set()));
+    set.add(slug);
+  }
+}
+
+// PASS 3 — build each component's surface, now that scope is knowable.
+for (const [slug, hooks] of readsBySlug) {
   themingSurface[slug] = [...hooks.entries()]
-    .map(([token, fallback]) => ({
-      token,
-      tier: tier(token, fallback),
-      fallback,
-      // Resolve from the token's own definition; ad-hoc tokens (defined nowhere)
-      // fall back to walking their inline fallback literal.
-      lineage: defs.has(token) ? lineageOf(defs.get(token)!) : lineageOf(fallback),
-    }))
+    .map(([token, fallback]) => {
+      const t = tier(token, fallback);
+      const owner = owners.get(token) ?? null;
+      const readers = [...(readersOf.get(token) ?? [])].filter((s) => s !== slug).sort();
+      // A tier-2/tier-1 token is system-wide by definition. For tier-3 and
+      // ad-hoc hooks the test is empirical, NOT the declaration: "wired to this
+      // component" has to mean nothing else reads it, or the promise is false.
+      // Declaration alone would lie in both directions — `--sidenav-*` is filed
+      // under a `/* ===== NAVIGATION — SIDEBAR ===== */` family header yet only
+      // esa-sidebar-nav reads it (exclusive in practice), while a token filed
+      // under one component but read by a sibling is shared no matter whose
+      // comment group it sits in. The declared owner survives as the family
+      // LABEL on shared rows — provenance, not the classifier.
+      const scope: ThemingHook['scope'] =
+        t === 'semantic' || t === 'primitive' ? 'system'
+        : readers.length === 0 ? 'exclusive'
+        : 'shared';
+      return {
+        token,
+        tier: t,
+        scope,
+        alsoReadBy: scope === 'shared' ? readers : [],
+        family: scope === 'shared' && owner?.kind === 'family' ? owner.label : null,
+        ownedBy:
+          scope === 'shared' && owner?.kind === 'component' && owner.label !== slug
+            ? owner.label
+            : null,
+        fallback,
+        // Resolve from the token's own definition; ad-hoc tokens (defined nowhere)
+        // fall back to walking their inline fallback literal.
+        lineage: defs.has(token) ? lineageOf(defs.get(token)!) : lineageOf(fallback),
+      };
+    })
     .sort((a, b) => {
       const order = { component: 0, 'ad-hoc': 1, semantic: 2, primitive: 3, undefined: 4 };
       return order[a.tier] - order[b.tier] || a.token.localeCompare(b.token);

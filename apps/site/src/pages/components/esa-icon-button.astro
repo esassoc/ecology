@@ -2,15 +2,17 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaIconButton from '@esa/ecology/esa-icon-button.astro';
 
-const props = [
-  { name: 'icon', type: 'string', description: 'Lucide icon name.' },
-  { name: 'label', type: 'string', description: 'Accessible name (aria-label + title). Required — an icon-only control needs a name.' },
-  { name: 'href', type: 'string', description: 'When present renders an <a>; otherwise a <button>.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Square footprint on the shared form size scale.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  icon: "Lucide icon name.",
+  label: "Accessible name (aria-label + title). Required — an icon-only control needs a name.",
+  href: "When present renders an <a>; otherwise a <button>.",
+  size: "Square footprint on the shared form size scale.",
+};
 ---
 <ComponentDoc name="Icon Button" category="Core" slug="esa-icon-button" type=".astro" status="stable"
   summary="Icon-only action for toolbars and chrome (search, close, overflow). Lightweight, transparent, and inherits <code>currentColor</code> — the chrome-grade counterpart to <code>esa-button</code>'s heavier <code>iconOnly</code> mode. <code>label</code> is required for accessibility.">
@@ -55,6 +57,6 @@ const props = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-icon-button" describe={describe} />
   </Section>
 </ComponentDoc>

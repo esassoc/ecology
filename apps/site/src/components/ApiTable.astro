@@ -1,0 +1,73 @@
+---
+// The API table for a component doc page.
+//
+// The rows are GENERATED from the component source at build time
+// (src/data/component-api.ts) — prop names, types and defaults are read off
+// `interface Props` + `Astro.props` destructuring (.astro) or `static
+// properties` + `declare` + constructor (Lit). A page cannot omit a prop, and
+// it cannot describe a type that the component no longer has.
+//
+// Pages supply only PROSE, keyed by prop name, via `describe`. A key that
+// matches no prop in source is a build-time warning, not a silent no-op.
+//
+// Events stay authored: a CustomEvent's `detail` shape is not declared anywhere
+// machine-readable. Their NAMES are still checked against the component's
+// actual `dispatchEvent` calls.
+import PropsTable from '@esa/docs/PropsTable.astro';
+import { componentApi, reportApiDrift } from '../data/component-api';
+
+interface EventRow { name: string; type: string; description: string }
+interface Props {
+  slug: string;
+  /** prop name (attribute name, for web components) → prose. */
+  describe?: Record<string, string>;
+  events?: EventRow[];
+}
+const { slug, describe = {}, events = [] } = Astro.props;
+
+const api = componentApi[slug];
+reportApiDrift(slug, Object.keys(describe), events.map((e) => e.name));
+
+const rows = (api?.props ?? []).map((p) => {
+  const prose = describe[p.name] ?? p.description ?? '';
+  // A web component's property name is worth stating when it differs from the
+  // attribute a consumer writes — `label-position` vs `.labelPosition`.
+  const alias = p.propertyName ? ` Property: \`${p.propertyName}\`.` : '';
+  // Without this note a reader would try to write it as an attribute in HTML
+  // and get silence.
+  const only = p.propertyOnly ? ' Set as a JS property — there is no attribute.' : '';
+  return {
+    name: p.name,
+    type: p.type,
+    // A required prop has no default precisely because you must pass one.
+    default: p.required ? 'required' : p.default,
+    description: prose + alias + only,
+  };
+});
+---
+{rows.length > 0 && <PropsTable rows={rows} nameHeader="Prop" />}
+
+{rows.length === 0 && events.length === 0 && (
+  <p class="api-empty">This component takes no props — compose it through its slots.</p>
+)}
+
+{api?.passthrough && (
+  <p class="api-note">
+    Any other attribute (<code>onclick</code>, <code>id</code>, <code>name</code>,
+    <code>data-*</code>, <code>aria-*</code>) is forwarded verbatim to the native
+    element, so plain-JS callers can wire a handler or grab it by id.
+  </p>
+)}
+
+{events.length > 0 && (
+  <>
+    <h3 class="api-sub">Events</h3>
+    <PropsTable rows={events} nameHeader="Event" />
+  </>
+)}
+
+<style>
+  .api-sub { font-size: 16px; font-weight: 600; margin: var(--spacing-400, 1rem) 0 var(--spacing-250, 0.625rem); color: var(--color-content-primary, #171717); }
+  .api-note, .api-empty { font-size: 14.5px; color: var(--color-content-secondary, #525252); margin: 0 0 var(--spacing-300, 0.75rem); }
+  .api-note code, .api-empty code { font-family: var(--font-mono, monospace); font-size: 13px; background: var(--color-background-sunken, #f3f7fc); padding: 1px 6px; border-radius: 5px; }
+</style>

@@ -25,30 +25,87 @@
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
-     One scale across button/input/icon-button so they line up on a row. */
+     One scale across button/input/icon-button so they line up on a row.
+
+     THERE IS NO --form-font-size-* HERE, AND THAT IS DELIBERATE. It existed
+     until 2026-08-14: a size-only ramp with no weight, leading or face behind
+     it — the same defect D1 of docs/typography-adoption-plan.md deleted
+     `--font-size-ui-*` for, one tier down. 17 components read it, among them
+     button, icon-button, chip-group and button-toggle, which are not forms; the
+     `form` namespace never bounded its readers because those four had nowhere
+     else to get the control ramp.
+
+     The fix was not a tier-2 partner ramp. One was added the same day as
+     `--control-font-size-*` and reverted within the hour — see the note on
+     control-height in semantic/size.json. The fix is that components adopt the
+     COMPOSITE whose job matches the text (D2): a label reads label-*, a value
+     reads body-*. One hook could never have narrowed both, which is the other
+     reason it could not survive. `--form-label-font-weight` and the never-
+     declared `--form-label-font-size` went with it; the composite carries size
+     and weight together, so neither had anything left to say.
+
+     Aliases for all six are in migrations.json, so a spoke READING an old name
+     keeps resolving. A spoke that DECLARED one is not rescued by an alias — that
+     asymmetry is in SPEC.md and is why the rows matter.
+
+     HEIGHT IS GONE ENTIRELY — first --form-height-* on 2026-08-14, then
+     --control-height-* behind it the same day. The first was a pure passthrough
+     that added only a narrowing. The second was the real problem: a px height
+     cannot grow with rem text. Raise your browser font size, swap in a taller
+     face, wrap a translation, and the box cannot follow — and esa-text-field
+     paired it with overflow:hidden, so the excess was cut silently (WCAG 1.4.4).
+
+     Nothing replaced it. An input, a button or a select is now as tall as the
+     padding below plus its own text. That is why each step sits one spacing rung
+     higher than it used to: the padding now CARRIES the height, where before the
+     height carried it and the padding was absorbed into the box. It carries it
+     through --spacing-* read directly, though — see below; --form-padding-* was
+     the lever for a matter of hours and is gone too.
+
+     Two consequences worth knowing. Heights are fluid, because the type is —
+     roughly 38px on a phone where a wide monitor gets 41px. And a row still
+     aligns, but structurally rather than by decree: siblings on the same step
+     share a padding value and a type rung, so they resolve to the same height.
+     See typography-migration-log.md Change 9.
+
+     WHY --form-radius-* SURVIVES AND --form-padding-* DID NOT. Both sat on this
+     ramp; only one was doing work:
+
+       --form-radius-* is NOT a passthrough. It encodes a documented mapping —
+       --radius-control's description says "inputs at xs/sm", --radius-surface's
+       says "inputs at md/lg". Delete it and 13 components each restate that. For
+       type, writing the mapping out per component bought visibility because the
+       hook was hiding the rung offset; here it hides nothing, so the hook is
+       doing honest work.
+
+       --form-padding-{y,x}-* was a flat passthrough and was deleted the same day
+       (migrations.json: form-padding-to-spacing). Reading --spacing-* was never
+       the problem — spacing is one of the two CORE sets (see SPEC.md): universal,
+       shared by every theme, meant to be consumed directly, which is why tier 2
+       has no spacing layer and why a --control-padding-* role should not be
+       invented. The problem was the hook in FRONT of that read. It renamed four
+       numbers sixteen times (x and y were identical at every step after Change 9),
+       nothing anywhere ever re-pointed one, and 31 of 66 components already walked
+       --spacing-* directly for their own padding ramps. The eleven controls now
+       do the same, and the ramp lives here as a table instead of as tokens:
+
+           step   padding (both axes)
+           xs     --spacing-200   0.5rem
+           sm     --spacing-250   0.625rem
+           md     --spacing-300   0.75rem
+           lg     --spacing-400   1rem
+
+       Note what this costs, so nobody rediscovers it as a bug: a spoke has NO
+       one-line density lever any more. Re-declaring --form-padding-y-md does
+       nothing (nothing reads it) and re-pointing --spacing-* moves every gap in
+       the kit. Tightening the controls is a /request-lego. */
   /* size — xs */
-  --form-padding-y-xs: var(--spacing-100);
-  --form-padding-x-xs: var(--spacing-200);
-  --form-font-size-xs: var(--font-size-ui-xs);
-  --form-height-xs: var(--control-height-xs, 28px);
   --form-radius-xs: var(--radius-control);
   /* size — sm */
-  --form-padding-y-sm: var(--spacing-150);
-  --form-padding-x-sm: var(--spacing-250);
-  --form-font-size-sm: var(--font-size-ui-sm);
-  --form-height-sm: var(--control-height-sm, 32px);
   --form-radius-sm: var(--radius-control);
   /* size — md (default) */
-  --form-padding-y-md: var(--spacing-200);
-  --form-padding-x-md: var(--spacing-300);
-  --form-font-size-md: var(--font-size-ui-md);
-  --form-height-md: var(--control-height-md, 40px);
   --form-radius-md: var(--radius-surface);
   /* size — lg */
-  --form-padding-y-lg: var(--spacing-300);
-  --form-padding-x-lg: var(--spacing-400);
-  --form-font-size-lg: var(--font-size-ui-lg);
-  --form-height-lg: var(--control-height-lg, 48px);
   --form-radius-lg: var(--radius-surface);
   /* colors */
   --form-bg: var(--color-background-raised);
@@ -57,26 +114,58 @@
   --form-border-color: var(--color-border);
   --form-border-color-hover: var(--color-border-strong);
   --form-border-color-focus: var(--color-border-focus);
-  --focus-ring-color: var(--color-border-focus);
-  --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
-  --form-border-color-error: var(--color-background-danger);
+  /* `error` is a validation VARIANT, not an interaction state — it does not sit
+     with hover/focus/pressed, and it was the one token in the file with a
+     variant in the trailing state slot. Now variant-first, which also pairs it
+     with --form-error-color below: one error treatment, two properties. */
+  --form-error-border-color: var(--color-background-danger);
   --form-text-color: var(--color-content-primary);
   --form-placeholder-color: var(--color-content-muted);
   --form-label-color: var(--color-content-secondary);
   --form-help-color: var(--color-content-muted);
   --form-error-color: var(--color-content-danger);
   /* structure */
+  /* Every form edge, including the checkbox box and the radio circle. There was
+     briefly a --form-indicator-border-width at --border-width-200, added because both
+     components asked for 2px via `var(--form-border-width, 2px)` — but that fallback
+     could never fire (this token has always been declared), so the kit shipped, was
+     reviewed and was signed off at 1px for its whole life. The 2px was an intent
+     living in dead code that nobody ever saw rendered.
+
+     Removed rather than promoted. Keeping it would have meant adding an `emphasis`
+     role at tier 2 to point it at — a role tier 2 deliberately does not have — to
+     justify a change that came from a bug. It also skipped tier 2 entirely by reading
+     --border-width-200 directly, which is the tier violation the audit exists to catch. */
   --form-border-width: var(--border-width-default);
-  /* The checkbox box and radio circle, which read heavier than a text field at the
-     same width — a 14px indicator with a hairline edge reads as unfilled rather than
-     as a control. Split from --form-border-width because both components asked for
-     2px via a fallback that could never fire: --form-border-width has always been
-     declared here, so the fallback was dead and they silently rendered 1px. */
-  --form-indicator-border-width: var(--border-width-200);
-  --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
+
+  /* ===================== FOCUS RING ===================== */
+  /* Lived in FORMS until now, which was the wrong home by a wide margin: 33
+     components read --focus-ring-width and 31 read --focus-ring-color, among
+     them alert-box, back-to-top, dialog and button — a focus ring is a
+     system-wide accessibility affordance, not a form control's concern. The
+     namespace itself is correct and stays: `focus-ring` is the naming rubric's
+     own worked example of a `special` case in the component slot, which is how
+     tier3-naming.ts already classifies it.
+
+     All three are thin aliases over tier 2, which is the shape --focus-ring-color
+     always had and the other two have now caught up to. `width` held a bare 2px
+     with no role behind it, so a spoke could not reach the ring's weight at all;
+     it now reads --border-width-focus. See that token for why the tier-2 width
+     role was rejected once and why the rejection did not survive contact with
+     this token (short version: the survey it rested on counted BORDERS, and
+     every component paints this ring with outline or box-shadow).
+
+     `offset` stays a literal, and that is not an oversight. There is no 2px
+     anywhere to point at: the spacing scale is a 4px grid starting at
+     --spacing-100 (0.25rem), and minting a 2px primitive to serve exactly one
+     consumer is the move SPEC.md forbids — a role nobody can point at. The ring
+     gap is genuine micro-geometry, which is the category the width turned out
+     not to belong to. */
+  --focus-ring-color: var(--color-border-focus);
+  --focus-ring-width: var(--border-width-focus);
+  --focus-ring-offset: 2px;
 
   /* ===================== ICON BUTTON ===================== */
   --icon-button-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
@@ -87,7 +176,13 @@
      declared value was describing padding no spoke could have been seeing. */
   --filter-container-padding: 0;
   --filter-dropdown-bg: var(--color-background-raised);
-  --filter-dropdown-border: 1px solid var(--color-border);
+  /* Was `--filter-dropdown-border: 1px solid …` — a whole shorthand behind a
+     name spelled exactly like the two bare `border` tokens that held a plain
+     colour. A theme could not re-point this one's colour without restating the
+     width and style it had no reason to care about. Now a colour, like every
+     other border hook in the file, with the component composing the shorthand
+     from --border-width-default. Value-neutral: that role is 1px. */
+  --filter-dropdown-border-color: var(--color-border);
   --filter-dropdown-radius: var(--radius-surface);
   --filter-dropdown-shadow: var(--elevation-4);
   --filter-dropdown-min-width: 200px;
@@ -109,7 +204,7 @@
   --filter-pill-label-color: var(--color-content-secondary);
   --filter-pill-text: var(--color-content-brand);
   --filter-pill-radius: var(--radius-pill);
-  --filter-pill-font-size: var(--font-size-ui-sm);
+  --filter-pill-font-size: var(--typography-label-xs-font-size);
   --filter-pill-remove-color: var(--color-content-secondary);
   --filter-pill-remove-color-hover: var(--color-content-danger);
   --filter-clear-color: var(--color-content-muted);
@@ -127,11 +222,11 @@
   --grid-radius: var(--radius-surface);
   --grid-shadow: var(--elevation-3);
   --grid-font-family: var(--font-sans);
-  --grid-font-size: var(--font-size-ui-md);
+  --grid-font-size: var(--typography-label-md-font-size);
   --grid-header-bg: var(--color-background);
   --grid-header-color: var(--color-content-primary);
   --grid-header-weight: var(--font-weight-semibold);
-  --grid-header-font-size: var(--font-size-ui-sm);
+  --grid-header-font-size: var(--typography-label-xs-font-size);
   --grid-header-border-color: var(--color-border);
   --grid-row-bg: var(--color-background-raised);
   --grid-row-bg-hover: var(--color-background-sunken);
@@ -162,7 +257,7 @@
      their INERT value (0 / same-as-resting) so they stay zero-regression and
      opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
   --sidenav-bg: var(--color-background-sunken);
-  --sidenav-border: var(--color-border-subtle);
+  --sidenav-border-color: var(--color-border-subtle);
   /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
      --sidenav-item-padding-y, which nothing could ever have read. */
   --sidenav-item-height: 40px;
@@ -227,7 +322,7 @@
      not text-secondary). Do not trust them as a record of the shipped look —
      read esa-app-shell.astro. If this is ever wired, reconcile there first. */
   --topbar-bg: var(--color-background-sunken);
-  --topbar-border: var(--color-border-subtle);
+  --topbar-border-color: var(--color-border-subtle);
   --topbar-shadow: none;
   --topbar-icon-color: var(--color-content-secondary);
   --topbar-icon-color-hover: var(--color-background-brand);
@@ -416,9 +511,11 @@
   /* esa-range-slider */
   --fill-percent: 0%;
 
-  /* esa-select */
-  --form-label-font-size: var(--_field-font-size);
-  --form-label-font-weight: var(--font-weight-medium, 500);
+  /* --form-label-font-size used to be argued about here. It is gone as of
+     2026-08-14 along with the rest of the size-only ramp — a label's size and
+     weight now arrive together as a composite, so the umbrella problem this note
+     described (no single value that could serve every size) stopped existing
+     rather than being solved. See the FORMS header. */
 
   /* esa-header-nav */
   --header-nav-avatar-bg: var(--color-background-brand, #43608a);
@@ -439,7 +536,7 @@
   --kbd-radius: var(--radius-control, 4px);
 
   /* esa-link-column */
-  --link-column-heading-font-size: var(--font-size-ui-md, 1rem);
+  --link-column-heading-font-size: var(--typography-label-md-font-size);
   --link-column-item-font-size: var(--font-size-150, 0.875rem);
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
@@ -447,6 +544,13 @@
   --loading-overlay-bg: var(--color-background-raised, #fff);
   --loading-overlay-bg-transparent: var(--color-overlay-scrim);
   --loading-overlay-message-color: var(--color-content-secondary, #525252);
+
+  /* The spinner owns these; the overlay reads them because it renders one.
+     Filed under esa-loading-overlay until now, which made the spinner's own
+     page show zero hooks of its own. NOTE: the owner marker below has to be a
+     comment containing ONLY the slug — theming.ts parses these to decide which
+     component a hook belongs to, and any trailing prose stops it matching. */
+  /* esa-loading-spinner */
   --loading-spinner-color: var(--color-background-brand, #43608a);
   --loading-spinner-track-color: var(--color-border-subtle, #efefef);
 
@@ -463,7 +567,7 @@
   --pagination-bg: var(--color-background-raised, #ffffff);
   --pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
   --pagination-button-color: var(--color-content-primary, #171717);
-  --pagination-font-size: var(--font-size-ui-md, 14px);
+  --pagination-font-size: var(--typography-label-md-font-size);
   --pagination-padding-x: var(--spacing-400, 16px);
   --pagination-padding-y: var(--spacing-200, 8px);
   --pagination-text-color: var(--color-content-secondary, #525252);
@@ -518,13 +622,35 @@
   /* esa-snackbar-container */
   --snackbar-container-max-width: 420px;
 
-  /* esa-snackbar-item */
-  --snackbar-item-bg-danger: var(--color-content-danger);
-  --snackbar-item-bg-info: var(--color-content-info);
-  --snackbar-item-bg-success: var(--color-content-success);
-  --snackbar-item-bg-warning: var(--color-content-warning);
+  /* esa-snackbar-item — the ONE component whose tier-3 surface exposes its
+     colour-variant axis (six others read tier-2 intentions directly and cannot
+     be diverged from the rest of the kit; see SPEC.md, tier-3 colour naming).
+     Variant sits BEFORE the property, matching --app-bar-brand-bg; these four
+     were the only tokens in the file with it the other way round. */
+  --snackbar-item-danger-bg: var(--color-content-danger);
+  --snackbar-item-info-bg: var(--color-content-info);
+  --snackbar-item-success-bg: var(--color-content-success);
+  --snackbar-item-warning-bg: var(--color-content-warning);
   --snackbar-item-color: var(--color-content-inverse, #ffffff);
   --snackbar-item-radius: var(--radius-surface, 0.5rem);
+
+  /* esa-stat — the whole surface is TYPE, which is unusual for a tier-3 block
+     and is the point: a metric's authority comes from the size/weight/face of
+     its value, so a spoke that cannot turn those cannot re-skin the stat at
+     all. Sizes stay pointed at tier-2 font-size roles (NOT at a type role
+     class) because the value deliberately sits at a large-but-tasteful step,
+     below the display/900 roles. */
+  --stat-accent-color: var(--color-content-brand-secondary, #3a7c59);
+  --stat-gap: var(--spacing-050, 0.125rem);
+  --stat-label-color: var(--color-content-secondary, #525252);
+  --stat-label-size: var(--font-size-200, 0.9375rem);
+  --stat-label-weight: var(--font-weight-medium, 500);
+  --stat-sub-color: var(--color-content-muted, #737373);
+  --stat-sub-size: var(--font-size-150, 0.875rem);
+  --stat-value-color: var(--color-content-primary, #171717);
+  --stat-value-font: var(--font-display, var(--font-sans, 'DM Sans', sans-serif));
+  --stat-value-size: var(--font-size-700, 2.25rem);
+  --stat-value-weight: var(--font-weight-bold, 650);
 
   /* esa-switch-toggle */
   --switch-toggle-label-color: var(--color-content-primary, #171717);

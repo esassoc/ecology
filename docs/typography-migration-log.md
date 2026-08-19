@@ -10,16 +10,16 @@ whose resolved values differ between the two has changed what it draws.
 ```
 166 typography rules across 54 components
 
-  119  sit at a size some role holds
-   60     matched that role on EVERY property
+  119  sit at a size some composite holds
+   60     matched that composite on EVERY property
    59     differed on at least one
-   18  sit at a size NO role holds — hardcoded 13px / 16px / 11px / 12px / 14px
+   18  sit at a size NO composite holds — hardcoded 13px / 16px / 11px / 12px / 14px
    29  set typography without a size
 
-  0 components read any composite role
+  0 components read any composite
 ```
 
-Deltas against the roles that existed, by property:
+Deltas against the composites that existed, by property:
 
 | property | rules that would have changed |
 |---|---|
@@ -29,18 +29,18 @@ Deltas against the roles that existed, by property:
 | letter-spacing | 4 |
 
 The `font-weight` column is the finding: **26 rules rendered `medium` where the nearest
-role said `regular`**, 22 of them at `body-md`'s size. The kit's most common typographic
-job — a UI label at body size — had no role, so 59 rules worked around it.
+composite said `regular`**, 22 of them at `body-md`'s size. The kit's most common typographic
+job — a UI label at body size — had no composite, so 59 rules worked around it.
 
 ## Change 1 — the vocabulary was extended, not the call sites bent
 
-Nine roles added, none changed. The rule applied throughout: **a role is changed when it
+Nine composites added, none changed. The rule applied throughout: **a composite is changed when it
 is wrong, not when something needs a neighbour.** `title` was a live example — every
-dialog title in the kit renders semibold against a role that says medium, and re-pointing
+dialog title in the kit renders semibold against a composite that says medium, and re-pointing
 `title` would have moved every other consumer to satisfy three call sites. `title-strong`
 was added instead.
 
-| role | size | weight | replaces hand-set rules |
+| composite | size | weight | replaces hand-set rules |
 |---|---|---|---|
 | `label-xs` | 100 | medium | *(was `label`)* |
 | `label-sm` | 150 | medium | 4 |
@@ -55,7 +55,7 @@ was added instead.
 `label-*` sizes deliberately share the `body-*` ramp — `label-md` and `body-md` are the
 same size doing different jobs. `eyebrow-md` took `letter-spacing: wide` (0.03em) rather
 than the `wider` its small sibling uses, because all three existing consumers had settled
-on 0.03em independently; the role is new and they are the design.
+on 0.03em independently; the composite is new and they are the design.
 
 Renames carry `migrations.json` rows (`typography-label-sized`,
 `typography-eyebrow-sized`, `typography-label-eyebrow-classes`) and deprecated class
@@ -76,18 +76,22 @@ spoke markup this repo does not control and would be dead weight in every shadow
 
 ## Open — not yet migrated
 
-No component has been changed. 91 rules are ready to adopt a role with no visual change.
+No component has been changed. 91 rules are ready to adopt a composite with no visual change.
 
 Remaining, in order of how much thought each needs:
 
 1. **12 `font-family: inherit` deltas are false.** Inside a shadow root that inherits from
    a host already set to `--font-sans`, `inherit` resolves to DM Sans. The resolver cannot
    follow `inherit`, so it reports a difference that does not exist.
-2. **8 rules set `line-height: 1`** — badges, pills, chips. Text inside a fixed-height
-   control, where line-height is doing layout rather than typography. Either a sanctioned
-   override on top of the role, or a `-tight` variant.
+2. **`line-height: 1` — 17 rules, and the reasoning was backwards.** The first read of this
+   was "line-height is doing layout inside a fixed-height control". It is the opposite:
+   inside a fixed-height control line-height is the one thing that *cannot* matter, because
+   the height is explicit and the text is flex-centred. 1.6 × 13px = 20.8px in a 28px badge
+   never reaches an edge. Ten of the seventeen are inert on those grounds and can take a
+   composite whole. The load-bearing ones are the **auto-height** elements, where the box is
+   content + padding. See Change 4.
 3. **18 rules are off the type scale** — hardcoded `13px`, `16px`, `11px`, `12px`, `14px`,
-   `0.875rem`. No role can match a size no primitive holds. **These are the only places
+   `0.875rem`. No composite can match a size no primitive holds. **These are the only places
    where something must actually change size.**
 4. **Tier-3 typography hooks conflict with adopting a class — DEFERRED to the tier-3 pass.**
    17 hooks in `component-tokens.css` (`--grid-font-size`, `--form-label-font-weight`,
@@ -106,7 +110,531 @@ already renders every one of them decomposed. Duplication, and worse than duplic
 it presented the parts as things to consume, when a component names the composite.
 Removed — the non-colour listing went 122 → 56.
 
-Same pass removed the word **"role"** from the shipped token source. `typography.css`
+Same pass removed the word **"composite"** from the shipped token source. `typography.css`
 retired it deliberately ("it named nothing the vocabulary did not already cover"), and
 four descriptions added earlier that day had reintroduced it. The vocabulary is
 **category · intention · variant · property**.
+
+## Change 4 — three components, so line-height stops being load-bearing
+
+Splitting the 17 `line-height: 1` rules by whether the box has an explicit height:
+
+- **10 inert** — flex-centred with a height (`esa-badge`, `esa-pill`, `esa-kbd`, `esa-icon`,
+  `esa-button__native`, `esa-filter-dropdown` ×2, `esa-filter-pills__chip`,
+  `esa-sidebar-nav` link + badge). These can adopt a composite unchanged.
+- **7 load-bearing** — but four of those turned out to be inner spans whose PARENT is a
+  fixed-size flex box, so they were inert too and the check was only looking one level up.
+  `--_avatar-size` centres the initials; a 16×16 box holds the remove icon.
+
+Acted on:
+
+| | |
+|---|---|
+| `esa-chip-group .chip` | given `height: var(--chip-height-{xs,sm,md,lg})`, `box-sizing: border-box`, padding horizontal only. `--_pad-y` removed. |
+| `esa-chip-group .chip__label` | `line-height` deleted — inert once the parent has a height |
+| `esa-avatar__initials` | `line-height` deleted — parent is a fixed `--_avatar-size` flex box |
+| `esa-filter-pills__remove-icon` | `line-height` deleted — the box is an explicit 16×16 |
+
+The chip height was the real reason, not the line-height: `--chip-height-*` already existed
+at tier 2, `esa-pill` and `esa-filter-pills__chip` already used fixed heights, and a
+padding-sized chip cannot line up on a row with them — which is the stated purpose of the
+shared size scale. Height went from fluid (font + padding, tracking a `clamp()`) to fixed:
+xs 16–18→18, sm 18–20→22, md 24–27→28, lg 30–34→34. Unchanged at desktop for xs and lg.
+
+Deliberately NOT done:
+
+- **`esa-select .chip`** — its padding is `0 4px 0 8px`, zero vertical, so it renders at
+  ~12–14px. The smallest rung is `--chip-height-xs: 18px`; no value on the scale preserves
+  what it draws, and it sits inside a select with its own height budget.
+- **`esa-icon-link`** — `padding: 0`, height *is* its text at 16px. The nearest ramp is
+  `--control-height-*`, starting at 28px. It is a link, not a control; pinning it to a
+  control ramp would import geometry it has no reason to carry.
+- **`esa-app-shell__wordmark`** — its parent `.esa-app-shell__brand` is flex-centred but has
+  no height, so the wordmark's line-height genuinely sets the brand's height. It is also
+  brand furniture at weight 650 and probably should not take a text composite at all.
+
+Typography diff vs the baseline: **3 declarations removed, 0 values changed.**
+
+## Change 5 — the hardcoded sizes came onto the scale
+
+The rule sweep found 15; the real number was **34 literals across 9 components**, because
+three of them carried a whole private four-step type ramp made of magic numbers that no
+rule-level scan can see:
+
+```
+--_badge-font-size     10 / 11 / 13 / 14px      --_empty-title-size  13 / 14 / 16 / 20px
+--_pill-font-size      10 / 11 / 13 / 14px      --_empty-desc-size   11 / 12 / 14 / 16px
+--_progress-font-size  10 / 11 / 13 / 14px      --_avatar-font-size   9 / 11 / 16 / 22px
+```
+
+Each is now the nearest primitive by desktop maximum (050=10, 100=12, 150=14, 200=15,
+400=20). Ramps were kept monotonic, which is why a few land ±1 rather than on the closest
+single value.
+
+Rendered change, all 15 visible rules, at desktop width:
+
+| | |
+|---|---|
+| +1px | badge, pill, progress header, entity-search kbd + scope-count, search-panel category |
+| −1px | avatar, empty-state title, search-panel input |
+| 0 | kbd, entity-search row-action, empty-state description, search-panel result + subtitle |
+
+The larger change is not the pixel: these were **fixed** and are now **fluid**, because every
+`--font-size-*` primitive is a `clamp()`. Badge text now scales with the viewport inside a
+fixed-height badge — smaller on a phone, ±1px of today's value on a desktop.
+
+**This is a half-step, not the finish.** A component reading `--font-size-150` is reading
+tier 1, which SPEC forbids just as much as a literal did. What it buys is that 34 values
+that existed nowhere in the system are now on it, and the composite migration converts them
+once the tier-3 question is settled.
+
+Noticed in passing, not fixed: `esa-avatar`'s four size variants all read the same
+`--avatar-font-size` hook and differ only in their FALLBACK. The fallback fires today
+because the hook is undeclared — but a spoke declaring it collapses all four sizes to one
+value. Same shape as the checkbox/radio 1px→2px finding already in the ledger.
+
+## Change 6 — `--font-size-ui-*` is gone, and it never needed the tier-3 decision
+
+The size-only ramp is deleted. Its nine tier-3 consumers now point at the size token of
+the composite whose job matches:
+
+| hook | was | now |
+|---|---|---|
+| `--form-font-size-xs` | `--font-size-ui-xs` | `--typography-label-2xs-font-size` |
+| `--form-font-size-sm` | `--font-size-ui-sm` | `--typography-label-xs-font-size` |
+| `--form-font-size-md` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+| `--form-font-size-lg` | `--font-size-ui-lg` | `--typography-body-lg-font-size` |
+| `--filter-pill-font-size` | `--font-size-ui-sm` | `--typography-label-xs-font-size` |
+| `--grid-font-size` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+| `--grid-header-font-size` | `--font-size-ui-sm` | `--typography-label-xs-font-size` |
+| `--link-column-heading-font-size` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+| `--pagination-font-size` | `--font-size-ui-md` | `--typography-label-md-font-size` |
+
+**Value-neutral.** The ramp was a pure passthrough — every step was exactly one primitive
+with no transformation — so all nine resolve to what they always did.
+
+This was logged as blocked on the tier-3 pass and it was not. The blocker was assumed to be
+"a hook cannot consume a composite", but a hook that carries one property can point at that
+property's token. The tier-3 question — whether a component adopting a composite CLASS
+should keep its per-component hook — is a different question and is still open.
+
+One composite was added to make it fit: **`label-2xs`** at `--font-size-050`, because
+`--form-font-size-xs` has 14 readers in the hub and 3 in cb-fish, and the only thing at 050
+was `eyebrow-sm`, which is uppercase. It breaks the kit's `xs | sm | md | lg` convention by
+one step, deliberately — the alternative was renaming the whole label family down and
+moving `label-xs` out from under 15 call sites that already match it exactly.
+
+Noted, not acted on: `--form-font-size-xs` renders **8–10px**. Every author who hardcoded a
+fallback at those 14 call sites assumed 11–13px. Those fallbacks are dead — the token has
+always been declared — so 8–10px is what the kit has shipped and been reviewed at. Whether
+that is too small is a live design question, kept separate from moving tokens around. This
+is the same trap as the checkbox 2px: a fallback nobody ever saw render is not evidence of
+intent.
+
+`migrations.json` row: `font-size-ui-to-composites`. Deprecated aliases 107 → 111.
+
+---
+
+## Change 7 — the control ramp adopts composites, and `--form-font-size-*` is gone
+
+**2026-08-14.** P1 + P2 of the adoption plan, executed together. All 16 type-carrying
+components on the control ramp now name a composite; none assembles one.
+
+### What started it
+
+A question that had no good answer: *why can't components just use the typography
+composites?* The honest answer turned out to be that nothing stopped them — the
+mechanism (`packages/ecology/src/typography.ts`) had been built in Change 2 and had
+**zero importers** for a day.
+
+Two wrong turns were taken first and are recorded because the reasoning matters:
+
+1. **A tier-2 `--control-font-size-*` ramp** was added to `semantic/size.json`, on the
+   argument that the HEIGHT axis has a tier-2 role (`--control-height-*`) and type did
+   not. It was reverted within the hour. It is `--font-size-ui-*` reborn — the exact
+   construct Change 6 deleted the same day — and it is *worse*, because naming a token
+   `--control-font-size-sm` for a value that is `label-xs`'s size makes the ramp offset
+   invisible instead of documented. A note in `control-height`'s `$description` now says
+   so, so it is not re-derived a third time.
+2. **A `control` intention at tier 2** was proposed before that, and D3 already forbids it.
+
+The real answer: a control renders **two** text treatments at one size — the label is UI
+text (`label-*`, medium) and the value the user typed is prose (`body-*`, regular). No
+single composite describes "a form control", and no single hook can narrow two.
+
+### The mapping
+
+| control `size` | box | rung | label slot | value slot |
+|---|---|---|---|---|
+| `xs` | 28px | 050 | `label-2xs` | `body-2xs` |
+| `sm` | 32px | 100 | `label-xs` | `body-xs` |
+| `md` | 40px | 200 | `label-md` | `body-md` |
+| `lg` | 48px | 300 | `label-lg` | `body-lg` |
+
+The letters do not line up. `size="sm"` takes the `-xs` rung, because the control ramp
+lands on 050·100·200·300 while the type families walk 050·100·150·200·300. That offset is
+left visible on purpose — renaming the label family to align it was rejected in Change 6
+and the reason still holds.
+
+### Composites added
+
+`label-lg`, `body-xs`, `body-2xs`, `label-2xs-strong`, `label-lg-strong`, `code-xs`,
+`code-2xs` — all following Change 6's `label-2xs` precedent: the control ramp runs wider
+than the prose family, at both ends. Live classes 22 → 28. Every one had zero readers when
+added, so all were value-neutral by construction.
+
+### Hooks retired
+
+`--form-font-size-{xs,sm,md,lg}`, `--form-label-font-weight`, `--form-label-font-size`.
+`--form-line-height` **stays** — it is the one legitimate deviation, because `body-md` and
+`body-lg` lead at `relaxed` (1.8) and a height-budgeted control cannot.
+
+`migrations.json` rows `form-font-size-to-composites` and
+`form-label-typography-to-composites`. Deprecated aliases 119 → 125.
+
+The `--form-label-*` row is `md`-pinned and that is a real behaviour change, not a rename:
+both hooks were size-AGNOSTIC — one name covering four steps — and a composite property
+token is not. A spoke rewritten by the codemod gets all four sizes pinned to md's value.
+Flagged in the row's `why`.
+
+### Verified
+
+`type-inventory.mjs`: **164 type-declaring rules before, 104 after.** 60 rules stopped
+assembling type; **zero** ramp components still declare `font-size`/`font-weight`/
+`font-family`; **zero** non-ramp rules changed. Phase 1's snapshot was byte-identical to
+the baseline. 83 pages build, 35 tests pass.
+
+### Visible changes
+
+Everything else is value-neutral.
+
+1. **Field-value weight: declared 400 → 350.** Renders unchanged in the hub (the layouts
+   request DM Sans at static 400/500/600/700, so 350 resolves to the 400 face). **A spoke
+   on a variable `wght` axis WILL see field text get lighter.** Neutral as rendered, not
+   as declared.
+2. **`esa-text-field` / `esa-textarea` label at `size="sm"`: 150 → 100** (−2px). Their
+   private label ramp was 050/150/200/300, which is not the control ramp; `sm` was the
+   only rung that disagreed.
+3. **Help/error in 5 components: 100 → 150** (+2px). The kit was split two ways; `body-sm`
+   unifies it. `meta` was rejected — it is 100, and re-pointing it to 150 would make it
+   byte-identical to `body-sm`.
+4. **Choice labels: leading 1.3 → 1.6** (checkbox, checkbox-group, radio-group). Andy's
+   call: choice labels should read like the kit's other labels, and the `tight` pin was a
+   local special case rather than a decision.
+5. **`esa-chip-group .chip`: weight 600 → 550.** The 600 was a raw literal; 600 is not a
+   token weight in this system.
+6. **Menu `.option` leading is now pinned** where it previously inherited from the page.
+7. **`letter-spacing: 0.01em` now applies to every migrated slot.** Zero of the 16 declared
+   tracking and nothing in their ancestry set it, so they inherited `normal` (0). ~0.15px
+   per glyph at md — sub-pixel individually, ~4.5px on a 30-character label, which matters
+   for truncation. Inherent to adopting composites whole; exempting the property is the
+   take-four-of-five failure D2 exists to stop.
+
+### `letter-spacing.normal` was 0.01em
+
+Corrected while doing (7): the one token in the set whose name promises a specific value
+was the one token that did not hold it. `normal` is now `0`; the kit's tracking moved to a
+new `default` at 0.01em, which all 21 composites read. **Render-neutral** — verified by
+snapshot diff. `--letter-spacing-normal` is now genuinely available for the case it always
+should have covered: mono runs and tabular figures where 0.01em breaks column alignment.
+
+### Two traps worth not re-learning
+
+- **`build.js` truncates `typography-styles.js` at the DEPRECATED marker.** Classes
+  appended to the END of `src/typography.css` are silently cut from the shadow-DOM bundle
+  — the class exists in `tokens.css`, resolves fine in light DOM, and does nothing inside
+  a Lit component. Caught `code-xs`/`code-2xs`. New classes go BEFORE that marker.
+- **Astro scoped styles outrank the composite class.** A scoped rule becomes
+  `.foo[data-astro-cid-*]` at specificity (0,2,0) against `.typography-label-md` at
+  (0,1,0), so a leftover `font-*` declaration silently BEATS the composite instead of
+  layering with it. Every font property must be removed, not overridden. Lit does not have
+  this problem — both are single-class selectors, and `typography` is listed first so the
+  component's own rules win deliberately.
+
+### Still open
+
+- `xs` renders 8–10px. Deferred by decision, again — see Change 6. Note for the record:
+  the 13px floor in `check-adherence.mjs:140` only matches literal `px`/`rem`, so it has
+  never measured the token ramp and is not evidence either way.
+- ~~`--form-height-*`~~ — **done, same day.** See Change 8.
+- ~~`--form-padding-*`~~ — **done, same day.** See Change 10.
+- `esa-file-upload` still has no size ramp — it names composites now, but its geometry is
+  hardcoded at the md/sm rungs.
+- `esa-select` still has no `xs` step; `size="xs"` silently renders `md`.
+
+---
+
+## Change 8 — `--form-height-*` follows the type ramp out
+
+**2026-08-14.** A one-axis follow-on, prompted by a question about `esa-button`'s theming
+surface: *why does it say `--form-height-lg` connected to `--control-height-lg`?*
+
+Because Change 7 applied its own argument to one axis only. The reason
+`--form-font-size-*` died was that the `form` namespace never bounded its readers —
+`esa-button`, `esa-icon-button`, `esa-chip-group` and `esa-button-toggle` read it and are
+not forms. That was just as true of `--form-height-*`, and nothing was done about it.
+
+### Why this one is a cleaner cut than the type ramp
+
+`--form-height-*` was a **pure passthrough** — `var(--control-height-xs, 28px)` and so on
+at all four steps. It added a name and a NARROWING and nothing else, and the narrowing is a
+footgun rather than a feature: `--control-height`'s own description says the ramp exists so
+"inputs, buttons, selects and icon buttons line up on a row." A spoke using
+`--form-height-*` to resize its form controls alone breaks precisely the invariant the
+tier-2 role promises. No spoke has asked for that, and the ask would be a mistake.
+
+Nine components, 36 declarations, now reading `--control-height-*` directly.
+
+| deleted | resolved to | components now read |
+|---|---|---|
+| `--form-height-xs` | 28px | `--control-height-xs` |
+| `--form-height-sm` | 32px | `--control-height-sm` |
+| `--form-height-md` | 40px | `--control-height-md` |
+| `--form-height-lg` | 48px | `--control-height-lg` |
+
+`migrations.json` row `form-height-to-control-height`. Deprecated aliases 125 → 129.
+`cb-fish-design` READS these in `src/styles/map-sow.css` but does not DECLARE them, so the
+alias covers it fully.
+
+### What deliberately did NOT follow, and why
+
+Deleting the other two geometry hooks by analogy would have made the file worse. They are
+not the same problem:
+
+- **`--form-radius-*` (13 components) is not a passthrough.** It encodes a documented
+  mapping — `--radius-control`'s description says "inputs at xs/sm", `--radius-surface`'s
+  says "inputs at md/lg". Delete the hook and 13 components each restate that mapping. For
+  type, writing the mapping out per component bought visibility, because the hook was
+  hiding the rung offset; here it hides nothing. The hook is doing honest work.
+  (An earlier read of this called the xs/sm → md/lg jump "drift". It is not — both tier-2
+  descriptions state the split explicitly.)
+- **`--form-padding-*` (10 components) cannot be fixed by deletion at all.** There is no
+  `--control-padding-*` behind it; `--form-padding-x-lg` reads `--spacing-400` (tier 1)
+  directly. Deleting would push a tier-1 read into 10 components — worse than the status
+  quo. The real question is whether control padding should be a semantic role, and
+  `tier2-naming.ts` records a deliberate position that spacing is a MEASURE, not an intent,
+  so the answer is not obviously yes. Left open.
+
+  > **SUPERSEDED 2026-08-14 — the tokens were deleted. See Change 10.** Kept above rather
+  > than edited, because the reversal is the useful part of the record. Two of its premises
+  > were simply wrong. The reader count was 11, not 10. And "would push a tier-1 read into
+  > 10 components" was framed as a cost when **31 of 66 components already read `--spacing-*`
+  > directly for their padding** — `esa-pill`, `esa-badge`, `esa-tab-layout` and
+  > `esa-filter-dropdown` each walk a full xs→lg ramp that way. The hook was not protecting
+  > the kit from a tier-1 read; it was the minority pattern.
+  >
+  > The framing error was treating this as the same question as type. It isn't. There, the
+  > hook hid a real rung offset, so deleting it had to put something back (the composite).
+  > Here `--form-padding-x-lg` *was* `--spacing-400` — same value, one more name, and after
+  > Change 9 the x and y ramps were identical, so eight names carried four numbers. The
+  > question "should control padding be a semantic role" was answered correctly (no, spacing
+  > is a measure) and then the wrong conclusion drawn from it: having no role behind it is
+  > what made the hook a passthrough, not what made it necessary.
+
+### Verified
+
+Resolved px captured from `dist/tokens.css` + `component-tokens.css` before and after:
+**28/32/40/48 at every step, both directly and through the alias.** The type inventory came
+back byte-identical to Change 7's post-migration snapshot (104 rules), so this touched
+geometry and nothing else. 83 pages build, 42 tests pass.
+
+### Also corrected
+
+`--letter-spacing-default`'s `$description` claimed "21 of the 24 composites". The real
+figure is **23 of 28** — the other five are the three `tight` headings and the two
+eyebrows. It was wrong when written, not made wrong by later additions.
+
+---
+
+## Change 9 — height stops being a token
+
+**2026-08-14.** `--control-height-{xs,sm,md,lg}` is deleted. Nothing replaced it: an
+input, a button or a select is now as tall as its padding plus its text.
+
+### Why
+
+A fixed px height cannot grow with its contents. The text inside these elements is sized
+in `rem` via a `clamp()`, so it grows with a user's browser font-size preference, with a
+spoke's taller face, or when a translation wraps — and a px box cannot follow, by
+construction. `esa-text-field` paired that fixed height with `overflow: hidden` **in the
+same rule**, so what did not fit was cut silently. That is WCAG 1.4.4 (Resize text):
+content must survive resize without loss.
+
+Padding cannot fail that way. Whatever the line box turns out to be, the padding still
+surrounds it.
+
+The kit had already reached this conclusion four times without generalising it:
+`esa-textarea` has no height at all; `.esa-button--sm` used `height: auto` + `padding-block`
+(marked `hub-edit-approved`, justified as "standalone small buttons looked squished");
+`esa-select` and `esa-input-tag` used `min-height`. Change 9 makes that the rule and
+deletes the `sm` special case rather than generalising it.
+
+### The model
+
+```
+height = 2 × padding-y + font-size + border      ← nothing declares a height
+line-height: 1                                   ← --line-height-none
+```
+
+`line-height: 1` is what leaves padding as the only variable. At `1.6` there is a third
+term — 0.6 × font-size of leading — that nobody chose and that grows faster than either
+input; it is why the old declared heights and the intrinsic ones drifted further apart at
+every step up. `--line-height-none` already existed and was already read this way by ten
+components; its description is literally *"No leading — the box supplies the height."* Two
+of those reads had been deleted earlier the same day, on the reasoning that "the button is
+a fixed-height centred flex box, so leading never reached an edge" — a premise this change
+removes, so they came back.
+
+`--form-padding-y-*` moves up one spacing rung at every step, because it now **carries**
+the height where before the height carried it and the padding was absorbed. (That token was
+itself deleted hours later — Change 10 — so the rungs it moved to now sit in the components
+as direct `--spacing-*` reads. The re-point stands; only its spelling changed.)
+
+### Measured
+
+| step | padding-y | font-size | height narrow → wide | was |
+|---|---|---|---|---|
+| xs | 8px | 8–10px | 26 → 28px | 28 |
+| sm | 10px | 10–12px | 32 → 34px | 32 |
+| md | 12px | 12–15px | 38 → 41px | 40 |
+| lg | 16px | 14–18px | 48 → 52px | 48 |
+
+**Heights are now fluid**, because the type is. An input is ~38px on a phone and ~41px on
+a wide monitor rather than 40px everywhere. Accepted deliberately: it follows from the
+fluid type decision, and a row still aligns — structurally rather than by decree, since
+siblings on the same step share a padding value and a type rung.
+
+### Accessibility — reported, not fixed
+
+Deferred to the batched a11y pass. **Text-bearing elements clear the WCAG 2.5.8 AA minimum
+(24px) at every step**, the smallest being `xs` at 26px on a narrow viewport. None clears
+2.5.5 AAA (44px) except `lg`.
+
+`--touch-target-min` (44px) is declared in `semantic/effect.json` and **read by nothing** —
+zero consumers, ever. The height tokens were the de-facto floor; there is now no floor at
+all. Icon-only buttons are the exposure: with no text and `padding: 0` they would have
+collapsed to the bare icon (16/18/22/26px), so they were given the same padding ramp,
+landing at 32/38/46/58px. That clears AA but runs *taller* than a text button at every
+step, because icons (14–24px) exceed the text line box (10–18px). Worth settling on screen.
+
+Also for that pass: `--chip-height-xs` (18px) and `-sm` (22px) are already below AA, and
+`esa-chip-group` is interactive. Pre-existing, untouched.
+
+### `migrations.json` gained a `removed` concept
+
+Every prior row was a rename with an equivalent value, so `build.js` emitted
+`--old: var(--new)` unconditionally. That is wrong for a deletion: aliasing
+`--control-height-md` to `--form-padding-y-md` would silently resolve 40px to **12px**,
+which is worse than emitting nothing. Rows may now set `removed: true` —
+`build.js` emits a documented note instead of a shim, and `migrate-tokens.mjs` reports the
+reads for a human instead of rewriting them, because the replacement is a different lever
+with different arithmetic, not a new spelling.
+
+The spoke template's `--control-height-*` slot became `--form-padding-y-*`, with a warning
+not to translate old values across: 36px of height is roughly 12px of padding, not 36px.
+Change 10 deleted that replacement slot too, so the template now offers **no** density lever
+at all and says so — see there for why that is the honest state rather than a regression.
+
+### Still fixed, deliberately
+
+`--chip-height-*` (badge, pill, chip-group). A badge is a shape more than a box of text —
+every badge is the same height whatever its label, and a padding-sized one could not line
+up with the others on a row. It carries the same clipping exposure in principle, but with
+`line-height: none` and no `overflow: hidden`, overgrown text spills visibly rather than
+being cropped silently.
+
+---
+
+## Change 10 — padding stops being a token (2026-08-14)
+
+`--form-padding-{y,x}-{xs,sm,md,lg}` deleted. The eleven inputs and buttons that read them
+now read `--spacing-200/250/300/400` directly.
+
+### Why
+
+Change 9 handed padding the job of carrying height and moved it up a rung. That made the
+eight tokens **identical on both axes at every step** — eight names for four numbers, each
+a flat passthrough to a spacing rung. Nothing had ever re-pointed one: not `themes.css`, not
+`cb-fish-design`, not `air-exchange-tool`. Meanwhile **31 of 66 components already walked
+`--spacing-*` directly** for their own padding ramps, four of them (`esa-pill`, `esa-badge`,
+`esa-tab-layout`, `esa-filter-dropdown`) with a full xs→lg ramp. The kit was carrying two
+patterns to say one thing, and the hook was the minority one.
+
+Reading `--spacing-*` from a component was never the problem — SPEC.md has always said so:
+spacing is one of the two CORE sets, universal, shared by every theme, meant to be consumed
+directly, which is why tier 2 has no spacing layer at all. The problem was the hook in front
+of that read.
+
+### What it costs
+
+A spoke has **no one-line density lever** any more, and that is a real loss, not a
+technicality. Re-declaring `--form-padding-y-md` does nothing because nothing reads it, and
+re-pointing `--spacing-*` moves every gap, grid and stack in the kit. Tightening the
+controls is now a `/request-lego` against the hub. Taken knowingly: a hook is earned by a
+spoke asking for it, and in three spokes none ever had.
+
+The spoke template's section (5) was the load-bearing casualty — its four `__FILL__` slots
+were the only dimension slots left in the file. It now states plainly that there is no lever
+and why, rather than deleting the section silently. Worth recording: those slots shipped
+defaults **one rung tighter than the hub's**, so any scaffolded-but-unfilled spoke had been
+running denser than the hub and gets *roomier* as its declarations go inert. No spoke is
+affected today.
+
+### Alias, not `removed: true`
+
+The opposite of Change 9's call, and for a concrete reason. `cb-fish-design` **reads** these
+at six sites, and its fallbacks are wrong — `var(--form-padding-x-sm, 12px)` where the token
+resolves to `0.625rem` = 10px. A `removed` row emits no shim, so those reads would have
+fallen through to a fallback 2px per side too wide, silently. The alias is value-identical
+(`--form-padding-y-md: var(--spacing-300)` is exactly what it already resolved to), so
+readers keep rendering unchanged and `/update-tokens` rewrites the name in place.
+
+`removed: true` is for when there is no equivalent value. Here there is, exactly — using it
+would have burned the one signal the file has for "the arithmetic changed."
+
+Two things the tooling cannot enforce, so the row's `why` carries them: the collapse from
+8 names to 4 will make `findCollapseCollisions` **refuse** to run in any spoke that gave y
+and x different values on the same step; and `check-adherence.mjs` builds its vocabulary
+from `dist/tokens.css`, which now contains the aliases, so **Gate 1 will not flag** a spoke
+still reading an old name. `/update-tokens` and `doctor` are the only enforcement.
+
+`control-height-removed`'s pairs pointed at `--form-padding-y-*` and were re-pointed to `""`,
+matching `layout-orphans-removed`. The `to` half of a `removed` row's pairs is dead data —
+`build.js`, `doctor.mjs` and `migrate-tokens.mjs` all destructure `[from]` — so aiming it at
+a live token bought nothing and would have re-orphaned on the next ramp move.
+
+### Verified
+
+The claim is that components changed which token they name, not what they draw.
+
+A resolver walking privates → tier 3 → tier 2 → tier 1 to a terminal literal, run over every
+padding declaration in the kit before and after: **the diff is empty.** The substitution
+itself was scripted from a four-row table rather than hand-applied, and that table is
+verifiably the deleted declarations (`xs→200, sm→250, md→300, lg→400`, both axes), with the
+step read off the old token name — so all 78 sites are correct by construction.
+
+78 substitutions landed across exactly the 11 predicted files, with the predicted per-file
+counts: 8 each for the eight full-ramp components, 6 for `esa-select` (no `xs` block — still
+open, deliberately not fixed here), 4 for `esa-chip-group` (x-axis only) and 4 for
+`esa-icon-button` (one value, all four sides).
+
+A second pass with the token definitions emptied — which is the only way to see the
+*fallback* rewrite — changed exactly two things, both intended. `esa-textarea`'s whole ramp
+was a rung low, left over from before Change 9, and is now correct. `esa-button`'s x
+fallbacks narrowed (16px→0.75rem, 20px→1rem, 12px→0.625rem): someone once wanted buttons
+wider than tall, but that intent had survived only in dead fallbacks — the resolved values
+have been square on both axes since Change 9.
+
+*A note on the harness, since it nearly hid this:* the first version of the resolver matched
+Lit styles as `` css`…`; `` and so **skipped every component written as
+`static styles = [typography, css`…`]`** — `esa-textarea` among them. The empty diff was
+narrower than it looked until that was fixed. Coverage went from 156 declarations to 261
+across 48 components.
+
+### Not touched
+
+`--form-radius-*` stays. It is not a passthrough: it encodes the documented xs/sm →
+`--radius-control`, md/lg → `--radius-surface` mapping, and deleting it would make 13
+components each restate it. `--chip-height-*` stays fixed for the reasons in Change 9.
+`esa-select`'s missing `xs` step stays open — fixing it during a de-indirection sweep would
+have been a rendered change wearing a value-identical one's clothes.

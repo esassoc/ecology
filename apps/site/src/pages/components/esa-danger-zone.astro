@@ -2,24 +2,26 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaDangerZone from '@esa/ecology/esa-danger-zone.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
 
-const props = [
-  { name: 'heading', type: 'string', default: "'Danger Zone'", description: 'Section heading, rendered in danger color and wired to the group via aria-labelledby.' },
-  { name: 'description', type: 'string', description: 'Optional supporting copy explaining the consequence of the actions.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  heading: "Section heading, rendered in danger color and wired to the group via aria-labelledby.",
+  description: "Optional supporting copy explaining the consequence of the actions.",
+};
 ---
 <ComponentDoc name="Danger Zone" category="Display" slug="esa-danger-zone" type=".astro" status="stable"
   summary="A bordered section that corrals one or more destructive actions behind clear danger-colored chrome — a tinted background, danger border, and danger-colored heading — so a misclick is harder to make by accident.">
 
   <Section id="preview" title="Preview">
     <Preview code={`<EsaDangerZone description="Deleting this project also removes its annotations and history. This cannot be undone.">
-  <EsaButton color="danger">Delete project</EsaButton>
+  <EsaButton variant="danger">Delete project</EsaButton>
 </EsaDangerZone>`}>
       <EsaDangerZone description="Deleting this project also removes its annotations and history. This cannot be undone.">
-        <EsaButton color="danger">Delete project</EsaButton>
+        <EsaButton variant="danger">Delete project</EsaButton>
       </EsaDangerZone>
     </Preview>
   </Section>
@@ -27,12 +29,12 @@ const props = [
   <Section id="multiple-actions" title="Multiple actions">
     <p>Project any number of destructive actions into the default slot — they wrap on a shared gap.</p>
     <Preview code={`<EsaDangerZone heading="Irreversible actions" description="These operations cannot be undone.">
-  <EsaButton color="danger" appearance="outline">Archive</EsaButton>
-  <EsaButton color="danger">Delete</EsaButton>
+  <EsaButton variant="danger" appearance="outline">Archive</EsaButton>
+  <EsaButton variant="danger">Delete</EsaButton>
 </EsaDangerZone>`}>
       <EsaDangerZone heading="Irreversible actions" description="These operations cannot be undone.">
-        <EsaButton color="danger" appearance="outline">Archive</EsaButton>
-        <EsaButton color="danger">Delete</EsaButton>
+        <EsaButton variant="danger" appearance="outline">Archive</EsaButton>
+        <EsaButton variant="danger">Delete</EsaButton>
       </EsaDangerZone>
     </Preview>
   </Section>
@@ -40,17 +42,17 @@ const props = [
   <Section id="heading-only" title="Heading only">
     <p>The <code>description</code> is optional — omit it for a compact zone.</p>
     <Preview code={`<EsaDangerZone>
-  <EsaButton color="danger">Revoke access</EsaButton>
+  <EsaButton variant="danger">Revoke access</EsaButton>
 </EsaDangerZone>`}>
       <EsaDangerZone>
-        <EsaButton color="danger">Revoke access</EsaButton>
+        <EsaButton variant="danger">Revoke access</EsaButton>
       </EsaDangerZone>
     </Preview>
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
-    <p class="slot-note">The <strong>default slot</strong> holds the destructive action(s) or content — typically one or more <code>esa-button</code> elements with <code>color="danger"</code>.</p>
+    <ApiTable slug="esa-danger-zone" describe={describe} />
+    <p class="slot-note">The <strong>default slot</strong> holds the destructive action(s) or content — typically one or more <code>esa-button</code> elements with <code>variant="danger"</code>.</p>
   </Section>
 
   <Section id="accessibility" title="Accessibility">

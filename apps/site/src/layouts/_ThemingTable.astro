@@ -1,0 +1,88 @@
+---
+// One table of theming hooks. Used twice by ComponentDoc.astro: once for the
+// tokens wired to this component, once for the shared/system tokens it merely
+// reads. Split out so the lineage cell — the fiddly part — has one definition.
+import type { ThemingHook } from '../data/theming';
+
+interface Props {
+  hooks: ThemingHook[];
+  /** `own` drops the reach column (every row would read "only here"). */
+  mode: 'own' | 'shared';
+}
+const { hooks, mode } = Astro.props;
+
+const isColor = (v: string) => /^#[0-9a-fA-F]{3,8}$|^(rgb|rgba|hsl|hsla|oklch|color)\(/.test(v.trim());
+
+// What else moves if you re-point this token.
+const reach = (h: ThemingHook): string => {
+  if (h.scope === 'system') return 'every component';
+  const others = h.alsoReadBy.length ? `+${h.alsoReadBy.length} more` : '';
+  // A family surface is shared by design; borrowing another component's hook
+  // is a different fact and reads as one.
+  const source = h.family ? `${h.family} group` : h.ownedBy ? `owned by ${h.ownedBy}` : '';
+  return [source, others].filter(Boolean).join(' · ') || 'shared';
+};
+---
+<table class="ts-table">
+  <thead>
+    <tr>
+      <th>Token</th>
+      <th>{mode === 'own' ? 'Tier' : 'Reach'}</th>
+      <th>Resolves to</th>
+    </tr>
+  </thead>
+  <tbody>
+    {hooks.map((h) => {
+      const terminal = h.lineage[h.lineage.length - 1]; // last link = the raw value it lands on
+      const path = h.lineage.slice(0, -1);              // the tokens it passes through to get there
+      return (
+        <tr>
+          <td><code>{h.token}</code></td>
+          <td>
+            <span class={`ts-tier ts-tier--${h.tier}`}>{h.tier}</span>
+            {mode === 'shared' && (
+              <span class="ts-reach" title={h.alsoReadBy.join(', ') || undefined}>{reach(h)}</span>
+            )}
+          </td>
+          <td class="ts-chain">
+            {h.lineage.length === 0 ? (
+              <span class="ts-none">—</span>
+            ) : (
+              <Fragment>
+                <span class="ts-resolved">
+                  {isColor(terminal.ref) && <span class="ts-swatch" style={`background:${terminal.ref}`} />}
+                  <code>{terminal.ref}</code>
+                </span>
+                {path.length > 0 && (
+                  <span class="ts-via">via {path.map((p, i) => (
+                    <Fragment>{i > 0 && <span class="ts-arrow"> → </span>}<code>{p.ref}</code></Fragment>
+                  ))}</span>
+                )}
+              </Fragment>
+            )}
+          </td>
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
+
+<style>
+  .ts-table { width: 100%; border-collapse: collapse; }
+  .ts-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
+  .ts-table td { padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); vertical-align: top; }
+  .ts-tier { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border, #e5e5e5); }
+  .ts-tier--component { background: var(--color-background-brand-subtle, #eef6f6); border-color: var(--color-border-brand, #cfe5e5); }
+  .ts-tier--ad-hoc { background: var(--color-background-brand-subtle, #eef6f6); }
+  .ts-tier--semantic { background: var(--color-background-sunken, #f5f5f5); }
+  .ts-tier--undefined { background: var(--color-background-danger-subtle, #fdecec); border-color: var(--color-border-danger, #f5c2c2); }
+  .ts-reach { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-content-muted, #999); }
+  .ts-none { color: var(--color-content-muted, #888); }
+
+  /* Lineage: the resolved value leads; the cascade path is a quiet breadcrumb beneath. */
+  .ts-resolved { display: inline-flex; align-items: center; gap: var(--spacing-150, 0.375rem); }
+  .ts-swatch { width: 0.95em; height: 0.95em; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.15); flex: none; }
+  .ts-via { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-content-muted, #999); }
+  .ts-via code { font-size: inherit; background: none; padding: 0; color: inherit; }
+  .ts-via .ts-arrow { color: var(--color-border-strong, #ccc); }
+</style>

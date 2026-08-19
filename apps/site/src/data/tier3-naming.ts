@@ -14,6 +14,16 @@
  * our names carry and the rubric doesn't model, so it gets its own section
  * rather than being scored as a variant.
  *
+ * The second half of the file audits the same tokens against the narrower
+ * COLOUR rubric, which fixes the property to three values and moves `disabled`
+ * into the state slot:
+ *
+ *   colour:  --<component|category|special>-<variant>-color-<background|content|border>[-<state>]
+ *
+ * Scoped to colour-valued tokens so the dialect counts aren't diluted by
+ * padding and width hooks, and so the variant slot can be measured against the
+ * rubric's own worked example — a component with a real variant axis.
+ *
  * Consumed only by /debug/tokens, which is excluded from production builds.
  * Delete alongside token-graph.ts when the refinement work is done.
  */
@@ -174,7 +184,9 @@ const PSEUDO_STATE: Record<string, string> = {
 const SIZE_SHORT = ['xs', 'sm', 'md', 'lg', 'xl'];
 const SIZE_LONG = ['small', 'medium', 'large'];
 const SIZE_WORDS = new Set([...SIZE_SHORT, ...SIZE_LONG]);
-/** Semantic variants that trail the property, e.g. --snackbar-item-bg-danger. */
+/** Semantic variants, wherever they sit. Kept as a peel-from-the-end list because
+ *  the parser has to handle both orders — --app-bar-brand-bg puts the variant
+ *  first, and until the snackbar rename the same word could trail instead. */
 const VARIANT_WORDS = new Set(['danger', 'info', 'success', 'warning', 'primary', 'secondary', 'strong', 'inverse']);
 
 /* -------------------------------------------------------------- the parse */
@@ -295,6 +307,10 @@ const parse = (d: RawDecl): Tier3Row => {
     state,
     part,
     isColor: node?.isColor ?? false,
+    // COMPONENTS only, deliberately — not usedByFiles. `reach` is what separates
+    // a genuine category namespace (form, read by many components) from a
+    // component that happens to be named oddly, and that discrimination only
+    // works if the unit stays "components". Do not widen this to hasReader().
     reach: node?.usedByComponents.length ?? 0,
     flags,
   };
@@ -651,6 +667,268 @@ export const stateNotTrailing = rows.filter(
     ),
 );
 
+/* ======================================================================
+ * The COLOUR rubric — a narrower shape than the six-slot one above.
+ * ======================================================================
+ *
+ *   --<component|category|special>-<variant>-<color-{background|content|border}>[-<state>]
+ *
+ * Same slots, but the model is explicit about two things the general rubric
+ * leaves open, and both are checkable:
+ *
+ *   - the property is one of THREE, spelled `color-background` /
+ *     `color-content` / `color-border` — not any CSS property;
+ *   - `disabled` belongs in the STATE slot here, alongside hover / focus /
+ *     active / pressed, rather than being a variant.
+ *
+ * Everything below is scoped to the tokens that actually hold a colour, which
+ * is `isColor` from the graph — anchored at the start of the RESOLVED value, so
+ * a `1px solid var(--color-border)` shorthand and an `--elevation-*` shadow are
+ * both correctly excluded. That exclusion is the point: this section is about
+ * names for colours, and a token whose value is a shorthand is a different
+ * finding (see `borderSplit`).
+ */
+
+export const colourRows: Tier3Row[] = rows.filter((r) => r.isColor);
+
+const RUBRIC_COLOUR_PROPS: RubricProp[] = ['color-background', 'color-content', 'color-border'];
+
+/** Names that qualify their property the rubric's way. Derived, not asserted. */
+export const colourQualified = colourRows.filter((r) =>
+  /(^|-)color-(content|background|border)(-|$)/.test(r.name),
+);
+
+/**
+ * Per rubric property: the words we use instead, with counts. This is the same
+ * shape as `propVocab` above but scoped to colour-valued tokens, so the dialect
+ * count is not diluted by `--card-padding` and friends.
+ */
+export const colourPropVocab: PropVocabRow[] = [
+  {
+    rubric: 'color-background',
+    words: (() => {
+      const m = new Map<string, number>();
+      for (const r of colourRows) if (r.prop === 'color-background' && r.propWord) m.set(r.propWord, (m.get(r.propWord) ?? 0) + 1);
+      return [...m.entries()].map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count);
+    })(),
+    total: colourRows.filter((r) => r.prop === 'color-background').length,
+    note: 'One word, used consistently — the healthiest of the three. It is an abbreviation of the rubric’s word rather than a different concept, so this is a spelling difference and nothing more.',
+  },
+  {
+    rubric: 'color-content',
+    words: (() => {
+      const m = new Map<string, number>();
+      for (const r of colourRows) if (r.prop === 'color-content' && r.propWord) m.set(r.propWord, (m.get(r.propWord) ?? 0) + 1);
+      return [...m.entries()].map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count);
+    })(),
+    total: colourRows.filter((r) => r.prop === 'color-content').length,
+    note: 'Three spellings for one property, and the bare `color` reading is the one that costs something: `--dialog-color`, `--kbd-color` and `--tab-layout-color` are all text, but the name never says so — you have to open the component to find out. Tier 2 settled this exact argument in favour of `content` (over `text`) because icons read these too; tier 3 never followed.',
+  },
+  {
+    rubric: 'color-border',
+    words: (() => {
+      const m = new Map<string, number>();
+      for (const r of colourRows) if (r.prop === 'color-border' && r.propWord) m.set(r.propWord, (m.get(r.propWord) ?? 0) + 1);
+      return [...m.entries()].map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count);
+    })(),
+    total: colourRows.filter((r) => r.prop === 'color-border').length,
+    note: 'One spelling now, and this is the property that was fixed rather than recorded. `border` used to be a second spelling here, and unlike `bg`-vs-`background` it was not merely cosmetic: --sidenav-border and --topbar-border held a plain colour while --filter-dropdown-border held a whole `1px solid …` shorthand, so two of the three were re-pointable and the third was not — a theme could not touch its colour without restating a width and style it had no reason to care about. All three are now -border-color holding a colour, with esa-filter-dropdown composing the shorthand from --border-width-default. If a second word ever reappears in this row, check the VALUES before assuming it is cosmetic.',
+  },
+];
+
+/** Colour tokens whose name states no property at all — the value is the only clue. */
+export const colourUnnamedProp = colourRows.filter((r) => !RUBRIC_COLOUR_PROPS.includes(r.prop));
+
+/* ------------------------------------------- the variant slot, for colour */
+
+/**
+ * The rubric's worked example is a button: primary / secondary / tertiary, each
+ * with its own `color-background` and its own states. So the honest test of our
+ * variant slot is not "do any tokens carry a variant word" — it is: where a
+ * component HAS a colour-variant axis, does the tier-3 surface expose it?
+ *
+ * Both halves are derived. The axis comes from the component source: which
+ * tier-2 intentions the file reads. The surface comes from the token names.
+ * Where the two disagree, the component is expressing variants by reaching
+ * straight past tier 3 into tier 2 — which works, and costs exactly one thing:
+ * the variant cannot be re-skinned independently of every other use of that
+ * intention in the kit.
+ */
+const INTENTIONS = ['brand', 'danger', 'success', 'warning', 'info', 'ai', 'accent'] as const;
+
+/**
+ * The four STATUS intentions, and the threshold is measured against these rather
+ * than against the full list. Reading two intentions is not an axis — nine
+ * components read exactly `brand` and `danger`, which is a brand accent plus an
+ * error message, not a variant they choose between. Requiring three of the four
+ * statuses is what separates a component with a `tone` prop from one that merely
+ * styles its own validation state.
+ */
+const STATUS_INTENTIONS = ['danger', 'success', 'warning', 'info'];
+const STATUS_THRESHOLD = 3;
+
+export interface IntentionAxisRow {
+  /** Component file name, minus `esa-`. */
+  component: string;
+  /** The tier-3 namespace, where the token prefix differs from the tag. */
+  ns: string;
+  /** Distinct tier-2 intentions the component reads directly. */
+  intentions: string[];
+  /** Tier-3 colour tokens in this namespace. */
+  hooks: number;
+  /** …of which carry a variant word. */
+  varianted: number;
+}
+
+export const intentionAxis: IntentionAxisRow[] = (() => {
+  if (!existsSync(COMPONENT_DIR)) return [];
+  const nsHooks = new Map<string, Tier3Row[]>();
+  for (const r of colourRows) {
+    if (!r.ns) continue;
+    if (!nsHooks.has(r.ns)) nsHooks.set(r.ns, []);
+    nsHooks.get(r.ns)!.push(r);
+  }
+  const out: IntentionAxisRow[] = [];
+  for (const file of readdirSync(COMPONENT_DIR)) {
+    if (!file.startsWith('esa-')) continue;
+    const component = file.replace(/\.[a-z]+$/, '').slice(4);
+    const src = readFileSync(path.join(COMPONENT_DIR, file), 'utf8');
+    const found = new Set<string>();
+    for (const i of INTENTIONS) {
+      if (new RegExp(`--color-(background|content|border)-${i}(?![a-z])`).test(src)) found.add(i);
+    }
+    if (STATUS_INTENTIONS.filter((i) => found.has(i)).length < STATUS_THRESHOLD) continue;
+    // `sidenav` is the one namespace spelled unlike its tag; nothing with an
+    // intention axis is affected today, but resolve through the roster anyway
+    // so this doesn't silently under-report if that changes.
+    const ns = nsHooks.has(component) ? component : (nsOf(`--${component}`) ?? component);
+    const hooks = nsHooks.get(ns) ?? [];
+    out.push({
+      component,
+      ns,
+      intentions: [...found],
+      hooks: hooks.length,
+      // `--button-on-warning` parses as variant `warning`, but it is the
+      // FOREGROUND painted on a warning fill, not a warning surface to theme —
+      // PART_KIND already classes `button:on` as an artefact. Counting it would
+      // report the rubric's own worked example as exposed when the axis it names
+      // has no hook at all.
+      varianted: hooks.filter((h) => h.variant && partKindOf(h) !== 'artefact').length,
+    });
+  }
+  return out.sort((a, b) => b.intentions.length - a.intentions.length || a.component.localeCompare(b.component));
+})();
+
+/** Components with a colour-variant axis and no varianted hook to theme it through. */
+export const axisUnexposed = intentionAxis.filter((a) => a.varianted === 0);
+
+/**
+ * Variant words that trail the property instead of preceding it. The rubric puts
+ * the variant FIRST (`button-primary-color-background`), and so does this system
+ * (`--app-bar-brand-bg`, `--snackbar-item-danger-bg`). Derived by position in the
+ * string, so it stays a live check rather than a claim: five tokens used to fail
+ * it — esa-snackbar-item's four variant hooks and --form-border-color-error —
+ * and if a sixth appears, this is where it shows up.
+ */
+export const colourVariantRows = colourRows.filter((r) => r.variant);
+export const colourVariantInverted = colourVariantRows.filter(
+  (r) => r.propWord && r.name.indexOf(r.propWord) < r.name.lastIndexOf(r.variant!),
+);
+
+/* -------------------------------------------------- the state slot, for colour */
+
+export const colourStateRows = colourRows.filter((r) => r.state);
+
+/**
+ * The rubric's state list, measured against colour tokens only. `disabled` is in
+ * this list deliberately — the model puts it at the state layer rather than
+ * treating it as a variant, which is the one place our tier 2 and this rubric
+ * disagree about where a concept lives.
+ */
+export const colourStateVocab = (() => {
+  const RUBRIC = ['hover', 'focus', 'active', 'pressed', 'disabled'];
+  const m = new Map<string, string[]>();
+  for (const r of colourStateRows) {
+    if (!m.has(r.state!)) m.set(r.state!, []);
+    m.get(r.state!)!.push(r.name);
+  }
+  const inRubric = RUBRIC.map((state) => ({
+    state,
+    inRubric: true,
+    tokens: m.get(state) ?? [],
+    note:
+      state === 'pressed'
+        ? 'No colour token names it. `active` — the CSS spelling of pressed — is in use for "currently selected", so the pressed state is unreachable at tier 3 by any name.'
+        : state === 'active'
+          ? 'Present, but meaning current/selected: the open tab, the nav row you are on, the highlighted result. Not the rubric’s pressed.'
+          : state === 'disabled'
+            ? 'The rubric puts disabled here, at the state layer. We mostly put it one tier up, as an intention (--color-background-disabled, --color-content-disabled), and reach for a tier-3 hook only where a component genuinely differs. That is a real disagreement about where the concept lives, and ours de-duplicates better — one disabled treatment instead of one per component.'
+            : state === 'focus'
+              ? 'One, and that is the right number: the global ring is --focus-ring-color / -width, so a component only needs its own where something else changes. Here it is the input border.'
+              : '',
+  }));
+  const extras = [...m.keys()]
+    .filter((s) => !RUBRIC.includes(s))
+    .map((state) => ({
+      state,
+      inRubric: false,
+      tokens: m.get(state)!,
+      note:
+        PSEUDO_STATE[state] ??
+        'A component state the rubric’s list doesn’t cover. Genuine states, not misfilings — but worth knowing the list is not exhaustive.',
+    }));
+  return [...inRubric, ...extras];
+})();
+
+/* ------------------------------------------------------- the colour verdict */
+
+export const colourTally = {
+  total: colourRows.length,
+  qualified: colourQualified.length,
+  background: colourRows.filter((r) => r.prop === 'color-background').length,
+  content: colourRows.filter((r) => r.prop === 'color-content').length,
+  border: colourRows.filter((r) => r.prop === 'color-border').length,
+  unnamed: colourUnnamedProp.length,
+  varianted: colourVariantRows.length,
+  stateful: colourStateRows.length,
+};
+
+export const colourSlots: RubricSlot[] = [
+  {
+    n: 1,
+    name: 'Component / category / use case',
+    spec: 'button, link, table, header, form, focus-ring',
+    verdict: `${colourRows.filter((r) => r.ns).length} of ${colourRows.length} lead with one, and the rubric’s own six examples include two we ship as-named — form and focus-ring. Unchanged from the general audit: this slot is the system’s strongest.`,
+    status: 'match',
+  },
+  {
+    n: 2,
+    name: 'Component variant',
+    spec: 'primary, secondary, tertiary, link, knockout',
+    verdict: `${colourTally.varianted} of ${colourTally.total} carry one, and ${colourVariantInverted.length} of those put it AFTER the property — the rubric’s order reversed. The deeper gap is the rubric’s own worked example: ${intentionAxis.length} components have a colour-variant axis, ${axisUnexposed.length} of them expose none of it at tier 3. They express variants by reading tier-2 intentions directly, so a spoke cannot diverge one component’s danger from every other danger in the kit.`,
+    status: 'partial',
+  },
+  {
+    n: 3,
+    name: 'Property',
+    spec: 'color-background, color-content, color-border',
+    verdict: `${colourTally.qualified} of ${colourTally.total} qualify the property with color-. The three concepts are all present and nearly always named — ${colourTally.background} background, ${colourTally.content} content, ${colourTally.border} border, ${colourTally.unnamed} unstated — but in ${colourPropVocab.reduce((n, p) => n + p.words.length, 0)} words rather than 3. Tier 2 qualifies (--color-background-brand); tier 3 never adopted it.`,
+    status: 'partial',
+  },
+  {
+    n: 4,
+    name: 'State',
+    spec: 'hover, focus, active, pressed, disabled — default omitted',
+    verdict: `${colourTally.stateful} stateful colour tokens, every one trailing, default omitted. Two gaps: pressed has no name available (active is spoken for), and one token puts a variant — error — in the state slot. Disabled is a deliberate disagreement, not a gap: we manage it at tier 2 as an intention.`,
+    status: 'partial',
+  },
+];
+
+export const colourGrammars = {
+  rubric: '--<component|category|special>-<variant>-color-<background|content|border>[-<state>]',
+  current: '--<component>[-<part>]-<bg|color|text|border-color>[-<state>][-<variant>]',
+};
+
 /* ------------------------------------------------------------ the verdict */
 
 export interface RubricSlot {
@@ -706,11 +984,112 @@ export const slots: RubricSlot[] = [
   },
 ];
 
+/* ======================================================================
+ * The TYPOGRAPHY rubric — the third narrow shape, beside colour.
+ * ======================================================================
+ *
+ *   --<component>-<variant>-<font-size|font-weight|font-style|line-height>
+ *
+ * The model, in its own words: most components wire straight to the tier-2
+ * typography COMPOSITE tokens, and tier 3 exists only for the component-specific
+ * exceptions — "most of the use cases for this are either tweaking a font size,
+ * or setting a line height to one in order to remove white space above and
+ * below a text". So unlike colour, a SMALL count here is the healthy result: a
+ * large tier-3 typography surface would mean components are re-deriving type
+ * instead of reading a role.
+ *
+ * Note the property list is closed at four, and every one is spelled with its
+ * full CSS property name — there is no `size`/`weight` shorthand in the model.
+ */
+
+const TYPOGRAPHIC_PROPS = ['font-size', 'font-weight', 'font-style', 'line-height'] as const;
+type TypographicProp = (typeof TYPOGRAPHIC_PROPS)[number];
+
+/** The word we actually use → the rubric property it fills. Abbreviations are
+ *  mapped here rather than being silently dropped, so the dialect shows up as a
+ *  spelling difference rather than as a missing token.
+ *
+ *  A bare `size` is deliberately NOT mapped, and the omission is the whole
+ *  reason this is a table rather than a regex on `/size|weight/`: in this kit
+ *  `size` means a BOX dimension — `--avatar-size-md`, `--back-to-top-size`,
+ *  `--empty-state-icon-size-lg` — and mapping it caught 12 of those and
+ *  reported them as type. A bare `weight` has no such second meaning (border
+ *  thickness is spelled `width`), so that one is safe to fold in. */
+const TYPE_WORD_TO_PROP: Record<string, TypographicProp> = {
+  'font-size': 'font-size',
+  'font-weight': 'font-weight',
+  'font-style': 'font-style',
+  'line-height': 'line-height',
+  weight: 'font-weight',
+};
+
+export interface TypeRow {
+  row: Tier3Row;
+  /** The rubric property, or null when the name uses a word outside the model. */
+  prop: TypographicProp | null;
+  /** The word actually written in the name. */
+  word: string;
+  /** True when the word matches the rubric's own spelling exactly. */
+  rubricSpelling: boolean;
+}
+
+/** Tier-3 tokens whose property is typographic, matched on the NAME (minus its
+ *  namespace, so a namespace containing `font` can't produce a false hit). */
+export const typeRows: TypeRow[] = rows
+  .map((r) => {
+    const tail = r.name.slice(2 + (r.ns?.length ?? 0));
+    const word = Object.keys(TYPE_WORD_TO_PROP)
+      // Longest first: `font-size` has to win over `size`, `font-weight` over `weight`.
+      .sort((a, b) => b.length - a.length)
+      .find((w) => new RegExp(`(^|-)${w}(-|$)`).test(tail));
+    if (!word && !/(^|-)font-family(-|$)/.test(tail)) return null;
+    return {
+      row: r,
+      prop: word ? TYPE_WORD_TO_PROP[word] : null,
+      word: word ?? 'font-family',
+      rubricSpelling: !!word && (TYPOGRAPHIC_PROPS as readonly string[]).includes(word),
+    };
+  })
+  .filter((x): x is TypeRow => x !== null)
+  .sort((a, b) => a.row.name.localeCompare(b.row.name));
+
+/** Per rubric property: which words we use for it, with counts. */
+export const typePropVocab: PropVocabRow[] = TYPOGRAPHIC_PROPS.map((p) => {
+  const mine = typeRows.filter((t) => t.prop === p);
+  const m = new Map<string, number>();
+  for (const t of mine) m.set(t.word, (m.get(t.word) ?? 0) + 1);
+  return {
+    rubric: p,
+    words: [...m.entries()].map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count),
+    total: mine.length,
+    note:
+      p === 'font-size'
+        ? 'The bulk of the surface, and exactly the case the model predicts — components tweaking one size rather than re-deriving a role. Spelled the rubric’s way throughout.'
+        : p === 'font-weight'
+          ? 'Two spellings for one property: `font-weight` once, and a bare `weight` twice (--grid-header-weight, --sidenav-link-weight-active). Same drift the general rubric’s property slot already records, in miniature.'
+          : p === 'line-height'
+            ? 'One token, and it is NOT the model’s worked example — `--form-line-height` carries --line-height-normal, not the `line-height: 1` trick for stripping the half-leading above and below a single line of text. That case is handled inside components where it comes up, so it has no tier-3 hook.'
+            : 'Nothing. No component exposes a font-style hook, which is the expected result — italics in this kit are a content decision, not a themeable axis.',
+  };
+});
+
+/** Typographic tier-3 tokens whose property is OUTSIDE the model's four. */
+export const typeOutsideRubric = typeRows.filter((t) => t.prop === null);
+
+export const typeTally = {
+  total: typeRows.length,
+  rubricSpelled: typeRows.filter((t) => t.rubricSpelling).length,
+  outside: typeOutsideRubric.length,
+  /** Components reading a tier-2 composite instead — the healthy default. */
+  withVariant: typeRows.filter((t) => t.row.variant).length,
+  withSize: typeRows.filter((t) => t.row.size).length,
+};
+
 export const grammars = {
   rubric: '--eco-<tier>-<component|category|special>-<variant>-<property>[-<state>]',
   current: [
     'component:  --<component>[-<part>][-<variant>]-<property>[-<state>]',
-    'category:   --<category>-<property>-<size>            (--form-padding-x-md)',
+    'category:   --<category>-<property>-<size>            (--form-radius-md)',
     'special:    --focus-ring-<property>                    (rubric-shaped, tier-ambiguous)',
     'unplaced:   --<property>                               (--backdrop-filter, --fill-percent)',
   ],

@@ -102,6 +102,7 @@ export class EsaSearchPanel extends LitElement {
     results: { type: Array },
     loading: { type: Boolean, reflect: true },
     position: { type: String, reflect: true },
+    name: { type: String, reflect: true },
     hasSearched: { type: Boolean, state: true },
   };
 
@@ -110,6 +111,8 @@ export class EsaSearchPanel extends LitElement {
   declare results: EsaSearchResult[];
   declare loading: boolean;
   declare position: 'right' | 'left';
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare hasSearched: boolean;
 
   private internals: ElementInternals;
@@ -320,7 +323,7 @@ export class EsaSearchPanel extends LitElement {
       border: none;
       outline: none;
       font-family: inherit;
-      font-size: 1rem;
+      font-size: var(--font-size-200, 0.9375rem);
       color: var(--color-content-primary, #171717);
       background: transparent;
     }
@@ -354,7 +357,7 @@ export class EsaSearchPanel extends LitElement {
 
     .category {
       padding: var(--spacing-300, 12px) var(--spacing-200, 8px) var(--spacing-100, 4px);
-      font-size: 0.6875rem;
+      font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
       text-transform: var(--text-transform-uppercase, uppercase);
       letter-spacing: var(--letter-spacing-wide, 0.03em);
@@ -372,7 +375,7 @@ export class EsaSearchPanel extends LitElement {
       background: transparent;
       color: var(--color-content-primary, #171717);
       font-family: inherit;
-      font-size: 0.875rem;
+      font-size: var(--font-size-150, 0.875rem);
       cursor: pointer;
       text-align: left;
     }
@@ -391,7 +394,7 @@ export class EsaSearchPanel extends LitElement {
     }
 
     .result-subtitle {
-      font-size: 0.75rem;
+      font-size: var(--font-size-100, 0.75rem);
       color: var(--color-content-muted, #737373);
     }
 

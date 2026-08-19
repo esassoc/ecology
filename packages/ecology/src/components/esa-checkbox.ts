@@ -1,4 +1,10 @@
 import { LitElement, html, css, svg } from 'lit';
+import { typography } from '../typography.js';
+
+/** A choice label is the option's own text, not the group's heading — prose
+    weight, so it reads body-* rather than label-*. See the FORMS header in
+    component-tokens.css for the step→rung mapping. */
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 // Inlined Lucide icons (lucide.dev) to avoid an icon dependency.
 const checkIcon = svg`<polyline points="20 6 9 17 4 12"></polyline>`;
@@ -22,6 +28,7 @@ export class EsaCheckbox extends LitElement {
     label: { type: String },
     size: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     indeterminate: { type: Boolean, reflect: true },
     checked: { type: Boolean, reflect: true },
   };
@@ -29,6 +36,8 @@ export class EsaCheckbox extends LitElement {
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare indeterminate: boolean;
   declare checked: boolean;
 
@@ -88,35 +97,36 @@ export class EsaCheckbox extends LitElement {
                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${checkIcon}</svg>`
               : null}
         </span>
-        ${this.label ? html`<span class="label">${this.label}</span>` : null}
+        ${this.label
+          ? html`<span class="label typography-${VALUE_TYPE[this.size]}">${this.label}</span>`
+          : null}
       </label>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       --_checkbox-size: 20px;
       --_checkbox-radius: var(--form-radius-md, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
       --_checkbox-icon-size: 16px;
       display: inline-block;
     }
+    /* Box geometry only — the label's type is a composite named in render(). */
     :host([size='xs']) {
       --_checkbox-size: 14px;
       --_checkbox-radius: var(--form-radius-xs, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
       --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
       --_checkbox-radius: var(--form-radius-sm, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-sm, 0.875rem);
       --_checkbox-icon-size: 12px;
     }
     :host([size='lg']) {
       --_checkbox-size: 24px;
       --_checkbox-radius: var(--form-radius-lg, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-lg, 1.125rem);
       --_checkbox-icon-size: 20px;
     }
     :host([disabled]) .wrapper {
@@ -142,7 +152,7 @@ export class EsaCheckbox extends LitElement {
       /* The size token is authoritative: without this, re-pointing the indicator
          border width would resize the control instead of thickening its edge. */
       box-sizing: border-box;
-      border: var(--form-indicator-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--form-bg, #fff);
       color: var(--color-content-inverse, #fff);
@@ -168,13 +178,15 @@ export class EsaCheckbox extends LitElement {
       border-color: var(--color-background-brand, #43608a);
     }
 
+    /* Type comes from .typography-body-* on the element — including its leading.
+       This used to pin line-height to tight (1.3) while every other label in the
+       kit led at 1.6; that was a local special case, not a decision, and choice
+       labels now read like the rest. */
     .label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_checkbox-font-size);
       color: var(--color-content-primary, #171717);
-      line-height: var(--line-height-tight, 1.3);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-checkbox')) {

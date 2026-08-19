@@ -2,16 +2,18 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "'Upload files'", description: 'Prompt text inside the drop zone.' },
-  { name: 'accept', type: 'string', default: "''", description: 'Native accept filter (e.g. image/*, .pdf).' },
-  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow selecting more than one file.' },
-  { name: 'max-size-mb', type: 'number', default: '10', description: 'Per-file size limit in MB. Oversized files are rejected inline.' },
-  { name: 'name', type: 'string', default: "'files'", description: 'FormData field name used when submitting.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables the drop zone and browse (reflected attribute).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Prompt text inside the drop zone.",
+  accept: "Native accept filter (e.g. image/*, .pdf).",
+  multiple: "Allow selecting more than one file.",
+  "max-size-mb": "Per-file size limit in MB. Oversized files are rejected inline.",
+  name: "FormData field name used when submitting.",
+  disabled: "Disables the drop zone and browse (reflected attribute).",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ files: File[] }>', description: 'Fired when the file list changes (add or remove). Composed and bubbles.' },
@@ -38,7 +40,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-file-upload" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

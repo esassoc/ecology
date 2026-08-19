@@ -238,7 +238,8 @@ export interface RampRow {
   renamedFrom: string | null;
 }
 
-const isUsed = (t: TokenNode) => t.usedByTokens.length > 0 || t.usedByComponents.length > 0;
+const isUsed = (t: TokenNode) =>
+  t.usedByTokens.length > 0 || t.usedByComponents.length > 0 || t.usedByFiles.length > 0;
 
 export const rampRows: RampRow[] = (() => {
   const bases = new Map<string, TokenNode[]>();

@@ -2,18 +2,20 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 
 const brand = JSON.stringify(['#43608a', '#5787b9', '#f9a134', '#ef4444', '#3b82f6', '#22c55e']);
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
-  { name: 'value', type: 'string', default: "'#000000'", description: 'Current color as a hex string.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
-  { name: 'swatches', type: 'string[]', default: '[]', description: 'Preset colors. Accepts a string[] property or a JSON-encoded swatches attribute.' },
-  { name: 'show-input', type: 'boolean', default: 'true', description: 'Show the hex text input next to the preview.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Field label above the control.",
+  value: "Current color as a hex string.",
+  size: "Control size (reflected attribute).",
+  swatches: "Preset colors. Accepts a string[] property or a JSON-encoded swatches attribute.",
+  "show-input": "Show the hex text input next to the preview.",
+  disabled: "Disables interaction (reflected attribute).",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string }>', description: 'Fired when the color commits (native picker, valid hex input, or swatch click). Hex input validates #rgb / #rrggbb. Composed and bubbles.' },
@@ -57,7 +59,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-color-picker" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

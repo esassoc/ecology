@@ -23,6 +23,7 @@ export class EsaSwitchToggle extends LitElement {
     label: { type: String },
     size: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     labelPosition: { type: String, attribute: 'label-position', reflect: true },
     checked: { type: Boolean, reflect: true },
   };
@@ -30,6 +31,8 @@ export class EsaSwitchToggle extends LitElement {
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare labelPosition: 'before' | 'after';
   declare checked: boolean;
 

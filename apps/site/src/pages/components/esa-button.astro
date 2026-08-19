@@ -2,23 +2,26 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '../../components/ApiTable.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
 
-const props = [
-  { name: 'color', type: "'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost'", default: "'primary'", description: 'Semantic color. `ai` uses the copper AI-context palette; `ghost` is neutral/transparent.' },
-  { name: 'appearance', type: "'fill' | 'outline' | 'dashed'", default: "'fill'", description: 'How the color renders — solid fill, bordered, or dashed border.' },
-  { name: 'active', type: 'boolean', default: 'false', description: 'Pressed/selected state (sets aria-pressed) — for toggle buttons.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (shared form scale).' },
-  { name: 'icon', type: 'string', description: 'Lucide icon name, rendered left of the label.' },
-  { name: 'iconOnly', type: 'boolean', default: 'false', description: 'Square icon-only button with no text.' },
-  { name: 'loading', type: 'boolean', default: 'false', description: 'Shows a spinner; label is held in place but hidden.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction.' },
-  { name: 'type', type: "'button' | 'submit' | 'reset'", default: "'button'", description: 'Native button type.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  variant: "Semantic intent. `ai` uses the copper AI-context palette; `ghost` is neutral/transparent.",
+  appearance: "How the variant renders — solid fill, bordered, dashed border, or a soft neutral surface with accent-colored text.",
+  active: "Pressed/selected state (sets aria-pressed) — for toggle buttons.",
+  size: "Control size (shared form scale).",
+  icon: "Leading Lucide icon name, rendered left of the label.",
+  iconRight: "Lucide icon shown to the right of the label — the affordance (`arrow-right`, `chevron-down`). Independent of `icon`; a button may carry both.",
+  iconOnly: "Square icon-only button with no text. Uses `icon` and ignores `iconRight`.",
+  loading: "Shows a spinner; label is held in place but hidden.",
+  disabled: "Disables interaction.",
+  type: "Native button type.",
+};
 ---
 <ComponentDoc name="Button" category="Core" slug="esa-button" type=".astro" status="stable"
-  summary="Triggers an action or event. A two-axis model — 8 semantic <strong>colors</strong> × 3 <strong>appearances</strong> (fill/outline/dashed) — plus a toggle, four sizes, and icon/loading affordances.">
+  summary="Triggers an action or event. A two-axis model — 8 semantic <strong>variants</strong> × 4 <strong>appearances</strong> (fill/outline/dashed/soft) — plus a toggle, four sizes, and icon/loading affordances.">
 
   <Section id="preview" title="Preview">
     <Preview code={`<EsaButton>Get started</EsaButton>`}>
@@ -26,35 +29,37 @@ const props = [
     </Preview>
   </Section>
 
-  <Section id="colors" title="Colors">
-    <p>Eight semantic colors. <code>ai</code> maps to the copper AI-context palette; <code>ghost</code> is neutral and transparent.</p>
-    <Preview code={`<EsaButton color="primary">Primary</EsaButton>
-<EsaButton color="secondary">Secondary</EsaButton>
-<EsaButton color="danger">Danger</EsaButton>
-<EsaButton color="success">Success</EsaButton>
-<EsaButton color="warning">Warning</EsaButton>
-<EsaButton color="info">Info</EsaButton>
-<EsaButton color="ai">AI</EsaButton>
-<EsaButton color="ghost">Ghost</EsaButton>`}>
-      <EsaButton color="primary">Primary</EsaButton>
-      <EsaButton color="secondary">Secondary</EsaButton>
-      <EsaButton color="danger">Danger</EsaButton>
-      <EsaButton color="success">Success</EsaButton>
-      <EsaButton color="warning">Warning</EsaButton>
-      <EsaButton color="info">Info</EsaButton>
-      <EsaButton color="ai">AI</EsaButton>
-      <EsaButton color="ghost">Ghost</EsaButton>
+  <Section id="variants" title="Variants">
+    <p>Eight semantic variants. <code>ai</code> maps to the copper AI-context palette; <code>ghost</code> is neutral and transparent.</p>
+    <Preview code={`<EsaButton variant="primary">Primary</EsaButton>
+<EsaButton variant="secondary">Secondary</EsaButton>
+<EsaButton variant="danger">Danger</EsaButton>
+<EsaButton variant="success">Success</EsaButton>
+<EsaButton variant="warning">Warning</EsaButton>
+<EsaButton variant="info">Info</EsaButton>
+<EsaButton variant="ai">AI</EsaButton>
+<EsaButton variant="ghost">Ghost</EsaButton>`}>
+      <EsaButton variant="primary">Primary</EsaButton>
+      <EsaButton variant="secondary">Secondary</EsaButton>
+      <EsaButton variant="danger">Danger</EsaButton>
+      <EsaButton variant="success">Success</EsaButton>
+      <EsaButton variant="warning">Warning</EsaButton>
+      <EsaButton variant="info">Info</EsaButton>
+      <EsaButton variant="ai">AI</EsaButton>
+      <EsaButton variant="ghost">Ghost</EsaButton>
     </Preview>
   </Section>
 
   <Section id="appearances" title="Appearances">
-    <p>The appearance axis is independent of color — any color renders as <code>fill</code>, <code>outline</code>, or <code>dashed</code>.</p>
-    <Preview code={`<EsaButton color="danger" appearance="fill">Fill</EsaButton>
-<EsaButton color="danger" appearance="outline">Outline</EsaButton>
-<EsaButton color="danger" appearance="dashed">Dashed</EsaButton>`}>
-      <EsaButton color="danger" appearance="fill">Fill</EsaButton>
-      <EsaButton color="danger" appearance="outline">Outline</EsaButton>
-      <EsaButton color="danger" appearance="dashed">Dashed</EsaButton>
+    <p>The appearance axis is independent of variant — any variant renders as <code>fill</code>, <code>outline</code>, <code>dashed</code>, or <code>soft</code>. <code>soft</code> is a neutral surface with accent-colored text that fills on hover — <code>variant="danger" appearance="soft"</code> is the secondary-danger button.</p>
+    <Preview code={`<EsaButton variant="danger" appearance="fill">Fill</EsaButton>
+<EsaButton variant="danger" appearance="outline">Outline</EsaButton>
+<EsaButton variant="danger" appearance="dashed">Dashed</EsaButton>
+<EsaButton variant="danger" appearance="soft">Soft</EsaButton>`}>
+      <EsaButton variant="danger" appearance="fill">Fill</EsaButton>
+      <EsaButton variant="danger" appearance="outline">Outline</EsaButton>
+      <EsaButton variant="danger" appearance="dashed">Dashed</EsaButton>
+      <EsaButton variant="danger" appearance="soft">Soft</EsaButton>
     </Preview>
   </Section>
 
@@ -79,20 +84,42 @@ const props = [
     </Preview>
   </Section>
 
-  <Section id="states" title="States">
-    <Preview code={`<EsaButton icon="arrow-right">With icon</EsaButton>
-<EsaButton loading>Loading</EsaButton>
-<EsaButton disabled>Disabled</EsaButton>
+  <Section id="icons" title="Icons">
+    <p><code>icon</code> sits left of the label, <code>iconRight</code> sits right. They are
+    independent props, not two settings of one, so a button can carry both. Reach for
+    <code>iconRight</code> when the glyph is an <em>affordance</em> — where the action goes
+    (<code>arrow-right</code>) or that it opens something (<code>chevron-down</code>) — and
+    for <code>icon</code> when it labels what the action <em>is</em>. <code>iconOnly</code>
+    drops the text and squares the box; it uses <code>icon</code> and ignores
+    <code>iconRight</code>.</p>
+    <Preview code={`<EsaButton icon="plus">Leading</EsaButton>
+<EsaButton iconRight="arrow-right">Continue</EsaButton>
+<EsaButton appearance="outline" iconRight="chevron-down">Export</EsaButton>
+<EsaButton icon="download" iconRight="chevron-down">Download</EsaButton>
 <EsaButton iconOnly icon="plus" aria-label="Add" />`}>
-      <EsaButton icon="arrow-right">With icon</EsaButton>
-      <EsaButton loading>Loading</EsaButton>
-      <EsaButton disabled>Disabled</EsaButton>
+      <EsaButton icon="plus">Leading</EsaButton>
+      <EsaButton iconRight="arrow-right">Continue</EsaButton>
+      <EsaButton appearance="outline" iconRight="chevron-down">Export</EsaButton>
+      <EsaButton icon="download" iconRight="chevron-down">Download</EsaButton>
       <EsaButton iconOnly icon="plus" />
     </Preview>
   </Section>
 
+  <Section id="states" title="States">
+    <p>Conditions the button is <em>in</em>, as opposed to what it is made of. Both are
+    transient and both block interaction; <code>loading</code> also hides the label in
+    place and suppresses either icon, so the width never jumps.</p>
+    <Preview code={`<EsaButton loading>Loading</EsaButton>
+<EsaButton disabled>Disabled</EsaButton>
+<EsaButton appearance="outline" active>Active</EsaButton>`}>
+      <EsaButton loading>Loading</EsaButton>
+      <EsaButton disabled>Disabled</EsaButton>
+      <EsaButton appearance="outline" active>Active</EsaButton>
+    </Preview>
+  </Section>
+
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-button" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

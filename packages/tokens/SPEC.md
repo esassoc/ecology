@@ -35,9 +35,18 @@ all new components follow.
    called `normal` because it is this system's default, not because CSS has a
    keyword spelled the same way. `--line-height-normal` is **1.6 by definition**;
    CSS `line-height: normal` (~1.2) is a different thing and the token has never
-   claimed to be it. Same for `--letter-spacing-normal: 0.01em`. Nobody reading
+   claimed to be it. Nobody reading
    `var(--line-height-normal)` is asking for the keyword — the `var()` says they
    want the token. (Tailwind's `leading-normal` is 1.5 for exactly this reason.)
+
+   `--letter-spacing-normal` used to sit beside it here, at `0.01em`. It is **`0`
+   as of 2026-08-14** and no longer illustrates the point: the rung now happens to
+   equal the CSS keyword. That was not a retreat from the principle — it was that
+   the kit's real default tracking had nowhere to live, so the one token in the
+   set whose name promises a specific value was the one holding something else.
+   The 0.01em moved to `--letter-spacing-default`, which every composite reads.
+   A rung and a keyword agreeing is fine; being *obliged* to agree is what this
+   section rejects.
 
    This does **not** relax the rule for value names. Where a token's value *is*
    a CSS keyword — `--text-transform-uppercase`, `--font-style-italic` — the
@@ -51,15 +60,58 @@ all new components follow.
    here, not just colour:
    - colour — `--color-background-brand`, `--color-background-raised`, `--color-content-secondary`
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
-   - size — `--control-height-{xs,sm,md,lg}`, `--chip-height-*`
-   - UI type — `--font-size-ui-{xs,sm,md,lg}` (chrome, not prose — prose uses
-     the typography composites in `src/typography.css`)
+   - size — `--chip-height-*`, and only that. `--control-height-{xs,sm,md,lg}` was
+     deleted on 2026-08-14: a px height cannot grow with rem text, so it clipped.
+     Inputs and buttons are now as tall as their padding plus their text, and that
+     padding is `--spacing-*` read directly — so this category has no ramp for them
+     at any tier. See `tokens/semantic/size.json`.
+   - type — the **composites**, `--typography-<intention>[-<size>]-<property>`,
+     plus the faces (`--font-sans | -mono | -display`) and named weights they are
+     assembled from. There is no separate chrome ramp. A `--font-size-ui-*` set
+     existed until 2026-08-14 on the theory that interface text was a different
+     kind of thing from prose; it was deleted because a size-only scale running
+     parallel to the composites is what lets a component pick a size without
+     adopting a composite. Controls now name the same composites everything else
+     does — see `docs/typography-adoption-plan.md` D1–D3 and the control-step
+     mapping in `semantic/size.json`.
    - elevation — `--elevation-1…6`
-   - layout — `--sidebar-width`, `--header-height`, `--content-max-width`
+   - layout — `--sidebar-width`, `--sidebar-width-collapsed`. This category is
+     nearly empty on purpose: `--header-height`, `--footer-height` and the
+     `--content-*-width` trio were deleted 2026-08-14 with zero readers between
+     them. A dimension token nothing reads cannot be re-pointed to any effect, so
+     it is a theming surface that only appears to exist. The sidebar pair stays
+     because it is a real agreement — the rail, the content offset and the
+     collapse transition must land on the same number.
 
-   **Components read this tier, never a primitive.** A component reaching past
-   it (`border-radius: var(--radius-200)`) is the bug that forces a theme to
-   move a primitive, because the semantic layer no longer covers the property.
+   **Components read this tier, never a primitive — except the CORE set.** A
+   component reaching past it (`border-radius: var(--radius-200)`) is the bug
+   that forces a theme to move a primitive, because the semantic layer no longer
+   covers the property.
+
+   **The exception is not a loophole, it is a named set.** Two tier-1 groups are
+   *universal* — shared by every theme, exportable, and meant to be consumed
+   directly by components in both design and code:
+
+   - **spacing** (`--spacing-*`) — every theme follows the same grid. Density is
+     not a branding axis.
+   - **the neutral palette** (`--color-gray-*`, `--color-black-a*`,
+     `--color-white-a*`) — the greyscale the UI is built on.
+
+   A theme re-points brand ramps; it never re-points these. So there is nothing
+   for a semantic layer to intervene in, and inserting one would be indirection
+   with no theme behind it — which is why `spacing` has **no tier-2 layer at all**
+   and why `--_pill-padding-x: var(--spacing-200)` in `esa-pill` is correct rather
+   than tolerated. Note where that example now lives: at the **component read**.
+   This exception used to be illustrated by a tier-3 hook (`--form-padding-x-lg:
+   var(--spacing-400)`), and that hook was deleted on 2026-08-14 — being allowed to
+   read spacing directly was never a licence to put a passthrough in front of it.
+   The set is defined in `apps/site/src/data/token-graph.ts`
+   (`CORE_SETS`) and rendered as "Tier 1 · Core / universal" on `/debug/tokens`;
+   that definition is the authority, not this list.
+
+   Read the rule as: **a component reaching past tier 2 for something a theme
+   would want to re-point is the bug.** Core tokens are exactly the tokens no
+   theme re-points.
 
    Most semantic tokens alias a primitive. **Dimension roles are allowed to
    define instead** — there is no tier-1 ramp behind a control height or a
@@ -233,21 +285,127 @@ spacing token is prefixed `--foundations-`.
    component from the semantic default without forking it.
 
 Inside components, **private `--_*` tokens** consume the public tiers, always
-with a literal fallback: `--_btn-height: var(--form-height-md, 40px)`.
+with a literal fallback: `--_field-padding-y: var(--spacing-300, 0.75rem)`.
 Privates are internals — never themed, never documented as surface.
 
 ## Tier-3 naming
 
 - **Shared group surfaces** for things that must align across components:
-  `--form-height-md`, `--form-radius-sm`, `--form-padding-x-lg` — one scale so
+  `--form-radius-sm`, `--form-bg`, `--form-border-color-focus` — one scale so
   inputs, selects, and buttons line up on a row. Prefer extending a group
-  surface over duplicating the same knob per component.
+  surface over duplicating the same knob per component. A group surface still has
+  to earn its place: `--form-height-*` and `--form-padding-*` were both examples
+  here until 2026-08-14, and both were deleted for being passthroughs that added a
+  name and nothing else. `--form-radius-*` survives because it encodes a real
+  mapping (xs/sm → `--radius-control`, md/lg → `--radius-surface`).
 - **Per-component surfaces**: `--<component>-<part?>-<property>` —
   `--card-bg`, `--card-border-color`, `--dialog-width`, `--badge-radius`,
   `--sidenav-item-color`. Size-variant knobs take the size suffix last:
   `--badge-height-sm`.
 - The component prefix is the element name minus `esa-` (esa-side-dialog →
   `--side-dialog-*`).
+
+### Tier-3 colour naming
+
+Colour has a narrower shape than the rest of tier 3, the same way it does at
+tier 2:
+
+```
+--<component|category|special>-<variant>-color-<property>-<state>
+            │                     │            │            └── hover, focus, pressed,
+            │                     │            │                disabled  (optional)
+            │                     │            └─────────────── background | content | border
+            │                     └──────────────────────────── primary, secondary, tertiary,
+            │                                                   knockout…  (default omitted)
+            └────────────────────────────────────────────────── button, link, table, form,
+                                                                focus-ring
+```
+
+**We do not ship this shape. One divergence is deliberate, one is outstanding,
+and two have been closed.** `/debug/tokens` measures all four slots against the
+real names; the summary:
+
+- **Component slot — matches.** Including both non-component cases: `form` is a
+  category, `focus-ring` a special case.
+- **Property — not qualified.** We write `--card-bg`, not
+  `--card-color-background`. Tier 2 qualifies and tier 3 never followed, so one
+  property is spelled `bg` and one three ways (`color`, `text`, `text-color`).
+  This is the one still outstanding, and it is a legibility cost rather than a
+  capability cost — see the note on rename risk below before taking it on.
+
+  *Closed:* `border` used to be the fourth spelling and the only one that cost
+  more than legibility. Three tokens were named `border` while `--sidenav-border`
+  and `--topbar-border` held a plain colour and `--filter-dropdown-border` held a
+  whole `1px solid …` shorthand — so a theme could re-point two of them and could
+  not re-point the third's colour without restating a width and style it had no
+  reason to care about. All three are now `-border-color` holding a colour, and
+  the component composes the shorthand from `--border-width-default`.
+- **State — placed correctly.** States trail and `default` is omitted. `active`
+  is in use for *currently selected*, so the rubric's **pressed** state still has
+  no name available at tier 3 — that one is real and open.
+
+  *Closed:* `--form-border-color-error` put a validation **variant** in the
+  trailing slot reserved for interaction states. It is now
+  `--form-error-border-color`, which also pairs it with the existing
+  `--form-error-color`: one error treatment, two properties.
+- **Variant — mostly absent, and this is the substantive gap.** Seven components
+  have a real colour-variant axis (button, badge, pill, alert-box,
+  confirm-dialog, progress-bar, snackbar-item — measured as reading three or
+  more of the four status intentions). **Six of them expose none of it at
+  tier 3**: they read `--color-background-danger` and friends directly, so their
+  variants are themeable only by moving the whole kit's danger.
+  `esa-snackbar-item` is the one exception, and its four hooks now put the
+  variant *before* the property (`--snackbar-item-danger-bg`), matching
+  `--app-bar-brand-bg` and the rubric alike.
+
+**On `disabled`, we disagree with the rubric on purpose.** It puts disabled in
+the state slot, per component. We manage it one tier up as an intention
+(`--color-background-disabled`, `--color-content-disabled`,
+`--color-border-disabled`) and reach for a tier-3 hook only where a component
+genuinely differs — currently once, `--form-bg-disabled`. That de-duplicates:
+one disabled treatment for the kit instead of one per component. Same reasoning
+as the tier-2 note above, where `disabled` is a variant rather than a state.
+
+**Renaming a tier-3 token is riskier than renaming one at tier 1 or 2, and the
+machinery does not say so.** `build.js` emits `--old: var(--new)` for every row
+in `migrations.json`, which rescues a spoke that **reads** the old name. But
+tier 3 is the surface a spoke **declares** — that is its entire job — and an
+alias cannot rescue a declaration. A spoke whose theme file sets
+`--sidenav-border: <its colour>` keeps setting a token nothing reads any more:
+it loses the override, renders the hub default, and **nothing errors**. The
+alias makes it look fine.
+
+So a tier-3 rename is only half-done when the row lands. `/update-tokens` has to
+run in every spoke, and `doctor.mjs` has to come back clean, before the rename
+can be considered absorbed. The eight renames on this page are the first tier-3
+rows in `migrations.json`; one of them,
+`filter-dropdown-border-shorthand-to-colour`, is marked `exact: false` because
+the value *shape* changed — a spoke that wrote `border: var(--filter-dropdown-border)`
+now gets a bare colour where a shorthand was, which is not a valid border.
+
+**The sharpest case of that asymmetry is `form-padding-to-spacing` (2026-08-14),
+because there the hub itself invited the declaration.** `packages/spoke-template`
+shipped four `__FILL__` slots for `--form-padding-y-*` under a heading that called
+padding "the density lever", with defaults one spacing rung tighter than the hub's.
+So a spoke could have declared those names *on the hub's own instruction* and will
+now silently lose the override — and, because the template ran tighter, get
+**roomier** controls rather than merely unchanged ones. The alias covers readers;
+deleting the template slot and running `/update-tokens` is the only thing that
+covers declarers. When a row removes something the template offered, the template
+edit belongs in the same commit.
+
+This is the reason the property-qualification divergence above stays open rather
+than being tidied up: 158 colour hooks would move, and every spoke would have to
+be walked through the same gate for a change that buys legibility and no new
+capability.
+
+**What the variant gap actually forecloses.** Reading tier 2 directly is legal
+and keeps the surface small — the whole kit's danger moves as one, which is
+usually what a spoke wants. The cost is the other direction: a spoke cannot make
+its danger *button* differ from its danger *badge*, because there is no hook
+between them. That is the trade to revisit if a spoke asks for it, not a defect
+to fix pre-emptively — per the rule below, a hook is earned by a spoke asking,
+not by a rubric having a slot.
 
 ## When a property earns a hook
 
@@ -306,6 +464,29 @@ Removing a prefix from that list should mean **the component landed**, not that
 the finding got annoying. A staged surface that no one has claimed after a
 release cycle is dead surface — fold it away.
 
+## A shipped `.css` partial is a token READER
+
+Three of the audit's worst findings have been the same mistake: a token reported as
+having no readers because nothing looked at the file reading it. `--duration-0`
+(its reader was a `@media` block), `--topbar-*` (filed "staged" on a false
+premise), and then all 113 `--typography-*` composites, which
+`src/typography.css` reads 169 times while the graph scanned only
+`packages/ecology/src/components`. That last one made 102 of 125 reported
+orphans false and the health tally read 126 instead of 23.
+
+So: **this package ships more than `dist/tokens.css`.** `src/typography.css` and
+`src/layouts.css` are authored partials in the `exports` map, and they consume
+tokens exactly the way a component does. Adding another one requires a
+`SCAN_ROOTS` entry in `apps/site/src/data/token-graph.ts`, or a
+`READ_SCAN_EXEMPT` entry stating why not. The check is derived from this
+package's own `exports` map and counts toward the health total, so shipping a
+partial from a location no root covers fails visibly rather than quietly
+inflating the orphan list.
+
+The general form, which is worth keeping in mind beyond tokens: **usage is a
+different question from value, and it has to be asked of every surface that
+ships — not of the surfaces a tool happened to open for some other reason.**
+
 ## Chrome exemptions
 
 Distinct from staged, and the distinction is the point: here the component
@@ -332,9 +513,12 @@ directly.
 [data-theme="cb-fish"] {
   /* tier 2 — the brand: everything 'primary' becomes navy */
   --color-background-brand: #1e5386;
-  /* tier 2 — shape and size are roles too: flatter corners, tighter controls */
+  /* tier 2 — shape is a role too: flatter corners.
+     Note what is NOT here: there is no size lever. This example used to read
+     `--control-height-md: 36px` beside the radius; that token was deleted on
+     2026-08-14 and the padding hook that briefly replaced it went the same day.
+     A theme cannot make its inputs tighter — see tokens/semantic/size.json. */
   --radius-surface: 4px;
-  --control-height-md: 36px;
   /* tier 3 — ONE component diverges from those defaults */
   --card-radius: var(--radius-control);
 }

@@ -70,18 +70,29 @@
   --color-background-ai:       var(--color-blue-9);    /* __FILL__ */
   --color-background-ai-hover: var(--color-blue-10);   /* __FILL__ */
 
-  /* ===== (5) CONTROL SIZING + SHAPE — match this spoke's density =====
-     These are SEMANTIC roles, so re-pointing one moves every component that
-     reads it. The hub defaults to controls xs 28 / sm 32 / md 40 / lg 48, and
-     surface corners at 8px. Re-point if this spoke runs more compact/flatter.
+  /* ===== (5) SHAPE — match this spoke's corner language =====
+     THERE IS NO DENSITY LEVER HERE ANY MORE, and this section used to promise one.
+     Read this before you go looking for it.
 
-     Never re-point --radius-100/200/… or --spacing-*: those are primitives, and
-     moving one moves everything downstream of it. Move the ROLE. */
-  --control-height-xs: /* __FILL__ */ 24px;
-  --control-height-sm: /* __FILL__ */ 28px;
-  --control-height-md: /* __FILL__ */ 36px;
-  --control-height-lg: /* __FILL__ */ 44px;
+     `--form-padding-{y,x}-*` lived here until 2026-08-14. It was a flat passthrough
+     to --spacing-200/250/300/400, identical on both axes, and no spoke ever
+     re-pointed it — while 31 of 66 components already walked --spacing-* directly
+     for their own padding. The eleven inputs and buttons now do the same, so:
 
+       - Re-declaring --form-padding-y-md here does NOTHING. Nothing reads it.
+       - Re-pointing --spacing-* itself moves every gap, grid, stack and inset in
+         the kit. It is a CORE set (see SPEC.md) — universal, never themed. Don't.
+
+     If this spoke genuinely needs tighter inputs, that is a `/request-lego` against
+     the hub. A hook is earned by a spoke asking for it, not by a slot existing.
+
+     `--control-height-*` was deleted the same day for a different reason: a px
+     height could not grow with rem text, so it clipped when a user raised their
+     browser font size or a translation wrapped. If you are porting an older spoke,
+     do NOT translate those values anywhere — there is no successor token.
+
+     Never re-point --radius-100/200/… either: those are primitives and moving one
+     moves everything downstream. Move the ROLE. */
   --radius-control: /* __FILL__ small controls, badges, pills */ var(--radius-100);
   --radius-surface: /* __FILL__ inputs, menus, panels — the most-used role */ var(--radius-100);
   --radius-card:    /* __FILL__ cards, collapsibles */ var(--radius-200);
