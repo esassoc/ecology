@@ -69,16 +69,32 @@ const isVisible = (el: HTMLElement): boolean =>
 export function focusableWithin(root: Element | ShadowRoot): HTMLElement[] {
   const out: HTMLElement[] = [];
 
+  /*
+   * SLOTTED CONTENT IS REACHED TWICE and has to be de-duplicated. A slotted element is
+   * BOTH resolved through the `<slot>` inside the host's shadow root AND still a
+   * light-DOM descendant of the host, so the outer scope's own querySelectorAll('*')
+   * returns it again a few iterations later. Measured in Chromium on a host with one
+   * inner button and one slotted button: ['inner', 'slotted', 'slotted', 'plain'].
+   *
+   * Keeping the FIRST occurrence is what gives the flattened tab order: the host always
+   * precedes its own light children in document order, so the slot-resolved hit always
+   * lands at the position the element actually renders in.
+   */
+  const seen = new Set<HTMLElement>();
+  const push = (el: HTMLElement): void => {
+    if (!seen.has(el)) { seen.add(el); out.push(el); }
+  };
+
   const collect = (scope: Element | ShadowRoot): void => {
     for (const el of Array.from(scope.querySelectorAll<HTMLElement>('*'))) {
       if (el.localName === 'slot') {
         for (const assigned of (el as unknown as HTMLSlotElement).assignedElements({ flatten: true })) {
-          if (assigned.matches(FOCUSABLE_SELECTOR)) out.push(assigned as HTMLElement);
+          if (assigned.matches(FOCUSABLE_SELECTOR)) push(assigned as HTMLElement);
           else collect(assigned);
         }
         continue;
       }
-      if (el.matches(FOCUSABLE_SELECTOR)) out.push(el);
+      if (el.matches(FOCUSABLE_SELECTOR)) push(el);
       else if (el.shadowRoot) collect(el.shadowRoot);
     }
   };
@@ -117,7 +133,25 @@ export function deepActiveElement(): HTMLElement | null {
 export function restoreFocus(el: HTMLElement | null): boolean {
   if (!el?.isConnected) return false;
   el.focus?.();
-  return deepActiveElement() === el;
+  /*
+   * `deepActiveElement() === el` was too strict, and wrong for the case the kit uses
+   * most. A host with `delegatesFocus` moves focus to a control INSIDE its shadow root,
+   * so the deep active element is that control and never the host — measured true in
+   * Chromium. Seven components here declare delegatesFocus (esa-text-field, esa-select,
+   * esa-combobox, esa-textarea, esa-date-picker, esa-radio-group, esa-checkbox-group),
+   * so passing any of them returned false after focusing them perfectly well, and a
+   * caller acting on that answer moves focus a second time.
+   *
+   * Walk back up from the real active element through parents AND shadow hosts: focus
+   * landed on `el` if `el` is anywhere on that path.
+   */
+  let node: HTMLElement | null = deepActiveElement();
+  while (node) {
+    if (node === el) return true;
+    const root = node.getRootNode();
+    node = node.parentElement ?? ((root as ShadowRoot).host as HTMLElement | undefined) ?? null;
+  }
+  return false;
 }
 
 /** Focus `initial` if given, else the first focusable in `root`, else `fallback`. */
