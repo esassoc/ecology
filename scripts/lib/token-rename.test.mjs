@@ -116,6 +116,41 @@ test('findCollapseCollisions is quiet when only one side is declared', () => {
   assert.deepEqual(findCollapseCollisions(css, pairs), []);
 });
 
+test('findCollapseCollisions sees a declaration with NO trailing semicolon', () => {
+  // CSS routinely omits the `;` on the last declaration in a block. A guard that
+  // cannot see it lets the codemod emit the same property twice — later-wins —
+  // and the earlier value is gone with no error. That is the one outcome this
+  // whole function exists to prevent, so the edge case is not optional.
+  const src = ':root {\n  --color-text-secondary: #525252;\n  --color-text-tertiary: #737373\n}';
+  const found = findCollapseCollisions(src, [
+    { from: '--color-text-secondary', to: '--color-content-secondary' },
+    { from: '--color-text-tertiary', to: '--color-content-secondary' },
+  ]);
+  assert.equal(found.length, 1);
+  assert.deepEqual(
+    found[0].froms.map((f) => f.value).sort(),
+    ['#525252', '#737373'],
+  );
+});
+
+test('findCollapseCollisions ignores a commented-out declaration', () => {
+  // A comment emits nothing, so it cannot collide. Counting it aborts the whole
+  // spoke's migration and tells the author to delete a declaration that is prose.
+  const src = [
+    ':root {',
+    '  /* was --color-text-tertiary: #737373; retired 2026-08 */',
+    '  --color-text-secondary: #525252;',
+    '}',
+  ].join('\n');
+  assert.deepEqual(
+    findCollapseCollisions(src, [
+      { from: '--color-text-secondary', to: '--color-content-secondary' },
+      { from: '--color-text-tertiary', to: '--color-content-secondary' },
+    ]),
+    [],
+  );
+});
+
 test('findCollapseCollisions allows a collapse when both values match', () => {
   // air-exchange-tool declares both sides identically — the hub's merge reasoning
   // still holds there, so blocking would be friction with nothing gained.

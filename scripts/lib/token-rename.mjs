@@ -57,7 +57,16 @@ export const classPattern = (name) => new RegExp(`(?<![\\w-])${esc(name)}(?![\\w
  *
  * @returns Array of { to, froms: [{name, value}] } — empty when the file is safe.
  */
+/**
+ * Comments are stripped before matching. A commented-out declaration is not a
+ * declaration — counting it blocks the whole migration on a line that emits
+ * nothing, and the error tells the author to "delete the other declaration"
+ * while pointing at prose.
+ */
+const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, '');
+
 export function findCollapseCollisions(src, pairs) {
+  const clean = stripComments(src);
   const byTo = new Map();
   for (const { from, to } of pairs) {
     if (!byTo.has(to)) byTo.set(to, []);
@@ -68,7 +77,12 @@ export function findCollapseCollisions(src, pairs) {
     if (froms.length < 2) continue;
     const declared = [];
     for (const name of froms) {
-      const m = src.match(new RegExp(`(?<![\\w-])${esc(name)}\\s*:\\s*([^;]+);`));
+      // The trailing `;` is OPTIONAL — CSS routinely omits it on the last
+      // declaration in a block, and a guard that cannot see that declaration
+      // lets the codemod emit the same property twice and drop a value.
+      const m = clean.match(
+        new RegExp(`(?<![\\w-])${esc(name)}\\s*:\\s*([^;}]+?)\\s*(?:;|(?=\\})|$)`),
+      );
       if (m) declared.push({ name, value: m[1].trim().replace(/\s+/g, ' ') });
     }
     if (declared.length < 2) continue;
