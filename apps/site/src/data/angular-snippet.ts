@@ -8,38 +8,27 @@
 // knows about neither, and only ever receives a finished string.
 //
 // WHICH TAGS ARE REAL ELEMENTS is the fact nothing else here records, and it is
-// the one that keeps the tab honest: 39 of the 70 components are Lit `.ts` and
-// register a custom element; the other 31 are `.astro`, compile-time only. The
+// the one that keeps the tab honest: 35 of the 66 component source files are Lit
+// `.ts` and register a custom element; the other 31 are `.astro`, compile-time
+// only. (Counted 2026-08-19; `componentCount` in `catalog.ts` is the authority.) The
 // obvious names are in the wrong bucket — `esa-button`, `esa-badge`, `esa-icon`,
 // `esa-form-field` are all `.astro`. Writing `<esa-badge>` in an Angular template
 // renders literally nothing, so those pages get no Angular tab at all rather than
 // a sample that silently does nothing.
-import { readFileSync, readdirSync } from 'node:fs';
-import path from 'node:path';
-// COMPONENTS comes from component-api rather than being recomputed here: this
-// module gets inlined into whichever chunk imports it, so counting directories up
-// from `import.meta.url` lands somewhere different depending on the caller. That
-// is not hypothetical — it broke the build the first time these two files met.
-import { componentApi, COMPONENTS } from './component-api';
+// componentApi and ELEMENTS both come from component-api rather than being
+// recomputed here. Two reasons, and the second is the one that bit:
+//   (1) this module gets inlined into whichever chunk imports it, so counting
+//       directories up from `import.meta.url` lands somewhere different depending
+//       on the caller — it broke the build the first time these two files met.
+//   (2) ELEMENTS was built HERE by a second walk of the same directory reading
+//       the same files, and `ApiTable` imported it from this module. When the
+//       table moved into `@esa/docs` (2026-08-19) it could not follow — this
+//       module reads hub sources a spoke does not install. So the fact moved to
+//       where it is already being read, and this is now its only consumer.
+import { componentApi, ELEMENTS, isCustomElement } from './component-api';
 import { toAngular } from '../../../../scripts/lib/angular-snippet.mjs';
 
-/** Tags backed by a real `customElements.define` — the only ones Angular can use. */
-const ELEMENTS: Set<string> = new Set();
-for (const file of readdirSync(COMPONENTS)) {
-  const m = file.match(/^(esa-[a-z0-9-]+)\.ts$/);
-  if (!m) continue;
-  const src = readFileSync(path.join(COMPONENTS, file), 'utf8');
-  if (/customElements\.define\(/.test(src)) ELEMENTS.add(m[1]);
-}
-
-/**
- * Is this slug a real custom element? The API table asks, because an Angular
- * event binding is meaningless for an `.astro` component — there is no element
- * to bind to, however many events its inline script dispatches.
- */
-export function isCustomElement(slug: string): boolean {
-  return ELEMENTS.has(slug);
-}
+export { isCustomElement };
 
 type Outcome = 'generated' | 'override' | 'dead-override' | 'skipped';
 
