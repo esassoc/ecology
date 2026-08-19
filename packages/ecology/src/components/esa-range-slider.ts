@@ -3,7 +3,10 @@ import { typography } from '../typography.js';
 
 /** Both slots are UI text at medium: the field label, and the numeric readout —
     a readout is chrome, not something the user typed, so it stays label-*. */
+// The readout is microcopy — a tabular number, min-width 3ch, in a flex row. The LABEL
+// above it flows, so it keeps its own map.
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+const VALUE_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
 
 /**
  * esa-range-slider — form-associated Lit Web Component.
@@ -104,7 +107,7 @@ export class EsaRangeSlider extends LitElement {
             @input=${this.onInput}
           />
         </div>
-        ${this.showValue ? html`<span class="value typography-${LABEL_TYPE[this.size]}">${this.value}</span>` : null}
+        ${this.showValue ? html`<span class="value typography-${VALUE_TYPE[this.size]}">${this.value}</span>` : null}
       </div>
     `;
   }
@@ -133,7 +136,7 @@ export class EsaRangeSlider extends LitElement {
     .label {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
     .row {
       display: flex;
@@ -162,8 +165,8 @@ export class EsaRangeSlider extends LitElement {
         to right,
         var(--color-background-brand, #43608a) 0%,
         var(--color-background-brand, #43608a) var(--fill-percent, 0%),
-        var(--color-border, #e5e5e5) var(--fill-percent, 0%),
-        var(--color-border, #e5e5e5) 100%
+        var(--color-border-default, #e5e5e5) var(--fill-percent, 0%),
+        var(--color-border-default, #e5e5e5) 100%
       );
     }
     .input::-webkit-slider-thumb {
@@ -173,7 +176,7 @@ export class EsaRangeSlider extends LitElement {
       margin-top: calc((var(--_track-height) - var(--_thumb-size)) / 2);
       border: 2px solid var(--color-background-brand, #43608a);
       border-radius: 50%;
-      background: var(--color-background-raised, #fff);
+      background: var(--color-background-elevation-raised, #fff);
       box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
       transition:
         box-shadow var(--transition-fast, 150ms ease),
@@ -182,7 +185,7 @@ export class EsaRangeSlider extends LitElement {
     .input::-moz-range-track {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-border, #e5e5e5);
+      background: var(--color-border-default, #e5e5e5);
     }
     .input::-moz-range-progress {
       height: var(--_track-height);
@@ -194,7 +197,7 @@ export class EsaRangeSlider extends LitElement {
       height: var(--_thumb-size);
       border: 2px solid var(--color-background-brand, #43608a);
       border-radius: 50%;
-      background: var(--color-background-raised, #fff);
+      background: var(--color-background-elevation-raised, #fff);
       box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
     }
     .input:focus-visible {
@@ -217,7 +220,7 @@ export class EsaRangeSlider extends LitElement {
     .value {
       min-width: 3ch;
       text-align: right;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       font-variant-numeric: tabular-nums;
     }
   `,

@@ -20,27 +20,36 @@ html[data-scheme='dark'] {
 
   /* Surfaces — gray-dark-1 is the app background (#111111), gray-dark-2 the base
      surface (#191919). Elevated sits one step lighter; sunken one step darker. */
-  --color-background:            var(--color-gray-dark-1);
-  --color-background-raised:               var(--color-gray-dark-2);
-  --color-background-floating:      var(--color-gray-dark-3);
-  --color-background-sunken:        #0d0d0f;
-  --color-background-inverse:       var(--color-gray-dark-12);
-  --color-background-inverse-hover: var(--color-gray-dark-11);
+  --color-background-default:            var(--color-gray-dark-1);
+  --color-background-elevation-raised:               var(--color-gray-dark-2);
+  --color-background-elevation-floating:      var(--color-gray-dark-3);
+  --color-background-elevation-sunken:        #0d0d0f;
+  --color-background-default-knockout:       var(--color-gray-dark-12);
+  --color-background-default-knockout-hover: var(--color-gray-dark-11);
+
+  /* EVERY -knockout ROLE IS THE MIRROR IMAGE, wherever it appears below. In the
+     light theme knockout reaches for the DARK ramp; in this block it reaches for
+     the LIGHT one. The token a component reads never changes — a knocked-out
+     tooltip is light-on-dark in the light scheme and dark-on-light here, without
+     the component knowing which scheme it is in.
+
+     That is why the variant is `knockout` and not `-dark`: a name saying `dark`
+     would be holding a light value in this block and lying. */
 
   /* Text — dark-12 is near-white (#ededef) for primary; dark-11 (#b4b4b4) for
      secondary/tertiary; dark-10 (#7b7b7b) for muted. Inverse = dark-2 (dark text
      on a rare light surface inside dark mode). */
-  --color-content-primary:   var(--color-gray-dark-12);
-  --color-content-secondary: var(--color-gray-dark-11);
-  --color-content-secondary:  var(--color-gray-dark-11);
-  --color-content-muted:     var(--color-gray-dark-10);
-  --color-content-inverse:   var(--color-gray-dark-2);
+  --color-content-default:   var(--color-gray-dark-12);
+  --color-content-default-secondary: var(--color-gray-dark-11);
+  --color-content-default-muted:     var(--color-gray-dark-10);
+  --color-content-default-knockout:            var(--color-gray-dark-2);
 
   /* Borders — dark-6 (#3a3a3a) default; dark-5 light; dark-7 strong. */
-  --color-border:        var(--color-gray-dark-6);
-  --color-border-subtle:  var(--color-gray-dark-5);
-  --color-border-strong: var(--color-gray-dark-7);
-  /* No --color-border-focus here on purpose. It used to be pinned to
+  --color-border-default:        var(--color-gray-dark-6);
+  --color-border-default-subtle:  var(--color-gray-dark-5);
+  --color-border-default-strong: var(--color-gray-dark-7);
+  --color-border-default-knockout:        var(--color-gray-7);
+  /* No --color-border-default-focus here on purpose. It used to be pinned to
      var(--color-grass-9), which was both redundant (dark does not re-point
      --color-background-brand, so it was already grass-9) and harmful: it re-broke
      the chain this scheme inherits, so a themed spoke in dark mode got an
@@ -51,23 +60,26 @@ html[data-scheme='dark'] {
   --color-background-brand-subtle: var(--color-grass-dark-2);
   --color-border-brand: var(--color-grass-dark-6);
 
-  /* Status subtles & borders — light ramp steps 1-6 are near-white; replace
-     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged. */
-  --color-background-info-subtle:    var(--color-blue-dark-2);
-  --color-border-info:    var(--color-blue-dark-6);
-  --color-background-success-subtle: var(--color-lime-dark-2);
-  --color-border-success: var(--color-lime-dark-6);
-  --color-background-warning-subtle: var(--color-yellow-dark-2);
-  --color-border-warning: var(--color-yellow-dark-6);
-  --color-background-danger-subtle:  var(--color-red-dark-2);
-  --color-border-danger:  var(--color-red-dark-6);
+  /* Utility subtles & borders — light ramp steps 1-6 are near-white; replace
+     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged.
+     `utility` is ONE intention with four variants as of 2026-08-15 — the
+     lockstep visible in this block, four names taking the identical step at
+     every role, is the evidence that made it one. */
+  --color-background-utility-info-subtle:    var(--color-blue-dark-2);
+  --color-border-utility-info:    var(--color-blue-dark-6);
+  --color-background-utility-success-subtle: var(--color-lime-dark-2);
+  --color-border-utility-success: var(--color-lime-dark-6);
+  --color-background-utility-warning-subtle: var(--color-yellow-dark-2);
+  --color-border-utility-warning: var(--color-yellow-dark-6);
+  --color-background-utility-danger-subtle:  var(--color-red-dark-2);
+  --color-border-utility-danger:  var(--color-red-dark-6);
 
-  /* Status strong — light step-11 values are dark and unreadable on dark surfaces.
+  /* Utility coloured text — light step-11 values are dark and unreadable on dark surfaces.
      Dark step-11 is a lighter, accessible tone on dark bg. */
-  --color-content-info:    var(--color-blue-dark-11);
-  --color-content-success: var(--color-lime-dark-11);
-  --color-content-warning: var(--color-yellow-dark-11);
-  --color-content-danger:  var(--color-red-dark-11);
+  --color-content-utility-info:    var(--color-blue-dark-11);
+  --color-content-utility-success: var(--color-lime-dark-11);
+  --color-content-utility-warning: var(--color-yellow-dark-11);
+  --color-content-utility-danger:  var(--color-red-dark-11);
 
   /* Brand strong — same reasoning. These were missing while the four status
      tokens above were mapped, which was harmless only while nothing used them

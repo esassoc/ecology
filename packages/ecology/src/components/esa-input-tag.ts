@@ -4,6 +4,10 @@ import { typography } from '../typography.js';
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
     chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaInputTagOption {
@@ -364,7 +368,7 @@ export class EsaInputTag extends LitElement {
           <div class="chips">
             ${this.tagsBelow ? null : this.renderChips()}
             <input
-              class="input typography-${VALUE_TYPE[this.size]}"
+              class="input typography-${FIELD_TYPE[this.size]}"
               type="text"
               role="combobox"
               aria-haspopup="listbox"
@@ -474,7 +478,7 @@ export class EsaInputTag extends LitElement {
       --_field-border-color: var(--form-border-color, #d4d4d4);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
-      --_chip-bg: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      --_chip-bg: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       --_chip-color: var(--color-content-brand, #3a7c59);
       --_chip-radius: var(--radius-pill, 9999px);
     }
@@ -503,14 +507,14 @@ export class EsaInputTag extends LitElement {
       color: var(--form-label-color, #525252);
     }
     .field__required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
 
     .container {
@@ -519,7 +523,7 @@ export class EsaInputTag extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -535,9 +539,16 @@ export class EsaInputTag extends LitElement {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .container--disabled {
-      background: var(--form-bg-disabled, #efefef);
       cursor: not-allowed;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
     }
     /* Hover/focus/open each re-point --_field-border-color at higher specificity
        than a bare ".field--error .container" selector, so the error state has to
@@ -604,7 +615,7 @@ export class EsaInputTag extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-overlay-hover-strong, rgba(0, 0, 0, 0.06));
+      background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.06));
     }
     .chip__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
@@ -615,6 +626,9 @@ export class EsaInputTag extends LitElement {
       flex: 1;
       min-width: 80px;
       padding: 0;
+      /* Leading is load-bearing on a content-sized box — see the long note in
+         esa-select's .input. Single line, so the composite's relaxed leading only
+         adds height. */
       background: transparent;
       border: none;
       outline: none;
@@ -636,11 +650,11 @@ export class EsaInputTag extends LitElement {
       padding: 0;
       background: transparent;
       border: none;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       cursor: pointer;
     }
     .toggle:hover:not(:disabled) {
-      color: var(--color-content-secondary, #525252);
+      color: var(--color-content-default-secondary, #525252);
     }
     .toggle:disabled {
       cursor: not-allowed;
@@ -666,7 +680,7 @@ export class EsaInputTag extends LitElement {
       max-height: 252px;
       overflow-y: auto;
       overscroll-behavior: contain;
-      background: var(--color-background-raised, #fff);
+      background: var(--color-background-elevation-raised, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
@@ -680,7 +694,7 @@ export class EsaInputTag extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: transparent;
       border: none;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       text-align: left;
       cursor: pointer;
       box-sizing: border-box;
@@ -688,7 +702,7 @@ export class EsaInputTag extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
     }
     .option__label {
       flex: 1;
@@ -699,7 +713,7 @@ export class EsaInputTag extends LitElement {
     }
     .option--add {
       color: var(--color-content-brand, #3a7c59);
-      border-top: var(--form-border-width, 1px) solid var(--color-border-subtle, #efefef);
+      border-top: var(--form-border-width, 1px) solid var(--color-border-default-subtle, #efefef);
     }
     .option__icon {
       width: var(--icon-size-sm, 16px);
@@ -709,7 +723,7 @@ export class EsaInputTag extends LitElement {
 
     .empty {
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }

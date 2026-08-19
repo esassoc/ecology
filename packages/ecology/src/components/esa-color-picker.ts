@@ -4,7 +4,8 @@ import { typography } from '../typography.js';
 /** The label is UI text. The hex field is the one value slot in the kit set in the
     MONO face — a hex code is tabular, so it reads code-* rather than body-*. */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
-const CODE_TYPE  = { xs: 'code-sm', sm: 'code-sm', md: 'code-md', lg: 'code-lg' } as const;
+// The hex field is microcopy in the mono face — a single-line <input> sized by padding.
+const CODE_TYPE  = { xs: 'microcopy-code-sm', sm: 'microcopy-code-sm', md: 'microcopy-code-md', lg: 'microcopy-code-lg' } as const;
 
 /**
  * esa-color-picker — form-associated Lit Web Component.
@@ -181,7 +182,7 @@ export class EsaColorPicker extends LitElement {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
 
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
     .controls {
       display: flex;
@@ -230,9 +231,8 @@ export class EsaColorPicker extends LitElement {
       /* A bare input with no flex centring — at padding:0 and no height token this
          would collapse straight to its line box. */
       padding: var(--_pad-y) var(--_padding-x);
-      line-height: var(--line-height-none, 1);
       color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_radius);
       outline: none;
@@ -245,9 +245,16 @@ export class EsaColorPicker extends LitElement {
       border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .hex-input:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
     }
 

@@ -42,31 +42,49 @@
   /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
      Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
      what warms or cools the entire UI vs the hub default. */
-  --color-content-primary:   var(--__SCOPE__-gray-900);
-  --color-content-secondary: var(--__SCOPE__-gray-700);
-  --color-content-secondary:  var(--__SCOPE__-gray-600);
-  --color-content-muted:     var(--__SCOPE__-gray-500);
-  --color-border:         var(--__SCOPE__-gray-200);
-  --color-border-subtle:   var(--__SCOPE__-gray-100);
-  --color-border-strong:  var(--__SCOPE__-gray-300);
-  --color-background:     var(--__SCOPE__-gray-50);
-  --color-background-sunken: var(--__SCOPE__-gray-100);
+  --color-content-default:   var(--__SCOPE__-gray-900);
+  --color-content-default-secondary: var(--__SCOPE__-gray-700);
+  --color-content-default-secondary:  var(--__SCOPE__-gray-600);
+  --color-content-default-muted:     var(--__SCOPE__-gray-500);
+  --color-border-default:         var(--__SCOPE__-gray-200);
+  --color-border-default-subtle:   var(--__SCOPE__-gray-100);
+  --color-border-default-strong:  var(--__SCOPE__-gray-300);
+  --color-background-default:     var(--__SCOPE__-gray-50);
+  --color-background-elevation-sunken: var(--__SCOPE__-gray-100);
+  /* The surface of an editable field. THE HUB DEFAULT IS `transparent` — a field
+     is the colour of whatever contains it, so it is correct on a card, in a
+     dialog, on a sunken well and on a tinted panel without anyone choosing a
+     value. Every field state is carried by the BORDER, not a fill.
+
+     Uncomment ONLY for a filled/Material house style. Three fixed greys were
+     tried in the hub before transparent and each was right on the canvas and
+     INVERTED on a sunken surface, where the field rendered lighter than its own
+     container. If you set this, check your fields on every surface they land on,
+     not just the page. */
+  /* --color-background-field: var(--__SCOPE__-gray-100); */
 
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so
      components pick them up. Leave a token out to keep the hub default. */
-  --font-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
-  --font-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
+  --typography-font-family-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
+  --typography-font-family-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
   /* Optional decorative/display voice — components reach for these explicitly. */
-  --font-display:    /* __FILL__ (or remove to inherit --font-sans) */ var(--font-sans);
+  --typography-font-family-display:    /* __FILL__ (or remove to inherit --typography-font-family-sans) */ var(--typography-font-family-sans);
   --font-decorative: /* __FILL__ (optional serif) */ 'Besley', serif;
 
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
-     where it's standalone. */
-  --color-background-success:  var(--color-green-9);   /* __FILL__ */
-  --color-background-warning:  var(--color-orange-9);  /* __FILL__ */
-  --color-background-info:     /* __FILL__ */ #228be6;
+     where it's standalone.
+
+     RENAMED 2026-08-15: these were `--color-background-{success,warning,info}`
+     before `utility` became their intention. If your spoke was scaffolded from
+     an older template it still DECLARES the old names, and a declaration gets
+     no alias rescue — the hub can only redirect a `var()` read. Those three
+     lines are inert until you run /update-tokens, and inert here means your
+     brand's success green silently reverts to Ecology's. */
+  --color-background-utility-success:  var(--color-green-9);   /* __FILL__ */
+  --color-background-utility-warning:  var(--color-orange-9);  /* __FILL__ */
+  --color-background-utility-info:     /* __FILL__ */ #228be6;
   --color-background-ai:       var(--color-blue-9);    /* __FILL__ */
   --color-background-ai-hover: var(--color-blue-10);   /* __FILL__ */
 

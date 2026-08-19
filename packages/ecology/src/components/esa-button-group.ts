@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-button-group — groups slotted <esa-button> elements with connected borders.
@@ -70,18 +71,25 @@ export class EsaButtonGroup extends LitElement {
   }
 
   render() {
-    return html`<slot @slotchange=${() => this.syncSelected()}></slot>`;
+    // The slot's only wrapper: display:contents, so it names a type role for
+    // slotted content without adding a box. Inheritance follows the flattened
+    // tree, so buttons projected in read label-md unless they set their own.
+    return html`<div class="esa-button-group__slot typography-label-md">
+      <slot @slotchange=${() => this.syncSelected()}></slot>
+    </div>`;
   }
 
-  static styles = css`
+  static styles = [typography, css`
     :host {
       --_group-radius: var(--form-radius-md, var(--radius-surface, 8px));
-      --_group-border: var(--color-border, #e5e5e5);
+      --_group-border: var(--color-border-default, #e5e5e5);
       display: inline-flex;
       align-items: stretch;
       border-radius: var(--_group-radius);
       overflow: hidden;
     }
+    /* No box of its own — the buttons stay direct flex items of the host. */
+    .esa-button-group__slot { display: contents; }
     /* Connected borders: square the internal corners, divider between buttons. */
     ::slotted(esa-button),
     ::slotted(button) {
@@ -100,7 +108,7 @@ export class EsaButtonGroup extends LitElement {
     ::slotted(button:only-child) {
       border-radius: var(--_group-radius) !important;
     }
-  `;
+  `];
 }
 
 if (!customElements.get('esa-button-group')) {

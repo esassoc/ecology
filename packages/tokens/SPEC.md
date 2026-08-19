@@ -13,7 +13,7 @@ all new components follow.
    names the face; `--font-weight-350` names the weight. The uncomfortable
    literalness is the point — nothing consumes these directly, so a name that
    says exactly what the value *is* makes the tier-2 mapping legible. A tier-1
-   token named for a role (`--font-sans`, `--color-status-success`) reads as
+   token named for a role (`--typography-font-family-sans`, `--color-status-success`) reads as
    themeable and isn't, which is how a theme ends up re-pointing a primitive.
 
    Three scale conventions are in play. Which one a category uses depends on
@@ -58,7 +58,7 @@ all new components follow.
    primitives. A spoke's brand identity lives here: re-point a semantic token
    and the intent re-skins everywhere it's used. Every category gets a layer
    here, not just colour:
-   - colour — `--color-background-brand`, `--color-background-raised`, `--color-content-secondary`
+   - colour — `--color-background-brand`, `--color-background-elevation-raised`, `--color-content-default-secondary`
    - shape — `--radius-control | -surface | -card | -overlay | -pill`
    - size — `--chip-height-*`, and only that. `--control-height-{xs,sm,md,lg}` was
      deleted on 2026-08-14: a px height cannot grow with rem text, so it clipped.
@@ -66,7 +66,7 @@ all new components follow.
      padding is `--spacing-*` read directly — so this category has no ramp for them
      at any tier. See `tokens/semantic/size.json`.
    - type — the **composites**, `--typography-<intention>[-<size>]-<property>`,
-     plus the faces (`--font-sans | -mono | -display`) and named weights they are
+     plus the faces (`--typography-font-family-sans | -mono | -display`) and named weights they are
      assembled from. There is no separate chrome ramp. A `--font-size-ui-*` set
      existed until 2026-08-14 on the theory that interface text was a different
      kind of thing from prose; it was deleted because a size-only scale running
@@ -75,13 +75,23 @@ all new components follow.
      does — see `docs/typography-adoption-plan.md` D1–D3 and the control-step
      mapping in `semantic/size.json`.
    - elevation — `--elevation-1…6`
-   - layout — `--sidebar-width`, `--sidebar-width-collapsed`. This category is
-     nearly empty on purpose: `--header-height`, `--footer-height` and the
-     `--content-*-width` trio were deleted 2026-08-14 with zero readers between
-     them. A dimension token nothing reads cannot be re-pointed to any effect, so
-     it is a theming surface that only appears to exist. The sidebar pair stays
-     because it is a real agreement — the rail, the content offset and the
-     collapse transition must land on the same number.
+   - layout — **empty, and the emptiest category is the most instructive one.**
+     It shipped seven names and has none. `--header-height`, `--footer-height`
+     and the `--content-*-width` trio went on 2026-08-14 with zero readers
+     between them: a dimension token nothing reads cannot be re-pointed to any
+     effect, so it is a theming surface that only appears to exist.
+     `--sidebar-width` and `--sidebar-width-collapsed` survived that pass on the
+     claim that they were "a real agreement — the rail, the content offset and
+     the collapse transition must land on the same number," sourced from a
+     `$description` asserting 15 readers. Counted on 2026-08-15 the number was
+     ONE COMPONENT, and there is no content offset or transition reading them at
+     all; both are tier 3 now as `--sidenav-width*`
+     (`migrations.json: sidebar-width-to-sidenav-width`). **Before you put a
+     dimension here, count its readers — do not accept a count already written
+     down.** All seven of this category's tokens were defended by a reader count
+     nobody had run, and two of them additionally collided by name, at a
+     different value, with a `.sidebar` layout-primitive knob in `layouts.css`.
+     See `tokens/semantic/layout.json`, kept for that record.
 
    **Components read this tier, never a primitive — except the CORE set.** A
    component reaching past it (`border-radius: var(--radius-200)`) is the bug
@@ -123,29 +133,57 @@ all new components follow.
 Colour is the largest and most-read part of this tier, so it has a fixed shape:
 
 ```
---color-<property>-<intention>-<variant>-<state>
-            │           │          │        └── hover, active, focus  (optional)
-            │           │          └─────────── subtle, muted, strong, secondary (optional)
-            │           └────────────────────── brand, info, success, warning,
-            │                                   danger, accent, ai, disabled (optional)
-            └────────────────────────────────── background | content | border
+--color-<property>-<intention>-<variant>-<knockout>-<state>
+            │           │          │          │         └── hover, active, focus (optional)
+            │           │          │          └──────────── knockout (optional)
+            │           │          └─────────────────────── info, success, warning, danger,
+            │           │                                   raised, floating, sunken,
+            │           │                                   backdrop, scrim, strong, heavy,
+            │           │                                   subtle, muted, secondary (optional)
+            │           └────────────────────────────────── brand, utility, elevation, overlay,
+            │                                               accent, ai, link, disabled (optional)
+            └────────────────────────────────────────────── background | content | border
 ```
 
+**The property slot holds three words and only three.** It said "and `overlay`"
+until 2026-08-15, when the fourth retired — see below.
+
+Three of those intentions are **axes with named rungs**, and that is why the
+variant slot carries words like `danger`, `sunken` and `backdrop` that look like
+intentions themselves. `utility` holds the four feedback rungs, `elevation` the
+three surface rungs, `overlay` the translucent washes. All three were separate
+intentions until 2026-08-15 — eleven of them between the three — and splitting
+one axis across the intention slot is what stopped anything in the system from
+saying its rungs belonged together. `knockout` gets its own slot rather than
+sharing `variant`, because the variant slot is frequently already occupied —
+see `inverse-to-knockout` in `migrations.json`.
+
+**`overlay` is the fourth property that stopped being one.** The washes are
+applied OVER a background rather than being one, and `--color-background-hover`
+would read as the hover state of the page canvas — the opaque gray-4 that
+already owns that meaning — instead of a wash painted on hover. That collision
+was real, and a fourth property was the wrong place to resolve it:
+`--color-background-overlay-hover` says the same thing in slots the grammar
+already had. Property says it paints a fill; intention says it stacks rather
+than replaces. It also gave four washes their first intention — `hover`,
+`strong-hover`, `heavy-hover` and `active` had named a state and nothing else,
+and were the last residents of the unclassified group on `/debug/tokens`.
+Now empty, which is the assertion that group exists to make. See
+`overlay-property-to-intention`.
+
 **The property is never optional.** It is the thing that makes a name guessable:
-a danger border is `--color-border-danger`. Not `--color-danger-border`, and not
+a danger border is `--color-border-utility-danger`. Not `--color-danger-border`, and not
 `--color-danger` — that one is a background, and it says so.
 
 - **`background`** — fills and surfaces. Page canvas, cards, solid button fills.
 - **`content`** — text, icons and SVG strokes. Anything sitting *on* a background.
   `content` rather than `text` because icons read these too.
 - **`border`** — strokes and dividers.
-- **`overlay`** is a deliberate fourth property for the translucent washes
-  (`--color-overlay-hover`, `--color-overlay-backdrop`). They sit *over* a
-  background rather than being one, and naming them `background-*` would collide
-  with the opaque neutrals already holding those names.
+There is no fourth. `overlay` was one until 2026-08-15 and is an **intention**
+now — see above.
 
 **Neutral is the default intention and carries no intention word.**
-`--color-background` is the page; `--color-content-primary` is body text. Every
+`--color-background` is the page; `--color-content-default` is body text. Every
 non-neutral names its intention: `--color-background-brand`.
 
 **Two rules that exist because they were once broken:**
@@ -158,7 +196,7 @@ non-neutral names its intention: `--color-background-brand`.
 
 2. **A step-11 colour is `content-*`, never `-strong`.** The old
    `--color-danger-strong` sounded like a bolder fill and was used as one; it is
-   Radix step 11, which is *text on a surface*. `--color-content-danger` cannot be
+   Radix step 11, which is *text on a surface*. `--color-content-utility-danger` cannot be
    misread that way.
 
 ### Defining vs deriving — when tier 2 may point at tier 2
@@ -168,14 +206,14 @@ A tier-2 token does one of two jobs, and which one decides what it may reference
 - **Defining** a colour identity → references a **primitive**.
   `--color-background-brand: {color.grass.9}` is where "brand" becomes a value.
 - **Deriving** from an identity it does not own → references **another tier-2
-  token**. `--color-border-focus: {color.background-brand}`.
+  token**. `--color-border-default-focus: {color.background-brand}`.
 
 This is not a loophole in "components read tier 2, never a primitive" — it is what
 makes theming work. `build.js` compiles with `outputReferences: true`, so the
 reference survives into the CSS as a live `var()`:
 
 ```css
---color-border-focus: var(--color-background-brand);
+--color-border-default-focus: var(--color-background-brand);
 ```
 
 A spoke overriding `--color-background-brand` in its `[data-theme]` block moves the
@@ -189,7 +227,7 @@ focus ring **at runtime**. Flattened to a hex, it could not.
 2. **Ask whose identity it is.** A focus ring has no colour of its own — it *is*
    the brand, so it derives. A danger border is not the brand; it defines danger,
    so it references a primitive. Getting this backwards is how
-   `--color-border-focus: {color.grass.8}` shipped: a derived token written as a
+   `--color-border-default-focus: {color.grass.8}` shipped: a derived token written as a
    defining one, unreachable by every theme, and it stayed green in a navy spoke
    for months without a single error.
 
@@ -199,12 +237,12 @@ Two tier-2 tokens with the **same default value are not redundant**. Tier 2 is t
 layer whose entire job is being re-pointed, so the question is whether the *role* is
 real, not whether this palette happens to distinguish it.
 
-`--color-background-raised` and `--color-background-floating` are both gray-1. They
+`--color-background-elevation-raised` and `--color-background-elevation-floating` are both gray-1. They
 stay two tokens because a card and a dialog are different jobs, and a theme with an
 elevation story will separate them.
 
 This was learned the hard way. `--color-background-brand-active` and
-`--color-content-tertiary` were briefly deleted for holding their sibling's value —
+`--color-content-default-tertiary` were briefly deleted for holding their sibling's value —
 and cb-fish had already separated both, running a three-step navy press sequence and
 a four-step grey ramp. Merging them would have silently overwritten two of its
 colours. `scripts/migrate-tokens.mjs` now refuses to apply any rename that collapses
@@ -281,7 +319,7 @@ spacing token is prefixed `--foundations-`.
 
 3. **Component** (`src/component-tokens.css`, authored) — the per-component
    (or per-group) theming surface, defaulting to semantic references:
-   `--card-bg: var(--color-background-raised)`. A spoke uses this tier to diverge ONE
+   `--card-bg: var(--color-background-elevation-raised)`. A spoke uses this tier to diverge ONE
    component from the semantic default without forking it.
 
 Inside components, **private `--_*` tokens** consume the public tiers, always
@@ -291,13 +329,30 @@ Privates are internals — never themed, never documented as surface.
 ## Tier-3 naming
 
 - **Shared group surfaces** for things that must align across components:
-  `--form-radius-sm`, `--form-bg`, `--form-border-color-focus` — one scale so
-  inputs, selects, and buttons line up on a row. Prefer extending a group
-  surface over duplicating the same knob per component. A group surface still has
-  to earn its place: `--form-height-*` and `--form-padding-*` were both examples
-  here until 2026-08-14, and both were deleted for being passthroughs that added a
-  name and nothing else. `--form-radius-*` survives because it encodes a real
+  `--form-radius-sm`, `--form-border-color-focus` — one scale so inputs, selects,
+  and buttons line up on a row. Prefer extending a group surface over duplicating
+  the same knob per component.
+
+  **This is the category to be most suspicious of, and the count says so.** Five
+  of its members were deleted or moved on 2026-08-14 alone: `--form-height-*`,
+  `--form-padding-*` and `--form-font-size-*` for being passthroughs that added a
+  name and nothing else, and `--form-bg{,-hover,-disabled}` for a different
+  reason — see below. `--form-radius-*` survives because it encodes a real
   mapping (xs/sm → `--radius-control`, md/lg → `--radius-surface`).
+
+  **The test that separates a group surface from a mis-tiered role: does the
+  namespace bound its readers?** A tier-3 hook exists so a spoke can re-skin ONE
+  component. `--form-bg` was read by thirteen, five of which are not forms, and
+  `_inject-styles` is not even a component. A surface that many components share
+  is an INTENT, and intents belong at tier 2 — it is now
+  `--color-background-field`. Fanning it out to per-component hooks instead was
+  measured and rejected: 162 names, with `esa-text-field` alone carrying 18 form
+  hooks, against the 5–9 guidance below.
+
+  Applied across the file, that test leaves exactly three multi-reader sets:
+  `--form-*` (18 tokens), `--focus-ring-*` (3, read by 31 components) and
+  `--loading-spinner-*` (2, where the honest fix is composition). 248 of 311
+  tier-3 tokens are read by exactly one component, which is the shape to hold to.
 - **Per-component surfaces**: `--<component>-<part?>-<property>` —
   `--card-bg`, `--card-border-color`, `--dialog-width`, `--badge-radius`,
   `--sidenav-item-color`. Size-variant knobs take the size suffix last:
@@ -351,8 +406,8 @@ real names; the summary:
 - **Variant — mostly absent, and this is the substantive gap.** Seven components
   have a real colour-variant axis (button, badge, pill, alert-box,
   confirm-dialog, progress-bar, snackbar-item — measured as reading three or
-  more of the four status intentions). **Six of them expose none of it at
-  tier 3**: they read `--color-background-danger` and friends directly, so their
+  more of the four `utility` variants). **Six of them expose none of it at
+  tier 3**: they read `--color-background-utility-danger` and friends directly, so their
   variants are themeable only by moving the whole kit's danger.
   `esa-snackbar-item` is the one exception, and its four hooks now put the
   variant *before* the property (`--snackbar-item-danger-bg`), matching
@@ -362,9 +417,25 @@ real names; the summary:
 the state slot, per component. We manage it one tier up as an intention
 (`--color-background-disabled`, `--color-content-disabled`,
 `--color-border-disabled`) and reach for a tier-3 hook only where a component
-genuinely differs — currently once, `--form-bg-disabled`. That de-duplicates:
-one disabled treatment for the kit instead of one per component. Same reasoning
-as the tier-2 note above, where `disabled` is a variant rather than a state.
+genuinely differs — **currently nowhere**. That de-duplicates: one disabled
+treatment for the kit instead of one per component. Same reasoning as the tier-2
+note above, where `disabled` is a variant rather than a state.
+
+The last exception, `--form-bg-disabled`, went on 2026-08-14 with the rest of
+the form surface. It is worth knowing what that revealed: it was the ONLY
+consumer of `--color-background-disabled` in the whole kit, so the intention
+token existed to serve exactly one hook wrapping it. That is also why
+`--color-background-disabled` could be re-pointed twice inside two days at zero
+blast radius: gray-3 → gray-2 → gray-1, and then back to gray-3 with **no
+consumers at all** once fields went transparent and stopped needing a disabled
+fill. It never picked its own step — it was pinned one lighter than
+`--color-background-field`, because a disabled field the same colour as a
+resting one says nothing, so every time the field moved, it moved.
+
+That chase is the lesson, not the values. **A role whose value is derived from
+another role's value is not a role, it is a calculation.** The kit's other
+disabled states never had this problem because they cue with `opacity` and
+`content-disabled` rather than a fill — which is what fields do now too.
 
 **Renaming a tier-3 token is riskier than renaming one at tier 1 or 2, and the
 machinery does not say so.** `build.js` emits `--old: var(--new)` for every row
@@ -432,10 +503,10 @@ Adding a hook NEVER changes rendered output:
 
 ```css
 /* component-tokens.css (authored default = the old semantic chain) */
---card-bg: var(--color-background-raised);
+--card-bg: var(--color-background-elevation-raised);
 
 /* inside the component: hook spliced ABOVE the old chain, old fallback kept */
---_card-bg: var(--card-bg, var(--color-background-raised, #fff));
+--_card-bg: var(--card-bg, var(--color-background-elevation-raised, #fff));
 ```
 
 Spokes already shipping are untouched by construction: every new token's

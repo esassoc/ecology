@@ -16,7 +16,12 @@ interface Props {
 }
 const { variant = 'info', title, dismissable = false } = Astro.props;
 
-const cls = ['esa-alert-box', `esa-alert-box--${variant}`].join(' ');
+// TYPE: the box names roles rather than assembling them — `body-sm` on the root so
+// message text inherits it, `label-sm-strong` on the title. The import is the Astro
+// half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+const cls = ['esa-alert-box', `esa-alert-box--${variant}`, 'typography-body-sm'].join(' ');
 
 // Inlined Lucide icon paths per variant (avoids an icon dependency).
 const ICON_PATHS: Record<string, string> = {
@@ -49,7 +54,7 @@ const iconPath = ICON_PATHS[variant];
   </div>
 
   <div class="esa-alert-box__body">
-    {title && <strong class="esa-alert-box__title">{title}</strong>}
+    {title && <strong class="esa-alert-box__title typography-label-sm-strong">{title}</strong>}
     <div class="esa-alert-box__message">
       <slot />
     </div>
@@ -76,27 +81,37 @@ const iconPath = ICON_PATHS[variant];
   )}
 </div>
 
-{dismissable && (
-  <script>
-    document.querySelectorAll('[data-esa-alert-dismiss]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const box = (btn as HTMLElement).closest('.esa-alert-box') as HTMLElement | null;
-        if (box) {
-          box.style.display = 'none';
-          box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
-        }
-      });
-    });
-  </script>
-)}
+{/* NOT wrapped in `dismissable` any more. With per-button wiring the condition was
+    honest — no dismiss buttons on this page, nothing to wire. With a DELEGATED
+    listener it reintroduces the bug it is meant to fix at one remove: the whole
+    point is to catch alerts inserted at runtime, and a page whose server-rendered
+    alerts are all non-dismissable would ship no listener at all, so a dismissable
+    one injected later would still be dead. The listener is a few lines and inert
+    until something matches. */}
+<script>
+  // DELEGATED, not per-button. This was
+  // `document.querySelectorAll('[data-esa-alert-dismiss]').forEach(btn => …)`,
+  // which runs once at load and therefore only wires alerts present in the
+  // initial HTML. An alert box is the canonical inject-at-runtime component —
+  // the dismiss button on anything rendered afterwards did nothing, silently.
+  document.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest?.('[data-esa-alert-dismiss]');
+    if (!btn) return;
+    const box = btn.closest('.esa-alert-box') as HTMLElement | null;
+    if (box) {
+      box.style.display = 'none';
+      box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
+    }
+  });
+</script>
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--alert-box-bg, var(--color-background-info-subtle, #eff6ff));
-    --_alert-border: var(--alert-box-border-color, var(--color-border-info, #bfdbfe));
-    --_alert-icon-color: var(--color-content-info, #0d74ce);
-    --_alert-title-color: var(--alert-box-title-color, var(--color-content-primary, #171717));
-    --_alert-text-color: var(--alert-box-text-color, var(--color-content-secondary, #525252));
+    --_alert-bg: var(--alert-box-bg, var(--color-background-utility-info-subtle, #eff6ff));
+    --_alert-border: var(--alert-box-border-color, var(--color-border-utility-info, #bfdbfe));
+    --_alert-icon-color: var(--color-content-utility-info, #0d74ce);
+    --_alert-title-color: var(--alert-box-title-color, var(--color-content-default, #171717));
+    --_alert-text-color: var(--alert-box-text-color, var(--color-content-default-secondary, #525252));
 
     display: flex;
     align-items: flex-start;
@@ -105,26 +120,24 @@ const iconPath = ICON_PATHS[variant];
     border: var(--border-width-default, 1px) solid var(--_alert-border);
     border-radius: var(--alert-box-radius, var(--radius-surface, 0.5rem));
     background: var(--_alert-bg);
-    font-size: var(--font-size-150, 0.875rem);
-    line-height: var(--line-height-normal, 1.6);
   }
 
   .esa-alert-box--success {
-    --_alert-bg: var(--color-background-success-subtle, #f0fdf4);
-    --_alert-border: var(--color-border-success, #bbf7d0);
-    --_alert-icon-color: var(--color-content-success, #3a6d3f);
+    --_alert-bg: var(--color-background-utility-success-subtle, #f0fdf4);
+    --_alert-border: var(--color-border-utility-success, #bbf7d0);
+    --_alert-icon-color: var(--color-content-utility-success, #3a6d3f);
   }
 
   .esa-alert-box--warning {
-    --_alert-bg: var(--color-background-warning-subtle, #fffbeb);
-    --_alert-border: var(--color-border-warning, #fde68a);
-    --_alert-icon-color: var(--color-content-warning, #915930);
+    --_alert-bg: var(--color-background-utility-warning-subtle, #fffbeb);
+    --_alert-border: var(--color-border-utility-warning, #fde68a);
+    --_alert-icon-color: var(--color-content-utility-warning, #915930);
   }
 
   .esa-alert-box--danger {
-    --_alert-bg: var(--color-background-danger-subtle, #fef2f2);
-    --_alert-border: var(--color-border-danger, #fecaca);
-    --_alert-icon-color: var(--color-content-danger, #ce2c31);
+    --_alert-bg: var(--color-background-utility-danger-subtle, #fef2f2);
+    --_alert-border: var(--color-border-utility-danger, #fecaca);
+    --_alert-icon-color: var(--color-content-utility-danger, #ce2c31);
   }
 
   .esa-alert-box__icon {
@@ -140,7 +153,6 @@ const iconPath = ICON_PATHS[variant];
 
   .esa-alert-box__title {
     display: block;
-    font-weight: 600;
     color: var(--_alert-title-color);
     margin-bottom: var(--spacing-050, 0.125rem);
   }
@@ -160,14 +172,14 @@ const iconPath = ICON_PATHS[variant];
     border: none;
     border-radius: var(--radius-control, 0.25rem);
     background: transparent;
-    color: var(--color-content-muted, #737373);
+    color: var(--color-content-default-muted, #737373);
     cursor: pointer;
     transition: color var(--transition-fast, 150ms ease),
                 background var(--transition-fast, 150ms ease);
   }
 
   .esa-alert-box__dismiss:hover {
-    color: var(--color-content-primary, #171717);
+    color: var(--color-content-default, #171717);
     background: var(--alert-box-dismiss-bg-hover, rgba(0, 0, 0, 0.06));
   }
 

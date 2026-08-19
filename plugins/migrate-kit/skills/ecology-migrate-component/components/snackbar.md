@@ -16,7 +16,7 @@ So the migration = build `esa-snackbar` + refactor the host to render `<esa-snac
 ## References + visual
 - **Noria `esa-snackbar` lego** (`shared/components/esa/snackbar/`) — the **primary Angular reference**: the single-toast view (context/message/dismissable/actions, the context→Lucide map, composing `esa-icon`/`-icon-button`/`-button`) already built on Ecology tokens with the tinted-surface recipe. Mirror it; the host/view split above still applies.
 - **Beacon `ui-toast`** — the Angular reference: per-context **tinted surface + left accent border + colored icon**, the status hues matching `ui-button`'s palette (a success toast reads like a success button); `primary` is the **neutral** context (gray), not branded.
-- Derive the tint from the semantic token with `color-mix(in srgb, var(--color-background-success) 8%, var(--color-background-raised))` — no `-50` ramp dependency.
+- Derive the tint from the semantic token with `color-mix(in srgb, var(--color-background-utility-success) 8%, var(--color-background-elevation-raised))` — no `-50` ramp dependency.
 
 ## Migrating the host
 - **Reuse the app's `AlertContext` (or equivalent) enum** for `esa-snackbar`'s `context` input (Beacon's ui-toast does the same), so `[context]="alert.context"` type-matches with no mapping.

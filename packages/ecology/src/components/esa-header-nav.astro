@@ -20,10 +20,18 @@
 // cbf-public-nav, or the App Bar specimen). This component is the batteries-included
 // shortcut for the common brand · nav · user shape.
 import EsaAppBar from './esa-app-bar.astro';
-import EsaIconLink from './esa-icon-link.astro';
+import EsaButton from './esa-button.astro';
 import EsaNavDropdown from './esa-nav-dropdown.astro';
 import EsaIcon from './esa-icon.astro';
 import EsaAvatar from './esa-avatar.astro';
+// Menu rows and user-menu actions are navigation text (`body-md`); the account name
+// is the one emphasised label in the dropdown, its email the quiet line under it.
+// The brand and actions slot containers name `label-md` — bar chrome, the same role
+// esa-app-bar puts on its own start/main/end wrappers. Stating it here makes the
+// default local to the slot rather than something inherited from a parent component.
+// The import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 export interface EsaHeaderNavItem {
   label: string;
@@ -55,7 +63,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
 }
 ---
 <EsaAppBar tone="surface" as="header" class="esa-header-nav">
-  <div slot="start" class="esa-header-nav__brand"><slot name="brand" /></div>
+  <div slot="start" class="esa-header-nav__brand typography-label-md"><slot name="brand" /></div>
 
   {items.map((item) =>
     item.children && item.children.length ? (
@@ -64,22 +72,22 @@ function initialsFor(u: EsaHeaderNavUser): string {
           {item.children.map((child) => (
             <li>
               {child.href ? (
-                <a class="esa-header-nav__menu-item" href={child.href}>{child.label}</a>
+                <a class="esa-header-nav__menu-item typography-body-md" href={child.href}>{child.label}</a>
               ) : (
-                <span class="esa-header-nav__menu-item esa-header-nav__menu-item--inert">{child.label}</span>
+                <span class="esa-header-nav__menu-item esa-header-nav__menu-item--inert typography-body-md">{child.label}</span>
               )}
             </li>
           ))}
         </ul>
       </EsaNavDropdown>
     ) : (
-      <EsaIconLink href={item.href} icon={item.icon}>{item.label}</EsaIconLink>
+      <EsaButton variant="chrome" href={item.href} icon={item.icon}>{item.label}</EsaButton>
     )
   )}
 
   <Fragment slot="end">
     {Astro.slots.has('actions') && (
-      <span class="esa-header-nav__actions"><slot name="actions" /></span>
+      <span class="esa-header-nav__actions typography-label-md"><slot name="actions" /></span>
     )}
 
     {user && (
@@ -89,14 +97,14 @@ function initialsFor(u: EsaHeaderNavUser): string {
         </summary>
         <div class="esa-header-nav__user-dropdown">
           <div class="esa-header-nav__user-info">
-            <span class="esa-header-nav__user-name">{user.name}</span>
-            {user.email && <span class="esa-header-nav__user-email">{user.email}</span>}
+            <span class="esa-header-nav__user-name typography-label-md-strong">{user.name}</span>
+            {user.email && <span class="esa-header-nav__user-email typography-body-xs">{user.email}</span>}
           </div>
           <div class="esa-header-nav__user-actions">
-            <a class="esa-header-nav__user-action" href="#profile"><EsaIcon name="user" size="sm" /><span>Profile</span></a>
-            <a class="esa-header-nav__user-action" href="#settings"><EsaIcon name="settings" size="sm" /><span>Settings</span></a>
+            <a class="esa-header-nav__user-action typography-body-md" href="#profile"><EsaIcon name="user" size="sm" /><span>Profile</span></a>
+            <a class="esa-header-nav__user-action typography-body-md" href="#settings"><EsaIcon name="settings" size="sm" /><span>Settings</span></a>
             <div class="esa-header-nav__user-divider"></div>
-            <a class="esa-header-nav__user-action esa-header-nav__user-action--danger" href="#logout"><span>Log out</span></a>
+            <a class="esa-header-nav__user-action esa-header-nav__user-action--danger typography-body-md" href="#logout"><span>Log out</span></a>
           </div>
         </div>
       </details>
@@ -112,7 +120,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
     --app-bar-gap: var(--spacing-300, 12px);
     --app-bar-pad-x: var(--spacing-500, 24px);
     --app-bar-pad-y: var(--spacing-150, 6px);
-    border-bottom: var(--border-width-default, 1px) solid var(--header-nav-border-color, var(--color-border, #e5e5e5));
+    border-bottom: var(--border-width-default, 1px) solid var(--header-nav-border-color, var(--color-border-default, #e5e5e5));
   }
   .esa-header-nav__brand { display: inline-flex; align-items: center; }
   .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200, 8px); }
@@ -123,12 +131,11 @@ function initialsFor(u: EsaHeaderNavUser): string {
     display: block;
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
-    color: var(--header-nav-menu-item-color, var(--color-content-secondary, #525252));
-    font-size: var(--font-size-200, 1rem);
+    color: var(--header-nav-menu-item-color, var(--color-content-default-secondary, #525252));
     text-decoration: none;
   }
-  .esa-header-nav__menu-item:hover { background: var(--color-background-sunken, #efefef); }
-  .esa-header-nav__menu-item--inert { color: var(--color-content-muted, #737373); }
+  .esa-header-nav__menu-item:hover { background: var(--color-background-elevation-sunken, #efefef); }
+  .esa-header-nav__menu-item--inert { color: var(--color-content-default-muted, #737373); }
 
   /* User menu (the DISCLOSURE is bespoke; the avatar inside it is esa-avatar) */
   .esa-header-nav__user { position: relative; display: flex; align-items: center; }
@@ -142,7 +149,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
        arrive as scoped overrides rather than as compromises. */
     --avatar-size-sm: var(--header-nav-avatar-size, 32px);
     --avatar-bg: var(--header-nav-avatar-bg, var(--color-background-brand, #43608a));
-    --avatar-text-color: var(--header-nav-avatar-text, var(--color-content-inverse, #fff));
+    --avatar-text-color: var(--header-nav-avatar-text, var(--color-content-default-knockout, #fff));
     --avatar-font-size: var(--font-size-100, 0.75rem);
 
     /* The summary is now only the focusable trigger — the avatar draws the
@@ -160,8 +167,8 @@ function initialsFor(u: EsaHeaderNavUser): string {
     position: absolute; top: calc(100% + var(--spacing-100, 4px)); right: 0;
     z-index: var(--z-dropdown, 50);
     min-width: 220px;
-    background: var(--color-background-raised, #fff);
-    border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+    background: var(--color-background-elevation-raised, #fff);
+    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     border-radius: var(--radius-surface, 8px);
     box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
     overflow: hidden;
@@ -169,19 +176,19 @@ function initialsFor(u: EsaHeaderNavUser): string {
   .esa-header-nav__user-info {
     display: flex; flex-direction: column; gap: 2px;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+    border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
   }
-  .esa-header-nav__user-name { font-size: var(--font-size-200, 1rem); font-weight: var(--font-weight-semibold, 550); color: var(--color-content-primary, #171717); }
-  .esa-header-nav__user-email { font-size: var(--font-size-100, 0.75rem); color: var(--color-content-secondary, #525252); }
+  .esa-header-nav__user-name { color: var(--color-content-default, #171717); }
+  .esa-header-nav__user-email { color: var(--color-content-default-secondary, #525252); }
   .esa-header-nav__user-actions { padding: var(--spacing-100, 4px); }
   .esa-header-nav__user-action {
     display: flex; align-items: center; gap: var(--spacing-200, 8px);
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
-    color: var(--header-nav-menu-item-color, var(--color-content-secondary, #525252));
-    font-size: var(--font-size-200, 1rem); text-decoration: none;
+    color: var(--header-nav-menu-item-color, var(--color-content-default-secondary, #525252));
+    text-decoration: none;
   }
-  .esa-header-nav__user-action:hover { background: var(--color-background-sunken, #efefef); }
-  .esa-header-nav__user-action--danger { color: var(--color-content-danger, #ce2c31); }
-  .esa-header-nav__user-divider { height: 1px; margin: var(--spacing-100, 4px) 0; background: var(--color-border, #e5e5e5); }
+  .esa-header-nav__user-action:hover { background: var(--color-background-elevation-sunken, #efefef); }
+  .esa-header-nav__user-action--danger { color: var(--color-content-utility-danger, #ce2c31); }
+  .esa-header-nav__user-divider { height: 1px; margin: var(--spacing-100, 4px) 0; background: var(--color-border-default, #e5e5e5); }
 </style>

@@ -20,7 +20,7 @@
   --color-background-brand:        #1f7a6d; /* TODO: real Beacon brand */
   --color-background-brand-hover:  #155a50; /* TODO */
   --color-background-brand-secondary:      #2a9d8f; /* TODO */
-  --color-background-sunken: #f0f6f4; /* TODO */
+  --color-background-elevation-sunken: #f0f6f4; /* TODO */
   --radius-surface:       6px;     /* flatter than the hub default */
 }
 
@@ -28,6 +28,6 @@
   --color-background-brand:        #1769aa;
   --color-background-brand-hover:  #11507f;
   --color-background-brand-secondary:      #4a90c2;
-  --color-background-sunken: #eef4f8;
+  --color-background-elevation-sunken: #eef4f8;
   --radius-surface:       10px;    /* rounder than the hub default */
 }

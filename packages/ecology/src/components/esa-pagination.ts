@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-pagination — Lit Web Component.
@@ -116,12 +117,12 @@ export class EsaPagination extends LitElement {
 
   render() {
     return html`
-      <div class="container ${this.disabled ? 'container--disabled' : ''}" role="navigation" aria-label="Pagination">
+      <div class="container typography-microcopy-md-subtle ${this.disabled ? 'container--disabled' : ''}" role="navigation" aria-label="Pagination">
         ${this.showPageSizeSelector && this.pageSizeOptions.length > 0
           ? html`<div class="page-size">
-              <label class="page-size-label" for="esa-page-size">Items per page:</label>
+              <label class="page-size-label typography-microcopy-md-subtle" for="esa-page-size">Items per page:</label>
               <select
-                class="page-size-select"
+                class="page-size-select typography-microcopy-md-subtle"
                 id="esa-page-size"
                 .value=${String(this.pageSize)}
                 ?disabled=${this.disabled}
@@ -134,7 +135,7 @@ export class EsaPagination extends LitElement {
             </div>`
           : null}
 
-        <span class="range">${this.rangeLabel}</span>
+        <span class="range typography-microcopy-md-subtle">${this.rangeLabel}</span>
 
         <div class="buttons">
           ${this.showFirstLastButtons
@@ -158,22 +159,35 @@ export class EsaPagination extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
-      --_pagination-bg: var(--pagination-bg, var(--color-background-raised, #ffffff));
-      --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
-      --_pagination-text-color: var(--pagination-text-color, var(--color-content-secondary, #525252));
-      --_pagination-font-size: var(--pagination-font-size, var(--font-size-200, 14px));
-      --_pagination-button-color: var(--pagination-button-color, var(--color-content-primary, #171717));
+      --_pagination-bg: var(--pagination-bg, var(--color-background-elevation-raised, #ffffff));
+      --_pagination-border-color: var(--pagination-border-color, var(--color-border-default, rgba(0, 0, 0, 0.12)));
+      --_pagination-text-color: var(--pagination-text-color, var(--color-content-default-secondary, #525252));
+      --_pagination-button-color: var(--pagination-button-color, var(--color-content-default, #171717));
       --_pagination-button-disabled-color: var(--color-content-disabled, #bdbdbd);
-      --_pagination-button-hover-bg: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
+      --_pagination-button-hover-bg: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
       --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
       --_pagination-padding-y: var(--pagination-padding-y, var(--spacing-200, 8px));
 
       display: block;
     }
 
+    .container,
+    .page-size-label,
+    .page-size-select,
+    .range {
+      font-size: var(--pagination-font-size, var(--typography-body-md-font-size));
+    }
+
     .container {
+      /* The bar is one row. Its children already declare this; saying it here is what
+         makes the no-leading role safe rather than incidentally safe. */
+      white-space: nowrap;
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -182,8 +196,6 @@ export class EsaPagination extends LitElement {
       padding: var(--_pagination-padding-y) var(--_pagination-padding-x);
       background: var(--_pagination-bg);
       border-top: var(--border-width-default, 1px) solid var(--_pagination-border-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--_pagination-font-size);
       color: var(--_pagination-text-color);
     }
     .container--disabled { opacity: 0.6; pointer-events: none; }
@@ -192,7 +204,6 @@ export class EsaPagination extends LitElement {
     .page-size-label {
       white-space: nowrap;
       color: var(--_pagination-text-color);
-      font-size: var(--_pagination-font-size);
     }
     .page-size-select {
       padding: var(--spacing-100, 4px) var(--spacing-200, 8px);
@@ -200,8 +211,6 @@ export class EsaPagination extends LitElement {
       border-radius: var(--radius-control, 4px);
       background: var(--_pagination-bg);
       color: var(--_pagination-text-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--_pagination-font-size);
       cursor: pointer;
       appearance: auto;
     }
@@ -214,7 +223,6 @@ export class EsaPagination extends LitElement {
     .range {
       white-space: nowrap;
       color: var(--_pagination-text-color);
-      font-size: var(--_pagination-font-size);
     }
 
     .buttons { display: flex; align-items: center; gap: var(--spacing-100, 4px); }
@@ -241,7 +249,8 @@ export class EsaPagination extends LitElement {
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .button:disabled { color: var(--_pagination-button-disabled-color); cursor: default; }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-pagination')) {

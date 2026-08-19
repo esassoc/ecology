@@ -29,6 +29,21 @@ const {
   padding = 'default',
 } = Astro.props;
 
+// TYPE: the header names roles rather than assembling them — `title-sm-strong` on the
+// card title, `body-sm` on the subtitle. The import is the Astro half of the composite
+// mechanism; Lit siblings get it via `static styles = [typography, …]`.
+//
+// The four SLOT containers name a role too, so slotted content lands on a composite by
+// inheritance instead of on whatever the host page happens to set. It is a default, not
+// a dictate — any esa-* slotted in carries its own class and wins. Body → `body-md`;
+// actions → `label-md`, the chrome band that holds buttons. Footer → `meta`, NOT the
+// chrome default: a card footer carries a timestamp or a count, which is the thing
+// `meta` is named for, and setting that in medium made it louder than the title above it.
+// The header's role is applied ONLY when the header slot is filled: the slot replaces
+// .esa-card__title, so it inherits that title's role. On the default path the title and
+// subtitle already name their own, and a class there would be inherited by nothing.
+import '@esa/tokens/typography.css';
+
 const hasHeaderSlot = Astro.slots.has('header');
 const hasActionsSlot = Astro.slots.has('actions');
 const hasFooterSlot = Astro.slots.has('footer');
@@ -45,7 +60,7 @@ const cls = [
 ---
 <div class={cls}>
   {showHeader && (
-    <div class="esa-card__header">
+    <div class:list={['esa-card__header', hasHeaderSlot && 'typography-title-sm-strong']}>
       {hasHeaderSlot ? (
         <slot name="header" />
       ) : (
@@ -71,12 +86,12 @@ const cls = [
               </svg>
             )}
             <div class="esa-card__titles">
-              {title && <h3 class="esa-card__title">{title}</h3>}
-              {subtitle && <p class="esa-card__subtitle">{subtitle}</p>}
+              {title && <h3 class="esa-card__title typography-title-sm-strong">{title}</h3>}
+              {subtitle && <p class="esa-card__subtitle typography-body-sm">{subtitle}</p>}
             </div>
           </div>
           {hasActionsSlot && (
-            <div class="esa-card__actions">
+            <div class="esa-card__actions typography-label-md">
               <slot name="actions" />
             </div>
           )}
@@ -84,11 +99,11 @@ const cls = [
       )}
     </div>
   )}
-  <div class="esa-card__body">
+  <div class="esa-card__body typography-body-md">
     <slot />
   </div>
   {hasFooterSlot && (
-    <div class="esa-card__footer">
+    <div class="esa-card__footer typography-meta">
       <slot name="footer" />
     </div>
   )}
@@ -96,13 +111,13 @@ const cls = [
 
 <style>
   .esa-card {
-    --_card-bg: var(--card-bg, var(--color-background-raised, #ffffff));
-    --_card-border: var(--card-border-color, var(--color-border, #e5e5e5));
+    --_card-bg: var(--card-bg, var(--color-background-elevation-raised, #ffffff));
+    --_card-border: var(--card-border-color, var(--color-border-default, #e5e5e5));
     --_card-radius: var(--card-radius, var(--radius-card, 0.5rem));
     --_card-padding: var(--card-padding, var(--spacing-500, 1.5rem));
     --_card-header-bg: var(--card-header-bg, transparent);
-    --_card-header-color: var(--card-header-color, var(--color-content-primary, #171717));
-    --_card-header-border: var(--card-header-border-color, var(--color-border-subtle, #efefef));
+    --_card-header-color: var(--card-header-color, var(--color-content-default, #171717));
+    --_card-header-border: var(--card-header-border-color, var(--color-border-default-subtle, #efefef));
 
     display: block;
     background: var(--_card-bg);
@@ -112,7 +127,7 @@ const cls = [
   }
 
   /* outlined: explicit (same as default) */
-  .esa-card--outlined { --_card-border: var(--color-border, #e5e5e5); }
+  .esa-card--outlined { --_card-border: var(--color-border-default, #e5e5e5); }
 
   /* elevated: shadow, no border */
   .esa-card--elevated {
@@ -122,17 +137,17 @@ const cls = [
 
   /* filled: sunken background, no border */
   .esa-card--filled {
-    --_card-bg: var(--color-background-sunken, #efefef);
+    --_card-bg: var(--color-background-elevation-sunken, #efefef);
     --_card-border: transparent;
   }
 
   .esa-card--header-primary .esa-card__header {
     --_card-header-bg: var(--color-background-brand, #43608a);
-    --_card-header-color: var(--color-content-inverse, #ffffff);
+    --_card-header-color: var(--color-content-default-knockout, #ffffff);
   }
 
   .esa-card--header-muted .esa-card__header {
-    --_card-header-bg: var(--color-background-sunken, #efefef);
+    --_card-header-bg: var(--color-background-elevation-sunken, #efefef);
   }
 
   .esa-card--padding-none { --_card-padding: 0; }
@@ -163,21 +178,21 @@ const cls = [
   }
 
   .esa-card__title {
-    font-size: var(--font-size-250, 1.0625rem);
-    font-weight: 600;
     margin: 0;
     color: inherit;
-    font-family: var(--font-sans, 'DM Sans', sans-serif);
   }
 
   .esa-card__subtitle {
-    font-size: var(--font-size-150, 0.8125rem);
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
     margin: 0;
   }
 
+  /* On a BRAND header, not a knocked-out one — so this is `content-on-brand`,
+     the foreground for that fill, and not a knockout variant. It was
+     rgba(255,255,255,0.8): a hardcode that no theme could reach and that stayed
+     white however far a spoke moved its brand colour. */
   .esa-card--header-primary .esa-card__subtitle {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-content-on-brand-secondary, rgba(255, 255, 255, 0.8));
   }
 
   .esa-card__icon {
@@ -198,6 +213,6 @@ const cls = [
   .esa-card__footer {
     padding: var(--spacing-300, 0.75rem) var(--_card-padding);
     border-top: var(--border-width-default, 1px) solid var(--_card-header-border);
-    background: var(--card-footer-bg, var(--color-background-sunken, #efefef));
+    background: var(--card-footer-bg, var(--color-background-elevation-sunken, #efefef));
   }
 </style>

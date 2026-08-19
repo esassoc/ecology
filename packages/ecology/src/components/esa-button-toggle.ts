@@ -5,7 +5,10 @@ import { typography } from '../typography.js';
     steps up to semibold, which is what the -strong weight axis is for — it is not
     a size change, so the rung stays the same. */
 const LABEL_TYPE  = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
-const STRONG_TYPE = { xs: 'label-2xs-strong', sm: 'label-xs-strong', md: 'label-md-strong', lg: 'label-lg-strong' } as const;
+// The OPTIONS are microcopy — nowrap text in a padding-sized box. The group label
+// above them is not: it flows, so it keeps LABEL_TYPE. Selected steps to -strong.
+const OPTION_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
+const OPTION_SELECTED_TYPE = { xs: 'microcopy-2xs-strong', sm: 'microcopy-xs-strong', md: 'microcopy-md-strong', lg: 'microcopy-lg-strong' } as const;
 // unsafeSVG (not unsafeHTML): parses the markup in the SVG namespace so injected
 // <path>/<rect> children render. unsafeHTML would create them as XHTML elements.
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
@@ -228,7 +231,7 @@ export class EsaButtonToggle extends LitElement {
           return html`<button
             type="button"
             role="radio"
-            class="option ${selected ? 'option--selected' : ''} typography-${selected ? STRONG_TYPE[this.size] : LABEL_TYPE[this.size]}"
+            class="option ${selected ? 'option--selected' : ''} typography-${selected ? OPTION_SELECTED_TYPE[this.size] : OPTION_TYPE[this.size]}"
             aria-checked=${selected}
             aria-label=${opt.ariaLabel ?? (opt.label ? null : opt.value)}
             tabindex=${i === this.focusIndex ? 0 : -1}
@@ -298,7 +301,7 @@ export class EsaButtonToggle extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
 
@@ -311,7 +314,7 @@ export class EsaButtonToggle extends LitElement {
       max-width: 100%;
       gap: 2px;
       padding: 2px;
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
     }
@@ -329,8 +332,7 @@ export class EsaButtonToggle extends LitElement {
          height token the segment is its own text plus padding, and the track wraps
          it — the compensation has nothing left to compensate for. */
       padding: var(--_pad-y) var(--_padding-x);
-      line-height: var(--line-height-none, 1);
-      color: var(--color-content-secondary, #525252);
+      color: var(--color-content-default-secondary, #525252);
       background: transparent;
       border: 0;
       border-radius: calc(var(--_radius) - 2px);
@@ -350,8 +352,8 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:hover:not(:disabled):not(.option--selected) {
-      color: var(--color-content-primary, #171717);
-      background: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
+      color: var(--color-content-default, #171717);
+      background: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
     }
 
     .option:focus-visible {
@@ -362,7 +364,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option--selected {
-      background: var(--form-bg, #fff);
+      background: var(--color-background-elevation-raised, #fcfcfc);
       color: var(--color-content-brand, #2a7e3b);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
@@ -373,7 +375,7 @@ export class EsaButtonToggle extends LitElement {
       background: transparent;
     }
     .option--selected:disabled {
-      background: var(--form-bg, #fff);
+      background: var(--color-background-elevation-raised, #fcfcfc);
       color: var(--color-content-disabled, #a3a3a3);
     }
 
@@ -381,7 +383,7 @@ export class EsaButtonToggle extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
   `,
   ];

@@ -2,6 +2,7 @@
 // NAME (via ./icon-registry) so spokes pass icon: 'chef-hat' instead of pasting
 // raw <svg> blobs into nav data. Raw-SVG strings still work (back-compat).
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 import { iconSvg } from './icon-registry';
 
 /**
@@ -123,14 +124,14 @@ export class EsaSidebarNav extends LitElement {
 
   private badge(value?: string | number) {
     return value != null
-      ? html`<span class="badge">${value}</span>`
+      ? html`<span class="badge typography-microcopy-xs-strong">${value}</span>`
       : null;
   }
 
   private renderLeaf(item: EsaSidebarNavItem) {
     if (item.href) {
       return html`<a
-        class="link ${item.active ? 'link--active' : ''} ${item.disabled ? 'link--disabled' : ''}"
+        class="link typography-microcopy-md ${item.active ? 'link--active' : ''} ${item.disabled ? 'link--disabled' : ''}"
         href=${item.href}
         tabindex=${item.disabled ? -1 : 0}
         aria-current=${item.active ? 'page' : 'false'}
@@ -140,7 +141,7 @@ export class EsaSidebarNav extends LitElement {
         ${this.badge(item.badge)}
       </a>`;
     }
-    return html`<span class="link link--inert">
+    return html`<span class="link link--inert typography-microcopy-md">
       ${this.icon(item.icon)}
       <span class="label">${item.label}</span>
       ${this.badge(item.badge)}
@@ -152,7 +153,7 @@ export class EsaSidebarNav extends LitElement {
       const expanded = this.isExpanded(item);
       return html`<li class="item ${item.disabled ? 'item--disabled' : ''}">
         <button
-          class="link link--parent ${expanded ? 'link--expanded' : ''}"
+          class="link link--parent typography-microcopy-md ${expanded ? 'link--expanded' : ''}"
           type="button"
           aria-expanded=${expanded}
           ?disabled=${item.disabled}
@@ -169,7 +170,7 @@ export class EsaSidebarNav extends LitElement {
                 (child) => html`<li class="child ${child.disabled ? 'child--disabled' : ''}">
                   ${child.href
                     ? html`<a
-                        class="link link--child ${child.active ? 'link--active' : ''} ${child.disabled ? 'link--disabled' : ''}"
+                        class="link link--child typography-microcopy-sm ${child.active ? 'link--active' : ''} ${child.disabled ? 'link--disabled' : ''}"
                         href=${child.href}
                         tabindex=${child.disabled ? -1 : 0}
                       >
@@ -177,7 +178,7 @@ export class EsaSidebarNav extends LitElement {
                         <span class="label">${child.label}</span>
                         ${this.badge(child.badge)}
                       </a>`
-                    : html`<span class="link link--child link--inert">
+                    : html`<span class="link link--child link--inert typography-label-sm">
                         ${this.icon(child.icon)}
                         <span class="label">${child.label}</span>
                         ${this.badge(child.badge)}
@@ -195,7 +196,7 @@ export class EsaSidebarNav extends LitElement {
 
   render() {
     return html`
-      <nav class="nav" aria-label="Sidebar navigation">
+      <nav class="nav typography-label-md" aria-label="Sidebar navigation">
         <slot name="header"></slot>
         ${this.collapsible
           ? html`<button
@@ -212,7 +213,7 @@ export class EsaSidebarNav extends LitElement {
             (section) => html`
               ${section.group
                 ? html`<li class="group-heading" role="presentation">
-                    <span class="group-label">${section.group}</span>
+                    <span class="group-label typography-eyebrow-md">${section.group}</span>
                   </li>`
                 : null}
               ${section.items.map((item) => this.renderItem(item))}
@@ -223,15 +224,25 @@ export class EsaSidebarNav extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     /* The light-DOM box-sizing reset doesn't cross the shadow boundary, so set it
        here — without it, .link (width:100% + padding) overflows the rail, pushing
        the right-aligned badge past the border and shifting collapsed icons off-center. */
     *, *::before, *::after { box-sizing: border-box; }
 
     :host {
-      --_sidenav-width: var(--sidebar-width, 260px);
-      --_sidenav-collapsed-width: var(--sidebar-width-collapsed, 56px);
+      /* Renamed from --sidebar-width / --sidebar-width-collapsed on 2026-08-15:
+         one component read them, and the name collided with the `.sidebar`
+         layout primitive's own knob at a different value. The 260/56 fallbacks
+         that sat here did not match the 280/72 the tokens ship — dead code,
+         since the token always resolves, but it stated a default the rail never
+         rendered. See migrations.json: sidebar-width-to-sidenav-width. */
+      --_sidenav-width: var(--sidenav-width, 280px);
+      --_sidenav-collapsed-width: var(--sidenav-width-collapsed, 72px);
       --_sidenav-bg: var(--sidenav-bg, #ffffff);
       --_sidenav-border: var(--sidenav-border-color, #efefef);
       --_sidenav-item-height: var(--sidenav-item-height, 40px);
@@ -245,9 +256,9 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-color-hover: var(--sidenav-link-text-hover, var(--sidenav-link-text, #525252));
       --_sidenav-item-color-active: var(--sidenav-link-text-active, var(--color-content-brand, #3a7c59));
       --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
-      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-background-sunken, #efefef));
+      --_sidenav-item-bg-hover: var(--sidenav-link-bg-hover, var(--color-background-elevation-sunken, #efefef));
       --_sidenav-item-bg-active: var(--sidenav-link-bg-active, var(--color-background-brand-subtle, #f3f8fb));
-      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--font-weight-semibold, 550));
+      --_sidenav-item-weight-active: var(--sidenav-link-weight-active, var(--typography-font-weight-semibold, 550));
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
       --_sidenav-active-border-color: var(--sidenav-active-border-color, var(--color-background-brand, #43608a));
       --_sidenav-group-color: var(--sidenav-section-text, #737373);
@@ -286,6 +297,8 @@ export class EsaSidebarNav extends LitElement {
     :host([collapsed]) .link { justify-content: center; gap: 0; padding-inline: var(--spacing-200, 8px); }
     :host([collapsed]) .children { display: none; }
 
+    /* label-md on the rail is the default the slotted header inherits — every
+       link, group label and badge below names its own role and overrides it. */
     .nav {
       display: flex;
       flex-direction: column;
@@ -339,12 +352,10 @@ export class EsaSidebarNav extends LitElement {
     }
     /* Only between sections — the first heading keeps the rail's own top padding. */
     .group-heading:not(:first-child) { margin-top: var(--_sidenav-section-margin-top); }
+    /* Type comes from .typography-eyebrow-md — size, weight, uppercase and tracking
+       were exactly that role, spelled out one property at a time. */
     .group-label {
       display: block;
-      font-size: var(--font-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 550);
-      text-transform: var(--text-transform-uppercase, uppercase);
-      letter-spacing: var(--letter-spacing-wide, 0.03em);
       color: var(--_sidenav-group-color);
       white-space: nowrap;
       overflow: hidden;
@@ -365,10 +376,6 @@ export class EsaSidebarNav extends LitElement {
       border-radius: var(--_sidenav-item-radius);
       background: var(--_sidenav-item-bg);
       color: var(--_sidenav-item-color);
-      font-family: inherit;
-      font-size: var(--font-size-200, 14px);
-      font-weight: var(--font-weight-medium, 500);
-      line-height: var(--line-height-none, 1);
       text-decoration: none;
       cursor: pointer;
       white-space: nowrap;
@@ -383,6 +390,9 @@ export class EsaSidebarNav extends LitElement {
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
+    /* The active row's weight stays a declaration, not a swapped composite:
+       --sidenav-link-weight-active is a PUBLIC tier-3 hook, and a spoke's
+       declaration of it is the one thing no alias could rescue if it went away. */
     .link--active {
       color: var(--_sidenav-item-color-active);
       background: var(--_sidenav-item-bg-active);
@@ -391,7 +401,8 @@ export class EsaSidebarNav extends LitElement {
     }
     .link--disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     .link--inert { cursor: default; }
-    .link--child { height: 36px; font-size: var(--font-size-150, 13px); }
+    /* Size comes from .typography-label-sm on the element; only the height differs. */
+    .link--child { height: 36px; }
 
     .icon { flex-shrink: 0; display: inline-flex; }
     /* iconSvg() stamps width/height ATTRIBUTES (18px). A presentational attribute
@@ -419,10 +430,7 @@ export class EsaSidebarNav extends LitElement {
       padding: 0 6px;
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-brand, #43608a);
-      color: var(--color-content-inverse, #ffffff);
-      font-size: var(--font-size-100, 11px);
-      font-weight: var(--font-weight-semibold, 550);
-      line-height: var(--line-height-none, 1);
+      color: var(--color-content-default-knockout, #ffffff);
       transition: opacity var(--_sidenav-transition), width var(--_sidenav-transition);
     }
     .chevron {
@@ -434,7 +442,8 @@ export class EsaSidebarNav extends LitElement {
 
     .item--disabled,
     .child--disabled { opacity: 0.5; pointer-events: none; }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-sidebar-nav')) {

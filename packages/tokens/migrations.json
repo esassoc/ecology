@@ -26,7 +26,22 @@
     "A rename used to be tribal knowledge in one person's head. Now it is a row here.",
     "",
     "ADDING A RENAME: add the entry in the same commit as the rename. If you rename",
-    "without adding a row, the alias is not emitted and spokes break silently."
+    "without adding a row, the alias is not emitted and spokes break silently.",
+    "",
+    "YOU CANNOT FORGET ANY MORE, and that is new as of 2026-08-14. token-names.json",
+    "is a committed baseline of every name this package ships; `npm test` fails when",
+    "one disappears from it without a row here. Everything in this system used to",
+    "start from the assumption that the row exists — the alias, the codemod, doctor's",
+    "warnings — and nothing checked that assumption. Order of operations: add the row",
+    "FIRST (it is what emits the alias, or the removed note), then",
+    "`npm run tokens:snapshot` to accept the new set.",
+    "",
+    "A ROW'S DESTINATION IS ALSO CHECKED. `to` must resolve to a real value through",
+    "the hub's own declarations — not merely be declared, since an alias pointing at",
+    "a deleted token is itself declared and still resolves to nothing. This is not",
+    "hypothetical: form-height-to-control-height renamed onto --control-height-*,",
+    "which was deleted hours later, and the codemod happily rewrote two spokes onto",
+    "a dead name while reporting success."
   ],
   "migrations": [
     {
@@ -97,7 +112,7 @@
       "pairs": [
         [
           "--shadow-50",
-          "--shadow-050"
+          "--elevation-1"
         ]
       ]
     },
@@ -137,55 +152,55 @@
       "id": "status-colors-to-semantic",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead — that is the one it is allowed to override.",
+      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead — that is the one it is allowed to override.\n\nDESTINATIONS REPOINTED 2026-08-15. This row originally landed on the `--color-{background,content,border}-{info,success,warning,danger}` names, which `status-to-utility` deprecated the same day. They now point straight at the `utility` names. Without this edit the codemod would have rewritten a spoke onto a name that was itself an alias, printed a success, and left it one rename behind — invisible, because aliases chain and the page still renders.",
       "pairs": [
         [
           "--color-status-info",
-          "--color-background-info"
+          "--color-background-utility-info"
         ],
         [
           "--color-status-info-subtle",
-          "--color-background-info-subtle"
+          "--color-background-utility-info-subtle"
         ],
         [
           "--color-status-info-border",
-          "--color-border-info"
+          "--color-border-utility-info"
         ],
         [
           "--color-status-info-strong",
-          "--color-content-info"
+          "--color-content-utility-info"
         ],
         [
           "--color-status-success",
-          "--color-background-success"
+          "--color-background-utility-success"
         ],
         [
           "--color-status-success-subtle",
-          "--color-background-success-subtle"
+          "--color-background-utility-success-subtle"
         ],
         [
           "--color-status-success-border",
-          "--color-border-success"
+          "--color-border-utility-success"
         ],
         [
           "--color-status-success-strong",
-          "--color-content-success"
+          "--color-content-utility-success"
         ],
         [
           "--color-status-warning",
-          "--color-background-warning"
+          "--color-background-utility-warning"
         ],
         [
           "--color-status-warning-subtle",
-          "--color-background-warning-subtle"
+          "--color-background-utility-warning-subtle"
         ],
         [
           "--color-status-warning-border",
-          "--color-border-warning"
+          "--color-border-utility-warning"
         ],
         [
           "--color-status-warning-strong",
-          "--color-content-warning"
+          "--color-content-utility-warning"
         ]
       ]
     },
@@ -197,7 +212,7 @@
       "pairs": [
         [
           "--font-family-primary",
-          "--font-sans"
+          "--typography-font-family-sans"
         ]
       ]
     },
@@ -266,7 +281,7 @@
       "id": "color-tier2-property-first",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things — the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted — identical defaults do not make a themeable token redundant, and a spoke had already separated both.",
+      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things — the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted — identical defaults do not make a themeable token redundant, and a spoke had already separated both.\n\nDESTINATIONS REPOINTED 2026-08-15. This row originally landed on the `--color-{background,content,border}-{info,success,warning,danger}` names, which `status-to-utility` deprecated the same day. They now point straight at the `utility` names. Without this edit the codemod would have rewritten a spoke onto a name that was itself an alias, printed a success, and left it one rename behind — invisible, because aliases chain and the page still renders.",
       "pairs": [
         [
           "--color-primary-bg-hover",
@@ -342,27 +357,27 @@
         ],
         [
           "--color-surface-inverse-hover",
-          "--color-background-inverse-hover"
+          "--color-background-default-knockout-hover"
         ],
         [
           "--color-surface-inverse",
-          "--color-background-inverse"
+          "--color-background-default-knockout"
         ],
         [
           "--color-surface-elevated",
-          "--color-background-floating"
+          "--color-background-elevation-floating"
         ],
         [
           "--color-surface-sunken",
-          "--color-background-sunken"
+          "--color-background-elevation-sunken"
         ],
         [
           "--color-surface-hover",
-          "--color-background-hover"
+          "--color-background-default-hover"
         ],
         [
           "--color-surface",
-          "--color-background-raised"
+          "--color-background-elevation-raised"
         ],
         [
           "--color-disabled-bg",
@@ -370,23 +385,23 @@
         ],
         [
           "--color-text-primary",
-          "--color-content-primary"
+          "--color-content-default"
         ],
         [
           "--color-text-secondary",
-          "--color-content-secondary"
+          "--color-content-default-secondary"
         ],
         [
           "--color-text-tertiary",
-          "--color-content-tertiary"
+          "--color-content-default-tertiary"
         ],
         [
           "--color-text-muted",
-          "--color-content-muted"
+          "--color-content-default-muted"
         ],
         [
           "--color-text-inverse",
-          "--color-content-inverse"
+          "--color-content-default-knockout"
         ],
         [
           "--color-text-link-hover",
@@ -402,7 +417,7 @@
         ],
         [
           "--color-border-light",
-          "--color-border-subtle"
+          "--color-border-default-subtle"
         ],
         [
           "--color-disabled-border",
@@ -410,91 +425,91 @@
         ],
         [
           "--color-info-subtle",
-          "--color-background-info-subtle"
+          "--color-background-utility-info-subtle"
         ],
         [
           "--color-info-hover",
-          "--color-background-info-hover"
+          "--color-background-utility-info-hover"
         ],
         [
           "--color-info-border",
-          "--color-border-info"
+          "--color-border-utility-info"
         ],
         [
           "--color-info-strong",
-          "--color-content-info"
+          "--color-content-utility-info"
         ],
         [
           "--color-info",
-          "--color-background-info"
+          "--color-background-utility-info"
         ],
         [
           "--color-success-subtle",
-          "--color-background-success-subtle"
+          "--color-background-utility-success-subtle"
         ],
         [
           "--color-success-hover",
-          "--color-background-success-hover"
+          "--color-background-utility-success-hover"
         ],
         [
           "--color-success-border",
-          "--color-border-success"
+          "--color-border-utility-success"
         ],
         [
           "--color-success-strong",
-          "--color-content-success"
+          "--color-content-utility-success"
         ],
         [
           "--color-success",
-          "--color-background-success"
+          "--color-background-utility-success"
         ],
         [
           "--color-warning-subtle",
-          "--color-background-warning-subtle"
+          "--color-background-utility-warning-subtle"
         ],
         [
           "--color-warning-hover",
-          "--color-background-warning-hover"
+          "--color-background-utility-warning-hover"
         ],
         [
           "--color-warning-border",
-          "--color-border-warning"
+          "--color-border-utility-warning"
         ],
         [
           "--color-warning-strong",
-          "--color-content-warning"
+          "--color-content-utility-warning"
         ],
         [
           "--color-warning",
-          "--color-background-warning"
+          "--color-background-utility-warning"
         ],
         [
           "--color-danger-subtle",
-          "--color-background-danger-subtle"
+          "--color-background-utility-danger-subtle"
         ],
         [
           "--color-danger-hover",
-          "--color-background-danger-hover"
+          "--color-background-utility-danger-hover"
         ],
         [
           "--color-danger-border",
-          "--color-border-danger"
+          "--color-border-utility-danger"
         ],
         [
           "--color-danger-strong",
-          "--color-content-danger"
+          "--color-content-utility-danger"
         ],
         [
           "--color-danger",
-          "--color-background-danger"
+          "--color-background-utility-danger"
         ],
         [
           "--color-success-on-fill",
-          "--color-content-on-success"
+          "--color-content-on-utility-success"
         ],
         [
           "--color-warning-on-fill",
-          "--color-content-on-warning"
+          "--color-content-on-utility-warning"
         ]
       ]
     },
@@ -502,31 +517,31 @@
       "id": "color-overlay-property-first",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "The translucent washes now lead with `overlay`, matching the property-first order of the rest of tier-2 colour. `overlay` is a deliberate fourth property: these sit OVER a background rather than being one, and naming them background-* would collide with the opaque neutrals that already own those names.",
+      "why": "The translucent washes now lead with `overlay`, matching the property-first order of the rest of tier-2 colour. `overlay` is a deliberate fourth property: these sit OVER a background rather than being one, and naming them background-* would collide with the opaque neutrals that already own those names.\n\nDESTINATIONS REPOINTED 2026-08-15. This row created the `--color-overlay-*` names by moving the property word to the front; `overlay-property-to-intention` then moved that word out of the property slot entirely, because it was never a property. The six destinations now point at the `--color-background-overlay-*` names. Without this edit the codemod would have landed a spoke on a name deprecated in the same commit and reported success.",
       "pairs": [
         [
           "--color-hover-overlay-strong",
-          "--color-overlay-hover-strong"
+          "--color-background-overlay-strong-hover"
         ],
         [
           "--color-hover-overlay-heavy",
-          "--color-overlay-hover-heavy"
+          "--color-background-overlay-heavy-hover"
         ],
         [
           "--color-hover-overlay",
-          "--color-overlay-hover"
+          "--color-background-overlay-hover"
         ],
         [
           "--color-active-overlay",
-          "--color-overlay-active"
+          "--color-background-overlay-active"
         ],
         [
           "--color-backdrop",
-          "--color-overlay-backdrop"
+          "--color-background-overlay-backdrop"
         ],
         [
           "--color-scrim-light",
-          "--color-overlay-scrim"
+          "--color-background-overlay-scrim"
         ]
       ]
     },
@@ -747,24 +762,27 @@
     {
       "id": "form-height-to-control-height",
       "kind": "token",
+      "removed": true,
+      "exact": false,
       "since": "2026-08-14",
-      "why": "--form-height-* was a pure passthrough to --control-height-* at all four steps — same value, one extra name. What it added was a NARROWING, and that narrowing is a footgun rather than a feature: --control-height exists so inputs, buttons, selects and icon buttons line up on a row, and a spoke using --form-height-* to resize its form controls alone would break precisely that invariant. It also never bounded its readers — esa-button, esa-icon-button, esa-button-toggle and esa-chip-group read it and are not forms, the same complaint that retired --form-font-size-* the same day. Value-neutral: every pair below resolves to the identical px. CORRECTION, same day: this row originally read 'NOTE that --form-radius-* and --form-padding-* deliberately DO NOT follow: radius encodes a real xs/sm→control, md/lg→surface mapping, and padding has no tier-2 role behind it at all.' Half of that stands and half had the reason backwards. --form-radius-* does not follow, for exactly the mapping reason given. --form-padding-* DID follow, hours later, under form-padding-to-spacing — 'no tier-2 role behind it' was never an argument for keeping the hook. Having nothing behind it is precisely what made it a flat passthrough: sixteen names for four numbers, identical on both axes. See the FORMS header in component-tokens.css.",
+      "to": "nothing. This row briefly renamed to --control-height-*, which was deleted hours later — so the rename pointed at a name declared nowhere. Height is gone entirely; padding carries it, and there is no padding token either.",
+      "why": "--form-height-* was a pure passthrough to --control-height-* at all four steps — same value, one extra name. What it added was a NARROWING, and that narrowing is a footgun rather than a feature: --control-height exists so inputs, buttons, selects and icon buttons line up on a row, and a spoke using --form-height-* to resize its form controls alone would break precisely that invariant. It also never bounded its readers — esa-button, esa-icon-button, esa-button-toggle and esa-chip-group read it and are not forms, the same complaint that retired --form-font-size-* the same day. Value-neutral: every pair below resolves to the identical px. SUPERSEDED THE SAME DAY, and this row now carries removed:true. It originally renamed to --control-height-*, which was itself deleted hours later with no alias — so the rename wrote spokes onto a name declared NOWHERE, and the codemod reported success while doing it. Two spokes hit exactly that: cb-fish read --form-height-* at 11 sites and air-exchange declared all four in its theme. The alias build.js used to emit for this row (--form-height-md: var(--control-height-md)) resolved to nothing, which is worse than emitting nothing at all — it looked like a working shim. There is no successor name: an input is as tall as its padding plus its text, and after form-padding-to-spacing the padding is --spacing-* read directly. A spoke still setting a height here should delete the declaration and let the control size itself; if it needs a shorter control, that is a /request-lego. Also note the original text of this row asserted that --form-radius-* and --form-padding-* deliberately did NOT follow. Half of that stands: radius encodes a real xs/sm-to-control, md/lg-to-surface mapping and survives. --form-padding-* DID follow, hours later, under form-padding-to-spacing — 'no tier-2 role behind it' was never an argument for keeping a hook. Having nothing behind it is precisely what made it a flat passthrough: sixteen names for four numbers, identical on both axes.",
       "pairs": [
         [
           "--form-height-xs",
-          "--control-height-xs"
+          ""
         ],
         [
           "--form-height-sm",
-          "--control-height-sm"
+          ""
         ],
         [
           "--form-height-md",
-          "--control-height-md"
+          ""
         ],
         [
           "--form-height-lg",
-          "--control-height-lg"
+          ""
         ]
       ]
     },
@@ -805,6 +823,27 @@
         [
           "--form-padding-x-lg",
           "--spacing-400"
+        ]
+      ]
+    },
+    {
+      "id": "form-bg-to-background-field",
+      "kind": "token",
+      "since": "2026-08-14",
+      "exact": false,
+      "why": "THE FIRST TIER-3 -> TIER-2 PROMOTION IN THIS FILE, and the first surface change that is deliberately NOT value-neutral. --form-bg was read by 13 components, --form-bg-disabled by 7, --form-bg-hover by 3. A surface thirteen components share is an INTENT, and intents live at tier 2; a tier-3 hook exists so a spoke can re-skin ONE component. The `form` namespace never bounded its readers — the same complaint that retired --form-font-size-*, --form-height-* and --form-padding-* the same day.\n\nWHERE IT LANDED: --color-background-field is TRANSPARENT. A field is the colour of whatever contains it. Do not read the pairs below as a rename onto a grey — the destination has no colour of its own.\n\nWHAT CHANGES ON SCREEN: every text input, textarea, select, combobox, date picker, colour-picker hex field, tag container, checkbox box, radio circle and file dropzone loses its fill. On the canvas or a card they go from #fcfcfc to the page colour, which is the same colour — so most screens barely move. Inside a sunken well, a filled card, the sidenav rail or a dialog they now MATCH their container instead of sitting a shade off it.\n\nWHY NOT A GREY, so nobody retries one: this token pointed at --color-background-raised (the CARD surface) until 2026-08-14, then gray-3, then gray-2 on 2026-08-15. Every one of those measured between 1.00 and 1.11 against the surface it sat on. THE FILL WAS NEVER DOING THE WORK — the border always was. And each fixed grey was wrong somewhere: correct on the canvas, INVERTED on a sunken surface, where the field rendered lighter than its own container. A --color-gray-a-* alpha wash was considered and rejected too: it adapts, but black-alpha darkens an already-dark surface, so it still needs a dark-scheme counterpart. Transparent needs none, which is also why this closed a live dark-mode bug rather than adding one.\n\nREST, HOVER, FOCUS AND ERROR ARE NOW BORDER STATES. Rest --color-border; hover --form-border-color-hover (--color-border-strong); focus --form-border-color-focus plus the ring; error --form-error-border-color. esa-input-tag had done hover this way all along and was the model. If your spoke styles those states with backgrounds, move them to the border or they will fight the container.\\n\\nDISABLED IS THE ONE STATE THAT KEEPS A FILL, and --form-bg-disabled aliases straight onto it: --color-background-disabled (gray-3), alongside --color-border-disabled and --color-content-disabled. Do not read the transparent default as a ban on fills — a disabled field SHOULD break from its container, because it is no longer editable and no longer belongs to the surface. That fill briefly came out with the others on 2026-08-15 and was re-expressed as a hardcoded opacity; it was put back the same day. If your spoke has its own disabled field styling, point it at the tier-2 triple rather than dimming.\n\nIF YOU WANT FILLED INPUTS BACK, that is one line: --color-background-field: <your grey>. The token survives its own default precisely so a spoke with a filled house style does not have to file a /request-lego.\n\nWRITE IT, DO NOT OMIT IT. Dropping the `background` declaration does not give transparency on a native element — the UA stylesheet paints <input>/<textarea>/<select> with `field` (about white) and <button> with `ButtonFace` (about #efefef). Six of the fifteen field surfaces in this kit are native elements, so omitting renders a transparent wrapper beside a white textarea beside a grey trigger, varying by browser, in a colour no theme can reach.\n\nONE READER DID NOT FOLLOW, and it is why a blind find-and-replace would have been wrong: esa-button-toggle's `.option--selected` read --form-bg to lift the chosen segment OUT of a --color-background-sunken track. That is a raised chip, not a field; transparent would have erased the selection entirely. It reads --color-background-raised now, which is what it always meant. If your spoke has a segmented control built on --form-bg, check it for the same thing.\n\nTWO OTHER TOKENS MOVED IN THIS WINDOW and are not in the pairs below because their NAMES did not change. --color-background went gray-2 -> gray-1 on 2026-08-15, which undoes a deliberate inversion: the canvas used to sit one step DARKER than --color-background-raised so cards read as lifted by value alone. Canvas, raised and floating are all gray-1 now, so a card separates by its 1px border and nothing else — esa-card's default and outlined variants carry that border, but esa-card--elevated does NOT and leans entirely on --elevation-2, a 4% shadow. And --color-background-disabled chased the field across two days (gray-3 -> gray-2 -> gray-1) before landing back at gray-3, where it stays: with a transparent resting field there is nothing left for it to track, so it finally stands on its own value rather than being computed from another role's.",
+      "pairs": [
+        [
+          "--form-bg",
+          "--color-background-field"
+        ],
+        [
+          "--form-bg-hover",
+          "--color-background-default-hover"
+        ],
+        [
+          "--form-bg-disabled",
+          "--color-background-disabled"
         ]
       ]
     },
@@ -898,6 +937,447 @@
           ""
         ]
       ]
+    },
+    {
+      "id": "icon-button-to-button-chrome",
+      "kind": "component",
+      "since": "2026-08-14",
+      "from": "esa-icon-button",
+      "to": "esa-button",
+      "fromModule": "@esa/ecology/esa-icon-button.astro",
+      "toModule": "@esa/ecology/esa-button.astro",
+      "addProps": {
+        "variant": "chrome",
+        "iconOnly": true
+      },
+      "why": "FIRST `component` ROW IN THIS FILE. esa-icon-button did not lose a prop, it stopped existing: the one thing it did that esa-button could not was take its colour FROM the surrounding context instead of owning one, and that is now `variant=\"chrome\"`. What was left was a parallel API — six prop names already spelled identically to button's — kept alive for three CSS declarations. Measured: the conversion is near-lossless (44x44 -> 46x46, the 2px being button's transparent border; icon size and padding identical). NOTE `iconOnly` is what distinguishes this from the icon-link row — both land on the same component and the same variant, and only the presence of a text label separates them. GENUINELY LOST: `label` was REQUIRED here in the type system; on esa-button it can only be a build-time warning, because the label is a slot and a boolean flag cannot make a sibling prop mandatory. See docs/button-consolidation-plan.md."
+    },
+    {
+      "id": "icon-link-to-button-chrome",
+      "kind": "component",
+      "since": "2026-08-14",
+      "from": "esa-icon-link",
+      "to": "esa-button",
+      "fromModule": "@esa/ecology/esa-icon-link.astro",
+      "toModule": "@esa/ecology/esa-button.astro",
+      "addProps": {
+        "variant": "chrome"
+      },
+      "renameProps": {
+        "active": "current"
+      },
+      "dropProps": [
+        "weight"
+      ],
+      "why": "Same fold as icon-button, minus `iconOnly`. Two mappings are NOT one-to-one and are why this cannot be a plain tag swap. (1) `active` meant \"this is the current nav item\" and emitted aria-current; on esa-button `active` means \"this toggle is pressed\" and emits aria-pressed. Those are different claims — a nav link announced as a depressed toggle is worse for a screen-reader user than an unlabelled one — so button grew a separate `current` prop and this maps onto it. (2) `weight` is DROPPED, not remapped: esa-button takes its type from the typography-label-* composites, which own font-weight, and declaring it on the element would silently beat the composite (Astro's [data-astro-cid-*] scoping outranks a single-class selector). An audit found `weight` passed ZERO times anywhere in the hub. The codemod REPORTS a dropped prop rather than deleting it — a human decides that call site. VISUAL CHANGE, unlike the icon-button row: nav items go from bare text (16px tall at md, 14px at sm) to 46px/38px boxes, and md type goes 16px -> 15px. Those old heights were under the 24px AA touch-target floor; the new ones clear 44px AAA."
+    },
+    {
+      "id": "select-searchable-to-combobox",
+      "kind": "prop",
+      "since": "2026-08-15",
+      "components": [
+        "esa-select"
+      ],
+      "pairs": [],
+      "why": "NO REWRITE PAIRS ON PURPOSE — this row exists so `doctor` and /update-tokens can NAME the affected files, not rewrite them. `searchable` defaulted to TRUE, so every existing <esa-select> is rendering an editable autocomplete: a codemod cannot know whether each call site wanted a filter or merely took the default. That is a human judgement per site. A select is a list opened by a BUTTON; a type-to-filter field is an autocomplete, i.e. esa-combobox. Most sites need NOTHING — dropping `searchable` leaves typeahead, which covers the common case. Sites over a genuinely long list (cb-fish-design's locality schedule is the example) should become <esa-combobox>. The component keeps `searchable` working and warns at runtime; that warning, not this row, is what reaches a binding no static scan can see. NO `module` KEY, DELIBERATELY: this component is a Lit custom element with no .astro wrapper, so the specifier that used to sit here resolved to a file that does not exist and importedAs() could never match it. It would not help even if corrected \u2014 a Lit element is registered by side-effect import and has no default binding to alias, so the `components` tag list is the whole scan. Do not re-add it: a dead `module` reads as \"aliased imports are covered\" when they are not.",
+      "deprecatedProps": [
+        "searchable"
+      ]
+    },
+    {
+      "id": "combobox-mode-select-to-select",
+      "kind": "prop",
+      "since": "2026-08-15",
+      "components": [
+        "esa-combobox"
+      ],
+      "pairs": [],
+      "why": "Also no rewrite pairs. `mode=\"select\"` renders a button trigger over a fixed list — that is <esa-select>. The correct migration is a COMPONENT swap conditional on an attribute VALUE, which `renameComponent` cannot express (it matches on tag alone). Building that predicate was scoped and DROPPED: measured across every spoke, it would rewrite 4 call sites in one repo, against ~150 lines plus tests. A warning that names the file is the better tool at that size. `triggerStyle` is deprecated with it — it is read at exactly one site, inside renderSelect, so it only ever styled that button. NO `module` KEY, DELIBERATELY: this component is a Lit custom element with no .astro wrapper, so the specifier that used to sit here resolved to a file that does not exist and importedAs() could never match it. It would not help even if corrected \u2014 a Lit element is registered by side-effect import and has no default binding to alias, so the `components` tag list is the whole scan. Do not re-add it: a dead `module` reads as \"aliased imports are covered\" when they are not.",
+      "deprecatedProps": [
+        "mode",
+        "triggerStyle"
+      ]
+    },
+    {
+      "id": "bare-property-to-default",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background",
+          "--color-background-default"
+        ],
+        [
+          "--color-border",
+          "--color-border-default"
+        ]
+      ],
+      "why": "SPELLING OUT THE INTENTION THAT WAS OMITTED. `--color-background` and `--color-border` were the only two tier-2 colour tokens carrying NO variant word at all. The convention was intention-by-omission — a token with no intention word IS the default — and every other token in the set names its intention (`-brand`, `-danger`, `-ai`, `-link`, `-disabled`).\n\nWHY THE CONVENTION LOST. It only reads if you already know it. `--color-background-raised` and `--color-background` look like a pair where one is more specific than the other, when in fact they are siblings — the default surface and the raised surface. Naming the default `-default` makes them read as the peers they are, and makes the slot-5 variant position present in EVERY name rather than present in all but two. The debug tree is what surfaced it: grouping colour by intention produced a group that no token was named after, which meant the grouping had to invent a word (`neutral`) to describe the absence of one. A group label the token set cannot supply is a naming gap, not a rendering choice.\n\nVALUE-IDENTICAL. Both keep their exact values (`--color-gray-1` and `--color-gray-7`) and every reference chain behind them is untouched. Nothing renders differently.\n\nTHE DECLARATION HALF IS THE RISK, as always. An alias rescues `var(--color-background)`; it can never rescue `--color-background: <value>`. A spoke theme file is nothing BUT declarations, and these two are among the most likely tokens for a spoke to re-point — they are the page canvas and the default hairline, the first two lines of any re-skin. A spoke that does not run `/update-tokens` keeps a theme file that parses, passes every gate, and silently stops applying its canvas and border colours. Both hub theme files (`apps/site/src/styles/docs-dark.css`) and the spoke template were updated in the same commit; spoke repos were NOT touched and must migrate themselves.\n\nSCOPE, so nothing is over-rewritten: this renames the BARE names only. `--color-background-raised`, `--color-background-sunken`, `--color-border-strong` and the rest already carry a variant word and are unchanged. A codemod matching on prefix rather than on the whole token name would corrupt all of them."
+    },
+    {
+      "id": "missing-intention-to-default",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-hover",
+          "--color-background-default-hover"
+        ],
+        [
+          "--color-content-primary",
+          "--color-content-default"
+        ],
+        [
+          "--color-content-secondary",
+          "--color-content-default-secondary"
+        ],
+        [
+          "--color-content-tertiary",
+          "--color-content-default-tertiary"
+        ],
+        [
+          "--color-content-muted",
+          "--color-content-default-muted"
+        ],
+        [
+          "--color-border-subtle",
+          "--color-border-default-subtle"
+        ],
+        [
+          "--color-border-strong",
+          "--color-border-default-strong"
+        ],
+        [
+          "--color-border-focus",
+          "--color-border-default-focus"
+        ]
+      ],
+      "why": "THE SECOND HALF OF bare-property-to-default, and the reason that row was not enough on its own.\n\nA TIER-2 COLOUR NAME HAS FOUR SLOTS: property > intention > variant > state. --color-background-brand-muted-hover fills all four. The first row spelled out the intention on the two tokens that had NOTHING after the property. These eight are the same omission one slot to the right: they carry a VARIANT or a STATE with the intention still unsaid. --color-border-subtle is the DEFAULT border, made subtle; --color-background-hover is the DEFAULT background, hovered. Nothing named the default, so slot 2 sat empty and slot 3 or 4 moved up into it.\n\nWHY THAT MATTERS MORE THAN TIDINESS. A name whose slots have shifted cannot be parsed, only recognised — you have to already know that `subtle` in --color-border-subtle is a variant while `brand` in --color-border-brand is an intention, because their positions are identical. That ambiguity is what made every attempt to GROUP these tokens invent an umbrella word (`neutral`, then `utility`) to stand in for the missing slot. With slot 2 always filled, the grouping falls straight out of the names and needs no vocabulary the token set does not ship.\n\n--color-content-primary BECAME --color-content-default, not --color-content-default-primary. `primary` was never a variant of the default text colour, it WAS the default text colour, wearing a prominence word because the set had no other way to say `first`. Its three siblings did become variants: secondary, tertiary and muted are genuine degrees of a single intention, and they now say which intention they are degrees OF.\n\nVALUE-IDENTICAL, all eight. Only names moved.\n\nDECLARATIONS ARE THE RISK, and this row carries more of them than any before it: 13 in the hub across the dark theme, the spoke template and the docs package, versus 558 reads. An alias rescues a read and never a declaration, and --color-content-primary / --color-content-secondary / --color-border-subtle are exactly the tokens a spoke re-points first — they are the text ramp and the hairline. A spoke that skips /update-tokens keeps a theme file that parses, passes every gate and applies nothing.\n\nWHOLE-NAME MATCHING IS MANDATORY HERE. --color-content-secondary and --color-content-brand-secondary differ only by the intention between them, and --color-background-hover sits beside --color-background-brand-hover. A codemod matching on prefix corrupts the siblings it is not meant to touch.\n\nNOTED IN PASSING: --color-content-tertiary had ZERO readers in the hub at the time of the rename. It was carried across rather than deleted because the ramp reads as incomplete without it, but it has never been used."
+    },
+    {
+      "id": "surface-to-elevation",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-raised",
+          "--color-background-elevation-raised"
+        ],
+        [
+          "--color-background-floating",
+          "--color-background-elevation-floating"
+        ],
+        [
+          "--color-background-sunken",
+          "--color-background-elevation-sunken"
+        ]
+      ],
+      "why": "NAMING THE AXIS THESE THREE ALREADY SHARED. `raised`, `floating` and `sunken` are not three intentions — they are three points on ONE axis, elevation, and the tier-2 grammar (property > intention > variant > state) was spending its intention slot on the variant. Nothing in the names said they belonged together, so nothing said that re-pointing one without the others leaves a surface ramp with a step missing.\n\nTHE EVIDENCE WAS ALREADY IN THE REPO. `--elevation-*` — the SHADOW ramp — describes its own rungs with these exact words: `--elevation-3` is \"Raised card — a surface sitting above the page but still part of it\", `--elevation-4` is \"Anchored or transient floating surfaces — dropdowns, popovers, menus\". The system has had an elevation axis all along and has been spelling it `raised`/`floating` at both ends; the colour half just never said so. A card is `--color-background-elevation-raised` + `--elevation-3`, and now the two ramps read as the pair they are instead of the pairing being folklore.\n\nTWO FAMILIES NOW SAY \"elevation\" — this colour set and the shadow set. That is deliberate, not an oversight. There is no literal collision (`--color-background-elevation-*` vs `--elevation-*`), and the shared word is the point: they are one concept expressed as value and as shadow.\n\nWHAT DID NOT JOIN, and why each stayed out. `--color-background-default` is the reference PLANE, not a departure from it — sunken is below IT and raised is above IT, so it sits at position 0 on the axis and takes no elevation word; naming a departure is useful, naming the thing it departs from is not. `--color-background-field` is `transparent` and deliberately takes no step at all. `--color-background-inverse` is gray-12, a HUE flip rather than a lift. A regroup like this fails by over-reaching; these three are the tokens it would have swept up.\n\nVALUE-IDENTICAL. gray-1, gray-1, gray-3 respectively, and every reference chain behind them is untouched. Nothing renders differently.\n\nFLOATING DOES NOT DERIVE FROM RAISED, and this was considered and rejected rather than overlooked. When `floating` looked like a VARIANT of `raised` (both gray-1 in light, one step apart in dark) the natural fix was `background-floating: {color.background-raised}`, so a spoke re-pointing the card surface got dialogs for free. Under the elevation reading they are SIBLINGS on one ramp, and siblings each own their own step — `background-brand-subtle` does not derive from `background-brand`. The shared namespace does that job instead, weakly but honestly: a spoke re-pointing `--color-background-elevation-raised` has the other two rungs sitting beside it under the same prefix. If the light theme ever separates them by value the sibling reading is what survives; a derivation would have had to be undone.\n\nTHE DECLARATION HALF, as always, is the risk. An alias rescues `var(--old)`; it can NEVER rescue `--old: <value>`. Eight declarations existed in the hub at rename time and all were updated in the same commit. SUNKEN CARRIED FIVE OF THEM and is the one to watch: `apps/site/src/styles/themes.css` declares it in BOTH the beacon and qanat themes, `docs-dark.css` declares it, `foundations/color.astro` demos it, and — the one with a future — `packages/spoke-template/src/styles/theme-__SPOKE_SLUG__.css` seeds it into every scaffolded spoke. Any spoke scaffolded BEFORE this date has an inert declaration in its theme file and silently loses its well colour until it runs /update-tokens.\n\nSPOKE EXPOSURE WAS ZERO AT RENAME TIME, verified rather than assumed: cb-fish-design and air-exchange-tool both exist on disk and neither reads NOR declares any of the three. That is unusual for a surface token and is the reason this rename was cheap — contrast `bare-property-to-default`, which hit both spokes on the declaration side.\n\nSCOPE — WHOLE-NAME MATCHING IS MANDATORY. None of the three has a suffixed sibling today (there is no `--color-background-raised-hover`), which is exactly the condition under which a lazy prefix codemod passes its own tests and then corrupts the first sibling anyone adds. Match the whole token name with a boundary, not a prefix."
+    },
+    {
+      "id": "font-ingredients-to-typography-namespace",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--font-sans",
+          "--typography-font-family-sans"
+        ],
+        [
+          "--font-mono",
+          "--typography-font-family-mono"
+        ],
+        [
+          "--font-display",
+          "--typography-font-family-display"
+        ],
+        [
+          "--font-weight-light",
+          "--typography-font-weight-light"
+        ],
+        [
+          "--font-weight-regular",
+          "--typography-font-weight-regular"
+        ],
+        [
+          "--font-weight-medium",
+          "--typography-font-weight-medium"
+        ],
+        [
+          "--font-weight-semibold",
+          "--typography-font-weight-semibold"
+        ],
+        [
+          "--font-weight-bold",
+          "--typography-font-weight-bold"
+        ]
+      ],
+      "why": "TIER-2 TYPOGRAPHY WAS TWO SETS UNDER TWO PREFIXES, and only one of them said what it was. The composites announce their category (`--typography-label-md-font-size`); the faces and weights they are ASSEMBLED FROM did not (`--font-sans`, `--font-weight-medium`). Same tier, same file, same job, two vocabularies — so nothing in a name told you that re-pointing `--font-sans` moves every composite that reads it.\n\nTHE COLLISION THIS FIXES IS THE REAL REASON, and it was invisible in the JSON. Tier-1 `primitive/typography.json` declares a `font-weight` group (100…900). Tier-2 `semantic/typography.json` declared a `font-weight` group TOO (light…bold). Style Dictionary MERGES groups across files, so `--font-weight-500` and `--font-weight-medium` came out of one namespace as siblings, with nothing in either name marking which tier it belongs to. That is not cosmetic: a spoke MUST re-point `medium` when it swaps its body face (the weight numbers are typeface-bound — 350/500/550/650 are DM Sans's optical weights) and MUST NEVER touch `500`. The names gave it no way to tell them apart, and the tier-1/tier-2 boundary is the one thing the whole three-tier contract rests on. `--font-family-dm-sans` stays where it is; it is a primitive and does not move.\n\n`--font-sans` NAMED THE FACE, NOT THE PROPERTY. It reads as a family only because nothing else could plausibly consume it — the name never says `font-family`, it says `sans`, which is a classification. Spelling the property makes it parse instead of being recognised, and it is the same correction the tier-1 audit already applied when `--type-size-*` became `--font-size-*`.\n\nTHIS NAMESPACE NOW HAS TWO SLOT ORDERS, DELIBERATELY. Composites are intention > variant > property (`--typography-label-md-strong-font-size`) so a composite's five properties sort as one block — the whole point of a composite is that its parts stay together. Ingredients have no intention slot at all, so the property leads: `--typography-font-family-sans` is property > variant, which is exactly the colour grammar (`--color-background-brand`). The colour order is the rule; the composites are the documented exception, and they earn it. Anyone reading a `--typography-*` name resolves the ambiguity the same way every time: if slot 2 is a CSS property, it is an ingredient; otherwise it is an intention.\n\nVALUE-IDENTICAL, all eight. Only names moved; every reference chain behind them is untouched and nothing renders differently.\n\nDECLARATIONS ARE THE RISK, AND THIS ROW CARRIES THE WORST EXPOSURE OF ANY YET. An alias rescues `var(--old)` and can NEVER rescue `--old: value` — and these are not incidental tokens, they are THE SPOKE OVERRIDE SURFACE. The type contract written at the top of `src/typography.css` instructs every spoke in so many words to set `--font-sans`, `--font-display` and the named `--font-weight-*`; `packages/spoke-template/src/styles/` seeds them into every scaffolded spoke. A spoke that skips `/update-tokens` keeps a theme file that parses, passes every gate, and applies none of its brand typography — the exact failure shape recorded against `bare-property-to-default`, but on the one surface a spoke is most certain to have touched. Every spoke must run the codemod; the alias only buys time for the reads.\n\nSCOPE — WHOLE-NAME MATCHING IS MANDATORY, and this set is unusually easy to get wrong. `--font-sans` sits one character from `--font-size-*`, `--font-mono` from `--font-family-dm-mono`, and `--font-weight-medium` from `--font-weight-500` — a prefix codemod on `--font-` would sweep the entire tier-1 typography family into a namespace it must never enter. `exact` is set explicitly here rather than left to its default for that reason."
+    },
+    {
+      "id": "inverse-to-knockout",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-inverse",
+          "--color-background-default-knockout"
+        ],
+        [
+          "--color-background-inverse-hover",
+          "--color-background-default-knockout-hover"
+        ],
+        [
+          "--color-content-inverse",
+          "--color-content-default-knockout"
+        ]
+      ],
+      "why": "GENERALISING A MECHANISM THAT ALREADY WORKED, FOR ONE ROLE ONLY. `inverse` was never \"the dark surface\" — the dark scheme re-points it to gray-dark-12, which is near-WHITE. It has always meant \"the opposite of whatever ground this theme sits on\", and it has always flipped correctly with the theme. That is a KNOCKOUT, and it was locked into the intention slot where exactly one background and one content role could have it.\n\nWHAT THAT COST, and it is the reason for the change: a knocked-out region could set its background and its text and nothing else. There was no `--color-border-inverse`, no secondary or muted text on an inverted ground, no inverted raised surface. So a dark app bar in a light theme got its two colours right and then every hairline and every muted label inside it fell back to LIGHT-theme values — on a near-black ground. Moving the word into the variant slot lets any role take it; five roles that a knocked-out region genuinely needs are added alongside this row.\n\nWHY `knockout` AND NOT `inverse`. Two names for one concept is the defect this whole audit removed elsewhere, so only one word survives. `inverse` reads as an instruction to invert a colour and collides with `filter: invert()`; `knockout` is the print term for reversing type out of a ground, which is the actual behaviour. It also stays honest for a spoke whose DEFAULT is dark: `light`/`dark` would have named the absolute value and lied on such a theme, while `knockout` names the relationship to whatever the theme already is.\n\nVALUE-IDENTICAL. gray-12, gray-11 and gray-1 respectively, and the dark-scheme counterparts move with the names. Nothing renders differently; the five NEW roles are additions, not changes.\n\nSEVENTY-SIX READERS, the largest colour rename in this file so far, and heavily concentrated: 11 in component-tokens.css (tier-3 hooks), then esa-tooltip, esa-popover, esa-confirm-dialog and esa-app-bar with 3 each. `--color-content-inverse` alone has 62 — it is the text colour of every filled badge, button and snackbar, so a missed read is a white-on-white or black-on-black label rather than a subtle shift.\n\nTHE DECLARATION HALF: the dark scheme (apps/site/src/styles/docs-dark.css) declares all three and was updated with them. A spoke that re-points inverse in its own theme file gets NO alias rescue and silently loses its inverted chrome until it runs /update-tokens.\n\nSCOPE: whole-name matching. `--color-background-inverse` is a strict prefix of `--color-background-inverse-hover`, so a prefix codemod rewrites the hover token into `--color-background-default-knockout-hover-hover`. Match the whole name with a boundary."
+    },
+    {
+      "id": "status-to-utility",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-info",
+          "--color-background-utility-info"
+        ],
+        [
+          "--color-background-info-hover",
+          "--color-background-utility-info-hover"
+        ],
+        [
+          "--color-background-info-subtle",
+          "--color-background-utility-info-subtle"
+        ],
+        [
+          "--color-background-success",
+          "--color-background-utility-success"
+        ],
+        [
+          "--color-background-success-hover",
+          "--color-background-utility-success-hover"
+        ],
+        [
+          "--color-background-success-subtle",
+          "--color-background-utility-success-subtle"
+        ],
+        [
+          "--color-background-warning",
+          "--color-background-utility-warning"
+        ],
+        [
+          "--color-background-warning-hover",
+          "--color-background-utility-warning-hover"
+        ],
+        [
+          "--color-background-warning-subtle",
+          "--color-background-utility-warning-subtle"
+        ],
+        [
+          "--color-background-danger",
+          "--color-background-utility-danger"
+        ],
+        [
+          "--color-background-danger-hover",
+          "--color-background-utility-danger-hover"
+        ],
+        [
+          "--color-background-danger-subtle",
+          "--color-background-utility-danger-subtle"
+        ],
+        [
+          "--color-content-info",
+          "--color-content-utility-info"
+        ],
+        [
+          "--color-content-success",
+          "--color-content-utility-success"
+        ],
+        [
+          "--color-content-warning",
+          "--color-content-utility-warning"
+        ],
+        [
+          "--color-content-danger",
+          "--color-content-utility-danger"
+        ],
+        [
+          "--color-content-on-info",
+          "--color-content-on-utility-info"
+        ],
+        [
+          "--color-content-on-success",
+          "--color-content-on-utility-success"
+        ],
+        [
+          "--color-content-on-warning",
+          "--color-content-on-utility-warning"
+        ],
+        [
+          "--color-content-on-danger",
+          "--color-content-on-utility-danger"
+        ],
+        [
+          "--color-border-info",
+          "--color-border-utility-info"
+        ],
+        [
+          "--color-border-success",
+          "--color-border-utility-success"
+        ],
+        [
+          "--color-border-warning",
+          "--color-border-utility-warning"
+        ],
+        [
+          "--color-border-danger",
+          "--color-border-utility-danger"
+        ]
+      ],
+      "why": "FOUR INTENTIONS THAT WERE ALWAYS ONE. `info`, `success`, `warning` and `danger` each held the intention slot, which said they were four unrelated purposes the way `brand` and `link` are. They are not. They are four rungs of a single axis — the system's feedback vocabulary — and the proof is in the shape: every one of the four takes the SAME six roles (fill, fill-hover, subtle surface, border, coloured text, on-fill text) at the same Radix steps (9, 10, 2, 6, 11, and a foreground chosen by scale brightness). Nothing else in tier 2 has that regularity. `brand` has no `-subtle` hover; `link` has no border; `disabled` has no fill-hover. A set of names that move together in lockstep across six roles is one intention with four variants, and holding them as four intentions is what stopped anything in the system from saying so.\n\nSAME DEFECT AS `elevation`, SAME FIX. `raised`/`floating`/`sunken` were three intentions until 2026-08-15; they were three points on one axis spending the intention slot on the variant (see `surface-to-elevation`). This is that shape again, one slot wider.\n\nTHE OBJECTION THIS ROW ANSWERS. tier2-naming.ts carried an explicit comment refusing exactly this grouping: \"NOT collapsed under an invented `utility` heading: no token is named `utility`, and that is the same defect as `neutral` was.\" That was correct about the DEFECT and it is worth being precise about what has changed. The complaint was never that the four do not belong together — it was that the grouping page would show a heading no token carried, so a reader could not get from a name back to the tree. This row puts the word IN THE NAMES. The heading is now readable off any token that sits under it, which is the same standard `elevation` had to meet.\n\nWHY `utility` AND NOT `status`. `status` was the old prefix (`--color-status-info-*`) and it was retired by `status-colors-to-semantic` because it named a property-less bucket. Reusing a word this file already spent would make the history unreadable — two different `--color-status-*` eras with different grammars. `feedback` was the other candidate and describes the four accurately, but it is the word for what they COMMUNICATE, while several readers use them for what a thing IS (a `danger` button is not feedback, it is a destructive action). `utility` is the chosen word; it is the weakest fit at `danger` and the strongest across all six roles.\n\nVALUE-IDENTICAL. All 24 pairs. No Radix step moves, no scale changes, and the dark scheme's 12 overrides were renamed with them, so nothing renders differently in either scheme.\n\nTWO HUNDRED AND THIRTY-ONE READS ACROSS 41 FILES — the largest colour rename in this file. Concentrated in esa-button (14), esa-alert-box (12), esa-pill (12), esa-badge (10) and component-tokens.css (10 tier-3 hooks). `--color-content-danger` alone has 45 reads and `--color-content-warning` 27, because they are the coloured-text role every inline validation message reaches for; a missed read is unstyled black text on a form error, not a subtle shift.\n\nTHE DECLARATION HALF, AND THE HUB INVITED IT. 15 declarations exist. 12 are the hub's own dark scheme (apps/site/src/styles/docs-dark.css), renamed here. The other THREE are in packages/spoke-template/src/styles/theme-__SPOKE_SLUG__.css — `--color-background-info`, `-success` and `-warning` are scaffolded slots we hand every new spoke. An alias rescues `var(--old)` and can never rescue `--old: value`, so every spoke scaffolded before today has three declarations that go INERT the moment it upgrades: its status fills silently revert to Ecology blue/lime/yellow with no error anywhere. This is the second row where the hub itself planted the declaration it is now breaking (the first was `form-padding-to-spacing`), and it is the reason /update-tokens must be run rather than assumed.\n\nTWO-HOP: 34 PAIRS REPOINTED IN THIS COMMIT. `status-colors-to-semantic` (12 pairs) and `color-tier2-property-first` (22 pairs) both had these names as their DESTINATION. Left alone, a spoke still on `--color-status-info` would have been rewritten by /update-tokens onto `--color-background-info` — itself deprecated as of this row — reported as a success, and stranded one rename behind. Aliases chain, so nothing would have rendered wrong and nothing would have complained. Both rows now point straight at the `utility` names.\n\nSCOPE: whole-name matching, and this row needs it more than most. `--color-background-info` is a strict prefix of BOTH `--color-background-info-hover` and `--color-background-info-subtle`, so a prefix codemod produces `--color-background-utility-info-hover-hover`. Match to a boundary.\n\nNOTED, NOT FIXED: `--color-content-on-info` and `--color-content-on-danger` have ZERO readers and are carried through this rename unchanged. They are the two members of the six-role set that nothing has needed yet, and the set's regularity is the argument for keeping them. Revisit with the other orphan decisions."
+    },
+    {
+      "id": "overlay-property-to-intention",
+      "kind": "token",
+      "since": "2026-08-15",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-overlay-hover",
+          "--color-background-overlay-hover"
+        ],
+        [
+          "--color-overlay-hover-strong",
+          "--color-background-overlay-strong-hover"
+        ],
+        [
+          "--color-overlay-hover-heavy",
+          "--color-background-overlay-heavy-hover"
+        ],
+        [
+          "--color-overlay-active",
+          "--color-background-overlay-active"
+        ],
+        [
+          "--color-overlay-backdrop",
+          "--color-background-overlay-backdrop"
+        ],
+        [
+          "--color-overlay-scrim",
+          "--color-background-overlay-scrim"
+        ]
+      ],
+      "why": "RETIRING THE FOURTH PROPERTY. `overlay` has been sitting in the PROPERTY slot, as an invented fourth alongside background/content/border. It moves to the INTENTION slot, where it was always the right word, and the property slot goes back to the rubric's three for the whole colour set.\n\nWHY THE EXCEPTION EXISTED, AND WHY IT NO LONGER NEEDS TO. The defence in effect.json was a name collision: these are translucent washes applied OVER a background rather than backgrounds themselves, and `--color-background-hover` would read as \"the hover state of the page background\" — which is the opaque gray-4 already holding that meaning — instead of \"a wash painted on hover\". That collision is real. `--color-background-overlay-hover` resolves it inside the grammar we already have: property says it paints a fill, intention says it STACKS rather than replaces. An exception that a slot can express is not an exception.\n\nIT FILLS FOUR EMPTY INTENTION SLOTS. `--color-overlay-{hover, hover-strong, hover-heavy, active}` named a state and nothing else, so they rendered under `no intention in slot 2` on /debug/tokens and were logged open in the improvement ledger. They have an intention now, and the unclassified group is empty again — which is the assertion that group exists to make.\n\n`backdrop` AND `scrim` GO FROM INTENTION TO VARIANT. They were the two members of this set that already named their job, and tier2-naming.ts called them the model. This is not a demotion of that: it is the same move `raised`/`floating`/`sunken` made under `elevation` on 2026-08-15 and `info`/`success`/`warning`/`danger` made under `utility` the same day. A word that names a rung of an axis belongs one slot to the right of the word that names the axis.\n\nTHE STATE/VARIANT INVERSION IS FIXED IN THE SAME PASS, and it is why two of these pairs are not a simple prefix insertion. `--color-overlay-hover-strong` put the STATE before the VARIANT, backwards against the declared order (property > intention > variant > knockout > state). It becomes `--color-background-overlay-strong-hover`; `-hover-heavy` becomes `-heavy-hover`. Read the new names as \"the strong overlay, on hover\" — which is what they always meant, and what the old order could not say.\n\nWHY NOT `transparent`, WHICH WAS THE FIRST CANDIDATE. It carries strictly less information: `transparent` says alpha < 1, while `overlay` says a translucent layer painted OVER something — transparency plus position. Every one of the six is defined by where it sits. `transparent` also fails the guess-it-without-the-docs test that named `iconRight` and `knockout`; nobody looking for a dialog backdrop searches on it. And nesting them (`--color-background-transparent-overlay-hover`) states one fact twice, because an overlay that is not transparent is not an overlay. The one thing `transparent` had over `overlay` is room for a future transparent role that is NOT an overlay — a layout-preserving invisible border, say. Nothing needs one, and a slot with zero members does not ship here.\n\nVALUE-IDENTICAL. All six. rgba(0,0,0,.03), black-a-1, black-a-2, the brand-derived color-mix, black-a-7 and white-a-10 respectively — untouched.\n\nTWENTY-FIVE READS, ZERO DECLARATIONS, which makes this the cheapest colour rename in this file. Concentrated in `--color-overlay-backdrop` (9, across the six dialog-family components) and `--color-overlay-active` (7). Nothing anywhere — not the hub's dark scheme, not the spoke template, not either spoke — DECLARES one of these names, so for once the alias rescues every affected site and no theme silently goes inert. That is luck, not design: the set has no dark-scheme counterpart because black-alpha and white-alpha wash correctly over either ground.\n\nTWO-HOP: 6 PAIRS REPOINTED IN THIS COMMIT. `color-overlay-property-first` had all six of these names as its DESTINATION — it is the row that MADE them, on the earlier pass that moved the property word to the front. Left alone, a spoke still on `--color-hover-overlay` would have been rewritten onto `--color-overlay-hover`, deprecated by this row, and told it succeeded. cb-fish reads `--color-active-overlay` and would have hit exactly that.\n\nSCOPE: whole-name matching. `--color-overlay-hover` is a strict prefix of both `--color-overlay-hover-strong` and `--color-overlay-hover-heavy`, and those two additionally REORDER their last two words, so a prefix codemod produces `--color-background-overlay-hover-strong` — a name this row never defines and nothing declares. Match to a boundary and take the destination from the table."
+    },
+    {
+      "id": "sidebar-width-to-sidenav-width",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-15",
+      "to": "--sidenav-width and --sidenav-width-collapsed, tier 3, declared in src/component-tokens.css alongside the other 24 --sidenav-* hooks. Same values (280px / 72px). NOT aliased and NOT auto-rewritten — see why.",
+      "pairs": [
+        [
+          "--sidebar-width",
+          ""
+        ],
+        [
+          "--sidebar-width-collapsed",
+          ""
+        ]
+      ],
+      "why": "ACTION FIRST, because the generic reporter line above this is WRONG for this row: it prints \"inert, nothing reads it\", and that is only true of the token being retired, not of the name. If your declaration sits on an element that carries the `.sidebar` LAYOUT PRIMITIVE class, KEEP IT EXACTLY AS IT IS — layouts.css still reads `--sidebar-width` and your override still works. Only rename it to `--sidenav-width` if you were theming an `esa-sidebar-nav` rail. Deleting it as inert is the one wrong move.\n\nA TIER-2 TOKEN JUSTIFIED BY A READER COUNT THAT WAS NEVER TRUE. semantic/layout.json's own $description read \"15 readers. A real agreement: the rail, the content offset and the collapse transition all have to land on the same number.\" The actual count is ONE COMPONENT: esa-sidebar-nav.ts:238-239, which reads both names into --_sidenav-width and --_sidenav-collapsed-width. There is no content offset and no transition reading it; the collapse is a width change on the same element. system-improvement-ledger.md:548 repeated the 15 when it kept these two while deleting their five zero-reader siblings (layout-orphans-removed), so the number that saved them was carried forward unchecked. One component, one token — that is the tier-3 rule, and this is where they go.\n\nTHE NAME WAS ALSO SHARED WITH SOMETHING THAT IS NOT A TOKEN, at a different value. src/layouts.css:83 declares `--sidebar-width: 18rem` (288px) on the `.sidebar` layout primitive as a per-element knob, next to its sibling --sidebar-content-min. The semantic layer shipped 280px. Two constructs, one name, and which one wins on any given element is decided by cascade position rather than intent — logged P2 in the ledger, and found a third time when the token-graph scan roster had to special-case the file to stop crediting it with READING a token it actually shadows (token-graph.ts:309). Demoting the semantic pair vacates the name: the primitive knob becomes its sole owner, uncontested, and needs no change.\n\nWIDTH WAS THE ONE SIDENAV PROPERTY OUTSIDE THE SIDENAV'S OWN SURFACE. Everything else esa-sidebar-nav themes — bg, border, item height, icon size, link colours, the active marker — goes through --sidenav-*. Width alone reached past tier 3 into tier 2, so a spoke narrowing the rail had to reach for a different namespace than for every other property of the same component, and the hub's own patterns/app-shell.astro:140 did exactly that: `--sidebar-width: 248px` on .shell, which would ALSO have resized any .sidebar layout primitive nested inside that wrapper.\n\nREMOVED RATHER THAN ALIASED, AND THAT IS THE POINT OF THE ROW. `removed: true` is normally for a token with no equivalent value; these have an exact one. The reason here is DESTINATION AMBIGUITY — a first for this file. `--sidebar-width` in spoke source means the sidenav rail OR the layout primitive's flex-basis, and nothing in the name distinguishes them. migrate-tokens.mjs matches token rows by whole name with no scope (only `prop` rows carry `components`), so an auto-rewrite would hit both readings and be wrong about one of them. It is already wrong about the one spoke that uses it: air-exchange-tool/src/components/smaqmd-aer-calculator.astro:245 declares `--sidebar-width: 21rem` on `.smaqmd-aer__layout.sidebar` — paired with --sidebar-content-min, on an element that carries the `.sidebar` class, so it is unambiguously the PRIMITIVE. Rewriting it to --sidenav-width would drop that layout back to the primitive's 18rem default: a 3rem shift, no error, nothing logged. Reported for a human instead, the same way renameComponent leaves a dropped prop in place and prints the call site.\n\nNO ALIAS IS NEEDED EITHER, which is why removing costs nothing. An alias rescues reads, and every read of the semantic name was inside this repo: esa-sidebar-nav (migrated in this commit) and layouts.css:89, which reads its own local 18rem and never touched the semantic token. Zero spoke reads. air-exchange only DECLARES, and its declaration keeps working untouched because layouts.css still supplies the read. Emitting `--sidebar-width: var(--sidenav-width)` at :root would have re-planted the exact collision this row exists to close.\n\nVALUE-IDENTICAL. 280px and 72px, unchanged. Nothing renders differently in either scheme.\n\nsemantic/layout.json IS NOW EMPTY OF TOKENS. The sidebar pair was the last of the seven it shipped. The file is kept for its $description, which records why a layout dimension keeps failing to earn a token here — heights because a px box cannot grow with rem text (Change 9), widths because they had already lost to a hardcoded 1556px."
+    },
+    {
+      "id": "chip-height-removed",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-15",
+      "to": "Nothing — these four shapes are sized by padding + text now. Set padding-block on the component's own spacing rung; there is no height token at any tier. See esa-button for the pattern.",
+      "pairs": [
+        [
+          "--chip-height-xs",
+          ""
+        ],
+        [
+          "--chip-height-sm",
+          ""
+        ],
+        [
+          "--chip-height-md",
+          ""
+        ],
+        [
+          "--chip-height-lg",
+          ""
+        ],
+        [
+          "--badge-height-xs",
+          ""
+        ],
+        [
+          "--badge-height-sm",
+          ""
+        ],
+        [
+          "--badge-height-md",
+          ""
+        ],
+        [
+          "--badge-height-lg",
+          ""
+        ],
+        [
+          "--pill-height-xs",
+          ""
+        ],
+        [
+          "--pill-height-sm",
+          ""
+        ],
+        [
+          "--pill-height-md",
+          ""
+        ],
+        [
+          "--pill-height-lg",
+          ""
+        ]
+      ],
+      "why": "THE TOKEN DID NOT FAIL — IT WAS HIDING SOMETHING, which makes this a different deletion from `control-height-removed` even though the two files now read alike. `--chip-height-*` was read by FOUR components through four tier-3 hooks (esa-badge, esa-pill, esa-chip-group, esa-filter-pills). Four readers is a real agreement and a defensible tier-2 intent; CLAUDE.md's own rule — a token many components read is an INTENT — put it exactly where it was. What it was agreeing ON is the problem.\n\nTHE FOUR WEAR DIFFERENT TYPE RUNGS AT THE SAME NOMINAL SIZE: at `md`, esa-badge is label-sm-strong (14px at the clamp plateau), esa-pill label-sm (14px), esa-chip-group label-md-strong (15px) and esa-filter-pills a fixed label-xs (12px, it has no size axis at all). They nonetheless all rendered 28px tall, because the height token overrode the text. The shared height was COMPENSATING FOR A TYPOGRAPHY INCONSISTENCY, one tier away from where the inconsistency lives — so re-pointing it moved four shapes at once and made the disagreement invisible rather than fixing it.\n\nTHE ARITHMETIC THAT PROVED PADDING COULD NOT SIMPLY REPLACE IT, kept because it is the non-obvious part and it will come up again. Every rung on the spacing scale is an even number of px (2, 4, 6, 8, 10, 12, 16), so padding contributes a multiple of 4 to a height. Font sizes 14, 14, 15 and 12 have residues 2, 2, 3 and 0 mod 4, and padding cannot change a residue. Constrained to real spacing rungs, NO two of these four can be made equal in height while their type rungs differ — badge and chip-group are off by 1px at every rung, forever. Calibrated per-component padding closes it only at one viewport width (all four clamps plateau by ~1200px, so they align at >=1200px and spread up to 0.98px at 360px) and only with off-scale literals like 7px and 6.5px, which is the discipline this package exists to prevent.\n\nSO THE TYPE RUNGS ARE THE ACTUAL FIX, and aligning them is a SEPARATE PASS, deliberately not done here. Until it lands, these four are sized independently and are NOT guaranteed to line up on a row — that is the known, accepted intermediate state, not an oversight. Nothing regressed by it: the alignment the height token provided was real, and it is temporarily gone.\n\nWHAT REPLACED IT is `padding-block` on the rung each component's `padding-inline` already walked — the pattern esa-button settled on when `--control-height-*` went (`--_btn-pad-y` equals `--_btn-padding-x` at every size). esa-badge and esa-pill keep their static-mark ramp (--spacing-100/150/200/300); esa-chip-group keeps the CONTROL ramp (--spacing-200/250/300/400) because it is interactive and sits beside inputs; esa-filter-pills keeps its single --spacing-300. Heights are fluid now, as the inputs' have been since Change 9.\n\nesa-badge's min-width NEEDED A REPLACEMENT, and it is the one behavioural change here. It set `min-width: var(--badge-height-*)` so a single-digit count badge rendered as a square; with no height number there is nothing to feed it. It now uses `aspect-ratio: 1` with `min-width: fit-content` — the same squaring esa-button uses for `.esa-button--icon-only`. fit-content is what keeps a long label ('99+') from being squeezed by the ratio, since min-width:auto is 0 on a box that is not a flex ITEM.\n\nREMOVED, NOT ALIASED, AND NO SHIM. There is no destination: the replacement is a CSS property, not another token, so there is no name to point at. `removed: true` is exactly the case. Cost of that is nil here — measured across all six spoke repos, packages/spoke-template and apps/site: ZERO reads and ZERO declarations of any of the twelve names. Every reader was inside packages/ecology and is migrated in this commit. The only surviving mentions anywhere are prose in apps/site/src/data/tier2-naming.ts, updated in this commit too.\n\nFIVE MORE NAMES WENT WITH THEM AND ARE DELIBERATELY ABSENT FROM `pairs`: --chip-group-height-{xs,sm,md,lg} and --filter-pill-height. Both hooks were added earlier on 2026-08-15, in this same uncommitted branch, and were never in a released token-names.json — so they need no row and no shim, on the precedent CLAUDE.md sets for esa-button's `iconRight`. Listing them would tell spokes to migrate off a name they were never able to use.\n\nCARRIED FORWARD: `xs` (18px) and `sm` (22px) were below the WCAG 2.5.8 AA minimum of 24px and esa-chip-group is interactive. Padding sizing changes those numbers without raising them past 24px, so the observation survives this deletion and still needs the batched accessibility pass.\n\nIF THE BASELINE GUARD FLAGS THOSE FIVE, THAT IS EXPECTED IN-BRANCH AND THE ROW IS STILL RIGHT. token-names.json is a working-tree file, and the earlier commit-less work on this branch had already snapshotted the five in — so `npm run tokens:check` sees them disappear and demands a row for names that never left this branch. The guard cannot tell an unreleased addition from a shipped one; it diffs the baseline file, not git history. Confirm against HEAD (`git show HEAD:packages/tokens/token-names.json`) before adding a row on its say-so, and if they are absent there, re-snapshot to accept. Adding a row instead would publish a migration note into tokens.css for names no spoke could ever have read."
+    },
+    {
+      "id": "line-height-hooks-to-microcopy",
+      "kind": "token",
+      "removed": true,
+      "since": "2026-08-15",
+      "to": "Nothing to re-point — apply a `typography-microcopy-*` composite class instead. That intention IS flush leading, so the element names one composite and overrides nothing.",
+      "pairs": [
+        [
+          "--badge-line-height",
+          ""
+        ],
+        [
+          "--pill-line-height",
+          ""
+        ],
+        [
+          "--filter-pill-line-height",
+          ""
+        ],
+        [
+          "--chip-group-line-height",
+          ""
+        ]
+      ],
+      "why": "ADDED AND RETIRED THE SAME DAY, deliberately, and the round trip is the point. These four existed because badge, pill, filter-pill and chip-group are single-line text in a box sized by padding, and no composite in the kit set line-height 1 — so each named a composite and then replaced its leading. A tier-3 hook made that deviation themeable, which is better than a raw --line-height-none read, but it did not make it go away.\n\nFOUR COMPONENTS WANTING IDENTICAL BEHAVIOUR IS AN INTENT, and spelling it four times hides that. The count would have reached twelve — every field, trigger and keycap has the same shape. That is the argument for tier 2: not that the hooks were wrong individually, but that each one is a small defeat, and twelve of them would have buried the fact that the system was missing a word. The word is `microcopy` — the small functional text a UI is built from, which sits IN a box rather than flowing in a column, and therefore carries no leading. See semantic/typography.json.\n\nNO ALIAS, AND NONE IS POSSIBLE. An alias re-points a name at another TOKEN; the replacement here is a CLASS, and build.js emits aliases only for kind:\"token\" pairs anyway. A spoke that declared one of these to retune chip density should instead re-point the composite it is actually using — --typography-microcopy-md-line-height and its siblings are tier 2 and overridable.\n\nREALISTICALLY ZERO EXPOSURE: these shipped for a matter of hours and no spoke has pulled a release containing them. The row is written anyway, because the guard is only worth having if it is fed every time — a rename that skips the row emits no alias, rewrites nothing in a spoke, and reports success. Writing it when the blast radius is nil is what keeps it trustworthy when the blast radius is not."
     }
   ]
 }

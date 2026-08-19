@@ -10,6 +10,14 @@
  * intention is the job the text does; the t-shirt variant appears only where an
  * intention has more than one size.
  *
+ * THE TOKEN NAMESPACE HAS TWO SLOT ORDERS and a class only ever mirrors one of
+ * them. The composites a class assembles are `<intention>-<variant>-<property>`
+ * (--typography-label-md-strong-font-size). The INGREDIENTS they are built from
+ * are `<property>-<variant>` (--typography-font-family-sans), which is the house
+ * grammar colour also uses. There is no class for an ingredient — a face or a
+ * weight on its own is not a composite, which is exactly why reaching for one
+ * directly is the adoption debt the composites exist to retire.
+ *
  * The word "role" is gone. It came from this repo, not from the model these
  * names follow, and it named nothing the vocabulary did not already cover:
  * a token has a CATEGORY, an INTENTION, an optional VARIANT and a PROPERTY.
@@ -24,14 +32,22 @@
  * definition whose rendering depends on context.
  *
  * THE TYPE CONTRACT (for spokes): a brand swaps two faces —
- *   1. --font-sans      the body face  (default 'DM Sans')
- *   2. --font-display   the headline face (defaults to the body face; display
- *                       and heading-lg/md read it, so setting it gets distinct
- *                       headlines for free).
+ *   1. --typography-font-family-sans     the body face (default 'DM Sans')
+ *   2. --typography-font-family-display  the headline face (defaults to the body
+ *                                        face; display and heading-lg/md read
+ *                                        it, so setting it gets distinct
+ *                                        headlines for free).
  * Both are TIER 2, as are the named weights. Weight VALUES are typeface-bound —
  * the hub's numbers are DM Sans's optical weights — so a spoke overriding
- * --font-sans also re-points --font-weight-* to its own face's weights. All
- * tier-2 overrides; no primitive moves.
+ * --typography-font-family-sans also re-points --typography-font-weight-* to its
+ * own face's matching weights. All tier-2 overrides; no primitive moves.
+ *
+ * THESE WERE `--font-sans` / `--font-display` / `--font-weight-*` UNTIL
+ * 2026-08-15. The old names still resolve (deprecated aliases, emitted from
+ * migrations.json), but an alias only rescues a READ. This contract is a list of
+ * things a spoke DECLARES, and a declaration of a renamed token is inert — it
+ * parses, passes every gate and applies nothing. Every spoke must run
+ * `/update-tokens`; see the `font-ingredients-to-typography-namespace` row.
  *
  * RESPONSIVE: no mobile/tablet/desktop variants, because every --font-size-*
  * primitive is a clamp() that scales with the viewport. A model that ships
@@ -57,6 +73,14 @@
   font-weight: var(--typography-display-font-weight);
   line-height: var(--typography-display-line-height);
   letter-spacing: var(--typography-display-letter-spacing);
+}
+
+.typography-display-sm {
+  font-family: var(--typography-display-sm-font-family);
+  font-size: var(--typography-display-sm-font-size);
+  font-weight: var(--typography-display-sm-font-weight);
+  line-height: var(--typography-display-sm-line-height);
+  letter-spacing: var(--typography-display-sm-letter-spacing);
 }
 
 .typography-heading-lg {
@@ -207,12 +231,182 @@
   letter-spacing: var(--typography-label-lg-strong-letter-spacing);
 }
 
+/* ---------------------------------------------------------------------------
+ * MICROCOPY — the small functional text a UI is built from.
+ *
+ * The only intention with NO leading. Everything else here sets normal, relaxed
+ * or tight; microcopy sets `none`, because this text sits IN a box whose height
+ * comes from padding rather than flowing in a column. Once the height tokens were
+ * deleted (a px box cannot grow with rem text), leading became the term that SETS
+ * the box — so 20 elements were naming a composite and then replacing its
+ * line-height. That is what these remove.
+ *
+ * ONLY for text that is structurally single-line: a native <input>, or
+ * white-space: nowrap. On text that can wrap, line-height 1 makes lines touch.
+ *
+ * base = medium (the pressable) - subtle = regular (the value) -
+ * strong = semibold (small text on a colored fill, where the weight is legibility
+ * rather than emphasis).
+ * ------------------------------------------------------------------------- */
+
+.typography-microcopy-2xs {
+  font-family: var(--typography-microcopy-2xs-font-family);
+  font-size: var(--typography-microcopy-2xs-font-size);
+  font-weight: var(--typography-microcopy-2xs-font-weight);
+  line-height: var(--typography-microcopy-2xs-line-height);
+  letter-spacing: var(--typography-microcopy-2xs-letter-spacing);
+}
+
+.typography-microcopy-xs {
+  font-family: var(--typography-microcopy-xs-font-family);
+  font-size: var(--typography-microcopy-xs-font-size);
+  font-weight: var(--typography-microcopy-xs-font-weight);
+  line-height: var(--typography-microcopy-xs-line-height);
+  letter-spacing: var(--typography-microcopy-xs-letter-spacing);
+}
+
+.typography-microcopy-sm {
+  font-family: var(--typography-microcopy-sm-font-family);
+  font-size: var(--typography-microcopy-sm-font-size);
+  font-weight: var(--typography-microcopy-sm-font-weight);
+  line-height: var(--typography-microcopy-sm-line-height);
+  letter-spacing: var(--typography-microcopy-sm-letter-spacing);
+}
+
+.typography-microcopy-md {
+  font-family: var(--typography-microcopy-md-font-family);
+  font-size: var(--typography-microcopy-md-font-size);
+  font-weight: var(--typography-microcopy-md-font-weight);
+  line-height: var(--typography-microcopy-md-line-height);
+  letter-spacing: var(--typography-microcopy-md-letter-spacing);
+}
+
+.typography-microcopy-lg {
+  font-family: var(--typography-microcopy-lg-font-family);
+  font-size: var(--typography-microcopy-lg-font-size);
+  font-weight: var(--typography-microcopy-lg-font-weight);
+  line-height: var(--typography-microcopy-lg-line-height);
+  letter-spacing: var(--typography-microcopy-lg-letter-spacing);
+}
+
+.typography-microcopy-2xs-subtle {
+  font-family: var(--typography-microcopy-2xs-subtle-font-family);
+  font-size: var(--typography-microcopy-2xs-subtle-font-size);
+  font-weight: var(--typography-microcopy-2xs-subtle-font-weight);
+  line-height: var(--typography-microcopy-2xs-subtle-line-height);
+  letter-spacing: var(--typography-microcopy-2xs-subtle-letter-spacing);
+}
+
+.typography-microcopy-xs-subtle {
+  font-family: var(--typography-microcopy-xs-subtle-font-family);
+  font-size: var(--typography-microcopy-xs-subtle-font-size);
+  font-weight: var(--typography-microcopy-xs-subtle-font-weight);
+  line-height: var(--typography-microcopy-xs-subtle-line-height);
+  letter-spacing: var(--typography-microcopy-xs-subtle-letter-spacing);
+}
+
+.typography-microcopy-sm-subtle {
+  font-family: var(--typography-microcopy-sm-subtle-font-family);
+  font-size: var(--typography-microcopy-sm-subtle-font-size);
+  font-weight: var(--typography-microcopy-sm-subtle-font-weight);
+  line-height: var(--typography-microcopy-sm-subtle-line-height);
+  letter-spacing: var(--typography-microcopy-sm-subtle-letter-spacing);
+}
+
+.typography-microcopy-md-subtle {
+  font-family: var(--typography-microcopy-md-subtle-font-family);
+  font-size: var(--typography-microcopy-md-subtle-font-size);
+  font-weight: var(--typography-microcopy-md-subtle-font-weight);
+  line-height: var(--typography-microcopy-md-subtle-line-height);
+  letter-spacing: var(--typography-microcopy-md-subtle-letter-spacing);
+}
+
+.typography-microcopy-lg-subtle {
+  font-family: var(--typography-microcopy-lg-subtle-font-family);
+  font-size: var(--typography-microcopy-lg-subtle-font-size);
+  font-weight: var(--typography-microcopy-lg-subtle-font-weight);
+  line-height: var(--typography-microcopy-lg-subtle-line-height);
+  letter-spacing: var(--typography-microcopy-lg-subtle-letter-spacing);
+}
+
+.typography-microcopy-2xs-strong {
+  font-family: var(--typography-microcopy-2xs-strong-font-family);
+  font-size: var(--typography-microcopy-2xs-strong-font-size);
+  font-weight: var(--typography-microcopy-2xs-strong-font-weight);
+  line-height: var(--typography-microcopy-2xs-strong-line-height);
+  letter-spacing: var(--typography-microcopy-2xs-strong-letter-spacing);
+}
+
+.typography-microcopy-xs-strong {
+  font-family: var(--typography-microcopy-xs-strong-font-family);
+  font-size: var(--typography-microcopy-xs-strong-font-size);
+  font-weight: var(--typography-microcopy-xs-strong-font-weight);
+  line-height: var(--typography-microcopy-xs-strong-line-height);
+  letter-spacing: var(--typography-microcopy-xs-strong-letter-spacing);
+}
+
+.typography-microcopy-sm-strong {
+  font-family: var(--typography-microcopy-sm-strong-font-family);
+  font-size: var(--typography-microcopy-sm-strong-font-size);
+  font-weight: var(--typography-microcopy-sm-strong-font-weight);
+  line-height: var(--typography-microcopy-sm-strong-line-height);
+  letter-spacing: var(--typography-microcopy-sm-strong-letter-spacing);
+}
+
+.typography-microcopy-md-strong {
+  font-family: var(--typography-microcopy-md-strong-font-family);
+  font-size: var(--typography-microcopy-md-strong-font-size);
+  font-weight: var(--typography-microcopy-md-strong-font-weight);
+  line-height: var(--typography-microcopy-md-strong-line-height);
+  letter-spacing: var(--typography-microcopy-md-strong-letter-spacing);
+}
+
+.typography-microcopy-lg-strong {
+  font-family: var(--typography-microcopy-lg-strong-font-family);
+  font-size: var(--typography-microcopy-lg-strong-font-size);
+  font-weight: var(--typography-microcopy-lg-strong-font-weight);
+  line-height: var(--typography-microcopy-lg-strong-line-height);
+  letter-spacing: var(--typography-microcopy-lg-strong-letter-spacing);
+}
+
+.typography-microcopy-code-sm {
+  font-family: var(--typography-microcopy-code-sm-font-family);
+  font-size: var(--typography-microcopy-code-sm-font-size);
+  font-weight: var(--typography-microcopy-code-sm-font-weight);
+  line-height: var(--typography-microcopy-code-sm-line-height);
+  letter-spacing: var(--typography-microcopy-code-sm-letter-spacing);
+}
+
+.typography-microcopy-code-md {
+  font-family: var(--typography-microcopy-code-md-font-family);
+  font-size: var(--typography-microcopy-code-md-font-size);
+  font-weight: var(--typography-microcopy-code-md-font-weight);
+  line-height: var(--typography-microcopy-code-md-line-height);
+  letter-spacing: var(--typography-microcopy-code-md-letter-spacing);
+}
+
+.typography-microcopy-code-lg {
+  font-family: var(--typography-microcopy-code-lg-font-family);
+  font-size: var(--typography-microcopy-code-lg-font-size);
+  font-weight: var(--typography-microcopy-code-lg-font-weight);
+  line-height: var(--typography-microcopy-code-lg-line-height);
+  letter-spacing: var(--typography-microcopy-code-lg-letter-spacing);
+}
+
 .typography-title-strong {
   font-family: var(--typography-title-strong-font-family);
   font-size: var(--typography-title-strong-font-size);
   font-weight: var(--typography-title-strong-font-weight);
   line-height: var(--typography-title-strong-line-height);
   letter-spacing: var(--typography-title-strong-letter-spacing);
+}
+
+.typography-title-sm-strong {
+  font-family: var(--typography-title-sm-strong-font-family);
+  font-size: var(--typography-title-sm-strong-font-size);
+  font-weight: var(--typography-title-sm-strong-font-weight);
+  line-height: var(--typography-title-sm-strong-line-height);
+  letter-spacing: var(--typography-title-sm-strong-letter-spacing);
 }
 
 .typography-meta {

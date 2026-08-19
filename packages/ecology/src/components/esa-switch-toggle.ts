@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-switch-toggle — GOLDEN INTERACTIVE PATTERN (Lit Web Component).
@@ -14,7 +15,9 @@ import { LitElement, html, css } from 'lit';
  *   - toggle() / onKeydown()           → same logic, same Space/Enter handling
  *
  * Decorator-free on purpose: avoids per-consumer tsconfig decorator flags.
- * Tokens reach inside shadow DOM because CSS custom properties inherit through it.
+ * Tokens reach inside shadow DOM because CSS custom properties inherit through it —
+ * except class definitions, which is why the typography composites are adopted into
+ * `static styles` and the label names a role instead of listing size and leading.
  */
 export class EsaSwitchToggle extends LitElement {
   static formAssociated = true;
@@ -78,7 +81,7 @@ export class EsaSwitchToggle extends LitElement {
 
   render() {
     const labelEl = this.label
-      ? html`<span class="label" part="label">${this.label}</span>`
+      ? html`<span class="label typography-body-md" part="label">${this.label}</span>`
       : null;
     return html`
       <button
@@ -97,14 +100,18 @@ export class EsaSwitchToggle extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
       --_track-w: 40px;
       --_track-h: 22px;
       --_thumb: 18px;
-      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-strong, #d4d4d4));
+      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-default-strong, #d4d4d4));
       --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-background-brand, #43608a));
-      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-background-raised, #fff));
+      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-background-elevation-raised, #fff));
       display: inline-block;
     }
     :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
@@ -120,7 +127,7 @@ export class EsaSwitchToggle extends LitElement {
       border: 0;
       background: none;
       font: inherit;
-      color: var(--switch-toggle-label-color, var(--color-content-primary, #171717));
+      color: var(--switch-toggle-label-color, var(--color-content-default, #171717));
       cursor: pointer;
     }
     .root:disabled { cursor: not-allowed; }
@@ -155,11 +162,12 @@ export class EsaSwitchToggle extends LitElement {
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
-    .label {
-      font-size: var(--font-size-200, 0.9375rem);
-      line-height: var(--line-height-normal, 1.6);
-    }
-  `;
+    /* Type comes from .typography-body-md on the element, leading included — the
+       role leads at normal, which is what a one-word label beside a 22px track
+       wants. This carried a line-height override back when body-md was relaxed
+       (1.8) and the row outgrew the track; the role moved, so the override went. */
+  `,
+  ];
 }
 
 if (!customElements.get('esa-switch-toggle')) {

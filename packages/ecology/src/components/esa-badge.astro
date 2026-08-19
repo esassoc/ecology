@@ -10,7 +10,28 @@ interface Props {
   dot?: boolean;
 }
 const { value, variant = 'primary', size = 'md', dot = false } = Astro.props;
-const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 'esa-badge--dot']
+
+// Badge text is UI text at emphasis — the -strong label composite, one rung per size.
+// The import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+// A badge is microcopy: nowrap text in a padding-sized box. `-strong` because small
+// knocked-out text on a saturated fill needs the stroke — legibility, not emphasis.
+const LABEL_TYPE = {
+  xs: 'microcopy-2xs-strong',
+  sm: 'microcopy-xs-strong',
+  md: 'microcopy-sm-strong',
+  lg: 'microcopy-md-strong',
+} as const;
+
+const cls = [
+  'esa-badge',
+  `esa-badge--${variant}`,
+  `esa-badge--${size}`,
+  `typography-${LABEL_TYPE[size]}`,
+  dot && 'esa-badge--dot',
+]
   .filter(Boolean)
   .join(' ');
 ---
@@ -21,38 +42,46 @@ const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 
 <style>
   .esa-badge {
     --_badge-bg: var(--badge-bg, var(--color-background-brand, #43608a));
-    --_badge-text: var(--badge-text-color, var(--color-content-inverse, #fff));
-    --_badge-height: var(--badge-height-md, 28px);
-    --_badge-font-size: var(--font-size-150, 0.875rem);
+    --_badge-text: var(--badge-text-color, var(--color-content-default-knockout, #fff));
+    --_badge-padding-y: var(--spacing-150, 0.375rem);
     --_badge-padding-x: var(--spacing-200, 0.5rem);
-    --_badge-min-width: var(--badge-height-md, 28px);
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: var(--_badge-height);
-    min-width: var(--_badge-min-width);
+    /* Sized by padding + text, not by a height token — --chip-height-* and its
+       --badge-height-* hook were deleted 2026-08-15 (a px box cannot grow with rem
+       text). --_badge-padding-y sits ONE RUNG BELOW --_badge-padding-x, which is what
+       makes this read as an inline mark. Do NOT copy esa-button's rule here: a button
+       sets --_btn-pad-y EQUAL to --_btn-padding-x, and it is a 40px control that can
+       afford it; applying that to a chip renders it button-tall (measured: md went to
+       38px). Wider-than-tall padding is the shape.
+       aspect-ratio squares the count case the way .esa-button--icon-only does;
+       min-width: fit-content is what keeps a long label from being squeezed by it —
+       min-width:auto resolves to 0 on a box that is not a flex ITEM, so the ratio
+       would otherwise crop a long label. */
+    aspect-ratio: 1;
+    min-width: fit-content;
+    padding-block: var(--_badge-padding-y);
     padding-inline: var(--_badge-padding-x);
     border-radius: var(--badge-radius, var(--radius-control, 4px));
     background: var(--_badge-bg);
     color: var(--_badge-text);
-    font-size: var(--_badge-font-size);
-    font-weight: 600;
-    line-height: var(--line-height-none, 1);
     white-space: nowrap;
     box-sizing: border-box;
   }
 
-  /* base .esa-badge = md. xs is one step below sm; sm/lg keep the old small/large values. */
-  .esa-badge--xs { --_badge-height: var(--badge-height-xs, 18px); --_badge-font-size: var(--font-size-050, 0.625rem); --_badge-padding-x: var(--spacing-100, 0.25rem);  --_badge-min-width: var(--badge-height-xs, 18px); }
-  .esa-badge--sm { --_badge-height: var(--badge-height-sm, 22px); --_badge-font-size: var(--font-size-100, 0.75rem); --_badge-padding-x: var(--spacing-150, 0.375rem); --_badge-min-width: var(--badge-height-sm, 22px); }
-  .esa-badge--lg { --_badge-height: var(--badge-height-lg, 34px); --_badge-font-size: var(--font-size-200, 0.9375rem); --_badge-padding-x: var(--spacing-300, 0.75rem);  --_badge-min-width: var(--badge-height-lg, 34px); }
+  /* base .esa-badge = md. xs is one step below sm; sm/lg keep the old small/large values.
+     Size no longer carries a font-size — that rung comes from LABEL_TYPE above. */
+  .esa-badge--xs { --_badge-padding-y: var(--spacing-100, 0.25rem);  --_badge-padding-x: var(--spacing-100, 0.25rem); }
+  .esa-badge--sm { --_badge-padding-y: var(--spacing-100, 0.25rem);  --_badge-padding-x: var(--spacing-150, 0.375rem); }
+  .esa-badge--lg { --_badge-padding-y: var(--spacing-250, 0.625rem); --_badge-padding-x: var(--spacing-300, 0.75rem); }
 
   .esa-badge--secondary { --_badge-bg: var(--color-background-brand-secondary, #65ba74); --_badge-text: var(--color-content-on-brand-secondary, #203c25); }
-  .esa-badge--success   { --_badge-bg: var(--color-background-success, #bdee63); --_badge-text: var(--color-content-on-success, #37401c); }
-  .esa-badge--warning   { --_badge-bg: var(--color-background-warning, #ffc53d); --_badge-text: var(--color-content-on-warning, #4f3422); }
-  .esa-badge--danger    { --_badge-bg: var(--color-background-danger, #e5484d); }
-  .esa-badge--info      { --_badge-bg: var(--color-background-info, #0090ff); }
+  .esa-badge--success   { --_badge-bg: var(--color-background-utility-success, #bdee63); --_badge-text: var(--color-content-on-utility-success, #37401c); }
+  .esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning, #ffc53d); --_badge-text: var(--color-content-on-utility-warning, #4f3422); }
+  .esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger, #e5484d); }
+  .esa-badge--info      { --_badge-bg: var(--color-background-utility-info, #0090ff); }
 
   .esa-badge--dot {
     width: 8px;
@@ -64,8 +93,8 @@ const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 
 
   .esa-badge--dot.esa-badge--primary   { --_badge-bg: var(--color-background-brand-hover,   #3e9b4f); }
   .esa-badge--dot.esa-badge--secondary { --_badge-bg: var(--color-background-brand-secondary-hover,  #46a758); }
-  .esa-badge--dot.esa-badge--success   { --_badge-bg: var(--color-background-success-hover,    #b0e64c); }
-  .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-background-warning-hover,    #ffba18); }
-  .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-background-danger-hover,     #dc3e42); }
-  .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-background-info-hover,       #0588f0); }
+  .esa-badge--dot.esa-badge--success   { --_badge-bg: var(--color-background-utility-success-hover,    #b0e64c); }
+  .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning-hover,    #ffba18); }
+  .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger-hover,     #dc3e42); }
+  .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-background-utility-info-hover,       #0588f0); }
 </style>

@@ -180,8 +180,8 @@ export class EsaFileUpload extends LitElement {
             ${this._files.map(
               (file, i) => html`<li class="file">
                 ${this.fileIcon()}
-                <span class="file__name typography-body-sm">${file.name}</span>
-                <span class="file__size typography-body-sm">${this.formatFileSize(file.size)}</span>
+                <span class="file__name typography-microcopy-sm-subtle">${file.name}</span>
+                <span class="file__size typography-microcopy-sm-subtle">${this.formatFileSize(file.size)}</span>
                 <button
                   type="button"
                   class="file__remove"
@@ -252,10 +252,10 @@ export class EsaFileUpload extends LitElement {
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
       border: 2px dashed var(--form-border-color, #d4d4d4);
       border-radius: var(--form-radius-md, 8px);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       cursor: pointer;
       text-align: center;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       transition:
         border-color var(--transition-fast, 150ms ease),
         background var(--transition-fast, 150ms ease),
@@ -263,7 +263,6 @@ export class EsaFileUpload extends LitElement {
     }
     .zone:hover {
       border-color: var(--form-border-color-focus, #43608a);
-      background: var(--color-background-sunken, #efefef);
     }
     .zone:focus-visible {
       outline: none;
@@ -273,35 +272,40 @@ export class EsaFileUpload extends LitElement {
 
     :host([dragging]) .zone {
       border-color: var(--color-background-brand, #43608a);
-      background: var(--color-overlay-active, rgba(0, 88, 98, 0.08));
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
       color: var(--color-content-brand, #2a7e3b);
     }
-    :host([disabled]) .zone {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    :host([disabled]) .zone,
     :host([disabled]) .zone:hover {
-      border-color: var(--form-border-color, #d4d4d4);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
+      cursor: not-allowed;
     }
 
     .zone__label {
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
     }
     .zone__hint {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
     .browse {
       color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .zone__limit {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
 
     .error {
       margin-top: var(--spacing-100, 4px);
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
 
     .files {
@@ -317,19 +321,19 @@ export class EsaFileUpload extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      background: var(--color-background-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #efefef);
       border-radius: var(--form-radius-sm, 6px);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
     .file__name {
       flex: 1;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .file__size {
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       white-space: nowrap;
     }
     .file__remove {
@@ -341,15 +345,15 @@ export class EsaFileUpload extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       border-radius: 50%;
       cursor: pointer;
       flex-shrink: 0;
       transition: background var(--transition-fast, 150ms ease);
     }
     .file__remove:hover {
-      background: var(--color-border, #e5e5e5);
-      color: var(--color-content-danger, #ce2c31);
+      background: var(--color-border-default, #e5e5e5);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
     .file__remove:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

@@ -14,6 +14,17 @@ interface Props {
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 const { items, size = 'md' } = Astro.props;
+
+// A crumb is navigation text: the link steps are `body-*`, the current page is the
+// same rung at label weight (medium). The import is the Astro half of the composite
+// mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+const ITEM_TYPE = { xs: 'body-xs', sm: 'body-sm', md: 'body-md', lg: 'body-lg' } as const;
+const CURRENT_TYPE = { xs: 'label-xs', sm: 'label-sm', md: 'label-md', lg: 'label-lg' } as const;
+
+// The size modifier no longer carries a font-size — that rung comes from the maps
+// above — but it stays on the element as a spoke-facing hook.
 const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
 ---
 <nav class={cls} aria-label="Breadcrumb">
@@ -23,12 +34,12 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
       return (
         <li class="esa-breadcrumbs__item" aria-current={last ? 'page' : undefined}>
           {!last && item.href ? (
-            <a href={item.href} class="esa-breadcrumbs__link">
+            <a href={item.href} class={`esa-breadcrumbs__link typography-${ITEM_TYPE[size]}`}>
               {item.icon && <span class="esa-breadcrumbs__icon" set:html={item.icon} />}
               {item.label}
             </a>
           ) : (
-            <span class="esa-breadcrumbs__current">
+            <span class={`esa-breadcrumbs__current typography-${CURRENT_TYPE[size]}`}>
               {item.icon && <span class="esa-breadcrumbs__icon" set:html={item.icon} />}
               {item.label}
             </span>
@@ -51,21 +62,15 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
 
 <style>
   .esa-breadcrumbs {
-    --_crumb-font-size: var(--font-size-200, 0.875rem);
     --_crumb-link-color: var(--breadcrumbs-link-color, #43608a);
     --_crumb-link-hover: var(--breadcrumbs-link-hover, #39506f);
-    --_crumb-current-color: var(--breadcrumbs-text-color, var(--color-content-primary, #171717));
+    --_crumb-current-color: var(--breadcrumbs-text-color, var(--color-content-default, #171717));
     --_crumb-separator-color: var(--breadcrumbs-separator-color, #737373);
     --_crumb-gap: var(--spacing-200, 8px);
 
     display: block;
     background: var(--breadcrumbs-bg, transparent);
   }
-
-  /* base .esa-breadcrumbs = md. xs is one step below sm; sm/lg keep the old small/large values. */
-  .esa-breadcrumbs--xs { --_crumb-font-size: var(--font-size-100, 0.6875rem); }
-  .esa-breadcrumbs--sm { --_crumb-font-size: var(--font-size-150, 0.75rem); }
-  .esa-breadcrumbs--lg { --_crumb-font-size: var(--font-size-300, 1rem); }
 
   .esa-breadcrumbs__list {
     display: flex;
@@ -75,13 +80,16 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
     list-style: none;
     margin: 0;
     padding: 0;
-    font-size: var(--_crumb-font-size);
   }
 
   .esa-breadcrumbs__item {
     display: flex;
     align-items: center;
     gap: var(--_crumb-gap);
+  }
+
+  .esa-breadcrumbs__link,
+  .esa-breadcrumbs__current {
   }
 
   .esa-breadcrumbs__link {
@@ -101,7 +109,6 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
     align-items: center;
     gap: var(--spacing-100, 4px);
     color: var(--_crumb-current-color);
-    font-weight: var(--font-weight-medium, 500);
   }
 
   .esa-breadcrumbs__icon {

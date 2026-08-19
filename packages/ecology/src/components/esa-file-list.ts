@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 export interface EsaFile {
   /** File name shown in the row. */
@@ -59,7 +60,7 @@ export class EsaFileList extends LitElement {
     return html`
       <ul class="list">
         ${this.files.map(
-          (file, i) => html`<li class="file">
+          (file, i) => html`<li class="file typography-microcopy-sm-subtle">
             <span class="file__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" />
@@ -100,7 +101,9 @@ export class EsaFileList extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host {
       display: block;
     }
@@ -122,15 +125,13 @@ export class EsaFileList extends LitElement {
          room without restyling the shadow DOM. Defaults reproduce the original tight row. */
       padding: var(--file-list-row-padding-y, 2px)
         var(--file-list-row-padding-x, var(--spacing-300, 12px));
-      border: var(--form-border-width, 1px) solid var(--color-border, #e5e5e5);
+      border: var(--form-border-width, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-control, 4px);
-      background: var(--color-background-raised, #fff);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--font-size-150, 12px);
+      background: var(--color-background-elevation-raised, #fff);
     }
     .file__icon {
       display: inline-flex;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
     }
     .file__icon svg {
       width: 16px;
@@ -141,7 +142,7 @@ export class EsaFileList extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       text-decoration: none;
     }
     a.file__name {
@@ -164,7 +165,7 @@ export class EsaFileList extends LitElement {
       padding: 0;
       border: 0;
       background: transparent;
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       border-radius: var(--radius-control, 4px);
       cursor: pointer;
       flex-shrink: 0;
@@ -177,17 +178,18 @@ export class EsaFileList extends LitElement {
       height: 15px;
     }
     .file__btn:hover {
-      background: var(--color-background-sunken, #efefef);
-      color: var(--color-content-primary, #171717);
+      background: var(--color-background-elevation-sunken, #efefef);
+      color: var(--color-content-default, #171717);
     }
     .file__btn--remove:hover {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
     }
     .file__btn:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-file-list')) {

@@ -14,6 +14,11 @@ interface Props {
 }
 const { active = false, message, transparent = false } = Astro.props;
 
+// TYPE: the status message is short prose under the spinner — `body-sm`. The import is
+// the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
 const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transparent']
   .filter(Boolean)
   .join(' ');
@@ -23,7 +28,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     <div class="esa-loading-overlay__backdrop">
       <div class="esa-loading-overlay__content">
         <span class="esa-loading-overlay__spinner" role="status" aria-label="Loading"></span>
-        {message && <p class="esa-loading-overlay__message">{message}</p>}
+        {message && <p class="esa-loading-overlay__message typography-body-sm">{message}</p>}
       </div>
     </div>
   )}
@@ -40,7 +45,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--loading-overlay-bg, var(--color-background-raised, #fff));
+    background: var(--loading-overlay-bg, var(--color-background-elevation-raised, #fff));
     z-index: 10;
   }
 
@@ -60,7 +65,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
   .esa-loading-overlay__spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid var(--loading-spinner-track-color, var(--color-border-subtle, #efefef));
+    border: 4px solid var(--loading-spinner-track-color, var(--color-border-default-subtle, #efefef));
     border-top-color: var(--loading-spinner-color, var(--color-background-brand, #43608a));
     border-radius: var(--radius-pill, 9999px);
     animation: esa-overlay-spinner-rotate var(--animation-spin, 750ms linear infinite);
@@ -73,8 +78,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
 
   .esa-loading-overlay__message {
     margin: 0;
-    font-size: var(--font-size-150, 0.875rem);
-    color: var(--loading-overlay-message-color, var(--color-content-secondary, #525252));
+    color: var(--loading-overlay-message-color, var(--color-content-default-secondary, #525252));
     text-align: center;
   }
 </style>

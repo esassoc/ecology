@@ -1,6 +1,29 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 // Options render as esa-checkbox rows (the ui-filter pattern) — import to register it.
 import './esa-checkbox';
+
+/**
+ * The three composites this control renders at each step of the size ramp.
+ *
+ * The trigger is UI text (label-*, medium) and gains weight — not size — once a
+ * filter is applied, so selection reads as emphasis without reflowing the bar.
+ * What the user types into the search box and the option labels they read back are
+ * prose (body-*, regular): they are content, not chrome, and the panel matching the
+ * trigger's rung is what keeps the two halves the same control.
+ */
+const TRIGGER_TYPE = { xs: 'microcopy-xs', sm: 'microcopy-sm', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
+const TRIGGER_ACTIVE_TYPE = {
+  xs: 'microcopy-xs-strong',
+  sm: 'microcopy-sm-strong',
+  md: 'microcopy-md-strong',
+  lg: 'microcopy-lg-strong',
+} as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
+const OPTION_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 
 /**
  * esa-filter-dropdown — INTERACTIVE filter control (Lit Web Component).
@@ -212,10 +235,13 @@ export class EsaFilterDropdown extends LitElement {
 
   render() {
     const options = this.filteredOptions;
+    const triggerRole = this.hasSelection
+      ? TRIGGER_ACTIVE_TYPE[this.size]
+      : TRIGGER_TYPE[this.size];
     return html`
       <div class="esa-filter-dropdown">
         <button
-          class="esa-filter-dropdown__trigger ${this.hasSelection ? 'esa-filter-dropdown__trigger--active' : ''}"
+          class="esa-filter-dropdown__trigger typography-${triggerRole} ${this.hasSelection ? 'esa-filter-dropdown__trigger--active' : ''}"
           type="button"
           aria-expanded=${this._open}
           aria-haspopup="listbox"
@@ -223,7 +249,9 @@ export class EsaFilterDropdown extends LitElement {
         >
           <span class="esa-filter-dropdown__label">${this.buttonLabel}</span>
           ${this.multiple && this._selected.length > 0
-            ? html`<span class="esa-filter-dropdown__count">${this._selected.length}</span>`
+            ? html`<span class="esa-filter-dropdown__count typography-microcopy-xs-strong"
+                >${this._selected.length}</span
+              >`
             : null}
           <span
             class="esa-filter-dropdown__arrow ${this._open ? 'esa-filter-dropdown__arrow--open' : ''}"
@@ -234,7 +262,7 @@ export class EsaFilterDropdown extends LitElement {
           ? html`<div class="esa-filter-dropdown__panel" role="listbox">
               <div class="esa-filter-dropdown__search">
                 <input
-                  class="esa-filter-dropdown__search-input"
+                  class="esa-filter-dropdown__search-input typography-${FIELD_TYPE[this.size]}"
                   type="text"
                   placeholder=${this.placeholder || 'Search...'}
                   .value=${this._searchText}
@@ -248,7 +276,7 @@ export class EsaFilterDropdown extends LitElement {
                   ? html`<div class="esa-filter-dropdown__empty">No options match.</div>`
                   : options.map(
                       (option, i) => html`<div
-                        class="esa-filter-dropdown__option
+                        class="esa-filter-dropdown__option typography-${OPTION_TYPE[this.size]}
                           ${option.disabled ? 'esa-filter-dropdown__option--disabled' : ''}
                           ${this._highlighted === i ? 'esa-filter-dropdown__option--highlighted' : ''}"
                         role="option"
@@ -277,7 +305,7 @@ export class EsaFilterDropdown extends LitElement {
               <div class="esa-filter-dropdown__footer">
                 <button
                   type="button"
-                  class="esa-filter-dropdown__clear-link"
+                  class="esa-filter-dropdown__clear-link typography-microcopy-sm"
                   ?disabled=${!this.hasSelection}
                   @click=${this.clear}
                 >Clear all</button>
@@ -288,39 +316,42 @@ export class EsaFilterDropdown extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
       display: inline-block;
 
       --_filter-height: 40px;
       --_filter-padding-x: var(--spacing-400, 1rem);
-      --_filter-font-size: var(--font-size-200, 0.9375rem);
       --_filter-radius: var(--radius-surface, 0.5rem);
-      --_filter-bg: var(--color-background-raised, #fff);
+      --_filter-bg: var(--color-background-elevation-raised, #fff);
       --_filter-bg-active: var(--color-background-brand-subtle, #f3f8fb);
-      --_filter-text: var(--color-content-primary, #171717);
+      --_filter-text: var(--color-content-default, #171717);
       --_filter-text-active: var(--color-background-brand, #43608a);
-      --_filter-border: var(--color-border, #e5e5e5);
+      --_filter-border: var(--color-border-default, #e5e5e5);
       --_filter-border-active: var(--color-background-brand, #43608a);
     }
 
-    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
+    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values.
+       The size steps carry geometry only — the text comes from a composite class
+       named in render() (TRIGGER_TYPE / TRIGGER_ACTIVE_TYPE / OPTION_TYPE), so the
+       trigger and the panel it opens stay on one rung by construction. */
     :host([size='xs']) {
       --_filter-height: 28px;
       --_filter-padding-x: var(--spacing-200, 0.5rem);
-      --_filter-font-size: var(--font-size-100, 0.75rem);
       --_filter-radius: var(--radius-control, 0.25rem);
     }
     :host([size='sm']) {
       --_filter-height: 32px;
       --_filter-padding-x: var(--spacing-300, 0.75rem);
-      --_filter-font-size: var(--font-size-150, 0.875rem);
       --_filter-radius: var(--radius-control, 0.25rem);
     }
     :host([size='lg']) {
       --_filter-height: 48px;
       --_filter-padding-x: var(--spacing-500, 1.5rem);
-      --_filter-font-size: var(--font-size-300, 1.125rem);
       --_filter-radius: var(--radius-card, 0.5rem);
     }
 
@@ -339,10 +370,6 @@ export class EsaFilterDropdown extends LitElement {
       border-radius: var(--_filter-radius);
       background: var(--_filter-bg);
       color: var(--_filter-text);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--_filter-font-size);
-      font-weight: var(--font-weight-medium, 500);
-      line-height: var(--line-height-none, 1);
       cursor: pointer;
       white-space: nowrap;
       transition:
@@ -359,11 +386,12 @@ export class EsaFilterDropdown extends LitElement {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: var(--focus-ring-offset, 2px);
     }
+    /* Weight comes from TRIGGER_ACTIVE_TYPE (label-*-strong) — same rung as the
+       resting trigger, so applying a filter does not resize the bar. */
     .esa-filter-dropdown__trigger--active {
       background: var(--_filter-bg-active);
       border-color: var(--_filter-border-active);
       color: var(--_filter-text-active);
-      font-weight: var(--font-weight-semibold, 550);
     }
     /* Open (panel showing) but nothing selected yet → just lift the border. */
     .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
@@ -385,10 +413,7 @@ export class EsaFilterDropdown extends LitElement {
       padding-inline: 0.3rem;
       border-radius: var(--radius-pill, 9999px);
       background: var(--color-background-brand, #43608a);
-      color: var(--color-content-inverse, #fff);
-      font-size: var(--font-size-100, 0.75rem);
-      font-weight: var(--font-weight-semibold, 550);
-      line-height: var(--line-height-none, 1);
+      color: var(--color-content-default-knockout, #fff);
     }
 
     .esa-filter-dropdown__arrow {
@@ -419,9 +444,9 @@ export class EsaFilterDropdown extends LitElement {
       z-index: var(--z-dropdown, 50);
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
-      background: var(--filter-dropdown-bg, var(--color-background-raised, #fff));
+      background: var(--filter-dropdown-bg, var(--color-background-elevation-raised, #fff));
       border: var(--border-width-default, 1px) solid
-        var(--filter-dropdown-border-color, var(--color-border, #e5e5e5));
+        var(--filter-dropdown-border-color, var(--color-border-default, #e5e5e5));
       border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
       box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
       overflow: hidden;
@@ -431,18 +456,17 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__search {
       padding: var(--spacing-200, 0.5rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
     .esa-filter-dropdown__search-input {
+      /* A real <input> — it cannot wrap, so leading only sets the box height. */
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
       border-radius: var(--radius-control, 0.25rem);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--_filter-font-size);
-      background: var(--color-background-raised, #fff);
-      color: var(--color-content-primary, #171717);
+      background: var(--color-background-elevation-raised, #fff);
+      color: var(--color-content-default, #171717);
       outline: none;
     }
     .esa-filter-dropdown__search-input:focus {
@@ -461,16 +485,14 @@ export class EsaFilterDropdown extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 0.5rem);
       padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
-      font-size: var(--_filter-font-size);
-      font-family: var(--font-sans, inherit);
-      color: var(--color-content-primary, #171717);
+      color: var(--color-content-default, #171717);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-background-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f4f4f5);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
@@ -497,7 +519,7 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
-      color: var(--color-content-muted, #737373);
+      color: var(--color-content-default-muted, #737373);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }
@@ -506,27 +528,25 @@ export class EsaFilterDropdown extends LitElement {
       display: flex;
       justify-content: flex-end;
       padding: var(--spacing-200, 0.5rem);
-      border-top: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
     }
     .esa-filter-dropdown__clear-link {
       background: none;
       border: none;
       color: var(--color-content-brand, #2a7e3b);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--font-size-150, 0.875rem);
-      font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--radius-control, 0.25rem);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
-      background: var(--color-background-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f4f4f5);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-content-muted, #a3a3a3);
+      color: var(--color-content-default-muted, #a3a3a3);
       cursor: not-allowed;
     }
-  `;
+  `,
+  ];
 }
 
 const chevronIcon = html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>`;

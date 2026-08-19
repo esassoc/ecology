@@ -33,10 +33,12 @@ import EsaIcon from './esa-icon.astro';
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
 
-const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// Button text is microcopy: one line (the label is white-space: nowrap) in a box whose
+// height comes from padding, so it carries no leading. Base weight — the pressable step.
+const LABEL_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
 
 type EsaSize = 'xs' | 'sm' | 'md' | 'lg';
-type EsaButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost';
+type EsaButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'info' | 'ai' | 'ghost' | 'chrome';
 type EsaButtonAppearance = 'fill' | 'outline' | 'dashed' | 'soft'; // hub-edit-approved: Andy (see header note)
 
 interface Props {
@@ -54,9 +56,29 @@ interface Props {
    * ("chevron-down"). Independent of `icon`, so a button can carry both.
    */
   iconRight?: string;
-  /** Icon-only mode (no text). */
+  /** Icon-only mode (no text). Requires `label` (or an explicit `aria-label`). */
   iconOnly?: boolean;
+  /**
+   * Accessible name. Required when `iconOnly` — there is no text for a screen
+   * reader to read, so without it the control announces as an unlabelled button.
+   * Also sets `title`, giving the sighted-hover tooltip icon-only chrome needs.
+   * Ignored when a label is rendered (the slot names it already).
+   */
+  label?: string;
+  /**
+   * Current item in a navigation set → `aria-current`. NOT the same as `active`,
+   * which is a toggle's pressed state (`aria-pressed`). A nav link marked
+   * `aria-pressed` announces as a depressed toggle button, which is worse than
+   * silence — so the two stay separate props. See docs/button-consolidation-plan.md §2a.
+   */
+  current?: boolean;
   type?: 'button' | 'submit' | 'reset';
+  /**
+   * Override the rendered element. `href` already picks <a> vs <button>; this is
+   * for the one case that inference cannot reach — `summary`, the disclosure
+   * trigger inside <details> (see esa-nav-dropdown).
+   */
+  tag?: 'a' | 'button' | 'summary';
   /** When set, the button renders as an <a> styled identically — a link that looks like a button. */
   href?: string;
   /** Link target (href only), e.g. "_blank". */
@@ -96,7 +118,10 @@ const {
   icon = '',
   iconRight = '',
   iconOnly = false,
+  label = '',
+  current = false,
   type = 'button',
+  tag,
   href,
   target,
   rel,
@@ -117,12 +142,28 @@ if (deprecatedColor && !variantWasSet) {
 }
 const resolvedVariant = !variantWasSet && deprecatedColor ? deprecatedColor : variant;
 
+// An icon-only control has no text to announce. esa-icon-button enforced this in
+// the type system (`label` was required); folding it into a boolean mode means the
+// type can no longer carry the requirement, so it is enforced here instead. This
+// is a genuine downgrade from a compile error to a build warning — hence the loud
+// wording. `aria-label` passed through ...rest counts, since that is what the
+// pre-consolidation docs told people to write.
+const ariaLabelled = label !== '' || typeof rest['aria-label'] === 'string' || typeof rest['aria-labelledby'] === 'string';
+if (iconOnly && !ariaLabelled) {
+  console.warn(
+    `⚠️  esa-button: \`iconOnly\` with no accessible name — add \`label="…"\`. ` +
+      `An icon-only button announces as "button" with no name to a screen reader. ` +
+      `(icon="${icon || '?'}")`,
+  );
+}
+
 const cls = [
   'esa-button',
   `esa-button--variant-${resolvedVariant}`,
   `esa-button--appearance-${appearance}`,
   `esa-button--${size}`,
   active && 'esa-button--active',
+  current && 'esa-button--current',
   disabled && 'esa-button--disabled',
   loading && 'esa-button--loading',
   iconOnly && 'esa-button--icon-only',
@@ -138,25 +179,67 @@ const cls = [
 // href ⇒ render an <a> styled identically (a link that looks like a button).
 // Anchors can't be natively disabled, so a disabled/loading link drops its href
 // and is marked aria-disabled (the --disabled wrapper kills pointer events).
-const isLink = href != null && href !== '';
+const isSummary = tag === 'summary';
+const isLink = tag === 'a' || (tag == null && href != null && href !== '');
 const isDisabled = disabled || loading;
+
+// `label` is the accessible name for icon-only mode, and the hover tooltip. When a
+// text label renders, the slot already names the control — a second name would
+// override what the user can see.
+const nameAttrs = {
+  'aria-label': iconOnly && label ? label : undefined,
+  title: iconOnly && label ? label : undefined,
+};
+
+// `aria-current` (nav position) and `aria-pressed` (toggle state) are different
+// claims and must not collapse into one prop — see Props.current.
+const stateAttrs = {
+  'aria-busy': loading ? ('true' as const) : undefined,
+  'aria-pressed': active ? ('true' as const) : undefined,
+  'aria-current': current ? ('true' as const) : undefined,
+};
+
+// role="button" is right for "a link styled as a page action", which is what every
+// pre-chrome variant is. It is WRONG for chrome, whose whole purpose is nav links:
+// it would announce a real link as a button and drop link semantics. Chrome links
+// stay links.
 const linkAttrs = {
   href: isDisabled ? undefined : href,
   target: target || undefined,
   rel: rel || (target === '_blank' ? 'noreferrer' : undefined),
-  role: 'button' as const,
+  role: resolvedVariant === 'chrome' ? undefined : ('button' as const),
   tabindex: isDisabled ? -1 : undefined,
   'aria-disabled': isDisabled ? ('true' as const) : undefined,
-  'aria-busy': loading ? ('true' as const) : undefined,
-  'aria-pressed': active ? ('true' as const) : undefined,
+  ...stateAttrs,
+  ...nameAttrs,
 };
 const buttonAttrs = {
   type,
   disabled: isDisabled,
-  'aria-busy': loading ? ('true' as const) : undefined,
-  'aria-pressed': active ? ('true' as const) : undefined,
+  ...stateAttrs,
+  ...nameAttrs,
 };
+// <summary> is not focusable-as-a-button and takes no `type`/`disabled`; <details>
+// owns its open state. It carries the name/state attributes and nothing else.
+const summaryAttrs = { ...stateAttrs, ...nameAttrs };
 ---
+{/* <summary> MUST be the first child of <details> — a wrapper <span> between them
+    makes the disclosure inert. So the WRAPPER ROLE moves onto the <summary> itself
+    and the native stays an inner element. Doing it the other way (one element
+    carrying both class sets) silently breaks every rule in the stylesheet below,
+    since they are all `.esa-button--x .esa-button__native` descendant selectors and
+    a single element is not a descendant of itself. */}
+{isSummary ? (
+  <summary class={cls} {...summaryAttrs} {...rest}>
+    <span class={`esa-button__native typography-${LABEL_TYPE[size]}`}>
+      {icon && <EsaIcon name={icon} size={size} />}
+      {!iconOnly && (
+        <span class="esa-button__label"><slot /></span>
+      )}
+      {iconRight && !iconOnly && <EsaIcon name={iconRight} size={size} />}
+    </span>
+  </summary>
+) : (
 <span class={cls}>
   {isLink ? (
     <a class={`esa-button__native typography-${LABEL_TYPE[size]}`} {...linkAttrs} {...rest}>
@@ -182,6 +265,7 @@ const buttonAttrs = {
     </button>
   )}
 </span>
+)}
 
 <style>
   .esa-button {
@@ -195,7 +279,7 @@ const buttonAttrs = {
        --_on          = text color on a solid fill (step 12 for bright/mid fills) */
     --_accent: var(--color-background-brand, #46a758);
     --_accent-hover: var(--color-background-brand-hover, #3e9b4f);
-    --_on: var(--color-content-inverse, #ffffff);
+    --_on: var(--color-content-default-knockout, #ffffff);
     --_accent-text: var(--_accent);
     /* Tint overlays for outline/dashed appearances — track --_accent so they update per color variant. */
     --_btn-tint-hover: color-mix(in srgb, var(--_accent) 8%, transparent);
@@ -225,30 +309,30 @@ const buttonAttrs = {
   .esa-button--variant-secondary {
     --_accent: var(--color-background-brand-secondary);
     --_accent-hover: var(--color-background-brand-secondary-hover);
-    --_on: var(--color-content-on-brand-secondary, var(--color-content-primary));
+    --_on: var(--color-content-on-brand-secondary, var(--color-content-default));
     --_accent-text: var(--color-content-brand-secondary);
   }
   .esa-button--variant-danger {
-    --_accent: var(--color-background-danger);
-    --_accent-hover: var(--color-background-danger-hover);
-    --_accent-text: var(--color-content-danger);
+    --_accent: var(--color-background-utility-danger);
+    --_accent-hover: var(--color-background-utility-danger-hover);
+    --_accent-text: var(--color-content-utility-danger);
   }
   .esa-button--variant-success {
-    --_accent: var(--color-background-success);
-    --_accent-hover: var(--color-background-success-hover);
-    --_on: var(--color-content-on-success);
-    --_accent-text: var(--color-content-success);
+    --_accent: var(--color-background-utility-success);
+    --_accent-hover: var(--color-background-utility-success-hover);
+    --_on: var(--color-content-on-utility-success);
+    --_accent-text: var(--color-content-utility-success);
   }
   .esa-button--variant-warning {
-    --_accent: var(--color-background-warning);
-    --_accent-hover: var(--color-background-warning-hover);
-    --_on: var(--button-on-warning, var(--color-content-on-warning, #4f3422));
-    --_accent-text: var(--color-content-warning);
+    --_accent: var(--color-background-utility-warning);
+    --_accent-hover: var(--color-background-utility-warning-hover);
+    --_on: var(--button-on-warning, var(--color-content-on-utility-warning, #4f3422));
+    --_accent-text: var(--color-content-utility-warning);
   }
   .esa-button--variant-info {
-    --_accent: var(--color-background-info);
-    --_accent-hover: var(--color-background-info-hover);
-    --_accent-text: var(--color-content-info);
+    --_accent: var(--color-background-utility-info);
+    --_accent-hover: var(--color-background-utility-info-hover);
+    --_accent-text: var(--color-content-utility-info);
   }
   .esa-button--variant-ai {
     --_accent: var(--color-background-ai);
@@ -282,10 +366,10 @@ const buttonAttrs = {
      darker-gray border, red text; hover fills red. hub-edit-approved: Andy (header). */
   /* hub-edit-approved: Andy (see header) — soft bg is a light tint (mix of sunken + surface). */
   .esa-button--appearance-soft .esa-button__native {
-    background: color-mix(in srgb, var(--color-background-sunken, #efefef) 45%, var(--color-background-raised, #fff));
+    background: color-mix(in srgb, var(--color-background-elevation-sunken, #efefef) 45%, var(--color-background-elevation-raised, #fff));
     /* --_accent-text (step 11), not --_accent (step 9): colored text on a light surface. */
     color: var(--_accent-text);
-    border-color: var(--color-border-strong, #d4d4d4);
+    border-color: var(--color-border-default-strong, #d4d4d4);
   }
   .esa-button--appearance-soft .esa-button__native:hover:not(:disabled),
   .esa-button--appearance-soft.esa-button--active .esa-button__native {
@@ -297,13 +381,43 @@ const buttonAttrs = {
   /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
   .esa-button--variant-ghost .esa-button__native {
     background: transparent;
-    color: var(--color-content-primary, #171717);
+    color: var(--color-content-default, #171717);
     border-color: transparent;
   }
   .esa-button--variant-ghost.esa-button--appearance-outline .esa-button__native,
-  .esa-button--variant-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border, #e5e5e5); }
+  .esa-button--variant-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border-default, #e5e5e5); }
   .esa-button--variant-ghost .esa-button__native:hover:not(:disabled),
-  .esa-button--variant-ghost.esa-button--active .esa-button__native { background: var(--color-background-sunken, #efefef); }
+  .esa-button--variant-ghost.esa-button--active .esa-button__native { background: var(--color-background-elevation-sunken, #efefef); }
+
+  /* ---------- Chrome (takes its color FROM context instead of owning one) ------
+     Every variant above picks a color. That is exactly what makes them unusable on
+     app-bar chrome: `ghost` resolves its text to --color-content-default, which is
+     --color-gray-12 — the same token --color-background-default-knockout uses for a dark
+     bar. Gray-12 on gray-12 is a 1:1 contrast ratio, i.e. invisible.
+
+     Chrome inherits currentColor instead, so the containing esa-app-bar decides the
+     color and this works on a dark bar and a light one without knowing which it is
+     on. The hover scrim and the focus ring are derived from currentColor for the
+     same reason — a fixed --focus-ring-color has the identical invisible-on-dark
+     failure. Absorbs esa-icon-button (with iconOnly) and esa-icon-link (with a
+     label). See docs/button-consolidation-plan.md.
+
+     Placed after the appearance rules deliberately: those are equal specificity
+     (two classes), so source order is what lets chrome win — same mechanic ghost
+     above relies on. */
+  .esa-button--variant-chrome .esa-button__native {
+    background: transparent;
+    color: inherit;
+    border-color: transparent;
+  }
+  .esa-button--variant-chrome .esa-button__native:hover:not(:disabled),
+  .esa-button--variant-chrome.esa-button--active .esa-button__native,
+  .esa-button--variant-chrome.esa-button--current .esa-button__native {
+    background: var(--button-chrome-bg-hover, color-mix(in srgb, currentColor 14%, transparent));
+  }
+  .esa-button--variant-chrome .esa-button__native:focus-visible {
+    outline-color: currentColor;
+  }
 
   /* ---------- Native button ---------- */
   .esa-button__native {
@@ -318,18 +432,23 @@ const buttonAttrs = {
        case is gone rather than generalised. */
     padding-block: var(--_btn-pad-y);
     padding-inline: var(--_btn-padding-x);
-    line-height: var(--line-height-none, 1);
+    /* NO line-height HERE, and that is not the old deletion repeated. Leading comes
+       from .typography-label-* on this element, which declares it (typography.css) —
+       so the height is still `2 * padding-block + leading + border`, the term is just
+       owned by the composite rather than restated here. Restating it is what the
+       rule below forbids: Astro's [data-astro-cid-*] scoping outranks the composite's
+       single-class selector, so a local line-height would silently BEAT the composite
+       instead of agreeing with it. */
     border: var(--border-width-default, 1px) solid transparent;
     border-radius: var(--_btn-radius);
     /* Type comes from .typography-label-* on this element. Nothing font-related
        may be declared here: Astro scopes this rule with a [data-astro-cid-*]
        attribute, which outranks the composite's single-class selector, so a
        leftover declaration would silently beat the composite rather than
-       layering with it. line-height IS set above, and deliberately: it was deleted
-       here earlier on the grounds that "the button is a fixed-height centred flex
-       box, so leading never reached an edge." There is no fixed height any more,
-       so leading is exactly what reaches the edge — it is the term that decides
-       how tall the button is. */
+       layering with it. That includes line-height: there is no fixed height any
+       more, so leading is exactly what reaches the edge — it is the term that
+       decides how tall the button is, which is why it must come from the composite
+       and not from a declaration here that would outrank it. */
     text-decoration: none;
     cursor: pointer;
     transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
@@ -348,6 +467,26 @@ const buttonAttrs = {
      on both axes — which was a token fact until 2026-08-14 and is now a coincidence
      two separate declarations have to keep. Diverge the axes and revisit this line. */
   .esa-button--icon-only .esa-button__native { padding-inline: var(--_btn-pad-y); aspect-ratio: 1; }
+
+  /* ---------- tag="summary" ----------
+     The <summary> takes the WRAPPER role (see the render note), so it inherits
+     `.esa-button`'s display and every variant rule keeps matching unchanged. Only
+     two things need saying: kill the disclosure triangle, and move the focus ring
+     here — the summary is the focusable element, but `:focus-visible` is written
+     against `.esa-button__native`, which is now its child. */
+  summary.esa-button { list-style: none; cursor: pointer; }
+  summary.esa-button::-webkit-details-marker { display: none; }
+  summary.esa-button:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset, 2px);
+    border-radius: var(--_btn-radius);
+  }
+  /* Chrome's ring is currentColor for the same reason its text is — a fixed ring
+     color is invisible on a dark bar. */
+  /* One selector, not two: with tag="summary" the <summary> carries BOTH classes
+     itself, so the descendant form (`.esa-button--variant-chrome summary.esa-button`)
+     could never match — an element is not its own descendant. */
+  summary.esa-button--variant-chrome:focus-visible { outline-color: currentColor; }
 
   /* Label + loading */
   .esa-button__label { white-space: nowrap; }

@@ -7,10 +7,15 @@
 // give it the already-resolved `message` string and it renders the danger line
 // (or nothing). Pair it with whatever validation layer the host stack provides.
 //
-// Matches the error styling esa-form-field uses: --color-background-danger text at
-// --font-size-100. Collapses out of layout when empty so it doesn't reserve a
+// Matches the error styling esa-form-field uses: --color-background-utility-danger text at
+// the body-xs role. Collapses out of layout when empty so it doesn't reserve a
 // gap under the input. An optional leading icon mirrors common form patterns.
 import EsaIcon from './esa-icon.astro';
+
+// TYPE: error text is small running text — the body-xs composite. The import is the
+// Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 interface Props {
   /** Resolved error message. Renders nothing when null/empty. */
@@ -23,7 +28,7 @@ const { message = '', icon = false } = Astro.props;
 const show = !!(message && String(message).trim());
 ---
 {show && (
-  <p class="esa-field-error" role="alert" aria-live="polite">
+  <p class="esa-field-error typography-body-xs" role="alert" aria-live="polite">
     {icon && <span class="esa-field-error__icon"><EsaIcon name="circle-alert" size="xs" /></span>}
     <span class="esa-field-error__text">{message}</span>
   </p>
@@ -31,8 +36,7 @@ const show = !!(message && String(message).trim());
 
 <style>
   .esa-field-error {
-    --_error-color: var(--color-content-danger, #ce2c31);
-    --_error-font-size: var(--font-size-100, 0.75rem);
+    --_error-color: var(--color-content-utility-danger, #ce2c31);
     --_error-gap: var(--form-help-gap, 4px);
 
     display: flex;
@@ -41,8 +45,6 @@ const show = !!(message && String(message).trim());
     margin: 0;
     margin-block-start: var(--_error-gap);
     color: var(--_error-color);
-    font-size: var(--_error-font-size);
-    line-height: var(--line-height-tight, 1.3);
   }
 
   .esa-field-error__icon {

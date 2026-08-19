@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 type TooltipPosition = 'above' | 'below' | 'left' | 'right';
 
@@ -65,7 +66,7 @@ export class EsaTooltip extends LitElement {
   render() {
     return html`
       <span
-        class="esa-tooltip-anchor"
+        class="esa-tooltip-anchor typography-label-md"
         @mouseenter=${this.onEnter}
         @mouseleave=${this.onLeave}
         @focusin=${this.onEnter}
@@ -74,7 +75,7 @@ export class EsaTooltip extends LitElement {
         <slot></slot>
         ${this.open && this.text
           ? html`
-              <span class="esa-tooltip esa-tooltip--${this.position}" role="tooltip">
+              <span class="esa-tooltip typography-microcopy-sm-subtle esa-tooltip--${this.position}" role="tooltip">
                 <span class="esa-tooltip__text">${this.text}</span>
                 <span class="esa-tooltip__arrow"></span>
               </span>
@@ -84,7 +85,9 @@ export class EsaTooltip extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: inline-block; }
 
     .esa-tooltip-anchor {
@@ -95,13 +98,15 @@ export class EsaTooltip extends LitElement {
     .esa-tooltip {
       position: absolute;
       z-index: var(--z-tooltip, 600);
-      background: var(--tooltip-bg, var(--color-background-inverse));
-      color: var(--tooltip-color, var(--color-content-inverse, #ffffff));
+      background: var(--tooltip-bg, var(--color-background-default-knockout));
+      color: var(--tooltip-color, var(--color-content-default-knockout, #ffffff));
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border-radius: var(--tooltip-radius, var(--radius-control, 0.25rem));
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--font-size-150, 0.875rem);
-      line-height: var(--line-height-tight, 1.3);
+      /* Leading comes from microcopy-sm-subtle. This carried a tight override
+         justified as "a tooltip may wrap to two or three lines" — but the rule
+         below sets white-space: nowrap, so it never wraps and never did. The
+         override was correcting for a case this component cannot produce.
+         --tooltip-max-width is in the same position: nowrap makes it inert. */
       max-width: var(--tooltip-max-width, 240px);
       pointer-events: none;
       white-space: nowrap;
@@ -138,7 +143,7 @@ export class EsaTooltip extends LitElement {
       position: absolute;
       width: 8px;
       height: 8px;
-      background: var(--tooltip-bg, var(--color-background-inverse));
+      background: var(--tooltip-bg, var(--color-background-default-knockout));
       transform: rotate(45deg);
     }
     .esa-tooltip--above .esa-tooltip__arrow {
@@ -161,7 +166,8 @@ export class EsaTooltip extends LitElement {
       top: 50%;
       margin-top: -4px;
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-tooltip')) {

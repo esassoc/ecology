@@ -30,9 +30,13 @@ export interface ThemingHook {
    * BLAST RADIUS — the question `tier` can't answer: if I re-point this, what
    * else moves? Tier says which file declares a token; scope says how many
    * components read it. They are NOT the same axis, and conflating them
-   * misleads: every tier-3 token `esa-text-field` reads is a `--form-*`
-   * shared by 16 other controls, so a "component tier" badge there reads as
-   * "your private hook" when it is nothing of the kind.
+   * misleads: nearly every tier-3 token `esa-text-field` reads is a `--form-*`
+   * shared by a dozen other inputs and buttons, so a "component tier" badge
+   * there reads as "your private hook" when it is nothing of the kind.
+   *
+   * The surface hooks left that family on 2026-08-14 — `--form-bg` became the
+   * tier-2 `--color-background-field` — so those rows now correctly show
+   * `system` instead. The badge was never wrong about them; the tier was.
    *
    * exclusive = this is the only component that reads it — turn it freely.
    * shared    = a tier-3 token a FAMILY of components reads (see `alsoReadBy`).
@@ -41,7 +45,7 @@ export interface ThemingHook {
   scope: 'exclusive' | 'shared' | 'system';
   /** Other components reading this token — populated only when scope=shared. */
   alsoReadBy: string[];
-  /** Group surface a shared token belongs to, e.g. `--form-bg` → `forms`. */
+  /** Group surface a shared token belongs to, e.g. `--form-border-color` → `forms`. */
   family: string | null;
   /**
    * The component that OWNS a shared token, when another one declared it —
@@ -106,7 +110,7 @@ const isPrimitive = (t: string) => primitiveSrc.has(t);
 // --- Declared ownership ----------------------------------------------------
 // WHICH COMPONENT IS A TIER-3 TOKEN FOR? Not inferable from the component's
 // source — a source scan only sees what a component READS, and reading
-// `--color-content-primary` is tier-2 working correctly, not a leak. Ownership
+// `--color-content-default` is tier-2 working correctly, not a leak. Ownership
 // is AUTHORED, in component-tokens.css: the HOOKIFY block groups declarations
 // under `/* esa-badge */` comments, and the older top block groups them under
 // `/* ===== FORMS ===== */` family headers. We read those markers rather than
@@ -145,8 +149,8 @@ const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
 
 // --- Lineage resolution ----------------------------------------------------
 // Map every declared token → its right-hand value, across the component partial
-// (--dialog-bg: var(--color-background-floating, #fff)) and the compiled base
-// (--color-background-floating: var(--color-gray-1); --color-gray-1: #fcfcfc).
+// (--dialog-bg: var(--color-background-elevation-floating, #fff)) and the compiled base
+// (--color-background-elevation-floating: var(--color-gray-1); --color-gray-1: #fcfcfc).
 // With outputReferences on, the base CSS preserves the var() chain, so we can
 // walk it to the raw value.
 const parseDefs = (css: string): Map<string, string> => {
@@ -185,6 +189,18 @@ const lineageOf = (start: string | null): LineageLink[] => {
   }
   return chain;
 };
+
+/**
+ * The lineage of any declared token, for callers outside this module.
+ *
+ * Exported so the component doc page can resolve a COMPOSITE's property tokens
+ * with the same walker the token table uses. A composite is a class, so none of
+ * its tokens appear in `themingSurface` — the page would otherwise have needed a
+ * second resolver, and two walkers over the same `defs` map is how the two
+ * columns start disagreeing about what a token computes to.
+ */
+export const lineageFor = (token: string): LineageLink[] =>
+  defs.has(token) ? lineageOf(defs.get(token)!) : [];
 
 export const themingSurface: Record<string, ThemingHook[]> = {};
 

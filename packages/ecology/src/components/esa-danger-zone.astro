@@ -14,23 +14,32 @@ interface Props {
 }
 const { heading = 'Danger Zone', description } = Astro.props;
 
+// TYPE: `title-sm-strong` on the heading, `body-md` on the explanatory prose — roles,
+// not five assembled property tokens. The slot region takes `label-md`: the prose of
+// this component is the `description` prop above it, and the slot is the destructive
+// action(s) the whole box exists to corral — a row of buttons, not a second paragraph.
+// Slotted content inherits it as a default; an esa-button brings its own and wins.
+// The import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
 let nextId = 0;
 const headingId = `esa-danger-zone-heading-${++nextId}`;
 ---
 <section class="esa-danger-zone" role="group" aria-labelledby={headingId}>
-  <h3 class="esa-danger-zone__heading" id={headingId}>{heading}</h3>
-  {description && <p class="esa-danger-zone__description">{description}</p>}
-  <div class="esa-danger-zone__actions">
+  <h3 class="esa-danger-zone__heading typography-title-sm-strong" id={headingId}>{heading}</h3>
+  {description && <p class="esa-danger-zone__description typography-body-md">{description}</p>}
+  <div class="esa-danger-zone__actions typography-label-md">
     <slot />
   </div>
 </section>
 
 <style>
   .esa-danger-zone {
-    --_dz-bg: var(--danger-zone-bg, var(--color-background-danger-subtle, #fef2f2));
-    --_dz-border: var(--danger-zone-border-color, var(--color-border-danger, #fecaca));
-    --_dz-heading-color: var(--danger-zone-heading-color, var(--color-content-danger));
-    --_dz-description-color: var(--danger-zone-description-color, var(--color-content-secondary, #525252));
+    --_dz-bg: var(--danger-zone-bg, var(--color-background-utility-danger-subtle, #fef2f2));
+    --_dz-border: var(--danger-zone-border-color, var(--color-border-utility-danger, #fecaca));
+    --_dz-heading-color: var(--danger-zone-heading-color, var(--color-content-utility-danger));
+    --_dz-description-color: var(--danger-zone-description-color, var(--color-content-default-secondary, #525252));
     --_dz-radius: var(--danger-zone-radius, var(--radius-surface, 0.5rem));
     --_dz-padding: var(--danger-zone-padding, var(--spacing-300, 0.75rem));
     --_dz-gap: var(--spacing-200, 0.5rem);
@@ -46,15 +55,11 @@ const headingId = `esa-danger-zone-heading-${++nextId}`;
 
   .esa-danger-zone__heading {
     margin: 0;
-    font-family: var(--font-sans, 'DM Sans', sans-serif);
-    font-size: var(--font-size-250, 1.0625rem);
-    font-weight: 600;
     color: var(--_dz-heading-color);
   }
 
   .esa-danger-zone__description {
     margin: 0;
-    font-size: var(--font-size-200, 0.9375rem);
     color: var(--_dz-description-color);
   }
 

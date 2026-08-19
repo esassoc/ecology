@@ -7,9 +7,9 @@
 // Children (esa-icon-link, esa-icon-button, a brand lockup) INHERIT the color —
 // so a bar's brand comes entirely from tokens, never from the children.
 //
-//   tone="surface"      → --color-background-raised bg, primary text
+//   tone="surface"      → --color-background-elevation-raised bg, primary text
 //   tone="brand"        → --color-background-brand bg, inverse text          (primary bar)
-//   tone="brand-strong" → --color-background-inverse bg, inverse text  (dark sub-bar)
+//   tone="brand-strong" → --color-background-default-knockout bg, inverse text  (dark sub-bar)
 //
 // Tune spacing per instance with the public component tokens --app-bar-gap /
 // --app-bar-pad-x / --app-bar-pad-y (each falls back to an ecology spacing step).
@@ -29,6 +29,13 @@ interface Props {
   class?: string;
 }
 
+// TYPE: the three slot regions carry `label-md` so raw text dropped into a bar
+// names a role instead of inheriting whatever the page happens to be. It is a
+// DEFAULT, not a dictate — any esa-* slotted in brings its own composite and wins.
+// The import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
 const { tone = 'surface', contained = false, maxWidth = '1556px', as = 'div', class: className } = Astro.props;
 const Tag = as;
 const hasStart = Astro.slots.has('start');
@@ -39,11 +46,11 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
 <Tag class={cls}>
   <div class={rowCls} style={contained ? `--_bar-max:${maxWidth}` : undefined}>
     {hasStart && (
-      <div class="esa-app-bar__start"><slot name="start" /></div>
+      <div class="esa-app-bar__start typography-label-md"><slot name="start" /></div>
     )}
-    <div class="esa-app-bar__main"><slot /></div>
+    <div class="esa-app-bar__main typography-label-md"><slot /></div>
     {hasEnd && (
-      <div class="esa-app-bar__end"><slot name="end" /></div>
+      <div class="esa-app-bar__end typography-label-md"><slot name="end" /></div>
     )}
   </div>
 </Tag>
@@ -57,16 +64,16 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
 
     display: block;
     width: 100%;
-    background: var(--app-bar-bg, var(--color-background-raised, #fff));
-    color: var(--app-bar-text, var(--color-content-primary, #171717));
+    background: var(--app-bar-bg, var(--color-background-elevation-raised, #fff));
+    color: var(--app-bar-text, var(--color-content-default, #171717));
   }
   .esa-app-bar--brand {
     background: var(--app-bar-brand-bg, var(--color-background-brand, #43608a));
-    color: var(--app-bar-brand-text, var(--color-content-inverse, #fff));
+    color: var(--app-bar-brand-text, var(--color-content-default-knockout, #fff));
   }
   .esa-app-bar--brand-strong {
-    background: var(--app-bar-brand-strong-bg, var(--color-background-inverse, #171717));
-    color: var(--app-bar-brand-strong-text, var(--color-content-inverse, #fff));
+    background: var(--app-bar-brand-strong-bg, var(--color-background-default-knockout, #171717));
+    color: var(--app-bar-brand-strong-text, var(--color-content-default-knockout, #fff));
   }
 
   .esa-app-bar__row {

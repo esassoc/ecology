@@ -1,190 +1,1019 @@
 {
-  "font": {
-    "$description": "Face tokens — the surface a spoke re-points when it swaps typeface. These were tier-1 primitives until the tier-1 typography audit: `--font-sans` names a classification rather than a face, and typography.css documents it as the spoke's override surface, which made the shipped contract an instruction to re-point a primitive. The names are unchanged, so every reader kept working; only the tier moved. NOTE: a `$description` at the ROOT of a semantic file collides with the one in effect.json — Style Dictionary merges file roots — so group level is the right home for it.",
-    "sans":    { "$value": "{font-family.dm-sans}", "$type": "fontFamily", "$description": "The body face. A spoke re-points this to its brand face." },
-    "mono":    { "$value": "{font-family.dm-mono}", "$type": "fontFamily", "$description": "The code/tabular face." },
-    "display": { "$value": "{font.sans}",           "$type": "fontFamily", "$description": "Headline/display face. Defaults to the body face (zero visual change) so the slot exists for a spoke to override with a distinct face — e.g. a condensed family for logotypes and big numbers. Wired into the display and heading-lg/md composites." }
-  },
-  "font-weight": {
-    "$description": "Weight intentions. The numbers are typeface-bound — 350/500/550/650 are DM Sans's optical weights, not universal values — so a spoke swapping the body face re-points these to that face's matching weights. That is exactly why the named steps live at tier 2 and the raw numbers are the primitives at tier 1.",
-    "light":    { "$value": "{font-weight.300}", "$type": "fontWeight" },
-    "regular":  { "$value": "{font-weight.350}", "$type": "fontWeight" },
-    "medium":   { "$value": "{font-weight.500}", "$type": "fontWeight" },
-    "semibold": { "$value": "{font-weight.550}", "$type": "fontWeight" },
-    "bold":     { "$value": "{font-weight.650}", "$type": "fontWeight" }
-  },
-
   "typography": {
-    "$description": "The COMPOSITE layer: <intention>[-<size>]-<property>. An intention is the job the text does (display, heading, body, label, meta, code); the size variant is t-shirt and appears ONLY where an intention has more than one — a bare `--typography-label-font-size` is not an inconsistency, it is an intention with one size. Every composite sets all five properties rather than letting any inherit, so a composite is a complete definition rather than a partial one that depends on what it happens to sit inside. These are what src/typography.css assembles into classes; components and spokes use the class, and a spoke re-points these tokens to move a composite without forking the class. NOTE ON RESPONSIVENESS: the rubric puts a screen-size slot here (mobile/tablet/desktop) for the composites that need to shrink on small screens. This system has no such slot because it does not need one — every `--font-size-*` primitive is a `clamp()` that scales continuously with the viewport, so a composite is responsive by construction rather than by breakpoint-keyed variants.",
+    "$description": "TIER-2 TYPOGRAPHY, one namespace, two halves and TWO SLOT ORDERS — read this before adding a name.\n\n  INGREDIENTS  property > variant            --typography-font-family-sans\n  COMPOSITES   intention > variant > property --typography-label-md-strong-font-size\n\nThe ingredient order is the house grammar, the same one colour uses (`--color-background-brand` leads with the property). The composite order is the documented EXCEPTION and it earns it: a composite's five properties only work as a set, so leading with the intention keeps them sorted as one block instead of scattering `font-size` away from the `line-height` it was chosen against. Disambiguating is mechanical — if slot 2 is a CSS property, it is an ingredient; otherwise it is an intention.\n\nBoth halves were folded under this namespace on 2026-08-15 (`font-ingredients-to-typography-namespace`). They were `--font-*` before: same tier, same file, same job as the composites, under a prefix that said none of it — and, in the case of the weights, colliding with the tier-1 group of the same name. See each subgroup for the specifics.\n\n--- THE COMPOSITE HALF ---\n\nThe COMPOSITE layer: <intention>[-<size>][-<weight>]-<property>. The weight slot is a MODIFIER, not a value — `-strong` and `-subtle` name a step relative to the intention's base rather than a number, which is why `label-md-strong` and `microcopy-md-subtle` read as one family and `-semibold` would not. Only two intentions use it: `label` (base + strong) and `microcopy` (subtle + base + strong). An intention is the job the text does (display, heading, body, label, meta, code); the size variant is t-shirt and appears ONLY where an intention has more than one — a bare `--typography-label-font-size` is not an inconsistency, it is an intention with one size. Every composite sets all five properties rather than letting any inherit, so a composite is a complete definition rather than a partial one that depends on what it happens to sit inside. These are what src/typography.css assembles into classes; components and spokes use the class, and a spoke re-points these tokens to move a composite without forking the class. NOTE ON RESPONSIVENESS: the rubric puts a screen-size slot here (mobile/tablet/desktop) for the composites that need to shrink on small screens. This system has no such slot because it does not need one — every `--font-size-*` primitive is a `clamp()` that scales continuously with the viewport, so a composite is responsive by construction rather than by breakpoint-keyed variants.",
 
-    "display-font-family":    { "$value": "{font.display}",          "$type": "fontFamily" },
-    "display-font-size":      { "$value": "{font-size.800}",         "$type": "dimension" },
-    "display-font-weight":    { "$value": "{font-weight.bold}",      "$type": "fontWeight" },
-    "display-line-height":    { "$value": "{line-height.tight}",     "$type": "number" },
-    "display-letter-spacing": { "$value": "{letter-spacing.tight}",  "$type": "dimension" },
+    "font-family": {
+      "$description": "THE INGREDIENT HALF, slot order property > variant. Face tokens — the surface a spoke re-points when it swaps typeface. These were tier-1 primitives until the tier-1 typography audit: `sans` names a classification rather than a face, and typography.css documents it as the spoke's override surface, which made the shipped contract an instruction to re-point a primitive.\n\nMOVED under `typography` on 2026-08-15 (`font-ingredients-to-typography-namespace`). They were `--font-sans` / `--font-mono` / `--font-display`: the same tier and the same file as the composites, under a prefix that did not say so, with the CSS property they feed left unspoken. NOTE: a `$description` at the ROOT of a semantic file collides with the one in effect.json — Style Dictionary merges file roots — so group level is the right home for it.",
 
-    "heading-lg-font-family":    { "$value": "{font.display}",         "$type": "fontFamily" },
-    "heading-lg-font-size":      { "$value": "{font-size.600}",        "$type": "dimension" },
-    "heading-lg-font-weight":    { "$value": "{font-weight.semibold}", "$type": "fontWeight" },
-    "heading-lg-line-height":    { "$value": "{line-height.tight}",    "$type": "number" },
-    "heading-lg-letter-spacing": { "$value": "{letter-spacing.tight}", "$type": "dimension" },
+      "sans": {
+        "$value": "{font-family.dm-sans}",
+        "$type": "fontFamily",
+        "$description": "The body face. A spoke re-points this to its brand face."
+      },
+      "mono": {
+        "$value": "{font-family.dm-mono}",
+        "$type": "fontFamily",
+        "$description": "The code/tabular face."
+      },
+      "display": {
+        "$value": "{typography.font-family.sans}",
+        "$type": "fontFamily",
+        "$description": "Headline/display face. Defaults to the body face (zero visual change) so the slot exists for a spoke to override with a distinct face — e.g. a condensed family for logotypes and big numbers. Wired into the display and heading-lg/md composites."
+      }
+    },
 
-    "heading-md-font-family":    { "$value": "{font.display}",         "$type": "fontFamily" },
-    "heading-md-font-size":      { "$value": "{font-size.500}",        "$type": "dimension" },
-    "heading-md-font-weight":    { "$value": "{font-weight.semibold}", "$type": "fontWeight" },
-    "heading-md-line-height":    { "$value": "{line-height.tight}",    "$type": "number" },
-    "heading-md-letter-spacing": { "$value": "{letter-spacing.tight}", "$type": "dimension" },
+    "font-weight": {
+      "$description": "Weight intentions, slot order property > variant. The numbers are typeface-bound — 350/500/550/650 are DM Sans's optical weights, not universal values — so a spoke swapping the body face re-points these to that face's matching weights. That is exactly why the named steps live at tier 2 and the raw numbers are the primitives at tier 1.\n\nMOVED under `typography` on 2026-08-15, and this group is WHY the move happened. It used to be a top-level `font-weight` group — the SAME group name tier-1 `primitive/typography.json` uses for 100…900. Style Dictionary merges groups across files, so `--font-weight-medium` and `--font-weight-500` came out as siblings in one namespace with nothing marking the tier. A spoke must re-point `medium` and must never touch `500`; the names could not tell it which was which. The references below still read `{font-weight.300}` etc. because that group is now unambiguously the tier-1 one.",
 
-    "title-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily" },
-    "title-font-size":      { "$value": "{font-size.400}",         "$type": "dimension" },
-    "title-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
-    "title-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "title-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+      "light": { "$value": "{font-weight.300}", "$type": "fontWeight" },
+      "regular": { "$value": "{font-weight.350}", "$type": "fontWeight" },
+      "medium": { "$value": "{font-weight.500}", "$type": "fontWeight" },
+      "semibold": { "$value": "{font-weight.550}", "$type": "fontWeight" },
+      "bold": { "$value": "{font-weight.650}", "$type": "fontWeight" }
+    },
 
-    "body-lg-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily" },
-    "body-lg-font-size":      { "$value": "{font-size.300}",         "$type": "dimension" },
-    "body-lg-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "body-lg-line-height":    { "$value": "{line-height.relaxed}",   "$type": "number" },
-    "body-lg-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "display-font-family": {
+      "$value": "{typography.font-family.display}",
+      "$type": "fontFamily"
+    },
+    "display-font-size": { "$value": "{font-size.800}", "$type": "dimension" },
+    "display-font-weight": {
+      "$value": "{typography.font-weight.bold}",
+      "$type": "fontWeight"
+    },
+    "display-line-height": {
+      "$value": "{line-height.tight}",
+      "$type": "number"
+    },
+    "display-letter-spacing": {
+      "$value": "{letter-spacing.tight}",
+      "$type": "dimension"
+    },
 
-    "body-md-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The default prose composite. If you are unsure which body size to use, this is it." },
-    "body-md-font-size":      { "$value": "{font-size.200}",         "$type": "dimension" },
-    "body-md-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "body-md-line-height":    { "$value": "{line-height.relaxed}",   "$type": "number" },
-    "body-md-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "display-sm-font-family": {
+      "$value": "{typography.font-family.display}",
+      "$type": "fontFamily",
+      "$description": "The display treatment one rung down, for the big number in a stat block. Same recipe as `display` — display face, bold, tight leading and tracking — at 700 rather than 800. Added because esa-stat's value was the last text in the kit assembling that recipe by hand; nothing about how it renders changes."
+    },
+    "display-sm-font-size": {
+      "$value": "{font-size.700}",
+      "$type": "dimension"
+    },
+    "display-sm-font-weight": {
+      "$value": "{typography.font-weight.bold}",
+      "$type": "fontWeight"
+    },
+    "display-sm-line-height": {
+      "$value": "{line-height.tight}",
+      "$type": "number"
+    },
+    "display-sm-letter-spacing": {
+      "$value": "{letter-spacing.tight}",
+      "$type": "dimension"
+    },
 
-    "body-sm-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily" },
-    "body-sm-font-size":      { "$value": "{font-size.150}",         "$type": "dimension" },
-    "body-sm-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "body-sm-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "body-sm-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "heading-lg-font-family": {
+      "$value": "{typography.font-family.display}",
+      "$type": "fontFamily"
+    },
+    "heading-lg-font-size": {
+      "$value": "{font-size.600}",
+      "$type": "dimension"
+    },
+    "heading-lg-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "heading-lg-line-height": {
+      "$value": "{line-height.tight}",
+      "$type": "number"
+    },
+    "heading-lg-letter-spacing": {
+      "$value": "{letter-spacing.tight}",
+      "$type": "dimension"
+    },
 
-    "body-xs-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "Prose weight at the `sm` control step. Exists for the same reason `label-2xs` does — the CONTROL ramp runs wider than the prose family, and a control has two text slots at every rung: the label (medium, `label-*`) and the value the user typed or picked (regular, `body-*`). Below `body-sm` there was a label rung with no body partner, so the value slot in an `sm` control had nothing to point at.\n\nNot a prose size. Nothing sets a paragraph at 10–12px; this rung exists only where a box forces the size and the text is still a value rather than a label. See the FORMS header in src/component-tokens.css for the full step→rung mapping." },
-    "body-xs-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },
-    "body-xs-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "body-xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "body-xs-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "heading-md-font-family": {
+      "$value": "{typography.font-family.display}",
+      "$type": "fontFamily"
+    },
+    "heading-md-font-size": {
+      "$value": "{font-size.500}",
+      "$type": "dimension"
+    },
+    "heading-md-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "heading-md-line-height": {
+      "$value": "{line-height.tight}",
+      "$type": "number"
+    },
+    "heading-md-letter-spacing": {
+      "$value": "{letter-spacing.tight}",
+      "$type": "dimension"
+    },
 
-    "body-2xs-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The value slot in an `xs` control — `body-xs`'s partner one rung down, mirroring `label-2xs`. Renders 8–10px.\n\nThat size is a live design question, NOT an endorsement: it inherits the `xs` step's size unchanged so the component migration stays size-neutral, and whether the kit should ship an 8–10px rung at all is recorded in the ledger as its own decision. If `xs` is later raised or dropped, this token goes with it." },
-    "body-2xs-font-size":      { "$value": "{font-size.050}",         "$type": "dimension" },
-    "body-2xs-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "body-2xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "body-2xs-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "title-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "title-font-size": { "$value": "{font-size.400}", "$type": "dimension" },
+    "title-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "title-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "title-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-2xs-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The smallest UI text — the xs form-control step. Sits one below `label-xs` because the control ramp descends further than the prose family does: the xs step's text is font-size-050, a size no prose intention has any use for.\n\nBreaks the kit's `xs | sm | md | lg` convention by one step, deliberately. The alternative was renaming the whole label family down, which would move `label-xs` out from under 15 call sites that already match it exactly. NOTE: this renders 8–10px. Every author who hardcoded a fallback at these call sites assumed 11–13px, but those fallbacks are dead (the token has always been declared), so 8–10px is what the kit has actually shipped and been reviewed at. Whether it is too small is a live question — and a design decision, not something to change while moving tokens around." },
-    "label-2xs-font-size":      { "$value": "{font-size.050}",         "$type": "dimension" },
-    "label-2xs-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
-    "label-2xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-2xs-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "body-lg-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "body-lg-font-size": { "$value": "{font-size.300}", "$type": "dimension" },
+    "body-lg-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "body-lg-line-height": {
+      "$value": "{line-height.relaxed}",
+      "$type": "number"
+    },
+    "body-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-xs-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "UI TEXT — the label family. Was a single `label` intention at one size and one weight, which is why 59 rules across the component kit worked around it: prose only ever needed one weight, so `label` shipped with one. The kit runs UI text at MEDIUM and SEMIBOLD across three sizes, and now says so.\n\nThe sizes deliberately share the `body-*` ramp (xs=100 is body's step below, sm=150 = body-sm, md=200 = body-md). The `2xs` and `lg` rungs that bracket them do NOT come from prose — they exist because the control ramp is wider than the prose family; see those two tokens. Same size, different weight, different job — a table header and a paragraph can sit at the same size without being the same intention." },
-    "label-xs-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },
-    "label-xs-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
-    "label-xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-xs-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "body-md-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The default prose composite. If you are unsure which body size to use, this is it."
+    },
+    "body-md-font-size": { "$value": "{font-size.200}", "$type": "dimension" },
+    "body-md-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "body-md-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "body-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-sm-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily" },
-    "label-sm-font-size":      { "$value": "{font-size.150}",         "$type": "dimension" },
-    "label-sm-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
-    "label-sm-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-sm-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "body-sm-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "body-sm-font-size": { "$value": "{font-size.150}", "$type": "dimension" },
+    "body-sm-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "body-sm-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "body-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-md-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The single most-wanted intention in the kit — 22 rules already render exactly this and had nowhere to point. Same size as `body-md`, medium rather than regular." },
-    "label-md-font-size":      { "$value": "{font-size.200}",         "$type": "dimension" },
-    "label-md-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
-    "label-md-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-md-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "body-xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "Prose weight at the `sm` control step. Exists for the same reason `label-2xs` does — the CONTROL ramp runs wider than the prose family, and a control has two text slots at every rung: the label (medium, `label-*`) and the value the user typed or picked (regular, `body-*`). Below `body-sm` there was a label rung with no body partner, so the value slot in an `sm` control had nothing to point at.\n\nNot a prose size. Nothing sets a paragraph at 10–12px; this rung exists only where a box forces the size and the text is still a value rather than a label. See the FORMS header in src/component-tokens.css for the full step→rung mapping."
+    },
+    "body-xs-font-size": { "$value": "{font-size.100}", "$type": "dimension" },
+    "body-xs-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "body-xs-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "body-xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-lg-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The top of the UI-text ramp — the text inside a 48px control. Added for the same reason `label-2xs` sits below `label-xs`: the CONTROL ramp (xs·sm·md·lg) runs wider than the prose family does, and it needs a rung at both ends that prose has no use for.\n\nBefore this existed, --form-font-size-lg reached into `body-lg` for its size — the only step of the control ramp that borrowed from a different intention, and it did so purely because 300 was the number it needed. That was visible, not cosmetic: `body-lg` is regular weight at `relaxed` leading, and every form component overrode the leading back to `normal` via --form-line-height. The token named a composite the kit deliberately contradicted. The ramp is now label-2xs · label-xs · label-md · label-lg — one intention, four rungs. (It skips `label-sm`/150 because the control steps land on 050·100·200·300; sampling a family is fine, borrowing from another is not.)\n\nValue-neutral: font-size-300 before and after, and only the size was ever read." },
-    "label-lg-font-size":      { "$value": "{font-size.300}",         "$type": "dimension" },
-    "label-lg-font-weight":    { "$value": "{font-weight.medium}",    "$type": "fontWeight" },
-    "label-lg-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-lg-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "body-2xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The value slot in an `xs` control — `body-xs`'s partner one rung down, mirroring `label-2xs`. Renders 8–10px.\n\nThat size is a live design question, NOT an endorsement: it inherits the `xs` step's size unchanged so the component migration stays size-neutral, and whether the kit should ship an 8–10px rung at all is recorded in the ledger as its own decision. If `xs` is later raised or dropped, this token goes with it."
+    },
+    "body-2xs-font-size": { "$value": "{font-size.050}", "$type": "dimension" },
+    "body-2xs-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "body-2xs-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "body-2xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-2xs-strong-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "`label-2xs` at semibold. Added to complete the `-strong` ramp: esa-button-toggle sets its SELECTED segment semibold at every size, so a weight variant that stopped at `xs` left the two ends of the control ramp with no composite to name. `-strong` is a weight axis and has to cover whatever sizes exist, or the call sites at the ends go back to inventing a weight." },
-    "label-2xs-strong-font-size":      { "$value": "{font-size.050}",         "$type": "dimension" },
-    "label-2xs-strong-font-weight":    { "$value": "{font-weight.semibold}",  "$type": "fontWeight" },
-    "label-2xs-strong-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-2xs-strong-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-2xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The smallest UI text — the xs form-control step. Sits one below `label-xs` because the control ramp descends further than the prose family does: the xs step's text is font-size-050, a size no prose intention has any use for.\n\nBreaks the kit's `xs | sm | md | lg` convention by one step, deliberately. The alternative was renaming the whole label family down, which would move `label-xs` out from under 15 call sites that already match it exactly. NOTE: this renders 8–10px. Every author who hardcoded a fallback at these call sites assumed 11–13px, but those fallbacks are dead (the token has always been declared), so 8–10px is what the kit has actually shipped and been reviewed at. Whether it is too small is a live question — and a design decision, not something to change while moving tokens around."
+    },
+    "label-2xs-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "label-2xs-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "label-2xs-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-2xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-xs-strong-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "The semibold tier of UI text. `-strong` is a WEIGHT variant, not a size one — it pairs with each size rather than extending the ramp. Menu group headings, badge counts and section markers all sit here." },
-    "label-xs-strong-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },
-    "label-xs-strong-font-weight":    { "$value": "{font-weight.semibold}",  "$type": "fontWeight" },
-    "label-xs-strong-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-xs-strong-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "UI TEXT — the label family. Was a single `label` intention at one size and one weight, which is why 59 rules across the component kit worked around it: prose only ever needed one weight, so `label` shipped with one. The kit runs UI text at MEDIUM and SEMIBOLD across three sizes, and now says so.\n\nThe sizes deliberately share the `body-*` ramp (xs=100 is body's step below, sm=150 = body-sm, md=200 = body-md). The `2xs` and `lg` rungs that bracket them do NOT come from prose — they exist because the control ramp is wider than the prose family; see those two tokens. Same size, different weight, different job — a table header and a paragraph can sit at the same size without being the same intention."
+    },
+    "label-xs-font-size": { "$value": "{font-size.100}", "$type": "dimension" },
+    "label-xs-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "label-xs-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-sm-strong-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily" },
-    "label-sm-strong-font-size":      { "$value": "{font-size.150}",         "$type": "dimension" },
-    "label-sm-strong-font-weight":    { "$value": "{font-weight.semibold}",  "$type": "fontWeight" },
-    "label-sm-strong-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-sm-strong-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-sm-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "label-sm-font-size": { "$value": "{font-size.150}", "$type": "dimension" },
+    "label-sm-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "label-sm-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-md-strong-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily" },
-    "label-md-strong-font-size":      { "$value": "{font-size.200}",         "$type": "dimension" },
-    "label-md-strong-font-weight":    { "$value": "{font-weight.semibold}",  "$type": "fontWeight" },
-    "label-md-strong-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-md-strong-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-md-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The single most-wanted intention in the kit — 22 rules already render exactly this and had nowhere to point. Same size as `body-md`, medium rather than regular."
+    },
+    "label-md-font-size": { "$value": "{font-size.200}", "$type": "dimension" },
+    "label-md-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "label-md-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "label-lg-strong-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "`label-lg` at semibold — the top end of the `-strong` ramp, added alongside `label-2xs-strong` so the weight axis covers every rung the control ramp uses. Also the home for esa-chip-group's chip text, which renders a raw `font-weight: 600` today; 600 is not a token weight in this system (semibold is 550), so adopting this composite is a small, deliberate weight change rather than a passthrough." },
-    "label-lg-strong-font-size":      { "$value": "{font-size.300}",         "$type": "dimension" },
-    "label-lg-strong-font-weight":    { "$value": "{font-weight.semibold}",  "$type": "fontWeight" },
-    "label-lg-strong-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "label-lg-strong-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-lg-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The top of the UI-text ramp — the text inside a 48px control. Added for the same reason `label-2xs` sits below `label-xs`: the CONTROL ramp (xs·sm·md·lg) runs wider than the prose family does, and it needs a rung at both ends that prose has no use for.\n\nBefore this existed, --form-font-size-lg reached into `body-lg` for its size — the only step of the control ramp that borrowed from a different intention, and it did so purely because 300 was the number it needed. That was visible, not cosmetic: `body-lg` is regular weight at `relaxed` leading, and every form component overrode the leading back to `normal` via --form-line-height. The token named a composite the kit deliberately contradicted. The ramp is now label-2xs · label-xs · label-md · label-lg — one intention, four rungs. (It skips `label-sm`/150 because the control steps land on 050·100·200·300; sampling a family is fine, borrowing from another is not.)\n\nValue-neutral: font-size-300 before and after, and only the size was ever read."
+    },
+    "label-lg-font-size": { "$value": "{font-size.300}", "$type": "dimension" },
+    "label-lg-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "label-lg-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "title-strong-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "`title` at semibold. Added rather than changing `title`'s weight: every dialog title in the kit renders semibold, but re-pointing `title` would have moved every other consumer to match three call sites. An intention is changed when it is WRONG, not when something needs a neighbour." },
-    "title-strong-font-size":      { "$value": "{font-size.400}",         "$type": "dimension" },
-    "title-strong-font-weight":    { "$value": "{font-weight.semibold}",  "$type": "fontWeight" },
-    "title-strong-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "title-strong-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-2xs-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "`label-2xs` at semibold. Added to complete the `-strong` ramp: esa-button-toggle sets its SELECTED segment semibold at every size, so a weight variant that stopped at `xs` left the two ends of the control ramp with no composite to name. `-strong` is a weight axis and has to cover whatever sizes exist, or the call sites at the ends go back to inventing a weight."
+    },
+    "label-2xs-strong-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "label-2xs-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "label-2xs-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-2xs-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "meta-font-family":    { "$value": "{font.sans}",             "$type": "fontFamily", "$description": "Secondary information beside the thing it describes — captions, timestamps, counts, helper text." },
-    "meta-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },
-    "meta-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "meta-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "meta-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-xs-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The semibold tier of UI text. `-strong` is a WEIGHT variant, not a size one — it pairs with each size rather than extending the ramp. Menu group headings, badge counts and section markers all sit here."
+    },
+    "label-xs-strong-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "label-xs-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "label-xs-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-xs-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "eyebrow-sm-font-family":     { "$value": "{font.sans}",                  "$type": "fontFamily", "$description": "The eyebrow treatment — meta text set in caps above a heading or as a section marker. Gained a size variant because the kit sets menu group headings in caps one step larger than the page-level eyebrow; both are the same treatment, so they are one intention at two sizes rather than two intentions." },
-    "eyebrow-sm-font-size":       { "$value": "{font-size.050}",              "$type": "dimension" },
-    "eyebrow-sm-font-weight":     { "$value": "{font-weight.semibold}",       "$type": "fontWeight" },
-    "eyebrow-sm-line-height":     { "$value": "{line-height.normal}",         "$type": "number" },
-    "eyebrow-sm-letter-spacing":  { "$value": "{letter-spacing.wider}",       "$type": "dimension" },
-    "eyebrow-sm-text-transform":  { "$value": "{text-transform.uppercase}",   "$type": "other" },
+    "label-sm-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "label-sm-strong-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "label-sm-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "label-sm-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-sm-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "eyebrow-md-font-family":     { "$value": "{font.sans}",                  "$type": "fontFamily", "$description": "Menu and sidebar group headings — the caps treatment at UI scale." },
-    "eyebrow-md-font-size":       { "$value": "{font-size.100}",              "$type": "dimension" },
-    "eyebrow-md-font-weight":     { "$value": "{font-weight.semibold}",       "$type": "fontWeight" },
-    "eyebrow-md-line-height":     { "$value": "{line-height.normal}",         "$type": "number" },
-    "eyebrow-md-letter-spacing":  { "$value": "{letter-spacing.wide}",        "$type": "dimension", "$description": "`wide` (0.03em), not the `wider` (0.06em) the small eyebrow uses. Tracking is there to keep caps legible, and the need falls off as the size goes up — every existing consumer of this size had already settled on 0.03em independently. The token matches them rather than the reverse: it is new, they are the design." },
-    "eyebrow-md-text-transform":  { "$value": "{text-transform.uppercase}",   "$type": "other" },
+    "label-md-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "label-md-strong-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "label-md-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "label-md-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-md-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "code-lg-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily" },
-    "code-lg-font-size":      { "$value": "{font-size.300}",         "$type": "dimension" },
-    "code-lg-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "code-lg-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "code-lg-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "label-lg-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "`label-lg` at semibold — the top end of the `-strong` ramp, added alongside `label-2xs-strong` so the weight axis covers every rung the control ramp uses. Also the home for esa-chip-group's chip text, which renders a raw `font-weight: 600` today; 600 is not a token weight in this system (semibold is 550), so adopting this composite is a small, deliberate weight change rather than a passthrough."
+    },
+    "label-lg-strong-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "label-lg-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "label-lg-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "label-lg-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "code-md-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily", "$description": "Inline and block code. Sized to match body-md so code sits at the size of the prose around it."  },
-    "code-md-font-size":      { "$value": "{font-size.200}",         "$type": "dimension" },
-    "code-md-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "code-md-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "code-md-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "microcopy-2xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "THE MICROCOPY INTENTION — small functional text that sits IN a box rather than flowing in a column, and therefore carries NO leading. Every other composite sets line-height to normal, relaxed or tight; microcopy sets `none` (1), and that is the whole reason it exists as its own intention.\\n\\nWHY IT HAD TO EXIST. The height tokens were all deleted because a px box cannot grow with rem text (--control-height-*, --chip-height-*, --badge-height-*, --pill-height-*). Once they were gone, leading became the term that SETS the box wherever padding is the only other variable — so 20 elements named a composite and then replaced its line-height, which means the class on them was a partial truth. esa-badge said `label-md-strong` and rendered something else. Those overrides are what this intention removes.\\n\\nSCOPE, and it is strict: only text that is STRUCTURALLY single-line — a native <input>, or white-space: nowrap. On text that can wrap, line-height 1 makes the lines touch. Check the child that holds the text, not the styled element: esa-button's nowrap sits on .esa-button__label, not on .esa-button__native.\\n\\nTHE THREE WEIGHTS each do distinct work, measured across all 31 consumers — every size x weight cell has one, so none is speculative:\\n  -subtle / regular   the VALUE: what the user typed, what the data says. Regular so it does not outweigh the label naming it.\\n  base / medium       the PRESSABLE: button labels, nav links, pills, triggers, keycaps.\\n  -strong / semibold  small text knocked out on a COLORED FILL — badges, counts, avatar initials. Here semibold is legibility, not emphasis: 10-12px light text on a saturated fill needs the stroke.\\n\\n`-subtle` is borrowed rather than invented: it already means \\\"the quieter version of this\\\" across 21 colour tokens, so the word keeps one meaning instead of gaining a second."
+    },
+    "microcopy-2xs-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "microcopy-2xs-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-2xs-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-2xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "code-sm-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily" },
-    "code-sm-font-size":      { "$value": "{font-size.150}",         "$type": "dimension" },
-    "code-sm-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "code-sm-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "code-sm-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "microcopy-xs-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-xs-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "microcopy-xs-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-xs-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "code-xs-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily", "$description": "The mono face at the `sm` control step. Added for the same reason `body-xs` was: the CONTROL ramp descends below where prose goes, and esa-color-picker's hex field is a value slot set in mono — a hex code is tabular, so it cannot take `body-*` without losing the face. Without this rung a small colour picker had no mono composite to name.\n\nTRACKING: inherits `letter-spacing.default` (0.01em) like every other composite. If a mono run ever needs true column alignment, that is what `letter-spacing.normal` (0) now exists for." },
-    "code-xs-font-size":      { "$value": "{font-size.100}",         "$type": "dimension" },
-    "code-xs-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "code-xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "code-xs-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" },
+    "microcopy-sm-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-sm-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-sm-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-sm-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
 
-    "code-2xs-font-family":    { "$value": "{font.mono}",              "$type": "fontFamily", "$description": "The mono face at the `xs` control step — `code-xs`'s partner one rung down, mirroring `body-2xs`. Renders 8–10px, and carries the same caveat: that size is a live design question deferred to its own decision, not an endorsement. If the `xs` step is later raised or dropped, this token goes with it." },
-    "code-2xs-font-size":      { "$value": "{font-size.050}",         "$type": "dimension" },
-    "code-2xs-font-weight":    { "$value": "{font-weight.regular}",   "$type": "fontWeight" },
-    "code-2xs-line-height":    { "$value": "{line-height.normal}",    "$type": "number" },
-    "code-2xs-letter-spacing": { "$value": "{letter-spacing.default}", "$type": "dimension" }
+    "microcopy-md-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-md-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-md-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-md-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-lg-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-lg-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-lg-font-weight": {
+      "$value": "{typography.font-weight.medium}",
+      "$type": "fontWeight"
+    },
+    "microcopy-lg-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-2xs-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-2xs-subtle-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "microcopy-2xs-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-2xs-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-2xs-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-xs-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-xs-subtle-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "microcopy-xs-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-xs-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-xs-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-sm-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-sm-subtle-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-sm-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-sm-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-sm-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-md-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-md-subtle-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-md-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-md-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-md-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-lg-subtle-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-lg-subtle-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-lg-subtle-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-lg-subtle-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-lg-subtle-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-2xs-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-2xs-strong-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "microcopy-2xs-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-2xs-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-2xs-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-xs-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-xs-strong-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "microcopy-xs-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-xs-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-xs-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-sm-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-sm-strong-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-sm-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-sm-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-sm-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-md-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-md-strong-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-md-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-md-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-md-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-lg-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily"
+    },
+    "microcopy-lg-strong-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-lg-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "microcopy-lg-strong-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-lg-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-code-sm-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily",
+      "$description": "The mono branch, for a hex field — the only mono input in the kit. `code` sits where a weight modifier otherwise would because it is a FACE, which is the one awkward corner of this naming. Taken deliberately: the alternative is letting that field keep `code-*` plus a line-height override, which is exactly the exception this intention removes."
+    },
+    "microcopy-code-sm-font-size": {
+      "$value": "{font-size.150}",
+      "$type": "dimension"
+    },
+    "microcopy-code-sm-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-code-sm-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-code-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-code-md-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily"
+    },
+    "microcopy-code-md-font-size": {
+      "$value": "{font-size.200}",
+      "$type": "dimension"
+    },
+    "microcopy-code-md-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-code-md-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-code-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "microcopy-code-lg-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily"
+    },
+    "microcopy-code-lg-font-size": {
+      "$value": "{font-size.300}",
+      "$type": "dimension"
+    },
+    "microcopy-code-lg-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "microcopy-code-lg-line-height": {
+      "$value": "{line-height.none}",
+      "$type": "number"
+    },
+    "microcopy-code-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "title-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "`title` at semibold. ORPHANED on 2026-08-15 — every call site (the three dialog headings, and the top rung of esa-avatar's and esa-empty-state's ramps) moved to plain `title`, so nothing in the kit reads this. It was added on the argument that every dialog title renders semibold and re-pointing `title` would move every other consumer to match three call sites; the answer that eventually won was that those three should not have been semibold. Kept, not deleted, because removal is a class rename needing a migrations.json row before the name can go — and because a spoke may be applying it. Delete it deliberately or adopt it, but do not leave it here unexamined."
+    },
+    "title-strong-font-size": {
+      "$value": "{font-size.400}",
+      "$type": "dimension"
+    },
+    "title-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "title-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "title-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "title-sm-strong-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "`title-strong` one rung down, at 250 — the heading that names a card or a section INSIDE a page, below the page's own title. Card titles and the danger-zone heading both render this and had nowhere to point, so 250 was the only rung in the ramp no composite covered. Both call sites hardcode `font-weight: 600`; 600 is not a weight in this system, so adopting this is a deliberate step to semibold (550), not a passthrough."
+    },
+    "title-sm-strong-font-size": {
+      "$value": "{font-size.250}",
+      "$type": "dimension"
+    },
+    "title-sm-strong-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "title-sm-strong-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "title-sm-strong-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "meta-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "Secondary information beside the thing it describes — captions, timestamps, counts, helper text."
+    },
+    "meta-font-size": { "$value": "{font-size.100}", "$type": "dimension" },
+    "meta-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "meta-line-height": { "$value": "{line-height.normal}", "$type": "number" },
+    "meta-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "eyebrow-sm-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "The eyebrow treatment — meta text set in caps above a heading or as a section marker. Gained a size variant because the kit sets menu group headings in caps one step larger than the page-level eyebrow; both are the same treatment, so they are one intention at two sizes rather than two intentions."
+    },
+    "eyebrow-sm-font-size": {
+      "$value": "{font-size.050}",
+      "$type": "dimension"
+    },
+    "eyebrow-sm-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "eyebrow-sm-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "eyebrow-sm-letter-spacing": {
+      "$value": "{letter-spacing.wider}",
+      "$type": "dimension"
+    },
+    "eyebrow-sm-text-transform": {
+      "$value": "{text-transform.uppercase}",
+      "$type": "other"
+    },
+
+    "eyebrow-md-font-family": {
+      "$value": "{typography.font-family.sans}",
+      "$type": "fontFamily",
+      "$description": "Menu and sidebar group headings — the caps treatment at UI scale."
+    },
+    "eyebrow-md-font-size": {
+      "$value": "{font-size.100}",
+      "$type": "dimension"
+    },
+    "eyebrow-md-font-weight": {
+      "$value": "{typography.font-weight.semibold}",
+      "$type": "fontWeight"
+    },
+    "eyebrow-md-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "eyebrow-md-letter-spacing": {
+      "$value": "{letter-spacing.wide}",
+      "$type": "dimension",
+      "$description": "`wide` (0.03em), not the `wider` (0.06em) the small eyebrow uses. Tracking is there to keep caps legible, and the need falls off as the size goes up — every existing consumer of this size had already settled on 0.03em independently. The token matches them rather than the reverse: it is new, they are the design."
+    },
+    "eyebrow-md-text-transform": {
+      "$value": "{text-transform.uppercase}",
+      "$type": "other"
+    },
+
+    "code-lg-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily"
+    },
+    "code-lg-font-size": { "$value": "{font-size.300}", "$type": "dimension" },
+    "code-lg-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "code-lg-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "code-lg-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "code-md-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily",
+      "$description": "Inline and block code. Sized to match body-md so code sits at the size of the prose around it."
+    },
+    "code-md-font-size": { "$value": "{font-size.200}", "$type": "dimension" },
+    "code-md-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "code-md-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "code-md-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "code-sm-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily"
+    },
+    "code-sm-font-size": { "$value": "{font-size.150}", "$type": "dimension" },
+    "code-sm-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "code-sm-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "code-sm-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "code-xs-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily",
+      "$description": "The mono face at the `sm` control step. Added for the same reason `body-xs` was: the CONTROL ramp descends below where prose goes, and esa-color-picker's hex field is a value slot set in mono — a hex code is tabular, so it cannot take `body-*` without losing the face. Without this rung a small colour picker had no mono composite to name.\n\nTRACKING: inherits `letter-spacing.default` (0.01em) like every other composite. If a mono run ever needs true column alignment, that is what `letter-spacing.normal` (0) now exists for."
+    },
+    "code-xs-font-size": { "$value": "{font-size.100}", "$type": "dimension" },
+    "code-xs-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "code-xs-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "code-xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    },
+
+    "code-2xs-font-family": {
+      "$value": "{typography.font-family.mono}",
+      "$type": "fontFamily",
+      "$description": "The mono face at the `xs` control step — `code-xs`'s partner one rung down, mirroring `body-2xs`. Renders 8–10px, and carries the same caveat: that size is a live design question deferred to its own decision, not an endorsement. If the `xs` step is later raised or dropped, this token goes with it."
+    },
+    "code-2xs-font-size": { "$value": "{font-size.050}", "$type": "dimension" },
+    "code-2xs-font-weight": {
+      "$value": "{typography.font-weight.regular}",
+      "$type": "fontWeight"
+    },
+    "code-2xs-line-height": {
+      "$value": "{line-height.normal}",
+      "$type": "number"
+    },
+    "code-2xs-letter-spacing": {
+      "$value": "{letter-spacing.default}",
+      "$type": "dimension"
+    }
   }
 }

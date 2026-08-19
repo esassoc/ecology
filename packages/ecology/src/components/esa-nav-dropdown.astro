@@ -1,13 +1,18 @@
 ---
 // esa-nav-dropdown — presentational disclosure (.astro).
 //
-// An icon-link trigger paired with a floating panel, using a native
+// A chrome-button trigger paired with a floating panel, using a native
 // <details>/<summary> disclosure — zero runtime JS, same pattern as
-// esa-header-nav. The trigger reuses esa-icon-link (tag="summary"); the panel
-// content is slotted, so the consumer supplies whatever menu it needs. The
-// trailing chevron rotates when open. The panel resets to surface colors so it
+// esa-header-nav. The trigger reuses esa-button (variant="chrome" tag="summary");
+// the panel content is slotted, so the consumer supplies whatever menu it needs.
+// The trailing chevron rotates when open. The panel resets to surface colors so it
 // reads correctly even when the trigger lives on a dark/brand bar.
-import EsaIconLink from './esa-icon-link.astro';
+import EsaButton from './esa-button.astro';
+// TYPE: the panel is the inheritance root for slotted menu content, so it names
+// `body-md` rather than leaving loose text on whatever the bar above it set. The
+// import is the Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 interface Props {
   /** Trigger label. */
@@ -23,8 +28,8 @@ const { label, icon, size = 'md', align = 'start' } = Astro.props;
 const cls = ['esa-nav-dropdown', `esa-nav-dropdown--${align}`].join(' ');
 ---
 <details class={cls}>
-  <EsaIconLink tag="summary" icon={icon} iconRight="chevron-down" size={size}>{label}</EsaIconLink>
-  <div class="esa-nav-dropdown__panel">
+  <EsaButton tag="summary" variant="chrome" icon={icon} iconRight="chevron-down" size={size}>{label}</EsaButton>
+  <div class="esa-nav-dropdown__panel typography-body-md">
     <slot />
   </div>
 </details>
@@ -32,11 +37,14 @@ const cls = ['esa-nav-dropdown', `esa-nav-dropdown--${align}`].join(' ');
 <style>
   .esa-nav-dropdown { position: relative; }
 
-  /* chevron (last icon in the trigger) rotates when open */
-  .esa-nav-dropdown :global(.esa-icon-link > .esa-icon:last-child) {
+  /* Chevron (last icon in the trigger) rotates when open. Scoped to
+     .esa-button__native, not the summary itself: with tag="summary" the <summary>
+     takes esa-button's WRAPPER class and the icons sit one level deeper, inside
+     .esa-button__native. A `.esa-button > .esa-icon` selector would match nothing. */
+  .esa-nav-dropdown :global(.esa-button__native > .esa-icon:last-child) {
     transition: transform 150ms ease;
   }
-  .esa-nav-dropdown[open] :global(.esa-icon-link > .esa-icon:last-child) {
+  .esa-nav-dropdown[open] :global(.esa-button__native > .esa-icon:last-child) {
     transform: rotate(180deg);
   }
 
@@ -47,9 +55,9 @@ const cls = ['esa-nav-dropdown', `esa-nav-dropdown--${align}`].join(' ');
     z-index: var(--z-dropdown, 50);
     min-width: var(--nav-dropdown-panel-min-width, 240px);
     padding: var(--nav-dropdown-panel-padding, var(--spacing-300, 12px));
-    background: var(--nav-dropdown-panel-bg, var(--color-background-raised, #fff));
-    color: var(--nav-dropdown-panel-text, var(--color-content-primary, #171717));
-    border: var(--border-width-default, 1px) solid var(--nav-dropdown-panel-border-color, var(--color-border, #e5e5e5));
+    background: var(--nav-dropdown-panel-bg, var(--color-background-elevation-raised, #fff));
+    color: var(--nav-dropdown-panel-text, var(--color-content-default, #171717));
+    border: var(--border-width-default, 1px) solid var(--nav-dropdown-panel-border-color, var(--color-border-default, #e5e5e5));
     border-radius: var(--nav-dropdown-panel-radius, var(--radius-surface, 8px));
     box-shadow: var(--nav-dropdown-panel-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
   }

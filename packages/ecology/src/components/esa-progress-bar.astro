@@ -23,6 +23,17 @@ const {
   showValue = false,
 } = Astro.props;
 
+// The header line (label + percentage) is UI text — the label composite, one rung
+// per size. The import is the Astro half of the composite mechanism; Lit siblings
+// get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+// Two ramps, not one. The header carries the size for both children, but only the
+// LABEL was ever medium — the percentage read at the body weight it inherited. One
+// ramp on the header would have quietly promoted the value to medium too.
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-sm', lg: 'body-md' } as const;
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-sm', lg: 'label-md' } as const;
+
 const clampedValue = Math.max(0, Math.min(100, value));
 const isDeterminate = mode === 'determinate';
 
@@ -46,8 +57,8 @@ const showHeader = !!label || showValue;
   aria-label={label || 'Progress'}
 >
   {showHeader && (
-    <div class="esa-progress-bar__header">
-      {label && <span class="esa-progress-bar__label">{label}</span>}
+    <div class={`esa-progress-bar__header typography-${VALUE_TYPE[size]}`}>
+      {label && <span class={`esa-progress-bar__label typography-${LABEL_TYPE[size]}`}>{label}</span>}
       {showValue && isDeterminate && (
         <span class="esa-progress-bar__value">{clampedValue}%</span>
       )}
@@ -65,9 +76,8 @@ const showHeader = !!label || showValue;
   .esa-progress-bar {
     --_progress-height: var(--progress-bar-height-md, 8px);
     --_progress-radius: var(--progress-bar-radius, var(--radius-pill, 9999px));
-    --_progress-track-bg: var(--progress-bar-track-bg, var(--color-background-sunken, #efefef));
+    --_progress-track-bg: var(--progress-bar-track-bg, var(--color-background-elevation-sunken, #efefef));
     --_progress-fill-bg: var(--progress-bar-fill-bg, var(--color-background-brand, #43608a));
-    --_progress-font-size: var(--font-size-150, 0.875rem);
 
     display: block;
     width: 100%;
@@ -78,16 +88,14 @@ const showHeader = !!label || showValue;
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: var(--spacing-100, 0.25rem);
-    font-size: var(--_progress-font-size);
   }
 
   .esa-progress-bar__label {
-    color: var(--color-content-primary, #171717);
-    font-weight: 500;
+    color: var(--color-content-default, #171717);
   }
 
   .esa-progress-bar__value {
-    color: var(--color-content-secondary, #525252);
+    color: var(--color-content-default-secondary, #525252);
     font-variant-numeric: tabular-nums;
   }
 
@@ -106,13 +114,14 @@ const showHeader = !!label || showValue;
     transition: width 300ms ease;
   }
 
-  .esa-progress-bar--xs { --_progress-height: var(--progress-bar-height-xs, 2px); --_progress-font-size: var(--font-size-050, 0.625rem); }
-  .esa-progress-bar--sm { --_progress-height: var(--progress-bar-height-sm, 4px); --_progress-font-size: var(--font-size-100, 0.75rem); }
-  .esa-progress-bar--lg { --_progress-height: var(--progress-bar-height-lg, 12px); --_progress-font-size: var(--font-size-200, 0.9375rem); }
+  /* Size no longer carries a font-size — that rung comes from LABEL_TYPE above. */
+  .esa-progress-bar--xs { --_progress-height: var(--progress-bar-height-xs, 2px); }
+  .esa-progress-bar--sm { --_progress-height: var(--progress-bar-height-sm, 4px); }
+  .esa-progress-bar--lg { --_progress-height: var(--progress-bar-height-lg, 12px); }
 
-  .esa-progress-bar--success { --_progress-fill-bg: var(--color-background-success, #22c55e); }
-  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-background-warning, #f59e0b); }
-  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-background-danger, #ef4444); }
+  .esa-progress-bar--success { --_progress-fill-bg: var(--color-background-utility-success, #22c55e); }
+  .esa-progress-bar--warning { --_progress-fill-bg: var(--color-background-utility-warning, #f59e0b); }
+  .esa-progress-bar--danger  { --_progress-fill-bg: var(--color-background-utility-danger, #ef4444); }
 
   .esa-progress-bar--indeterminate .esa-progress-bar__fill {
     width: 40% !important;

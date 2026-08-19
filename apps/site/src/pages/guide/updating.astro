@@ -1,0 +1,208 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+---
+<DocsLayout title="Keeping a spoke current — Ecology" activeHref="/guide/updating">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Keeping current</span></nav>
+  <h1>Keeping a spoke current</h1>
+  <p class="lede">The hub renames things. Your spoke does not break when it happens — which is exactly the problem, because nothing tells you either. This is how you find out what has drifted and move off it, in your own repo, on your own schedule.</p>
+
+  <Section id="why" title="Why a rename reaches you with no warning">
+    <p>
+      A spoke does not install a copy of the design system. It points at the hub checkout
+      through a <code>file:</code> symlink, so a rename in the hub lands in your spoke on
+      the next dev tick — there is no version bump and no publish step to absorb it.
+    </p>
+    <p>
+      The hub keeps old names working as <strong>compatibility aliases</strong>, so nothing
+      looks broken. That is the trap: a spoke can sit on retired names for months and only
+      find out when the aliases are finally deleted. Worse, an alias only covers
+      <em>one</em> of the two ways you can use a token — see below.
+    </p>
+  </Section>
+
+  <Section id="asymmetry" title="The one thing to understand: reads vs declarations">
+    <p>
+      This is the whole reason the tooling is more than a find-and-replace, and the single
+      most common way a spoke is silently wrong.
+    </p>
+    <table class="tk">
+      <thead><tr><th>What you wrote</th><th>What it is</th><th>After a hub rename</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>color: var(--old-name)</code></td>
+          <td>a <strong>read</strong></td>
+          <td>✅ Rescued by the alias. Renders exactly as before.</td>
+        </tr>
+        <tr>
+          <td><code>--old-name: #1e5386;</code></td>
+          <td>a <strong>declaration</strong></td>
+          <td>❌ <strong>Inert.</strong> Nothing reads that name any more, so your override does nothing. You get the hub default, and no error says so.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      An alias points old → new. It rescues you when you <em>read</em> the old name. It can
+      never rescue you when you <em>declare</em> it, because the components are reading the
+      new name and your theme file is setting the old one. Those two never meet.
+    </p>
+    <p class="callout">
+      Your theme file is nothing but declarations. That means the file where you set your
+      brand is the file most exposed to this — and the failure looks like "the design system
+      just doesn't apply our colour", not like an error.
+    </p>
+  </Section>
+
+  <Section id="check" title="Step 1 — find out where you stand">
+    <pre><code>npm run doctor</code></pre>
+    <p>Two separate warnings matter here, and they mean different things:</p>
+    <table class="tk">
+      <thead><tr><th>Warning</th><th>Severity</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>no deprecated @esa/tokens names in src/</code></td>
+          <td>Renders correctly today via aliases. Fix on your own schedule, before the hub drops them.</td>
+        </tr>
+        <tr>
+          <td><code>no deprecated names DECLARED in src/</code></td>
+          <td><strong>Already wrong.</strong> These overrides are inert right now. Fix first.</td>
+        </tr>
+      </tbody>
+    </table>
+  </Section>
+
+  <Section id="preview" title="Step 2 — preview the change">
+    <pre><code>node ../ecology/scripts/migrate-tokens.mjs</code></pre>
+    <p>
+      Nothing is written. It groups every rewrite by the rename that caused it, and calls
+      out four things you should not skim past:
+    </p>
+    <ul>
+      <li>
+        <strong><code>⚠ NOT an exact alias</code></strong> — that rule changes rendering, not
+        just the name. Read the reason it prints and look at those call sites afterwards.
+      </li>
+      <li>
+        <strong><code>✖ NOT REWRITTEN — replacement is itself gone</code></strong> — the hub
+        renamed something and then deleted the destination. The tool refuses to swap one dead
+        name for another and shows you the chain. These need a decision, not a rename: ask what
+        replaced the <em>capability</em>, because the answer is usually a different CSS property
+        rather than a new token.
+      </li>
+      <li>
+        <strong><code>✖ REMOVED</code></strong> — deleted with no equivalent. Reads of these
+        resolve to nothing <em>today</em>; whatever literal fallback you wrote is what you are
+        actually seeing.
+      </li>
+      <li>
+        <strong><code>⚠ declared here, not just read</code></strong> — the inert overrides from
+        the section above.
+      </li>
+    </ul>
+    <h3>If it refuses to run</h3>
+    <p>
+      A <strong>collapse collision</strong> means the hub merged two names into one, and your
+      spoke gave those two names <em>different</em> values. The merge was safe in the hub because
+      the values were identical there; here the distinction is real. Rewriting both would emit the
+      same property twice and silently drop one value, so nothing is written until you decide which
+      one survives. Delete the loser from your theme file and re-run.
+    </p>
+  </Section>
+
+  <Section id="apply" title="Step 3 — apply, then look at it">
+    <pre><code>git status --porcelain          # must be clean — this edits in place
+node ../ecology/scripts/migrate-tokens.mjs --write
+npm run build</code></pre>
+    <p>
+      For every rename except the ones flagged inexact, the correct result is
+      <strong>no visible difference at all</strong> — the old name and the new one resolve to the
+      same value, which is what made the rename safe. Load the pages that changed most and confirm
+      that is what you see. A visible change on an "exact" rule means something else is going on;
+      say so rather than accepting it.
+    </p>
+    <p>
+      In Claude Code, <code>/update-tokens</code> wraps all three steps and explains the output in
+      plain language — useful if the person doing this does not read CSS.
+    </p>
+  </Section>
+
+  <Section id="promise" title="What the hub guarantees in return">
+    <p>
+      None of this works if the hub can drop a name without saying so, and until
+      2026-08-14 nothing stopped it. Every mechanism above — the aliases, the codemod,
+      the <code>doctor</code> warnings — starts from a row in <code>migrations.json</code>,
+      and nothing checked the row had been written. Three guards now enforce it:
+    </p>
+    <ul>
+      <li>
+        <strong>A name cannot disappear silently.</strong> The hub commits a baseline of
+        every token name it ships; its own test suite fails if one vanishes without a
+        migration row. Forgetting is a build failure, not a thing to remember.
+      </li>
+      <li>
+        <strong>A rename cannot point at a dead name.</strong> The destination has to
+        resolve to a real value, not merely exist — an alias aimed at a deleted token is
+        itself declared and still resolves to nothing. That case shipped once and reached
+        two spokes before this guard existed.
+      </li>
+      <li>
+        <strong>Additions are always free.</strong> New tokens never trip anything. A spoke
+        cannot be broken by a name it has never used.
+      </li>
+    </ul>
+    <p>
+      So the deal is: the hub owes you a declared, resolvable path off every name it
+      retires. You owe it a run of the migration before the aliases are dropped.
+    </p>
+  </Section>
+
+  <Section id="cadence" title="When to do this">
+    <p>
+      There is no schedule and no forced upgrade. Reasonable triggers: before you ship anything
+      real, when <code>doctor</code> reports a <em>declared</em> deprecated name (that one is not
+      cosmetic), and whenever the hub announces it is about to drop aliases. Aliases are a bridge,
+      not a fixture — they exist so you can cross on your own schedule, not so you never have to.
+    </p>
+    <p>
+      If the migration tells you a capability is gone and you genuinely need it, that is a
+      <code>/request-lego</code> against the hub. A missing hook is a conversation, not something
+      to work around locally.
+    </p>
+  </Section>
+</DocsLayout>
+
+<style>
+  .lede { font-size: var(--font-size-250, 1.05rem); color: var(--color-content-default-secondary, #525252); max-width: 70ch; }
+  .crumbs { margin-bottom: var(--spacing-400, 1rem); color: var(--color-content-default-muted, #737373); }
+  .crumbs a { color: var(--color-content-brand, #2a7e3b); }
+
+  .tk { width: 100%; border-collapse: collapse; margin: var(--spacing-400, 1rem) 0; }
+  .tk th, .tk td {
+    text-align: left;
+    vertical-align: top;
+    padding: var(--spacing-250, 0.625rem) var(--spacing-300, 0.75rem);
+    border-bottom: 1px solid var(--color-border-default, #e5e5e5);
+  }
+  .tk th { color: var(--color-content-default-secondary, #525252); white-space: nowrap; }
+
+  pre {
+    background: var(--color-background-elevation-sunken, #f5f5f5);
+    border: 1px solid var(--color-border-default, #e5e5e5);
+    border-radius: var(--radius-surface, 8px);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    overflow-x: auto;
+  }
+
+  /* The claim this page is built around — worth pulling out of the flow. */
+  .callout {
+    border-inline-start: 3px solid var(--color-border-utility-warning, #d97706);
+    background: var(--color-background-utility-warning-subtle, #fffbeb);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    margin: var(--spacing-400, 1rem) 0;
+  }
+
+  ul { max-width: 78ch; }
+  li { margin-bottom: var(--spacing-250, 0.625rem); }
+  h3 { margin-top: var(--spacing-600, 1.5rem); }
+</style>

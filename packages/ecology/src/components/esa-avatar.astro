@@ -40,7 +40,22 @@ const hue = (() => {
 // Lucide "user" icon path — inlined to avoid an icon dependency.
 const iconSize = size === 'xs' ? 14 : size === 'sm' ? 16 : size === 'lg' ? 24 : 20;
 
-const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
+// Initials are UI text at emphasis — the -strong label composite, one rung per
+// size, topping out at title for lg. The import is the Astro half of the
+// composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+// NOTE: `lg` is the odd rung out — the other three are `-strong` (semibold) and it
+// is now `title` (medium), because every `title-strong` call site moved to `title`.
+// Flagged rather than silently re-pointed: this ramp no longer holds one weight.
+const INITIALS_TYPE = {
+  xs: 'label-2xs-strong',
+  sm: 'label-xs-strong',
+  md: 'label-md-strong',
+  lg: 'title',
+} as const;
+
+const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`, `typography-${INITIALS_TYPE[size]}`]
   .filter(Boolean)
   .join(' ');
 ---
@@ -75,10 +90,10 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     /* Public so initials type can be re-pointed per instance. Each size rule
        below repeats the hook with its own literal, so an override wins whichever
        size is active rather than only at md. */
-    --_avatar-font-size: var(--avatar-font-size, var(--font-size-200, 0.9375rem));
+    --_avatar-font-size: var(--avatar-font-size, var(--typography-label-md-strong-font-size, var(--font-size-200, 0.9375rem)));
     --_avatar-radius: var(--avatar-radius, var(--radius-pill, 9999px));
     --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
-    --_avatar-text: var(--avatar-text-color, var(--color-content-inverse, #fff));
+    --_avatar-text: var(--avatar-text-color, var(--color-content-default-knockout, #fff));
 
     display: inline-flex;
     align-items: center;
@@ -88,19 +103,19 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
     border-radius: var(--_avatar-radius);
     background: var(--_avatar-bg);
     color: var(--_avatar-text);
+    /* The rest of the type comes from .typography-*-strong on this element. Only
+       font-size stays, because --avatar-font-size is public and esa-header-nav
+       sets it — the composite token is its fallback, one rung per size below. */
     font-size: var(--_avatar-font-size);
-    /* Was a raw 600. The token is 550, which is what every other component's
-       semibold resolves to — the literal was quietly heavier than the system. */
-    font-weight: var(--font-weight-semibold, 550);
     overflow: hidden;
     flex-shrink: 0;
     user-select: none;
     box-sizing: border-box;
   }
 
-  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size, var(--font-size-050, 0.625rem)); }
-  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, var(--font-size-100, 0.75rem)); }
-  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, var(--font-size-400, 1.25rem)); }
+  .esa-avatar--xs { --_avatar-size: var(--avatar-size-xs, 20px); --_avatar-font-size: var(--avatar-font-size, var(--typography-label-2xs-strong-font-size, var(--font-size-050, 0.625rem))); }
+  .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, var(--typography-label-xs-strong-font-size, var(--font-size-100, 0.75rem))); }
+  .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, var(--typography-title-font-size, var(--font-size-400, 1.25rem))); }
 
   .esa-avatar--square { --_avatar-radius: var(--radius-surface, 0.5rem); }
 
@@ -113,7 +128,10 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`]
   /* No line-height here: .esa-avatar is a fixed --_avatar-size box that flex-centres
      its children, so the line box has nothing to push against. Setting it was
      defending against leading that could not reach this element. */
-  .esa-avatar__initials {
-    letter-spacing: 0.02em;
-  }
+  /* NO tracking override here, deliberately. The initials carried a bare `0.02em`,
+     a value belonging to no rung, on the argument that two capitals need air. The
+     composite owns tracking along with the other four properties, and a component
+     reaching past it to set one of the five by hand is the assembling-at-the-call-site
+     problem in miniature — it is how a role stops meaning one thing. The delta is
+     0.01em across two characters. The role wins. */
 </style>

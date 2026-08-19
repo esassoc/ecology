@@ -4,6 +4,10 @@ import { typography } from '../typography.js';
 /** Label is UI text (medium); the typed date is prose (regular). See
     the FORMS header in component-tokens.css for the step→rung mapping. */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 /**
@@ -126,7 +130,7 @@ export class EsaDatePicker extends LitElement {
           : null}
         <input
           type="date"
-          class="input typography-${VALUE_TYPE[this.size]}"
+          class="input typography-${FIELD_TYPE[this.size]}"
           .value=${this.value}
           ?disabled=${this.disabled}
           min=${this.min || ''}
@@ -180,7 +184,7 @@ export class EsaDatePicker extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .field__required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
@@ -193,8 +197,11 @@ export class EsaDatePicker extends LitElement {
     .input {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
+      /* Leading is load-bearing on a content-sized box — see the long note in
+         esa-select's .input. Single line, so the composite's relaxed leading only
+         adds height. */
       color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -207,9 +214,16 @@ export class EsaDatePicker extends LitElement {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .input:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
     }
     .input::-webkit-calendar-picker-indicator {
@@ -225,7 +239,7 @@ export class EsaDatePicker extends LitElement {
       --_field-border-color: var(--form-error-border-color, #ef4444);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-border-danger, rgba(211, 47, 47, 0.25));
+      box-shadow: 0 0 0 2px var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,
   ];

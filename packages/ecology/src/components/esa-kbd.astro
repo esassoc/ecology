@@ -3,24 +3,28 @@
 // (/, Tab, Esc, ↑ ↓ ↵). Slot the key label. Token-driven, so it re-skins with the
 // active theme. (Promoted from cb-fish's cbf-kbd; the same keycap styling was also
 // duplicated inside esa-command-palette — this is the shared primitive both use.)
+//
+// TYPE: `label-xs` — a keycap is UI text, not code, and the sans face is deliberate
+// (it also overrides the UA's monospace default for <kbd>). The import is the Astro
+// half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 ---
-<kbd class="esa-kbd"><slot /></kbd>
+<kbd class="esa-kbd typography-microcopy-xs"><slot /></kbd>
 
 <style>
   .esa-kbd {
+    /* microcopy carries no leading, which is only safe because a keycap is one
+       line. Say so, rather than relying on it being short. */
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 19px;
     height: 19px;
     padding: 0 5px;
-    font-family: var(--font-sans);
-    font-size: var(--font-size-100, 0.75rem);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-none, 1);
-    color: var(--kbd-color, var(--color-content-muted));
-    background: var(--kbd-bg, var(--color-background-raised));
-    border: var(--border-width-default, 1px) solid var(--kbd-border-color, var(--color-border));
+    color: var(--kbd-color, var(--color-content-default-muted));
+    background: var(--kbd-bg, var(--color-background-elevation-raised));
+    border: var(--border-width-default, 1px) solid var(--kbd-border-color, var(--color-border-default));
     border-bottom-width: 2px;
     border-radius: var(--kbd-radius, 4px);
   }

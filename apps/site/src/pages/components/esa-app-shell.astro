@@ -120,7 +120,7 @@ const searchIndex = [
 ];
 
 <AppShell items={items} active="sites" />`} lang="ts">
-      <p style="margin: 0; color: var(--color-content-secondary, #525252);">
+      <p style="margin: 0; color: var(--color-content-default-secondary, #525252);">
         <code>icon</code> takes an <code>esa-icon</code> registry name (<code>'map-pin'</code>) or a raw
         inline SVG string. <code>active</code> matches on <code>key</code> — never on label or href, so
         renaming a page or moving a route doesn't silently unhighlight the nav.
@@ -140,7 +140,7 @@ const searchIndex = [
     <!-- page content -->
   </AppShell>
 </div>`}>
-      <p style="margin: 0; color: var(--color-content-secondary, #525252);">
+      <p style="margin: 0; color: var(--color-content-default-secondary, #525252);">
         The <code>logo</code> slot replaces the mark + wordmark; <code>mark</code> takes a raw inline
         <code>&lt;svg&gt;</code> for the common case. Content is rendered directly into the sidenav
         header rather than through a nested <code>&lt;slot&gt;</code>, which is what previously failed
@@ -183,7 +183,7 @@ const searchIndex = [
     width: 100%;
     height: 520px;
     overflow: hidden;
-    border: 1px solid var(--color-border, #e5e5e5);
+    border: 1px solid var(--color-border-default, #e5e5e5);
     border-radius: 10px;
   }
   .shell-page {

@@ -1,9 +1,9 @@
 ---
 // esa-page-header — presentational page top (.astro).
 // The standard prototype page header: optional breadcrumbs OR an eyebrow (with
-// an optional leading icon), a title (at the page-title role by default, or the
-// oversized display role via prominence="display"), an optional lede at
-// body-large in secondary text, and a right-aligned actions slot. Replaces both
+// an optional leading icon), a title (`heading-lg` by default, or the oversized
+// `display` via prominence="display"), an optional lede at `body-lg` in
+// secondary text, and a right-aligned actions slot. Replaces both
 // the bespoke .x__head / .x__title / .x__lede / .x__cta cluster every prototype
 // re-implements AND the per-spoke "hero header" (eyebrow + icon + big title).
 //
@@ -14,6 +14,17 @@
 // Slots: "breadcrumbs" (above the title — host an esa-breadcrumbs here),
 // "actions" (right-aligned, top-aligned with the title block).
 import EsaIcon from './esa-icon.astro';
+
+// TYPE: the header names roles rather than assembling them — `heading-lg` on the
+// default title, `display` on prominence="display", `label-md` on the eyebrow and
+// `body-lg` on the lede. The slot containers name one too, as a default that reaches
+// slotted content by inheritance — an esa-breadcrumbs or esa-button carries its own
+// composite and wins. Actions take `label-md` (chrome that holds buttons); breadcrumbs
+// take `body-md`, matching what esa-breadcrumbs sets on its own crumbs, so a bare <nav>
+// slotted here reads the same as the real component rather than heavier than it.
+// The import is the Astro half of the composite mechanism;
+// Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
 
 interface Props {
   title: string;
@@ -29,28 +40,31 @@ interface Props {
 const { title, lede, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
 const Tag = as;
 
+// The two title prominences are two composites, not one composite plus overrides.
+const titleType = prominence === 'display' ? 'display' : 'heading-lg';
+
 const hasBreadcrumbs = Astro.slots.has('breadcrumbs');
 const hasActions = Astro.slots.has('actions');
 ---
 <Tag class:list={['esa-page-header', prominence === 'display' && 'esa-page-header--display']}>
   {hasBreadcrumbs && (
-    <div class="esa-page-header__breadcrumbs">
+    <div class="esa-page-header__breadcrumbs typography-body-md">
       <slot name="breadcrumbs" />
     </div>
   )}
   <div class="esa-page-header__bar">
     <div class="esa-page-header__titles">
       {eyebrow && (
-        <p class="esa-page-header__eyebrow">
+        <p class="esa-page-header__eyebrow typography-label-md">
           {icon && <EsaIcon name={icon} size="sm" />}
           <span>{eyebrow}</span>
         </p>
       )}
-      <h1 class="esa-page-header__title">{title}</h1>
-      {lede && <p class="esa-page-header__lede">{lede}</p>}
+      <h1 class={`esa-page-header__title typography-${titleType}`}>{title}</h1>
+      {lede && <p class="esa-page-header__lede typography-body-lg">{lede}</p>}
     </div>
     {hasActions && (
-      <div class="esa-page-header__actions">
+      <div class="esa-page-header__actions typography-label-md">
         <slot name="actions" />
       </div>
     )}
@@ -59,14 +73,18 @@ const hasActions = Astro.slots.has('actions');
 
 <style>
   .esa-page-header {
-    --_ph-title-color: var(--page-header-title-color, var(--color-content-primary, #171717));
-    --_ph-title-font: var(--page-header-title-font, var(--font-display, var(--font-sans, 'DM Sans', sans-serif)));
-    --_ph-title-size: var(--page-header-title-size, var(--font-size-600, 1.875rem));
-    --_ph-title-weight: var(--page-header-title-weight, var(--font-weight-semibold, 550));
-    --_ph-lede-color: var(--page-header-lede-color, var(--color-content-secondary, #525252));
-    --_ph-lede-size: var(--page-header-lede-size, var(--font-size-300, 1.125rem));
-    --_ph-eyebrow-color: var(--page-header-eyebrow-color, var(--color-content-secondary, #525252));
-    --_ph-eyebrow-size: var(--page-header-eyebrow-size, var(--font-size-200, 0.9375rem));
+    --_ph-title-color: var(--page-header-title-color, var(--color-content-default, #171717));
+    /* Type comes from the composite classes in the markup. These three stay because
+       they are the PUBLIC re-skin surface — a spoke declaring --page-header-title-*
+       must still win, so each hook keeps one declaration below with its composite
+       token as the fallback. */
+    --_ph-title-font: var(--page-header-title-font, var(--typography-heading-lg-font-family, var(--typography-font-family-display, 'DM Sans', sans-serif)));
+    --_ph-title-size: var(--page-header-title-size, var(--typography-heading-lg-font-size, var(--font-size-600, 1.875rem)));
+    --_ph-title-weight: var(--page-header-title-weight, var(--typography-heading-lg-font-weight, var(--typography-font-weight-semibold, 550)));
+    --_ph-lede-color: var(--page-header-lede-color, var(--color-content-default-secondary, #525252));
+    --_ph-lede-size: var(--page-header-lede-size, var(--typography-body-lg-font-size, var(--font-size-300, 1.125rem)));
+    --_ph-eyebrow-color: var(--page-header-eyebrow-color, var(--color-content-default-secondary, #525252));
+    --_ph-eyebrow-size: var(--page-header-eyebrow-size, var(--typography-label-md-font-size, var(--font-size-200, 0.9375rem)));
     --_ph-gap: var(--page-header-gap, var(--spacing-200, 0.5rem));
     --_ph-bar-gap: var(--page-header-bar-gap, var(--spacing-500, 1.5rem));
     --_ph-crumb-gap: var(--page-header-breadcrumbs-gap, var(--spacing-300, 0.75rem));
@@ -75,10 +93,14 @@ const hasActions = Astro.slots.has('actions');
     background: transparent;
   }
 
-  /* prominence="display" — the oversized hero title (display role + bold). */
+  /* prominence="display" — the oversized hero title. The h1 carries
+     .typography-display here; these repoint the public hooks' fallbacks onto that
+     composite so an override still lands on the right rung.
+     3rem was never font-size-800: its clamp maxes at 2.75rem. */
   .esa-page-header--display {
-    --_ph-title-size: var(--page-header-title-size-display, var(--font-size-800, 3rem));
-    --_ph-title-weight: var(--page-header-title-weight-display, var(--font-weight-bold, 650));
+    --_ph-title-font: var(--page-header-title-font, var(--typography-display-font-family, var(--typography-font-family-display, 'DM Sans', sans-serif)));
+    --_ph-title-size: var(--page-header-title-size-display, var(--typography-display-font-size, var(--font-size-800, 2.75rem)));
+    --_ph-title-weight: var(--page-header-title-weight-display, var(--typography-display-font-weight, var(--typography-font-weight-bold, 650)));
   }
 
   .esa-page-header__breadcrumbs {
@@ -91,8 +113,6 @@ const hasActions = Astro.slots.has('actions');
     gap: var(--spacing-100, 0.25rem);
     margin: 0;
     font-size: var(--_ph-eyebrow-size);
-    font-weight: var(--font-weight-medium, 500);
-    line-height: var(--line-height-normal, 1.6);
     color: var(--_ph-eyebrow-color);
   }
 
@@ -116,16 +136,12 @@ const hasActions = Astro.slots.has('actions');
     font-family: var(--_ph-title-font);
     font-size: var(--_ph-title-size);
     font-weight: var(--_ph-title-weight);
-    line-height: var(--line-height-tight, 1.3);
-    letter-spacing: var(--letter-spacing-tight, -0.01em);
     color: var(--_ph-title-color);
   }
 
   .esa-page-header__lede {
     margin: 0;
     font-size: var(--_ph-lede-size);
-    font-weight: var(--font-weight-regular, 350);
-    line-height: var(--line-height-relaxed, 1.8);
     color: var(--_ph-lede-color);
     max-width: 70ch;
   }

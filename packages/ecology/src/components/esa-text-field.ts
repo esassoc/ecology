@@ -15,6 +15,10 @@ import { typography } from '../typography.js';
  * for the control step.
  */
 const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 /**
@@ -147,7 +151,7 @@ export class EsaTextField extends LitElement {
                 : null}</label
             >`
           : null}
-        <div class="control typography-${VALUE_TYPE[this.size]}">
+        <div class="control typography-${FIELD_TYPE[this.size]}">
           ${this.prefix
             ? html`<span class="affix affix--prefix" aria-hidden="true">${this.prefix}</span>`
             : null}
@@ -220,7 +224,7 @@ export class EsaTextField extends LitElement {
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-inline-start: 2px;
     }
 
@@ -239,8 +243,7 @@ export class EsaTextField extends LitElement {
          grows faster than either input. Everything else — face, size, weight,
          tracking — still comes from .typography-body-* on this element and
          inherits to the input and the affixes below. */
-      line-height: var(--line-height-none, 1);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -248,16 +251,17 @@ export class EsaTextField extends LitElement {
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
-    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    /* Hover moves the BORDER, not the fill — the field is transparent in every
+       state so that it is the colour of whatever contains it. --form-border-color-hover
+       already existed for exactly this and was wired into one component; it is the
+       family treatment now. Disabled needs no rule here: .input:disabled below
+       dims and sets the cursor. */
     .control:hover:not(:has(.input:disabled)) {
-      background: var(--form-bg-hover, var(--form-bg, #fff));
+      --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .control:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
-    }
-    .control:has(.input:disabled) {
-      background: var(--form-bg-disabled, #efefef);
     }
 
     .input {
@@ -282,9 +286,22 @@ export class EsaTextField extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    .control:has(.input:disabled) {
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
+    }
     .input:disabled {
-      opacity: 0.5;
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
+    }
+    .input:disabled::placeholder {
+      color: var(--color-content-disabled, #8d8d8d);
     }
 
     /* Segmented addon inside the field box — a sunken tint divided from the input
@@ -295,8 +312,8 @@ export class EsaTextField extends LitElement {
       align-items: center;
       flex: none;
       padding-inline: var(--_field-padding-x);
-      color: var(--form-affix-color, var(--color-content-secondary, #737373));
-      background: var(--form-affix-bg, var(--color-background-sunken, #efefef));
+      color: var(--form-affix-color, var(--color-content-default-secondary, #737373));
+      background: var(--form-affix-bg, var(--color-background-elevation-sunken, #efefef));
       user-select: none;
       white-space: nowrap;
     }
@@ -327,7 +344,7 @@ export class EsaTextField extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
   `,
   ];

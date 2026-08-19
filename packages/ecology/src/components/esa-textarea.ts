@@ -200,21 +200,24 @@ export class EsaTextarea extends LitElement {
       margin-block-end: var(--form-label-gap, 4px);
     }
     .required {
-      color: var(--color-content-danger, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-inline-start: 2px;
     }
 
     .input {
       width: 100%;
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      /* The one element here that KEEPS real leading. --form-line-height is gone —
-         it existed to force 1.6 onto single-line boxes that now use 1 — but a
-         textarea is genuinely multi-line prose, and its rows attribute budgets
-         height off this. body-md/lg lead at relaxed (1.8), which is looser than a
-         field wants, so it reads the normal rung directly. */
-      line-height: var(--typography-body-sm-line-height, 1.6);
+      /* The one element here that KEEPS real leading, and it takes it from its own
+         role rather than declaring any. --form-line-height is gone — it existed to
+         force 1.6 onto single-line boxes that now run flush — and a textarea is
+         genuinely multi-line prose, which is the case the body roles lead FOR; its
+         rows attribute budgets height off that leading. This used to read
+         --typography-body-sm-line-height while wearing body-md or body-lg: a reach
+         into a neighbour composite for one of the five properties, which is the
+         assembling-at-the-call-site problem in miniature. body-md leads at normal
+         now, so there is nothing left to correct. */
       color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -227,18 +230,28 @@ export class EsaTextarea extends LitElement {
     .input::placeholder {
       color: var(--form-placeholder-color, #737373);
     }
-    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    /* Hover moves the BORDER, not the fill — the field is transparent in every
+       state so that it is the colour of whatever contains it.
+       --form-border-color-hover already existed for exactly this and was wired
+       into one component; it is the family treatment now. */
     .input:hover:not(:disabled) {
-      background: var(--form-bg-hover, var(--form-bg, #fff));
+      --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
       --_field-border-color: var(--form-border-color-focus, #43608a);
       box-shadow: 0 0 0 var(--focus-ring-width)
         var(--focus-ring-color);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .input:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.5;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
     }
 
@@ -264,7 +277,7 @@ export class EsaTextarea extends LitElement {
       color: var(--form-help-color, #737373);
     }
     .error {
-      color: var(--form-error-color, var(--color-content-danger, #ce2c31));
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
   `,
   ];

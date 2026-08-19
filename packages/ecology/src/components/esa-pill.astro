@@ -14,8 +14,20 @@ interface Props {
 }
 const { label, variant = 'default', removable = true, size = 'md' } = Astro.props;
 
+// Pill text is UI text — the label composite, one rung per size. The import is the
+// Astro half of the composite mechanism; Lit siblings get it via
+// `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+
+const LABEL_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-sm', lg: 'microcopy-md' } as const;
+
 const hasIconSlot = Astro.slots.has('icon');
-const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
+const cls = [
+  'esa-pill',
+  `esa-pill--${variant}`,
+  `esa-pill--${size}`,
+  `typography-${LABEL_TYPE[size]}`,
+].join(' ');
 ---
 <span class={cls}>
   {hasIconSlot && (
@@ -45,61 +57,80 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
   )}
 </span>
 
-{removable && (
-  <script>
-    document.querySelectorAll('[data-esa-pill-remove]').forEach((btn) => {
-      btn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const pill = (btn as HTMLElement).closest('.esa-pill') as HTMLElement | null;
-        if (pill) {
-          pill.dispatchEvent(new CustomEvent('removed', { bubbles: true }));
-          pill.remove();
-        }
-      });
-    });
-  </script>
-)}
+{/* NOT gated on `removable`, for the same reason esa-alert-box is not: a delegated
+    listener exists precisely to catch pills rendered after load, so gating it on a
+    BUILD-TIME prop reintroduces the bug at one remove — a page whose server-rendered
+    pills are all non-removable would ship no listener, and a removable pill injected
+    later would still have a dead X. */}
+<script>
+  // DELEGATED, not per-button. This used to be
+  // `document.querySelectorAll('[data-esa-pill-remove]').forEach(btn => …)`,
+  // which runs once at load, so any pill rendered afterwards had a dead X and
+  // said nothing about it.
+  //
+  // CAPTURE phase, deliberately. The per-button version called
+  // stopPropagation() so that removing a pill inside a clickable row did not
+  // also activate the row. Delegating on the bubble phase would lose that — by
+  // the time document sees the click, every ancestor already has. Listening in
+  // capture puts this ahead of all of them, so stopPropagation() still means
+  // what it meant.
+  document.addEventListener(
+    'click',
+    (event) => {
+      const btn = (event.target as HTMLElement).closest?.('[data-esa-pill-remove]');
+      if (!btn) return;
+      event.stopPropagation();
+      const pill = btn.closest('.esa-pill') as HTMLElement | null;
+      if (pill) {
+        pill.dispatchEvent(new CustomEvent('removed', { bubbles: true }));
+        pill.remove();
+      }
+    },
+    true,
+  );
+</script>
 
 <style>
   .esa-pill {
-    --_pill-bg: var(--pill-bg, var(--color-background-sunken, #efefef));
-    --_pill-text: var(--pill-text-color, var(--color-content-primary, #171717));
-    --_pill-border: var(--pill-border-color, var(--color-border-subtle, #efefef));
-    --_pill-height: var(--pill-height-md, 28px);
-    --_pill-font-size: var(--font-size-150, 0.875rem);
+    --_pill-bg: var(--pill-bg, var(--color-background-elevation-sunken, #efefef));
+    --_pill-text: var(--pill-text-color, var(--color-content-default, #171717));
+    --_pill-border: var(--pill-border-color, var(--color-border-default-subtle, #efefef));
+    --_pill-padding-y: var(--spacing-150, 0.375rem);
     --_pill-padding-x: var(--spacing-200, 0.5rem);
     --_pill-gap: var(--spacing-100, 0.25rem);
 
     display: inline-flex;
     align-items: center;
     gap: var(--_pill-gap);
-    height: var(--_pill-height);
+    /* Sized by padding + text — --pill-height-* and the shared --chip-height-* ramp
+       behind it were deleted 2026-08-15. --_pill-padding-y sits one rung below
+       --_pill-padding-x (see esa-badge for why esa-button's equal-axis rule does not
+       transfer to a chip). The radius is 9999px, so the capsule follows whatever
+       height the text and padding resolve to. Note this box has a 1px border on each
+       side, so it renders 2px taller than esa-badge at the same rung. */
+    padding-block: var(--_pill-padding-y);
     padding-inline: var(--_pill-padding-x);
     border: var(--border-width-default, 1px) solid var(--_pill-border);
     border-radius: var(--pill-radius, var(--radius-pill, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
-    font-size: var(--_pill-font-size);
-    line-height: var(--line-height-none, 1);
     white-space: nowrap;
     box-sizing: border-box;
   }
 
+  /* Size no longer carries a font-size — that rung comes from LABEL_TYPE above. */
   .esa-pill--xs {
-    --_pill-height: var(--pill-height-xs, 18px);
-    --_pill-font-size: var(--font-size-050, 0.625rem);
+    --_pill-padding-y: var(--spacing-100, 0.25rem);
     --_pill-padding-x: var(--spacing-100, 0.25rem);
   }
 
   .esa-pill--sm {
-    --_pill-height: var(--pill-height-sm, 22px);
-    --_pill-font-size: var(--font-size-100, 0.75rem);
+    --_pill-padding-y: var(--spacing-100, 0.25rem);
     --_pill-padding-x: var(--spacing-150, 0.375rem);
   }
 
   .esa-pill--lg {
-    --_pill-height: var(--pill-height-lg, 34px);
-    --_pill-font-size: var(--font-size-200, 0.9375rem);
+    --_pill-padding-y: var(--spacing-200, 0.5rem);
     --_pill-padding-x: var(--spacing-300, 0.75rem);
   }
 
@@ -110,27 +141,27 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
   }
 
   .esa-pill--info {
-    --_pill-bg: var(--color-background-info-subtle, var(--color-blue-2));
-    --_pill-text: var(--color-content-info, #0d74ce);
-    --_pill-border: var(--color-border-info, var(--color-blue-6));
+    --_pill-bg: var(--color-background-utility-info-subtle, var(--color-blue-2));
+    --_pill-text: var(--color-content-utility-info, #0d74ce);
+    --_pill-border: var(--color-border-utility-info, var(--color-blue-6));
   }
 
   .esa-pill--success {
-    --_pill-bg: var(--color-background-success-subtle, var(--color-lime-2));
-    --_pill-text: var(--color-content-success, #5c7c2f);
-    --_pill-border: var(--color-border-success, var(--color-lime-6));
+    --_pill-bg: var(--color-background-utility-success-subtle, var(--color-lime-2));
+    --_pill-text: var(--color-content-utility-success, #5c7c2f);
+    --_pill-border: var(--color-border-utility-success, var(--color-lime-6));
   }
 
   .esa-pill--warning {
-    --_pill-bg: var(--color-background-warning-subtle, var(--color-yellow-2));
-    --_pill-text: var(--color-content-warning, #ab6400);
-    --_pill-border: var(--color-border-warning, var(--color-yellow-6));
+    --_pill-bg: var(--color-background-utility-warning-subtle, var(--color-yellow-2));
+    --_pill-text: var(--color-content-utility-warning, #ab6400);
+    --_pill-border: var(--color-border-utility-warning, var(--color-yellow-6));
   }
 
   .esa-pill--danger {
-    --_pill-bg: var(--color-background-danger-subtle, var(--color-red-2));
-    --_pill-text: var(--color-content-danger, #ce2c31);
-    --_pill-border: var(--color-border-danger, var(--color-red-6));
+    --_pill-bg: var(--color-background-utility-danger-subtle, var(--color-red-2));
+    --_pill-text: var(--color-content-utility-danger, #ce2c31);
+    --_pill-border: var(--color-border-utility-danger, var(--color-red-6));
   }
 
   .esa-pill__icon {
@@ -138,9 +169,8 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     display: inline-flex;
   }
 
-  .esa-pill__label {
-    font-weight: 500;
-  }
+  /* .esa-pill__label had font-weight: 500 — exactly what label-* already carries,
+     so it is inherited from the root composite now rather than restated here. */
 
   .esa-pill__remove {
     display: inline-flex;
