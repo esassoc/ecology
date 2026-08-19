@@ -227,7 +227,15 @@ if (runMarkup) {
     if (!isLive) continue;
     if (/\{\s*\.\.\./.test(attrs)) continue; // spread props may carry children/content
     // Self-closing, or an element whose body is whitespace only.
-    const body = selfClosed ? '' : (inner ?? '');
+    //
+    // `inner` is undefined when the closing tag is not in this text at all, which
+    // is the normal shape of an Edit fragment: `old_string` / `new_string` carry
+    // the opening tag and nothing else. Reading that as an empty body blocked
+    // routine attribute edits on regions that are populated in the file — and the
+    // only escape, `a11y-checked:`, disables all nine checks on that file forever.
+    // An unclosed tag is unknown, not empty, so it is skipped.
+    if (!selfClosed && inner === undefined) continue;
+    const body = selfClosed ? '' : inner;
     if (body.trim() !== '') continue; // has children or an interpolation — fine
     seen.add(`<${tagName}${attrs.trim() ? ' ' + attrs.trim().slice(0, 60) : ''}>`);
   }

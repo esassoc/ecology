@@ -113,6 +113,13 @@ function ensureRegions(): AnnouncerRegions | null {
     return regions;
   }
 
+  // One region may survive while the other is torn out (a framework replacing part
+  // of body, a stray removeChild). Rebuilding both without removing the survivor
+  // leaves THREE regions in the document — they interfere with each other, which is
+  // the reason the ceiling is two, and live-region-audit.mjs asserts exactly two.
+  regions?.polite.remove();
+  regions?.assertive.remove();
+
   const make = (live: 'polite' | 'assertive', role: 'status' | 'alert') => {
     const el = document.createElement('div');
     el.setAttribute('aria-live', live);

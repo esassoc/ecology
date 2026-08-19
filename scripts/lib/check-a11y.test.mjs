@@ -217,6 +217,15 @@ test('empty live region: a region with content or interpolation passes', () => {
   assert.equal(check(ASTRO, '<div role="status" {...rest}></div>').blocked, false);
 });
 
+test('empty live region: an UNCLOSED fragment is unknown, not empty', () => {
+  // An Edit carries a fragment: `new_string` is the opening tag and nothing else,
+  // while the element is populated in the file. Reading a missing closing tag as
+  // an empty body blocked routine attribute edits — and the only escape,
+  // `a11y-checked:`, disables all nine checks on that file permanently.
+  assert.equal(check(ASTRO, '<span class="x y" role="status" aria-live="polite">').blocked, false);
+  assert.equal(check(ASTRO, '<div aria-live="polite" data-x="1">').blocked, false);
+});
+
 test('empty live region: aria-live="off" is not a live region', () => {
   assert.equal(check(ASTRO, '<div aria-live="off"></div>').blocked, false);
 });

@@ -50,7 +50,19 @@ const baseUrl = flag('--url');
 const filter = flag('--filter');
 const jsonOut = flag('--json');
 const strict = has('--strict');
-const concurrency = Number(flag('--concurrency') || 1);
+const concurrency = (() => {
+  // See live-region-audit.mjs: Math.min(n, total) spawns zero workers for 0, a
+  // negative, a sub-1 fraction, or NaN — and the report below prints `total`
+  // (every route discovered), so an audit of nothing reads as a full clean run.
+  const raw = flag('--concurrency');
+  if (!raw) return 1;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    console.error(`✗ --concurrency must be a positive integer (got ${JSON.stringify(raw)}).`);
+    process.exit(1);
+  }
+  return n;
+})();
 
 // WCAG 2.2 AA, which is the conformance target. `best-practice` is deliberately
 // excluded — it flags stylistic opinions and would bury the conformance failures.

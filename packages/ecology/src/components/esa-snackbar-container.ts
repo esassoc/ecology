@@ -145,9 +145,18 @@ export class EsaSnackbarContainer extends LitElement {
         // happened again. Bailing out early meant that second action reported
         // nothing at all to a screen reader, which is the failure this whole
         // component was rebuilt to fix.
+        // Update the ENTRY, not just the announcement. announce() speaks the new
+        // message; without this the rendered toast keeps the first call's text, so
+        // a sighted user reads "1 file saved" while a screen-reader user hears
+        // "2 files saved" — the two are given different facts about the same event.
+        // Replaced rather than mutated so Lit sees a new array and re-renders.
+        this.snackbars = this.snackbars.map((s) =>
+          s.uniqueKey === resolved.uniqueKey ? { ...s, ...resolved, id: s.id, timer: s.timer } : s,
+        );
+        const updated = this.snackbars.find((s) => s.id === existing.id) ?? existing;
         announce(resolved.message, { assertive });
-        this.restartTimer(existing);
-        return existing.id;
+        this.restartTimer(updated);
+        return updated.id;
       }
     }
 

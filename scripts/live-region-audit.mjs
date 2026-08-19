@@ -49,7 +49,19 @@ const filter = arg('--filter');
 const strict = argv.includes('--strict');
 // Mirrors a11y-audit: a fresh page per route, several in flight. Sequential over
 // 85 pages with a networkidle wait each is minutes of wall clock for no reason.
-const concurrency = Number(arg('--concurrency') ?? 6);
+const concurrency = (() => {
+  // A gate that can spawn ZERO workers reports "no findings" having looked at
+  // nothing. Math.min(n, total) yields 0 for `0`, a negative, a fraction under 1,
+  // and NaN (`--concurrency auto`), so the value is validated rather than trusted.
+  const raw = arg('--concurrency');
+  if (raw === undefined) return 6;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    console.error(`✗ --concurrency must be a positive integer (got ${JSON.stringify(raw)}).`);
+    process.exit(1);
+  }
+  return n;
+})();
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
@@ -265,6 +277,17 @@ async function main() {
   }
 
   if (!findings.length) {
+    // "No findings" and "nothing was audited" are not the same result, and this
+    // branch used to report them identically. A page whose custom elements never
+    // upgraded has no announcer regions to inspect, so it produces no findings for
+    // the same reason an empty run does. a11y-audit.mjs already fails on its
+    // equivalent (`dead.length`) under --strict; this is the matching guard.
+    if (un.length) {
+      console.log(`✗ ${un.length} page(s) never upgraded — nothing was audited on them,`);
+      console.log('  so "no findings" here proves nothing. Re-run with --concurrency 1,');
+      console.log("  and check the build's base path if it persists.");
+      process.exit(strict ? 1 : 0);
+    }
     console.log('✓ No live-region structure findings.');
     console.log('  This proves structure only. It does NOT prove anything is announced —');
     console.log('  use NerdeRegion + NVDA/Firefox + VoiceOver/Safari (see status-messages.md).');
