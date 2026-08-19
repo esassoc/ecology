@@ -1,0 +1,1 @@
+import"./esa-radio-group.CxUpa1gs.js";import"./lit-element.D8DSg5zn.js";import"./typography.KBHeYOQc.js";import"./a11y.sqk3bMt7.js";const t=document.getElementById("rg-form");t?.addEventListener("submit",e=>{e.preventDefault();const r=new FormData(t);document.getElementById("rg-out").textContent="priority = "+JSON.stringify(r.get("priority"))});
