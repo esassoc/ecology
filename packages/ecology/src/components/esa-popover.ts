@@ -127,13 +127,13 @@ export class EsaPopover extends LitElement {
 
   static styles = css`
     :host {
-      --_popover-bg: var(--popover-bg, var(--color-surface, #ffffff));
+      --_popover-bg: var(--popover-bg, var(--color-background-raised, #ffffff));
       --_popover-border: var(--popover-border-color, var(--color-border, #e5e5e5));
       --_popover-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       --_popover-radius: var(--popover-radius, var(--radius-surface, 0.5rem));
       --_popover-padding: var(--spacing-300, 0.75rem);
       --_popover-arrow-size: 8px;
-      --_popover-color: var(--popover-color, var(--color-text-primary, #171717));
+      --_popover-color: var(--popover-color, var(--color-content-primary, #171717));
       display: inline-block;
     }
 
@@ -141,9 +141,9 @@ export class EsaPopover extends LitElement {
        text — for documentation/help content. Overriding the private bg/border
        tokens re-skins both the panel and the arrow. */
     :host([appearance='inverse']) {
-      --_popover-bg: var(--color-surface-inverse);
-      --_popover-border: var(--color-surface-inverse);
-      --_popover-color: var(--color-text-inverse, #ffffff);
+      --_popover-bg: var(--color-background-inverse);
+      --_popover-border: var(--color-background-inverse);
+      --_popover-color: var(--color-content-inverse, #ffffff);
     }
 
     .esa-popover-anchor {
@@ -157,10 +157,10 @@ export class EsaPopover extends LitElement {
       min-width: max-content;
       max-width: var(--popover-max-width, none);
       background: var(--_popover-bg);
-      border: 1px solid var(--_popover-border);
+      border: var(--border-width-default, 1px) solid var(--_popover-border);
       border-radius: var(--_popover-radius);
       box-shadow: var(--_popover-shadow);
-      animation: esa-popover-fade-in 150ms ease-out;
+      animation: esa-popover-fade-in var(--animation-enter, 150ms ease-out);
       font-family: var(--font-sans, 'DM Sans', sans-serif);
       color: var(--_popover-color);
     }
@@ -200,7 +200,7 @@ export class EsaPopover extends LitElement {
       width: var(--_popover-arrow-size);
       height: var(--_popover-arrow-size);
       background: var(--_popover-bg);
-      border: 1px solid var(--_popover-border);
+      border: var(--border-width-default, 1px) solid var(--_popover-border);
       transform: rotate(45deg);
     }
     .esa-popover__arrow--bottom {

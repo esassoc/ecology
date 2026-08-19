@@ -1,0 +1,599 @@
+{
+  "$schema": "./migrations.schema.md",
+  "$comment": [
+    "The renames this package has made, as DATA. Three things read this file, which is",
+    "the point \u2014 the hub declares a rename once and everything else follows:",
+    "",
+    "  1. build.js       emits a deprecated alias for every `token` entry, so spoke source",
+    "                    keeps resolving the moment the rename lands.",
+    "  2. migrate-tokens.mjs  rewrites a spoke's source from `from` to `to`.",
+    "  3. doctor.mjs     warns a spoke that it is still on deprecated names.",
+    "",
+    "WHY THIS EXISTS: spokes consume this package through a `file:` symlink, so a rename",
+    "here reaches every spoke on their next dev tick \u2014 there is no publish step to absorb",
+    "it, and a bare `var(--old-name)` does not fall back, it drops the whole declaration.",
+    "A rename used to be tribal knowledge in one person's head. Now it is a row here.",
+    "",
+    "ADDING A RENAME: add the entry in the same commit as the rename. If you rename",
+    "without adding a row, the alias is not emitted and spokes break silently."
+  ],
+  "migrations": [
+    {
+      "id": "type-size-to-font-size",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "`type` is a homonym (typography? or a variable's type?). Tier-1 typography converged on `--<css-property>-<value>`, and the property is font-size.",
+      "pairs": [
+        [
+          "--type-size-050",
+          "--font-size-050"
+        ],
+        [
+          "--type-size-100",
+          "--font-size-100"
+        ],
+        [
+          "--type-size-150",
+          "--font-size-150"
+        ],
+        [
+          "--type-size-200",
+          "--font-size-200"
+        ],
+        [
+          "--type-size-250",
+          "--font-size-250"
+        ],
+        [
+          "--type-size-300",
+          "--font-size-300"
+        ],
+        [
+          "--type-size-400",
+          "--font-size-400"
+        ],
+        [
+          "--type-size-500",
+          "--font-size-500"
+        ],
+        [
+          "--type-size-600",
+          "--font-size-600"
+        ],
+        [
+          "--type-size-700",
+          "--font-size-700"
+        ],
+        [
+          "--type-size-800",
+          "--font-size-800"
+        ],
+        [
+          "--type-size-900",
+          "--font-size-900"
+        ],
+        [
+          "--type-size-1000",
+          "--font-size-1000"
+        ]
+      ]
+    },
+    {
+      "id": "shadow-50-padding",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "The only sub-100 step in the system written without padding, so shadows sorted wrong in every alphabetical listing.",
+      "pairs": [
+        [
+          "--shadow-50",
+          "--shadow-050"
+        ]
+      ]
+    },
+    {
+      "id": "shadow-composites-to-elevation",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "The composite `--shadow-050\u2026500` were ordinal names for intents living in tier 1 \u2014 the same misfiling that put `--transition-fast` there. Tier 1 now holds only the raw axes (offset-x / offset-y / blur / spread / color); clustering them into a usable box-shadow is the semantic act, so the composites are `--elevation-1\u20266` at tier 2. The old names also formed a 1:1 passthrough \u2014 six primitives, six roles, no reuse \u2014 so nothing was lost by collapsing them. A spoke should read the tier-2 role, which is the one it is allowed to override. NOTE: `--shadow-50` (the earlier `shadow-50-padding` row) still points at `--shadow-050` and resolves through this row's alias \u2014 custom-property resolution is order-independent, so the two-hop chain holds.",
+      "pairs": [
+        [
+          "--shadow-050",
+          "--elevation-1"
+        ],
+        [
+          "--shadow-100",
+          "--elevation-2"
+        ],
+        [
+          "--shadow-200",
+          "--elevation-3"
+        ],
+        [
+          "--shadow-300",
+          "--elevation-4"
+        ],
+        [
+          "--shadow-400",
+          "--elevation-5"
+        ],
+        [
+          "--shadow-500",
+          "--elevation-6"
+        ]
+      ]
+    },
+    {
+      "id": "status-colors-to-semantic",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "`--color-status-*` were tier-1 ALIASES of ramp steps. The tier-2 roles already existed and merely detoured through them, so the detour was deleted. A spoke reading the tier-1 name should read the tier-2 role instead \u2014 that is the one it is allowed to override.",
+      "pairs": [
+        [
+          "--color-status-info",
+          "--color-background-info"
+        ],
+        [
+          "--color-status-info-subtle",
+          "--color-background-info-subtle"
+        ],
+        [
+          "--color-status-info-border",
+          "--color-border-info"
+        ],
+        [
+          "--color-status-info-strong",
+          "--color-content-info"
+        ],
+        [
+          "--color-status-success",
+          "--color-background-success"
+        ],
+        [
+          "--color-status-success-subtle",
+          "--color-background-success-subtle"
+        ],
+        [
+          "--color-status-success-border",
+          "--color-border-success"
+        ],
+        [
+          "--color-status-success-strong",
+          "--color-content-success"
+        ],
+        [
+          "--color-status-warning",
+          "--color-background-warning"
+        ],
+        [
+          "--color-status-warning-subtle",
+          "--color-background-warning-subtle"
+        ],
+        [
+          "--color-status-warning-border",
+          "--color-border-warning"
+        ],
+        [
+          "--color-status-warning-strong",
+          "--color-content-warning"
+        ]
+      ]
+    },
+    {
+      "id": "font-family-primary-removed",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "An alias of --font-sans that nothing read. Deleted rather than moved.",
+      "pairs": [
+        [
+          "--font-family-primary",
+          "--font-sans"
+        ]
+      ]
+    },
+    {
+      "id": "type-roles-to-typography-composites",
+      "kind": "class",
+      "since": "2026-08-13",
+      "why": "A composite class now carries the same name as the tokens it assembles: .typography-body-sm reads --typography-body-sm-*. The old names described the PLACE (page-title, card-title) rather than the intention plus a size.",
+      "pairs": [
+        [
+          "type-display",
+          "typography-display"
+        ],
+        [
+          "type-page-title",
+          "typography-heading-lg"
+        ],
+        [
+          "type-section-title",
+          "typography-heading-md"
+        ],
+        [
+          "type-card-title",
+          "typography-title"
+        ],
+        [
+          "type-body-large",
+          "typography-body-lg"
+        ],
+        [
+          "type-body",
+          "typography-body-md"
+        ],
+        [
+          "type-body-small",
+          "typography-body-sm"
+        ],
+        [
+          "type-label",
+          "typography-label"
+        ],
+        [
+          "type-caption",
+          "typography-meta"
+        ],
+        [
+          "type-overline",
+          "typography-eyebrow"
+        ]
+      ]
+    },
+    {
+      "id": "type-code-to-typography-code-sm",
+      "kind": "class",
+      "since": "2026-08-13",
+      "exact": false,
+      "why": "The ONE rename in this file that changes rendering. `.type-code` was font-size-100; code now tracks body, whose smallest step is font-size-150, so there is no exact equivalent. Mapped to the nearest step rather than to -md, which would jump two. Inline code gets slightly larger.",
+      "pairs": [
+        [
+          "type-code",
+          "typography-code-sm"
+        ]
+      ]
+    },
+    {
+      "id": "color-tier2-property-first",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things \u2014 the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted \u2014 identical defaults do not make a themeable token redundant, and a spoke had already separated both.",
+      "pairs": [
+        [
+          "--color-primary-bg-hover",
+          "--color-background-brand-muted-hover"
+        ],
+        [
+          "--color-primary-bg",
+          "--color-background-brand-muted"
+        ],
+        [
+          "--color-primary-subtle",
+          "--color-background-brand-subtle"
+        ],
+        [
+          "--color-primary-hover",
+          "--color-background-brand-hover"
+        ],
+        [
+          "--color-primary-active",
+          "--color-background-brand-active"
+        ],
+        [
+          "--color-primary-border",
+          "--color-border-brand"
+        ],
+        [
+          "--color-primary-strong",
+          "--color-content-brand"
+        ],
+        [
+          "--color-primary",
+          "--color-background-brand"
+        ],
+        [
+          "--color-secondary-on-fill",
+          "--color-content-on-brand-secondary"
+        ],
+        [
+          "--color-secondary-strong",
+          "--color-content-brand-secondary"
+        ],
+        [
+          "--color-secondary-hover",
+          "--color-background-brand-secondary-hover"
+        ],
+        [
+          "--color-secondary",
+          "--color-background-brand-secondary"
+        ],
+        [
+          "--color-accent-hover",
+          "--color-background-accent-hover"
+        ],
+        [
+          "--color-accent",
+          "--color-background-accent"
+        ],
+        [
+          "--color-ai-subtle",
+          "--color-background-ai-subtle"
+        ],
+        [
+          "--color-ai-strong",
+          "--color-content-ai"
+        ],
+        [
+          "--color-ai-hover",
+          "--color-background-ai-hover"
+        ],
+        [
+          "--color-ai",
+          "--color-background-ai"
+        ],
+        [
+          "--color-surface-inverse-hover",
+          "--color-background-inverse-hover"
+        ],
+        [
+          "--color-surface-inverse",
+          "--color-background-inverse"
+        ],
+        [
+          "--color-surface-elevated",
+          "--color-background-floating"
+        ],
+        [
+          "--color-surface-sunken",
+          "--color-background-sunken"
+        ],
+        [
+          "--color-surface-hover",
+          "--color-background-hover"
+        ],
+        [
+          "--color-surface",
+          "--color-background-raised"
+        ],
+        [
+          "--color-disabled-bg",
+          "--color-background-disabled"
+        ],
+        [
+          "--color-text-primary",
+          "--color-content-primary"
+        ],
+        [
+          "--color-text-secondary",
+          "--color-content-secondary"
+        ],
+        [
+          "--color-text-tertiary",
+          "--color-content-tertiary"
+        ],
+        [
+          "--color-text-muted",
+          "--color-content-muted"
+        ],
+        [
+          "--color-text-inverse",
+          "--color-content-inverse"
+        ],
+        [
+          "--color-text-link-hover",
+          "--color-content-link-hover"
+        ],
+        [
+          "--color-text-link",
+          "--color-content-link"
+        ],
+        [
+          "--color-disabled-text",
+          "--color-content-disabled"
+        ],
+        [
+          "--color-border-light",
+          "--color-border-subtle"
+        ],
+        [
+          "--color-disabled-border",
+          "--color-border-disabled"
+        ],
+        [
+          "--color-info-subtle",
+          "--color-background-info-subtle"
+        ],
+        [
+          "--color-info-hover",
+          "--color-background-info-hover"
+        ],
+        [
+          "--color-info-border",
+          "--color-border-info"
+        ],
+        [
+          "--color-info-strong",
+          "--color-content-info"
+        ],
+        [
+          "--color-info",
+          "--color-background-info"
+        ],
+        [
+          "--color-success-subtle",
+          "--color-background-success-subtle"
+        ],
+        [
+          "--color-success-hover",
+          "--color-background-success-hover"
+        ],
+        [
+          "--color-success-border",
+          "--color-border-success"
+        ],
+        [
+          "--color-success-strong",
+          "--color-content-success"
+        ],
+        [
+          "--color-success",
+          "--color-background-success"
+        ],
+        [
+          "--color-warning-subtle",
+          "--color-background-warning-subtle"
+        ],
+        [
+          "--color-warning-hover",
+          "--color-background-warning-hover"
+        ],
+        [
+          "--color-warning-border",
+          "--color-border-warning"
+        ],
+        [
+          "--color-warning-strong",
+          "--color-content-warning"
+        ],
+        [
+          "--color-warning",
+          "--color-background-warning"
+        ],
+        [
+          "--color-danger-subtle",
+          "--color-background-danger-subtle"
+        ],
+        [
+          "--color-danger-hover",
+          "--color-background-danger-hover"
+        ],
+        [
+          "--color-danger-border",
+          "--color-border-danger"
+        ],
+        [
+          "--color-danger-strong",
+          "--color-content-danger"
+        ],
+        [
+          "--color-danger",
+          "--color-background-danger"
+        ],
+        [
+          "--color-success-on-fill",
+          "--color-content-on-success"
+        ],
+        [
+          "--color-warning-on-fill",
+          "--color-content-on-warning"
+        ]
+      ]
+    },
+    {
+      "id": "color-overlay-property-first",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "The translucent washes now lead with `overlay`, matching the property-first order of the rest of tier-2 colour. `overlay` is a deliberate fourth property: these sit OVER a background rather than being one, and naming them background-* would collide with the opaque neutrals that already own those names.",
+      "pairs": [
+        [
+          "--color-hover-overlay-strong",
+          "--color-overlay-hover-strong"
+        ],
+        [
+          "--color-hover-overlay-heavy",
+          "--color-overlay-hover-heavy"
+        ],
+        [
+          "--color-hover-overlay",
+          "--color-overlay-hover"
+        ],
+        [
+          "--color-active-overlay",
+          "--color-overlay-active"
+        ],
+        [
+          "--color-backdrop",
+          "--color-overlay-backdrop"
+        ],
+        [
+          "--color-scrim-light",
+          "--color-overlay-scrim"
+        ]
+      ]
+    },
+    {
+      "id": "typography-label-sized",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "UI text runs at three sizes and two weights in the component kit; `label` shipped with one of each, which is why 59 rules across 54 components set typography by hand instead of naming a role. `label` is now `label-xs` alongside `label-sm`/`label-md` and a `-strong` weight variant, following the same shape `body-*` and `code-*` already use.",
+      "pairs": [
+        [
+          "--typography-label-font-family",
+          "--typography-label-xs-font-family"
+        ],
+        [
+          "--typography-label-font-size",
+          "--typography-label-xs-font-size"
+        ],
+        [
+          "--typography-label-font-weight",
+          "--typography-label-xs-font-weight"
+        ],
+        [
+          "--typography-label-line-height",
+          "--typography-label-xs-line-height"
+        ],
+        [
+          "--typography-label-letter-spacing",
+          "--typography-label-xs-letter-spacing"
+        ]
+      ]
+    },
+    {
+      "id": "typography-eyebrow-sized",
+      "kind": "token",
+      "since": "2026-08-13",
+      "why": "The caps treatment exists at two sizes \u2014 the page-level eyebrow and the menu group heading one step up. Same intention, so one role with a size variant rather than two roles.",
+      "pairs": [
+        [
+          "--typography-eyebrow-font-family",
+          "--typography-eyebrow-sm-font-family"
+        ],
+        [
+          "--typography-eyebrow-font-size",
+          "--typography-eyebrow-sm-font-size"
+        ],
+        [
+          "--typography-eyebrow-font-weight",
+          "--typography-eyebrow-sm-font-weight"
+        ],
+        [
+          "--typography-eyebrow-line-height",
+          "--typography-eyebrow-sm-line-height"
+        ],
+        [
+          "--typography-eyebrow-letter-spacing",
+          "--typography-eyebrow-sm-letter-spacing"
+        ],
+        [
+          "--typography-eyebrow-text-transform",
+          "--typography-eyebrow-sm-text-transform"
+        ]
+      ]
+    },
+    {
+      "id": "typography-label-eyebrow-classes",
+      "kind": "class",
+      "since": "2026-08-13",
+      "why": "Class names track their tokens: .typography-label-xs reads --typography-label-xs-*.",
+      "pairs": [
+        [
+          "typography-label",
+          "typography-label-xs"
+        ],
+        [
+          "typography-eyebrow",
+          "typography-eyebrow-sm"
+        ]
+      ]
+    }
+  ]
+}

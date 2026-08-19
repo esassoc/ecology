@@ -7,7 +7,7 @@ import LoadingSpinner from '@esa/ecology/esa-loading-spinner.astro';
 
 const props = [
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Ring diameter (14 / 20 / 32 / 48px).' },
-  { name: 'color', type: 'string', description: 'Any CSS color value for the rotating arc. Defaults to --color-primary.' },
+  { name: 'color', type: 'string', description: 'Any CSS color value for the rotating arc. Defaults to --color-background-brand.' },
 ];
 ---
 <ComponentDoc name="Loading Spinner" category="Display" slug="esa-loading-spinner" type=".astro" status="stable"
@@ -33,12 +33,12 @@ const props = [
 
   <Section id="states" title="Custom color">
     <p>Pass any CSS color (including a token reference) to recolor the rotating arc.</p>
-    <Preview code={`<LoadingSpinner color="var(--color-success, #22c55e)" />
-<LoadingSpinner color="var(--color-warning, #f59e0b)" />
-<LoadingSpinner color="var(--color-danger, #ef4444)" />`}>
-      <LoadingSpinner color="var(--color-success, #22c55e)" />
-      <LoadingSpinner color="var(--color-warning, #f59e0b)" />
-      <LoadingSpinner color="var(--color-danger, #ef4444)" />
+    <Preview code={`<LoadingSpinner color="var(--color-background-success, #22c55e)" />
+<LoadingSpinner color="var(--color-background-warning, #f59e0b)" />
+<LoadingSpinner color="var(--color-background-danger, #ef4444)" />`}>
+      <LoadingSpinner color="var(--color-background-success, #22c55e)" />
+      <LoadingSpinner color="var(--color-background-warning, #f59e0b)" />
+      <LoadingSpinner color="var(--color-background-danger, #ef4444)" />
     </Preview>
   </Section>
 

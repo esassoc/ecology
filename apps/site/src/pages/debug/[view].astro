@@ -117,7 +117,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
       {[
         { id: 'undef', label: 'Undefined references', rows: undefinedRefs, note: 'Declared nowhere AND read with no fallback, so the declaration drops entirely. Unambiguous bugs.', severity: 'bad' },
-        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header, then does it anyway. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead.', severity: 'bad' },
+        { id: 'themeprim', label: 'Theme re-points a primitive', rows: themePrimitiveOverrides, note: 'SPEC.md: “Primitives never move — not in the hub, not in a theme.” themes.css says the same in its own header. Moving a primitive moves everything downstream of it, which is the exact blast radius the tier model exists to prevent. Re-point the semantic or component token instead — which is what both shipped themes now do, re-skinning shape through --radius-surface rather than --radius-200.', severity: 'bad' },
         { id: 'dupes', label: 'Declared at two tiers', rows: duplicateDeclarations, note: 'The same name declared in the token JSON and again in component-tokens.css. The tier-3 copy loads last and wins, so the compiled declaration is dead while still reading as authoritative in the source JSON. It also breaks the tier model — the token is both “never moves” and “a per-component hook”. Pick one tier.', severity: 'bad' },
         { id: 'skips', label: 'Tier-3 color skipping tier 2', rows: tierSkips, note: 'A component color token wired straight to a primitive. A spoke re-pointing the semantic layer will NOT re-skin these.', severity: 'warn' },
         { id: 'hardcode', label: 'Semantic colour hardcodes', rows: semanticHardcodes, note: 'A tier-2 COLOUR terminating in a raw literal without passing through a ramp — a magic value hiding at the intent layer, off the palette and unconstrained by it.', severity: 'warn' },
@@ -206,11 +206,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-gap">
         <b>This has already cost you.</b> <code>token-graph.ts</code> classifies tier by
         <em>source directory</em> because no regex on the name can do it (<code>theming.ts</code> still
-        tries the regex route). Both themes re-point <code>--radius-200</code>, a primitive — invisible,
-        because nothing in the name announces which tier you are editing. And
-        <code>--focus-ring-color</code> is declared in both <code>tokens/primitive/effect.json</code>
-        and <code>src/component-tokens.css</code>; tier 3 loads last and wins. See <b>Health</b> above
-        for all three.
+        tries the regex route). Two further costs have since been paid off. Both themes used to
+        re-point <code>--radius-200</code>, a primitive — invisible, because nothing in the name
+        announces which tier you are editing; they now re-point <code>--radius-surface</code>, the
+        tier-2 role. And <code>--focus-ring-color</code> was once declared in both
+        <code>tokens/primitive/effect.json</code> and <code>src/component-tokens.css</code>, with
+        tier 3 loading last and winning; the tier-1 block was removed, so the ring lives only at
+        tier 3 now. Both read <b>0</b> under <b>Health</b> above — but the prefix collision that let
+        them happen unnoticed is still here, so the next one lands the same way.
       </p>
 
       <h3 class="sub">Slot 4 · the surface — biggest divergence</h3>
@@ -326,9 +329,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       </table>
 
       <p class="cat-note">
-        Typography is the interesting one: the intention vocabulary <em>already exists</em>, just as
-        CSS classes in <code>typography.css</code> rather than tokens. Because they are classes, Figma
-        can&rsquo;t consume them and a spoke can&rsquo;t re-point them by overriding a token.
+        Typography was the interesting one: the intention vocabulary existed only as CSS classes in
+        <code>typography.css</code>, which Figma cannot consume and a spoke cannot re-point by
+        overriding a token. It is now tokenised &mdash; {t2.nonColorGroups.find((g) => g.label === 'typography')?.tokens.length ?? 0} composite
+        tokens assembled from the faces and weights below them, with the classes reading the
+        composites rather than the primitives. The mapping the audit was built to measure:
       </p>
       <table class="findings">
         <thead><tr><th>Rubric intention</th><th>Current</th><th></th></tr></thead>
@@ -348,21 +353,24 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       </p>
 
       <h3 class="sub">The non-colour tier-2 tokens</h3>
+      <p class="cat-note">
+        Colour is the only family the property-first rubric was written for. These are
+        judged on the same question — does the name say which CSS declaration it belongs
+        in — one row per family, because that is the level the claim is true at.
+      </p>
       <table class="findings">
-        <thead><tr><th>Token</th><th>Leads with</th><th>Then</th></tr></thead>
+        <thead><tr><th>Family</th><th>Count</th><th>Names lead with</th><th>Property slot</th></tr></thead>
         <tbody>
-          {t2.layoutRows.map((l) => (
+          {t2.nonColorLeadRows().map((r) => (
             <tr>
-              <td><code>{l.name}</code></td>
-              <td><code class="vocab warnv">{l.region}</code> <span class="dim">region, not a category</span></td>
-              <td><code class="vocab">{l.rest}</code></td>
-            </tr>
-          ))}
-          {t2.elevationRows.map((e) => (
-            <tr>
-              <td><code>{e.name}</code></td>
-              <td><code class="vocab warnv">elevation</code> <span class="dim">scale, not the box-shadow category</span></td>
-              <td class="dim">{e.description}</td>
+              <td><code>{r.label}</code></td>
+              <td class="dim">{r.count}</td>
+              <td class="dim">{r.leads}</td>
+              <td>
+                {r.property === 'first' ? <code class="vocab">first</code>
+                : r.property === 'last' ? <code class="vocab warnv">last</code>
+                : <code class="vocab warnv">none</code>}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -803,7 +811,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p>
         The last of the three, and the one with the most riding on it. A tier-1 name is the only
         description a raw value ever gets — there is no layer beneath it to explain what
-        <code>--color-yellow-9</code> or <code>--shadow-050</code> means. Counts are derived from the
+        <code>--color-yellow-9</code> or <code>--shadow-blur-200</code> means. Counts are derived from the
         real names and the real files at build time; the prose is authored.
       </p>
 
@@ -1066,8 +1074,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <b>This check is scoped, and the scope hides something.</b> It looks only at the tier-1
         measure tokens. Run the same comparison across <em>every</em> token and it returns roughly
         <b> 1,250</b> disagreeing read sites in ~110 files — overwhelmingly colour
-        (<code>--color-text-primary</code> is <code>#202020</code> and is written as
-        <code>#171717</code> in 118 places; <code>--color-primary</code> is grass and is written as a
+        (<code>--color-content-primary</code> is <code>#202020</code> and is written as
+        <code>#171717</code> in 118 places; <code>--color-background-brand</code> is grass and is written as a
         navy left over from another brand in 72). That is a real finding and it is <em>not</em> being
         fixed here: it is mostly tier-2 colour, it needs its own pass, and a blind rewrite would be
         wrong in at least one class of case — <code>var(--font-sans, sans-serif)</code> is a
@@ -1187,8 +1195,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         <p class="resolved">
           <span class="slot-flag f-match">resolved</span>
           The check returns zero. It found 6 across 5 files. The live ones were in
-          <code>packages/spoke-template/</code> — <code>--color-success</code>,
-          <code>--color-warning</code> and <code>--color-ai</code> were <code>var()</code> reads of
+          <code>packages/spoke-template/</code> — <code>--color-background-success</code>,
+          <code>--color-background-warning</code> and <code>--color-background-ai</code> were <code>var()</code> reads of
           names that no longer existed, so every new spoke started with those properties dropped.
           The rest were documentation: SPEC.md, CLAUDE.md and README.md all taught
           <code>--color-teal-900</code>.
@@ -1269,9 +1277,19 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       <p class="cat-note">
         Colour tokens map tier 1 to specific colour roles in the default (vanilla) theme, grouped here
         by <b>property</b> — the surface the colour lands on — then by variant family within each.
-        Only {t2.surfaceNamed} of {t2.colorTotal} spell their property in the name; the other
-        {' '}{t2.surfaceImplied} are placed by convention and marked <span class="inf">inferred</span>,
-        so this grouping doubles as the worklist for making the names say what the grouping knows.
+        {t2.surfaceImplied === 0 ? (
+          <>
+            All {t2.colorTotal} spell their property in the name, so the grouping below is read off
+            the names rather than inferred from convention. This was the point of the property-first
+            rename: nothing here is placed by knowing where it goes.
+          </>
+        ) : (
+          <>
+            Only {t2.surfaceNamed} of {t2.colorTotal} spell their property in the name; the other
+            {' '}{t2.surfaceImplied} are placed by convention and marked <span class="inf">inferred</span>,
+            so this grouping doubles as the worklist for making the names say what the grouping knows.
+          </>
+        )}
       </p>
 
       {t2.propertyGroups.map((prop) => (
@@ -1354,8 +1372,10 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
       </p>
       <p class="cat-note">
         The matrix is the composite and its parts in one view: the row is the role, each column is one
-        property, and each cell shows the <code>--typography-*</code> token that supplies it plus what
-        that token resolves to. {t2.typeCoverage.placed} composites across {t2.typeIntentions.length} intentions, grouped by
+        property, and each cell shows the <code>--typography-*</code> token that supplies it, the
+        hops down to the <b>tier-1 token</b> it lands on (bold), and the value that token resolves
+        to — the same reading as the colour rows above, which name their tier-1 referent rather
+        than only its value. {t2.typeCoverage.placed} composites across {t2.typeIntentions.length} intentions, grouped by
         the intention DERIVED from each name rather than by an authored list. The six property columns are fixed, so an unset
         property would read as a hole rather than an absence — there are none left: every composite now
         pins all five (six for <code>eyebrow</code>), so no composite inherits a type property from
@@ -1422,6 +1442,20 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                           {d.fallbackRef && (
                             <span class="fb">↳ fallback <code>{d.fallbackRef}</code></span>
                           )}
+                          {d.chain.length > 0 ? (
+                            <span class="t1">
+                              {d.chain.map((l) => (
+                                <>
+                                  <span class="arrow">→</span>
+                                  <code class={l.tier === 'primitive' ? 't1-ref' : undefined}>{l.ref}</code>
+                                </>
+                              ))}
+                            </span>
+                          ) : d.refTier === 'primitive' ? (
+                            <span class="t1 direct" title="Reads tier 1 directly — no tier-2 hook for a spoke to re-point">
+                              <span class="arrow">→</span>tier 1 direct
+                            </span>
+                          ) : null}
                           <span class="dim resolved">{d.resolved ?? '?'}</span>
                         </td>
                       );
@@ -1449,114 +1483,18 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         </p>
       )}
 
-      <h3 class="sub">Distance to the reference model</h3>
-      <p class="cat-note">
-        A worked example of the target <b>shape</b>, for calibration only —
-        {' '}<b>{t2.referenceGap.refTotal}</b> composites named
-        {' '}<code>&lt;intention&gt;-&lt;size&gt;[-mobile]</code>, each declaring all six properties,
-        every value a reference with no literals, and each <code>-mobile</code> variant aliasing its
-        desktop sibling for whatever doesn&rsquo;t change.
-      </p>
-      <p class="dev-banner">
-        <strong>Structure, not values.</strong> The reference&rsquo;s px numbers are illustrative —
-        they are not a scale we are trying to hit, and nothing on this page measures ours against
-        them. What is being compared is which roles exist, which slots the names carry, whether a
-        composite is complete, and whether a mobile/desktop pair is expressible.
-      </p>
-
-      <div class="tally">
-        <div class="tally-cell t2"><b>{t2.referenceGap.covered}</b><span>of {t2.referenceGap.refDesktop} desktop roles have an equivalent</span></div>
-        <div class="tally-cell warn"><b>{t2.referenceGap.missing.length}</b><span>desktop roles with no equivalent</span></div>
-        <div class="tally-cell ok"><b>{t2.referenceGap.refMobile}</b><span>-mobile roles · ours live inside the clamp</span></div>
-        <div class="tally-cell"><b>{t2.referenceGap.extra.length}</b><span>of ours with no reference slot</span></div>
-      </div>
-
-      <p class="cat-gap">
-        <b>The clamp point.</b> Our sizes are fluid, but <code>clamp(min, fluid, max)</code> already
-        carries the two discrete values the reference splits into two named roles — the <b>min is the
-        mobile size</b> and the <b>max is the desktop size</b>. Every one of our roles therefore
-        already <em>has</em> a desktop/mobile pair; it has just never been named as one. Exporting to
-        Figma is a build-time extraction of the bounds, not a re-authoring. What we genuinely
-        can&rsquo;t do is move the mobile value independently of the desktop one — the interpolation
-        ties them together, so a <code>-mobile</code> role that changes letter-spacing has no
-        equivalent here.
-      </p>
-
-      <table class="findings cov">
-        <thead>
-          <tr>
-            <th>Reference role</th><th>-mobile sibling</th>
-            <th>Our equivalent</th><th>size token</th><th>mobile/desktop pair</th>
-          </tr>
-        </thead>
-        <tbody>
-          {t2.coverageByIntention.map((grp) => (
-            <>
-              <tr class="cov-head"><td colspan="5">{grp.intention}</td></tr>
-              {grp.cells.map((c) => (
-                <tr class={c.ours ? undefined : 'cov-miss'}>
-                  <td><code>{c.reference.name}</code></td>
-                  <td>
-                    {c.mobile ? (
-                      <span class="dim">declares {c.mobile.aliases.length ? `${6 - c.mobile.aliases.length} of 6, aliases the rest` : 'all 6'}</span>
-                    ) : (
-                      <span class="dim">none</span>
-                    )}
-                  </td>
-                  <td>{c.ours ? <code>.{c.ours}</code> : <span class="req">none</span>}</td>
-                  <td>{c.oursToken ? <code class="vocab">{c.oursToken}</code> : <span class="dim">—</span>}</td>
-                  <td>
-                    {c.oursBounds ? (
-                      <span class="pair">encoded in the clamp</span>
-                    ) : (
-                      <span class="dim">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-note">
-        Structure only — the reference&rsquo;s px values are a worked example, not a target, so
-        nothing here compares our scale against theirs. What the last column says is that wherever we
-        have a role, the mobile/desktop pair already exists inside its clamp; it has never been given
-        a name.
-      </p>
-
-      <h3 class="sub">Where the distance actually is</h3>
-      <p class="cat-note">
-        <span class="slot-flag f-absent">gap</span> is something the reference has and we lack.
-        {' '}<span class="slot-flag f-partial">divergence</span> is a different decision with a
-        rationale already written down in this repo — closing it would be a trade, not a fix.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Dimension</th><th>Reference</th><th>Ours</th><th></th><th>Detail</th></tr></thead>
-        <tbody>
-          {t2.structuralGaps.map((g) => (
-            <tr>
-              <td><b>{g.dimension}</b></td>
-              <td><code>{g.reference}</code></td>
-              <td><code>{g.ours}</code></td>
-              <td>
-                <span class={`slot-flag f-${g.verdict === 'gap' ? 'absent' : g.verdict === 'divergence' ? 'partial' : 'match'}`}>
-                  {g.verdict}
-                </span>
-              </td>
-              <td class="detail">{g.detail}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
       {t2.nonColorGroups.map((g) => (
         <details class="tok-category" data-group>
           <summary>
             <span class="cat-label">{g.label}</span>
             <span class="summary-right">
-              <span class="gap-flag">no property slot</span>
-              <span class="group-count">{g.tokens.length}</span>
+              {/* The catch-all is empty in the healthy case, so it carries no verdict —
+                  a chip there would read as a finding about tokens that do not exist. */}
+              {!g.isUnclassified && g.property === 'last' && <span class="gap-flag">property last</span>}
+              {!g.isUnclassified && g.property === 'none' && <span class="gap-flag">no property slot</span>}
+              <span class={g.isUnclassified && g.tokens.length === 0 ? 'group-count none' : 'group-count'}>
+                {g.tokens.length}
+              </span>
             </span>
           </summary>
           <p class="cat-note">{g.note}</p>
@@ -1595,6 +1533,16 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
 
     <Section id="primitive" title="Tier 1 · Primitive">
       <p>{TIER_NOTE.primitive}</p>
+      <p class="legend">
+        <b>Reading these tables.</b>
+        <span><code>*</code> after a token name — it carries a <code>$description</code> in the
+        DTCG source; hover the row to read it.</span>
+        <span><span class="gap-flag">diverges</span> — the STRUCTURE departs from the model
+        (a wrong or missing axis), not that work is outstanding. Adoption debt gets its own
+        line and no chip, because the two call for opposite responses: rethink the tier, versus
+        go and edit call sites.</span>
+        <span><span class="orphan-flag">orphan</span> — nothing reads this token.</span>
+      </p>
       {primitiveCategories.map((cat) => (
         <details class="tok-category" data-group>
           <summary>
@@ -1608,6 +1556,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           {cat.gap && (
             <p class="cat-gap">
               <b>What we actually ship:</b> {cat.gap}
+            </p>
+          )}
+          {cat.adoption && (
+            <p class="cat-adoption">
+              <b>Adoption:</b> {cat.adoption}
             </p>
           )}
           {cat.groups.length === 1 && cat.groups[0].label === cat.label.toLowerCase() ? (
@@ -1630,9 +1583,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   /* Page-scoped styles are normally banned in this system — allowed here only
      because this page is debug-only and never ships. */
   .tokens-debug .dev-banner {
-    border: 1px dashed var(--color-warning-strong, #ab6400);
-    background: var(--color-warning-subtle, #fffbeb);
-    color: var(--color-text-primary, #111);
+    border: 1px dashed var(--color-content-warning, #ab6400);
+    background: var(--color-background-warning-subtle, #fffbeb);
+    color: var(--color-content-primary, #111);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-200, 6px);
     font-size: 0.9rem;
@@ -1648,15 +1601,15 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border: 1px solid var(--color-border, #d4d4d4);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-surface, #fff);
+    background: var(--color-background-raised, #fff);
   }
   .tokens-debug .tally-cell b { display: block; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-text-secondary, #666); }
-  .tokens-debug .tally-cell.t3 { border-left: 3px solid var(--color-ai, #b45309); }
-  .tokens-debug .tally-cell.t2 { border-left: 3px solid var(--color-primary, #16a34a); }
-  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-info-strong, #0d74ce); }
-  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-warning-strong, #ab6400); }
-  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-success-strong, #5c7c2f); }
+  .tokens-debug .tally-cell span { font-size: 0.75rem; color: var(--color-content-secondary, #666); }
+  .tokens-debug .tally-cell.t3 { border-left: 3px solid var(--color-background-ai, #b45309); }
+  .tokens-debug .tally-cell.t2 { border-left: 3px solid var(--color-background-brand, #16a34a); }
+  .tokens-debug .tally-cell.t1 { border-left: 3px solid var(--color-content-info, #0d74ce); }
+  .tokens-debug .tally-cell.warn { border-left: 3px solid var(--color-content-warning, #ab6400); }
+  .tokens-debug .tally-cell.ok { border-left: 3px solid var(--color-content-success, #5c7c2f); }
   .tokens-debug .filter-bar {
     position: sticky;
     top: 0;
@@ -1674,15 +1627,15 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.9rem;
     border: 1px solid var(--color-border, #d4d4d4);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-surface, #fff);
+    background: var(--color-background-raised, #fff);
     color: inherit;
   }
-  .tokens-debug .filter-count { font-size: 0.8rem; color: var(--color-text-secondary, #666); white-space: nowrap; }
+  .tokens-debug .filter-count { font-size: 0.8rem; color: var(--color-content-secondary, #666); white-space: nowrap; }
   .tokens-debug details.check, .tokens-debug details.tok-group {
-    border: 1px solid var(--color-border-light, #e5e5e5);
+    border: 1px solid var(--color-border-subtle, #e5e5e5);
     border-radius: var(--radius-200, 6px);
     margin-bottom: var(--spacing-250, 10px);
-    background: var(--color-surface, #fff);
+    background: var(--color-background-raised, #fff);
   }
   .tokens-debug details.check > summary, .tokens-debug details.tok-group > summary {
     display: flex;
@@ -1694,21 +1647,21 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.9rem;
     /* Generous target: the whole summary row is clickable, not just the marker. */
   }
-  /* -strong (step 11) is the "colored text on surfaces" step. --color-danger /
-     --color-warning are step 9 — solid FILL, for a background with dark text on
-     it. As text on white, --color-warning (#ffc53d) reads at ~1.7:1. The old
+  /* -strong (step 11) is the "colored text on surfaces" step. --color-background-danger /
+     --color-background-warning are step 9 — solid FILL, for a background with dark text on
+     it. As text on white, --color-background-warning (#ffc53d) reads at ~1.7:1. The old
      fallbacks here were hand-darkened to compensate, which never took effect
      because the tokens are defined. */
-  .tokens-debug details.check.bad > summary { color: var(--color-danger-strong, #ce2c31); }
-  .tokens-debug details.check.warn > summary { color: var(--color-warning-strong, #ab6400); }
+  .tokens-debug details.check.bad > summary { color: var(--color-content-danger, #ce2c31); }
+  .tokens-debug details.check.warn > summary { color: var(--color-content-warning, #ab6400); }
   .tokens-debug .check-count, .tokens-debug .group-count {
     font-variant-numeric: tabular-nums;
-    background: var(--color-surface-sunken, #f0f0f0);
+    background: var(--color-background-sunken, #f0f0f0);
     border-radius: var(--radius-full, 999px);
     padding: 1px 8px;
     font-size: 0.75rem;
   }
-  .tokens-debug .check-note, .tokens-debug .empty { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); font-size: 0.85rem; color: var(--color-text-secondary, #666); margin: 0; }
+  .tokens-debug .check-note, .tokens-debug .empty { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); font-size: 0.85rem; color: var(--color-content-secondary, #666); margin: 0; }
   .tokens-debug .group-label { font-size: 0.85rem; }
 
   /* Tier-1 categories: an outer level above the per-ramp groups. Visually
@@ -1717,7 +1670,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border: 1px solid var(--color-border, #d4d4d4);
     border-radius: var(--radius-200, 6px);
     margin-bottom: var(--spacing-300, 12px);
-    background: var(--color-surface, #fff);
+    background: var(--color-background-raised, #fff);
   }
   .tokens-debug details.tok-category > summary {
     display: flex;
@@ -1733,7 +1686,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
     font-size: 0.82rem;
     line-height: 1.5;
-    color: var(--color-text-secondary, #666);
+    color: var(--color-content-secondary, #666);
     max-width: 68ch;
   }
   .tokens-debug .summary-right { display: flex; align-items: center; gap: var(--spacing-200, 8px); }
@@ -1741,9 +1694,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-warning-strong, #ab6400);
-    border: 1px solid var(--color-warning-border, #fcd34d);
-    background: var(--color-warning-subtle, #fffbeb);
+    color: var(--color-content-warning, #ab6400);
+    border: 1px solid var(--color-border-warning, #fcd34d);
+    background: var(--color-background-warning-subtle, #fffbeb);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
   }
@@ -1752,22 +1705,47 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .cat-gap {
     margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
     padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
-    border-left: 3px solid var(--color-warning-strong, #ab6400);
-    background: var(--color-warning-subtle, #fffbeb);
+    border-left: 3px solid var(--color-content-warning, #ab6400);
+    background: var(--color-background-warning-subtle, #fffbeb);
     border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
     font-size: 0.82rem;
     line-height: 1.55;
     max-width: 72ch;
   }
+  /* Adoption reads calmer than a gap on purpose: the structure is right, so this
+     is a worklist item rather than a design defect. Same shape, neutral colour. */
+  .tokens-debug .cat-adoption {
+    margin: 0 var(--spacing-300, 12px) var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+    border-left: 3px solid var(--color-border-strong, #b9b9b9);
+    background: var(--color-background-sunken, #f5f5f5);
+    border-radius: 0 var(--radius-100, 4px) var(--radius-100, 4px) 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    max-width: 72ch;
+  }
+  .tokens-debug .legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-150, 6px);
+    margin-bottom: var(--spacing-400, 16px);
+    padding: var(--spacing-300, 12px);
+    border: 1px dashed var(--color-border, #dcdcdc);
+    border-radius: var(--radius-200, 8px);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--color-content-secondary, #525252);
+    max-width: 72ch;
+  }
   .tokens-debug .core-wrap { margin-bottom: var(--spacing-400, 16px); }
-  .tokens-debug .tok-group.is-core { border-color: var(--color-info-border, #93c5fd); }
+  .tokens-debug .tok-group.is-core { border-color: var(--color-border-info, #93c5fd); }
   .tokens-debug .core-flag {
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-info-strong, #0d74ce);
-    border: 1px solid var(--color-info-border, #93c5fd);
-    background: var(--color-info-subtle, #eff6ff);
+    color: var(--color-content-info, #0d74ce);
+    border: 1px solid var(--color-border-info, #93c5fd);
+    background: var(--color-background-info-subtle, #eff6ff);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
   }
@@ -1786,11 +1764,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .group-count.none {
     background: transparent;
     border: 1px dashed var(--color-border, #d4d4d4);
-    color: var(--color-text-muted, #999);
+    color: var(--color-content-muted, #999);
     font-style: italic;
   }
   .tokens-debug .cat-body { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
-  .tokens-debug .cat-body details.tok-group { background: var(--color-surface-sunken, #fafafa); }
+  .tokens-debug .cat-body details.tok-group { background: var(--color-background-sunken, #fafafa); }
   .tokens-debug table.findings, .tokens-debug table.tok-table {
     width: 100%;
     border-collapse: collapse;
@@ -1803,19 +1781,19 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--color-text-secondary, #666);
+    color: var(--color-content-secondary, #666);
     padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-    border-top: 1px solid var(--color-border-light, #e5e5e5);
-    border-bottom: 1px solid var(--color-border-light, #e5e5e5);
+    border-top: 1px solid var(--color-border-subtle, #e5e5e5);
+    border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
   }
   .tokens-debug table.findings td, .tokens-debug table.tok-table td {
     padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-    border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+    border-bottom: 1px solid var(--color-border-subtle, #f0f0f0);
     vertical-align: top;
   }
   .tokens-debug code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.95em; }
-  .tokens-debug .dim { color: var(--color-text-muted, #999); }
-  .tokens-debug .has-note { color: var(--color-text-muted, #999); margin-left: 2px; }
+  .tokens-debug .dim { color: var(--color-content-muted, #999); }
+  .tokens-debug .has-note { color: var(--color-content-muted, #999); margin-left: 2px; }
   .tokens-debug .c-chain { line-height: 1.9; }
   .tokens-debug .chip {
     display: inline-block;
@@ -1825,12 +1803,12 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.72rem;
     border: 1px solid transparent;
   }
-  .tokens-debug .k-component { background: var(--color-ai-subtle, #fff7ed); border-color: var(--color-ai, #b45309); }
-  .tokens-debug .k-semantic { background: var(--color-primary-subtle, #f0fdf4); border-color: var(--color-primary-border, #86efac); }
-  .tokens-debug .k-primitive { background: var(--color-info-subtle, #eff6ff); border-color: var(--color-info-border, #93c5fd); }
-  .tokens-debug .k-raw { background: var(--color-surface-sunken, #f4f4f4); border-color: var(--color-border, #d4d4d4); }
-  .tokens-debug .k-unknown { background: var(--color-danger-subtle, #fef2f2); border-color: var(--color-danger, #dc2626); }
-  .tokens-debug .arrow { color: var(--color-text-muted, #999); margin: 0 4px; }
+  .tokens-debug .k-component { background: var(--color-background-ai-subtle, #fff7ed); border-color: var(--color-background-ai, #b45309); }
+  .tokens-debug .k-semantic { background: var(--color-background-brand-subtle, #f0fdf4); border-color: var(--color-border-brand, #86efac); }
+  .tokens-debug .k-primitive { background: var(--color-background-info-subtle, #eff6ff); border-color: var(--color-border-info, #93c5fd); }
+  .tokens-debug .k-raw { background: var(--color-background-sunken, #f4f4f4); border-color: var(--color-border, #d4d4d4); }
+  .tokens-debug .k-unknown { background: var(--color-background-danger-subtle, #fef2f2); border-color: var(--color-background-danger, #dc2626); }
+  .tokens-debug .arrow { color: var(--color-content-muted, #999); margin: 0 4px; }
   .tokens-debug .c-value { white-space: nowrap; }
   .tokens-debug .swatch {
     display: inline-block;
@@ -1843,12 +1821,12 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .uses > summary { cursor: pointer; display: flex; gap: 4px; }
   .tokens-debug .uses p { margin: 6px 0 0; font-size: 0.75rem; word-break: break-word; }
   .tokens-debug .pill {
-    background: var(--color-surface-sunken, #f0f0f0);
+    background: var(--color-background-sunken, #f0f0f0);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
     font-size: 0.7rem;
   }
-  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-warning-strong, #ab6400); }
+  .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-content-warning, #ab6400); }
   .tokens-debug tr[hidden] { display: none; }
 
   /* ---------------------------------------------- tier-2 naming audit */
@@ -1856,7 +1834,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.95rem;
     margin: var(--spacing-600, 24px) 0 var(--spacing-250, 10px);
     padding-bottom: var(--spacing-200, 8px);
-    border-bottom: 1px solid var(--color-border-light, #e5e5e5);
+    border-bottom: 1px solid var(--color-border-subtle, #e5e5e5);
   }
   /* The two grammars side by side — the whole finding in one glance. */
   .tokens-debug .grammar {
@@ -1867,25 +1845,25 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug .grammar > div {
     padding: var(--spacing-300, 12px);
-    border: 1px solid var(--color-border-light, #e5e5e5);
+    border: 1px solid var(--color-border-subtle, #e5e5e5);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-surface-sunken, #fafafa);
+    background: var(--color-background-sunken, #fafafa);
   }
   .tokens-debug .grammar-label {
     display: block;
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--color-text-secondary, #666);
+    color: var(--color-content-secondary, #666);
     margin-bottom: var(--spacing-200, 8px);
   }
   .tokens-debug .grammar code { display: block; font-size: 0.78rem; line-height: 1.7; word-break: break-word; }
-  .tokens-debug .grammar > div:first-child code { color: var(--color-success-strong, #2a7e3b); }
-  .tokens-debug .grammar > div:last-child code { color: var(--color-warning-strong, #a35200); }
+  .tokens-debug .grammar > div:first-child code { color: var(--color-content-success, #2a7e3b); }
+  .tokens-debug .grammar > div:last-child code { color: var(--color-content-warning, #a35200); }
 
-  .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-text-muted, #999); width: 1.5rem; }
+  .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-content-muted, #999); width: 1.5rem; }
   .tokens-debug .slots .slot-name { font-weight: 600; white-space: nowrap; }
-  .tokens-debug code.spec { font-size: 0.72rem; color: var(--color-text-secondary, #666); }
+  .tokens-debug code.spec { font-size: 0.72rem; color: var(--color-content-secondary, #666); }
   .tokens-debug .slot-flag {
     display: inline-block;
     margin-left: var(--spacing-200, 8px);
@@ -1898,28 +1876,28 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border: 1px solid transparent;
   }
   .tokens-debug .f-absent, .tokens-debug .f-missing {
-    color: var(--color-danger-strong, #c62a2f);
-    background: var(--color-danger-subtle, #fef2f2);
-    border-color: var(--color-danger-border, #fbbcbc);
+    color: var(--color-content-danger, #c62a2f);
+    background: var(--color-background-danger-subtle, #fef2f2);
+    border-color: var(--color-border-danger, #fbbcbc);
   }
   .tokens-debug .f-partial, .tokens-debug .f-renamed {
-    color: var(--color-warning-strong, #a35200);
-    background: var(--color-warning-subtle, #fffbeb);
-    border-color: var(--color-warning-border, #fcd34d);
+    color: var(--color-content-warning, #a35200);
+    background: var(--color-background-warning-subtle, #fffbeb);
+    border-color: var(--color-border-warning, #fcd34d);
   }
   .tokens-debug .f-match {
-    color: var(--color-success-strong, #2a7e3b);
-    background: var(--color-success-subtle, #f0fdf4);
-    border-color: var(--color-success-border, #a7e8a7);
+    color: var(--color-content-success, #2a7e3b);
+    background: var(--color-background-success-subtle, #f0fdf4);
+    border-color: var(--color-border-success, #a7e8a7);
   }
   .tokens-debug .f-extra {
-    color: var(--color-text-secondary, #666);
-    background: var(--color-surface-sunken, #f4f4f4);
+    color: var(--color-content-secondary, #666);
+    background: var(--color-background-sunken, #f4f4f4);
     border-color: var(--color-border, #d4d4d4);
   }
-  .tokens-debug tr.slot-absent td { background: var(--color-danger-subtle, #fef2f2); }
-  .tokens-debug tr.slot-match td { background: var(--color-success-subtle, #f0fdf4); }
-  .tokens-debug tr.row-zero code { color: var(--color-text-muted, #999); }
+  .tokens-debug tr.slot-absent td { background: var(--color-background-danger-subtle, #fef2f2); }
+  .tokens-debug tr.slot-match td { background: var(--color-background-success-subtle, #f0fdf4); }
+  .tokens-debug tr.row-zero code { color: var(--color-content-muted, #999); }
 
   .tokens-debug code.vocab {
     display: inline-block;
@@ -1927,11 +1905,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 1px 6px;
     font-size: 0.72rem;
     border-radius: var(--radius-100, 4px);
-    background: var(--color-surface-sunken, #f4f4f4);
-    border: 1px solid var(--color-border-light, #e5e5e5);
+    background: var(--color-background-sunken, #f4f4f4);
+    border: 1px solid var(--color-border-subtle, #e5e5e5);
   }
-  .tokens-debug code.vocab.st { background: var(--color-info-subtle, #eff6ff); border-color: var(--color-info-border, #93c5fd); }
-  .tokens-debug code.vocab.warnv { background: var(--color-warning-subtle, #fffbeb); border-color: var(--color-warning-border, #fcd34d); }
+  .tokens-debug code.vocab.st { background: var(--color-background-info-subtle, #eff6ff); border-color: var(--color-border-info, #93c5fd); }
+  .tokens-debug code.vocab.warnv { background: var(--color-background-warning-subtle, #fffbeb); border-color: var(--color-border-warning, #fcd34d); }
 
   .tokens-debug .ord {
     font-size: 0.68rem;
@@ -1939,10 +1917,10 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     letter-spacing: 0.04em;
     white-space: nowrap;
   }
-  .tokens-debug .o-rubric { color: var(--color-success-strong, #2a7e3b); }
-  .tokens-debug .o-inverted { color: var(--color-danger-strong, #c62a2f); font-weight: 600; }
-  .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-text-muted, #999); }
-  .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-text-secondary, #666); max-width: 30ch; }
+  .tokens-debug .o-rubric { color: var(--color-content-success, #2a7e3b); }
+  .tokens-debug .o-inverted { color: var(--color-content-danger, #c62a2f); font-weight: 600; }
+  .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-content-muted, #999); }
+  .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-content-secondary, #666); max-width: 30ch; }
   .tokens-debug table.parse .notes div + div { margin-top: 3px; }
   .tokens-debug .num { font-variant-numeric: tabular-nums; }
 
@@ -1954,14 +1932,14 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 0.9rem;
   }
-  .tokens-debug details.tok-category.prop { border-left: 3px solid var(--color-primary, #16a34a); }
+  .tokens-debug details.tok-category.prop { border-left: 3px solid var(--color-background-brand, #16a34a); }
   /* `inferred` marks a token whose property the NAME does not carry — the thing
      this grouping is meant to make visible, so it stays legible, not decorative. */
   .tokens-debug .inf {
     font-size: 0.7rem;
     font-style: italic;
-    color: var(--color-warning-strong, #a35200);
-    border-bottom: 1px dotted var(--color-warning-strong, #ab6400);
+    color: var(--color-content-warning, #a35200);
+    border-bottom: 1px dotted var(--color-content-warning, #ab6400);
     cursor: help;
   }
   /* Typography roles: six fixed property columns, so the table is wide. Let it
@@ -1970,7 +1948,20 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug table.type-table { min-width: 60rem; }
   .tokens-debug table.type-table td { white-space: nowrap; }
   .tokens-debug table.type-table .resolved { display: block; font-size: 0.68rem; margin-top: 2px; }
-  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-text-muted, #999); margin-top: 2px; }
+  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-content-muted, #999); margin-top: 2px; }
+  /* The tier-1 token behind the hook. Same shape as the colour rows' tier-1
+     column — the value alone says what renders, this says which step of the
+     scale it came from. */
+  .tokens-debug table.type-table .t1 {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--color-content-secondary, #525252);
+    margin-top: 2px;
+  }
+  .tokens-debug table.type-table .t1 .arrow { margin: 0 3px 0 0; }
+  /* The end of the chain — the tier-1 step the composite actually lands on. */
+  .tokens-debug table.type-table .t1 .t1-ref { color: var(--color-content, #171717); font-weight: 600; }
+  .tokens-debug table.type-table .t1.direct { color: var(--color-content-warning, #a35200); }
   /* An unset property is the finding, not an absence — mark it, don't blank it.
      The quiet hatch is opt-in-unset; is-required is the one that's a defect. */
   .tokens-debug .req {
@@ -1978,39 +1969,30 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: 600;
-    color: var(--color-danger-strong, #c62a2f);
+    color: var(--color-content-danger, #c62a2f);
   }
-  .tokens-debug table.type-table td.is-required { background: var(--color-danger-subtle, #fef2f2); }
+  .tokens-debug table.type-table td.is-required { background: var(--color-background-danger-subtle, #fef2f2); }
   .tokens-debug table.type-table td.unset {
     background: repeating-linear-gradient(
       45deg,
       transparent, transparent 4px,
-      var(--color-surface-sunken, #f4f4f4) 4px, var(--color-surface-sunken, #f4f4f4) 8px
+      var(--color-background-sunken, #f4f4f4) 4px, var(--color-background-sunken, #f4f4f4) 8px
     );
     font-size: 0.7rem;
     font-style: italic;
   }
-  /* Coverage table: an intention header row separates the six blocks, and a
-     missing role is tinted so the holes read as a shape, not a list. */
-  .tokens-debug table.cov .cov-head td {
-    font-weight: 600;
-    font-size: 0.8rem;
-    background: var(--color-surface-sunken, #f4f4f4);
-    border-top: 1px solid var(--color-border, #d4d4d4);
-  }
-  .tokens-debug table.cov tr.cov-miss td { background: var(--color-danger-subtle, #fef2f2); }
   .tokens-debug table.findings .detail { font-size: 0.78rem; line-height: 1.55; max-width: 46ch; }
   .tokens-debug .pair {
     font-size: 0.7rem;
-    color: var(--color-success-strong, #2a7e3b);
+    color: var(--color-content-success, #2a7e3b);
   }
   .tokens-debug .inf-flag {
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-warning-strong, #a35200);
-    border: 1px solid var(--color-warning-border, #fcd34d);
-    background: var(--color-warning-subtle, #fffbeb);
+    color: var(--color-content-warning, #a35200);
+    border: 1px solid var(--color-border-warning, #fcd34d);
+    background: var(--color-background-warning-subtle, #fffbeb);
     border-radius: var(--radius-100, 4px);
     padding: 1px 6px;
   }
@@ -2025,33 +2007,33 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border: 1px solid transparent;
   }
   .tokens-debug .pk-part {
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-content-secondary, #525252);
     border-color: var(--color-border, #e5e5e5);
   }
   .tokens-debug .pk-variant,
   .tokens-debug .pk-state {
-    color: var(--color-warning-strong, #a35200);
-    border-color: var(--color-warning-border, #fcd34d);
-    background: var(--color-warning-subtle, #fffbeb);
+    color: var(--color-content-warning, #a35200);
+    border-color: var(--color-border-warning, #fcd34d);
+    background: var(--color-background-warning-subtle, #fffbeb);
   }
 
   /* ---------------------------------------------- tier-1 naming audit */
   .tokens-debug .alias-list { display: block; margin: var(--spacing-200, 8px) 0; }
-  .tokens-debug .rank { width: 1.5rem; color: var(--color-text-muted, #999); }
+  .tokens-debug .rank { width: 1.5rem; color: var(--color-content-muted, #999); }
   /* A finding whose check now returns zero. Deliberately keeps the finding text
      above it — the record of what was wrong is the useful part. */
   .tokens-debug .resolved {
     margin: var(--spacing-300, 12px) 0;
     padding: var(--spacing-300, 12px);
-    border: 1px solid var(--color-success-border, #a7e8a7);
+    border: 1px solid var(--color-border-success, #a7e8a7);
     border-radius: var(--radius-200, 6px);
-    background: var(--color-success-subtle, #f0fdf4);
+    background: var(--color-background-success-subtle, #f0fdf4);
     font-size: 0.85rem;
     line-height: 1.6;
   }
   .tokens-debug .resolved .slot-flag { margin: 0 var(--spacing-200, 8px) 0 0; }
   .tokens-debug tr.is-done td { opacity: 0.72; }
-  .tokens-debug tr.is-done .rank { color: var(--color-success-strong, #2a7e3b); }
+  .tokens-debug tr.is-done .rank { color: var(--color-content-success, #2a7e3b); }
   /* The verdict cells in this section pair a flag chip with a sentence. */
   .tokens-debug table.findings td.detail > div { margin-top: 4px; }
 </style>

@@ -62,9 +62,9 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
 
 <style>
   .esa-pill {
-    --_pill-bg: var(--pill-bg, var(--color-surface-sunken, #efefef));
-    --_pill-text: var(--pill-text-color, var(--color-text-primary, #171717));
-    --_pill-border: var(--pill-border-color, var(--color-border-light, #efefef));
+    --_pill-bg: var(--pill-bg, var(--color-background-sunken, #efefef));
+    --_pill-text: var(--pill-text-color, var(--color-content-primary, #171717));
+    --_pill-border: var(--pill-border-color, var(--color-border-subtle, #efefef));
     --_pill-height: var(--pill-height-md, 28px);
     --_pill-font-size: 13px;
     --_pill-padding-x: var(--spacing-200, 0.5rem);
@@ -75,7 +75,7 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
     gap: var(--_pill-gap);
     height: var(--_pill-height);
     padding-inline: var(--_pill-padding-x);
-    border: 1px solid var(--_pill-border);
+    border: var(--border-width-default, 1px) solid var(--_pill-border);
     border-radius: var(--pill-radius, var(--radius-pill, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
@@ -104,33 +104,33 @@ const cls = ['esa-pill', `esa-pill--${variant}`, `esa-pill--${size}`].join(' ');
   }
 
   .esa-pill--primary {
-    --_pill-bg: var(--color-primary-subtle, var(--color-grass-2));
-    --_pill-text: var(--color-primary-strong, var(--color-grass-11));
-    --_pill-border: var(--color-primary-border, var(--color-grass-6));
+    --_pill-bg: var(--color-background-brand-subtle, var(--color-grass-2));
+    --_pill-text: var(--color-content-brand, var(--color-grass-11));
+    --_pill-border: var(--color-border-brand, var(--color-grass-6));
   }
 
   .esa-pill--info {
-    --_pill-bg: var(--color-info-subtle, var(--color-blue-2));
-    --_pill-text: var(--color-info-strong, #0d74ce);
-    --_pill-border: var(--color-info-border, var(--color-blue-6));
+    --_pill-bg: var(--color-background-info-subtle, var(--color-blue-2));
+    --_pill-text: var(--color-content-info, #0d74ce);
+    --_pill-border: var(--color-border-info, var(--color-blue-6));
   }
 
   .esa-pill--success {
-    --_pill-bg: var(--color-success-subtle, var(--color-lime-2));
-    --_pill-text: var(--color-success-strong, #5c7c2f);
-    --_pill-border: var(--color-success-border, var(--color-lime-6));
+    --_pill-bg: var(--color-background-success-subtle, var(--color-lime-2));
+    --_pill-text: var(--color-content-success, #5c7c2f);
+    --_pill-border: var(--color-border-success, var(--color-lime-6));
   }
 
   .esa-pill--warning {
-    --_pill-bg: var(--color-warning-subtle, var(--color-yellow-2));
-    --_pill-text: var(--color-warning-strong, #ab6400);
-    --_pill-border: var(--color-warning-border, var(--color-yellow-6));
+    --_pill-bg: var(--color-background-warning-subtle, var(--color-yellow-2));
+    --_pill-text: var(--color-content-warning, #ab6400);
+    --_pill-border: var(--color-border-warning, var(--color-yellow-6));
   }
 
   .esa-pill--danger {
-    --_pill-bg: var(--color-danger-subtle, var(--color-red-2));
-    --_pill-text: var(--color-danger-strong, #ce2c31);
-    --_pill-border: var(--color-danger-border, var(--color-red-6));
+    --_pill-bg: var(--color-background-danger-subtle, var(--color-red-2));
+    --_pill-text: var(--color-content-danger, #ce2c31);
+    --_pill-border: var(--color-border-danger, var(--color-red-6));
   }
 
   .esa-pill__icon {

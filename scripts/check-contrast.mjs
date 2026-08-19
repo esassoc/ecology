@@ -25,35 +25,99 @@ import { fileURLToPath } from 'node:url';
 const HUB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // [foreground, background, minRatio, level] — level: 'fail' blocks, 'warn' reports.
+//
+// Property-first tier-2 naming makes this list read as what it is: every `content-*`
+// checked against the `background-*` it actually lands on.
+//
+// The `content-on-*` rows used to be a single guess — `text-inverse` against each
+// fill, at 'warn', because most intentions had no declared foreground and components
+// hardcoded #fff. Now every intention declares one, so each row tests the real token
+// at 'fail'. A spoke re-pointing a fill to a bright ramp without also re-pointing its
+// foreground now BLOCKS instead of printing a warning nobody reads.
 const PAIRS = [
-  ['--color-text-primary', '--color-surface', 4.5, 'fail'],
-  ['--color-text-primary', '--color-background', 4.5, 'fail'],
-  ['--color-text-primary', '--color-surface-sunken', 4.5, 'fail'],
-  ['--color-text-secondary', '--color-surface', 4.5, 'fail'],
-  ['--color-text-tertiary', '--color-surface', 4.5, 'fail'],
-  ['--color-text-muted', '--color-surface', 4.5, 'warn'], // genuine meta text — review, don't block
-  ['--color-text-link', '--color-surface', 4.5, 'fail'],
-  ['--color-text-inverse', '--color-surface-inverse', 4.5, 'fail'],
-  ['--color-text-inverse', '--color-primary', 4.5, 'fail'],
-  ['--color-text-inverse', '--color-secondary', 4.5, 'warn'],
-  ['--color-text-inverse', '--color-success', 4.5, 'warn'],
-  ['--color-text-inverse', '--color-warning', 4.5, 'warn'], // ambers almost always fail; surface it loudly
-  ['--color-text-inverse', '--color-danger', 4.5, 'warn'],
-  ['--color-text-inverse', '--color-info', 4.5, 'warn'],
-  ['--color-text-primary', '--color-primary-subtle', 4.5, 'fail'],
-  ['--color-text-primary', '--color-success-subtle', 4.5, 'warn'],
-  ['--color-text-primary', '--color-warning-subtle', 4.5, 'warn'],
-  ['--color-text-primary', '--color-danger-subtle', 4.5, 'warn'],
-  ['--color-text-primary', '--color-info-subtle', 4.5, 'warn'],
-  ['--color-disabled-text', '--color-disabled-bg', 4.5, 'warn'], // disabled is exempt from AA; informational
-  ['--color-border-focus', '--color-surface', 3.0, 'warn'],
-  ['--color-primary', '--color-surface', 3.0, 'warn'], // as a UI/graphic color
+  // Neutral text on neutral surfaces.
+  ['--color-content-primary', '--color-background-raised', 4.5, 'fail'],
+  ['--color-content-primary', '--color-background', 4.5, 'fail'],
+  ['--color-content-primary', '--color-background-sunken', 4.5, 'fail'],
+  ['--color-content-primary', '--color-background-floating', 4.5, 'fail'],
+  ['--color-content-secondary', '--color-background-raised', 4.5, 'fail'],
+  ['--color-content-muted', '--color-background-raised', 4.5, 'warn'], // genuine meta text — review, don't block
+  ['--color-content-link', '--color-background-raised', 4.5, 'fail'],
+  ['--color-content-inverse', '--color-background-inverse', 4.5, 'fail'],
+
+  // Each intention's declared foreground against its own solid fill.
+  ['--color-content-on-brand', '--color-background-brand', 4.5, 'fail'],
+  ['--color-content-on-brand-secondary', '--color-background-brand-secondary', 4.5, 'fail'],
+  ['--color-content-on-accent', '--color-background-accent', 4.5, 'fail'],
+  ['--color-content-on-ai', '--color-background-ai', 4.5, 'fail'],
+  ['--color-content-on-info', '--color-background-info', 4.5, 'fail'],
+  ['--color-content-on-success', '--color-background-success', 4.5, 'fail'],
+  ['--color-content-on-warning', '--color-background-warning', 4.5, 'fail'],
+  ['--color-content-on-danger', '--color-background-danger', 4.5, 'fail'],
+
+  // Coloured text on its own subtle tint — the alert/banner pairing.
+  ['--color-content-brand', '--color-background-brand-subtle', 4.5, 'fail'],
+  ['--color-content-info', '--color-background-info-subtle', 4.5, 'fail'],
+  ['--color-content-success', '--color-background-success-subtle', 4.5, 'fail'],
+  ['--color-content-warning', '--color-background-warning-subtle', 4.5, 'fail'],
+  ['--color-content-danger', '--color-background-danger-subtle', 4.5, 'fail'],
+
+  // Body text on the subtle tints, which is how the alert bodies are actually built.
+  ['--color-content-primary', '--color-background-brand-subtle', 4.5, 'fail'],
+  ['--color-content-primary', '--color-background-success-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-warning-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-danger-subtle', 4.5, 'warn'],
+  ['--color-content-primary', '--color-background-info-subtle', 4.5, 'warn'],
+
+  ['--color-content-disabled', '--color-background-disabled', 4.5, 'warn'], // disabled is exempt from AA; informational
+  ['--color-border-focus', '--color-background-raised', 3.0, 'warn'],
+  ['--color-background-brand', '--color-background-raised', 3.0, 'warn'], // as a UI/graphic color
 ];
 
 // --- token graph -------------------------------------------------------------
+/**
+ * Drop every @media block before parsing.
+ *
+ * This is not cosmetic. `dist/tokens.css` ends with an `@media (color-gamut: p3)`
+ * block that redeclares every primitive ramp as `color(display-p3 ...)`. Because
+ * declarations are read last-wins, EVERY primitive resolved to a P3 value, which
+ * parseColor cannot read — so the audit checked 0 pairs and still exited 0 with
+ * "All text pairs pass AA". It had never actually run.
+ *
+ * Contrast is judged at the sRGB baseline: it is the fallback every display gets,
+ * and WCAG's maths is defined on sRGB. The P3 block is a wider-gamut rendering of
+ * the same colours, not a different palette.
+ */
+function stripAtRules(css) {
+  // Comments FIRST. This scanner brace-matches from the next `{` after any literal
+  // `@media`, so an `@media` mentioned inside a comment sends it hunting for a brace
+  // that belongs to unrelated CSS and swallows everything up to the match. That is
+  // not hypothetical: build.js emits each token's DTCG $description as a comment, and
+  // --duration-0 documents the `@media (prefers-reduced-motion: reduce)` block it
+  // exists for — which silently ate most of :root and dropped the audit to 0/29.
+  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  let out = '';
+  for (let i = 0; i < css.length; i++) {
+    if (css.startsWith('@media', i)) {
+      const open = css.indexOf('{', i);
+      if (open === -1) break;
+      let depth = 0;
+      let j = open;
+      for (; j < css.length; j++) {
+        if (css[j] === '{') depth++;
+        else if (css[j] === '}' && --depth === 0) break;
+      }
+      i = j;
+      continue;
+    }
+    out += css[i];
+  }
+  return out;
+}
+
 function parseDeclarations(css, map) {
   // capture every `--name: value;` (last one wins — source order)
-  for (const m of css.matchAll(/(--[a-zA-Z0-9-_]+)\s*:\s*([^;]+);/g)) {
+  for (const m of stripAtRules(css).matchAll(/(--[a-zA-Z0-9-_]+)\s*:\s*([^;]+);/g)) {
     map.set(m[1], m[2].trim());
   }
 }
@@ -125,6 +189,7 @@ parseDeclarations(readFileSync(path.join(HUB, 'packages/tokens/src/component-tok
 
 const targets = hubOnly ? [['hub defaults', null]] : themeFiles.map((f) => [path.basename(f), f]);
 let failures = 0;
+let unresolved = false;
 
 for (const [label, file] of targets) {
   const map = new Map(base);
@@ -152,7 +217,18 @@ for (const [label, file] of targets) {
   const checked = PAIRS.length - manual.length;
   console.log(`checked ${checked}/${PAIRS.length} pairs${manual.length ? ` — manual review needed: ${manual.length}` : ''}`);
   for (const m of manual) console.log(`  manual: ${m}`);
+  // An audit that resolved almost nothing is BROKEN, not clean. This exact state —
+  // 0 pairs checked, exit 0, "All text pairs pass AA" — hid every failure in this
+  // list until the @media stripping above was added. Never report it as a pass.
+  if (checked < PAIRS.length / 2) {
+    console.error(
+      `\n✗ only ${checked}/${PAIRS.length} pairs resolved — this audit is not reporting on your theme.\n` +
+        '  Usually a renamed token, or values this parser cannot read. Fix before trusting the result.',
+    );
+    unresolved = true;
+  }
 }
 
-console.log(failures ? `\n${failures} AA text-contrast failure(s).` : '\nAll text pairs pass AA.');
-process.exit(failures ? 1 : 0);
+if (failures) console.log(`\n${failures} AA text-contrast failure(s).`);
+else if (!unresolved) console.log('\nAll text pairs pass AA.');
+process.exit(failures || unresolved ? 1 : 0);

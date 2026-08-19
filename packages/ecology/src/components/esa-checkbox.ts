@@ -139,10 +139,13 @@ export class EsaCheckbox extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      /* The size token is authoritative: without this, re-pointing the indicator
+         border width would resize the control instead of thickening its edge. */
+      box-sizing: border-box;
+      border: var(--form-indicator-border-width, 2px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--form-bg, #fff);
-      color: var(--color-text-inverse, #fff);
+      color: var(--color-content-inverse, #fff);
       transition:
         background var(--transition-fast, 150ms ease),
         border-color var(--transition-fast, 150ms ease),
@@ -161,14 +164,14 @@ export class EsaCheckbox extends LitElement {
 
     :host([checked]) .box,
     :host([indeterminate]) .box {
-      background: var(--color-primary, #43608a);
-      border-color: var(--color-primary, #43608a);
+      background: var(--color-background-brand, #43608a);
+      border-color: var(--color-background-brand, #43608a);
     }
 
     .label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_checkbox-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       line-height: var(--line-height-tight, 1.3);
     }
   `;

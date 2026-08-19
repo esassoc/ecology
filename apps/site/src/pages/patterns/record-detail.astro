@@ -116,7 +116,7 @@ const related = [
 <style>
   /* ── Record card ── */
   .record {
-    background: var(--color-surface, #fff);
+    background: var(--color-background-raised, #fff);
     border: 1px solid var(--color-border, #e5e5e5);
     border-radius: var(--radius-300, 12px);
     overflow: hidden;
@@ -141,12 +141,12 @@ const related = [
     font-size: var(--font-size-500, 1.375rem);
     font-weight: var(--font-weight-semibold, 550);
     line-height: 1.25;
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
   }
   .record__meta {
     margin: var(--spacing-100, 0.25rem) 0 0;
     font-size: var(--font-size-200, 0.9375rem);
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-content-secondary, #525252);
   }
   .record__actions {
     display: flex;
@@ -167,12 +167,12 @@ const related = [
     margin: 0 0 var(--spacing-050, 0.125rem);
     font-size: var(--font-size-200, 0.9375rem);
     font-weight: var(--font-weight-medium, 500);
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-content-secondary, #525252);
   }
   .facts dd {
     margin: 0;
     font-size: var(--font-size-300, 1rem);
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
   }
 
   /* ── Overview: related-items list ── */
@@ -181,7 +181,7 @@ const related = [
     margin: 0 0 var(--spacing-200, 0.5rem);
     font-size: var(--font-size-300, 1rem);
     font-weight: var(--font-weight-semibold, 550);
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
   }
   .related ul { margin: 0; padding: 0; list-style: none; }
   .related li {
@@ -191,25 +191,25 @@ const related = [
     gap: var(--spacing-300, 0.75rem);
     padding: var(--spacing-200, 0.5rem) 0;
   }
-  .related li + li { border-top: 1px solid var(--color-border-light, #efefef); }
+  .related li + li { border-top: 1px solid var(--color-border-subtle, #efefef); }
   .related a {
     font-size: var(--font-size-300, 1rem);
     font-weight: var(--font-weight-medium, 500);
-    color: var(--color-text-link, #43608a);
+    color: var(--color-content-link, #43608a);
     text-decoration: none;
   }
   .related a:hover { text-decoration: underline; }
   .related__meta {
     margin-left: auto;
     font-size: var(--font-size-150, 0.875rem);
-    color: var(--color-text-muted, #737373);
+    color: var(--color-content-muted, #737373);
   }
 
   /* Stub panels — Overview is the real content; these just hold the seat. */
   .record__stub {
     margin: var(--spacing-400, 1rem) 0 0;
     font-size: var(--font-size-300, 1rem);
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-content-secondary, #525252);
   }
 
   /* ── Side-dialog editor body (slotted light DOM) ── */
@@ -226,7 +226,7 @@ const related = [
   .editor__label {
     font-size: var(--font-size-200, 0.9375rem);
     font-weight: var(--font-weight-medium, 500);
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
   }
   .editor__foot {
     display: flex;

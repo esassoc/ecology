@@ -144,12 +144,12 @@ export class EsaSideDialog extends LitElement {
     .backdrop {
       position: fixed;
       inset: 0;
-      background: var(--side-dialog-backdrop-bg, var(--color-backdrop, rgba(0, 0, 0, 0.5)));
+      background: var(--side-dialog-backdrop-bg, var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5)));
       /* Opt-in frosted backdrop — set --backdrop-filter (e.g. blur(4px)) on the host. */
       backdrop-filter: var(--backdrop-filter, none);
       -webkit-backdrop-filter: var(--backdrop-filter, none);
       z-index: var(--z-modal-backdrop, 300);
-      animation: fade 150ms ease;
+      animation: fade var(--animation-enter, 150ms ease-out);
     }
     /* Inset floating panel (matches Beacon prod .ui-side-dialog): 16px gap on the
        top / bottom / anchored side, rounded corners. --_inset is overridable. */
@@ -161,7 +161,7 @@ export class EsaSideDialog extends LitElement {
       width: min(var(--_width), calc(100vw - var(--_inset) * 2));
       display: flex;
       flex-direction: column;
-      background: var(--side-dialog-bg, var(--color-surface, #fff));
+      background: var(--side-dialog-bg, var(--color-background-raised, #fff));
       border-radius: var(--side-dialog-radius, var(--radius-surface, 8px));
       box-shadow: var(--elevation-5, 0 8px 32px -8px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
@@ -171,12 +171,12 @@ export class EsaSideDialog extends LitElement {
          second dialog on top) — ease the reposition instead of jumping. */
       transition: top 220ms ease, right 220ms ease, bottom 220ms ease, left 220ms ease;
     }
-    :host([position='right']) .panel { right: var(--_inset); animation: slide-right 220ms ease; }
-    :host([position='left']) .panel { left: var(--_inset); animation: slide-left 220ms ease; }
+    :host([position='right']) .panel { right: var(--_inset); animation: slide-right var(--animation-overlay-enter, 250ms ease-out); }
+    :host([position='left']) .panel { left: var(--_inset); animation: slide-left var(--animation-overlay-enter, 250ms ease-out); }
     /* Exit: keep the end state so it doesn't flash back before unmounting. */
-    :host([position='right']) .panel.is-closing { animation: slide-out-right 200ms ease forwards; }
-    :host([position='left']) .panel.is-closing { animation: slide-out-left 200ms ease forwards; }
-    .backdrop.is-closing { animation: fade-out 150ms ease forwards; }
+    :host([position='right']) .panel.is-closing { animation: slide-out-right var(--animation-overlay-exit, 200ms ease-in) forwards; }
+    :host([position='left']) .panel.is-closing { animation: slide-out-left var(--animation-overlay-exit, 200ms ease-in) forwards; }
+    .backdrop.is-closing { animation: fade-out var(--animation-exit, 150ms ease-in) forwards; }
 
     .header {
       display: flex;
@@ -184,18 +184,18 @@ export class EsaSideDialog extends LitElement {
       justify-content: space-between;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem);
-      border-bottom: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5));
+      border-bottom: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border, #e5e5e5));
       flex: none;
     }
-    .title { margin: 0; font-size: var(--font-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 550); color: var(--side-dialog-color, var(--color-text-primary, #171717)); }
+    .title { margin: 0; font-size: var(--font-size-400, 1.25rem); font-weight: var(--font-weight-semibold, 550); color: var(--side-dialog-color, var(--color-content-primary, #171717)); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
       border: 0; border-radius: var(--radius-control, 4px); background: none;
-      color: var(--color-text-muted, #737373); cursor: pointer;
+      color: var(--color-content-muted, #737373); cursor: pointer;
     }
-    .close:hover { background: var(--color-surface-sunken, #efefef); color: var(--color-text-primary, #171717); }
-    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-text-secondary, #525252)); }
-    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: 1px solid var(--side-dialog-border-color, var(--color-border, #e5e5e5)); }
+    .close:hover { background: var(--color-background-sunken, #efefef); color: var(--color-content-primary, #171717); }
+    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-content-secondary, #525252)); }
+    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border, #e5e5e5)); }
     .footer:not(:has(*)) { display: none; }
 
     @keyframes fade { from { opacity: 0; } }

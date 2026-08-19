@@ -151,9 +151,9 @@ const buttonAttrs = {
        --_accent      = fill / border color (step 9)
        --_accent-text = text color for outline/dashed (step 11 of the ramp)
        --_on          = text color on a solid fill (step 12 for bright/mid fills) */
-    --_accent: var(--color-primary, #46a758);
-    --_accent-hover: var(--color-primary-hover, #3e9b4f);
-    --_on: var(--color-text-inverse, #ffffff);
+    --_accent: var(--color-background-brand, #46a758);
+    --_accent-hover: var(--color-background-brand-hover, #3e9b4f);
+    --_on: var(--color-content-inverse, #ffffff);
     --_accent-text: var(--_accent);
     /* Tint overlays for outline/dashed appearances — track --_accent so they update per color variant. */
     --_btn-tint-hover: color-mix(in srgb, var(--_accent) 8%, transparent);
@@ -180,40 +180,40 @@ const buttonAttrs = {
                       *-strong token (step 11) — designed for colored text on surfaces.
                       Spokes override via their theme's *-strong tokens, not primitives. */
   .esa-button--color-primary {
-    --_accent-text: var(--color-primary-strong);
+    --_accent-text: var(--color-content-brand);
   }
   .esa-button--color-secondary {
-    --_accent: var(--color-secondary);
-    --_accent-hover: var(--color-secondary-hover);
-    --_on: var(--color-secondary-on-fill, var(--color-text-primary));
-    --_accent-text: var(--color-secondary-strong);
+    --_accent: var(--color-background-brand-secondary);
+    --_accent-hover: var(--color-background-brand-secondary-hover);
+    --_on: var(--color-content-on-brand-secondary, var(--color-content-primary));
+    --_accent-text: var(--color-content-brand-secondary);
   }
   .esa-button--color-danger {
-    --_accent: var(--color-danger);
-    --_accent-hover: var(--color-danger-hover);
-    --_accent-text: var(--color-danger-strong);
+    --_accent: var(--color-background-danger);
+    --_accent-hover: var(--color-background-danger-hover);
+    --_accent-text: var(--color-content-danger);
   }
   .esa-button--color-success {
-    --_accent: var(--color-success);
-    --_accent-hover: var(--color-success-hover);
-    --_on: var(--color-success-on-fill);
-    --_accent-text: var(--color-success-strong);
+    --_accent: var(--color-background-success);
+    --_accent-hover: var(--color-background-success-hover);
+    --_on: var(--color-content-on-success);
+    --_accent-text: var(--color-content-success);
   }
   .esa-button--color-warning {
-    --_accent: var(--color-warning);
-    --_accent-hover: var(--color-warning-hover);
-    --_on: var(--button-on-warning, var(--color-warning-on-fill, #4f3422));
-    --_accent-text: var(--color-warning-strong);
+    --_accent: var(--color-background-warning);
+    --_accent-hover: var(--color-background-warning-hover);
+    --_on: var(--button-on-warning, var(--color-content-on-warning, #4f3422));
+    --_accent-text: var(--color-content-warning);
   }
   .esa-button--color-info {
-    --_accent: var(--color-info);
-    --_accent-hover: var(--color-info-hover);
-    --_accent-text: var(--color-info-strong);
+    --_accent: var(--color-background-info);
+    --_accent-hover: var(--color-background-info-hover);
+    --_accent-text: var(--color-content-info);
   }
   .esa-button--color-ai {
-    --_accent: var(--color-ai);
-    --_accent-hover: var(--color-ai-hover);
-    --_accent-text: var(--color-ai-strong);
+    --_accent: var(--color-background-ai);
+    --_accent-hover: var(--color-background-ai-hover);
+    --_accent-text: var(--color-content-ai);
   }
 
   /* ---------- Appearances ---------- */
@@ -242,7 +242,7 @@ const buttonAttrs = {
      darker-gray border, red text; hover fills red. hub-edit-approved: Andy (header). */
   /* hub-edit-approved: Andy (see header) — soft bg is a light tint (mix of sunken + surface). */
   .esa-button--appearance-soft .esa-button__native {
-    background: color-mix(in srgb, var(--color-surface-sunken, #efefef) 45%, var(--color-surface, #fff));
+    background: color-mix(in srgb, var(--color-background-sunken, #efefef) 45%, var(--color-background-raised, #fff));
     /* --_accent-text (step 11), not --_accent (step 9): colored text on a light surface. */
     color: var(--_accent-text);
     border-color: var(--color-border-strong, #d4d4d4);
@@ -257,13 +257,13 @@ const buttonAttrs = {
   /* ---------- Ghost (neutral, transparent regardless of appearance) ---------- */
   .esa-button--color-ghost .esa-button__native {
     background: transparent;
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
     border-color: transparent;
   }
   .esa-button--color-ghost.esa-button--appearance-outline .esa-button__native,
   .esa-button--color-ghost.esa-button--appearance-dashed .esa-button__native { border-color: var(--color-border, #e5e5e5); }
   .esa-button--color-ghost .esa-button__native:hover:not(:disabled),
-  .esa-button--color-ghost.esa-button--active .esa-button__native { background: var(--color-surface-sunken, #efefef); }
+  .esa-button--color-ghost.esa-button--active .esa-button__native { background: var(--color-background-sunken, #efefef); }
 
   /* ---------- Native button ---------- */
   .esa-button__native {
@@ -274,7 +274,7 @@ const buttonAttrs = {
     width: 100%;
     height: var(--_btn-height);
     padding-inline: var(--_btn-padding-x);
-    border: 1px solid transparent;
+    border: var(--border-width-default, 1px) solid transparent;
     border-radius: var(--_btn-radius);
     font-size: var(--_btn-font-size);
     font-family: var(--font-sans, system-ui, sans-serif);
@@ -301,7 +301,7 @@ const buttonAttrs = {
   .esa-button__spinner {
     display: inline-block; width: 1em; height: 1em;
     border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
-    animation: esa-button-spin 0.6s linear infinite;
+    animation: esa-button-spin var(--animation-spin, 750ms linear infinite);
   }
   @keyframes esa-button-spin { to { transform: rotate(360deg); } }
 </style>

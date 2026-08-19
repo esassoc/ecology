@@ -20,8 +20,8 @@ const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 
 
 <style>
   .esa-badge {
-    --_badge-bg: var(--badge-bg, var(--color-primary, #43608a));
-    --_badge-text: var(--badge-text-color, var(--color-text-inverse, #fff));
+    --_badge-bg: var(--badge-bg, var(--color-background-brand, #43608a));
+    --_badge-text: var(--badge-text-color, var(--color-content-inverse, #fff));
     --_badge-height: var(--badge-height-md, 28px);
     --_badge-font-size: 13px;
     --_badge-padding-x: var(--spacing-200, 0.5rem);
@@ -48,11 +48,11 @@ const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 
   .esa-badge--sm { --_badge-height: var(--badge-height-sm, 22px); --_badge-font-size: 11px; --_badge-padding-x: var(--spacing-150, 0.375rem); --_badge-min-width: var(--badge-height-sm, 22px); }
   .esa-badge--lg { --_badge-height: var(--badge-height-lg, 34px); --_badge-font-size: 14px; --_badge-padding-x: var(--spacing-300, 0.75rem);  --_badge-min-width: var(--badge-height-lg, 34px); }
 
-  .esa-badge--secondary { --_badge-bg: var(--color-secondary, #65ba74); --_badge-text: var(--color-secondary-on-fill, #203c25); }
-  .esa-badge--success   { --_badge-bg: var(--color-success, #bdee63); --_badge-text: var(--color-success-on-fill, #37401c); }
-  .esa-badge--warning   { --_badge-bg: var(--color-warning, #ffc53d); --_badge-text: var(--color-warning-on-fill, #4f3422); }
-  .esa-badge--danger    { --_badge-bg: var(--color-danger, #e5484d); }
-  .esa-badge--info      { --_badge-bg: var(--color-info, #0090ff); }
+  .esa-badge--secondary { --_badge-bg: var(--color-background-brand-secondary, #65ba74); --_badge-text: var(--color-content-on-brand-secondary, #203c25); }
+  .esa-badge--success   { --_badge-bg: var(--color-background-success, #bdee63); --_badge-text: var(--color-content-on-success, #37401c); }
+  .esa-badge--warning   { --_badge-bg: var(--color-background-warning, #ffc53d); --_badge-text: var(--color-content-on-warning, #4f3422); }
+  .esa-badge--danger    { --_badge-bg: var(--color-background-danger, #e5484d); }
+  .esa-badge--info      { --_badge-bg: var(--color-background-info, #0090ff); }
 
   .esa-badge--dot {
     width: 8px;
@@ -62,10 +62,10 @@ const cls = ['esa-badge', `esa-badge--${variant}`, `esa-badge--${size}`, dot && 
     border-radius: var(--radius-pill, 9999px);
   }
 
-  .esa-badge--dot.esa-badge--primary   { --_badge-bg: var(--color-primary-hover,   #3e9b4f); }
-  .esa-badge--dot.esa-badge--secondary { --_badge-bg: var(--color-secondary-hover,  #46a758); }
-  .esa-badge--dot.esa-badge--success   { --_badge-bg: var(--color-success-hover,    #b0e64c); }
-  .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-warning-hover,    #ffba18); }
-  .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-danger-hover,     #dc3e42); }
-  .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-info-hover,       #0588f0); }
+  .esa-badge--dot.esa-badge--primary   { --_badge-bg: var(--color-background-brand-hover,   #3e9b4f); }
+  .esa-badge--dot.esa-badge--secondary { --_badge-bg: var(--color-background-brand-secondary-hover,  #46a758); }
+  .esa-badge--dot.esa-badge--success   { --_badge-bg: var(--color-background-success-hover,    #b0e64c); }
+  .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-background-warning-hover,    #ffba18); }
+  .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-background-danger-hover,     #dc3e42); }
+  .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-background-info-hover,       #0588f0); }
 </style>

@@ -1,0 +1,9 @@
+{
+  "border-width": {
+    "default": {
+      "$value": "{border-width.100}",
+      "$type": "dimension",
+      "$description": "The hairline — every panel edge, table rule, input border, card border, divider. The only border width in this system that is a themeable ROLE rather than one component's internal geometry: re-point it to --border-width-200 and the whole kit gets heavier chrome in one move. Deliberately the only tier-2 width. An `emphasis` sibling was considered and left out: the 2px borders in the kit are all micro-geometry (spinner rings, the kbd keycap lip, a chevron built from two borders), and SPEC.md is explicit that inventing a role nobody can point at is not licensed by the fact that some theme might want it."
+    }
+  }
+}

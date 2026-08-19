@@ -92,17 +92,17 @@ const iconPath = ICON_PATHS[variant];
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--alert-box-bg, var(--color-info-subtle, #eff6ff));
-    --_alert-border: var(--alert-box-border-color, var(--color-info-border, #bfdbfe));
-    --_alert-icon-color: var(--color-info-strong, #0d74ce);
-    --_alert-title-color: var(--alert-box-title-color, var(--color-text-primary, #171717));
-    --_alert-text-color: var(--alert-box-text-color, var(--color-text-secondary, #525252));
+    --_alert-bg: var(--alert-box-bg, var(--color-background-info-subtle, #eff6ff));
+    --_alert-border: var(--alert-box-border-color, var(--color-border-info, #bfdbfe));
+    --_alert-icon-color: var(--color-content-info, #0d74ce);
+    --_alert-title-color: var(--alert-box-title-color, var(--color-content-primary, #171717));
+    --_alert-text-color: var(--alert-box-text-color, var(--color-content-secondary, #525252));
 
     display: flex;
     align-items: flex-start;
     gap: var(--spacing-300, 0.75rem);
     padding: var(--alert-box-padding, var(--spacing-300, 0.75rem) var(--spacing-400, 1rem));
-    border: 1px solid var(--_alert-border);
+    border: var(--border-width-default, 1px) solid var(--_alert-border);
     border-radius: var(--alert-box-radius, var(--radius-surface, 0.5rem));
     background: var(--_alert-bg);
     font-size: var(--font-size-150, 0.875rem);
@@ -110,21 +110,21 @@ const iconPath = ICON_PATHS[variant];
   }
 
   .esa-alert-box--success {
-    --_alert-bg: var(--color-success-subtle, #f0fdf4);
-    --_alert-border: var(--color-success-border, #bbf7d0);
-    --_alert-icon-color: var(--color-success-strong, #3a6d3f);
+    --_alert-bg: var(--color-background-success-subtle, #f0fdf4);
+    --_alert-border: var(--color-border-success, #bbf7d0);
+    --_alert-icon-color: var(--color-content-success, #3a6d3f);
   }
 
   .esa-alert-box--warning {
-    --_alert-bg: var(--color-warning-subtle, #fffbeb);
-    --_alert-border: var(--color-warning-border, #fde68a);
-    --_alert-icon-color: var(--color-warning-strong, #915930);
+    --_alert-bg: var(--color-background-warning-subtle, #fffbeb);
+    --_alert-border: var(--color-border-warning, #fde68a);
+    --_alert-icon-color: var(--color-content-warning, #915930);
   }
 
   .esa-alert-box--danger {
-    --_alert-bg: var(--color-danger-subtle, #fef2f2);
-    --_alert-border: var(--color-danger-border, #fecaca);
-    --_alert-icon-color: var(--color-danger-strong, #ce2c31);
+    --_alert-bg: var(--color-background-danger-subtle, #fef2f2);
+    --_alert-border: var(--color-border-danger, #fecaca);
+    --_alert-icon-color: var(--color-content-danger, #ce2c31);
   }
 
   .esa-alert-box__icon {
@@ -160,14 +160,14 @@ const iconPath = ICON_PATHS[variant];
     border: none;
     border-radius: var(--radius-control, 0.25rem);
     background: transparent;
-    color: var(--color-text-muted, #737373);
+    color: var(--color-content-muted, #737373);
     cursor: pointer;
     transition: color var(--transition-fast, 150ms ease),
                 background var(--transition-fast, 150ms ease);
   }
 
   .esa-alert-box__dismiss:hover {
-    color: var(--color-text-primary, #171717);
+    color: var(--color-content-primary, #171717);
     background: var(--alert-box-dismiss-bg-hover, rgba(0, 0, 0, 0.06));
   }
 

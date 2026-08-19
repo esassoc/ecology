@@ -123,7 +123,7 @@ export class EsaRangeSlider extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
     }
     .row {
       display: flex;
@@ -150,8 +150,8 @@ export class EsaRangeSlider extends LitElement {
       border-radius: calc(var(--_track-height) / 2);
       background: linear-gradient(
         to right,
-        var(--color-primary, #43608a) 0%,
-        var(--color-primary, #43608a) var(--fill-percent, 0%),
+        var(--color-background-brand, #43608a) 0%,
+        var(--color-background-brand, #43608a) var(--fill-percent, 0%),
         var(--color-border, #e5e5e5) var(--fill-percent, 0%),
         var(--color-border, #e5e5e5) 100%
       );
@@ -161,9 +161,9 @@ export class EsaRangeSlider extends LitElement {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
       margin-top: calc((var(--_track-height) - var(--_thumb-size)) / 2);
-      border: 2px solid var(--color-primary, #43608a);
+      border: 2px solid var(--color-background-brand, #43608a);
       border-radius: 50%;
-      background: var(--color-surface, #fff);
+      background: var(--color-background-raised, #fff);
       box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
       transition:
         box-shadow var(--transition-fast, 150ms ease),
@@ -177,14 +177,14 @@ export class EsaRangeSlider extends LitElement {
     .input::-moz-range-progress {
       height: var(--_track-height);
       border-radius: calc(var(--_track-height) / 2);
-      background: var(--color-primary, #43608a);
+      background: var(--color-background-brand, #43608a);
     }
     .input::-moz-range-thumb {
       width: var(--_thumb-size);
       height: var(--_thumb-size);
-      border: 2px solid var(--color-primary, #43608a);
+      border: 2px solid var(--color-background-brand, #43608a);
       border-radius: 50%;
-      background: var(--color-surface, #fff);
+      background: var(--color-background-raised, #fff);
       box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
     }
     .input:focus-visible {
@@ -210,7 +210,7 @@ export class EsaRangeSlider extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       font-variant-numeric: tabular-nums;
     }
   `;

@@ -130,17 +130,17 @@ export class EsaTabLayout extends LitElement {
     :host {
       --_tab-height: var(--tab-layout-height-md, 44px);
       --_tab-font-size: var(--font-size-200, 0.875rem);
-      --_tab-color: var(--tab-layout-color, var(--color-text-secondary, #525252));
-      --_tab-color-active: var(--tab-layout-color-active, var(--color-primary, #43608a));
-      --_tab-color-hover: var(--color-text-primary, #171717);
-      --_tab-indicator-color: var(--tab-layout-indicator-color, var(--color-primary, #43608a));
+      --_tab-color: var(--tab-layout-color, var(--color-content-secondary, #525252));
+      --_tab-color-active: var(--tab-layout-color-active, var(--color-background-brand, #43608a));
+      --_tab-color-hover: var(--color-content-primary, #171717);
+      --_tab-indicator-color: var(--tab-layout-indicator-color, var(--color-background-brand, #43608a));
       --_tab-indicator-height: 2px;
-      --_tab-bg-hover: var(--color-surface-sunken, #efefef);
+      --_tab-bg-hover: var(--color-background-sunken, #efefef);
       --_tab-gap: var(--spacing-100, 4px);
       --_tab-padding-x: var(--spacing-400, 16px);
       --_tab-border: var(--tab-layout-border-color, var(--color-border, #e5e5e5));
-      --_tab-badge-bg: var(--color-primary, #43608a);
-      --_tab-badge-color: var(--color-text-inverse, #ffffff);
+      --_tab-badge-bg: var(--color-background-brand, #43608a);
+      --_tab-badge-color: var(--color-content-inverse, #ffffff);
 
       display: block;
     }
@@ -164,7 +164,7 @@ export class EsaTabLayout extends LitElement {
 
     .tabs {
       display: flex;
-      border-bottom: 1px solid var(--_tab-border);
+      border-bottom: var(--border-width-default, 1px) solid var(--_tab-border);
       gap: var(--_tab-gap);
     }
 
@@ -229,8 +229,8 @@ export class EsaTabLayout extends LitElement {
     :host([variant='pill']) .tabs {
       align-self: flex-start;
       border-bottom: none;
-      background: var(--color-surface-sunken, #efefef);
-      border: 1px solid var(--color-border, #e5e5e5);
+      background: var(--color-background-sunken, #efefef);
+      border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
       border-radius: var(--radius-surface, 8px);
       padding: var(--spacing-050, 2px);
       gap: var(--spacing-050, 2px);
@@ -239,7 +239,7 @@ export class EsaTabLayout extends LitElement {
     :host([variant='pill']) .tab { border-radius: var(--radius-control, 4px); }
     :host([appearance='segmented']) .tab--active,
     :host([variant='pill']) .tab--active {
-      background: var(--color-surface, #ffffff);
+      background: var(--color-background-raised, #ffffff);
       box-shadow: var(--elevation-1, 0 1px 2px rgba(0, 0, 0, 0.06));
     }
     :host([appearance='segmented']) .tab--active::after,

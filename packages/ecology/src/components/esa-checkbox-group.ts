@@ -165,7 +165,7 @@ export class EsaCheckboxGroup extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_checkbox-font-size);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
     }
 
     .items {
@@ -201,15 +201,15 @@ export class EsaCheckboxGroup extends LitElement {
       border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
       border-radius: var(--_checkbox-radius);
       background: var(--form-bg, #fff);
-      color: var(--color-text-inverse, #fff);
+      color: var(--color-content-inverse, #fff);
       transition:
         background var(--transition-fast, 150ms ease),
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box--checked {
-      background: var(--color-primary, #43608a);
-      border-color: var(--color-primary, #43608a);
+      background: var(--color-background-brand, #43608a);
+      border-color: var(--color-background-brand, #43608a);
     }
     .box:focus-visible {
       outline: none;
@@ -226,7 +226,7 @@ export class EsaCheckboxGroup extends LitElement {
     .item-label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_checkbox-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-primary, #171717);
       line-height: var(--line-height-tight, 1.3);
     }
   `;

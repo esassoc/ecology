@@ -25,7 +25,7 @@ export interface TokenGroup {
 export const colorGroups: TokenGroup[] = [
   {
     label: 'Brand',
-    note: 'The spoke identity. Everything interactive chains off --color-primary.',
+    note: 'The spoke identity. Everything interactive chains off --color-background-brand.',
     roles: [
       { token: 'color-primary', note: 'Brand anchor — buttons, links, focus rings, active states.' },
       { token: 'color-primary-hover' },
@@ -76,7 +76,7 @@ export const colorGroups: TokenGroup[] = [
       { token: 'color-border' },
       { token: 'color-border-light' },
       { token: 'color-border-strong' },
-      { token: 'color-border-focus', note: 'Focus ring — equals --color-primary.' },
+      { token: 'color-border-focus', note: 'Focus ring — equals --color-background-brand.' },
     ],
   },
   {

@@ -15,13 +15,13 @@
   /* ===================== BUTTON ===================== */
   /* Text/icon color painted on a solid `warning` fill. Defaults to the tier-2
      role so a filled warning button and an esa-badge warning agree by default —
-     they paint on the same --color-warning fill and must not diverge.
+     they paint on the same --color-background-warning fill and must not diverge.
      The hook stays because the right choice depends on the themed
-     --color-warning shade: a light amber wants dark text (the hub default), a
+     --color-background-warning shade: a light amber wants dark text (the hub default), a
      darker orange wants white. A spoke whose warning is dark (e.g. Beacon's
      #f2770e) flips the button to white here without forking the component;
-     to move BOTH, re-point --color-warning-on-fill instead. */
-  --button-on-warning: var(--color-warning-on-fill);
+     to move BOTH, re-point --color-content-on-warning instead. */
+  --button-on-warning: var(--color-content-on-warning);
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
@@ -51,23 +51,29 @@
   --form-height-lg: var(--control-height-lg, 48px);
   --form-radius-lg: var(--radius-surface);
   /* colors */
-  --form-bg: var(--color-surface);
-  --form-bg-hover: var(--color-surface);
-  --form-bg-disabled: var(--color-disabled-bg);
+  --form-bg: var(--color-background-raised);
+  --form-bg-hover: var(--color-background-raised);
+  --form-bg-disabled: var(--color-background-disabled);
   --form-border-color: var(--color-border);
   --form-border-color-hover: var(--color-border-strong);
   --form-border-color-focus: var(--color-border-focus);
   --focus-ring-color: var(--color-border-focus);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
-  --form-border-color-error: var(--color-danger);
-  --form-text-color: var(--color-text-primary);
-  --form-placeholder-color: var(--color-text-muted);
-  --form-label-color: var(--color-text-secondary);
-  --form-help-color: var(--color-text-muted);
-  --form-error-color: var(--color-danger-strong);
+  --form-border-color-error: var(--color-background-danger);
+  --form-text-color: var(--color-content-primary);
+  --form-placeholder-color: var(--color-content-muted);
+  --form-label-color: var(--color-content-secondary);
+  --form-help-color: var(--color-content-muted);
+  --form-error-color: var(--color-content-danger);
   /* structure */
-  --form-border-width: 1px;
+  --form-border-width: var(--border-width-default);
+  /* The checkbox box and radio circle, which read heavier than a text field at the
+     same width — a 14px indicator with a hairline edge reads as unfilled rather than
+     as a control. Split from --form-border-width because both components asked for
+     2px via a fallback that could never fire: --form-border-width has always been
+     declared here, so the fallback was dead and they silently rendered 1px. */
+  --form-indicator-border-width: var(--border-width-200);
   --form-line-height: var(--line-height-normal);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
@@ -80,10 +86,10 @@
   /* 0, not the old `spacing-200 0` — the bar has always rendered flush, so the
      declared value was describing padding no spoke could have been seeing. */
   --filter-container-padding: 0;
-  --filter-dropdown-bg: var(--color-surface);
+  --filter-dropdown-bg: var(--color-background-raised);
   --filter-dropdown-border: 1px solid var(--color-border);
   --filter-dropdown-radius: var(--radius-surface);
-  --filter-dropdown-shadow: var(--elevation-3);
+  --filter-dropdown-shadow: var(--elevation-4);
   --filter-dropdown-min-width: 200px;
   /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
      that is ACCEPTED, not an oversight — do not re-open it without new evidence.
@@ -98,16 +104,16 @@
      Revisit only if esa-pill grows those two capabilities for other reasons;
      then this collapses to scoped --pill-* aliases the way esa-header-nav's
      avatar did. */
-  --filter-pill-bg: var(--color-primary-bg);
-  --filter-pill-bg-hover: var(--color-primary-bg-hover);
-  --filter-pill-label-color: var(--color-text-secondary);
-  --filter-pill-text: var(--color-primary-strong);
+  --filter-pill-bg: var(--color-background-brand-muted);
+  --filter-pill-bg-hover: var(--color-background-brand-muted-hover);
+  --filter-pill-label-color: var(--color-content-secondary);
+  --filter-pill-text: var(--color-content-brand);
   --filter-pill-radius: var(--radius-pill);
   --filter-pill-font-size: var(--font-size-ui-sm);
-  --filter-pill-remove-color: var(--color-text-secondary);
-  --filter-pill-remove-color-hover: var(--color-danger-strong);
-  --filter-clear-color: var(--color-text-muted);
-  --filter-clear-color-hover: var(--color-danger-strong);
+  --filter-pill-remove-color: var(--color-content-secondary);
+  --filter-pill-remove-color-hover: var(--color-content-danger);
+  --filter-clear-color: var(--color-content-muted);
+  --filter-clear-color-hover: var(--color-content-danger);
 
   /* ===================== DATA GRID (STAGED) =====================
      No esa-grid component ships yet — this is the theming contract the AG Grid
@@ -116,28 +122,28 @@
      depends on it; see SPEC.md "Staged surfaces". Border tokens hold a COLOUR,
      not a `1px solid …` shorthand, so a theme can re-point the colour without
      restating width and style. */
-  --grid-bg: var(--color-surface);
+  --grid-bg: var(--color-background-raised);
   --grid-border-color: var(--color-border);
   --grid-radius: var(--radius-surface);
   --grid-shadow: var(--elevation-3);
   --grid-font-family: var(--font-sans);
   --grid-font-size: var(--font-size-ui-md);
   --grid-header-bg: var(--color-background);
-  --grid-header-color: var(--color-text-primary);
+  --grid-header-color: var(--color-content-primary);
   --grid-header-weight: var(--font-weight-semibold);
   --grid-header-font-size: var(--font-size-ui-sm);
   --grid-header-border-color: var(--color-border);
-  --grid-row-bg: var(--color-surface);
-  --grid-row-bg-hover: var(--color-surface-sunken);
-  --grid-row-bg-selected: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  --grid-row-bg: var(--color-background-raised);
+  --grid-row-bg-hover: var(--color-background-sunken);
+  --grid-row-bg-selected: color-mix(in srgb, var(--color-background-brand) 6%, transparent);
   --grid-row-stripe-bg: var(--color-background);
-  --grid-row-border-color: var(--color-border-light);
+  --grid-row-border-color: var(--color-border-subtle);
   --grid-row-font-size: var(--font-size-150);
   --grid-cell-padding-x: var(--spacing-300);
   --grid-cell-padding-y: var(--spacing-200);
-  --grid-pagination-bg: var(--color-surface);
+  --grid-pagination-bg: var(--color-background-raised);
   --grid-pagination-border-color: var(--color-border);
-  --grid-toolbar-bg: var(--color-surface);
+  --grid-toolbar-bg: var(--color-background-raised);
   --grid-toolbar-gap: var(--spacing-200);
   --grid-toolbar-padding: var(--spacing-200) var(--spacing-300);
 
@@ -155,8 +161,8 @@
      Hooks for behaviour the component does not do by default are declared at
      their INERT value (0 / same-as-resting) so they stay zero-regression and
      opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
-  --sidenav-bg: var(--color-surface-sunken);
-  --sidenav-border: var(--color-border-light);
+  --sidenav-bg: var(--color-background-sunken);
+  --sidenav-border: var(--color-border-subtle);
   /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
      --sidenav-item-padding-y, which nothing could ever have read. */
   --sidenav-item-height: 40px;
@@ -167,24 +173,24 @@
   --sidenav-icon-gap: var(--spacing-200);
   --sidenav-icon-size: 18px;
   --sidenav-icon-size-collapsed: 18px;
-  --sidenav-section-text: var(--color-text-muted);
+  --sidenav-section-text: var(--color-content-muted);
   --sidenav-section-spacing: var(--spacing-300);
   /* Extra breathing room above a group heading that follows another section. */
   --sidenav-section-margin-top: 0;
   --sidenav-nested-gap: 0;
   --sidenav-nested-indent: var(--spacing-400);
-  --sidenav-link-text: var(--color-text-secondary);
+  --sidenav-link-text: var(--color-content-secondary);
   --sidenav-link-bg: transparent;
   /* Inherits the resting colour by default — the rail signals hover with the
      background wash alone. Re-point to also shift the text. */
   --sidenav-link-text-hover: var(--sidenav-link-text);
-  --sidenav-link-bg-hover: var(--color-surface-sunken);
-  --sidenav-link-text-active: var(--color-primary-strong);
-  --sidenav-link-bg-active: var(--color-primary-subtle);
+  --sidenav-link-bg-hover: var(--color-background-sunken);
+  --sidenav-link-text-active: var(--color-content-brand);
+  --sidenav-link-bg-active: var(--color-background-brand-subtle);
   --sidenav-link-weight-active: var(--font-weight-semibold);
   /* Inset marker on the active row. Width 0 = off, which is what ships. */
   --sidenav-active-border-width: 0;
-  --sidenav-active-border-color: var(--color-primary);
+  --sidenav-active-border-color: var(--color-background-brand);
 
   /* DELETED (2026-08-13) — six tokens describing a user/account block at the
      foot of the rail: --sidenav-user-{border,text,text-hover,avatar-bg,
@@ -217,20 +223,20 @@
 
      The values below therefore document intent, not what paints. Seven of the
      twelve already disagree with esa-app-shell's actual chrome (it renders the
-     bar on --color-surface, not surface-sunken; the toggle on text-tertiary,
+     bar on --color-background-raised, not surface-sunken; the toggle on text-tertiary,
      not text-secondary). Do not trust them as a record of the shipped look —
      read esa-app-shell.astro. If this is ever wired, reconcile there first. */
-  --topbar-bg: var(--color-surface-sunken);
-  --topbar-border: var(--color-border-light);
+  --topbar-bg: var(--color-background-sunken);
+  --topbar-border: var(--color-border-subtle);
   --topbar-shadow: none;
-  --topbar-icon-color: var(--color-text-secondary);
-  --topbar-icon-color-hover: var(--color-primary);
+  --topbar-icon-color: var(--color-content-secondary);
+  --topbar-icon-color-hover: var(--color-background-brand);
   --topbar-icon-bg: transparent;
-  --topbar-icon-bg-hover: var(--color-surface-hover);
+  --topbar-icon-bg-hover: var(--color-background-hover);
   --topbar-icon-radius: 6px;
-  --topbar-search-bg: var(--color-surface);
+  --topbar-search-bg: var(--color-background-raised);
   --topbar-search-bg-hover: var(--color-background);
-  --topbar-search-text: var(--color-text-muted);
+  --topbar-search-text: var(--color-content-muted);
   --topbar-search-radius: var(--radius-surface, 8px);
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
@@ -238,9 +244,9 @@
   /* The trail's non-link text — i.e. the current (last) crumb. Was declared as
      text-secondary while the component painted text-primary; on the shipped
      value now. */
-  --breadcrumbs-text-color: var(--color-text-primary);
-  --breadcrumbs-link-color: var(--color-text-secondary);
-  --breadcrumbs-link-hover: var(--color-text-primary);
+  --breadcrumbs-text-color: var(--color-content-primary);
+  --breadcrumbs-link-color: var(--color-content-secondary);
+  --breadcrumbs-link-hover: var(--color-content-primary);
   --breadcrumbs-separator-color: var(--color-border-strong);
 
   /* DELETED (2026-08-13) — --breadcrumbs-pill-{bg,bg-hover,radius,padding}, a
@@ -263,27 +269,27 @@
 :root {
 
   /* esa-alert-box */
-  --alert-box-bg: var(--color-info-subtle, #eff6ff);
-  --alert-box-border-color: var(--color-info-border, #bfdbfe);
-  --alert-box-dismiss-bg-hover: var(--color-hover-overlay-strong);
+  --alert-box-bg: var(--color-background-info-subtle, #eff6ff);
+  --alert-box-border-color: var(--color-border-info, #bfdbfe);
+  --alert-box-dismiss-bg-hover: var(--color-overlay-hover-strong);
   --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
   --alert-box-radius: var(--radius-surface, 0.5rem);
-  --alert-box-text-color: var(--color-text-secondary, #525252);
-  --alert-box-title-color: var(--color-text-primary, #171717);
+  --alert-box-text-color: var(--color-content-secondary, #525252);
+  --alert-box-title-color: var(--color-content-primary, #171717);
 
   /* esa-app-shell */
   --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
 
   /* esa-app-bar */
-  --app-bar-bg: var(--color-surface, #fff);
-  --app-bar-brand-bg: var(--color-primary, #43608a);
-  --app-bar-brand-strong-bg: var(--color-surface-inverse, #171717);
-  --app-bar-brand-strong-text: var(--color-text-inverse, #fff);
-  --app-bar-brand-text: var(--color-text-inverse, #fff);
+  --app-bar-bg: var(--color-background-raised, #fff);
+  --app-bar-brand-bg: var(--color-background-brand, #43608a);
+  --app-bar-brand-strong-bg: var(--color-background-inverse, #171717);
+  --app-bar-brand-strong-text: var(--color-content-inverse, #fff);
+  --app-bar-brand-text: var(--color-content-inverse, #fff);
   --app-bar-gap: var(--spacing-600, 32px);
   --app-bar-pad-x: var(--spacing-600, 32px);
   --app-bar-pad-y: var(--spacing-400, 16px);
-  --app-bar-text: var(--color-text-primary, #171717);
+  --app-bar-text: var(--color-content-primary, #171717);
 
   /* esa-avatar */
   --avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
@@ -292,7 +298,7 @@
   --avatar-size-md: 40px;
   --avatar-size-sm: 28px;
   --avatar-size-xs: 20px;
-  --avatar-text-color: var(--color-text-inverse, #fff);
+  --avatar-text-color: var(--color-content-inverse, #fff);
   /* Initials type. One hook rather than four: each size rule repeats it with its
      own literal default, so an override lands on whichever size is active. Left
      UNSET here on purpose — declaring a value would pin every size to one number
@@ -300,61 +306,61 @@
      does, to hold 12px initials in a 32px face. */
 
   /* esa-back-to-top */
-  --back-to-top-bg: var(--color-primary, #43608a);
+  --back-to-top-bg: var(--color-background-brand, #43608a);
   --back-to-top-bottom: var(--spacing-500, 1.5rem);
   --back-to-top-radius: var(--radius-pill, 9999px);
   --back-to-top-right: var(--spacing-500, 1.5rem);
   --back-to-top-size: 44px;
-  --back-to-top-text: var(--color-text-inverse, #fff);
+  --back-to-top-text: var(--color-content-inverse, #fff);
 
   /* esa-side-dialog */
   --backdrop-filter: none;
 
   /* esa-badge */
-  --badge-bg: var(--color-primary, #43608a);
+  --badge-bg: var(--color-background-brand, #43608a);
   --badge-height-lg: var(--chip-height-lg, 34px);
   --badge-height-md: var(--chip-height-md, 28px);
   --badge-height-sm: var(--chip-height-sm, 22px);
   --badge-height-xs: var(--chip-height-xs, 18px);
   --badge-radius: var(--radius-control, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
-  --badge-text-color: var(--color-text-inverse, #fff);
+  --badge-text-color: var(--color-content-inverse, #fff);
 
   /* esa-card */
-  --card-bg: var(--color-surface, #ffffff);
+  --card-bg: var(--color-background-raised, #ffffff);
   --card-border-color: var(--color-border, #e5e5e5);
-  --card-footer-bg: var(--color-surface-sunken, #efefef);
+  --card-footer-bg: var(--color-background-sunken, #efefef);
   --card-header-bg: transparent;
-  --card-header-border-color: var(--color-border-light, #efefef);
-  --card-header-color: var(--color-text-primary, #171717);
+  --card-header-border-color: var(--color-border-subtle, #efefef);
+  --card-header-color: var(--color-content-primary, #171717);
   --card-padding: var(--spacing-500, 1.5rem);
   --card-radius: var(--radius-card, 0.5rem);
 
   /* esa-collapsible */
-  --collapsible-bg: var(--color-surface, #fff);
+  --collapsible-bg: var(--color-background-raised, #fff);
   --collapsible-border-color: var(--color-border, #e5e5e5);
   --collapsible-padding-x: var(--spacing-400, 1rem);
   --collapsible-radius: var(--radius-card, 0.5rem);
-  --collapsible-title-color: var(--color-text-primary, #171717);
+  --collapsible-title-color: var(--color-content-primary, #171717);
 
   /* esa-file-list */
-  --color-link: var(--color-primary-strong, #3a7c59);
+  --color-link: var(--color-content-brand, #3a7c59);
 
   /* esa-entity-search */
-  --entity-search-selected-text: var(--color-text-inverse);
+  --entity-search-selected-text: var(--color-content-inverse);
 
   /* esa-command-palette */
-  --command-palette-bg: var(--color-surface-elevated, #ffffff);
+  --command-palette-bg: var(--color-background-floating, #ffffff);
   --command-palette-border-color: var(--color-border, #e5e5e5);
-  --command-palette-item-bg-active: var(--color-surface-sunken, #efefef);
+  --command-palette-item-bg-active: var(--color-background-sunken, #efefef);
   --command-palette-max-height: 440px;
   --command-palette-radius: var(--radius-overlay, 0.75rem);
   --command-palette-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --command-palette-width: 560px;
 
   /* esa-confirm-dialog */
-  --confirm-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-  --confirm-dialog-bg: var(--color-surface-elevated, #ffffff);
-  --confirm-dialog-border-color: var(--color-border-light, #efefef);
+  --confirm-dialog-backdrop-bg: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  --confirm-dialog-bg: var(--color-background-floating, #ffffff);
+  --confirm-dialog-border-color: var(--color-border-subtle, #efefef);
   --confirm-dialog-radius: var(--radius-overlay, 0.75rem);
   --confirm-dialog-width: 360px;
 
@@ -362,18 +368,18 @@
   --container-gutter: var(--spacing-600, 2rem);
 
   /* esa-danger-zone */
-  --danger-zone-bg: var(--color-danger-subtle, #fef2f2);
-  --danger-zone-border-color: var(--color-danger-border, #fecaca);
-  --danger-zone-description-color: var(--color-text-secondary, #525252);
-  --danger-zone-heading-color: var(--color-danger-strong);
+  --danger-zone-bg: var(--color-background-danger-subtle, #fef2f2);
+  --danger-zone-border-color: var(--color-border-danger, #fecaca);
+  --danger-zone-description-color: var(--color-content-secondary, #525252);
+  --danger-zone-heading-color: var(--color-content-danger);
   --danger-zone-padding: var(--spacing-300, 0.75rem);
   --danger-zone-radius: var(--radius-surface, 0.5rem);
 
   /* esa-dialog */
-  --dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-  --dialog-bg: var(--color-surface-elevated, #ffffff);
-  --dialog-border-color: var(--color-border-light, #efefef);
-  --dialog-color: var(--color-text-primary, #171717);
+  --dialog-backdrop-bg: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  --dialog-bg: var(--color-background-floating, #ffffff);
+  --dialog-border-color: var(--color-border-subtle, #efefef);
+  --dialog-color: var(--color-content-primary, #171717);
   --dialog-radius: var(--radius-overlay, 0.75rem);
   --dialog-width: 480px;
   --dialog-width-lg: 640px;
@@ -381,29 +387,29 @@
   --dialog-width-xs: 280px;
 
   /* esa-dropdown-menu */
-  --dropdown-menu-bg: var(--color-surface-elevated, #ffffff);
+  --dropdown-menu-bg: var(--color-background-floating, #ffffff);
   --dropdown-menu-border-color: var(--color-border, #e5e5e5);
-  --dropdown-menu-item-color: var(--color-text-primary, #171717);
+  --dropdown-menu-item-color: var(--color-content-primary, #171717);
   --dropdown-menu-max-width: 280px;
   --dropdown-menu-min-width: 160px;
   --dropdown-menu-radius: var(--radius-surface, 0.5rem);
 
   /* esa-empty-state */
-  --empty-state-description-color: var(--color-text-secondary, #525252);
+  --empty-state-description-color: var(--color-content-secondary, #525252);
   --empty-state-gap: var(--spacing-200, 0.5rem);
-  --empty-state-icon-color: var(--color-text-muted, #737373);
+  --empty-state-icon-color: var(--color-content-muted, #737373);
   --empty-state-icon-size-lg: 64px;
   --empty-state-icon-size-md: 48px;
   --empty-state-icon-size-sm: 32px;
   --empty-state-icon-size-xs: 24px;
-  --empty-state-title-color: var(--color-text-primary, #171717);
+  --empty-state-title-color: var(--color-content-primary, #171717);
 
   /* esa-entity-search */
-  --entity-search-bg: var(--color-surface-elevated, #ffffff);
+  --entity-search-bg: var(--color-background-floating, #ffffff);
   --entity-search-border-color: var(--color-border, #dcdcdc);
   --entity-search-max-height: 70vh;
   --entity-search-radius: var(--radius-overlay, 0.75rem);
-  --entity-search-row-bg-active: var(--color-surface-sunken, #f3f7fc);
+  --entity-search-row-bg-active: var(--color-background-sunken, #f3f7fc);
   --entity-search-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --entity-search-width: 600px;
 
@@ -415,11 +421,11 @@
   --form-label-font-weight: var(--font-weight-medium, 500);
 
   /* esa-header-nav */
-  --header-nav-avatar-bg: var(--color-primary, #43608a);
+  --header-nav-avatar-bg: var(--color-background-brand, #43608a);
   --header-nav-avatar-size: 32px;
-  --header-nav-avatar-text: var(--color-text-inverse, #fff);
+  --header-nav-avatar-text: var(--color-content-inverse, #fff);
   --header-nav-border-color: var(--color-border, #e5e5e5);
-  --header-nav-menu-item-color: var(--color-text-secondary, #525252);
+  --header-nav-menu-item-color: var(--color-content-secondary, #525252);
 
   /* esa-icon-link */
   --icon-link-font-size-md: 1rem;
@@ -427,9 +433,9 @@
   --icon-link-gap: var(--spacing-150, 6px);
 
   /* esa-kbd */
-  --kbd-bg: var(--color-surface);
+  --kbd-bg: var(--color-background-raised);
   --kbd-border-color: var(--color-border);
-  --kbd-color: var(--color-text-muted);
+  --kbd-color: var(--color-content-muted);
   --kbd-radius: var(--radius-control, 4px);
 
   /* esa-link-column */
@@ -438,40 +444,40 @@
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
   /* esa-loading-overlay */
-  --loading-overlay-bg: var(--color-surface, #fff);
-  --loading-overlay-bg-transparent: var(--color-scrim-light);
-  --loading-overlay-message-color: var(--color-text-secondary, #525252);
-  --loading-spinner-color: var(--color-primary, #43608a);
-  --loading-spinner-track-color: var(--color-border-light, #efefef);
+  --loading-overlay-bg: var(--color-background-raised, #fff);
+  --loading-overlay-bg-transparent: var(--color-overlay-scrim);
+  --loading-overlay-message-color: var(--color-content-secondary, #525252);
+  --loading-spinner-color: var(--color-background-brand, #43608a);
+  --loading-spinner-track-color: var(--color-border-subtle, #efefef);
 
   /* esa-nav-dropdown */
-  --nav-dropdown-panel-bg: var(--color-surface, #fff);
+  --nav-dropdown-panel-bg: var(--color-background-raised, #fff);
   --nav-dropdown-panel-border-color: var(--color-border, #e5e5e5);
   --nav-dropdown-panel-min-width: 240px;
   --nav-dropdown-panel-padding: var(--spacing-300, 12px);
   --nav-dropdown-panel-radius: var(--radius-surface, 8px);
-  --nav-dropdown-panel-shadow: var(--elevation-3, 0 8px 24px rgba(0, 0, 0, 0.12));
-  --nav-dropdown-panel-text: var(--color-text-primary, #171717);
+  --nav-dropdown-panel-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
+  --nav-dropdown-panel-text: var(--color-content-primary, #171717);
 
   /* esa-pagination */
-  --pagination-bg: var(--color-surface, #ffffff);
+  --pagination-bg: var(--color-background-raised, #ffffff);
   --pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
-  --pagination-button-color: var(--color-text-primary, #171717);
+  --pagination-button-color: var(--color-content-primary, #171717);
   --pagination-font-size: var(--font-size-ui-md, 14px);
   --pagination-padding-x: var(--spacing-400, 16px);
   --pagination-padding-y: var(--spacing-200, 8px);
-  --pagination-text-color: var(--color-text-secondary, #525252);
+  --pagination-text-color: var(--color-content-secondary, #525252);
 
   /* esa-pill */
-  --pill-bg: var(--color-surface-sunken, #efefef);
-  --pill-border-color: var(--color-border-light, #efefef);
-  --pill-remove-bg-hover: var(--color-hover-overlay-heavy);
+  --pill-bg: var(--color-background-sunken, #efefef);
+  --pill-border-color: var(--color-border-subtle, #efefef);
+  --pill-remove-bg-hover: var(--color-overlay-hover-heavy);
   --pill-height-lg: var(--chip-height-lg, 34px);
   --pill-height-md: var(--chip-height-md, 28px);
   --pill-height-sm: var(--chip-height-sm, 22px);
   --pill-height-xs: var(--chip-height-xs, 18px);
   --pill-radius: var(--radius-control, 4px);
-  --pill-text-color: var(--color-text-primary, #171717);
+  --pill-text-color: var(--color-content-primary, #171717);
 
   /* esa-pillbox */
   --pillbox-gap-large: var(--spacing-300, 12px);
@@ -479,29 +485,29 @@
   --pillbox-gap-small: var(--spacing-100, 4px);
 
   /* esa-popover */
-  --popover-bg: var(--color-surface, #ffffff);
+  --popover-bg: var(--color-background-raised, #ffffff);
   --popover-border-color: var(--color-border, #e5e5e5);
-  --popover-color: var(--color-text-primary, #171717);
+  --popover-color: var(--color-content-primary, #171717);
   --popover-max-width: none;
   --popover-radius: var(--radius-surface, 0.5rem);
 
   /* esa-progress-bar */
-  --progress-bar-fill-bg: var(--color-primary, #43608a);
+  --progress-bar-fill-bg: var(--color-background-brand, #43608a);
   --progress-bar-height-lg: 12px;
   --progress-bar-height-md: 8px;
   --progress-bar-height-sm: 4px;
   --progress-bar-height-xs: 2px;
   --progress-bar-radius: var(--radius-pill, 9999px);
-  --progress-bar-track-bg: var(--color-surface-sunken, #efefef);
+  --progress-bar-track-bg: var(--color-background-sunken, #efefef);
 
   /* esa-search-panel */
-  --search-panel-bg: var(--color-surface-elevated, #ffffff);
-  --search-panel-result-bg-hover: var(--color-surface-sunken, #efefef);
+  --search-panel-bg: var(--color-background-floating, #ffffff);
+  --search-panel-result-bg-hover: var(--color-background-sunken, #efefef);
   --search-panel-width: 400px;
 
   /* esa-side-dialog */
-  --side-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-  --side-dialog-bg: var(--color-surface, #fff);
+  --side-dialog-backdrop-bg: var(--color-overlay-backdrop, rgba(0, 0, 0, 0.5));
+  --side-dialog-bg: var(--color-background-raised, #fff);
   --side-dialog-border-color: var(--color-border, #e5e5e5);
   --side-dialog-inset: 16px;
   --side-dialog-radius: var(--radius-surface, 8px);
@@ -513,32 +519,32 @@
   --snackbar-container-max-width: 420px;
 
   /* esa-snackbar-item */
-  --snackbar-item-bg-danger: var(--color-danger-strong);
-  --snackbar-item-bg-info: var(--color-info-strong);
-  --snackbar-item-bg-success: var(--color-success-strong);
-  --snackbar-item-bg-warning: var(--color-warning-strong);
-  --snackbar-item-color: var(--color-text-inverse, #ffffff);
+  --snackbar-item-bg-danger: var(--color-content-danger);
+  --snackbar-item-bg-info: var(--color-content-info);
+  --snackbar-item-bg-success: var(--color-content-success);
+  --snackbar-item-bg-warning: var(--color-content-warning);
+  --snackbar-item-color: var(--color-content-inverse, #ffffff);
   --snackbar-item-radius: var(--radius-surface, 0.5rem);
 
   /* esa-switch-toggle */
-  --switch-toggle-label-color: var(--color-text-primary, #171717);
-  --switch-toggle-thumb-bg: var(--color-surface, #fff);
+  --switch-toggle-label-color: var(--color-content-primary, #171717);
+  --switch-toggle-thumb-bg: var(--color-background-raised, #fff);
   --switch-toggle-track-bg: var(--color-border-strong, #d4d4d4);
-  --switch-toggle-track-bg-checked: var(--color-primary, #43608a);
+  --switch-toggle-track-bg-checked: var(--color-background-brand, #43608a);
 
   /* esa-tab-layout */
   --tab-layout-border-color: var(--color-border, #e5e5e5);
-  --tab-layout-color: var(--color-text-secondary, #525252);
-  --tab-layout-color-active: var(--color-primary, #43608a);
+  --tab-layout-color: var(--color-content-secondary, #525252);
+  --tab-layout-color-active: var(--color-background-brand, #43608a);
   --tab-layout-height-lg: 52px;
   --tab-layout-height-md: 44px;
   --tab-layout-height-sm: 36px;
   --tab-layout-height-xs: 30px;
-  --tab-layout-indicator-color: var(--color-primary, #43608a);
+  --tab-layout-indicator-color: var(--color-background-brand, #43608a);
 
   /* esa-tooltip */
-  --tooltip-bg: var(--color-surface-inverse);
-  --tooltip-color: var(--color-text-inverse, #ffffff);
+  --tooltip-bg: var(--color-background-inverse);
+  --tooltip-color: var(--color-content-inverse, #ffffff);
   --tooltip-max-width: 240px;
   --tooltip-radius: var(--radius-control, 0.25rem);
 }

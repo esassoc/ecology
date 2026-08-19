@@ -31,26 +31,26 @@
      The hub ships a generic teal. Point the brand semantics at THIS spoke's own
      primitive ramp (the --__SCOPE__-* raw ramp in section 7). If you skip this,
      primary stays hub teal. */
-  --color-primary:         var(--__SCOPE__-brand-900);  /* __FILL__ the brand's strongest tint */
-  --color-primary-hover:   /* __FILL__ */ #00474f;
-  --color-primary-active:  /* __FILL__ */ #003940;
-  --color-primary-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
-  --color-primary-border:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
-  --color-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
-  --color-secondary-hover: var(--__SCOPE__-brand-800);
+  --color-background-brand:         var(--__SCOPE__-brand-900);  /* __FILL__ the brand's strongest tint */
+  --color-background-brand-hover:   /* __FILL__ */ #00474f;
+  --color-background-brand-hover:  /* __FILL__ */ #003940;
+  --color-background-brand-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
+  --color-border-brand:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
+  --color-background-brand-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
+  --color-background-brand-secondary-hover: var(--__SCOPE__-brand-800);
 
   /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
      Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
      what warms or cools the entire UI vs the hub default. */
-  --color-text-primary:   var(--__SCOPE__-gray-900);
-  --color-text-secondary: var(--__SCOPE__-gray-700);
-  --color-text-tertiary:  var(--__SCOPE__-gray-600);
-  --color-text-muted:     var(--__SCOPE__-gray-500);
+  --color-content-primary:   var(--__SCOPE__-gray-900);
+  --color-content-secondary: var(--__SCOPE__-gray-700);
+  --color-content-secondary:  var(--__SCOPE__-gray-600);
+  --color-content-muted:     var(--__SCOPE__-gray-500);
   --color-border:         var(--__SCOPE__-gray-200);
-  --color-border-light:   var(--__SCOPE__-gray-100);
+  --color-border-subtle:   var(--__SCOPE__-gray-100);
   --color-border-strong:  var(--__SCOPE__-gray-300);
   --color-background:     var(--__SCOPE__-gray-50);
-  --color-surface-sunken: var(--__SCOPE__-gray-100);
+  --color-background-sunken: var(--__SCOPE__-gray-100);
 
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so
@@ -64,11 +64,11 @@
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
      where it's standalone. */
-  --color-success:  var(--color-green-9);   /* __FILL__ */
-  --color-warning:  var(--color-orange-9);  /* __FILL__ */
-  --color-info:     /* __FILL__ */ #228be6;
-  --color-ai:       var(--color-blue-9);    /* __FILL__ */
-  --color-ai-hover: var(--color-blue-10);   /* __FILL__ */
+  --color-background-success:  var(--color-green-9);   /* __FILL__ */
+  --color-background-warning:  var(--color-orange-9);  /* __FILL__ */
+  --color-background-info:     /* __FILL__ */ #228be6;
+  --color-background-ai:       var(--color-blue-9);    /* __FILL__ */
+  --color-background-ai-hover: var(--color-blue-10);   /* __FILL__ */
 
   /* ===== (5) CONTROL SIZING + SHAPE — match this spoke's density =====
      These are SEMANTIC roles, so re-pointing one moves every component that
@@ -116,7 +116,7 @@
   --__SCOPE__-gray-950:  /* __FILL__ */ #292929;
   --__SCOPE__-gray-1000: /* __FILL__ */ #000000;
 
-  /* Brand ramp — this spoke's signature color (feeds --color-primary*/secondary*). */
+  /* Brand ramp — this spoke's signature color (feeds --color-background-brand*/secondary*). */
   --__SCOPE__-brand-50:  /* __FILL__ */ #effefb;
   --__SCOPE__-brand-100: /* __FILL__ */ #eef5f4;
   --__SCOPE__-brand-200: /* __FILL__ */ #b9d6d2;

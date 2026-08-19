@@ -96,17 +96,17 @@ const cls = [
 
 <style>
   .esa-card {
-    --_card-bg: var(--card-bg, var(--color-surface, #ffffff));
+    --_card-bg: var(--card-bg, var(--color-background-raised, #ffffff));
     --_card-border: var(--card-border-color, var(--color-border, #e5e5e5));
     --_card-radius: var(--card-radius, var(--radius-card, 0.5rem));
     --_card-padding: var(--card-padding, var(--spacing-500, 1.5rem));
     --_card-header-bg: var(--card-header-bg, transparent);
-    --_card-header-color: var(--card-header-color, var(--color-text-primary, #171717));
-    --_card-header-border: var(--card-header-border-color, var(--color-border-light, #efefef));
+    --_card-header-color: var(--card-header-color, var(--color-content-primary, #171717));
+    --_card-header-border: var(--card-header-border-color, var(--color-border-subtle, #efefef));
 
     display: block;
     background: var(--_card-bg);
-    border: 1px solid var(--_card-border);
+    border: var(--border-width-default, 1px) solid var(--_card-border);
     border-radius: var(--_card-radius);
     overflow: hidden;
   }
@@ -122,17 +122,17 @@ const cls = [
 
   /* filled: sunken background, no border */
   .esa-card--filled {
-    --_card-bg: var(--color-surface-sunken, #efefef);
+    --_card-bg: var(--color-background-sunken, #efefef);
     --_card-border: transparent;
   }
 
   .esa-card--header-primary .esa-card__header {
-    --_card-header-bg: var(--color-primary, #43608a);
-    --_card-header-color: var(--color-text-inverse, #ffffff);
+    --_card-header-bg: var(--color-background-brand, #43608a);
+    --_card-header-color: var(--color-content-inverse, #ffffff);
   }
 
   .esa-card--header-muted .esa-card__header {
-    --_card-header-bg: var(--color-surface-sunken, #efefef);
+    --_card-header-bg: var(--color-background-sunken, #efefef);
   }
 
   .esa-card--padding-none { --_card-padding: 0; }
@@ -146,7 +146,7 @@ const cls = [
     padding: var(--spacing-400, 1rem) var(--_card-padding);
     background: var(--_card-header-bg);
     color: var(--_card-header-color);
-    border-bottom: 1px solid var(--_card-header-border);
+    border-bottom: var(--border-width-default, 1px) solid var(--_card-header-border);
     min-height: 56px;
   }
 
@@ -172,7 +172,7 @@ const cls = [
 
   .esa-card__subtitle {
     font-size: var(--font-size-150, 0.8125rem);
-    color: var(--color-text-secondary, #525252);
+    color: var(--color-content-secondary, #525252);
     margin: 0;
   }
 
@@ -197,7 +197,7 @@ const cls = [
 
   .esa-card__footer {
     padding: var(--spacing-300, 0.75rem) var(--_card-padding);
-    border-top: 1px solid var(--_card-header-border);
-    background: var(--card-footer-bg, var(--color-surface-sunken, #efefef));
+    border-top: var(--border-width-default, 1px) solid var(--_card-header-border);
+    background: var(--card-footer-bg, var(--color-background-sunken, #efefef));
   }
 </style>

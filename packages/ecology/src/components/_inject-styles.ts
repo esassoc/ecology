@@ -5,17 +5,17 @@ export function injectStyles(): void {
   s.id = STYLE_ID;
   s.textContent = `
     .esa-field { display:flex; flex-direction:column; gap:.375rem; font-family:var(--font-sans,system-ui); }
-    .esa-field__label { font-size:.875rem; font-weight:600; color:var(--form-label-color,var(--color-text-secondary,#525252)); }
-    .esa-field__req { color:var(--color-danger-strong,#ce2c31); }
+    .esa-field__label { font-size:.875rem; font-weight:600; color:var(--form-label-color,var(--color-content-secondary,#525252)); }
+    .esa-field__req { color:var(--color-content-danger,#ce2c31); }
     .esa-field__input, .esa-field__select, .esa-field__textarea {
-      width:100%; padding:.5rem .75rem; border:1px solid var(--form-border-color,#e5e5e5);
+      width:100%; padding:.5rem .75rem; border: var(--border-width-default, 1px) solid var(--form-border-color,#e5e5e5);
       border-radius:.25rem; font-family:inherit; font-size:.9375rem;
       color:var(--form-text-color,#171717); background:var(--form-bg,#fff);
       transition:border-color .12s,box-shadow .12s; outline:none; box-sizing:border-box;
     }
     .esa-field__input:focus, .esa-field__select:focus, .esa-field__textarea:focus {
-      border-color:var(--form-border-color-focus,var(--color-primary,#005862));
-      box-shadow:0 0 0 3px var(--color-primary-subtle,rgba(0,88,98,.08));
+      border-color:var(--form-border-color-focus,var(--color-background-brand,#005862));
+      box-shadow:0 0 0 3px var(--color-background-brand-subtle,rgba(0,88,98,.08));
     }
     .esa-field__input::placeholder, .esa-field__textarea::placeholder { color:var(--form-placeholder-color,#737373); }
     .esa-field__input--error, .esa-field__select--error, .esa-field__textarea--error { border-color:var(--form-border-color-error,#ef4444); }

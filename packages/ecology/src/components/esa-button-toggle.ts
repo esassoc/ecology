@@ -245,7 +245,7 @@ export class EsaButtonToggle extends LitElement {
       color: var(--form-label-color, #171717);
     }
     .required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-danger, #ce2c31);
       margin-left: 2px;
     }
 
@@ -258,7 +258,7 @@ export class EsaButtonToggle extends LitElement {
       max-width: 100%;
       gap: 2px;
       padding: 2px;
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-sunken, #efefef);
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
     }
@@ -274,7 +274,7 @@ export class EsaButtonToggle extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
       font-weight: var(--font-weight-medium, 500);
-      color: var(--color-text-secondary, #525252);
+      color: var(--color-content-secondary, #525252);
       background: transparent;
       border: 0;
       border-radius: calc(var(--_radius) - 2px);
@@ -294,8 +294,8 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:hover:not(:disabled):not(.option--selected) {
-      color: var(--color-text-primary, #171717);
-      background: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
+      color: var(--color-content-primary, #171717);
+      background: var(--color-overlay-hover, rgba(0, 0, 0, 0.04));
     }
 
     .option:focus-visible {
@@ -307,19 +307,19 @@ export class EsaButtonToggle extends LitElement {
 
     .option--selected {
       background: var(--form-bg, #fff);
-      color: var(--color-primary-strong, #2a7e3b);
+      color: var(--color-content-brand, #2a7e3b);
       font-weight: var(--font-weight-semibold, 550);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
 
     .option:disabled {
       cursor: not-allowed;
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #a3a3a3);
       background: transparent;
     }
     .option--selected:disabled {
       background: var(--form-bg, #fff);
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #a3a3a3);
     }
   `;
 }

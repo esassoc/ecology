@@ -154,6 +154,40 @@ if (srcVersion && cached.length) {
     `spoke-kit source (${srcVersion}) is ahead of the installed plugin (${highest}) — its hook/skill fixes are inert until you republish: push the hub, then run BOTH \`claude plugin marketplace update ecology\` AND \`claude plugin update spoke-kit@ecology\` (the first alone only refreshes the listing), then restart Claude Code.`);
 }
 
+// --- Deprecated @esa/tokens names ---------------------------------------------
+// A rename in the hub reaches this spoke through the `file:` symlink with no
+// publish step to absorb it. Deprecated aliases keep the old names resolving, so
+// nothing LOOKS wrong — which is exactly why this has to be reported rather than
+// left to be noticed.
+if (isSpoke) {
+  const manifest = path.join(CWD, 'node_modules', '@esa', 'tokens', 'migrations.json');
+  if (existsSync(manifest)) {
+    const { migrations } = readJson(manifest) ?? { migrations: [] };
+    const names = migrations.flatMap((m) => m.pairs.map(([from]) => ({ from, kind: m.kind })));
+    const srcDir = path.join(CWD, 'src');
+    let hits = 0;
+    const seen = new Set();
+    const walk = (d) => {
+      for (const e of readdirSync(d, { withFileTypes: true })) {
+        const fp = path.join(d, e.name);
+        if (e.isDirectory()) { walk(fp); continue; }
+        if (!/\.(astro|ts|tsx|js|mjs|css|scss|svelte|vue)$/.test(e.name)) continue;
+        const src = readFileSync(fp, 'utf8');
+        for (const { from, kind } of names) {
+          const re = kind === 'token'
+            ? new RegExp(`${from}(?![\\w-])`, 'g')
+            : new RegExp(`(?<![\\w-])${from}(?![\\w-])`, 'g');
+          const n = (src.match(re) ?? []).length;
+          if (n) { hits += n; seen.add(from); }
+        }
+      }
+    };
+    if (existsSync(srcDir)) walk(srcDir);
+    warn(`no deprecated @esa/tokens names in src/`, hits === 0,
+      `${hits} use(s) of ${seen.size} deprecated name(s) — they still render, via compatibility aliases the hub will eventually drop. Preview the fix: \`node ../ecology/scripts/migrate-tokens.mjs\`, then re-run with --write.`);
+  }
+}
+
 // --- Verdict -------------------------------------------------------------------
 const failures = results.filter((r) => !r.ok);
 console.log(failures.length

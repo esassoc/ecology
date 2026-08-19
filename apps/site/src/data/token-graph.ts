@@ -197,7 +197,7 @@ const COLOR_RE = /^(#|rgb|hsl|oklch|color\(|color-mix\()/i;
 const PURE_VAR = /^var\(\s*--[a-zA-Z][a-zA-Z0-9-]*\s*(,[\s\S]*)?\)$/;
 
 /**
- * A value that WRAPS a reference — `color-mix(in srgb, var(--color-primary) 8%,
+ * A value that WRAPS a reference — `color-mix(in srgb, var(--color-background-brand) 8%,
  * transparent)`. Walking to the terminal here throws the wrapper away and
  * reports the solid brand colour, so a 8% wash rendered as a swatch came out as
  * a solid block. Substitute into the expression instead, which is both accurate
@@ -244,6 +244,34 @@ for (const node of nodes.values()) {
     nodes.get(ref)?.usedByTokens.push(node.name);
   }
 }
+
+/**
+ * Reverse edges from declarations inside AT-RULES, which `defs` cannot see: it is
+ * first-wins, so a token redeclared under `@media` contributes only its :root value.
+ *
+ * That is the right rule for VALUES — this graph reports the chain that ships by
+ * default, not what one condition does to it. Usage is a different question, and
+ * answering it from the default chain alone made `--duration-0` an ORPHAN: its only
+ * reader is the `prefers-reduced-motion` block, which is the entire reason it exists.
+ * `orphan` on this page reads as "nothing needs this, delete it", so the audit was
+ * pointing at a load-bearing token and saying it was safe to remove.
+ *
+ * Deliberately edges only — the conditional VALUE is still not merged into `defs`,
+ * so `--transition-fast` continues to resolve as 150ms rather than 0ms.
+ */
+const conditionalEdges: [string, string][] = [];
+for (const css of [tokensCss, componentCss]) {
+  const bare = css.replace(/\/\*[\s\S]*?\*\//g, ''); // prose mentioning var() is not usage
+  for (const [, name, value] of bare.matchAll(/(--[a-zA-Z0-9-]+)\s*:\s*([^;]+);/g)) {
+    if (defs.get(name) === value.trim()) continue; // the default declaration, already counted
+    for (const ref of refsOf(value)) conditionalEdges.push([ref, name]);
+  }
+}
+for (const [ref, by] of conditionalEdges) {
+  const node = nodes.get(ref);
+  if (node && ref !== by && !node.usedByTokens.includes(by)) node.usedByTokens.push(by);
+}
+
 for (const node of nodes.values()) node.usedByTokens.sort();
 
 export const allTokens: TokenNode[] = [...nodes.values()].sort((a, b) => a.name.localeCompare(b.name));
@@ -270,9 +298,14 @@ export interface TokenGroup {
 export interface TokenCategory {
   label: string;
   note: string;
-  /** Where what this repo actually ships diverges from the note's model.
-   *  Stated per category so the taxonomy doubles as the refinement worklist. */
+  /** Where the STRUCTURE this repo ships departs from the note's model — a wrong
+   *  or missing axis. Drives the "diverges" chip, so it must not be used for work
+   *  that is merely outstanding, or the chip degrades into "someone wrote prose". */
   gap?: string;
+  /** Where the structure is right but the codebase has not moved onto it. Kept
+   *  separate from `gap` because they call for opposite responses: a divergence
+   *  means rethink the tier, adoption debt means go and edit call sites. */
+  adoption?: string;
   groups: TokenGroup[];
   count: number;
 }
@@ -298,12 +331,15 @@ const naturalCompare = (a: string, b: string) => {
 /**
  * Colors sub-group by ramp: --color-grass-9 -> "grass", --color-gray-a3 ->
  * "gray-a". Everything that is NOT a stepped ramp collapses into one bucket —
- * status and the overlay washes are single tokens, and keying them the same way
- * as a ramp produced 13 groups of one, which is noise rather than structure.
+ * the overlay washes are single tokens, and keying them the same way as a ramp
+ * produced 13 groups of one, which is noise rather than structure.
+ *
+ * There was also a `status-` branch here, for the `--color-status-*` tier-1
+ * aliases. Those were deleted (see the Core note below) — tier 1 holds only ramps
+ * and washes now, so the branch had nothing left to match.
  */
 const primitiveGroupKey = (name: string) => {
   const body = name.replace(/^--color-/, '');
-  if (body.startsWith('status-')) return 'status (fixed, not a ramp)';
   const parts = body.split('-');
   const step = parts.at(-1) ?? '';
   if (!/^a?\d+$/.test(step)) return 'overlays + washes';
@@ -313,12 +349,25 @@ const primitiveGroupKey = (name: string) => {
   return parts.join('-') + (step.startsWith('a') ? '-a' : '');
 };
 
-/** Semantics group by role family: --color-text-primary -> "color-text". */
+/**
+ * Semantic colours group by PROPERTY: --color-content-primary -> "color-content".
+ *
+ * This used to list intentions (`text`, `surface`, `primary`, `secondary`, `status`)
+ * and match them at parts[1]. Once tier-2 colour went property-first every one of
+ * those words moved out of that slot, so 60 of 70 tokens fell through to
+ * `color-other` and the grouping quietly stopped grouping. Matching the property is
+ * both correct now and stable: the property slot is the one part of a tier-2 colour
+ * name that is guaranteed present.
+ *
+ * `color-other` should now always be empty — every tier-2 colour name carries its
+ * property. A group appearing there means a token was added without one, which is
+ * exactly the thing worth seeing on this page.
+ */
 const semanticGroupKey = (name: string) => {
   const parts = name.slice(2).split('-');
   if (parts[0] !== 'color') return parts[0];
-  const FAMILIES = ['text', 'surface', 'border', 'primary', 'secondary', 'accent', 'ai', 'status', 'disabled'];
-  return FAMILIES.includes(parts[1]) ? `color-${parts[1]}` : 'color-other';
+  const PROPERTIES = ['background', 'content', 'border', 'overlay'];
+  return PROPERTIES.includes(parts[1]) ? `color-${parts[1]}` : 'color-other';
 };
 
 /** Component tokens group by their component prefix: --card-bg -> "card". */
@@ -343,7 +392,7 @@ export const componentGroups = group(byTier('component'), componentGroupKey);
 
 /**
  * Tier 1 by CONCEPT rather than by source file — the ramps live in color.json
- * but shadows, transitions, and z-indexes are all crammed into effect.json, so
+ * but shadows and icon sizes are still crammed into effect.json, so
  * the file layout is not the taxonomy anyone reasons in.
  *
  * Matchers run in order, first hit wins. The trailing `Other` bucket is
@@ -354,6 +403,7 @@ const PRIMITIVE_CATEGORIES: {
   label: string;
   note: string;
   gap?: string;
+  adoption?: string;
   match: (n: string) => boolean;
   /** Sub-group within the category. Omit to render one flat list. */
   subGroupKey?: (n: string) => string;
@@ -400,26 +450,50 @@ const PRIMITIVE_CATEGORIES: {
   {
     label: 'Border',
     note:
-      'border-radius defines the available radius values; border-width the available widths (less common); border-style the available styles (rarely used). The focus ring sits here too — including --focus-ring-color, which is kept with the ring rather than filed under Color so the ring reads as one set.',
-    gap:
-      'Only border-radius exists. There are no border-width and no border-style primitives, so every border in the kit writes its width literally (1px) at the call site. Both are named as less common / rarely used, so this may be the right call — but it is currently an absence by default rather than by decision. Separately, --focus-ring-color and --focus-ring-width are declared at BOTH tier 1 and tier 3 (see Health), which is why only --focus-ring-offset lists here.',
-    match: (n) => /^--(radius-|border-width|border-style|focus-ring-)/.test(n),
+      'border-radius defines the available radius values, border-width the available widths, and border-style the available styles (the rarest of the three). Tier 2 maps those into themeable roles — the model names them with t-shirt sizing, e.g. theme-border-radius-large. Most components wire to the tier-2 roles, but radius and the other border properties can also be controlled per component at tier 3. Two of the three axes ship here: seven --radius-* steps and four --border-width-* steps (100–400 = 1–4px), each with a tier-2 role above it and tier-3 hooks below. border-style is deliberately absent — 56 of the 57 borders in the kit are solid and the one dashed border is the file-upload dropzone affordance, so a --border-style-solid token would alias a keyword nobody would re-point. Two departures from the model, both on purpose. The roles are named by INTENTION rather than t-shirt size — control / surface / card / overlay / pill for radius — because naming WHERE a corner belongs lets a theme round its cards without rounding every menu, which radius-lg cannot express. And width gets exactly ONE role, --border-width-default, because it turned out to have exactly one: the hairline, read by the 49 real borders in the kit. Every other width here (2px, 3px, 4px) is internal micro-geometry — spinner rings, the kbd keycap lip, a chevron built from two borders — which SPEC.md excludes from the theming surface by name, so those stay literals rather than becoming a role nobody can point at.',
+    gap: undefined,
+    match: (n) => /^--(radius-|border-width|border-style)/.test(n),
+    // Grouped by CSS PROPERTY, the way Typography is — one sub-table per axis
+    // instead of one flat list, now that the category holds more than radius.
+    // The labels are the properties, not the token prefixes, which is why the
+    // radius group reads `border-radius` while its tokens read `--radius-*`:
+    // Typography's own rule is that a primitive is named for the property it
+    // sets, and radius is the one tier-1 set that predates it.
+    subGroupKey: (n) =>
+      n.startsWith('--border-width-') ? 'border-width'
+      : n.startsWith('--border-style-') ? 'border-style'
+      : 'border-radius',
+    // border-style is listed but ships nothing, so it renders as an empty group.
+    // That is the point of `expect` — the absence is a documented decision (see
+    // the note), and a visible hole states it better than prose alone.
+    expect: ['border-radius', 'border-width', 'border-style'],
   },
   {
     label: 'Shadow',
     note:
-      'Shadow tokens are composite: x offset, y offset, blur radius, and spread, plus a color. The shadow color usually references a transparent color managed in the Color category, though it can be managed separately.',
-    gap:
-      'These are NOT composite here. Each shadow is a single opaque string typed "other" in the DTCG source (e.g. "0 4px 20px -4px rgba(0, 0, 0, 0.06)"), so x / y / blur / spread are not addressable and cannot be re-pointed independently. The color is a hardcoded rgba(0,0,0,α) literal that references nothing in the Color category — which means a theme cannot tint its shadows, and the alpha ramp already shipped (gray-a, black-a) goes unused by them.',
+      'Shadow is a composite token in the same way typography is: color, x offset, y offset, blur and spread work together to produce one stylistic result. Technically you define each of those axes and cluster them into a composite. In practice it is the weird one — you often do not need x / y / blur / spread to be addressable, so a lot of the time the shadow is just described at tier 2 directly. Component-specific shadow values can be created at tier 3 as well.\n\nBoth halves of that ship here, which is why this category no longer diverges. Tier 1 holds the axes as raw material; tier 2 does the clustering, as --elevation-1…6 — the model\'s "just describe them at the tier two level", taken literally. --elevation-4 compiles to var(--shadow-offset-x) var(--shadow-offset-y-300) var(--shadow-blur-300) var(--shadow-spread-300) var(--shadow-color-300), and tier 3 adds the component-specific values the model mentions last (--grid-shadow, --command-palette-shadow, --nav-dropdown-panel-shadow).\n\nThree calls worth recording. The composite belongs at tier 2, not tier 1: choosing which combination of axes is a resting card and which is a modal is an intent, so the old ordinal --shadow-050…500 were intent wearing a tier-1 name — the same misfiling as --transition-fast — and formed a 1:1 passthrough with elevation besides. They are gone; migrations.json keeps them resolving. Doing the axes at all was optional by the model, but the color axis was not optional in practice: every shadow used to terminate in a hardcoded rgba(0,0,0,α) referencing nothing, so a theme could not tint its shadows. offset-x is a single shared token rather than a ramp because every shadow casts straight down — same call as --border-width-default — and the colors deliberately do NOT alias black-a, which starts at 0.05 and steps by 0.05, since five of these six alphas (0.03–0.08) fall between its steps.',
+    gap: undefined,
+    // Tier 1 is now axes ONLY — the composites moved to tier 2 (--elevation-*), so
+    // there is no `composite` sub-group here any more. Grouped by axis the way
+    // Typography and Border are grouped by CSS property.
     match: (n) => n.startsWith('--shadow-'),
+    subGroupKey: (n) =>
+      n.startsWith('--shadow-offset-x') ? 'offset-x'
+      : n.startsWith('--shadow-offset-y-') ? 'offset-y'
+      : n.startsWith('--shadow-blur-') ? 'blur'
+      : n.startsWith('--shadow-spread-') ? 'spread'
+      : 'color',
+    expect: ['offset-x', 'offset-y', 'blur', 'spread', 'color'],
   },
   {
     label: 'Animation',
     note:
-      'duration defines how long an animation takes to complete; ease sets how it progresses through that duration; property names the style property being animated (opacity, color, …). These work in code but Figma cannot consume animation tokens.',
-    gap:
-      'Fused, not separated. The three tokens are single strings ("150ms ease") that weld duration and ease together, so neither axis is addressable on its own and no property axis exists at all. A component wanting the standard duration with a different easing has to re-declare the whole value.',
-    match: (n) => /^--(transition-|duration-|easing-|ease-)/.test(n),
+      'Animation is a COMPOSITE family, so tier 1 holds the ingredients and tier 2 assembles them. The ingredients are two: duration (how long) and ease (how it progresses through that duration). The animated property — opacity, color — is deliberately NOT tokenised at tier 1; the model is explicit that properties "are more just applied" at the call site. Tier 2 is where the named animations live. Tier 3 (component-specific animations) is sanctioned but the model notes it has never been needed in production. These work in code but Figma cannot consume animation tokens.',
+    adoption:
+      'All 22 `@keyframes` call sites are on tokens; 42 of the 73 `transition:` declarations still hold literals. The animation pass settled three disagreements nothing had chosen: four components were spinning at three different speeds (600ms, 750ms, 1000ms) because there was no token to spin at, and several entrances and exits shared one `ease` curve where the system now distinguishes decelerate from accelerate. The remaining transition literals still ignore the `prefers-reduced-motion` override, which can only reach tokenised call sites.',
+    match: (n) => /^--(duration-|easing-|ease-)/.test(n),
+    subGroupKey: (n) => (n.startsWith('--duration-') ? 'duration' : 'easing'),
+    expect: ['duration', 'easing'],
   },
   {
     label: 'Z-index',
@@ -524,6 +598,7 @@ export const primitiveCategories: TokenCategory[] = (() => {
       label: cat.label,
       note: cat.note,
       gap: cat.gap,
+      adoption: cat.adoption,
       groups,
       count: tokens.length,
     });

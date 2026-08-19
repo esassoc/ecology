@@ -112,7 +112,7 @@ function initialsFor(u: EsaHeaderNavUser): string {
     --app-bar-gap: var(--spacing-300, 12px);
     --app-bar-pad-x: var(--spacing-500, 24px);
     --app-bar-pad-y: var(--spacing-150, 6px);
-    border-bottom: 1px solid var(--header-nav-border-color, var(--color-border, #e5e5e5));
+    border-bottom: var(--border-width-default, 1px) solid var(--header-nav-border-color, var(--color-border, #e5e5e5));
   }
   .esa-header-nav__brand { display: inline-flex; align-items: center; }
   .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200, 8px); }
@@ -123,12 +123,12 @@ function initialsFor(u: EsaHeaderNavUser): string {
     display: block;
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
-    color: var(--header-nav-menu-item-color, var(--color-text-secondary, #525252));
+    color: var(--header-nav-menu-item-color, var(--color-content-secondary, #525252));
     font-size: var(--font-size-200, 1rem);
     text-decoration: none;
   }
-  .esa-header-nav__menu-item:hover { background: var(--color-surface-sunken, #efefef); }
-  .esa-header-nav__menu-item--inert { color: var(--color-text-muted, #737373); }
+  .esa-header-nav__menu-item:hover { background: var(--color-background-sunken, #efefef); }
+  .esa-header-nav__menu-item--inert { color: var(--color-content-muted, #737373); }
 
   /* User menu (the DISCLOSURE is bespoke; the avatar inside it is esa-avatar) */
   .esa-header-nav__user { position: relative; display: flex; align-items: center; }
@@ -141,8 +141,8 @@ function initialsFor(u: EsaHeaderNavUser): string {
        20/28/40/56 scale, and the brand fill is not its name-hash hue, so both
        arrive as scoped overrides rather than as compromises. */
     --avatar-size-sm: var(--header-nav-avatar-size, 32px);
-    --avatar-bg: var(--header-nav-avatar-bg, var(--color-primary, #43608a));
-    --avatar-text-color: var(--header-nav-avatar-text, var(--color-text-inverse, #fff));
+    --avatar-bg: var(--header-nav-avatar-bg, var(--color-background-brand, #43608a));
+    --avatar-text-color: var(--header-nav-avatar-text, var(--color-content-inverse, #fff));
     --avatar-font-size: var(--font-size-100, 0.75rem);
 
     /* The summary is now only the focusable trigger — the avatar draws the
@@ -160,28 +160,28 @@ function initialsFor(u: EsaHeaderNavUser): string {
     position: absolute; top: calc(100% + var(--spacing-100, 4px)); right: 0;
     z-index: var(--z-dropdown, 50);
     min-width: 220px;
-    background: var(--color-surface, #fff);
-    border: 1px solid var(--color-border, #e5e5e5);
+    background: var(--color-background-raised, #fff);
+    border: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
     border-radius: var(--radius-surface, 8px);
-    box-shadow: var(--elevation-3, 0 8px 24px rgba(0, 0, 0, 0.12));
+    box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
     overflow: hidden;
   }
   .esa-header-nav__user-info {
     display: flex; flex-direction: column; gap: 2px;
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-    border-bottom: 1px solid var(--color-border, #e5e5e5);
+    border-bottom: var(--border-width-default, 1px) solid var(--color-border, #e5e5e5);
   }
-  .esa-header-nav__user-name { font-size: var(--font-size-200, 1rem); font-weight: var(--font-weight-semibold, 550); color: var(--color-text-primary, #171717); }
-  .esa-header-nav__user-email { font-size: var(--font-size-100, 0.75rem); color: var(--color-text-secondary, #525252); }
+  .esa-header-nav__user-name { font-size: var(--font-size-200, 1rem); font-weight: var(--font-weight-semibold, 550); color: var(--color-content-primary, #171717); }
+  .esa-header-nav__user-email { font-size: var(--font-size-100, 0.75rem); color: var(--color-content-secondary, #525252); }
   .esa-header-nav__user-actions { padding: var(--spacing-100, 4px); }
   .esa-header-nav__user-action {
     display: flex; align-items: center; gap: var(--spacing-200, 8px);
     padding: var(--spacing-150, 6px) var(--spacing-300, 12px);
     border-radius: var(--radius-control, 4px);
-    color: var(--header-nav-menu-item-color, var(--color-text-secondary, #525252));
+    color: var(--header-nav-menu-item-color, var(--color-content-secondary, #525252));
     font-size: var(--font-size-200, 1rem); text-decoration: none;
   }
-  .esa-header-nav__user-action:hover { background: var(--color-surface-sunken, #efefef); }
-  .esa-header-nav__user-action--danger { color: var(--color-danger-strong, #ce2c31); }
+  .esa-header-nav__user-action:hover { background: var(--color-background-sunken, #efefef); }
+  .esa-header-nav__user-action--danger { color: var(--color-content-danger, #ce2c31); }
   .esa-header-nav__user-divider { height: 1px; margin: var(--spacing-100, 4px) 0; background: var(--color-border, #e5e5e5); }
 </style>

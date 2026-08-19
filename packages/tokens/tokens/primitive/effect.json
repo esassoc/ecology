@@ -1,16 +1,48 @@
 {
   "shadow": {
-    "050": { "$value": "0 1px 4px 0 rgba(0, 0, 0, 0.03)",    "$type": "other" },
-    "100": { "$value": "0 2px 12px 0 rgba(0, 0, 0, 0.04)",   "$type": "other" },
-    "200": { "$value": "0 4px 20px -4px rgba(0, 0, 0, 0.06)","$type": "other" },
-    "300": { "$value": "0 6px 24px -6px rgba(0, 0, 0, 0.07)","$type": "other" },
-    "400": { "$value": "0 8px 32px -8px rgba(0, 0, 0, 0.08)","$type": "other" },
-    "500": { "$value": "0 20px 60px rgba(0, 0, 0, 0.2)",     "$type": "other" }
-  },
-  "transition": {
-    "fast": { "$value": "150ms ease", "$type": "other" },
-    "base": { "$value": "200ms ease", "$type": "other" },
-    "slow": { "$value": "350ms ease", "$type": "other" }
+    "$description": "The four axes a box-shadow is made of, as raw material. There is deliberately NO composite step here. Clustering the axes into a usable box-shadow is the semantic act — it says which combination is a resting card and which is a modal — so the composites live at tier 2 as --elevation-1…6. A `--shadow-200` at this tier would be an ordinal name for an intent, which is the same misfiling that put --transition-fast in tier 1.",
+
+    "offset-x": { "$value": "0", "$type": "dimension", "$description": "Horizontal cast, shared by every step. This is the one axis with a single value rather than a ramp: all six shadows in the system are cast straight down, so a per-step ramp would be six copies of `0`. Same reasoning as --border-width-default — an axis gets a ramp when it HAS one." },
+
+    "offset-y": {
+      "$description": "Vertical cast. Climbs with the step, and faster at the top end — 8px to 20px between 400 and 500 — because 500 is the full-screen overlay tier, not the next notch on a card ramp.",
+      "050": { "$value": "1px",  "$type": "dimension" },
+      "100": { "$value": "2px",  "$type": "dimension" },
+      "200": { "$value": "4px",  "$type": "dimension" },
+      "300": { "$value": "6px",  "$type": "dimension" },
+      "400": { "$value": "8px",  "$type": "dimension" },
+      "500": { "$value": "20px", "$type": "dimension" }
+    },
+
+    "blur": {
+      "$description": "Softness. Always several times the y offset — that ratio is what reads as distance from the surface rather than a hard drop line.",
+      "050": { "$value": "4px",  "$type": "dimension" },
+      "100": { "$value": "12px", "$type": "dimension" },
+      "200": { "$value": "20px", "$type": "dimension" },
+      "300": { "$value": "24px", "$type": "dimension" },
+      "400": { "$value": "32px", "$type": "dimension" },
+      "500": { "$value": "60px", "$type": "dimension" }
+    },
+
+    "spread": {
+      "$description": "Negative from 200 up, pulling the shadow in so a wide blur does not bleed past the element's own footprint. 050 and 100 are too tight to need it; 500 deliberately does NOT pull in, because a full-screen overlay wants the bleed.",
+      "050": { "$value": "0",    "$type": "dimension" },
+      "100": { "$value": "0",    "$type": "dimension" },
+      "200": { "$value": "-4px", "$type": "dimension" },
+      "300": { "$value": "-6px", "$type": "dimension" },
+      "400": { "$value": "-8px", "$type": "dimension" },
+      "500": { "$value": "0",    "$type": "dimension" }
+    },
+
+    "color": {
+      "$description": "The axis that was doing real damage fused. Every shadow ended in a hardcoded rgba(0,0,0,α), so a theme could not tint its shadows at all — split out, six tokens re-point them. Deliberately NOT aliased onto the black-a ramp: black-a starts at 0.05 and steps in units of 0.05, and these alphas are 0.03 / 0.04 / 0.06 / 0.07 / 0.08, so pointing at it would have moved five of the six rendered values. Shadow alpha is its own fine-grained ramp for a reason — the difference between 0.03 and 0.05 is the difference between a card resting and a card lifting.",
+      "050": { "$value": "rgba(0, 0, 0, 0.03)", "$type": "color" },
+      "100": { "$value": "rgba(0, 0, 0, 0.04)", "$type": "color" },
+      "200": { "$value": "rgba(0, 0, 0, 0.06)", "$type": "color" },
+      "300": { "$value": "rgba(0, 0, 0, 0.07)", "$type": "color" },
+      "400": { "$value": "rgba(0, 0, 0, 0.08)", "$type": "color" },
+      "500": { "$value": "rgba(0, 0, 0, 0.2)",  "$type": "color" }
+    }
   },
   "icon": {
     "size": {

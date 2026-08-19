@@ -26,7 +26,7 @@ surfaces, so anything that hardcodes `#fff`/`#000`/a raw ramp step or assumes a 
 *looks* right and sails past a before/after (and past a `var(--raw)` grep, which can't see hardcoded
 literals at all). To actually prove token-cleanliness, **invert the theme**: add a throwaway
 `:root[data-theme="dark"]` override of the *semantic layer only* (dark surfaces, light text, dark borders,
-`--color-primary` lifted for contrast), inject it in-browser (devtools `<style>` + set the attr on
+`--color-background-brand` lifted for contrast), inject it in-browser (devtools `<style>` + set the attr on
 `<html>` — zero disk changes, reverts on reload), and screenshot the running app. **Every spot that
 doesn't flip is a stray literal or a non-semantic read** — the exact tail the other checks miss. Adjudicate:
 - **brand-swap-safe ≠ theme-safe.** A token derived from the brand ramp (e.g. a nav-active bg reading
