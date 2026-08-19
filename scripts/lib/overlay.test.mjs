@@ -78,13 +78,31 @@ test('the focusable selector is declared in exactly one place', () => {
   // drops a clause is exactly the drift this is looking for. One hand-copy had already
   // dropped :not([disabled]) from select and textarea, so a disabled control in a drawer
   // was a tab stop that the identical control in a dialog was not.
-  const needle = squash('button:not([disabled]),input:not([disabled])');
-  const copies = SOURCES.filter((c) => squash(c.code).includes(needle)).map((c) => c.file);
+  //
+  // TWO NEEDLES, BECAUSE ONE OF THEM KEYED ON THE CLAUSE COPIES DROP. The original
+  // needle was `button:not([disabled]),input:not([disabled])`, which cannot see the
+  // worst kind of copy: esa-dropdown-menu and esa-popover each carried
+  // `button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])` —
+  // reordered AND stripped of every :not([disabled]) — and passed this test clean,
+  // while resolving a DISABLED button as a menu trigger. A copy is far likelier to
+  // drop the disabled guards than to drop the tabindex clause, so match on either.
+  const STRICT = squash('button:not([disabled]),input:not([disabled])');
+  const TABINDEX = squash('[tabindex]:not([tabindex="-1"])');
+  // Either the exact disabled-guard pair, OR the shape every focusable list has
+  // whatever its order: a[href] + button + the tabindex escape hatch.
+  const hasCopy = (code) => {
+    const s = squash(code);
+    return (
+      s.includes(STRICT) ||
+      (s.includes(TABINDEX) && s.includes(squash('a[href]')) && s.includes(squash('button')))
+    );
+  };
+  const copies = SOURCES.filter((c) => hasCopy(c.code)).map((c) => c.file);
   assert.deepEqual(
     copies.sort(), [],
     'Import FOCUSABLE_SELECTOR from ../overlay.js instead:\n  ' + copies.join('\n  '),
   );
-  assert.ok(squash(OVERLAY_SRC).includes(needle), 'overlay.ts no longer declares it — this test is vacuous');
+  assert.ok(hasCopy(OVERLAY_SRC), 'overlay.ts no longer declares it — this test is vacuous');
 });
 
 test('nothing reads document.activeElement directly', () => {

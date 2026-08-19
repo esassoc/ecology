@@ -289,10 +289,26 @@ alone.
 says its 4px corner exists to match esa-badge), and three hooks would let them drift apart
 silently, which is the failure the 2026-08-16 demotion pass removed 168 instances of.
 
-**No npm script grades the two generated theme files.** `npm run contrast` is `--hub` only
-and `contrast:dark` targets `docs-dark.css`, so `check-contrast.mjs
-apps/site/src/styles/theme-{beacon,qanat}.css [--scheme dark]` has to be run by hand. That
-is a gap in the gate, not a property of this change.
+**`npm run theme:check` grades the generated themes** (2026-08-18). `check-contrast.mjs`
+takes scheme and profile as FLAGS and never iterates them, so covering one theme file
+means four runs — and `npm run contrast` is `--hub` only while `contrast:dark` targets
+`docs-dark.css`, so generated themes were graded by hand, which for a gate means not at
+all. `scripts/check-themes.mjs` is that loop and nothing else: it discovers `theme-*.css`
+(`src/styles` in a spoke, `apps/site/src/styles` here), discovers the profile names out of
+`dist/tokens.css`, and prints a theme × profile × scheme matrix. It **shells out** to
+`check-contrast.mjs` rather than importing the grader — re-composing the token layers is
+the part that is easy to get almost right, and that script's history is a list of audits
+whose inputs stopped describing what they claimed to report on.
+
+Two things it gets right that a substring check would not:
+- **A theme with no profile block is flagged, not shown as a flat column.** The test
+  matches a real SELECTOR (`[data-a11y-assurance="x"] … {`) after stripping comments,
+  because a generated theme names the attribute in its own header comment — a substring
+  test reports every file as having a block, including one whose blocks were deleted.
+- **Failing is proven, not assumed.** Verified against a hostile brand (`#e5399f`): it
+  reports `standard/light ✗1` and `wcag-aa/light ok` in one grid — the profile earning
+  itself — and strips to `✗` in both columns once the profile block is removed, which is
+  the hub-profile-cannot-reach-a-spoke-brand result made visible.
 
 **`packages/spoke-template` moved with it**, and it was further out than the name: both its
 ramps were on the 50/100/…/1000 **web-palette** vocabulary, so the hand-fill path and

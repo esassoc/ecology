@@ -1,6 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
@@ -27,7 +28,7 @@ const methods = [
     <Preview code={`<button id="open-cmdk">Open command palette</button>
 
 <esa-command-palette id="cmdk"></esa-command-palette>`}>
-      <button class="trigger" id="open-cmdk">Open command palette</button>
+      <EsaButton variant="primary" id="open-cmdk">Open command palette</EsaButton>
       <esa-command-palette id="cmdk"></esa-command-palette>
       <p id="result" class="result"></p>
     </Preview>
@@ -69,16 +70,6 @@ const methods = [
 </script>
 
 <style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-brand, #43608a);
-    color: var(--color-content-default-knockout, #fff);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
   .result { color: var(--color-content-default-muted, #737373); min-height: 1.5em; width: 100%; }
   kbd {
     padding: 1px 5px;

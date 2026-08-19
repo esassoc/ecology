@@ -126,8 +126,38 @@ const {
   target,
   rel,
   class: className = '',
+  /*
+   * `slot` IS HOISTED TO THE WRAPPER, and it is the one attribute that cannot ride in
+   * ...rest. Everything else in rest is a property OF the button and belongs on the
+   * native element. `slot` is not — it is a PLACEMENT instruction, and it only means
+   * anything on a DIRECT CHILD of the shadow host. This component renders
+   * `<span class="esa-button"><button class="esa-button__native"></button></span>`, so
+   * a slot left in rest lands on the inner button, which is one level too deep to be
+   * seen. Measured before the fix: `<esa-dialog><EsaButton slot="footer">` rendered
+   * `<esa-dialog><span …><button slot="footer">`, and the button went to the DEFAULT
+   * slot with nothing reporting a problem — the dialog footer was simply empty.
+   *
+   * AN ASTRO-COMPONENT PARENT IS UNAFFECTED, but not for the reason you would guess.
+   * Astro does NOT consume the attribute — measured on the esa-page-header page, `slot`
+   * arrives in these props even when Astro has already used it to place the content in a
+   * compile-time `<slot name="actions">`. So it renders into the output either way; it
+   * simply moved from the inner button to the wrapper. That is inert, because a `slot`
+   * attribute means nothing on an element that is not the child of a shadow host — which
+   * is also why the bug this fixes was invisible for so long.
+   */
+  slot,
   ...rest
 } = Astro.props;
+
+/*
+ * SPREAD IT, never write `slot={slot}`. Astro special-cases a LITERAL `slot=` attribute
+ * on an element inside a component template — it reads it as its own compile-time slot
+ * directive and strips it from the output, so the attribute silently disappears rather
+ * than moving. Measured: the literal form rendered no slot at all on either element.
+ * A spread is opaque to that check, which is exactly how the attribute reached the inner
+ * button through ...rest in the first place.
+ */
+const slotAttr = slot === undefined ? {} : { slot };
 
 // Explicit `variant` always wins, so a spoke mid-migration can pass both without
 // the stale one overriding the fixed one. Tested against Astro.props rather than
@@ -230,7 +260,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     since they are all `.esa-button--x .esa-button__native` descendant selectors and
     a single element is not a descendant of itself. */}
 {isSummary ? (
-  <summary class={cls} {...summaryAttrs} {...rest}>
+  <summary class={cls} {...slotAttr} {...summaryAttrs} {...rest}>
     <span class={`esa-button__native typography-${LABEL_TYPE[size]}`}>
       {icon && <EsaIcon name={icon} size={size} />}
       {!iconOnly && (
@@ -240,7 +270,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     </span>
   </summary>
 ) : (
-<span class={cls}>
+<span class={cls} {...slotAttr}>
   {isLink ? (
     <a class={`esa-button__native typography-${LABEL_TYPE[size]}`} {...linkAttrs} {...rest}>
       {loading && <span class="esa-button__spinner" aria-hidden="true" />}

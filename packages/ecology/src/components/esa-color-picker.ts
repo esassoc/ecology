@@ -109,6 +109,69 @@ export class EsaColorPicker extends LitElement {
     return this.value.toLowerCase() === color.toLowerCase();
   }
 
+  /**
+   * The swatch grid is a RADIOGROUP, not a listbox, and that is the second time this
+   * distinction has been got wrong in this kit.
+   *
+   * It shipped as `role="listbox"` over `<button role="option">`. Two problems, and
+   * only the first is pedantry: an `option` may not be an interactive widget, so the
+   * role was invalid on a button. The one that reached users is that `listbox`
+   * ANNOUNCES a keyboard contract — "listbox, N options", navigate with arrows — and
+   * there were no key handlers at all. Arrows did nothing. Every swatch was instead a
+   * separate tab stop, which is the exact cost the listbox pattern exists to avoid;
+   * with a 30-colour palette that is 30 stops between the hex field and whatever
+   * follows.
+   *
+   * Radio is what this actually is: pick exactly one from a set. `aria-checked` says
+   * "this is your current colour" where `aria-selected` only said "highlighted", and
+   * unlike `option`, `radio` is a legitimate role for a `<button>` — so the swatches
+   * stay buttons and keep native Enter/Space activation rather than needing it
+   * hand-rolled onto a div. Same fix as `esa-entity-search`'s facets, same reasoning.
+   *
+   * Arrowing MOVES THE SELECTION, not just focus. That is native radio behaviour and
+   * the right call for a colour picker, where the preview updates as you go.
+   */
+  private onSwatchKeydown = (event: KeyboardEvent): void => {
+    const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'];
+    if (!keys.includes(event.key) || this.disabled) return;
+    const colors = this.swatches.map(swatchValue);
+    if (colors.length === 0) return;
+    event.preventDefault();
+
+    const current = colors.findIndex((c) => this.isSelectedSwatch(c));
+    // No selection yet: Home/ArrowLeft/ArrowUp should land on the last, not wrap past
+    // it, so treat "nothing chosen" as sitting just before the first.
+    const from = current === -1 ? 0 : current;
+    let next = from;
+    if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = colors.length - 1;
+    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      next = current === -1 ? 0 : (from + 1) % colors.length;
+    } else {
+      next = current === -1 ? colors.length - 1 : (from - 1 + colors.length) % colors.length;
+    }
+
+    this.selectSwatch(colors[next]);
+    void this.updateComplete.then(() => {
+      (this.renderRoot as ShadowRoot)
+        .querySelectorAll<HTMLElement>('.swatch')[next]
+        ?.focus();
+    });
+  };
+
+  /**
+   * Roving tabindex: exactly one swatch is a tab stop.
+   *
+   * The checked one, or the first when nothing is chosen yet — a radiogroup with no
+   * selection must still be reachable, and a group where every member is -1 is
+   * unreachable by keyboard entirely.
+   */
+  private swatchTabIndex(color: string, index: number): string {
+    const anySelected = this.swatches.map(swatchValue).some((c) => this.isSelectedSwatch(c));
+    if (anySelected) return this.isSelectedSwatch(color) ? '0' : '-1';
+    return index === 0 ? '0' : '-1';
+  }
+
   render() {
     // Both inner controls need their OWN name. The visible span names the group,
     // and a group name does not name the things inside it — measured 2026-08-16
@@ -161,8 +224,13 @@ export class EsaColorPicker extends LitElement {
         </div>
 
         ${this.swatches.length > 0
-          ? html`<div class="swatches" role="listbox" aria-label="Color swatches">
-              ${this.swatches.map((swatch) => {
+          ? html`<div
+              class="swatches"
+              role="radiogroup"
+              aria-label="Color swatches"
+              @keydown=${this.onSwatchKeydown}
+            >
+              ${this.swatches.map((swatch, i) => {
                 const color = swatchValue(swatch);
                 const name = swatchLabel(swatch);
                 return html`<button
@@ -172,8 +240,9 @@ export class EsaColorPicker extends LitElement {
                   ?disabled=${this.disabled}
                   title=${name ? name + ' ' + color : color}
                   aria-label=${name ? 'Select color ' + name + ' ' + color : 'Select color ' + color}
-                  aria-selected=${this.isSelectedSwatch(color)}
-                  role="option"
+                  aria-checked=${this.isSelectedSwatch(color)}
+                  tabindex=${this.swatchTabIndex(color, i)}
+                  role="radio"
                   @click=${() => this.selectSwatch(color)}
                 ></button>`;
               })}

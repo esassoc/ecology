@@ -1,6 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 import ApiTable from '../../components/ApiTable.astro';
@@ -30,11 +31,11 @@ const events = [
   <p>Drawer body content…</p>
   <button slot="footer">Apply</button>
 </esa-side-dialog>`}>
-      <button class="trigger" id="open-sd">Open drawer</button>
+      <EsaButton variant="secondary" id="open-sd">Open drawer</EsaButton>
       <esa-side-dialog id="sd" heading="Filters" position="right">
         <p>Drawer body content goes here. It scrolls if it overflows, with the header and footer pinned.</p>
         <p>Use it for filters, detail panes, and create/edit forms that don't warrant a full page.</p>
-        <button class="trigger" slot="footer">Apply</button>
+        <EsaButton variant="secondary" slot="footer">Apply</EsaButton>
       </esa-side-dialog>
     </Preview>
   </Section>
@@ -42,7 +43,7 @@ const events = [
   <Section id="positions" title="Positions &amp; sizes">
     <p>Slides from <code>left</code> or <code>right</code>; width via <code>size</code> (<code>sm</code> 320 · <code>md</code> 400 · <code>lg</code> 520).</p>
     <Preview code={`<esa-side-dialog position="left" size="sm" heading="Left, sm">…</esa-side-dialog>`}>
-      <button class="trigger" id="open-left">Open left · sm</button>
+      <EsaButton variant="secondary" id="open-left">Open left · sm</EsaButton>
     </Preview>
   </Section>
 
@@ -63,15 +64,6 @@ const events = [
 
 </ComponentDoc>
 
-<style>
-  .trigger {
-    font: inherit; font-size: var(--font-size-200, 1rem);
-    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-    border: 1px solid var(--color-border-default, #e5e5e5); border-radius: var(--radius-200, 8px);
-    background: var(--color-background-elevation-raised, #fff); color: var(--color-content-default, #171717); cursor: pointer;
-  }
-  .trigger:hover { background: var(--color-background-elevation-sunken, #efefef); }
-</style>
 
 <script>
   import '@esa/ecology/esa-side-dialog';

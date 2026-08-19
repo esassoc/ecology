@@ -1,6 +1,10 @@
 // `nothing` (not undefined) is what REMOVES an attribute — see esa-dialog's import.
 import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+// The focusable selector and focus restore come from the ONE module that owns them.
+// The local copy that lived here until 2026-08-18 had dropped every :not([disabled])
+// clause, so a DISABLED slotted button resolved as the trigger.
+import { FOCUSABLE_SELECTOR, deepActiveElement, restoreFocus } from '../overlay.js';
 import { boolish } from '../boolish.js';
 
 type PopoverPosition = 'top' | 'bottom' | 'left' | 'right';
@@ -87,8 +91,10 @@ export class EsaPopover extends LitElement {
     // Focus return, but ONLY if focus is currently inside — this is a non-modal
     // popover, so yanking focus back from wherever the user has since moved to
     // would be the bug, not the fix.
-    const active = (this.renderRoot as ShadowRoot).activeElement;
-    if (active) this.triggerEl?.focus?.();
+    const active = deepActiveElement();
+    if (active && (this.contains(active) || (this.renderRoot as ShadowRoot).contains(active))) {
+      restoreFocus(this.triggerEl);
+    }
   }
 
   /**
@@ -103,9 +109,8 @@ export class EsaPopover extends LitElement {
     const assigned = slot?.assignedElements({ flatten: true }) ?? [];
     const outer = assigned.find((el) => el instanceof HTMLElement) as HTMLElement | undefined;
     if (!outer) return null;
-    const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    if (outer.matches(FOCUSABLE)) return outer;
-    return outer.querySelector<HTMLElement>(FOCUSABLE) ?? outer;
+    if (outer.matches(FOCUSABLE_SELECTOR)) return outer;
+    return outer.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? outer;
   }
 
   /**
@@ -117,8 +122,18 @@ export class EsaPopover extends LitElement {
     const el = this.triggerEl;
     if (!el) return;
     el.setAttribute('aria-expanded', String(this.open));
-    el.setAttribute('aria-controls', 'popover');
     if (this.label) el.setAttribute('aria-haspopup', 'dialog');
+    // NO aria-controls, and it cannot be added. The trigger is slotted LIGHT DOM and
+    // the panel is in this component's SHADOW ROOT, and an IDREF never crosses a
+    // shadow boundary in any engine — measured 2026-08-18: `aria-controls="popover"`
+    // shipped here and resolved to nothing at all, in both states. Closed, the panel
+    // is not rendered; open, it is in a tree scope the attribute cannot see. A
+    // dangling IDREF is not merely inert, it is worse than the omission: it reads in
+    // source review as a relationship that exists.
+    //
+    // aria-expanded and aria-haspopup carry no IDREF, so they do work, and between
+    // them the trigger announces that it opens something and whether it is open. The
+    // relationship itself is what this architecture cannot express.
   }
 
   updated(): void {

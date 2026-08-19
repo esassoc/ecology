@@ -2525,3 +2525,61 @@ generated value have a name already?
   its pills, badges and chips are now capsules. `theme-beacon` is `flat` and is unchanged.
   Verified in a real browser through the shadow boundary for all three components, hub theme
   and qanat. *Sink:* `hub-fix`. *Priority:* resolved.
+
+## Source: the overlay accessibility pass (2026-08-18)
+
+Follows the native `<dialog>` migration. Everything here was MEASURED in a real browser —
+none of it is visible from source, and axe reports clean throughout.
+
+- **The top layer ate the announcer, and no property showed it** · *Evidence:* a modal
+  `<dialog>` blocks everything outside itself from the pointer, from focus AND from the
+  accessibility tree. `announcer.ts` mounts the kit's two live regions on `document.body`,
+  outside every dialog — so from the moment the six modals moved to `showModal()`, every
+  `announce()` made from inside one reached nobody: `esa-entity-search`'s assertive "No
+  results found", plus `esa-command-palette` and `esa-search-panel`. Measured in Chromium,
+  Firefox and WebKit: a body-level element cannot take focus while a modal is open, and
+  Chromium's real a11y tree (CDP `Accessibility.getFullAXTree`) no longer contains the
+  region's text — while **`region.inert` reads `false` in all three**, because the IDL
+  attribute reflects only the `inert` content attribute. A `[popover]` region promoted to
+  the top layer was tried and measured NOT to work: the dialog blocks everything outside
+  *itself*, top layer or not. *Action:* `announcer.ts` re-homes its regions into the open
+  modal and back on close, knowingly bending the "no live region in a shadow root"
+  invariant — one root deep, inside the surface the user is focused in, against the
+  alternative of guaranteed silence. Verified end-to-end on the built site. *Guard:*
+  `scripts/lib/overlay.test.mjs`. **`npm run a11y:live` cannot catch a regression here** —
+  it audits pages at rest and never opens a dialog.
+
+- **`esa-entity-search` spent Tab on the wrong job, and it cost a Level A failure** ·
+  *Evidence:* facets declared `role="tablist"` — which promises Left/Right Arrow — while
+  Tab, the one key a tablist never uses, was bound to cycling them. The inversion left the
+  per-row action buttons reachable by **no key at all** (SC 2.1.1, Level A). Rows were
+  `<button role="option">`, which is invalid (an option may not be an interactive widget)
+  and nested the action buttons inside them — axe's `nested-interactive`. *Action:* rows
+  are `<div role="option" id="opt-N">` behind `aria-activedescendant`, matching
+  `esa-command-palette`, `esa-select`, `esa-combobox` and `esa-filter-dropdown`, which all
+  already did this — entity-search was the last one out. Facets are a `role="radiogroup"`
+  on Left/Right with roving tabindex; Tab is plain Tab. Verified: nested buttons 0,
+  activedescendant resolves, Tab reaches the facet. The reveal-on-hover rule on the action
+  buttons gained `:focus-within` — **a button at opacity 0 is still focusable**, so freeing
+  Tab would otherwise have put focus on something invisible (SC 2.4.7).
+
+- **Focus return, the last two** · *Evidence:* `esa-filter-dropdown` focused the panel's
+  search input on open and unmounted it on all FOUR close paths without restoring;
+  `esa-combobox` did the same in `mode="select"` only, where `.search-input` renders inside
+  the dropdown. *Action:* one `closePanel()` / `closeDropdown()` each, guarded on focus
+  actually being inside so an outside click is not yanked back. Verified: Esc returns focus
+  to the trigger.
+
+- **`aria-controls` on `esa-popover` resolved to nothing, in both states** · *Evidence:*
+  the trigger is slotted LIGHT DOM and the panel is in the shadow root; an IDREF never
+  crosses a shadow boundary. Measured: `resolvesInDocument: false`, and closed the panel is
+  not rendered at all. *Action:* removed. `aria-expanded` and `aria-haspopup` carry no
+  IDREF and do work. **A dangling IDREF is worse than the omission** — it reads in review
+  as a relationship that exists.
+
+- **The guard that fired on its own explanation** · *Evidence:* the first version of
+  `overlay.test.mjs`'s `document.activeElement` ratchet flagged three components whose
+  *comments* explain why they deliberately do not use it. *Action:* strip comments before
+  scanning. Worth recording because the failure mode is perverse: the fix it demanded was
+  deleting the reasoning that made the code correct.
+

@@ -370,6 +370,9 @@ export class EsaCommandPalette extends LitElement {
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .esa-command-palette__search-icon {
+      /* STAYS -muted, unlike the six text rules around it. An icon is non-text
+         content: SC 1.4.11 asks 3:1, not 4.5:1, and gray-10 on the dialog surface
+         measures 3.70:1. Raising it would be consistency for its own sake. */
       color: var(--color-content-default-muted, #838383);
       flex-shrink: 0;
     }
@@ -382,14 +385,18 @@ export class EsaCommandPalette extends LitElement {
       background: transparent;
       font-family: inherit;
     }
-    .esa-command-palette__input::placeholder { color: var(--color-content-default-muted, #838383); }
+    /* -secondary: a placeholder is TEXT under SC 1.4.3, and axe cannot evaluate
+       ::placeholder — so this one was invisible to the audit as well as to readers. */
+    .esa-command-palette__input::placeholder { color: var(--color-content-default-secondary, #646464); }
 
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
       padding: 2px 6px;
       border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-sm, 0.25rem);
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary, not -muted: muted is gray-10, which measures 3.33:1 on this
+         sunken chip at 12px and misses AA (SC 1.4.3). gray-11 gives 5.19:1. */
+      color: var(--color-content-default-secondary, #646464);
       background: var(--color-background-elevation-sunken, #f0f0f0);
     }
 
@@ -399,7 +406,8 @@ export class EsaCommandPalette extends LitElement {
     }
     .esa-command-palette__group-label {
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary, not -muted: 3.70:1 vs 5.77:1 on the dialog surface at 12px. */
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .esa-command-palette__item {
@@ -430,13 +438,16 @@ export class EsaCommandPalette extends LitElement {
       flex-direction: column;
     }
     .esa-command-palette__item-desc {
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary: same 3.70:1 as the group label; only renders once a result list
+         is populated, which is why the audit never saw it. */
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .esa-command-palette__empty {
       padding: var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary: only renders on a no-results state, so the audit never saw it. */
+      color: var(--color-content-default-secondary, #646464);
     }
   `,
   ];

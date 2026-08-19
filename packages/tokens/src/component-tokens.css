@@ -599,8 +599,8 @@
   --empty-state-icon-size-xs: 24px;
 
   /* esa-entity-search */
-  --entity-search-max-height: 70vh;
-  --entity-search-width: 600px;
+  --entity-search-max-height: 78vh;
+  --entity-search-width: 720px;
 
   /* esa-file-list */
   /* Row density. The one hook in the 2026-08-16 sweep with a named human behind
