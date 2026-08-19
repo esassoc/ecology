@@ -8,14 +8,15 @@
 // knows about neither, and only ever receives a finished string.
 //
 // WHICH TAGS ARE REAL ELEMENTS is the fact nothing else here records, and it is
-// the one that keeps the tab honest: 39 of the 70 components are Lit `.ts` and
-// register a custom element; the other 31 are `.astro`, compile-time only. The
+// the one that keeps the tab honest: 35 of the 66 component source files are Lit
+// `.ts` and register a custom element; the other 31 are `.astro`, compile-time
+// only. (Counted 2026-08-19; `componentCount` in `catalog.ts` is the authority.) The
 // obvious names are in the wrong bucket — `esa-button`, `esa-badge`, `esa-icon`,
 // `esa-form-field` are all `.astro`. Writing `<esa-badge>` in an Angular template
 // renders literally nothing, so those pages get no Angular tab at all rather than
 // a sample that silently does nothing.
-// COMPONENTS, componentApi and ELEMENTS all come from component-api rather than
-// being recomputed here. Two reasons, and the second is the one that bit:
+// componentApi and ELEMENTS both come from component-api rather than being
+// recomputed here. Two reasons, and the second is the one that bit:
 //   (1) this module gets inlined into whichever chunk imports it, so counting
 //       directories up from `import.meta.url` lands somewhere different depending
 //       on the caller — it broke the build the first time these two files met.
@@ -24,7 +25,7 @@
 //       table moved into `@esa/docs` (2026-08-19) it could not follow — this
 //       module reads hub sources a spoke does not install. So the fact moved to
 //       where it is already being read, and this is now its only consumer.
-import { componentApi, COMPONENTS, ELEMENTS, isCustomElement } from './component-api';
+import { componentApi, ELEMENTS, isCustomElement } from './component-api';
 import { toAngular } from '../../../../scripts/lib/angular-snippet.mjs';
 
 export { isCustomElement };

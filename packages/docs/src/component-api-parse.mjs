@@ -1,10 +1,17 @@
 /*
- * component-api.mjs — parse a component's PUBLIC API out of its source text.
+ * component-api-parse.mjs — parse a component's PUBLIC API out of its source text.
  *
  * Two pure functions, `parseAstro(src)` and `parseLit(src)`, each returning a
  * `ComponentApi`. Everything filesystem-shaped — walking the components
- * directory, the repo-root arithmetic, the drift guard — stays in
- * `apps/site/src/data/component-api.ts`, which imports these.
+ * directory, locating them, the drift guard — lives in `./component-api.ts`,
+ * which imports these.
+ *
+ * MOVED HERE FROM `scripts/lib/component-api.mjs` (2026-08-19), when the
+ * generated API table became `@esa/docs/ApiTable.astro` so SPOKES could render
+ * it. A package cannot reach up into the hub's `scripts/` for half its
+ * implementation. Nothing about the parsers changed — they are pure, with no
+ * `node:` imports — and `scripts/lib/component-api.mjs` remains as a re-export
+ * shim because three test files import it by relative path.
  *
  * WHY THIS IS A SEPARATE FILE, and not just tidiness:
  *

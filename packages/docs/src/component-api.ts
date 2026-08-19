@@ -56,17 +56,29 @@ function findComponents(): string {
     if (up === dir) break;
     dir = up;
   }
+  let resolveError = '';
   try {
     const pkg = createRequire(import.meta.url).resolve('@esa/ecology/package.json');
     const hit = path.join(path.dirname(pkg), 'src', 'components');
     if (existsSync(hit)) return hit;
-  } catch {
-    // fall through to the throw — the error below names both strategies
+    resolveError = `resolved to ${pkg} but ${hit} does not exist`;
+  } catch (err) {
+    // Report the CODE. The tempting message here is "is it installed?", and that
+    // is the least likely cause: `ERR_PACKAGE_PATH_NOT_EXPORTED` means it IS
+    // installed, at a version whose `exports` map predates `./package.json`
+    // being exposed — every @esa/ecology before 0.2.0. That is a different fix
+    // (upgrade) from the one "not installed" sends you to.
+    // Typed structurally, not as NodeJS.ErrnoException: this repo ships no
+    // @types/node, so the namespace does not resolve and referencing it adds a
+    // type error to a package that had none.
+    const e = err as { code?: string; message?: string };
+    resolveError = `${e.code ?? 'error'}: ${e.message ?? String(err)}`;
   }
   throw new Error(
-    'component-api: could not locate @esa/ecology component sources. Searched ' +
-      `for packages/ecology/src/components above ${fileURLToPath(import.meta.url)}, ` +
-      'then tried resolving @esa/ecology through Node. Is @esa/ecology installed?',
+    'component-api: could not locate @esa/ecology component sources.\n' +
+      `  walk-up:  no packages/ecology/src/components above ${fileURLToPath(import.meta.url)}\n` +
+      `  resolve:  ${resolveError}\n` +
+      '  @esa/ecology must be installed AND >= 0.2.0 (earlier versions do not export ./package.json).',
   );
 }
 
@@ -120,24 +132,33 @@ export const componentApi: Record<string, ComponentApi> = {};
 
 /**
  * Tags backed by a real `customElements.define` — the only ones Angular (or any
- * non-Astro consumer) can actually use. Collected in the SAME pass that parses
- * the API, because it is the same read of the same file: 35 of the 69 components
- * are Lit `.ts` and register an element; the rest are `.astro`, compile-time
- * only. The obvious names are in the wrong bucket — `esa-button`, `esa-badge`
- * and `esa-icon` are all `.astro`, and `<esa-badge>` in an Angular template
- * renders nothing with no error.
+ * non-Astro consumer) can actually use. Measured: 35 of the 66 component source
+ * files are Lit `.ts` and every one of them registers an element; the other 31
+ * are `.astro`, compile-time only. The obvious names are in the wrong bucket —
+ * `esa-button`, `esa-badge` and `esa-icon` are all `.astro`, and `<esa-badge>`
+ * in an Angular template renders nothing with no error. (Counts drift; the
+ * authority is `componentCount` in the site's `catalog.ts`. These are here to
+ * say which bucket is bigger, not to be cited.)
  */
-export const ELEMENTS: ReadonlySet<string> = (() => {
-  const set = new Set<string>();
-  for (const file of readdirSync(COMPONENTS)) {
-    const m = file.match(/^(esa-[a-z0-9-]+)\.(astro|ts)$/);
-    if (!m) continue;
-    const src = readFileSync(path.join(COMPONENTS, file), 'utf8');
-    componentApi[m[1]] = m[2] === 'astro' ? parseAstro(src) : parseLit(src);
-    if (m[2] === 'ts' && /customElements\.define\(/.test(src)) set.add(m[1]);
-  }
-  return set;
-})();
+const elements = new Set<string>();
+
+// ONE top-level loop, and `componentApi` is filled by a STATEMENT rather than as
+// a side effect of some other binding's initializer. It was written the other way
+// — `ELEMENTS` as an IIFE that also populated `componentApi` — and that couples
+// the map's existence to whether anything still reads `ELEMENTS`. Drop the last
+// `isCustomElement` call (split the Angular block out, make it unconditional) and
+// a tree-shaken chunk leaves `componentApi` as `{}`. Every table would then render
+// "This component takes no props", which reads like a fact, and `findComponents()`
+// could not catch it because the path resolved fine.
+for (const file of readdirSync(COMPONENTS)) {
+  const m = file.match(/^(esa-[a-z0-9-]+)\.(astro|ts)$/);
+  if (!m) continue;
+  const src = readFileSync(path.join(COMPONENTS, file), 'utf8');
+  componentApi[m[1]] = m[2] === 'astro' ? parseAstro(src) : parseLit(src);
+  if (m[2] === 'ts' && /customElements\.define\(/.test(src)) elements.add(m[1]);
+}
+
+export const ELEMENTS: ReadonlySet<string> = elements;
 
 /** True when `<slug>` is a real custom element rather than an `.astro` template. */
 export function isCustomElement(slug: string): boolean {
@@ -145,7 +166,7 @@ export function isCustomElement(slug: string): boolean {
 }
 
 /**
- * Drift guard. Called by `_ApiTable.astro` for every page that documents a
+ * Drift guard. Called by `./ApiTable.astro` for every page that documents a
  * component. Authored prose is keyed by prop name, so a rename in the component
  * would silently orphan the prose — this turns that into a build-time warning
  * instead of a table row that quietly loses its description.
