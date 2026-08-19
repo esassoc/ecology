@@ -80,13 +80,13 @@ html[data-scheme='light'] .topbar { background: var(--color-background-default);
 html[data-scheme='light'] .topbar { background: color-mix(in srgb, var(--color-background-default) 82%, transparent); }
 html[data-scheme='light'] .sidebar { border-right-color: var(--color-border-default); }
 
-html[data-scheme='light'] .nav-group > h4 { color: var(--color-content-default-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+html[data-scheme='light'] .nav-group > h4 { color: var(--color-content-default-secondary, #646464); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 html[data-scheme='light'] .nav-link { color: var(--color-content-default-secondary); border-radius: 4px; }
 html[data-scheme='light'] .nav-link:hover { background: color-mix(in srgb, var(--color-content-default) 4%, transparent); color: var(--color-content-default); }
 html[data-scheme='light'] .nav-link[aria-current='page'] { background: color-mix(in srgb, var(--color-content-default) 6%, transparent); color: var(--color-content-default); font-weight: 500; }
-html[data-scheme='light'] .nav-link .tag { border-color: var(--color-border-default); color: var(--color-content-default-muted); }
+html[data-scheme='light'] .nav-link .tag { border-color: var(--color-border-default); color: var(--color-content-default-secondary, #646464); }
 
-html[data-scheme='light'] .brand .ver { color: var(--color-content-default-muted); }
+html[data-scheme='light'] .brand .ver { color: var(--color-content-default-secondary, #646464); }
 
 html[data-scheme='light'] .article h1,
 html[data-scheme='light'] .article h2,
@@ -97,7 +97,7 @@ html[data-scheme='light'] .article p { color: var(--color-content-default-second
    invisible against Shiki's dark block background. */
 html[data-scheme='light'] .article :not(pre) > code { background: color-mix(in srgb, var(--color-content-default) 5%, transparent); color: var(--color-content-default); }
 
-html[data-scheme='light'] .search { background: var(--color-background-elevation-raised); border-color: var(--color-border-default); color: var(--color-content-default-muted); }
+html[data-scheme='light'] .search { background: var(--color-background-elevation-raised); border-color: var(--color-border-default); color: var(--color-content-default-secondary, #646464); }
 html[data-scheme='light'] .topbar-action,
 html[data-scheme='light'] .icon-btn,
 html[data-scheme='light'] .scheme-toggle { background: var(--color-background-elevation-raised); border-color: var(--color-border-default); color: var(--color-content-default-secondary); }

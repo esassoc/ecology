@@ -12,12 +12,6 @@
  * is interpolated along the reference curve. Verify with:
  *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-qanat.css
  *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-qanat.css --scheme dark
- *
- * This file also carries a wcag-aa ASSURANCE variant (1 declarations per
- * scheme), inert until <html data-a11y-assurance="wcag-aa"> is set. Nothing needs to import
- * it and nothing renders differently until the attribute is there. Verify it with:
- *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-qanat.css --assurance wcag-aa
- *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-qanat.css --assurance wcag-aa --scheme dark
  */
 
 [data-theme="qanat"] {
@@ -54,7 +48,6 @@
   --color-content-default:                    var(--qanat-neutral-12);
   --color-content-default-secondary:          var(--qanat-neutral-11);
   --color-content-default-tertiary:           var(--qanat-neutral-11);
-  --color-content-default-muted:              var(--qanat-neutral-10);
   --color-content-disabled:                   var(--qanat-neutral-9);
   --color-border-default:                     var(--qanat-neutral-7);
   --color-border-default-subtle:              var(--qanat-neutral-6);
@@ -181,7 +174,6 @@ html[data-scheme="dark"][data-theme="qanat"] {
   --color-content-default:                    var(--qanat-neutral-12);
   --color-content-default-secondary:          var(--qanat-neutral-11);
   --color-content-default-tertiary:           var(--qanat-neutral-11);
-  --color-content-default-muted:              var(--qanat-neutral-10);
   --color-content-disabled:                   var(--qanat-neutral-9);
   --color-border-default:                     var(--qanat-neutral-7);
   --color-border-default-subtle:              var(--qanat-neutral-6);
@@ -262,20 +254,4 @@ html[data-scheme="dark"][data-theme="qanat"] {
   --color-background-dataviz-diverging-5:     #8c333a;
   --color-background-dataviz-diverging-6:     #e5484d;
   --color-background-dataviz-diverging-7:     #ff9592;
-}
-
-/*
- * Accessibility assurance profile — wcag-aa. Composes with the brand above rather
- * than replacing it: a solid fill that carries text moves to step 11 of THIS theme's
- * own ramp, so the hue survives and only the step changes. Opt in per project with
- *   <html data-theme="qanat" data-a11y-assurance="wcag-aa">
- * A profile is a statement about DEFAULTS, not a conformance certificate — it cannot
- * reach keyboard behaviour, focus return, or forced colors.
- */
-html[data-theme="qanat"][data-a11y-assurance="wcag-aa"] {
-  --color-content-default-muted:  var(--qanat-neutral-11);
-}
-
-html[data-scheme="dark"][data-theme="qanat"][data-a11y-assurance="wcag-aa"] {
-  --color-content-default-muted:  var(--qanat-neutral-11);
 }

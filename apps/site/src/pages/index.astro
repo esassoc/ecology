@@ -150,7 +150,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
     border-bottom: 1px solid var(--color-border-default, #cecece);
   }
   .stat b { display: block; font-family: var(--meta-serif, serif); font-size: 26px; font-weight: var(--meta-serif-weight, 400); letter-spacing: -0.01em; color: var(--color-content-default, #202020); }
-  .stat span { font-size: 13px; color: var(--color-content-default-muted, #838383); }
+  .stat span { font-size: 13px; color: var(--color-content-default-secondary, #646464); }
 
   /* ---- How ---- */
   .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-400, 1rem); margin: var(--spacing-800, 4rem) 0; }
@@ -166,7 +166,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
   .rail__card--live { transition: border-color 140ms ease; }
   .rail__card--live:hover { border-color: var(--color-border-brand, #b2ddb5); }
   .rail__card--soon { background: var(--color-background-elevation-sunken, #f0f0f0); border-color: var(--color-border-default-subtle, #d9d9d9); }
-  .rail__eyebrow { font-family: var(--meta-mono, monospace); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-content-default-muted, #838383); }
+  .rail__eyebrow { font-family: var(--meta-mono, monospace); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-content-default-secondary, #646464); }
   .rail__card h2 { font-family: var(--meta-serif, serif); font-weight: var(--meta-serif-weight, 400); font-size: 26px; letter-spacing: -0.01em; margin: 0; color: var(--color-content-default, #202020); }
   .rail__card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--color-content-default-secondary, #646464); }
   .rail__go { margin-top: auto; padding-top: var(--spacing-300, 0.75rem); font-size: 14.5px; font-weight: 500; color: var(--color-content-link, #46a758); }
@@ -178,7 +178,7 @@ const totalComponents = componentGroups.reduce((n, g) => n + g.items.length, 0);
   .group-card { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem); border: 1px solid var(--color-border-default, #cecece); border-radius: 8px; background: var(--color-background-elevation-raised, #fcfcfc); transition: border-color 120ms ease; }
   .group-card:hover { border-color: var(--color-border-brand, #b2ddb5); }
   .group-card__label { font-weight: 500; font-size: 15px; color: var(--color-content-default, #202020); }
-  .group-card__count { font-family: var(--meta-mono, monospace); font-size: 13px; color: var(--color-content-default-muted, #838383); }
+  .group-card__count { font-family: var(--meta-mono, monospace); font-size: 13px; color: var(--color-content-default-secondary, #646464); }
 
   @media (max-width: 760px) {
     .hero { grid-template-columns: 1fr; }

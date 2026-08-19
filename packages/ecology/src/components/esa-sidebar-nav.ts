@@ -417,7 +417,7 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-weight-active: var(--typography-font-weight-semibold, 550);
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
       --_sidenav-active-border-color: var(--color-background-brand, #46a758);
-      --_sidenav-group-color: var(--color-content-default-muted, #838383);
+      --_sidenav-group-color: var(--color-content-default-secondary, #646464);
       --_sidenav-section-spacing: var(--spacing-300, 12px);
       --_sidenav-section-margin-top: var(--sidenav-section-margin-top, 0);
       --_sidenav-nested-gap: var(--sidenav-nested-gap, 0);

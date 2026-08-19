@@ -881,7 +881,7 @@ export class EsaSelect extends LitElement {
       top: 50%;
       transform: translateY(-50%);
       display: inline-flex;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
     }
@@ -936,7 +936,7 @@ export class EsaSelect extends LitElement {
       background: transparent;
     }
     .option--empty {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       cursor: default;
       font-style: var(--font-style-italic, italic);
     }

@@ -41,7 +41,6 @@ html[data-scheme='dark'] {
      on a rare light surface inside dark mode). */
   --color-content-default:   var(--color-gray-dark-12);
   --color-content-default-secondary: var(--color-gray-dark-11);
-  --color-content-default-muted:     var(--color-gray-dark-10);
   --color-content-default-knockout:            var(--color-gray-dark-2);
 
   /* Borders — dark-6 (#3a3a3a) default; dark-5 light; dark-7 strong. */

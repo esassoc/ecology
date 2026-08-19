@@ -489,7 +489,6 @@ export function deriveTheme(input) {
     t.set('--color-content-default', g(12));
     t.set('--color-content-default-secondary', g(11));
     t.set('--color-content-default-tertiary', g(11));
-    t.set('--color-content-default-muted', g(10));
     t.set('--color-content-disabled', g(9));
     t.set('--color-border-default', g(7));
     t.set('--color-border-default-subtle', g(6));
@@ -854,20 +853,17 @@ export function deriveTheme(input) {
       }
     }
 
-    // The one non-fill row, and it is the hub's own line. `--color-content-default-muted` is
-    // "the least prominent readable text" — placeholders, timestamps, help text, all of which
-    // a user has to actually read. Neutral step 10 is the muted-text step and lands under
-    // 4.5:1 on the surfaces it sits on; step 11 is the supporting-text step and clears it.
-    // check-contrast grades that pair at `warn`, not `fail`, which is exactly why the base
-    // theme is allowed to keep step 10 and why this block is where it moves.
-    const mutedOn =
-      pinnedHex('--color-background-elevation-raised') ?? step(neutral, dark ? 2 : 1);
-    if (
-      contrastHex(step(neutral, 10), mutedOn) < AA_TEXT &&
-      contrastHex(step(neutral, 11), mutedOn) >= AA_TEXT
-    ) {
-      setAssured('--color-content-default-muted', g(11));
-    }
+    // THE ONE NON-FILL ROW USED TO LIVE HERE AND IS GONE WITH THE ROLE IT MOVED.
+    // It read `--color-content-default-muted` from neutral step 10 up to step 11 whenever 10
+    // missed 4.5:1 — which was always, on every brand, in both schemes, because step 10 is the
+    // muted-text step and the ramp has nothing between it and step 11. A profile row that fires
+    // unconditionally is not a conformance profile, it is the base value being wrong; so
+    // `content-default-muted` was merged into `content-default-secondary` (step 11) outright and
+    // this rule has nothing left to move. See migrations.json § content-default-muted-to-secondary.
+    //
+    // Both shipped themes therefore emit an EMPTY assurance block now, which is the correct
+    // output and not a regression: it says the base theme is already AA. The block still earns
+    // itself on a hostile brand, where a fill the base derivation may not move fails on its own.
 
     out[scheme] = t;
   }

@@ -397,7 +397,7 @@
         ],
         [
           "--color-text-muted",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--color-text-inverse",
@@ -996,7 +996,7 @@
         ],
         [
           "--color-content-muted",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--color-border-subtle",
@@ -1541,7 +1541,7 @@
         ],
         [
           "--kbd-color",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--kbd-radius",
@@ -1862,7 +1862,7 @@
         ],
         [
           "--empty-state-icon-color",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--empty-state-title-color",
@@ -2256,7 +2256,7 @@
       "pairs": [
         [
           "--filter-clear-color",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--filter-clear-color-hover",
@@ -2294,7 +2294,7 @@
         ],
         [
           "--sidenav-section-text",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--sidenav-section-spacing",
@@ -2610,7 +2610,7 @@
         ],
         [
           "--stat-sub-color",
-          "--color-content-default-muted"
+          "--color-content-default-secondary"
         ],
         [
           "--stat-sub-size",
@@ -2672,6 +2672,19 @@
         ]
       ],
       "why": "THESE THREE ONLY EVER RE-SKINNED THE `info` ALERT, AND NOTHING SAID SO. Each was DECLARED in component-tokens.css, so it always won its var() chain — but esa-alert-box's --success, --warning and --danger blocks set the private --_alert-* properties directly, bypassing the hooks entirely. A spoke overriding --alert-box-bg moved the info alert and silently left the other three, and every hook still resolved, so nothing failed.\n\nThe defect is structural, not a wiring slip: a single-valued hook cannot sit in front of a per-VARIANT role. The declaration names one colour and this needs four. Discovered 2026-08-18 while moving the alert title onto the status colour — the title went coloured for success, warning and danger and stayed near-black for info, because --alert-box-title-color is declared to --color-content-default and won.\n\nA spoke re-points --color-{background,border,content}-utility-* instead, which moves all four variants together and is what an override of these was reaching for anyway. REMOVED, not renamed: there is no single destination to rename onto — the destination depends on the variant, which is the whole reason these could not work.\n\n--alert-box-text-color SURVIVES and the contrast is the point: the body copy is neutral in every variant, so one value genuinely serves it."
+    },
+    {
+      "id": "content-default-muted-to-secondary",
+      "kind": "token",
+      "since": "2026-08-18",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-content-default-muted",
+          "--color-content-default-secondary"
+        ]
+      ],
+      "why": "MUTED CLAIMED A RUNG THE NEUTRAL RAMP CANNOT EXPRESS. Its own description was \"the least prominent READABLE text - placeholders, timestamps, help text\", and its value was gray-10: 3.70:1 on the page, 3.32:1 on a sunken surface, 3.06-3.73:1 across every surface in the system. gray-11 (secondary) is 5.77:1 and is the LAST step on the ramp that clears AA - gray-10 is 3.70 and gray-9 is 3.24, with nothing between. So \"quieter than secondary but still readable\" is not a colour this ramp has; muted was defined as readable text and valued at the first step that is not.\n\nTHE SYSTEM ALREADY CONCEDED THIS. assurance.css re-pointed --color-content-default-muted to var(--color-gray-11) - byte-identical to --color-content-default-secondary - so under the wcag-aa profile the two tokens were ALREADY one value. muted held a distinct value only in the mode where that value is the defect. Measured over the 94-page build: gray-10 on light surfaces was ~7,600 of the site's 8,265 axe color-contrast failures, the single largest cause by an order of magnitude.\n\nNOT A PURE ALIAS, SO THIS IS A REAL VALUE CHANGE, not the no-op cleanup the 2026-08-16 demotion pass ran. Every call site darkens gray-10 -> gray-11. It is a RENAME rather than a removal because both sides are whole tier-2 roles at the same scope - a spoke's --color-content-default-muted: X genuinely does mean --color-content-default-secondary: X - which is the same argument brand-secondary-to-muted makes one layer up.\n\nTHE NON-TEXT DEFENCE WAS REAL AND WAS RETIRED SEPARATELY. Icons and dividers answer to SC 1.4.11 at 3:1, which gray-10 cleared, so muted was legitimate there. The house rule is now that an icon takes the same rung as the text beside it - a glyph sitting next to its own label in a different grey reads as a rendering bug, not as hierarchy - so nothing is left that wants a below-AA neutral.\n\nCONSEQUENCE FOR GENERATED THEMES: theme-recipe.mjs emitted this name at neutral-10 in the base block and neutral-11 in the assurance block, and that assurance row was the ONLY row both shipped themes emitted. With muted gone their wcag-aa blocks are empty, which is the correct output rather than a missing feature: it says the base theme is already AA. The block still earns itself on a hostile brand."
     }
   ]
 }

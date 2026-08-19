@@ -596,7 +596,7 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }
@@ -619,7 +619,7 @@ export class EsaFilterDropdown extends LitElement {
       background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       cursor: not-allowed;
     }
 

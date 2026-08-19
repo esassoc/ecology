@@ -283,7 +283,7 @@ export class EsaFileUpload extends LitElement {
       background: var(--color-background-field, transparent);
       cursor: pointer;
       text-align: center;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       transition:
         border-color var(--transition-fast, 150ms ease),
         background var(--transition-fast, 150ms ease),
@@ -321,14 +321,14 @@ export class EsaFileUpload extends LitElement {
       color: var(--color-content-default, #202020);
     }
     .zone__hint {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
     .browse {
       color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .zone__limit {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .error {
@@ -351,7 +351,7 @@ export class EsaFileUpload extends LitElement {
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       background: var(--color-background-elevation-sunken, #f0f0f0);
       border-radius: var(--radius-sm, 0.25rem);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
     .file__name {
       flex: 1;
@@ -367,7 +367,7 @@ export class EsaFileUpload extends LitElement {
       white-space: nowrap;
     }
     .file__size {
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       white-space: nowrap;
     }
     .file__remove {
@@ -379,7 +379,7 @@ export class EsaFileUpload extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       border-radius: 50%;
       cursor: pointer;
       flex-shrink: 0;

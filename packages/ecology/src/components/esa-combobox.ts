@@ -849,7 +849,7 @@ export class EsaCombobox extends LitElement {
 
     .spinner {
       display: inline-flex;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       animation: esa-cb-spin var(--animation-spin, 750ms linear infinite);
     }
     .spinner svg {
@@ -953,7 +953,7 @@ export class EsaCombobox extends LitElement {
 
     .arrow {
       display: inline-flex;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
       flex-shrink: 0;
@@ -999,7 +999,7 @@ export class EsaCombobox extends LitElement {
     .search__icon {
       width: var(--icon-size-sm, 16px);
       height: var(--icon-size-sm, 16px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       flex-shrink: 0;
     }
     .search-input {
@@ -1016,7 +1016,7 @@ export class EsaCombobox extends LitElement {
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
 
@@ -1132,7 +1132,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px);
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       font-style: var(--font-style-italic, italic);
     }
 
