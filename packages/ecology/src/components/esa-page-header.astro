@@ -2,10 +2,15 @@
 // esa-page-header — presentational page top (.astro).
 // The standard prototype page header: optional breadcrumbs OR an eyebrow (with
 // an optional leading icon), a title (`heading-lg` by default, or the oversized
-// `display` via prominence="display"), an optional lede at `body-lg` in
-// secondary text, and a right-aligned actions slot. Replaces both
-// the bespoke .x__head / .x__title / .x__lede / .x__cta cluster every prototype
+// `display` via prominence="display"), and a right-aligned actions slot. Replaces
+// both the bespoke .x__head / .x__title / .x__cta cluster every prototype
 // re-implements AND the per-spoke "hero header" (eyebrow + icon + big title).
+//
+// There is deliberately NO description/lede slot. A page header carries the
+// page's name and its actions; a sentence explaining the page to its reader is
+// text ABOUT the page, and the audit of 2026-08-16 found every real fill of the
+// former `lede` prop was exactly that. The page's own data and structure say
+// what it is.
 //
 // Container stays neutral — no background of its own (transparent); color is
 // the consumer's job. Private --_* tokens read public semantic tokens with a
@@ -16,8 +21,8 @@
 import EsaIcon from './esa-icon.astro';
 
 // TYPE: the header names roles rather than assembling them — `heading-lg` on the
-// default title, `display` on prominence="display", `label-md` on the eyebrow and
-// `body-lg` on the lede. The slot containers name one too, as a default that reaches
+// default title, `display` on prominence="display", and `label-md` on the eyebrow.
+// The slot containers name one too, as a default that reaches
 // slotted content by inheritance — an esa-breadcrumbs or esa-button carries its own
 // composite and wins. Actions take `label-md` (chrome that holds buttons); breadcrumbs
 // take `body-md`, matching what esa-breadcrumbs sets on its own crumbs, so a bare <nav>
@@ -27,9 +32,10 @@ import EsaIcon from './esa-icon.astro';
 import '@esa/tokens/typography.css';
 
 interface Props {
+  /** The page's name, as it appears in navigation and breadcrumbs. */
   title: string;
-  lede?: string;
-  /** Small kicker above the title (e.g. a section or award name). */
+  /** The named thing this page sits inside — a section, a report, a person, a
+      record id. A proper noun or a short label, never a sentence. */
   eyebrow?: string;
   /** esa-icon registry name for the eyebrow's leading glyph, e.g. 'award' (eyebrow only). */
   icon?: string;
@@ -37,7 +43,7 @@ interface Props {
   prominence?: 'page-title' | 'display';
   as?: 'header' | 'div' | 'section';
 }
-const { title, lede, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
+const { title, eyebrow, icon, prominence = 'page-title', as = 'header' } = Astro.props;
 const Tag = as;
 
 // The two title prominences are two composites, not one composite plus overrides.
@@ -61,7 +67,6 @@ const hasActions = Astro.slots.has('actions');
         </p>
       )}
       <h1 class={`esa-page-header__title typography-${titleType}`}>{title}</h1>
-      {lede && <p class="esa-page-header__lede typography-body-lg">{lede}</p>}
     </div>
     {hasActions && (
       <div class="esa-page-header__actions typography-label-md">
@@ -84,8 +89,6 @@ const hasActions = Astro.slots.has('actions');
     --_ph-title-font: var(--typography-heading-lg-font-family, var(--typography-font-family-display, 'DM Sans', sans-serif));
     --_ph-title-size: var(--typography-heading-lg-font-size, var(--font-size-600, 1.875rem));
     --_ph-title-weight: var(--typography-heading-lg-font-weight, var(--typography-font-weight-semibold, 550));
-    --_ph-lede-color: var(--color-content-default-secondary, #646464);
-    --_ph-lede-size: var(--typography-body-lg-font-size, var(--font-size-300, 1.125rem));
     --_ph-eyebrow-color: var(--color-content-default-secondary, #646464);
     --_ph-eyebrow-size: var(--typography-label-md-font-size, var(--font-size-200, 0.9375rem));
     --_ph-gap: var(--spacing-200, 0.5rem);
@@ -139,13 +142,6 @@ const hasActions = Astro.slots.has('actions');
     font-size: var(--_ph-title-size);
     font-weight: var(--_ph-title-weight);
     color: var(--_ph-title-color);
-  }
-
-  .esa-page-header__lede {
-    margin: 0;
-    font-size: var(--_ph-lede-size);
-    color: var(--_ph-lede-color);
-    max-width: 70ch;
   }
 
   .esa-page-header__actions {
