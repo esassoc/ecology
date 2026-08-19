@@ -99,7 +99,7 @@ Applies to composed pages under `src/pages/**` (the app/prototype pages — NOT
       `/plugin` UI or `claude plugin marketplace update ecology`. If Claude
       Code was just opened here, the install prompt must have been accepted.
 - [ ] **Hook smoke test** — pipe synthetic PreToolUse JSON at the hook source
-      in the sibling hub (`../ecology/plugins/spoke-kit/hooks/check-component-first`);
+      in the sibling hub (`../ecology/plugins/spoke-kit/hooks/check-component-first.mjs`, run via `node`);
       `file_path` must be an ABSOLUTE path inside this spoke. Three cases:
       1. content with a raw `<input>` → **exit 2** (blocked)
       2. content composing `esa-*` legos → **exit 0** (allowed)
@@ -107,7 +107,7 @@ Applies to composed pages under `src/pages/**` (the app/prototype pages — NOT
          (hub excluded)
       ```bash
       printf '{"tool_input":{"file_path":"%s/src/pages/smoke.astro","content":"<input type=\\"text\\" />"}}' "$PWD" \
-        | ../ecology/plugins/spoke-kit/hooks/check-component-first; echo "exit: $?"   # expect 2
+        | node ../ecology/plugins/spoke-kit/hooks/check-component-first.mjs; echo "exit: $?"   # expect 2
       ```
 - [ ] `CLAUDE.md` exists at the spoke root (project conventions; the
       component-first discipline itself comes from the plugin).
