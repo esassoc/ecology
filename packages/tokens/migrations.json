@@ -281,7 +281,7 @@
       "id": "color-tier2-property-first",
       "kind": "token",
       "since": "2026-08-13",
-      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things — the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted — identical defaults do not make a themeable token redundant, and a spoke had already separated both.\n\nDESTINATIONS REPOINTED 2026-08-15. This row originally landed on the `--color-{background,content,border}-{info,success,warning,danger}` names, which `status-to-utility` deprecated the same day. They now point straight at the `utility` names. Without this edit the codemod would have rewritten a spoke onto a name that was itself an alias, printed a success, and left it one rename behind — invisible, because aliases chain and the page still renders.",
+      "why": "Tier-2 colour used two opposite word orders: property-first for neutrals (text-primary, border-light) and intention-first for everything else (danger-border, primary-strong), so no name was predictable. Now every token is <property>-<intention>-<variant>-<state>, property being background | content | border. `primary` became `brand` because it meant two different things — the brand hue AND the most-prominent text. `-strong` became `content-*`: those tokens were step 11, TEXT on a surface, but read like a bolder fill and got used as one. Two pairs originally collapsed into a sibling (primary-active into brand-hover, text-tertiary into content-secondary) because the hub's values were identical; that was reverted — identical defaults do not make a themeable token redundant, and a spoke had already separated both.\n\nDESTINATIONS REPOINTED 2026-08-15. This row originally landed on the `--color-{background,content,border}-{info,success,warning,danger}` names, which `status-to-utility` deprecated the same day. They now point straight at the `utility` names. Without this edit the codemod would have rewritten a spoke onto a name that was itself an alias, printed a success, and left it one rename behind — invisible, because aliases chain and the page still renders.\n\nFOUR DESTINATIONS WERE REPOINTED ON 2026-08-18 when brand-secondary-to-muted retired the names they landed on. A rename row whose destination is itself deprecated leaves a spoke one migration behind after a run that reported success - the same shape as the form-height-to-control-height failure. token-rename.test.mjs asserts no row does this, and it is what caught these.",
       "pairs": [
         [
           "--color-primary-bg-hover",
@@ -317,19 +317,19 @@
         ],
         [
           "--color-secondary-on-fill",
-          "--color-content-on-brand-secondary"
+          "--color-content-on-brand-muted"
         ],
         [
           "--color-secondary-strong",
-          "--color-content-brand-secondary"
+          "--color-content-brand"
         ],
         [
           "--color-secondary-hover",
-          "--color-background-brand-secondary-hover"
+          "--color-background-brand-muted-hover"
         ],
         [
           "--color-secondary",
-          "--color-background-brand-secondary"
+          "--color-background-brand-muted"
         ],
         [
           "--color-accent-hover",
@@ -2625,6 +2625,53 @@
           "--typography-font-weight-bold"
         ]
       ]
+    },
+    {
+      "id": "brand-secondary-to-muted",
+      "kind": "token",
+      "since": "2026-08-18",
+      "exact": true,
+      "pairs": [
+        [
+          "--color-background-brand-secondary",
+          "--color-background-brand-muted"
+        ],
+        [
+          "--color-background-brand-secondary-hover",
+          "--color-background-brand-muted-hover"
+        ],
+        [
+          "--color-content-on-brand-secondary",
+          "--color-content-on-brand-muted"
+        ],
+        [
+          "--color-content-brand-secondary",
+          "--color-content-brand"
+        ]
+      ],
+      "why": "TWO FAMILIES HELD ONE VALUE ONCE `secondary` MOVED TO THE STEP IT ALWAYS WANTED. `--color-background-brand-secondary` was Radix step 8 - the *hovered UI element border* step - used as a solid fill. Measured against its own step-12 foreground that is 3.51-5.47:1 in light and 3.82-4.67:1 in dark, an AA failure for several brands, and theme-recipe.mjs was hiding it behind a `movable: true` walk that still left most brands marginal. Step 3 is Radix's UI-element background step and measures 10.27-11.80:1 / 11.33-12.54:1 with the same foreground - no search, no walk.\n\nBut step 3 was already `--color-background-brand-muted`, and step 4 already `--color-background-brand-muted-hover`. Keeping both families would have shipped two tier-2 names over one value, which is the exact aliasing the 2026-08-16 demotion pass removed 168 of: a spoke re-pointing one and not the other gets a silent split between its chips and its buttons. `muted` survives because it is the surface intention; `secondary` was a variant name for a fill that is not a second fill at all.\n\n`--color-content-brand-secondary` needed no argument - it was declared `var(--color-grass-11)` in :root and `var(--color-grass-dark-11)` in the dark block, byte-identical to `--color-content-brand` in both. A pure alias with no value of its own.\n\nA RENAME ROW AND NOT A REMOVAL, unlike the tier-3 demotions. Both sides here are whole tier-2 roles at the same scope, so a spoke's `--color-background-brand-secondary: X` declaration genuinely does mean `--color-background-brand-muted: X` - rewriting the declaration is correct rather than a widening. The tier-3 rule exists because demoting a one-component hook onto a role turns a narrow override into a system-wide one; nothing widens here."
+    },
+    {
+      "id": "alert-box-variant-hooks-removed",
+      "kind": "token",
+      "since": "2026-08-18",
+      "exact": true,
+      "removed": true,
+      "pairs": [
+        [
+          "--alert-box-bg",
+          "--color-background-utility-<variant>-subtle"
+        ],
+        [
+          "--alert-box-border-color",
+          "--color-border-utility-<variant>"
+        ],
+        [
+          "--alert-box-title-color",
+          "--color-content-utility-<variant>"
+        ]
+      ],
+      "why": "THESE THREE ONLY EVER RE-SKINNED THE `info` ALERT, AND NOTHING SAID SO. Each was DECLARED in component-tokens.css, so it always won its var() chain — but esa-alert-box's --success, --warning and --danger blocks set the private --_alert-* properties directly, bypassing the hooks entirely. A spoke overriding --alert-box-bg moved the info alert and silently left the other three, and every hook still resolved, so nothing failed.\n\nThe defect is structural, not a wiring slip: a single-valued hook cannot sit in front of a per-VARIANT role. The declaration names one colour and this needs four. Discovered 2026-08-18 while moving the alert title onto the status colour — the title went coloured for success, warning and danger and stayed near-black for info, because --alert-box-title-color is declared to --color-content-default and won.\n\nA spoke re-points --color-{background,border,content}-utility-* instead, which moves all four variants together and is what an override of these was reaching for anyway. REMOVED, not renamed: there is no single destination to rename onto — the destination depends on the variant, which is the whole reason these could not work.\n\n--alert-box-text-color SURVIVES and the contrast is the point: the body copy is neutral in every variant, so one value genuinely serves it."
     }
   ]
 }

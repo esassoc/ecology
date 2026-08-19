@@ -311,12 +311,12 @@ export class EsaChipGroup extends LitElement {
     /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
        default is brand blue, a forest-green theme goes forest. */
     .chip--active.chip--brand {
-      background: var(--color-background-brand-subtle, #f5fbf5);
+      background: var(--color-background-brand-subtle, #fbfefb);
       border-color: var(--color-border-brand, #b2ddb5);
       color: var(--color-content-brand, #2a7e3b);
     }
     .chip--active.chip--amber {
-      background: var(--color-background-utility-warning-subtle, #fefbe9);
+      background: var(--color-background-utility-warning-subtle, #fefdfb);
       border-color: var(--color-border-utility-warning, #f3d673);
       color: var(--color-content-utility-warning, #ab6400);
     }

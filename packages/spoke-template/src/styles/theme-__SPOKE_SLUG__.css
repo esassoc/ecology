@@ -35,8 +35,8 @@
   --color-background-brand-hover:   /* __FILL__ */ #003940;
   --color-background-brand-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
   --color-border-brand:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
-  --color-background-brand-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
-  --color-background-brand-secondary-hover: var(--__SCOPE__-brand-800);
+  --color-background-brand-muted:           var(--__SCOPE__-brand-100);  /* __FILL__ the brand's lightest usable tint */
+  --color-background-brand-muted-hover:     var(--__SCOPE__-brand-200);
 
   /* ===== (1a) THE FOCUS RING — the brand step that can actually be SEEN =====
      DO NOT DELETE THIS LINE, and do not assume the brand fill above will do.
@@ -66,7 +66,7 @@
      rows in check-contrast.mjs, and the template offered no slots for them — so every
      hand-filled theme re-pointed a fill and left the hub's foreground behind, chosen
      against the hub's grass ramp. That is exactly why `beacon` fails
-     content-on-brand-secondary at 3.64:1.
+     content-on-brand-muted at 3.64:1.
 
      There is no rule of thumb here, only a measurement: white on a step-9 fill works for
      most hues and fails for the bright ones (yellow, amber, lime, mint, sky), where the
@@ -76,7 +76,7 @@
      instinct: /guide/theme-maker (or make-theme.mjs) picks all eight against the fills
      it generates, and proves them. */
   --color-content-on-brand:           /* __FILL__ */ #ffffff;
-  --color-content-on-brand-secondary: /* __FILL__ */ #ffffff;
+  --color-content-on-brand-muted: /* __FILL__ */ #1c2024;
   --color-content-on-accent:          /* __FILL__ */ #ffffff;
   --color-content-on-ai:              /* __FILL__ */ #ffffff;
   --color-content-on-utility-info:    /* __FILL__ */ #ffffff;

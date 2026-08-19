@@ -155,8 +155,10 @@ The pipeline now has a middle: **`/guide/theme-maker`** (the editor) and
 `scripts/lib/theme-recipe.mjs`, with `theme-<slug>.json` as the durable artifact.
 `create-spoke.mjs --theme <recipe>` writes the real file. **Six seeds** (brand hex,
 neutral temperature, corner language, two font stacks, optional per-intention colours)
-produce ~95 light + ~92 dark declarations that pass 33/33 pairs in **both** schemes —
-against a hub whose own defaults fail 7 and whose dark block fails 5.
+produce ~114 light + ~111 dark declarations that pass 64/64 pairs in **both** schemes —
+against a hub whose own defaults fail 8 and whose dark block fails 5. It was ~95/~92 and
+"33/33" until 2026-08-18; the pair table had grown to 64 while the generator still emitted
+nothing for 22 of the names it graded (see the data-viz note below).
 
 Things that are easy to get wrong here:
 
@@ -275,6 +277,30 @@ so. A name without a property is not guessable, and it is the reason `utility` r
 
 Derived by `scripts/lib/dataviz.mjs` from the brand seed; the hub's own values are that
 generator's output for `grass-9`, committed. **Edit the derivation, never the values.**
+
+**THE GENERATOR DID NOT EMIT THESE UNTIL 2026-08-18, AND DARK WAS THE HALF THAT BROKE.**
+`theme-recipe.mjs` contained no reference to `dataviz` at all, so a generated theme shipped
+zero of these 22 names in either scheme. In light that was invisible — the theme silently
+inherited the hub's grass-derived values from `dist/tokens.css`, wrong brand but legible. In
+dark it was not: **`@esa/tokens` has no dark block**, and the hub's dark series palette lives
+in `apps/site/src/styles/docs-dark.css`, a SITE file a spoke never installs. So a spoke in
+dark mode painted its charts in the *light* series colours on a near-black page. Measured
+across 8 brand seeds: three failures every time, byte-identical ratios every time
+(categorical-7 2.85:1, sequential-7 1.45:1 and 1.56:1) — and that identicality across eight
+different brands is what proves nothing on the path was brand-derived.
+
+`deriveDataviz` runs **once, after the per-scheme loop**, not inside it. The slot order has
+to satisfy protan, deutan and normal separation in BOTH schemes at once, so searching per
+scheme could seat two different hue orders and series 3 would change identity when the user
+flipped to dark.
+
+**A near-black or pale brand used to CRASH it**, and wiring it in is what found that. The
+chroma re-tint clamps to 0.45 for a brand with almost no chroma, which pushes every hue under
+`CHROMA_FLOOR` — the stylistic preference ("a muted brand yields a muted palette") and the
+legibility bar deadlock, and `deriveDataviz` threw. Nothing had hit it because nothing called
+it with a hostile seed; once `theme-recipe.mjs` did, the throw killed generation of the
+**whole theme** for brands that had generated fine before. The preference now yields: the
+ratio walks back toward 1 until a palette seats, and the theme reports where it landed.
 Status colours are NOT here — tier 2 already ships
 `--color-{background,border,content}-utility-{info,success,warning,danger}`, and the
 data-viz method reserves status hues so a series never impersonates a state.
@@ -319,6 +345,38 @@ disappear must not block the gate. Adding these left the hub at its historical 7
 **All-pairs cannot be satisfied and is not meant to be.** Eight slots clear the ADJACENT
 gate (bars, lines, stacks); any-two-together — scatter, bubble, choropleth — measured a
 safe cap of 2–3 series. That is a charting rule to document, not more tokens.
+
+## SUCCESS IS GREEN, NOT LIME (2026-08-18)
+`--color-background-utility-success` was `{color.lime.9}`. Lime reads as a highlighter
+rather than a state, and lime-9 sits **1.31:1 against the page** — a fill whose edge you
+cannot see. It is now `{color.green.9}` (3.08:1), with the whole family moved: hover 10,
+subtle 2, border 6, text 11.
+
+**The foreground could not come along, and that is the part to know.** Tier 2 had two
+patterns for `content-on-utility-*`: `{color.gray.1}` (white) for `danger` and `info`,
+whose step 9 is dark, and `{color.<own>.12}` for `warning`, whose step 9 is bright. **green-9
+is neither** — white fails on it, and green-12 on green-9 is only **3.90:1**. It takes
+`{color.gray.12}`, the neutral's darkest, at **5.16:1**. So a mid-tone fill is a third case,
+and copying either existing pattern would have shipped a failure.
+
+**THE HUB WENT 7 → 8 LIGHT FAILURES, and the new row is a Radix marginality rather than a
+green one.** `--color-content-utility-success` on its own `-subtle` tint measures **4.49:1**.
+Radix engineers step 11 for ~4.5:1 on step 2 and several scales land a hair under — measured:
+green 4.49, jade 4.43, **yellow 4.43 — already one of the pre-existing failures** — against
+blue 4.53, lime 4.56, red 4.94. Success now sits beside warning in the same known band. If it
+ever has to come off the list without leaving green, `-subtle` at green-**1** gives 4.65:1.
+
+**THE REAL COST IS THAT GREEN COLLIDES WITH THE HUB'S OWN BRAND.** grass-9 vs green-9 is
+OKLab **deltaE 3.06**, and **2.99** under simulated colour-vision deficiency — below even the
+6–8 floor band `dataviz.mjs` treats as the minimum for telling two hues apart. Lime was 24.51
+/ 22.89 away. So on THIS site a success badge and a brand button are near enough the same
+colour. That is a hub-default problem, not a system one: a spoke re-points its brand, and for
+any non-green brand green is the conventional success hue. Not fixed, deliberately —
+`green-11` is deltaE 11.7 from grass and takes white text at 4.60:1 if it ever needs fixing.
+
+`green` is NOT in `dataviz.mjs`'s `WHEEL`, so no series can impersonate the new success
+colour. `lime` is in the wheel and was the old one, so this closed a collision as well as
+opening one.
 
 ## Assurance is a THIRD axis, orthogonal to the theme
 `data-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
@@ -601,6 +659,51 @@ docs?** Nobody guesses `trailing`, and it didn't read as a pair with `icon`.
 in this repo (no `dir`, no i18n, no locale), so `trailing` was defending a case
 that doesn't exist, and if RTL ever arrives the fix is one row here plus a shim.
 
+## `secondary` was never a second fill — it was step 8 (2026-08-18)
+`--color-background-brand-secondary` sat on **Radix step 8**, which is the *hovered UI
+element border* step, used as a solid fill. Measured against its own step-12 foreground
+that is **3.51–5.47:1 in light and 3.82–4.67:1 in dark** — an AA failure for several
+brands, and the reason `beacon` had been failing `content-on-brand-secondary` at 3.64:1
+for months. `theme-recipe.mjs` was papering over it with a `movable: true` walk that
+still left most brands marginal.
+
+**Step 3 is Radix's UI-element background step** and measures 10.27–11.80:1 / 11.33–12.54:1
+with the same foreground, for every brand, in both schemes, with no search and no walk.
+But step 3 was ALREADY `--color-background-brand-muted`, and step 4 already
+`-muted-hover`, so the two families **merged** rather than both surviving — two tier-2
+names over one value is the exact aliasing the 2026-08-16 demotion pass removed 168 of.
+`muted` survives; it is the surface intention. Beacon's pair is now **10.48:1 / 11.33:1**.
+
+`--color-content-brand-secondary` needed no argument at all: it was declared
+`var(--color-grass-11)` in `:root` and `var(--color-grass-dark-11)` in the dark block —
+byte-identical to `--color-content-brand` in both. A pure alias with no value of its own.
+
+Four things worth knowing:
+
+- **This is a RENAME row, not a removal**, unlike the tier-3 demotions. Both sides are
+  whole tier-2 roles at the same scope, so a spoke's `--color-background-brand-secondary: X`
+  genuinely does mean `--color-background-brand-muted: X`. The tier-3 rule exists because
+  demoting a one-component hook widens a narrow override into a system-wide one; nothing
+  widens here.
+- **A step-3 fill is 1.09–1.28:1 against the page**, so `esa-button` grew a border for this
+  variant — `--_accent-border`, defaulting to `transparent` so every other variant computes
+  byte-identically. It is the **neutral** `--color-border-default-strong` because no brand
+  step reaches 3:1 against the page either (step 6 = 1.46–1.75, step 7 = 1.74–2.32,
+  step 8 = 2.27–3.37) — measured, and `appearance="soft"` already drew exactly this border
+  for exactly this reason.
+- **A DOT IS NOT A FILL.** `.esa-badge--dot--secondary` read `-secondary-hover` as an 8px
+  solid mark; step 4 would have made it ~1.15:1 against the page. It now reads
+  `--color-background-brand` (step 9) — which is the value it already resolved to, so the
+  dot is unchanged.
+- **The chained-rename guard earned itself.** An older row, `color-tier2-property-first`,
+  renamed `--color-secondary` onto `--color-background-brand-secondary` — a name this row
+  then deprecated. A spoke running the codemod would land one migration behind and be told
+  it succeeded; `token-rename.test.mjs` caught all four destinations.
+
+`esa-card` was separately reading `--color-content-on-brand-secondary` for its
+`--header-primary` subtitle — on a `--color-background-brand` header, at 3.99:1 — while its
+own comment said the token should be `content-on-brand`. Fixed in the same pass.
+
 ## Removing a component (`kind: "component"`)
 The fourth `kind`, added 2026-08-14. A component rename is NOT a prop rename: it
 carries a new tag name, added props, renamed props and a repointed import
@@ -762,18 +865,18 @@ npm test               # token-name guard + hook regressions (scripts/**/*.test.
 npm run a11y           # axe-core over every built page (needs `npm run build` first)
 npm run a11y:live      # live-region structure audit (needs `npm run build` first)
 npm run a11y:charts    # re-score AG Charts against the 5-question rubric (needs `npm run build`)
-npm run contrast       # 33 pairs against the hub defaults — currently FAILS with 7
+npm run contrast       # 64 pairs against the hub defaults — currently FAILS with 8
 npm run contrast:dark  # the same pairs against the hub's dark block — fails with 5
 npm run theme:make     # recipe (or --brand/--slug) → theme-<slug>.css + .json
 npm run theme:curves   # regenerate scripts/lib/radix-curves.json from @radix-ui/colors
 npm run tokens:primitives  # regenerate tier-1 colour ramps from @radix-ui/colors (dry run; --write)
 ```
 
-**`npm run contrast` exits 1 on the hub's own defaults and always has** — 7 AA
+**`npm run contrast` exits 1 on the hub's own defaults and always has** — 8 AA
 failures, `content-on-brand` at 2.95:1 among them. That is not a regression to chase
 on sight; `npm run a11y:assured` passes because the assurance profile moves those
 fills from Radix step 9 to step 11, which is what the profile is for. A GENERATED
-theme passes 29/29 in both schemes, so a spoke can be cleaner than the hub.
+theme passes 64/64 in both schemes, so a spoke can be cleaner than the hub.
 
 `npm run a11y` serves `apps/site/dist` on an ephemeral port, waits for custom
 elements to upgrade (auditing pre-hydration HTML is how you get a meaningless

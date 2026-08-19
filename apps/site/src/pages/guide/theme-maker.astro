@@ -19,6 +19,35 @@ import Button from '@esa/ecology/esa-button.astro';
 import Badge from '@esa/ecology/esa-badge.astro';
 import Card from '@esa/ecology/esa-card.astro';
 
+import { CHROMATIC_SCALES } from '@theme/ramp.mjs';
+import { parseHex, srgbToOklch } from '@theme/color.mjs';
+import primitiveColor from '../../../../../packages/tokens/tokens/primitive/color.json';
+
+/*
+ * Starting points for the brand seed, read from TIER 1 rather than typed in — since
+ * 2026-08-17 the primitives ARE the whole Radix palette, so every hue the system has a
+ * vocabulary for is already on disk. Nobody should have to know that Radix teal is
+ * #12a594 to ask for it.
+ *
+ * STEP 9 ONLY, and that is the contract rather than a shortcut: rampFrom lands the seed
+ * exactly on step 9 and interpolates the other eleven along the nearest Radix curve, so
+ * seeding with a real Radix step 9 reproduces that scale instead of approximating it.
+ * Offering the other eleven steps would invite a seed that means nothing — step 3 is a
+ * background, and handing it over as a brand fill just re-derives a fill from it.
+ *
+ * `yellow` is dropped because the hub's `yellow` IS Radix amber (see CLAUDE.md) — same
+ * twelve values under two names, so it would render as a duplicate square.
+ *
+ * Sorted by OKLCH hue so the row reads as a wheel; alphabetical puts brown beside blue.
+ */
+const BRAND_SWATCHES = CHROMATIC_SCALES.filter((scale: string) => scale !== 'yellow')
+  .map((scale: string) => ({
+    scale,
+    value: (primitiveColor as any).color[scale]['9'].$value as string,
+  }))
+  .sort((a, b) => srgbToOklch(parseHex(a.value)).h - srgbToOklch(parseHex(b.value)).h)
+  .map(({ scale, value }) => ({ value, label: scale[0].toUpperCase() + scale.slice(1) }));
+
 const NEUTRALS = [
   { value: 'pure', label: 'Pure', hint: 'Radix gray — no tint' },
   { value: 'cool', label: 'Cool', hint: 'Radix slate — blue-leaning' },
@@ -51,7 +80,7 @@ const CORNERS = [
       never once declared the eight <code>--color-content-on-*</code> foregrounds — the
       spoke template offers no slots for them, and the contrast gate blocks on all eight.
       That is why <code>beacon</code> fails
-      <code>content-on-brand-secondary</code> at 3.64:1, and why the hub's own defaults
+      <code>content-on-brand-muted</code> at 3.64:1, and why the hub's own defaults
       fail seven pairs today. Choosing a foreground that reads on the fill you just
       generated is the job here; the swatches are incidental.
     </p>
@@ -74,7 +103,13 @@ const CORNERS = [
 
       <div class="field">
         <label for="brand">Brand colour</label>
-        <esa-color-picker id="brand" value="#1f7a6d" label="Brand colour" size="md"></esa-color-picker>
+        <esa-color-picker id="brand" value="#1f7a6d" label="Brand colour" size="md"
+                          swatches={JSON.stringify(BRAND_SWATCHES)}></esa-color-picker>
+        <p class="hint">
+          Type a hex, or start from one of the {BRAND_SWATCHES.length} Radix hues — tier 1
+          ships all of them, and a real step 9 seeds the ramp it came from rather than an
+          approximation of it.
+        </p>
         <p class="hint" id="brand-hint">The exact hex lands on step 9.</p>
       </div>
 

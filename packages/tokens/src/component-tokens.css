@@ -495,10 +495,7 @@
 :root {
 
   /* esa-alert-box */
-  --alert-box-bg: var(--color-background-utility-info-subtle, #eff6ff);
-  --alert-box-border-color: var(--color-border-utility-info, #bfdbfe);
   --alert-box-text-color: var(--color-content-default-secondary, #525252);
-  --alert-box-title-color: var(--color-content-default, #171717);
 
   /* esa-app-shell */
   --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
@@ -712,7 +709,7 @@
      all. Sizes stay pointed at tier-2 font-size roles (NOT at a type role
      class) because the value deliberately sits at a large-but-tasteful step,
      below the display/900 roles. */
-  --stat-accent-color: var(--color-content-brand-secondary, #3a7c59);
+  --stat-accent-color: var(--color-content-brand, #3a7c59);
   --stat-value-color: var(--color-content-default, #171717);
   --stat-value-size: var(--font-size-700, 2.25rem);
 

@@ -368,7 +368,7 @@ export class EsaFilterDropdown extends LitElement {
       --_filter-padding-x: var(--spacing-400, 1rem);
       --_filter-radius: var(--radius-md, 0.5rem);
       --_filter-bg: var(--color-background-elevation-raised, #fcfcfc);
-      --_filter-bg-active: var(--color-background-brand-subtle, #f5fbf5);
+      --_filter-bg-active: var(--color-background-brand-subtle, #fbfefb);
       --_filter-text: var(--color-content-default, #202020);
       --_filter-text-active: var(--color-background-brand, #46a758);
       --_filter-border: var(--color-border-default, #cecece);

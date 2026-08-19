@@ -53,11 +53,12 @@ test('validateRecipe fills in the defaults and expands the utility shorthand', (
 test('every content-on-* foreground clears AA, for brands chosen to be hostile', () => {
   // This is the whole reason the tool exists. The spoke template declares NONE of these
   // eight, so the hand-fill path ships a brand fill audited against a foreground nobody
-  // chose — which is why beacon has been failing content-on-brand-secondary at 3.64:1
-  // and why the hub's own defaults fail seven pairs today.
+  // chose — which is why beacon has been failing content-on-brand-muted at 3.64:1
+  // (it was `-brand-secondary` on a step-8 fill until 2026-08-18) and why the hub's own
+  // defaults fail seven pairs today.
   const PAIRS = [
     ['--color-content-on-brand', '--color-background-brand'],
-    ['--color-content-on-brand-secondary', '--color-background-brand-secondary'],
+    ['--color-content-on-brand-muted', '--color-background-brand-muted'],
     ['--color-content-on-accent', '--color-background-accent'],
     ['--color-content-on-ai', '--color-background-ai'],
     ['--color-content-on-utility-info', '--color-background-utility-info'],
@@ -540,7 +541,11 @@ test('a brand hex that cannot carry text is reported, never quietly moved', () =
   // The fill is still the seed, untouched.
   assert.equal(resolve(d.light, '--color-background-brand'), '#e5399f');
   // …and the best available foreground is still emitted, so the theme is usable.
-  assert.ok(d.light.get('--color-content-on-brand').startsWith('#'));
+  // Asserted through resolve() rather than on the raw declaration: since 2026-08-18 a
+  // searched foreground that lands exactly on a declared ramp step is emitted as that
+  // step's var() instead of a stranded hex, so the shape of the value is not the point —
+  // that it resolves to a real colour is.
+  assert.match(resolve(d.light, '--color-content-on-brand'), /^#[0-9a-f]{6}$/);
 });
 
 test('a fail warning that does happen is written into the file, not just returned', () => {
@@ -569,4 +574,59 @@ test('derivation is deterministic', () => {
   const a = emitCss(deriveTheme(recipe({ seeds: { brand: '#1769aa', neutral: 'warm' } })));
   const b = emitCss(deriveTheme(recipe({ seeds: { brand: '#1769aa', neutral: 'warm' } })));
   assert.equal(a, b);
+});
+
+// --- DATA-VIZ ----------------------------------------------------------------
+
+test('every theme emits the full data-viz family, in BOTH schemes', () => {
+  // Until 2026-08-18 it emitted NONE, in either scheme. @esa/tokens ships these 22 names
+  // light-only and has no dark block at all; the hub's dark series palette lives in
+  // apps/site/src/styles/docs-dark.css, a site file no spoke installs. So a spoke in dark
+  // mode painted its charts in the LIGHT series colours on a near-black page — measured
+  // across 8 seeds, the same three failures every time, identical because nothing on that
+  // path was brand-derived.
+  const d = deriveTheme(recipe({ seeds: { brand: '#3e63dd' } }));
+  for (const scheme of ['light', 'dark']) {
+    for (const [family, n] of Object.entries({ categorical: 8, sequential: 7, diverging: 7 })) {
+      for (let i = 1; i <= n; i++) {
+        const name = `--color-background-dataviz-${family}-${i}`;
+        assert.match(
+          resolve(d[scheme], name),
+          /^#[0-9a-f]{6}$/,
+          `${name} is missing or unresolvable in ${scheme}`,
+        );
+      }
+    }
+  }
+});
+
+test('the two schemes get DIFFERENT series colours, but the same hue ORDER', () => {
+  // The order is searched once for both schemes on purpose. If it were searched per
+  // scheme the two could disagree, and series 3 would change identity when the user
+  // flipped to dark — the one thing a categorical palette must never do.
+  const d = deriveTheme(recipe({ seeds: { brand: '#1f7a6d' } }));
+  const light = [], dark = [];
+  for (let i = 1; i <= 8; i++) {
+    light.push(resolve(d.light, `--color-background-dataviz-categorical-${i}`));
+    dark.push(resolve(d.dark, `--color-background-dataviz-categorical-${i}`));
+  }
+  assert.notDeepEqual(light, dark, 'dark reused the light values');
+  assert.equal(d.dataviz.hues.length, 8);
+  assert.deepEqual(d.dataviz.hues, [...new Set(d.dataviz.hues)], 'a hue was seated twice');
+});
+
+test('a brand with no chroma to lend still gets a palette, and says so', () => {
+  // A near-black brand clamps the chroma re-tint to 0.45, which pushed every hue under
+  // CHROMA_FLOOR — the preference and the legibility bar deadlocked and deriveDataviz
+  // THREW. Harmless while nothing called it; fatal once theme-recipe did, because it
+  // killed generation of the whole theme for a brand that had generated fine before.
+  for (const brand of ['#101418', '#c8f0e2']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    assert.match(resolve(d.dark, '--color-background-dataviz-categorical-1'), /^#[0-9a-f]{6}$/);
+    assert.ok(d.dataviz.chromaRelaxed, `${brand}: expected the chroma ratio to be relaxed`);
+    assert.ok(
+      d.warnings.some((w) => w.message.includes('re-tinted at chroma ratio')),
+      `${brand}: relaxing the ratio must be reported, not silent`,
+    );
+  }
 });

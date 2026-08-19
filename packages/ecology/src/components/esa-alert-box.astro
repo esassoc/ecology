@@ -167,10 +167,33 @@ const iconPath = ICON_PATHS[variant];
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--alert-box-bg, var(--color-background-utility-info-subtle, #f4faff));
-    --_alert-border: var(--alert-box-border-color, var(--color-border-utility-info, #acd8fc));
-    --_alert-icon-color: var(--color-content-utility-info, #0d74ce);
-    --_alert-title-color: var(--alert-box-title-color, var(--color-content-default, #202020));
+    /* THE THREE VARIANT-DEPENDENT VALUES HAVE NO TIER-3 HOOK, AND CANNOT HAVE ONE.
+       --alert-box-bg, --alert-box-border-color and --alert-box-title-color were DECLARED
+       in component-tokens.css, so they always won the var() chain — and the variant blocks
+       below set --_alert-* directly, so they were bypassed for success, warning and danger.
+       The hooks therefore re-skinned the `info` alert and silently did nothing to the other
+       three. A single-valued hook in front of a per-variant role cannot work: the
+       declaration can only name one colour, and this needs four. Removed 2026-08-18
+       (alert-box-variant-hooks-removed) — a spoke re-points --color-*-utility-* instead,
+       which moves all four variants together and is what it wanted anyway.
+
+       --alert-box-text-color KEEPS its hook, and the difference is the whole point: the
+       body copy is neutral in every variant, so one value genuinely serves it. */
+    --_alert-bg: var(--color-background-utility-info-subtle, #fbfdff);
+    --_alert-border: var(--color-border-utility-info, #acd8fc);
+    --_alert-accent: var(--color-content-utility-info, #0d74ce);
+
+    /* THE TITLE CARRIES THE STATUS COLOUR; THE BODY DOES NOT, and the split is the whole
+       decision. Every other place the kit paints text with --color-content-utility-* is a
+       SHORT string — a field error, a pill label, esa-error-summary's list items — because
+       a coloured sentence is harder to read than a neutral one, and an alert body is the
+       longest text any of these components carries. esa-danger-zone, which is the same
+       shape (tinted panel, coloured border, heading + description), already split it this
+       way; the alert box used to split it the other way and the two disagreed.
+       Measured on the tint: 4.54-5.11:1 in light and 8.72-9.87:1 in dark, all four
+       variants, so the title clears AA as body-sized text even at the tightest variant. */
+    --_alert-icon-color: var(--_alert-accent);
+    --_alert-title-color: var(--_alert-accent);
     --_alert-text-color: var(--alert-box-text-color, var(--color-content-default-secondary, #646464));
 
     display: flex;
@@ -183,21 +206,21 @@ const iconPath = ICON_PATHS[variant];
   }
 
   .esa-alert-box--success {
-    --_alert-bg: var(--color-background-utility-success-subtle, #f8faf3);
-    --_alert-border: var(--color-border-utility-success, #c2da91);
-    --_alert-icon-color: var(--color-content-utility-success, #5c7c2f);
+    --_alert-bg: var(--color-background-utility-success-subtle, #fbfefc);
+    --_alert-border: var(--color-border-utility-success, #adddc0);
+    --_alert-accent: var(--color-content-utility-success, #218358);
   }
 
   .esa-alert-box--warning {
-    --_alert-bg: var(--color-background-utility-warning-subtle, #fefbe9);
+    --_alert-bg: var(--color-background-utility-warning-subtle, #fefdfb);
     --_alert-border: var(--color-border-utility-warning, #f3d673);
-    --_alert-icon-color: var(--color-content-utility-warning, #ab6400);
+    --_alert-accent: var(--color-content-utility-warning, #ab6400);
   }
 
   .esa-alert-box--danger {
-    --_alert-bg: var(--color-background-utility-danger-subtle, #fff7f7);
+    --_alert-bg: var(--color-background-utility-danger-subtle, #fffcfc);
     --_alert-border: var(--color-border-utility-danger, #fdbdbe);
-    --_alert-icon-color: var(--color-content-utility-danger, #ce2c31);
+    --_alert-accent: var(--color-content-utility-danger, #ce2c31);
   }
 
   .esa-alert-box__icon {

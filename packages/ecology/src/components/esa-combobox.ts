@@ -1055,7 +1055,7 @@ export class EsaCombobox extends LitElement {
       flex: 1;
     }
     .hl {
-      background: var(--color-background-utility-warning-subtle, #fefbe9);
+      background: var(--color-background-utility-warning-subtle, #fefdfb);
       color: inherit;
       border-radius: 2px;
       padding: 0 1px;

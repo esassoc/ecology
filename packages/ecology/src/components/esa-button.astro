@@ -306,11 +306,24 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   .esa-button--variant-primary {
     --_accent-text: var(--color-content-brand);
   }
+  /* Step 3, not step 8. Step 8 is Radix's HOVERED UI ELEMENT BORDER step; used as a
+     solid fill it measured 3.51-5.47:1 against its own foreground in light and
+     3.82-4.67:1 in dark, and the theme generator was hiding that behind a movable
+     walk. Step 3 is the UI-element background step and measures 10.27-11.80:1 /
+     11.33-12.54:1 with the same foreground, for every brand, with no search.
+
+     The cost is that a step-3 fill sits 1.09-1.28:1 against the page, so this is the
+     one variant whose FILL appearance needs a drawn border. It is the neutral
+     --color-border-default-strong rather than a brand step because no brand step
+     reaches 3:1 against the page either (step 6 = 1.46-1.75, step 7 = 1.74-2.32) —
+     measured, not assumed — and because appearance="soft" already draws exactly this
+     border for exactly this reason. */
   .esa-button--variant-secondary {
-    --_accent: var(--color-background-brand-secondary);
-    --_accent-hover: var(--color-background-brand-secondary-hover);
-    --_on: var(--color-content-on-brand-secondary, var(--color-content-default));
-    --_accent-text: var(--color-content-brand-secondary);
+    --_accent: var(--color-background-brand-muted);
+    --_accent-hover: var(--color-background-brand-muted-hover);
+    --_on: var(--color-content-on-brand-muted, var(--color-content-default));
+    --_accent-text: var(--color-content-brand);
+    --_accent-border: var(--color-border-default-strong, #bbbbbb);
   }
   .esa-button--variant-danger {
     --_accent: var(--color-background-utility-danger);
@@ -344,7 +357,10 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   .esa-button--appearance-fill .esa-button__native {
     background: var(--_accent);
     color: var(--_on);
-    border-color: transparent;
+    /* transparent by default, so every other variant renders byte-identically. A
+       transparent border is also what keeps forced-colors working here: border-color
+       is force-adjusted, so the box becomes visible with no media query. */
+    border-color: var(--_accent-border, transparent);
   }
   .esa-button--appearance-fill .esa-button__native:hover:not(:disabled) { background: var(--_accent-hover); }
   .esa-button--appearance-fill.esa-button--active .esa-button__native { background: var(--_accent-hover); }
