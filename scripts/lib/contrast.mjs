@@ -37,14 +37,18 @@ export { contrastRatio as ratio };
 // ride on a deprecated alias.
 export const PAIRS = [
   // Neutral text on neutral surfaces.
-  ['--color-content-primary', '--color-background-raised', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-sunken', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-floating', 4.5, 'fail'],
-  ['--color-content-secondary', '--color-background-raised', 4.5, 'fail'],
-  ['--color-content-muted', '--color-background-raised', 4.5, 'warn'], // genuine meta text — review, don't block
-  ['--color-content-link', '--color-background-raised', 4.5, 'fail'],
-  ['--color-content-inverse', '--color-background-inverse', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-elevation-raised', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-default', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-elevation-sunken', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-elevation-floating', 4.5, 'fail'],
+  ['--color-content-default-secondary', '--color-background-elevation-raised', 4.5, 'fail'],
+  // WAS TWO ROWS. --color-content-muted and --color-content-secondary are both aliases of
+  // --color-content-default-secondary, so the table graded ONE value twice — once at
+  // `fail`, once at `warn` with the note "genuine meta text — review, don't block". The
+  // stricter row already governed, so the softer one changed no verdict in either scheme
+  // and only made the count look like coverage it did not have. If meta text ever wants a
+  // softer bar it needs its own ROLE first, not a second name for this one.
+  ['--color-content-link', '--color-background-elevation-raised', 4.5, 'fail'],
 
   // Each intention's declared foreground against its own solid fill.
   ['--color-content-on-brand', '--color-background-brand', 4.5, 'fail'],
@@ -64,19 +68,19 @@ export const PAIRS = [
   ['--color-content-utility-danger', '--color-background-utility-danger-subtle', 4.5, 'fail'],
 
   // Body text on the subtle tints, which is how the alert bodies are actually built.
-  ['--color-content-primary', '--color-background-brand-subtle', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-utility-success-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-utility-warning-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-utility-danger-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-utility-info-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-brand-subtle', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-utility-success-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-utility-warning-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-utility-danger-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-utility-info-subtle', 4.5, 'warn'],
 
   ['--color-content-disabled', '--color-background-disabled', 4.5, 'warn'], // disabled is exempt from AA; informational
-  ['--color-background-brand', '--color-background-raised', 3.0, 'warn'], // as a UI/graphic color
+  ['--color-background-brand', '--color-background-elevation-raised', 3.0, 'warn'], // as a UI/graphic color
 
   // ---- SC 1.4.11 · THE FOCUS RING, on every surface it can land on ----
   //
   // These five replace ONE row that was wrong three ways:
-  //   ['--color-border-focus', '--color-background-raised', 3.0, 'warn']
+  //   ['--color-border-default-focus', '--color-background-elevation-raised', 3.0, 'warn']
   // It named a PRE-RENAME token that resolved only through a compatibility alias; it was
   // `warn`, so it reported a Level AA failure to nobody; and it tested a single surface,
   // never the SUNKEN one, which is the ring's worst (2.66:1 against 2.95 on raised).
@@ -111,9 +115,13 @@ export const PAIRS = [
   // ---- SC 1.4.3 · TEXT ON THE KNOCKOUT SURFACE ----
   //
   // 22 components put text on a knocked-out ground — app bars, tooltips, snackbars, the
-  // secondary-badge text, esa-card's knockout header — and until 2026-08-18 the ONLY
-  // knockout row here was the focus ring above. The pair everything actually depends on
-  // was ungraded.
+  // secondary-badge text, esa-card's knockout header.
+  //
+  // THIS ROW WAS ADDED AS "the pair was ungraded", AND THAT WAS WRONG — it was graded, up
+  // in the neutral group, as --color-content-inverse on --color-background-inverse. Those
+  // are the pre-rename names for exactly these two tokens, so the row read as a different
+  // pair while resolving to the same one. That is the cost of grading deprecated names:
+  // the table cannot see its own duplicates, and the second row looked like new coverage.
   //
   // It passes comfortably today and always has: 15.88:1 on the hub's light defaults,
   // 15.15:1 on its dark block, because both sides are step 12 and step 1 of the same
@@ -280,17 +288,25 @@ const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
  * which is what lets a dark run resolve the roles the dark block does not re-point.
  */
 export function parseDeclarations(css, map, { assurance = null, scheme = 'light' } = {}) {
+  // COUNT THE SCHEME BLOCKS WE ACTUALLY MATCHED, and hand it back. A file holding
+  // both a light and a dark block gets swept flat otherwise, the dark one wins on
+  // last-one-wins, and the audit grades dark values under a header claiming light.
+  // The caller dies when a non-default --scheme matched nothing, which is the only
+  // way to tell "this file has no dark block" from "its dark block passed".
+  let schemeBlocks = 0;
   for (const [selector, body] of parseBlocks(css)) {
     if (ASSURANCE_SCOPE.test(selector)) {
       if (!assurance || !selector.includes(`[data-a11y-assurance="${assurance}"]`)) continue;
     }
     const sm = SCHEME_SCOPE.exec(selector);
     if (sm && sm[1] !== scheme) continue;
+    if (sm) schemeBlocks++;
     // last one wins — source order
     for (const m of body.matchAll(/(--[a-zA-Z0-9-_]+)\s*:\s*([^;]+);/g)) {
       map.set(m[1], m[2].trim());
     }
   }
+  return { schemeBlocks };
 }
 
 export function resolve(name, map, depth = 0) {
