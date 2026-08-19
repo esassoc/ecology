@@ -35,6 +35,7 @@ import { createReadStream, existsSync, readFileSync, readdirSync, statSync } fro
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { discoverRoutes } from './lib/site-harness.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'apps/site/dist');
@@ -91,15 +92,13 @@ function detectBase(dist) {
   return m ? m[1] : '/';
 }
 
-function discoverRoutes(dist, prefix = '') {
-  const out = [];
-  for (const entry of readdirSync(dist)) {
-    const full = path.join(dist, entry);
-    if (statSync(full).isDirectory()) out.push(...discoverRoutes(full, `${prefix}/${entry}`));
-    else if (entry === 'index.html') out.push(prefix === '' ? '/' : `${prefix}/`);
-  }
-  return out;
-}
+/*
+ * Route discovery comes from ./lib/site-harness.mjs, which this file used to duplicate.
+ * The copy was byte-equivalent except for the one thing that mattered: the harness drops
+ * redirect stubs, and this did not — so /patterns/app-shell navigated out from under the
+ * audit and surfaced as `error — Execution context was destroyed`, a finding about a page
+ * with no content in it. Two audits, one rule, one place.
+ */
 
 /**
  * Wait for every custom element on the page to upgrade.

@@ -28,9 +28,34 @@ export function discoverRoutes(dir, prefix = '') {
   for (const entry of readdirSync(dir)) {
     const full = path.join(dir, entry);
     if (statSync(full).isDirectory()) routes.push(...discoverRoutes(full, `${prefix}/${entry}`));
-    else if (entry === 'index.html') routes.push(prefix === '' ? '/' : `${prefix}/`);
+    else if (entry === 'index.html' && !isRedirectStub(full)) {
+      routes.push(prefix === '' ? '/' : `${prefix}/`);
+    }
   }
   return routes.sort();
+}
+
+/**
+ * A build emits redirect stubs — a ~450-byte page whose entire body is
+ * `<meta http-equiv="refresh" content="0;url=…">`. /patterns/app-shell is one, pointing
+ * at /components/esa-app-shell.
+ *
+ * They are not auditable and they are actively HOSTILE to an auditor: the navigation
+ * fires while the tool is mid-`evaluate`, so every call after it rejects with "Execution
+ * context was destroyed". Both `a11y:live` and `a11y:overlays` reported that as a bare
+ * `error` finding — which reads like a defect on a page that has no content at all.
+ *
+ * Dropped at DISCOVERY so every audit over this harness benefits, rather than each one
+ * growing its own guard. There is nothing lost: the destination route is itself in the
+ * list and gets audited properly.
+ */
+function isRedirectStub(file) {
+  try {
+    const html = readFileSync(file, 'utf8');
+    return html.length < 2048 && /<meta[^>]+http-equiv=["']?refresh/i.test(html);
+  } catch {
+    return false;
+  }
 }
 
 /**

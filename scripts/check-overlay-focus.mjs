@@ -218,7 +218,15 @@ const main = async () => {
             // <body> is the "nothing focused" resting state a headless Tab wrap lands
             // on; it is not the same as being stranded, so only a MISS on the probe
             // while something else holds focus is reported.
-            restored: deep() === probe,
+            //
+            // THE OVERLAY'S OWN TRIGGER COUNTS AS RESTORED, and it has to. This audit
+            // opens via the public `open` property, so focus was on the probe and NEVER
+            // on the trigger — while a menu button correctly returns focus to its
+            // trigger on close. Asserting the probe alone reported focus-not-restored
+            // against esa-dropdown-menu doing exactly the right thing (verified by
+            // hand: click trigger, Esc, focus lands back on "Actions ▾"). The panel is
+            // unmounted by now, so "inside the component" can only mean the trigger.
+            restored: deep() === probe || (!!el && !!deep() && el.contains(deep())),
             focusedTag: deep()?.id || deep()?.tagName,
           };
         }, tag);
@@ -237,7 +245,9 @@ const main = async () => {
   await browser.close();
   server?.close();
 
-  console.log(`\noverlay focus — ${routes.length} page(s), ${opened} overlay instance(s) opened`);
+  console.log(
+    `\noverlay focus — ${routes.length} page(s), ${opened} overlay instance(s) opened`,
+  );
   if (uncovered.size) {
     // Stated out loud rather than silently narrowed: a reader who cannot see what was
     // skipped will read the finding count as coverage.

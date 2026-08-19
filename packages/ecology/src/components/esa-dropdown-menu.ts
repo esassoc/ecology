@@ -76,6 +76,9 @@ export class EsaDropdownMenu extends LitElement {
    * A public property and the method that sets it must not do different things.
    */
   updated(changed: Map<string, unknown>): void {
+    // syncTrigger() on EVERY update — it used to live in a second `updated()` further
+    // down this class, which is why none of the code below ever ran. See the note there.
+    this.syncTrigger();
     if (!changed.has('open')) return;
     if (this.open) {
       document.addEventListener('click', this.onDocumentClick, true);
@@ -143,9 +146,21 @@ export class EsaDropdownMenu extends LitElement {
     }
   }
 
-  updated(): void {
-    this.syncTrigger();
-  }
+  /*
+   * THIS CLASS DECLARED `updated()` TWICE, and the second one silently won.
+   *
+   * A duplicate class member is not an error in JavaScript — the later definition
+   * replaces the earlier one — so this three-line method quietly deleted the whole
+   * open/close hook above it: no document-click listener, no route for Esc, no focus
+   * into the menu. Which is the EXACT bug the comment up there says it fixed, written
+   * and disabled in the same change. Nothing objected: TypeScript's duplicate-member
+   * error never fired because the build strips types without checking them, and on
+   * screen the menu looked correct.
+   *
+   * `npm run a11y:overlays` — added by this same change — reported it as
+   * esc-does-not-close on three routes and was shipping red. It is the only thing that
+   * caught it. Merged into the one hook above; syncTrigger() still runs every update.
+   */
 
   private onDocumentClick = (event: MouseEvent): void => {
     if (!this.contains(event.target as Node) && event.target !== this) {
