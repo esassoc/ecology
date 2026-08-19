@@ -542,16 +542,18 @@ opening one.
 
 ## Assurance is a THIRD axis, orthogonal to the theme
 
-**THE ATTRIBUTE WAS RENAMED `data-assurance` → `data-a11y-assurance` IN THIS PASS,
-AND NOTHING CAN MIGRATE IT.** `migrations.json` has four kinds — `token`, `class`,
-`prop`, `component` — and none of them describes an attribute on `<html>`. So there is
-no alias, nothing for `/update-tokens` to rewrite, and nothing for `doctor` to warn
-about. A spoke whose `BaseLayout.astro` sets the old spelling (which is what
-`packages/spoke-template` shipped until this change) keeps parsing, keeps building, and
-**silently stops getting the profile** — the exact shape of "our brand stopped applying",
-except the thing that switches off is an accessibility conformance profile. `assurance.css`
-matches the new spelling only; the old one is accepted nowhere. Grep a spoke for
-`data-assurance` by hand before it takes this version.
+**`data-assurance` → `data-a11y-assurance` was renamed in this pass, and it is safe
+BECAUSE THE OLD NAME NEVER LEFT THE STACK.** It was introduced by `b778c17` on
+2026-08-16 — a stack commit — and reached `main` on 2026-08-19; `main` immediately
+before the stack (`094798b`) contains the string nowhere in the tree. So no released
+version ever carried it and there is nothing to migrate.
+
+Worth knowing anyway, for the next one: **`migrations.json` has no kind that describes
+an HTML attribute.** The four are `token`, `class`, `prop` and `component`. Renaming an
+attribute a spoke has actually set would emit no alias, give `/update-tokens` nothing to
+rewrite and `doctor` nothing to warn about — and the spoke would keep parsing, keep
+building, and silently stop getting the profile. That is a gap to close before renaming
+an attribute that has shipped, not a debt from this one.
 
 `data-a11y-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
 composes with `data-theme` (brand) and `data-scheme` (light/dark) — a project is
