@@ -100,6 +100,46 @@ test('the four pre-existing rules still fire', () => {
   assert.equal(check('/tmp/x.css', ':focus-visible { outline: none; }').blocked, true);
 });
 
+// ── <label> wrapping a non-labelable ARIA role ──────────────────────────────
+// The shape that shipped in esa-checkbox, esa-checkbox-group and esa-radio-group:
+// a <label> around <span role="checkbox">. A label associates only with a form
+// control, so all three options had NO accessible name — measured against Chrome's
+// accessibility tree on 2026-08-16. The synthetic case was already caught; the REAL
+// files were not, because `aria-checked=${String(this.checked)}` put a `(` inside an
+// interpolation and tripped the "a call may return a control" exemption.
+
+test('label rule: a wrapped role=checkbox span is not named by the label', () => {
+  const { blocked, stderr } = check(LIT, 'html`<label>Email<span class="box" role="checkbox" tabindex="0"></span></label>`');
+  assert.equal(blocked, true);
+  assert.match(stderr, /names nothing/);
+});
+
+test('label rule: an interpolated call does NOT excuse a wrapped ARIA role', () => {
+  // The exact regression: a String() call in an aria-* attribute used to exempt the
+  // whole label, which is why three shipped components went unflagged for months.
+  assert.equal(
+    check(LIT, 'html`<label>${this.label}<span role="checkbox" aria-checked=${String(this.checked)}></span></label>`').blocked,
+    true,
+  );
+});
+
+test('label rule: aria-labelledby on the role element clears it', () => {
+  // This is the fix the rule asks for, so it has to be what satisfies it — a guard
+  // that still fires on corrected code is a guard people learn to ignore.
+  assert.equal(
+    check(LIT, 'html`<label><span role="checkbox" tabindex="0" aria-labelledby="l" aria-checked=${String(x)}></span><span id="l">Email</span></label>`').blocked,
+    false,
+  );
+  assert.equal(
+    check(LIT, 'html`<label><span role="radio" tabindex="0" aria-label="Low"></span></label>`').blocked,
+    false,
+  );
+});
+
+test('label rule: wrapping a real control still exempts, role or not', () => {
+  assert.equal(check(ASTRO, '<label>Email<input role="combobox" /></label>').blocked, false);
+});
+
 // ── Unconditional outline reset (Check 4c) ──────────────────────────────────
 // The 2026-08-16 focus audit found three rings deleted in the hub — all three
 // written as `.input { outline: none }`, with no `:focus` anywhere in the file.

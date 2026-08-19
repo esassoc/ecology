@@ -97,7 +97,11 @@ const cls = ['esa-breadcrumbs', `esa-breadcrumbs--${size}`].join(' ');
     align-items: center;
     gap: var(--spacing-100, 4px);
     color: var(--_crumb-link-color);
-    text-decoration: none;
+    /* Transparent, not `none` — text-decoration-color is force-adjusted, so the
+       underline reappears in forced colors and the clickable crumbs stay
+       separable from the current one. (They also differ by type role: links are
+       body-*, current is label-*, which carries a weight delta that survives.) */
+    text-decoration-color: transparent;
   }
   .esa-breadcrumbs__link:hover {
     color: var(--_crumb-link-hover);

@@ -32,18 +32,40 @@
      primitive ramp (the --__SCOPE__-* raw ramp in section 7). If you skip this,
      primary stays hub teal. */
   --color-background-brand:         var(--__SCOPE__-brand-900);  /* __FILL__ the brand's strongest tint */
-  --color-background-brand-hover:   /* __FILL__ */ #00474f;
-  --color-background-brand-hover:  /* __FILL__ */ #003940;
+  --color-background-brand-hover:   /* __FILL__ */ #003940;
   --color-background-brand-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
   --color-border-brand:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
   --color-background-brand-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
   --color-background-brand-secondary-hover: var(--__SCOPE__-brand-800);
 
+  /* ===== (1b) FOREGROUNDS ON THE FILLS ABOVE — the eight everyone forgets =====
+     THIS SECTION DID NOT EXIST UNTIL 2026-08-16, and its absence is the single most
+     reliable source of contrast failures in a spoke. All eight of these are `fail`-level
+     rows in check-contrast.mjs, and the template offered no slots for them — so every
+     hand-filled theme re-pointed a fill and left the hub's foreground behind, chosen
+     against the hub's grass ramp. That is exactly why `beacon` fails
+     content-on-brand-secondary at 3.64:1.
+
+     There is no rule of thumb here, only a measurement: white on a step-9 fill works for
+     most hues and fails for the bright ones (yellow, amber, lime, mint, sky), where the
+     answer is step 12 of the same ramp. Pick one, then RUN THE AUDIT — do not eyeball it.
+
+     If this feels like eight decisions you should not have to make, that is the right
+     instinct: /guide/theme-maker (or make-theme.mjs) picks all eight against the fills
+     it generates, and proves them. */
+  --color-content-on-brand:           /* __FILL__ */ #ffffff;
+  --color-content-on-brand-secondary: /* __FILL__ */ #ffffff;
+  --color-content-on-accent:          /* __FILL__ */ #ffffff;
+  --color-content-on-ai:              /* __FILL__ */ #ffffff;
+  --color-content-on-utility-info:    /* __FILL__ */ #ffffff;
+  --color-content-on-utility-success: /* __FILL__ */ #ffffff;
+  --color-content-on-utility-warning: /* __FILL__ dark text if your amber is light */ #ffffff;
+  --color-content-on-utility-danger:  /* __FILL__ */ #ffffff;
+
   /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
      Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
      what warms or cools the entire UI vs the hub default. */
   --color-content-default:   var(--__SCOPE__-gray-900);
-  --color-content-default-secondary: var(--__SCOPE__-gray-700);
   --color-content-default-secondary:  var(--__SCOPE__-gray-600);
   --color-content-default-muted:     var(--__SCOPE__-gray-500);
   --color-border-default:         var(--__SCOPE__-gray-200);
@@ -145,7 +167,9 @@
   --__SCOPE__-gray-950:  /* __FILL__ */ #292929;
   --__SCOPE__-gray-1000: /* __FILL__ */ #000000;
 
-  /* Brand ramp — this spoke's signature color (feeds --color-background-brand*/secondary*). */
+  /* Brand ramp — this spoke's signature color. Feeds the brand semantics in section 1.
+     (The comment on this line used to contain a literal end-comment sequence, which
+     closed it early and silently killed the declaration below.) */
   --__SCOPE__-brand-50:  /* __FILL__ */ #effefb;
   --__SCOPE__-brand-100: /* __FILL__ */ #eef5f4;
   --__SCOPE__-brand-200: /* __FILL__ */ #b9d6d2;

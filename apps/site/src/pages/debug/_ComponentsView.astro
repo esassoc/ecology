@@ -2,8 +2,8 @@
 /**
  * /debug/components — the tier-3 surface as a promise, checked against delivery.
  *
- * Underscore-prefixed so Astro never routes it directly; the dev-only [view]
- * router renders it. Unlike _TokenGroup.astro this DOES carry its own <style>,
+ * Underscore-prefixed so Astro never routes it directly; the [view] router
+ * renders it. Unlike _TokenGroup.astro this DOES carry its own <style>,
  * because it is a whole view rather than a row partial shared with the tokens
  * page — there is nothing to keep in sync with .tokens-debug.
  */
@@ -63,9 +63,10 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 <article class="article promises-debug">
   <h1>Component promises</h1>
 
-  <p class="dev-banner">
-    <strong>Debug page — not shipped.</strong> Emitted only under <code>astro dev</code>;
-    <code>npm run build</code> produces no HTML for it.
+  <p class="page-note">
+    <strong>Read at build time.</strong> Every number below comes from scanning
+    <code>component-tokens.css</code> and the component sources when this site was built — a
+    snapshot of that checkout, not a live read.
   </p>
 
   <p class="lede">
@@ -75,13 +76,12 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   </p>
 
   <p class="why">
-    The three existing views each see one half of this. The token graph&rsquo;s
+    The other two views each see one half of this. The token graph&rsquo;s
     <b>orphan hooks</b> check knows a token is unread but reports a flat list of names with no
     owner, so six tokens describing one component&rsquo;s missing user block read as six unrelated
-    findings. The shipped <b>Theming surface</b> table on every component page is built from what
-    the component <em>reads</em> — by construction it can only show hooks that are delivered, so an
-    over-promised token is invisible on the exact page where the promise is published. And the
-    tier-3 <b>naming audit</b> scores the names, indifferent to whether anything reads them.
+    findings. The <b>Theming surface</b> table on every component page is built from what the
+    component <em>reads</em> — by construction it can only show hooks that are delivered, so an
+    over-promised token is invisible on the exact page where the promise is published.
   </p>
 
   <div class="tally">
@@ -354,10 +354,22 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
   <Section id="adhoc" title="Under-promise — read, declared nowhere">
     <p>
       The inverse failure. These hooks <em>work</em> — the component reads them with an inline
-      fallback, and <code>SPEC.md</code> permits the pattern — but no token file declares them, so
-      nothing outside the component&rsquo;s own source records that they exist. They show on the
-      component&rsquo;s Theming surface table as tier <code>ad-hoc</code>; they do not show in
-      <code>component-tokens.css</code>, which is where a spoke author looks first.
+      fallback — but no token file declares them, so nothing outside the component&rsquo;s own
+      source records that they exist. They show on the component&rsquo;s Theming surface table as
+      tier <code>ad-hoc</code>; they do not show in <code>component-tokens.css</code>, which is
+      where a spoke author looks first.
+    </p>
+    <p>
+      This panel used to add &ldquo;and <code>SPEC.md</code> permits the pattern&rdquo;. It does
+      not. Its only mention of ad-hoc gives two dispositions and no third — <em>promote into
+      <code>component-tokens.css</code>, or fold away</em> — and reading a permission into that
+      turned a missing declaration into a fourth tier. There are three. An undeclared read is a
+      tier-3 token that never got its line written.
+    </p>
+    <p>
+      <strong>Empty is the expected state.</strong> The 30 that stood here were resolved on
+      2026-08-16 (9 declared, 24 folded). A row below means someone has added an undeclared read
+      since — it wants one of the same two answers, not a third.
     </p>
     {adHoc.map((g) => (
       <details class="ns">
@@ -402,13 +414,14 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 </article>
 
 <style is:inline>
-  /* Page-scoped styles are normally banned in this system — allowed here only
-     because this page is debug-only and never ships. Namespaced under
-     .promises-debug for the same reason .tokens-debug is: is:inline is unscoped. */
-  .promises-debug .dev-banner {
-    border: 1px dashed var(--color-content-utility-warning, #ab6400);
-    background: var(--color-background-utility-warning-subtle, #fffbeb);
-    color: var(--color-content-default, #111);
+  /* Page-scoped styles are normally banned in this system. This view is the
+     exception: it renders the token graph itself, so there is no component to
+     lift the styling into. Namespaced under .promises-debug for the same reason
+     .tokens-debug is: is:inline is unscoped. */
+  .promises-debug .page-note {
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
+    background: var(--color-background-elevation-sunken, #fafafa);
+    color: var(--color-content-default-secondary, #525252);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-md, 0.5rem);
     font-size: 0.9rem;

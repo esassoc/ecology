@@ -163,10 +163,13 @@ export class EsaDialog extends LitElement {
       --_dialog-border-radius: var(--radius-lg, 0.75rem);
       --_dialog-padding: var(--spacing-500, 1.5rem);
       --_dialog-header-border: var(--color-border-default-subtle, #d9d9d9);
-      /* Optional header/footer surface tints — a spoke fills these to frame the
-         body; default transparent leaves existing consumers unchanged. */
-      --_dialog-header-bg: var(--dialog-header-bg, transparent);
-      --_dialog-footer-bg: var(--dialog-footer-bg, transparent);
+      /* Header/footer surface tints. These were --dialog-header-bg /
+         --dialog-footer-bg, declared in no token file — a hook offered on the
+         strength of a fallback nobody had asked to override. Folded to their
+         literal default 2026-08-16; --dialog-* is a live namespace, so they come
+         back as declarations the day a spoke actually wants to frame the body. */
+      --_dialog-header-bg: transparent;
+      --_dialog-footer-bg: transparent;
       --_dialog-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       --_dialog-width: var(--dialog-width, 480px);
       --_dialog-max-height: 85vh;
@@ -281,6 +284,16 @@ export class EsaDialog extends LitElement {
       flex-shrink: 0;
     }
     .esa-dialog__footer:not(:has(*)) { display: none; }
+
+    /* FORCED COLORS. The panel's only edge is --_dialog-shadow, and box-shadow is
+       forced to 'none' in this mode — without a border the dialog and the page
+       behind it become one undifferentiated Canvas. Scoped to the query rather
+       than shipping a transparent border unconditionally because .esa-dialog is
+       content-box with a fixed width, so an unconditional border would push it
+       2px past 'max-width: 100vw' at every size. */
+    @media (forced-colors: active) {
+      .esa-dialog { border: 1px solid CanvasText; }
+    }
   `,
   ];
 }

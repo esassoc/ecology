@@ -693,9 +693,9 @@ export class EsaSelect extends LitElement {
                         @click=${() => this.selectOption(option)}
                         @mouseenter=${() => (this._active = i)}
                       >
-                        ${this.multiple
-                          ? html`<span class="check ${selected ? 'check--selected' : ''}">${this.checkIcon()}</span>`
-                          : null}
+                        <span class="check ${selected ? 'check--selected' : ''}"
+                          >${this.checkIcon()}</span
+                        >
                         <span class="option__label">${option.label}</span>
                       </div>`;
                     })}
@@ -1087,6 +1087,35 @@ export class EsaSelect extends LitElement {
     .field--error .input:focus {
       box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+    }
+
+    /* FORCED COLORS. Three of this listbox's states are backgrounds and nothing
+       else — :hover, --active (the keyboard cursor) and --selected — so all three
+       collapse onto Canvas together and the list reads as inert.
+
+       They are given DIFFERENT channels rather than different colours, because
+       the two states can coexist on one row: --selected takes the Highlight fill,
+       --active takes an inset outline. An inset outline is used so the cursor
+       does not enlarge the row or clip against the panel edge.
+
+       This also repairs a normal-mode bug. '.option--selected' is declared after
+       '.option--active' at equal specificity, so today the keyboard cursor simply
+       vanishes when it lands on the selected row. Here they compose. */
+    @media (forced-colors: active) {
+      .option--active {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+      .option--selected {
+        background: Highlight;
+        color: HighlightText;
+      }
+      /* The tick declares its own brand colour, which would survive as a
+         force-adjusted value and could land on top of the Highlight fill. It
+         must follow the row instead. Its opacity 0/1 toggle needs no help —
+         opacity is not force-adjusted. */
+      .check { color: inherit; }
+      .option--disabled { color: GrayText; }
     }
   `,
   ];

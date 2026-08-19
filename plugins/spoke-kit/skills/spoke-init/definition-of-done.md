@@ -48,13 +48,33 @@ Applies to composed pages under `src/pages/**` (the app/prototype pages — NOT
 ## Theme reviewed
 - [ ] `theme-<slug>.css` re-points were **reviewed by a human**.
 - [ ] If a source repo was given: the primitive-ramp divergence, the
-      feedback/AI re-points, the form radius/height deltas, and `--button-on-warning`
-      were each addressed (see `brand-extraction.md` (a)/(d)/(e)/(f)).
+      feedback/AI re-points, the control-radius delta (`--radius-*`, plus
+      `--button-radius-*` if buttons diverge from fields), and
+      `--button-on-warning` were each addressed
+      (see `brand-extraction.md` (a)/(d)/(e)/(f)). There is no control-HEIGHT
+      delta to address — that lever was removed; see (e).
+- [ ] **No deleted tier-3 names are declared.** `npm run doctor` fails on this
+      rather than warning, as of 2026-08-16. A declaration of a removed token is
+      inert and silent, so the guard is the only thing that catches it.
 - [ ] No leftover `/* __FILL__ */` markers or `__PLACEHOLDER__` tokens remain in
       any file (grep the repo for both).
-- [ ] **Contrast audit**: `node ../ecology/scripts/check-contrast.mjs` — no AA
-      text-pair failures (warnings reviewed and either fixed or accepted with
-      a reason).
+- [ ] **Contrast audit, BOTH SCHEMES**:
+      `node ../ecology/scripts/check-contrast.mjs` and
+      `node ../ecology/scripts/check-contrast.mjs src/styles/theme-<slug>.css --scheme dark`
+      — no AA text-pair failures in either (warnings reviewed and either fixed or
+      accepted with a reason). The dark run is new as of 2026-08-16 and it is not
+      optional: without `--scheme dark` a theme file holding both blocks gets swept
+      flat, the dark block wins on last-one-wins, and the audit grades dark values
+      under a header that says nothing about it. The hub's own dark block had never
+      been audited at all — it fails 5 pairs.
+- [ ] **The eight `--color-content-on-*` foregrounds are declared.** They are all
+      `fail`-level rows, and a hand-filled theme has historically declared none of
+      them. If the theme came from a recipe this is automatic; if it was hand-filled,
+      check it explicitly — a missing one leaves the hub's foreground, chosen against
+      the hub's grass ramp, sitting on your brand.
+- [ ] **The recipe is committed.** If the theme was generated, `theme-<slug>.json`
+      sits beside the CSS. Without it the theme cannot be regenerated and the next
+      person hand-edits the generated file, which the following regeneration reverts.
 - [ ] **Adherence audit**: `node ../ecology/scripts/check-adherence.mjs` —
       **0 errors** (undefined tokens, banned `border-left`, sub-floor type,
       hand-rolled `<input>/<select>/<textarea>`). Warnings (hardcoded color,

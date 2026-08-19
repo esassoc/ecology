@@ -1,0 +1,417 @@
+---
+/**
+ * FOCUS AUDIT — a scratch page, not a doc page.
+ *
+ * Built 2026-08-16 to answer "the focus ring seems glitchy in some components"
+ * by putting every suspect state on one screen. It CHANGES NOTHING: every
+ * component below is the real shipped component, and the only CSS this file
+ * writes is page furniture (cards, grid, labels). No component is re-styled and
+ * no token is overridden, so what you see here is what a spoke gets.
+ *
+ * Delete this file once the findings are triaged — it is not linked from the
+ * nav and is not part of the documented surface.
+ */
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import EsaBreadcrumbs from '@esa/ecology/esa-breadcrumbs.astro';
+import Collapsible from '@esa/ecology/esa-collapsible.astro';
+import EsaLinkColumn from '@esa/ecology/esa-link-column.astro';
+
+// Finding 1 — the token table the /foundations/focus page publishes, checked
+// against what the packages actually declare. `declared` is asserted here and
+// PROVEN at runtime by the probe script at the bottom, which reads the computed
+// value off :root; do not trust this column on its own.
+const claimedTokens = [
+  { token: '--focus-ring-color', maps: '--color-border-default-focus', declared: true },
+  { token: '--focus-ring-width', maps: '--border-width-focus', declared: true },
+  { token: '--focus-ring-offset', maps: '2px literal', declared: true },
+  { token: '--focus-ring-halo', maps: '--color-border-default-focus-halo', declared: false },
+  { token: '--focus-ring-halo-spread', maps: 'derived', declared: false },
+];
+
+// Finding 2 — every component whose error state ADDS a box-shadow ring without
+// resetting the outline the base focus rule already painted.
+const doubleRing = [
+  { file: 'esa-text-field.ts', base: '412 · .control:focus-within', err: '483 · .field--error .control:focus-within', shadow: '--form-error-border-color' },
+  { file: 'esa-textarea.ts', base: '336 · .input:focus', err: '362 · .field--error .input:focus', shadow: '--form-error-border-color' },
+  { file: 'esa-input-tag.ts', base: '587 · .container:focus-within', err: '612 · .field--error .container:focus-within', shadow: '--form-error-border-color' },
+  { file: 'esa-select.ts', base: '854 · .input:focus', err: '1016 · .field--error .input:focus', shadow: '--color-border-utility-danger' },
+  { file: 'esa-combobox.ts', base: '820 · .input:focus', err: '1131 · .field--error .input:focus', shadow: '--color-border-utility-danger' },
+  { file: 'esa-date-picker.ts', base: '334 · .input:focus', err: '363 · .field--error .input:focus', shadow: '--color-border-utility-danger' },
+];
+
+// Finding 4 — every outline-offset in the kit, grouped by the value it uses.
+const offsets = [
+  { value: 'var(--focus-ring-offset)', count: 39, sites: 'the house shape — button, checkbox, radio, switch, tabs, dialogs, all six form fields, …', verdict: 'correct' },
+  { value: 'calc(var(--focus-ring-offset) * -1)', count: 4, sites: 'esa-entity-search.ts:491, esa-command-palette.ts:301, esa-combobox.ts:985, esa-search-panel.ts:356', verdict: 'correct — an inset ring still derived from the token' },
+  { value: '-2px (hardcoded)', count: 6, sites: 'esa-dropdown-menu.ts:188, esa-tab-layout.ts:223, esa-command-palette.ts:355, esa-combobox.ts:1147, esa-select.ts:1036, esa-filter-dropdown.ts:614', verdict: 'deliberate inset, wrong spelling — the row above expresses the same idea through the token' },
+  { value: '1px (hardcoded)', count: 6, sites: 'esa-select.ts:1010, esa-combobox.ts:1114, esa-input-tag.ts:678, esa-filter-pills.astro:142, esa-file-list.ts:218, esa-file-upload.ts:388', verdict: 'drift — all six are the small ✕ inside a chip or row; nothing documents 1px' },
+  { value: '2px (hardcoded)', count: 3, sites: 'esa-app-shell.astro:233, esa-app-shell.astro:248, esa-combobox.ts:891', verdict: 'drift — the token’s own value, written literally' },
+];
+---
+<DocsLayout title="Focus audit (debug)">
+  <article class="article">
+    <h1>Focus audit</h1>
+    <p class="lede">
+      Five findings from reading every focus rule in the kit — 40 components plus
+      <code>packages/tokens/src/focus.css</code> and <code>a11y.css</code>. Nothing on this page is
+      fixed; it exists so you can point at which one you were seeing.
+    </p>
+
+    <!-- ================================================================== -->
+    <section class="find">
+      <h2><span class="sev sev--p1">P1</span> 1 · The two-band ring was reverted. Three documents still describe it.</h2>
+      <p>
+        <code>/foundations/focus</code> tells you the ring is a brand band plus a near-black
+        <strong>halo</strong>, lists <strong>five</strong> tokens, and publishes a house shape for
+        component authors to copy. Three of those tokens exist. Two do not — not in
+        <code>tokens.css</code>, not in <code>component-tokens.css</code>, not in the semantic JSON.
+        Neither does the semantic role the table says the halo maps to.
+      </p>
+      <table class="tbl">
+        <thead><tr><th>Token the docs publish</th><th>Maps to</th><th>Actually declared?</th><th>Computed value on this page</th></tr></thead>
+        <tbody>
+          {claimedTokens.map((t) => (
+            <tr class={t.declared ? '' : 'row--bad'}>
+              <td><code>{t.token}</code></td>
+              <td><code>{t.maps}</code></td>
+              <td>{t.declared ? 'yes' : 'NO'}</td>
+              <td><code class="probe" data-probe={t.token}>…</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="note">
+        The last column is read at runtime with <code>getComputedStyle</code> on
+        <code>:root</code>. An empty result means the property is not declared anywhere, so any
+        <code>var()</code> reading it with no fallback drops the whole declaration.
+      </p>
+      <p>Which is what the house shape the docs hand to authors does:</p>
+      <pre class="code"><code>{`.thing:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);  /* ← paints nothing */
+}`}</code></pre>
+      <p>
+        The <code>box-shadow</code> line is invalid at computed-value time and is thrown away. It is
+        not a wrong colour, it is <em>no</em> declaration — silently, with no console warning. The
+        two live samples below are the shipped <code>esa-button</code> and a bare
+        <code>&lt;button&gt;</code> ringed by <code>focus.css</code>. Tab into them: one band, not two.
+      </p>
+      <div class="stage">
+        <EsaButton variant="primary">Tab to me</EsaButton>
+        <button class="plain">…and me</button>
+      </div>
+      <p><strong>Where the stale references live:</strong></p>
+      <ul class="files">
+        <li><code>apps/site/src/pages/foundations/focus.astro</code> — the token table (lines 10, 13), the prose at line 76, and the copyable house shape at line 89.</li>
+        <li><code>plugins/spoke-kit/skills/design-principles/SKILL.md:57</code> — <strong>this one ships to spokes.</strong> A spoke is told to re-point <code>--focus-ring-halo</code>; doing so does nothing, and the read sites carry fallbacks, so it fails silently.</li>
+        <li><code>plugins/spoke-kit/skills/accessibility/forced-colors.md:83</code> — inside a worked example.</li>
+      </ul>
+      <p class="note">
+        The revert itself is intact: <code>grep -rn 'focus-ring-halo' packages/ecology/src</code>
+        returns nothing, and the components kept the good half of that pass — every ring is now an
+        <code>outline</code> rather than a <code>box-shadow</code>, which is what makes them survive
+        forced-colors. Only the documents were left behind. The uncommitted diff is still sitting at
+        <code>focus-revert.patch</code> in the repo root. Already logged in
+        <code>docs/system-improvement-ledger.md:51</code>.
+      </p>
+    </section>
+
+    <!-- ================================================================== -->
+    <section class="find">
+      <h2><span class="sev sev--p2">P2</span> 2 · A focused error field paints two rings in two colours</h2>
+      <p>
+        The base rule paints the brand outline at <code>outline-offset: 2px</code>. The error rule
+        <em>adds</em> a red <code>box-shadow</code> at offset 0 and never resets that outline. You get
+        red border → red ring → 2px gap → brand ring, concentric.
+      </p>
+      <p class="hint">
+        <strong>Click into the right-hand field.</strong> No keyboard needed — these use
+        <code>:focus-within</code>, so a mouse click paints the ring.
+      </p>
+      <div class="grid2">
+        <div class="cell">
+          <div class="cell__cap">valid — one ring</div>
+          <esa-text-field label="Email" value="ok@esassoc.com"></esa-text-field>
+        </div>
+        <div class="cell cell--bad">
+          <div class="cell__cap">error — two rings</div>
+          <esa-text-field label="Email" value="nope" error-text="Enter a valid address"></esa-text-field>
+        </div>
+
+        <div class="cell">
+          <div class="cell__cap">valid — one ring</div>
+          <esa-textarea label="Notes"></esa-textarea>
+        </div>
+        <div class="cell cell--bad">
+          <div class="cell__cap">error — two rings</div>
+          <esa-textarea label="Notes" error-text="Required"></esa-textarea>
+        </div>
+
+        <div class="cell">
+          <div class="cell__cap">valid — one ring</div>
+          <esa-date-picker label="Start date"></esa-date-picker>
+        </div>
+        <div class="cell cell--bad">
+          <div class="cell__cap">error — two rings</div>
+          <esa-date-picker label="Start date" error-text="Required"></esa-date-picker>
+        </div>
+      </div>
+      <p>Same shape in all six form components:</p>
+      <table class="tbl">
+        <thead><tr><th>Component</th><th>Base rule (paints the outline)</th><th>Error rule (adds the shadow)</th><th>Shadow colour</th></tr></thead>
+        <tbody>
+          {doubleRing.map((d) => (
+            <tr>
+              <td><code>{d.file}</code></td>
+              <td><code>{d.base}</code></td>
+              <td><code>{d.err}</code></td>
+              <td><code>{d.shadow}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="note">
+        Two separate problems in one table. The doubling is the first. The second is the
+        <strong>colour column</strong>: three components use <code>--form-error-border-color</code>
+        (a solid red) and three use <code>--color-border-utility-danger</code> with a
+        <em>translucent</em> literal fallback, <code>rgba(211, 47, 47, 0.25)</code>. Where the token
+        resolves they agree; where it does not, three fields ring solid red and three ring a faint
+        smear.
+      </p>
+    </section>
+
+    <!-- ================================================================== -->
+    <section class="find">
+      <h2><span class="sev sev--p2">P2</span> 3 · Three components have no ring of their own</h2>
+      <p>
+        They look right <em>here</em> because this docs site imports
+        <code>@esa/tokens/focus.css</code>, which rings every
+        <code>a, button, summary, input, select, textarea, [tabindex]</code> in the light DOM. A
+        spoke whose <code>BaseLayout</code> does not import it gets the browser default in these
+        three and the house ring everywhere else.
+      </p>
+      <p class="hint">
+        <strong>Tab through the row below</strong>, then flip the switch and Tab through it again.
+        The switch appends one stylesheet that neutralises <code>focus.css</code> — it simulates a
+        spoke that never imported it. It changes nothing on disk.
+      </p>
+      <label class="toggle">
+        <input type="checkbox" id="kill-focus" />
+        <span>Simulate a spoke without <code>focus.css</code></span>
+      </label>
+      <div class="stage stage--col">
+        <EsaBreadcrumbs items={[{ label: 'Home', href: '#' }, { label: 'Projects', href: '#' }, { label: 'Current' }]} />
+        <Collapsible title="esa-collapsible — a native summary, no focus rule">
+          <p>The <code>&lt;summary&gt;</code> above is the focusable element.</p>
+        </Collapsible>
+        <EsaLinkColumn heading="esa-link-column" href="#" links={[{ label: 'First link', href: '#' }, { label: 'Second link', href: '#' }]} />
+        <div class="ctl">
+          <EsaButton variant="secondary">esa-button — has its own rule (control)</EsaButton>
+        </div>
+      </div>
+      <p class="note">
+        <code>esa-nav-dropdown</code> and <code>esa-button-group</code> also have no focus rule and
+        are <strong>fine</strong> — their focusable element is an <code>esa-button</code>, which
+        brings its own. <code>esa-icon-button</code> and <code>esa-icon-link</code> likewise: both
+        are deprecated shims over <code>esa-button</code>.
+      </p>
+    </section>
+
+    <!-- ================================================================== -->
+    <section class="find">
+      <h2><span class="sev sev--p3">P3</span> 4 · Fifteen rings ignore <code>--focus-ring-offset</code></h2>
+      <p>
+        A spoke re-pointing the token moves <strong>43</strong> rings and misses <strong>15</strong>.
+        Six of the misses are a deliberate inset written the long way; nine are plain drift.
+      </p>
+      <table class="tbl">
+        <thead><tr><th>Offset written</th><th>Rules</th><th>Where</th><th>Read</th></tr></thead>
+        <tbody>
+          {offsets.map((o) => (
+            <tr class={o.verdict.startsWith('drift') ? 'row--bad' : ''}>
+              <td><code>{o.value}</code></td>
+              <td>{o.count}</td>
+              <td class="cell-sites">{o.sites}</td>
+              <td>{o.verdict}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="hint">
+        <strong>Tab across this row</strong> — the gap between the button and its ring changes on the
+        remove buttons. Both are shipped components at their real sizes.
+      </p>
+      <div class="stage">
+        <EsaButton variant="secondary" size="sm">2px offset (token)</EsaButton>
+        <esa-input-tag label="" placeholder="add a tag, then Tab to its ✕"></esa-input-tag>
+      </div>
+      <p class="note">
+        The <code>-2px</code> insets are defensible: those six rows run edge-to-edge inside an
+        <code>overflow: hidden</code> panel, so an outward ring would be clipped. The problem is that
+        the kit already has a spelling for that —
+        <code>calc(var(--focus-ring-offset) * -1)</code>, used by <code>esa-search-panel</code>,
+        <code>esa-command-palette</code>'s search box, <code>esa-combobox</code> and
+        <code>esa-entity-search</code>. Two spellings for one idea, in the same two files in two
+        places (<code>esa-combobox</code> writes it both ways, at lines 985 and 1147).
+      </p>
+    </section>
+
+    <!-- ================================================================== -->
+    <section class="find">
+      <h2><span class="sev sev--p3">P3</span> 5 · <code>esa-app-shell</code> rings from a fill role</h2>
+      <p>
+        Lines 233 and 248 paint <code>2px solid var(--color-background-brand)</code> — the solid
+        <em>fill</em> role, not <code>--focus-ring-color</code>. They are also the only two focus
+        rules in the kit with no <code>--focus-ring-width</code>.
+      </p>
+      <p class="note">
+        <strong>Nothing to see on screen today, and that is the point.</strong>
+        <code>--color-border-default-focus</code> is declared as
+        <code>var(--color-background-brand)</code>, so the two resolve identically in every theme
+        the hub ships — including <code>beacon</code> and <code>qanat</code>, which move the brand
+        and take the ring with it. This only becomes visible for a spoke that re-points
+        <code>--color-border-default-focus</code> on its own, which is exactly the escape hatch a
+        brand with a low-contrast fill needs. Discipline, not a live defect — the probe below shows
+        both values resolving the same right now.
+      </p>
+      <table class="tbl">
+        <thead><tr><th>Token</th><th>Computed on this page</th></tr></thead>
+        <tbody>
+          <tr><td><code>--color-background-brand</code></td><td><code class="probe" data-probe="--color-background-brand">…</code></td></tr>
+          <tr><td><code>--color-border-default-focus</code></td><td><code class="probe" data-probe="--color-border-default-focus">…</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================================================================== -->
+    <section class="find find--clear">
+      <h2>Checked and clear</h2>
+      <ul class="files">
+        <li><strong>The revert is complete in component code.</strong> No component references a halo token.</li>
+        <li><strong>No component paints its ring with <code>box-shadow</code> alone.</strong> The ledger's "14 components" note describes the state <em>before</em> the same pass; all 14 now lead with <code>outline</code>, which is what survives forced-colors. <code>check-a11y</code> check 9 holds the line.</li>
+        <li><strong>The <code>:focus</code> / <code>:focus-visible</code> / <code>:focus-within</code> split is consistent</strong> and matches what <code>/foundations/focus</code> documents: <code>:focus-within</code> on text-entry wrappers, bare <code>:focus</code> only in <code>esa-error-summary</code>, <code>:focus-visible</code> everywhere else.</li>
+        <li><strong>No clipped rings found.</strong> Every rule inside an <code>overflow: hidden</code> or scrolling container already uses a negative or zero offset. If you saw a ring cut in half, tell me which component — I could not reproduce it by reading.</li>
+      </ul>
+    </section>
+  </article>
+</DocsLayout>
+
+<style>
+  .lede { font-size: var(--font-size-400, 1.125rem); color: var(--color-content-default-secondary, #525252); max-width: 64ch; }
+  .find { margin-block: var(--spacing-700, 2.5rem); padding-block-start: var(--spacing-500, 1.5rem); border-block-start: 1px solid var(--color-border-default, #e5e5e5); }
+  .find h2 { display: flex; align-items: baseline; gap: var(--spacing-300, 0.75rem); line-height: 1.35; }
+  .find--clear { opacity: 0.85; }
+  .sev {
+    flex: none; font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+    padding: 2px var(--spacing-200, 0.5rem); border-radius: var(--radius-xs, 3px);
+    color: var(--color-content-default-knockout, #fff);
+  }
+  .sev--p1 { background: var(--color-background-utility-danger, #e5484d); }
+  .sev--p2 { background: var(--color-background-utility-warning, #ffb224); color: var(--color-content-default, #202020); }
+  .sev--p3 { background: var(--color-border-default-strong, #8d8d8d); }
+
+  .stage {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-500, 1.5rem);
+    padding: var(--spacing-600, 2rem);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
+    border-radius: var(--radius-md, 0.5rem);
+    margin-block: var(--spacing-400, 1rem);
+  }
+  .stage--col { flex-direction: column; align-items: stretch; }
+  .ctl { align-self: flex-start; }
+  /* A bare button so the light-DOM focus.css rule is what rings it — deliberately
+     NOT styled with a focus rule of its own. */
+  .plain {
+    font: inherit; cursor: pointer;
+    padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
+    border: 1px solid var(--color-border-default, #e5e5e5);
+    border-radius: var(--radius-md, 0.5rem);
+    background: var(--color-background-elevation-raised, #fff);
+    color: var(--color-content-default, #202020);
+  }
+
+  .grid2 {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--spacing-400, 1rem);
+    padding: var(--spacing-500, 1.5rem);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
+    border-radius: var(--radius-md, 0.5rem);
+    margin-block: var(--spacing-400, 1rem);
+  }
+  .cell {
+    padding: var(--spacing-400, 1rem);
+    background: var(--color-background-elevation-raised, #fff);
+    border-radius: var(--radius-sm, 0.25rem);
+  }
+  .cell--bad { box-shadow: inset 0 0 0 1px var(--color-border-utility-danger, #e5484d); }
+  .cell__cap {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--color-content-default-secondary, #646464);
+    margin-block-end: var(--spacing-300, 0.75rem);
+  }
+
+  .tbl { width: 100%; border-collapse: collapse; margin-block: var(--spacing-400, 1rem); font-size: var(--font-size-200, 0.875rem); }
+  .tbl th, .tbl td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-default, #e5e5e5); vertical-align: top; }
+  .tbl th { color: var(--color-content-default-secondary, #525252); font-weight: var(--typography-font-weight-semibold, 550); }
+  .row--bad td:first-child { box-shadow: inset 3px 0 0 var(--color-background-utility-danger, #e5484d); }
+  .cell-sites { max-width: 32ch; }
+  .probe:empty::after { content: '(empty — not declared)'; color: var(--color-content-utility-danger, #ce2c31); }
+
+  .code {
+    padding: var(--spacing-400, 1rem);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
+    border-radius: var(--radius-md, 0.5rem);
+    overflow-x: auto;
+    font-size: var(--font-size-200, 0.875rem);
+  }
+  .files li, .find > p { max-width: 72ch; }
+  .files li { margin-block-end: var(--spacing-250, 0.625rem); line-height: var(--line-height-relaxed, 1.7); }
+  .note {
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border-inline-start: 2px solid var(--color-border-default, #e5e5e5);
+    color: var(--color-content-default-secondary, #525252);
+    max-width: 72ch;
+  }
+  .hint {
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    background: var(--color-background-utility-info-subtle, #f0f7ff);
+    border-radius: var(--radius-sm, 0.25rem);
+    max-width: 72ch;
+  }
+  .toggle { display: inline-flex; align-items: center; gap: var(--spacing-250, 0.625rem); cursor: pointer; }
+</style>
+
+<script>
+  import '@esa/ecology/esa-text-field';
+  import '@esa/ecology/esa-textarea';
+  import '@esa/ecology/esa-date-picker';
+  import '@esa/ecology/esa-input-tag';
+
+  // Read each claimed token off :root. getPropertyValue returns '' for a custom
+  // property that was never declared, which is the whole proof — an empty string
+  // is not "transparent" or "0", it is "this var() has nothing to resolve to and
+  // the declaration reading it is dropped".
+  const root = getComputedStyle(document.documentElement);
+  document.querySelectorAll<HTMLElement>('.probe').forEach((el) => {
+    el.textContent = root.getPropertyValue(el.dataset.probe!).trim();
+  });
+
+  // Append a sheet that reverts focus.css's zero-specificity rules to the UA
+  // default. Appended to <head> last so it wins on order at equal specificity;
+  // `revert` (not `none`) is what restores the browser's own ring, which is
+  // exactly what a spoke missing focus.css sees.
+  const kill = document.createElement('style');
+  kill.textContent = `
+    :where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+      outline: revert; outline-offset: revert; border-radius: revert;
+    }
+    :where(a, button, summary, input, select, textarea, [tabindex]):focus:not(:focus-visible) {
+      outline: revert;
+    }`;
+  document.getElementById('kill-focus')?.addEventListener('change', (e) => {
+    if ((e.target as HTMLInputElement).checked) document.head.appendChild(kill);
+    else kill.remove();
+  });
+</script>

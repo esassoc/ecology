@@ -13,6 +13,7 @@ const describe = {
   variant: "Color intent — drives background, text, and border.",
   size: "Pill height and text size.",
   removable: "Shows a remove (×) button.",
+  category: "Project vocabulary this pill labels — emits data-category for a spoke-defined color ramp. See Custom colors.",
 };
 
 const slots = [
@@ -78,6 +79,85 @@ const events = [
     </Preview>
   </Section>
 
+  <Section id="custom-colors" title="Custom colors">
+    <p>
+      <code>variant</code> covers the six <strong>system intents</strong> and is deliberately closed —
+      <code>success</code> means succeeded, not "green". A project's own vocabulary is an open set the
+      hub can't enumerate: permit types, survey stages, species, funding sources. That's what
+      <code>category</code> is for.
+    </p>
+    <p>
+      Pass a category name and the pill emits <code>data-category</code>. Your theme scopes a
+      three-step ramp to that name; the pill reads steps <strong>2 / 6 / 11</strong> for fill, border and
+      text — the same triple every built-in variant uses, so your category renders as a native member
+      of the set rather than a foreign object.
+    </p>
+    <p>
+      <strong>Pick a scale, don't pick colors.</strong> The hub already ships eleven full Radix scales
+      as tier-1 primitives, twelve steps each. Point the three names at one of them and you're done —
+      no hex anywhere:
+    </p>
+    <Preview code={`<Pill label="Permit expired" category="permit-expired" removable={false} />
+<Pill label="Awaiting survey" category="awaiting-survey" removable={false} />
+
+/* in your <project>-theme.css — one block per category */
+[data-category="permit-expired"] {
+  --category-2:  var(--color-teal-2);
+  --category-6:  var(--color-teal-6);
+  --category-11: var(--color-teal-11);
+}`}>
+      <Pill label="Permit expired" category="permit-expired" removable={false} />
+      <Pill label="Awaiting survey" category="awaiting-survey" removable={false} />
+      <Pill label="Prescribed burn" category="prescribed-burn" removable={false} />
+    </Preview>
+    <p>
+      <strong>Start with <code>teal</code>, <code>gold</code> or <code>green</code>.</strong> Those three
+      are the scales no semantic role has claimed, so they carry no borrowed meaning. The other eight —
+      <code>grass</code>, <code>blue</code>, <code>lime</code>, <code>yellow</code>, <code>red</code>,
+      <code>orange</code>, <code>copper</code>, <code>gray</code> — already back brand, info, success,
+      warning and danger. Reusing one makes a category look like a status it isn't, which is worse than
+      leaving it neutral.
+    </p>
+    <p>
+      Two rungs down from there, in order. <strong>Need a hue we don't ship?</strong>
+      <code>@radix-ui/colors</code> is already a dependency and carries all thirty scales —
+      <code>@import '@radix-ui/colors/purple.css'</code> in your theme, then point at
+      <code>--purple-2/6/11</code>. <strong>Need a brand color that isn't a Radix hue at all?</strong>
+      Only then reach for
+      <a href="https://www.radix-ui.com/colors/custom" rel="external">radix-ui.com/colors/custom</a>,
+      which fits your color to a 12-step perceptual scale; copy steps 2, 6 and 11 and rename the
+      <code>--accent-</code> prefix.
+    </p>
+    <p>
+      All three rungs exist to avoid the same thing: a fill and a text color chosen independently. That
+      is how dark purple ends up on near-black, and nothing in the build will tell you.
+    </p>
+    <p>
+      <strong>Know where the line is.</strong> Step 11 is tuned to APCA, not WCAG 2, so on step 2 it
+      sits <em>at</em> the AA boundary rather than above it. Measured across all nine Radix scales the
+      hub ships: <code>gold</code> 5.60, <code>red</code> 4.94, <code>grass</code> 4.82,
+      <code>lime</code> 4.56, <code>blue</code> 4.53 — then <code>green</code> 4.49,
+      <code>yellow</code> 4.42, <code>teal</code> 4.34 and <code>orange</code> 4.25, all under 4.5:1.
+      Four of nine miss AA for normal text, and the rest pass by a hair.
+    </p>
+    <p>
+      This is a property of the scale, not of this mechanism — the built-in <code>warning</code> variant
+      measures 4.43 and always has. <strong>Step 12 clears AA on every scale at 10:1 or better</strong>,
+      so a category carrying real weight should point <code>--category-11</code> at step 12 instead; the
+      cost is a visibly darker label than the semantic pills beside it. Which step the system settles on
+      is a question for the contrast pass, not one to answer per component.
+    </p>
+    <p>
+      The three <code>--category-*</code> names are <strong>not hub tokens</strong> — your theme
+      declares them, the component reads them, which is the inverse of every other token in the kit.
+      That's deliberate: the mechanism is the hub's, the vocabulary is your project's. The
+      <em>values</em> you point them at should still be hub tokens, which is the whole argument above.
+      A category with no ramp defined, or a typo in the name, falls back to the default pill rather
+      than losing the declaration; and because the ramp arrives as one block, fill and text can't be
+      set independently.
+    </p>
+  </Section>
+
   <Section id="api" title="API">
     <ApiTable slug="esa-pill" describe={describe} />
     <h3 style="margin-top: 1.5rem;">Slots</h3>
@@ -95,3 +175,21 @@ const events = [
   </Section>
 
 </ComponentDoc>
+
+<!-- The three demo ramps for the Custom colors section. This stands in for a
+     spoke's <project>-theme.css, which is where these belong in real use — the hub
+     ships no --category-* token and this page is the one place in the repo that
+     declares any.
+
+     THE THREE UNCLAIMED SCALES, on purpose: teal, gold and green are the ones no
+     semantic role references, so the demo is also the recommendation. These were
+     pasted Radix hexes until the section was rewritten to lead with the shipped
+     scales — a docs page arguing "point at a hub token, never a hex" while itself
+     holding nine hexes teaches the hexes. `is:global` because Astro would
+     otherwise scope these to this page's own elements and they would never reach
+     the pill's [data-category] rule. -->
+<style is:global>
+  [data-category="permit-expired"]  { --category-2: var(--color-teal-2);  --category-6: var(--color-teal-6);  --category-11: var(--color-teal-11); }
+  [data-category="awaiting-survey"] { --category-2: var(--color-gold-2);  --category-6: var(--color-gold-6);  --category-11: var(--color-gold-11); }
+  [data-category="prescribed-burn"] { --category-2: var(--color-green-2); --category-6: var(--color-green-6); --category-11: var(--color-green-11); }
+</style>

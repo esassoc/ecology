@@ -402,8 +402,16 @@ export class EsaInputTag extends LitElement {
       .join(' ');
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
+        <!-- for="input" is load-bearing, not tidiness. Without it this label named
+             nothing and the browser fell through to the PLACEHOLDER: measured
+             2026-08-16, the visible label read "Tags" while the accessible name was
+             "Add a tag". That fails SC 2.5.3 Label in Name — a speech-control user
+             saying "click Tags" matches nothing. It also makes the label clickable,
+             which no aria-label ever does. The IDREF is safe because both nodes are
+             in this same shadow root; it is the light-DOM-to-shadow direction that
+             cannot cross. -->
         ${this.label
-          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
+          ? html`<label for="input" class="field__label typography-${LABEL_TYPE[this.size]}">
               ${this.label}${this.required ? html`<span class="field__required" aria-hidden="true">*</span>` : null}
             </label>`
           : null}
@@ -412,6 +420,7 @@ export class EsaInputTag extends LitElement {
           <div class="chips">
             ${this.tagsBelow ? null : this.renderChips()}
             <input
+              id="input"
               class="input typography-${FIELD_TYPE[this.size]}"
               type="text"
               role="combobox"

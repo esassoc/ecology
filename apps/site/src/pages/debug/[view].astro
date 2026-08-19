@@ -1,17 +1,18 @@
 ---
 /**
- * DEBUG-ONLY explorer. NOT SHIPPED.
+ * Token/component explorer. SHIPPED — both views are emitted by `npm run build`.
  *
- * This is a dynamic route whose getStaticPaths returns ZERO paths in a
- * production build, so `npm run build` emits no HTML for it at all — the pages
- * exist only under `astro dev`. That is the whole reason for the [view] param:
- * a static `tokens.astro` would always be built. Every debug view routes
- * through here to inherit that guarantee — adding a `foo.astro` beside this
- * file would ship it. Delete this directory (and src/data/token-graph.ts,
- * src/data/component-promises.ts) when the refinement work it supports is done.
+ * This used to be a dev-only route: getStaticPaths returned zero paths in a
+ * production build, which is why every view lives behind the [view] param
+ * rather than as its own `tokens.astro`. It now returns both paths in every
+ * mode, so anything added to VIEWS ships.
  *
  *   /debug/tokens      the three-tier graph + health checks
  *   /debug/components  the tier-3 surface as a promise, checked against delivery
+ *
+ * Both views read the repo off disk at BUILD time (src/data/token-graph.ts,
+ * src/data/component-promises.ts) — fine for a static build, but it means the
+ * output is a snapshot of the checkout that built it.
  */
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import Section from '@esa/docs/Section.astro';
@@ -23,18 +24,23 @@ import type { TokenGroup } from '../../data/token-graph';
 const VIEWS = ['tokens', 'components'] as const;
 
 export function getStaticPaths() {
-  // Production emits nothing.
-  if (!import.meta.env.DEV) return [];
+  // The list is repeated rather than read off VIEWS above: Astro hoists this
+  // function out of the component scope and calls it before the frontmatter
+  // runs, so a module const is not defined yet ("VIEWS is not defined").
   return ['tokens', 'components'].map((view) => ({ params: { view } }));
 }
 
 const view = Astro.params.view as (typeof VIEWS)[number];
 
-// Deliberately a DYNAMIC import inside the component body, not a static one at
-// the top. A static import is evaluated whenever Astro loads this module to
-// call getStaticPaths — including in a production build, where token-graph.ts
-// would then hit the filesystem for a page that is never emitted. The body runs
-// only when a route actually renders, and in production there are none.
+// DYNAMIC imports, and they have to stay that way. Static imports let vite
+// INLINE token-graph.ts into this page's module, which moves it from
+// dist/chunks/ to dist/pages/debug/ — one directory deeper. Every module under
+// src/data/ resolves the repo root by counting four levels up from
+// import.meta.url, so the inlined copy resolves one level short and the build
+// dies with "packages/tokens/dist/tokens.css is missing". Keeping the import
+// dynamic keeps the module in its own chunk at the depth that arithmetic
+// assumes. The vite warning about a module that cannot be split out is the
+// price, and it is only a warning.
 const {
   tierCounts,
   primitiveGroups,
@@ -60,9 +66,9 @@ const {
   READ_SCAN_EXEMPT,
 } = await import('../../data/token-graph');
 
+// tier2-naming also supplies the CATEGORY/property grouping the semantic
+// section renders — it is not only the (now removed) naming audit.
 const t2 = await import('../../data/tier2-naming');
-const t3 = await import('../../data/tier3-naming');
-const t1 = await import('../../data/tier1-naming');
 const { unwiredSlots, leadingMismatches } = await import('../../data/composite-classes');
 
 const TIER_NOTE = {
@@ -83,11 +89,11 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   <article class="article tokens-debug">
     <h1>Token graph</h1>
 
-    <p class="dev-banner">
-      <strong>Debug page — not shipped.</strong> This route is emitted only under
-      <code>astro dev</code>; <code>npm run build</code> produces no HTML for it. Values shown are the
-      <code>:root</code> light defaults compiled into <code>@esa/tokens</code> — theme blocks are
-      deliberately excluded so you see the shipped default chain, not one theme&rsquo;s overrides.
+    <p class="page-note">
+      <strong>Read at build time.</strong> Values shown are the <code>:root</code> light defaults
+      compiled into <code>@esa/tokens</code> — theme blocks are deliberately excluded so you see the
+      shipped default chain, not one theme&rsquo;s overrides. The graph is a snapshot of the checkout
+      that built this site, not a live read.
     </p>
 
     <p class="lede">
@@ -165,7 +171,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
         { id: 'orphans', label: 'Orphan hooks (tier 2 + 3)', rows: orphans, note: 'Declared, but nothing reads it — no token, no component, and no other shipped surface (see the Scan coverage table above for exactly which files that means). Either dead surface to fold away, or a hook nobody wired up. Primitives are excluded here — see “unused ramp steps” below. Staged surfaces are excluded too — see the next check.', severity: 'warn' },
         { id: 'staged', label: 'Staged surfaces (component not built yet)', rows: stagedSurfaces, note: 'Unread because the component that will read them does not exist yet — the contract is declared first so it can be reviewed before code depends on it. Governed by STAGED_PREFIXES in token-graph.ts; each prefix must be documented in SPEC.md and have a component doc page. Removing a prefix from that list should mean the component landed, not that the finding got annoying.', severity: 'info' },
         { id: 'chrome', label: 'Chrome, exempt by decision (component EXISTS)', rows: chromeSurfaces, note: `Not staged and not dead: the component is built and these map onto real elements in it, and we are choosing not to wire them. Kept in its own bucket because --topbar-* spent months filed as "staged" — which reads as "arriving soon" — on the false premise that no component owned it. The "Where" column names the owner so that cannot recur. Governed by CHROME_EXEMPT in token-graph.ts; every entry states what a spoke loses. ${CHROME_EXEMPT.map((c) => `${c.prefix}* → ${c.owner}: ${c.cost}`).join(' ')}`, severity: 'info' },
-        { id: 'adhoc', label: 'Ad-hoc hooks — promotion candidates', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. Legitimate per SPEC.md: the component offers the hook via its fallback only. This is the working list for tier-3 surface work — promote into component-tokens.css, or fold away.', severity: 'info' },
+        { id: 'adhoc', label: 'Ad-hoc hooks — undeclared tier-3 (should be empty)', rows: adHocHooks, note: 'Declared in no token file, but always read WITH a fallback. This note used to call that legitimate per SPEC.md; the spec says the opposite, giving two dispositions and no third — promote into component-tokens.css, or fold onto the role it aliases. An undeclared read is not a fourth tier, it is a tier-3 token missing its declaration: unguarded, absent from token-names.json, invisible to any spoke that has not read the component source. Resolved to zero on 2026-08-16 (9 declared, 24 folded), so a row here is a regression rather than a backlog.', severity: 'info' },
         { id: 'unused', label: 'Unused ramp steps (tier 1)', rows: unusedRampSteps, note: 'Primitive steps nothing references. Normal — a 12-step scale is a palette, not a checklist. Useful only for spotting a whole ramp that is carried but never used.', severity: 'info' },
       ].map((check) => (
         <details class={`check ${check.severity}`} open={check.rows.length > 0 && check.severity !== 'info'}>
@@ -192,1309 +198,6 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
           )}
         </details>
       ))}
-    </Section>
-
-    <Section id="tier2-naming" title="Tier 2 · Naming audit">
-      <p>
-        Every tier-2 name measured against the 6-slot rubric. Counts here are derived from the real
-        token names at build time, not typed in — the vocabulary tables and the prose are authored,
-        because that part is judgment a parser can&rsquo;t make.
-      </p>
-
-      <div class="grammar">
-        <div>
-          <span class="grammar-label">Rubric</span>
-          <code>{t2.grammars.rubric}</code>
-        </div>
-        <div>
-          <span class="grammar-label">What we ship</span>
-          {t2.grammars.current.map((g) => <code>{g}</code>)}
-        </div>
-      </div>
-
-      <p class="cat-note">
-        Three slots where the rubric specifies six, and in the colour family slots 4 and 5 swap order
-        depending on the token. The gap is front-loaded: everything from <em>variant</em> rightward is
-        largely sound; everything to its left is missing or unstable.
-      </p>
-
-      <h3 class="sub">Slot by slot</h3>
-      <table class="findings slots">
-        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t2.slots.map((s) => (
-            <tr class={`slot-${s.status}`}>
-              <td class="slot-n">{s.n}</td>
-              <td class="slot-name">
-                {s.name}
-                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
-              </td>
-              <td><code class="spec">{s.spec}</code></td>
-              <td>{s.verdict}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slots 1–2 · no namespace, no tier signal</h3>
-      <p class="cat-note">
-        <b>{t2.prefixCollision.primitive}</b> tier-1 and <b>{t2.prefixCollision.semantic}</b> tier-2
-        tokens share the <code>--color-</code> prefix. <code>{t2.prefixCollision.example.primitive}</code>
-        and <code>{t2.prefixCollision.example.semantic}</code> are indistinguishable by name — under the
-        rubric the second would be <code>--eco-theme-color-background-brand</code>.
-      </p>
-      <p class="cat-gap">
-        <b>This has already cost you.</b> <code>token-graph.ts</code> classifies tier by
-        <em>source directory</em> because no regex on the name can do it (<code>theming.ts</code> still
-        tries the regex route). Two further costs have since been paid off. Both themes used to
-        re-point <code>--radius-200</code>, a primitive — invisible, because nothing in the name
-        announces which tier you are editing; they now re-point <code>--radius-md</code>, the
-        tier-2 role. And <code>--focus-ring-color</code> was once declared in both
-        <code>tokens/primitive/effect.json</code> and <code>src/component-tokens.css</code>, with
-        tier 3 loading last and winning; the tier-1 block was removed, so the ring lives only at
-        tier 3 now. Both read <b>0</b> under <b>Health</b> above — but the prefix collision that let
-        them happen unnoticed is still here, so the next one lands the same way.
-      </p>
-
-      <h3 class="sub">Slot 4 · the surface — biggest divergence</h3>
-      <div class="tally">
-        <div class="tally-cell t2"><b>{t2.surfaceNamed}</b><span>of {t2.colorTotal} name a surface</span></div>
-        <div class="tally-cell warn"><b>{t2.surfaceImplied}</b><span>surface implied only</span></div>
-        <div class="tally-cell ok"><b>{t2.orderRubric}</b><span>rubric order</span></div>
-        <div class="tally-cell warn"><b>{t2.orderInverted}</b><span>inverted order</span></div>
-        <div class="tally-cell"><b>{t2.orderSurfaceOnly}</b><span>surface, no variant</span></div>
-        <div class="tally-cell warn"><b>{t2.variantAsSurface}</b><span>surface as a variant word</span></div>
-      </div>
-
-      <p class="cat-note">Five words in use for the rubric&rsquo;s three surfaces:</p>
-      <table class="findings">
-        <thead><tr><th>Rubric surface</th><th>Words in use</th><th>Tokens</th></tr></thead>
-        <tbody>
-          {t2.surfaceVocabRows.map((r) => (
-            <tr>
-              <td><code>{r.rubric}</code></td>
-              <td>{r.words.map((w) => <code class="vocab">{w}</code>)}</td>
-              <td class="num">{r.count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <p class="cat-note">
-        <code>text</code> is a legal split of <code>content</code> per the rubric — but there is no
-        <code>icon</code> counterpart, so icon colour is unmanaged at tier 2. And two suffixes are
-        surfaces wearing a variant costume: <code>-strong</code> means <em>content</em> colour,
-        <code>-on-fill</code> means <em>content on that background</em>.
-      </p>
-
-      <details class="tok-group" data-group>
-        <summary>
-          <code class="group-label">Every colour token, parsed into slots</code>
-          <span class="summary-right"><span class="group-count">{t2.colorTotal}</span></span>
-        </summary>
-        <table class="tok-table parse">
-          <thead>
-            <tr><th>Token</th><th>Surface</th><th>Variant</th><th>State</th><th>Order</th><th>Notes</th></tr>
-          </thead>
-          <tbody>
-            {t2.colorRows.map((r) => (
-              <tr data-token={r.name}>
-                <td class="c-name"><code>{r.name}</code></td>
-                <td>
-                  {r.surfaceWord ? (
-                    <>
-                      <code class="vocab">{r.surfaceWord}</code>
-                      {r.surfaceWord !== r.surface && <span class="dim"> → {r.surface}</span>}
-                    </>
-                  ) : (
-                    <span class="dim">implied</span>
-                  )}
-                </td>
-                <td>{r.variant ? <code class="vocab">{r.variant}</code> : <span class="dim">—</span>}</td>
-                <td>{r.state ? <code class="vocab st">{r.state}</code> : <span class="dim">—</span>}</td>
-                <td><span class={`ord o-${r.order}`}>{r.order}</span></td>
-                <td class="notes">
-                  {r.flags.length === 0 ? <span class="dim">—</span> : r.flags.map((f) => <div>{f}</div>)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
-
-      <h3 class="sub">Slot 5 · variant — right idea, different words</h3>
-      <table class="findings">
-        <thead><tr><th>Rubric</th><th>Current</th><th></th><th>Note</th></tr></thead>
-        <tbody>
-          {t2.variantVocab.map((v) => (
-            <tr>
-              <td><code>{v.rubric}</code></td>
-              <td><code>{v.current}</code></td>
-              <td><span class={`slot-flag f-${v.status}`}>{v.status}</span></td>
-              <td>{v.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slot 6 · state — this one is already correct</h3>
-      <p class="cat-note">
-        All {t2.stateRows.length} stateful tokens put the state last, and <code>default</code> is
-        correctly omitted rather than spelled out.
-      </p>
-      <table class="findings">
-        <thead><tr><th>State</th><th>Tokens</th></tr></thead>
-        <tbody>
-          {t2.stateBreakdown.map((s) => (
-            <tr>
-              <td><code class="vocab st">{s.state}</code> <span class="num">({s.tokens.length})</span></td>
-              <td>{s.tokens.map((n) => <code class="vocab">{n}</code>)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slot 3 · which categories exist at tier 2 at all</h3>
-      <table class="findings">
-        <thead><tr><th>Category</th><th>Tokens</th><th>How it is handled today</th></tr></thead>
-        <tbody>
-          {t2.categoryRows.map((c) => (
-            <tr class={c.count === 0 ? 'row-zero' : undefined}>
-              <td><code>{c.category}</code></td>
-              <td class="num">{c.count}</td>
-              <td>{c.how}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <p class="cat-note">
-        Typography was the interesting one: the intention vocabulary existed only as CSS classes in
-        <code>typography.css</code>, which Figma cannot consume and a spoke cannot re-point by
-        overriding a token. It is now tokenised &mdash; {t2.nonColorGroups.find((g) => g.label === 'typography')?.tokens.length ?? 0} composite
-        tokens assembled from the faces and weights below them, with the classes reading the
-        composites rather than the primitives. The mapping the audit was built to measure:
-      </p>
-      <table class="findings">
-        <thead><tr><th>Rubric intention</th><th>Current</th><th></th></tr></thead>
-        <tbody>
-          {t2.compositeMapping.map((m) => (
-            <tr>
-              <td><code>{m.rubric}</code></td>
-              <td><code>{m.current}</code></td>
-              <td><span class={`slot-flag f-${m.status}`}>{m.status}</span></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-note">
-        All {t2.compositeClasses.length} classes as shipped:
-        {t2.compositeClasses.map((c) => <code class="vocab">.{c}</code>)}
-      </p>
-
-      <h3 class="sub">The non-colour tier-2 tokens</h3>
-      <p class="cat-note">
-        Colour is the only family the property-first rubric was written for. These are
-        judged on the same question — does the name say which CSS declaration it belongs
-        in — one row per family, because that is the level the claim is true at.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Family</th><th>Count</th><th>Names lead with</th><th>Property slot</th></tr></thead>
-        <tbody>
-          {t2.nonColorLeadRows().map((r) => (
-            <tr>
-              <td><code>{r.label}</code></td>
-              <td class="dim">{r.count}</td>
-              <td class="dim">{r.leads}</td>
-              <td>
-                {r.property === 'first' ? <code class="vocab">first</code>
-                : r.property === 'last' ? <code class="vocab warnv">last</code>
-                : <code class="vocab warnv">none</code>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Section>
-
-    <Section id="tier3-naming" title="Tier 3 · Naming audit">
-      <p>
-        The same exercise, one tier down. Every tier-3 name measured against the rubric&rsquo;s six
-        slots, with counts derived from the real names at build time. Two things make tier 3 read
-        differently from tier 2: the component slot is the one place this system is already
-        <em>right</em>, and the names carry a seventh concept the rubric has no slot for.
-      </p>
-
-      <div class="grammar">
-        <div>
-          <span class="grammar-label">Rubric</span>
-          <code>{t3.grammars.rubric}</code>
-        </div>
-        <div>
-          <span class="grammar-label">What we ship</span>
-          {t3.grammars.current.map((g) => <code>{g}</code>)}
-        </div>
-      </div>
-
-      <div class="tally">
-        <div class="tally-cell t3"><b>{t3.total}</b><span>tier-3 tokens</span></div>
-        <div class="tally-cell"><b>{t3.namespaceCount}</b><span>namespaces</span></div>
-        <div class="tally-cell ok"><b>{t3.total - t3.unnamespaced.length}</b><span>name a component</span></div>
-        <div class="tally-cell warn"><b>{t3.partTally.tokens}</b><span>name an internal part</span></div>
-        <div class="tally-cell"><b>{t3.stateRows.length}</b><span>stateful</span></div>
-        <div class="tally-cell warn"><b>{t3.unnamespaced.length}</b><span>unplaced</span></div>
-      </div>
-
-      <p class="cat-note">
-        The shape of the gap is the mirror image of tier 2. There, everything left of
-        <em>variant</em> was missing. Here slot 3 is solid and slots 4–5 are inverted: we write
-        <code>--button-radius-md</code> where the rubric writes
-        <code>--eco-component-button-md-radius</code>. Same information, opposite order.
-      </p>
-
-      <h3 class="sub">Slot by slot</h3>
-      <table class="findings slots">
-        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t3.slots.map((s) => (
-            <tr class={`slot-${s.status}`}>
-              <td class="slot-n">{s.n}</td>
-              <td class="slot-name">
-                {s.name}
-                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
-              </td>
-              <td><code class="spec">{s.spec}</code></td>
-              <td>{s.verdict}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slots 1–2 · where the missing tier identifier finally bites</h3>
-      <p class="cat-note">
-        At tier 2 the absent tier identifier was an argument about readability. At tier 3 it names
-        real collisions — the same prefix declaring tokens at two tiers, with nothing in the name to
-        say which one you are editing.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Prefix</th><th>At tier 1</th><th>At tier 3</th><th>Consequence</th></tr></thead>
-        <tbody>
-          {t3.tierCollisions.map((c) => (
-            <tr class={c.live ? undefined : 'row-zero'}>
-              <td>
-                <code>{c.prefix}</code>
-                <span class={`slot-flag f-${c.live ? 'absent' : 'match'}`}>{c.live ? 'live' : 'closed'}</span>
-              </td>
-              <td>{c.tier1.length ? c.tier1.map((n) => <code class="vocab">{n}</code>) : <span class="dim">none</span>}</td>
-              <td>{c.tier3.length ? c.tier3.map((n) => <code class="vocab warnv">{n}</code>) : <span class="dim">none</span>}</td>
-              <td>
-                {c.cost}
-                {c.fix && <div class="detail"><b>Closed:</b> {c.fix}</div>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-gap">
-        <b>The rubric offers a cheaper fix here than at tier 2.</b> It says the tier identifier can be
-        the <em>component prefix</em> itself — you don&rsquo;t need <code>--eco-component-</code> on all
-        {t3.total} if the component name is doing that work. Which it already is, on
-        {t3.total - t3.unnamespaced.length} of them. The remaining exposure is the
-        {t3.unnamespaced.length} that name no component at all, plus the {t3.liveCollisions} prefix
-        above that still straddles tiers.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Unplaced token</th><th>Declared under</th><th>Reads as</th></tr></thead>
-        <tbody>
-          {t3.unnamespaced.map((r) => (
-            <tr>
-              <td><code>{r.name}</code></td>
-              <td><code class="vocab">{r.owner ?? '—'}</code></td>
-              <td class="dim">
-                {r.name.startsWith('--color-')
-                  ? 'a tier-2 semantic colour role'
-                  : 'a bare CSS property with no owner'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slot 3 · component / category / special case — the one that already works</h3>
-      <p class="cat-note">
-        The rubric allows three kinds of name in this slot, and all three are in use. Reach is the
-        number of distinct components that read a namespace&rsquo;s tokens — it is what separates a
-        genuine category from a component that happens to be named oddly.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Kind</th><th>Namespaces</th><th>Tokens</th></tr></thead>
-        <tbody>
-          {t3.nsKindTally.map((k) => (
-            <tr class={k.namespaces === 0 ? 'row-zero' : undefined}>
-              <td>
-                <code>{k.kind}</code>
-                <span class={`slot-flag f-${k.kind === 'none' ? 'absent' : 'match'}`}>
-                  {k.kind === 'none' ? 'unplaced' : 'rubric-legal'}
-                </span>
-              </td>
-              <td class="num">{k.namespaces}</td>
-              <td class="num">{k.tokens}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <table class="findings">
-        <thead><tr><th>Namespace</th><th>Tokens</th><th>Reach</th><th>Why it is not a component name</th></tr></thead>
-        <tbody>
-          {t3.nsGroups.filter((g) => g.note).map((g) => (
-            <tr>
-              <td>
-                <code>{g.ns}</code>
-                <span class={`slot-flag f-${g.hasComponent ? 'match' : 'partial'}`}>{g.kind}</span>
-              </td>
-              <td class="num">{g.tokens.length}</td>
-              <td class="num">{g.reach}</td>
-              <td>{g.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-note">
-        <code>form</code> (read by {t3.nsGroups.find((g) => g.ns === 'form')?.reach} components) and
-        <code>focus-ring</code> (read by {t3.nsGroups.find((g) => g.ns === 'focus-ring')?.reach}) are
-        the rubric&rsquo;s own two examples, arrived at independently. Every other namespace has a
-        reach of one or zero, which is what a component-scoped hook should look like.
-      </p>
-      <p class="cat-gap">
-        <b>The boundary is not machine-readable.</b> Nothing in a name marks where the component ends
-        and the property begins — these parse only because the parser checks the component roster
-        longest-match-first:
-        {t3.nsAmbiguity.map((p) => (
-          <span class="pair"><code class="vocab">{p.shorter}</code> vs {p.longer.map((l) => <code class="vocab warnv">{l}</code>)}</span>
-        ))}
-        A dash-delimited slot the rubric assumes is one word is, here, one-to-three words that only a
-        roster can segment.
-      </p>
-      {t3.ownerMismatch.length > 0 && (
-        <>
-          <p class="cat-note">
-            {t3.ownerMismatch.length} tokens are named for one component but declared in another
-            block. Mostly legitimate sharing — worth listing because it shows the block comment is
-            not authoritative, the name is.
-          </p>
-          <table class="findings">
-            <thead><tr><th>Token</th><th>Named for</th><th>Declared under</th></tr></thead>
-            <tbody>
-              {t3.ownerMismatch.map((r) => (
-                <tr>
-                  <td><code>{r.name}</code></td>
-                  <td><code class="vocab">{r.ns}</code></td>
-                  <td><code class="vocab warnv">{r.owner}</code></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
-
-      <h3 class="sub">The seventh concept · the internal part</h3>
-      <p class="cat-note">
-        <b>{t3.partTally.tokens} of {t3.total}</b> tokens name a piece <em>inside</em> the component —
-        the row of a grid, the thumb of a switch, the header of a card — across
-        {t3.partTally.distinct} distinct words. The rubric has six slots and none of them is this
-        one. Under a strict reading these words land in <em>variant</em>, but a part is not a
-        variant: <code>--grid-row-bg</code> and <code>--grid-header-bg</code> are not two variants of
-        a grid, they are two different elements of the same one.
-      </p>
-      <p class="cat-gap">
-        <b>Which matters because the slot is doing double duty.</b> The same unlabelled position
-        holds parts ({t3.partTally.asPart} tokens), real variants ({t3.partTally.asVariant}) and even
-        a state ({t3.partTally.asState}) — and nothing in the name tells you which you are reading.
-        <code>--grid-row-bg</code> names a part, <code>--grid-row-stripe-bg</code> a variant of that
-        part, and <code>--app-bar-brand-bg</code> a variant of the whole component. All three look
-        the same.
-      </p>
-      {t3.partWordClash.length > 0 && (
-        <p class="cat-gap">
-          <b>And the same word can mean both.</b> {t3.partWordClash.map((c) => (
-            <span class="pair">
-              <code class="vocab warnv">{c.word}</code> is {c.readings.join(', ')}
-            </span>
-          ))} — <code>tone="brand"</code> on <code>esa-app-bar</code> against
-          <code>.esa-app-shell__brand</code>, the BEM element. Two concepts, one spelling, one slot.
-        </p>
-      )}
-      <details class="tok-group" data-group>
-        <summary>
-          <code class="group-label">Every word used in the part position</code>
-          <span class="summary-right"><span class="group-count">{t3.partRows.length}</span></span>
-        </summary>
-        <table class="tok-table parse">
-          <thead><tr><th>Word</th><th>Tokens</th><th>Actually a</th><th>Examples</th></tr></thead>
-          <tbody>
-            {t3.partRows.map((p) => (
-              <tr>
-                <td><code class="vocab">{p.part}</code></td>
-                <td class="num">{p.count}</td>
-                <td><span class={`pk pk-${p.kind}`}>{p.kind}</span></td>
-                <td>{p.examples.map((e) => <code class="vocab">{e}</code>)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
-
-      <h3 class="sub">Slot 4 · variant — present, and in the wrong place</h3>
-      <div class="tally">
-        <div class="tally-cell"><b>{t3.sizeRows.short.length + t3.sizeRows.long.length}</b><span>carry a size</span></div>
-        <div class="tally-cell warn"><b>{t3.sizeRows.afterProperty.length}</b><span>of those, size after the property</span></div>
-        <div class="tally-cell warn"><b>{t3.sizeRows.long.length}</b><span>in the long dialect</span></div>
-        <div class="tally-cell"><b>{t3.variantRows.length}</b><span>semantic variants</span></div>
-      </div>
-      <p class="cat-note">
-        The size axis tier 2 carries for shape alone (<code>--radius-xs/sm/md/lg</code>, the
-        documented exception) and skips everywhere else lands here instead, on
-        {t3.sizeRows.scales.length} separate per-component scales — every one of them with the size
-        trailing the property. <code>default</code> is correctly omitted throughout: there is no
-        <code>--button-radius-default</code>, the unsuffixed name <em>is</em> the default.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Dialect</th><th>Tokens</th><th>Where</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><code class="vocab">xs · sm · md · lg</code></td>
-            <td class="num">{t3.sizeRows.short.length}</td>
-            <td class="dim">The shared scale, aligned to Beacon&rsquo;s UiSize.</td>
-          </tr>
-          <tr>
-            <td><code class="vocab warnv">small · medium · large</code></td>
-            <td class="num">{t3.sizeRows.long.length}</td>
-            <td>{t3.sizeRows.long.map((r) => <code class="vocab">{r.name}</code>)}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="cat-note">
-        Semantic variants exist too, and they sit in the same trailing position:
-        {t3.variantRows.map((r) => <code class="vocab">{r.name}</code>)}
-      </p>
-
-      <h3 class="sub">Slot 5 · property — nearly universal, never qualified</h3>
-      <p class="cat-note">
-        <b>{t3.withProperty} of {t3.total}</b> name a property. None of them qualify it the way the
-        rubric does: <code>color-content</code>, <code>color-background</code> and
-        <code>color-border</code> appear <b>{t3.colorQualified}</b> times in the whole file. Instead
-        the colour-ness is implied and the word is abbreviated.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Rubric property</th><th>Words in use</th><th>Tokens</th><th>Note</th></tr></thead>
-        <tbody>
-          {t3.propVocab.map((p) => (
-            <tr>
-              <td><code>{p.rubric}</code></td>
-              <td>
-                {p.words.map((w) => (
-                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="num">{w.count}</span></code>
-                ))}
-              </td>
-              <td class="num">{p.total}</td>
-              <td>{p.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class={t3.borderSplit.shorthand.length ? 'cat-gap' : 'cat-note'}>
-        {t3.borderSplit.shorthand.length ? (
-          <>
-            <b>One suffix, two property types.</b> <code>-border</code> holds a colour on
-            {t3.borderSplit.colour.length} tokens and a full shorthand on {t3.borderSplit.shorthand.length}.
-            Overriding the first changes a colour; overriding the second means restating the width
-            and style to change one.
-          </>
-        ) : (
-          <>
-            <b>Closed.</b> <code>-border</code> used to name two different property types —
-            a colour on <code>--sidenav-border</code> and <code>--topbar-border</code>, a whole
-            <code>1px solid …</code> shorthand on <code>--filter-dropdown-border</code> — so two of
-            the three were re-pointable and the third was not. All three are now
-            <code>-border-color</code> holding a colour, and esa-filter-dropdown composes the
-            shorthand from <code>--border-width-default</code>. The table below is derived, so it
-            repopulates the moment a shorthand reappears.
-          </>
-        )}
-      </p>
-      <table class="findings">
-        <thead><tr><th>Token</th><th>Holds</th><th>Value</th></tr></thead>
-        <tbody>
-          {[...t3.borderSplit.colour, ...t3.borderSplit.shorthand].map((r) => (
-            <tr>
-              <td><code>{r.name}</code></td>
-              <td>
-                <span class={`slot-flag f-${r.prop === 'color-border' ? 'match' : 'partial'}`}>
-                  {r.prop === 'color-border' ? 'colour' : 'shorthand'}
-                </span>
-              </td>
-              <td><code>{r.value}</code></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {t3.withoutProperty.length > 0 && (
-        <p class="cat-note">
-          {t3.withoutProperty.length} name no property at all — you have to read the value to know
-          what they control:
-          {t3.withoutProperty.map((r) => <code class="vocab warnv">{r.name}</code>)}
-        </p>
-      )}
-
-      <h3 class="sub">Slot 6 · state — correctly placed, one word short</h3>
-      <p class="cat-note">
-        All {t3.stateRows.length} stateful tokens put the state last and omit
-        <code>default</code>, exactly as the rubric prescribes.
-        {t3.stateNotTrailing.length > 0 && (
-          <>
-            {' '}The exceptions are {t3.stateNotTrailing.length} tokens carrying a state word in the
-            middle of the name instead:
-            {t3.stateNotTrailing.map((r) => <code class="vocab warnv">{r.name}</code>)}
-          </>
-        )}
-      </p>
-      <table class="findings">
-        <thead><tr><th>State</th><th>Tokens</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t3.stateVocab.map((s) => (
-            <tr class={s.tokens.length === 0 ? 'row-zero' : undefined}>
-              <td>
-                <code class="vocab st">{s.state}</code>
-                <span class={`slot-flag f-${s.inRubric ? 'match' : 'extra'}`}>
-                  {s.inRubric ? 'rubric' : 'ours'}
-                </span>
-              </td>
-              <td class="num">{s.tokens.length}</td>
-              <td>
-                {s.note && <div class="detail">{s.note}</div>}
-                {s.tokens.map((n) => <code class="vocab">{n}</code>)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-note">
-        <b>State is exclusive to colour — nearly.</b> {t3.stateColorCheck.onColor} of
-        {t3.stateColorCheck.total} stateful tokens name a colour property outright. Of the
-        {t3.stateColorCheck.exceptions.length} that don&rsquo;t, {t3.stateColorCheck.nonColour} really
-        do move something other than a colour, and {t3.stateColorCheck.unnamedColour} is a colour
-        whose property the name never states — so the rule holds on
-        {t3.stateColorCheck.onColor + t3.stateColorCheck.unnamedColour} of {t3.stateColorCheck.total}.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Token</th><th>Property</th><th>State</th><th>Value</th><th></th></tr></thead>
-        <tbody>
-          {t3.stateColorCheck.exceptions.map((e) => (
-            <tr>
-              <td><code>{e.row.name}</code></td>
-              <td><code class="vocab warnv">{e.row.propWord ?? 'implied'}</code></td>
-              <td><code class="vocab st">{e.row.state}</code></td>
-              <td><code>{e.row.value}</code></td>
-              <td>
-                <span class={`slot-flag f-${e.kind === 'non-colour' ? 'absent' : 'partial'}`}>
-                  {e.kind === 'non-colour' ? 'genuinely not a colour' : 'a colour, unnamed'}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Colour · the narrower rubric</h3>
-      <p class="cat-note">
-        Colour gets its own shape, and it is stricter in two ways: the property is one of
-        <em>three</em> rather than any CSS property, and <code>disabled</code> sits in the state slot
-        alongside hover and focus. Measured against the {t3.colourTally.total} tier-3 tokens that
-        actually hold a colour — a <code>1px solid …</code> shorthand and an
-        <code>--elevation-*</code> shadow are both excluded, because neither is a name for a colour.
-      </p>
-
-      <div class="grammar">
-        <div>
-          <span class="grammar-label">Rubric</span>
-          <code>{t3.colourGrammars.rubric}</code>
-        </div>
-        <div>
-          <span class="grammar-label">What we ship</span>
-          <code>{t3.colourGrammars.current}</code>
-        </div>
-      </div>
-
-      <div class="tally">
-        <div class="tally-cell t3"><b>{t3.colourTally.total}</b><span>colour tokens</span></div>
-        <div class="tally-cell warn"><b>{t3.colourTally.qualified}</b><span>qualified <code>color-</code></span></div>
-        <div class="tally-cell"><b>{t3.colourTally.background}</b><span>background</span></div>
-        <div class="tally-cell"><b>{t3.colourTally.content}</b><span>content</span></div>
-        <div class="tally-cell"><b>{t3.colourTally.border}</b><span>border</span></div>
-        <div class="tally-cell warn"><b>{t3.colourTally.varianted}</b><span>carry a variant</span></div>
-      </div>
-
-      <table class="findings slots">
-        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t3.colourSlots.map((s) => (
-            <tr class={`slot-${s.status}`}>
-              <td class="slot-n">{s.n}</td>
-              <td class="slot-name">
-                {s.name}
-                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
-              </td>
-              <td><code class="spec">{s.spec}</code></td>
-              <td>{s.verdict}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h4 class="sub2">The property, in {t3.colourPropVocab.reduce((n, p) => n + p.words.length, 0)} words instead of 3</h4>
-      <table class="findings">
-        <thead><tr><th>Rubric property</th><th>Our words</th><th>Tokens</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t3.colourPropVocab.map((p) => (
-            <tr>
-              <td><code class="spec">{p.rubric}</code></td>
-              <td>
-                {p.words.map((w) => (
-                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="dim">×{w.count}</span></code>
-                ))}
-              </td>
-              <td class="num">{p.total}</td>
-              <td>{p.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {t3.colourUnnamedProp.length > 0 && (
-        <p class="cat-gap">
-          <b>{t3.colourUnnamedProp.length} colour tokens name no property at all</b> — the value is the
-          only way to know what they paint:
-          {t3.colourUnnamedProp.map((r) => <code class="vocab warnv">{r.name}</code>)}
-        </p>
-      )}
-
-      <h4 class="sub2">The variant slot · {t3.axisUnexposed.length} of {t3.intentionAxis.length} axes unexposed</h4>
-      <p class="cat-note">
-        The rubric&rsquo;s worked example is a button with primary / secondary / tertiary variants, each
-        with its own background and its own states. So the real test is not whether any token carries a
-        variant word — it is whether a component that <em>has</em> a colour-variant axis can be themed
-        along it. <b>Intentions</b> is derived from the component source (which tier-2 roles the file
-        reads); <b>varianted hooks</b> from the token names.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Component</th><th>Variant axis</th><th>Colour hooks</th><th>…varianted</th></tr></thead>
-        <tbody>
-          {t3.intentionAxis.map((a) => (
-            <tr>
-              <td><code>esa-{a.component}</code></td>
-              <td>{a.intentions.map((i) => <code class="vocab">{i}</code>)}</td>
-              <td class="num">{a.hooks}</td>
-              <td class="num">
-                {a.varianted === 0
-                  ? <span class="slot-flag f-absent">none</span>
-                  : a.varianted}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-gap">
-        <b>This is a cost, not a bug.</b> Those components express their variants by reading tier-2
-        intentions directly, which is legal and keeps the surface small — the whole kit&rsquo;s danger
-        moves as one. What it forecloses is the other direction: a spoke cannot make its danger
-        <em>button</em> differ from its danger <em>badge</em>, because there is no hook between them.
-        {t3.colourVariantInverted.length > 0 && (
-          <>
-            {' '}The {t3.colourVariantInverted.length} tokens that do carry a variant put it after the
-            property, which is the rubric&rsquo;s order reversed:
-            {t3.colourVariantInverted.map((r) => <code class="vocab warnv">{r.name}</code>)}
-          </>
-        )}
-      </p>
-
-      <h4 class="sub2">The state slot</h4>
-      <table class="findings">
-        <thead><tr><th>State</th><th>Tokens</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t3.colourStateVocab.map((s) => (
-            <tr class={s.tokens.length === 0 ? 'row-zero' : undefined}>
-              <td>
-                <code class="vocab st">{s.state}</code>
-                <span class={`slot-flag f-${s.inRubric ? 'match' : 'extra'}`}>
-                  {s.inRubric ? 'rubric' : 'ours'}
-                </span>
-              </td>
-              <td class="num">{s.tokens.length}</td>
-              <td>
-                {s.note && <div class="detail">{s.note}</div>}
-                {s.tokens.map((n) => <code class="vocab">{n}</code>)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <details class="tok-group" data-group>
-        <summary>
-          <code class="group-label">Every tier-3 token, parsed into slots</code>
-          <span class="summary-right"><span class="group-count">{t3.total}</span></span>
-        </summary>
-        <table class="tok-table parse">
-          <thead>
-            <tr>
-              <th>Token</th><th>Component</th><th>Part</th><th>Variant</th>
-              <th>Property</th><th>State</th><th>Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {t3.rows.map((r) => (
-              <tr data-token={r.name}>
-                <td class="c-name"><code>{r.name}</code></td>
-                <td>
-                  {r.ns ? (
-                    <>
-                      <code class="vocab">{r.ns}</code>
-                      {r.nsKind !== 'component' && <span class="dim"> {r.nsKind}</span>}
-                    </>
-                  ) : (
-                    <span class="ord o-none">unplaced</span>
-                  )}
-                </td>
-                <td>{r.part ? <code class="vocab">{r.part}</code> : <span class="dim">—</span>}</td>
-                <td>
-                  {r.size || r.variant ? (
-                    <code class="vocab">{[r.variant, r.size].filter(Boolean).join(' · ')}</code>
-                  ) : (
-                    <span class="dim">—</span>
-                  )}
-                </td>
-                <td>
-                  {r.propWord ? (
-                    <>
-                      <code class="vocab">{r.propWord}</code>
-                      {r.prop !== 'other' && r.prop !== null && (
-                        <span class="dim"> → {r.prop}</span>
-                      )}
-                    </>
-                  ) : (
-                    <span class="dim">implied</span>
-                  )}
-                </td>
-                <td>{r.state ? <code class="vocab st">{r.state}</code> : <span class="dim">—</span>}</td>
-                <td class="notes">
-                  {r.flags.length === 0 ? <span class="dim">—</span> : r.flags.map((f) => <div>{f}</div>)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
-
-      <h3 class="sub">Typography · the third narrow rubric</h3>
-      <p class="cat-note">
-        Colour is not the only family with its own shape. Typography gets one too —
-        <code class="spec">--&lt;component&gt;-&lt;variant&gt;-&lt;font-size|font-weight|font-style|line-height&gt;</code>
-        — and it differs from colour in the direction it wants to be measured. The model is explicit
-        that components should wire to the tier-2 typography <em>composites</em>, and that tier 3 is
-        for the exceptions only: <q>most of the use cases for this are either tweaking a font size, or
-        setting a line height to one in order to remove white space above and below a text</q>. So a
-        <em>small</em> number here is the healthy result. A large tier-3 type surface would mean
-        components are re-deriving type instead of reading a role.
-      </p>
-      <div class="tally">
-        <div class="tally-cell t3"><b>{t3.typeTally.total}</b><span>typographic tier-3 tokens</span></div>
-        <div class="tally-cell ok"><b>{t3.typeTally.rubricSpelled}</b><span>spelled the rubric&rsquo;s way</span></div>
-        <div class="tally-cell warn"><b>{t3.typeTally.total - t3.typeTally.rubricSpelled - t3.typeTally.outside}</b><span>abbreviated</span></div>
-        <div class="tally-cell warn"><b>{t3.typeTally.outside}</b><span>property outside the four</span></div>
-      </div>
-      <table class="findings">
-        <thead><tr><th>Rubric property</th><th>Our words</th><th>Tokens</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t3.typePropVocab.map((p) => (
-            <tr>
-              <td><code class="spec">{p.rubric}</code></td>
-              <td>
-                {p.words.length === 0 ? <span class="dim">—</span> : p.words.map((w) => (
-                  <code class={`vocab ${p.words.length > 1 ? 'warnv' : ''}`}>{w.word} <span class="dim">×{w.count}</span></code>
-                ))}
-              </td>
-              <td class="num">{p.total}</td>
-              <td>{p.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {t3.typeOutsideRubric.length > 0 && (
-        <p class="cat-gap">
-          <b>{t3.typeOutsideRubric.length} outside the model&rsquo;s four properties</b> — the rubric closes
-          the list at font-size, font-weight, font-style and line-height, so these have no slot to sit in:
-          {t3.typeOutsideRubric.map((t) => <code class="vocab warnv">{t.row.name}</code>)}
-        </p>
-      )}
-    </Section>
-
-    <Section id="tier1-naming" title="Tier 1 · Naming audit">
-      <p>
-        The last of the three, and the one with the most riding on it. A tier-1 name is the only
-        description a raw value ever gets — there is no layer beneath it to explain what
-        <code>--color-yellow-9</code> or <code>--shadow-blur-200</code> means. Counts are derived from the
-        real names and the real files at build time; the prose is authored.
-      </p>
-
-      <div class="grammar">
-        <div>
-          <span class="grammar-label">Rubric</span>
-          <code>{t1.grammars.rubric}</code>
-        </div>
-        <div>
-          <span class="grammar-label">What we ship</span>
-          {t1.grammars.current.map((g) => <code>{g}</code>)}
-        </div>
-      </div>
-
-      <div class="tally">
-        <div class="tally-cell t1"><b>{t1.total}</b><span>tier-1 tokens</span></div>
-        <div class="tally-cell"><b>{t1.rampTally.ramps}</b><span>colour ramps</span></div>
-        <div class="tally-cell ok"><b>{t1.rampTally.used}</b><span>of {t1.rampTally.steps} ramp steps read</span></div>
-        <div class="tally-cell warn"><b>{t1.aliasRows.length}</b><span>aliases, not primitives</span></div>
-        <div class="tally-cell warn"><b>{t1.straddleRows.length}</b><span>prefixes straddling tiers</span></div>
-        <div class="tally-cell warn"><b>{t1.ghostRows.length}</b><span>retired names still cited</span></div>
-      </div>
-
-      <p class="cat-note">
-        The shape of the gap is different again. Tier 2 was missing everything left of
-        <em>variant</em>; tier 3 had the object slot right and the modifiers inverted. Tier 1 gets its
-        <em>scales</em> almost entirely right — the Radix 12-step ramp is the best-named thing in the
-        system — and then packs three unrelated concepts into one slot.
-      </p>
-      <p class="cat-note">
-        <b>{t1.worklistDone} of {t1.worklist.length} findings are closed.</b> Every count on this page
-        is re-derived at build time, so a section that reads &ldquo;resolved&rdquo; is reporting that
-        its own check now returns zero — not that someone edited a list. The findings stay on the page
-        after they close: what was found and why it mattered is the part worth keeping.
-      </p>
-
-      <h3 class="sub">Slot by slot</h3>
-      <table class="findings slots">
-        <thead><tr><th>#</th><th>Slot</th><th>Rubric</th><th>Where we are</th></tr></thead>
-        <tbody>
-          {t1.slots.map((s) => (
-            <tr class={`slot-${s.status}`}>
-              <td class="slot-n">{s.n}</td>
-              <td class="slot-name">
-                {s.name}
-                <span class={`slot-flag f-${s.status}`}>{s.status}</span>
-              </td>
-              <td><code class="spec">{s.spec}</code></td>
-              <td>{s.verdict}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slots 1–2 · where the missing tier identifier is load-bearing</h3>
-      <p class="cat-note">
-        SPEC.md&rsquo;s central rule is that a component reads tier 2 and never a primitive, and it
-        names <code>border-radius: var(--radius-200)</code> as <em>the</em> bug. These are the
-        prefixes where that bug is invisible in a diff, because the tier-1 and tier-2 names are the
-        same shape.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Prefix</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th><th>What it costs</th></tr></thead>
-        <tbody>
-          {t1.straddleRows.map((r) => (
-            <tr>
-              <td><code>--{r.prefix}-</code></td>
-              <td class="num">{r.tier1.length}</td>
-              <td class="num">{r.tier2.length || <span class="dim">—</span>}</td>
-              <td class="num">{r.tier3.length || <span class="dim">—</span>}</td>
-              <td class="detail">{r.cost}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Not primitives · {t1.aliasRows.length} tier-1 tokens whose value is a reference</h3>
-      <p class="cat-note">
-        A primitive holds a value. A token holding a <em>reference</em> is an alias, and an alias is
-        an intent expressed in terms of something else — tier 2&rsquo;s job. These are found
-        structurally (the compiled value is a bare <code>var()</code>), not by recognising names, so a
-        new one cannot slip in unnoticed.
-      </p>
-      {t1.aliasRows.length > 0 ? (
-        <table class="findings">
-          <thead><tr><th>Token</th><th>Points at</th><th>Rubric levels in the name</th><th>Verdict</th></tr></thead>
-          <tbody>
-            {t1.aliasRows.map((r) => (
-              <tr>
-                <td><code>{r.name}</code></td>
-                <td><code class="vocab">{r.value}</code></td>
-                <td class="dim">{r.levels}</td>
-                <td class="detail">{r.verdict}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p class="resolved">
-          <span class="slot-flag f-match">resolved</span>
-          The check returns zero. It found 14: the 12 <code>--color-status-*</code> tokens plus
-          <code>--typography-font-family-display</code> and <code>--font-family-primary</code>. The status family turned
-          out not to need moving at all — the tier-2 roles already existed and merely detoured through
-          it, so they were repointed straight at their ramp steps and the block deleted.
-          <code>--font-family-primary</code> went with it (zero readers);
-          <code>--typography-font-family-display</code> moved to <code>semantic/typography.json</code> keeping its name,
-          so every reader was untouched.
-        </p>
-      )}
-      <p class="cat-gap">
-        <b>Why this was not cosmetic.</b> SPEC.md&rsquo;s rule is that primitives never move — not in
-        the hub, not in a theme. Declaring the status family in
-        <code>tokens/primitive/color.json</code> made it unthemeable: a spoke that needed different
-        status hues had no legal override anywhere in the system. The tell that it was a
-        <em>split</em> rather than a style choice was that one member had already migrated —
-        <code>danger</code> was a tier-2 role pointing straight at <code>red.9</code>, while its three
-        siblings detoured through tier 1. The table below is the same check today.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Concept</th><th>At tier 1</th><th>At tier 2</th></tr></thead>
-        <tbody>
-          {t1.conceptSplit.map((c) => (
-            <tr class={c.tier1.length && c.tier2.length ? undefined : 'row-zero'}>
-              <td><code>{c.concept}</code></td>
-              <td>
-                {c.tier1.length
-                  ? c.tier1.map((n) => <code class="vocab warnv">{n}</code>)
-                  : <span class="dim">none</span>}
-              </td>
-              <td>
-                {c.tier2.length
-                  ? c.tier2.map((n) => <code class="vocab">{n}</code>)
-                  : <span class="dim">none</span>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">
-        Slot 3 · typography, by CSS property ({t1.typeTally.covered} of {t1.typeTally.properties})
-      </h3>
-      <div class="grammar">
-        <div>
-          <span class="grammar-label">Convention adopted</span>
-          <code>--&lt;css-property&gt;-&lt;value&gt;</code>
-        </div>
-        <div>
-          <span class="grammar-label">Previously</span>
-          <code>--font-&lt;variant&gt; · --type-size-&lt;step&gt; · --line-height-&lt;name&gt;</code>
-        </div>
-      </div>
-      <p class="cat-note">
-        Typography used to be where the category slot fell apart — five name shapes for one category,
-        including a second category word. It resolved by dropping the category instead of inventing
-        one: the token name is now a real CSS property plus the value it holds, so it needs no
-        grouping word and it reads directly as the declaration it will end up in. All
-        {' '}<b>{t1.typeTally.conformant}</b> tier-1 type tokens follow it. Two rules are being
-        measured — the name leads with a real property, and the <em>value</em> segment describes the
-        value rather than a job.
-      </p>
-      <table class="findings">
-        <thead><tr><th>CSS property</th><th>Value naming</th><th>Values</th><th>Note</th></tr></thead>
-        <tbody>
-          {t1.typeProperties.map((r) => (
-            <tr class={r.members.length ? `slot-${r.status}` : 'slot-absent'}>
-              <td>
-                <code class="spec">--{r.property}-*</code>
-                <span class={`slot-flag f-${r.members.length ? r.status : 'absent'}`}>
-                  {r.members.length ? r.status : 'no tokens'}
-                </span>
-              </td>
-              <td class="dim">{r.valueStyle}</td>
-              <td>
-                {r.values.length
-                  ? r.values.map((v) => <code class="vocab">{v}</code>)
-                  : <span class="dim">—</span>}
-              </td>
-              <td class="detail">{r.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <p class="cat-gap">
-        <b>The split that made it work.</b> The rule that tier-1 names describe values is what forced
-        the roles out. <code>--typography-font-family-sans</code> names a classification, not a face, and
-        <code>--typography-font-weight-regular: 350</code> names a job, not a weight — yet
-        <code>typography.css</code> documented both as the surface a spoke re-points, which made the
-        shipped type contract an instruction to re-point a primitive. These are the roles, now at
-        tier 2 with their names unchanged, so no reader had to move:
-      </p>
-      <table class="findings">
-        <thead><tr><th>Tier-2 role</th><th>Points at</th></tr></thead>
-        <tbody>
-          {t1.composites.map((r) => (
-            <tr>
-              <td><code>{r.name}</code></td>
-              <td><code class="vocab">{r.value}</code></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slots 3–6 · one slot carrying hue, mode and channel</h3>
-      <p class="cat-note">
-        Everything between <code>--color-</code> and the step number is a single undifferentiated
-        slot, and three different kinds of thing are living in it: a hue (<code>gray</code>), a hue
-        plus a <em>mode</em> (<code>gray-dark</code>), and a hue plus an alpha <em>channel</em>
-        (<code>gray-a</code>). The rubric appends mode last — <code>--color-gray-11-dark</code> — for
-        exactly this reason.
-      </p>
-      <table class="findings">
-        <thead>
-          <tr><th>Ramp</th><th>Slot holds</th><th>Hue</th><th>Modifier</th><th>Steps</th><th>With a reader</th><th>Name matches value</th></tr>
-        </thead>
-        <tbody>
-          {t1.rampRows.map((r) => (
-            <tr class={r.used === 0 ? 'row-zero' : undefined}>
-              <td><code>--color-{r.base}-*</code></td>
-              <td><span class={`pk pk-${r.kind === 'hue' ? 'part' : 'variant'}`}>{r.kind}</span></td>
-              <td class="dim">{r.hue}</td>
-              <td>{r.modifier ? <code class="vocab warnv">-{r.modifier}</code> : <span class="dim">—</span>}</td>
-              <td class="num">{r.steps}</td>
-              <td class="num">{r.used}</td>
-              <td>
-                {r.renamedFrom
-                  ? <span class="inf">no — this is Radix {r.renamedFrom}</span>
-                  : <span class="dim">yes</span>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="cat-gap">
-        <b>Two things this table makes visible.</b> First, the {t1.rampTally.renamed} ramps whose name
-        does not describe their value — both admit it in a <code>$description</code> that says
-        &ldquo;named for backward compat&rdquo;, which is a note a designer cross-referencing the
-        Radix docs will never read. Second, the {t1.rampTally.mode} mode ramps show zero readers here,
-        and that is not rot: they are consumed by
-        <code>{t1.darkModeConsumer.file}</code> ({t1.darkModeConsumer.refs} references), a
-        <code>[data-scheme]</code> block this graph deliberately excludes. The naming is what forces
-        that arrangement — a semantic role can hold one value per scope, so putting mode in the ramp
-        name pushes dark mode out of the token package entirely and into app CSS a spoke does not get.
-      </p>
-
-      <h3 class="sub">
-        Fallback drift · {t1.fallbackTally.tokens} tokens whose read sites disagree with them
-      </h3>
-      <p class="cat-note">
-        CLAUDE.md requires every private token to carry a literal fallback —
-        <code>var(--font-size-200, 0.875rem)</code>. Nothing checks that the literal agrees with the
-        token. For a scale named for a <em>rung</em> rather than a value there is nothing for an
-        author to check against, so they guess, and they guess differently:
-        {' '}<b>{t1.fallbackTally.contradictory}</b> of these carry more than one distinct fallback
-        across the kit. The <b>{t1.fallbackTally.wrong}</b> marked <em>exact</em> are the unambiguous
-        ones — the token holds a single literal, so the fallback could have been right and isn&rsquo;t.
-      </p>
-      <p class="cat-gap">
-        <b>This check is scoped, and the scope hides something.</b> It looks only at the tier-1
-        measure tokens. Run the same comparison across <em>every</em> token and it returns roughly
-        <b> 1,250</b> disagreeing read sites in ~110 files — overwhelmingly colour
-        (<code>--color-content-default</code> is <code>#202020</code> and is written as
-        <code>#171717</code> in 118 places; <code>--color-background-brand</code> is grass and is written as a
-        navy left over from another brand in 72). That is a real finding and it is <em>not</em> being
-        fixed here: it is mostly tier-2 colour, it needs its own pass, and a blind rewrite would be
-        wrong in at least one class of case — <code>var(--typography-font-family-sans, sans-serif)</code> is a
-        deliberate generic-family degradation, not a failed restatement of the token, and
-        &ldquo;correcting&rdquo; it would name a face that by definition isn&rsquo;t loading.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Token</th><th>Actual value</th><th>Fallbacks written</th><th>Read in</th></tr></thead>
-        <tbody>
-          {t1.fallbackDrift.map((r) => (
-            <tr class={r.exact ? 'slot-absent' : undefined}>
-              <td>
-                <code>{r.token}</code>
-                {r.exact && <span class="slot-flag f-absent">exact</span>}
-              </td>
-              <td><code class="vocab">{r.actual}</code></td>
-              <td>{r.fallbacks.map((f) => <code class="vocab warnv">{f}</code>)}</td>
-              <td class="dim">{r.files.length} file{r.files.length === 1 ? '' : 's'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Slot 5 · the scale systems</h3>
-      <p class="cat-note">
-        Mixed scale <em>types</em> across categories is what the rubric asks for — &ldquo;homogeneity
-        within a class, heterogeneity between classes.&rdquo; So most of this table is a pass. What
-        matters is the family that breaks the convention inside its own class.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Family</th><th>Scale</th><th>Steps</th><th>Note</th></tr></thead>
-        <tbody>
-          {t1.scaleRows.map((r) => (
-            <tr class={r.ragged ? 'slot-absent' : undefined}>
-              <td><code>{r.family}</code></td>
-              <td>
-                <span class={`slot-flag f-${r.ragged ? 'absent' : 'match'}`}>{r.kind}</span>
-              </td>
-              <td>
-                {r.steps.map((s) => (
-                  <code class={r.escapes.includes(s) ? 'vocab st' : 'vocab'}>{s}</code>
-                ))}
-              </td>
-              <td class="detail">{r.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">Two names, one value</h3>
-      <table class="findings">
-        <thead><tr><th>Value</th><th>Names</th><th>Reading</th></tr></thead>
-        <tbody>
-          {t1.dupeRows.map((r) => (
-            <tr class={r.kind === 'defect' ? 'slot-absent' : r.kind === 'by design' ? 'row-zero' : 'row-zero'}>
-              <td><code class="vocab">{r.value}</code></td>
-              <td>{r.names.map((n) => <code class="vocab">{n}</code>)}</td>
-              <td class="detail">
-                <span class={`slot-flag f-${r.kind === 'defect' ? 'absent' : 'match'}`}>{r.kind}</span>
-                <div>{r.note}</div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <p class="cat-note">
-        The alpha ramps are the subtler case, and they are <em>not</em> duplicates. Both are black at
-        an alpha, and they run two different progressions: <code>gray-a</code> follows Radix&rsquo;s
-        perceptual curve, <code>black-a</code> a hand-set linear one. Nothing in either name says
-        which you are asking for, and the source files don&rsquo;t agree on notation either —
-        <code>gray-a</code> is authored as 8-digit hex
-        (<code>{t1.alphaRamps.notation.grayA}</code>), <code>black-a</code> as
-        <code>{t1.alphaRamps.notation.blackA}</code>. That last difference is invisible in the
-        shipped CSS, because Style Dictionary normalises both to <code>rgba()</code> on the way out.
-        <code>gray-a</code> has {t1.alphaRamps.grayAUsed} readers;
-        <code>black-a</code> has {t1.alphaRamps.blackAUsed}.
-      </p>
-      <table class="findings">
-        <thead><tr><th>Step</th><th>--color-gray-a-*</th><th>α</th><th>--color-black-a-*</th><th>α</th></tr></thead>
-        <tbody>
-          {t1.alphaRamps.rows.map((r) => (
-            <tr class={r.same ? 'slot-absent' : undefined}>
-              <td class="num">{r.step}</td>
-              <td><code>{r.grayA}</code></td>
-              <td class="num">{r.grayAlpha}</td>
-              <td><code>{r.blackA}</code></td>
-              <td class="num">{r.blackAlpha}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <h3 class="sub">The rename that stopped at the package boundary</h3>
-      <p class="cat-note">
-        Tier 1 has been renamed once already: a <code>-50…900</code> lightness scale became the Radix
-        <code>-1…12</code> step scale. The compiled output moved; the citations did not. This check
-        looks for names matching the retired shape that are still read or documented anywhere in
-        <code>packages/</code>, <code>apps/</code>, <code>plugins/</code> or the root docs, and that
-        exist nowhere in the shipped tokens — the standing cost of a tier-1 rename when the names
-        carry no version or tier signal to grep for.
-      </p>
-      {t1.ghostRows.length > 0 ? (
-        <table class="findings">
-          <thead><tr><th>Retired name</th><th>Still cited in</th><th>Impact</th></tr></thead>
-          <tbody>
-            {t1.ghostRows.map((g) => (
-              <tr class="slot-absent">
-                <td><code>{g.name}</code></td>
-                <td>{g.files.map((f) => <code class="vocab warnv">{f}</code>)}</td>
-                <td class="detail">{g.impact}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p class="resolved">
-          <span class="slot-flag f-match">resolved</span>
-          The check returns zero. It found 6 across 5 files. The live ones were in
-          <code>packages/spoke-template/</code> — <code>--color-background-utility-success</code>,
-          <code>--color-background-utility-warning</code> and <code>--color-background-ai</code> were <code>var()</code> reads of
-          names that no longer existed, so every new spoke started with those properties dropped.
-          The rest were documentation: SPEC.md, CLAUDE.md and README.md all taught
-          <code>--color-teal-900</code>.
-        </p>
-      )}
-      <p class="cat-gap">
-        <b>Where they came from.</b> Two CSS files sat at the root of
-        <code>packages/tokens/</code>, superseded by <code>src/</code> and <code>dist/</code> and in
-        neither the package&rsquo;s <code>exports</code> nor its <code>files</code> — so nothing
-        loaded them, which is precisely why nobody noticed they still described a different system.
-        This table scans that directory; it is empty because both have been deleted.
-      </p>
-      {t1.strayFiles.length > 0 ? (
-        <table class="findings">
-          <thead><tr><th>File</th><th>Declares</th><th>Names not in the shipped output</th><th>Reachable?</th><th>Note</th></tr></thead>
-          <tbody>
-            {t1.strayFiles.map((f) => (
-              <tr class={f.ghosts ? 'slot-absent' : undefined}>
-                <td><code>{f.file}</code></td>
-                <td class="num">{f.names}</td>
-                <td class="num">{f.ghosts}</td>
-                <td>
-                  <span class={`slot-flag f-${f.exported || f.packed ? 'partial' : 'match'}`}>
-                    {f.exported ? 'exported' : f.packed ? 'published' : 'dead'}
-                  </span>
-                </td>
-                <td class="detail">{f.note}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p class="resolved">
-          <span class="slot-flag f-match">resolved</span>
-          No CSS files at the package root. <code>tokens.css</code> (157 declarations, 78 of them
-          retired names) and <code>component-tokens.css</code> (31 / 13) are gone.
-        </p>
-      )}
-
-      <h3 class="sub">Worklist</h3>
-      <p class="cat-note">
-        Ordered by cost-to-value, not by severity, and each row&rsquo;s <em>done</em> state comes from
-        the same check that raised it — not from anyone editing this list. The three that are closed
-        were all value-neutral: a rebuild of the pre-change sources against the current ones changed
-        0 of 421 token values. What is left splits into one rename that gets more expensive with time
-        (typography) and two decisions that should be made before any more renaming happens.
-      </p>
-      <table class="findings">
-        <thead><tr><th>#</th><th>Fix</th><th>Effort</th><th>Remaining</th><th>Detail</th></tr></thead>
-        <tbody>
-          {t1.worklist.map((f) => (
-            <tr class={f.done ? 'is-done' : undefined}>
-              <td class="num rank">{f.done ? '✓' : f.rank}</td>
-              <td><b>{f.title}</b></td>
-              <td>
-                <span class={`slot-flag f-${f.done ? 'match' : f.effort === 'design work' ? 'partial' : 'extra'}`}>
-                  {f.done ? 'done' : f.effort}
-                </span>
-              </td>
-              <td class="dim">{f.scope}</td>
-              <td class="detail">
-                {f.detail}
-                {f.done && f.outcome && <div class="pair"><b>Done:</b> {f.outcome}</div>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </Section>
 
     <Section id="component" title="Tier 3 · Component">
@@ -1549,9 +252,9 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
                   `--color-background-elevation-*`, one concept as value and as shadow.
                   `--touch-target-min` is a WCAG floor with no CSS property behind it
                   at all. A flag on a name that is correct and cannot move trains the
-                  reader to skim past flags. The `Property slot` column in the
-                  non-colour summary table above still records the fact for anyone
-                  auditing the rubric — that table describes, this chip alarmed. */}
+                  reader to skim past flags. The naming audit that recorded the
+                  fact in a `Property slot` column is gone from this page; what is
+                  left describes the graph, and this chip alarmed. */}
               <span class={cat.isUnclassified && cat.count === 0 ? 'group-count none' : 'group-count'}>
                 {cat.count}
               </span>
@@ -2260,15 +963,19 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   )}
 </DocsLayout>
 
-<!-- Both debug views' styles load on both routes. Harmless and deliberate:
-     each is namespaced (.tokens-debug / .promises-debug) and neither ships. -->
+<!-- Both views' styles load on both routes. Harmless and deliberate: each is
+     namespaced (.tokens-debug / .promises-debug), so neither reaches the other.
+     is:inline because these rules target markup rendered by _TokenGroup.astro
+     and _PropertyLevel.astro — Astro's scoping is per-file, so a processed
+     <style> would drop every one of those selectors. -->
 <style is:inline>
-  /* Page-scoped styles are normally banned in this system — allowed here only
-     because this page is debug-only and never ships. */
-  .tokens-debug .dev-banner {
-    border: 1px dashed var(--color-content-utility-warning, #ab6400);
-    background: var(--color-background-utility-warning-subtle, #fffbeb);
-    color: var(--color-content-default, #111);
+  /* Page-scoped styles are normally banned in this system. These two views are
+     the exception: they render the token graph itself, so there is no component
+     to lift the styling into without inventing one nothing else would use. */
+  .tokens-debug .page-note {
+    border: 1px solid var(--color-border-default-subtle, #e5e5e5);
+    background: var(--color-background-elevation-sunken, #fafafa);
+    color: var(--color-content-default-secondary, #525252);
     padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
     border-radius: var(--radius-200, 6px);
     font-size: 0.9rem;
@@ -2627,19 +1334,12 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .orphan-flag { font-size: 0.7rem; color: var(--color-content-utility-warning, #ab6400); }
   .tokens-debug tr[hidden] { display: none; }
 
-  /* ---------------------------------------------- tier-2 naming audit */
+  /* ---------------------------------------------- tier-2 semantic tables */
   .tokens-debug h3.sub {
     font-size: 0.95rem;
     margin: var(--spacing-600, 24px) 0 var(--spacing-250, 10px);
     padding-bottom: var(--spacing-200, 8px);
     border-bottom: 1px solid var(--color-border-default-subtle, #e5e5e5);
-  }
-  /* One level under h3.sub — the colour rubric's slots are subsections OF the
-     tier-3 audit, not siblings of it, so they get a quieter rule. */
-  .tokens-debug h4.sub2 {
-    font-size: 0.85rem;
-    margin: var(--spacing-500, 20px) 0 var(--spacing-200, 8px);
-    color: var(--color-content-default-secondary, #525252);
   }
   /* The two grammars side by side — the whole finding in one glance. */
   .tokens-debug .grammar {
@@ -2654,21 +1354,10 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border-radius: var(--radius-200, 6px);
     background: var(--color-background-elevation-sunken, #fafafa);
   }
-  .tokens-debug .grammar-label {
-    display: block;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-content-default-secondary, #666);
-    margin-bottom: var(--spacing-200, 8px);
-  }
   .tokens-debug .grammar code { display: block; font-size: 0.78rem; line-height: 1.7; word-break: break-word; }
   .tokens-debug .grammar > div:first-child code { color: var(--color-content-utility-success, #2a7e3b); }
   .tokens-debug .grammar > div:last-child code { color: var(--color-content-utility-warning, #a35200); }
 
-  .tokens-debug .slots .slot-n { font-variant-numeric: tabular-nums; color: var(--color-content-default-muted, #999); width: 1.5rem; }
-  .tokens-debug .slots .slot-name { font-weight: 600; white-space: nowrap; }
-  .tokens-debug code.spec { font-size: 0.72rem; color: var(--color-content-default-secondary, #666); }
   .tokens-debug .slot-flag {
     display: inline-block;
     margin-left: var(--spacing-200, 8px);
@@ -2680,16 +1369,13 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 1px 6px;
     border: 1px solid transparent;
   }
-  .tokens-debug .f-absent, .tokens-debug .f-missing {
+  .tokens-debug .f-absent {
     color: var(--color-content-utility-danger, #c62a2f);
     background: var(--color-background-utility-danger-subtle, #fef2f2);
     border-color: var(--color-border-utility-danger, #fbbcbc);
   }
-  .tokens-debug .f-partial, .tokens-debug .f-renamed {
-    color: var(--color-content-utility-warning, #a35200);
-    background: var(--color-background-utility-warning-subtle, #fffbeb);
-    border-color: var(--color-border-utility-warning, #fcd34d);
-  }
+  /* Both reached only through the `f-${…}` template in the scan-coverage table —
+     a grep for the literal class name finds nothing. */
   .tokens-debug .f-match {
     color: var(--color-content-utility-success, #2a7e3b);
     background: var(--color-background-utility-success-subtle, #f0fdf4);
@@ -2700,8 +1386,6 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     background: var(--color-background-elevation-sunken, #f4f4f4);
     border-color: var(--color-border-default, #d4d4d4);
   }
-  .tokens-debug tr.slot-absent td { background: var(--color-background-utility-danger-subtle, #fef2f2); }
-  .tokens-debug tr.slot-match td { background: var(--color-background-utility-success-subtle, #f0fdf4); }
   .tokens-debug tr.row-zero code { color: var(--color-content-default-muted, #999); }
 
   .tokens-debug code.vocab {
@@ -2722,17 +1406,6 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug code.vocab.warnv { background: var(--color-background-utility-warning-subtle, #fffbeb); border-color: var(--color-border-utility-warning, #fcd34d); }
 
-  .tokens-debug .ord {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-  .tokens-debug .o-rubric { color: var(--color-content-utility-success, #2a7e3b); }
-  .tokens-debug .o-inverted { color: var(--color-content-utility-danger, #c62a2f); font-weight: 600; }
-  .tokens-debug .o-surface-only, .tokens-debug .o-none { color: var(--color-content-default-muted, #999); }
-  .tokens-debug table.parse .notes { font-size: 0.72rem; color: var(--color-content-default-secondary, #666); max-width: 30ch; }
-  .tokens-debug table.parse .notes div + div { margin-top: 3px; }
   .tokens-debug .num { font-variant-numeric: tabular-nums; }
 
   /* Tier-2 CATEGORY level — the outermost node, and the one that answers "what
@@ -2846,51 +1519,15 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     padding: 1px 6px;
   }
 
-  /* Tier-3 audit: what a word in the part position actually turned out to be. */
-  .tokens-debug .pk {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-radius: var(--radius-100, 4px);
-    padding: 1px 6px;
-    border: 1px solid transparent;
-  }
-  .tokens-debug .pk-part {
-    color: var(--color-content-default-secondary, #525252);
-    border-color: var(--color-border-default, #e5e5e5);
-  }
-  .tokens-debug .pk-variant,
-  .tokens-debug .pk-state {
-    color: var(--color-content-utility-warning, #a35200);
-    border-color: var(--color-border-utility-warning, #fcd34d);
-    background: var(--color-background-utility-warning-subtle, #fffbeb);
-  }
-
-  /* ---------------------------------------------- tier-1 naming audit */
+  /* ---------------------------------------------- tier-1 aliases */
   .tokens-debug .alias-list { display: block; margin: var(--spacing-200, 8px) 0; }
-  .tokens-debug .rank { width: 1.5rem; color: var(--color-content-default-muted, #999); }
-  /* A finding whose check now returns zero. Deliberately keeps the finding text
-     above it — the record of what was wrong is the useful part. */
-  .tokens-debug .resolved {
-    margin: var(--spacing-300, 12px) 0;
-    padding: var(--spacing-300, 12px);
-    border: 1px solid var(--color-border-utility-success, #a7e8a7);
-    border-radius: var(--radius-200, 6px);
-    background: var(--color-background-utility-success-subtle, #f0fdf4);
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-  .tokens-debug .resolved .slot-flag { margin: 0 var(--spacing-200, 8px) 0 0; }
-  .tokens-debug tr.is-done td { opacity: 0.72; }
-  .tokens-debug tr.is-done .rank { color: var(--color-content-utility-success, #2a7e3b); }
   /* The verdict cells in this section pair a flag chip with a sentence. */
   .tokens-debug table.findings td.detail > div { margin-top: 4px; }
 </style>
 
-<!-- is:inline for the same reason as the <style> above: an Astro-processed
-     script is bundled into dist/_astro/ even when the page itself is never
-     emitted, leaving an orphan chunk in the shipped output. Inline means plain
-     JS (no TS annotations) and no bundling — correct for a dev-only page. -->
+<!-- is:inline: ~40 lines of DOM filtering with no imports, so a bundled chunk
+     would cost a request to save nothing. Inline means plain JS — no TS
+     annotations in here. -->
 <script is:inline>
   // Filter by token name. A group with no visible row hides itself, and any
   // group holding a match opens so hits are never buried behind a closed

@@ -392,13 +392,29 @@ Privates are internals — never themed, never documented as surface.
   hooks, against the 5–9 guidance below.
 
   Applied across the file, that test leaves exactly three multi-reader sets:
-  `--form-*` (18 tokens), `--focus-ring-*` (3, read by 31 components) and
-  `--loading-spinner-*` (2, where the honest fix is composition). 248 of 311
-  tier-3 tokens are read by exactly one component, which is the shape to hold to.
+  `--form-*` (12 tokens, 15 components), `--focus-ring-*` (3, read by 35) and
+  `--loading-spinner-*` (2, where the second reader composes the first).
+
+  **THIS SENTENCE USED TO END "248 of 311 tier-3 tokens are read by exactly one
+  component, which is the shape to hold to." THAT WAS EXACTLY BACKWARDS**, and it
+  is the single most expensive error this spec has carried. The
+  bounds-its-readers test measures LEAKAGE, which is a real defect, but it says
+  nothing about NECESSITY — so it endorsed 249 one-reader tokens as the target
+  while flagging the three sets above as the problem. They are the three cases
+  tier 3 is *for*: a category surface, a special case, and composition.
+
+  The 2026-08-16 pass applied the necessity test instead (see "The test: WOULD
+  this component diverge" above) and took the file from 306 declarations to 116.
+  **Both tests are live and they catch different things** — run the leakage test
+  on a namespace to see whether it bounds its readers, and the divergence test on
+  each hook to see whether it should exist at all. A hook can pass the first and
+  fail the second, and 168 of them did.
 - **Per-component surfaces**: `--<component>-<part?>-<property>` —
-  `--card-bg`, `--card-border-color`, `--dialog-width`, `--badge-radius`,
-  `--sidenav-item-color`. Size-variant knobs take the size suffix last:
-  `--badge-height-sm`.
+  `--card-bg`, `--card-border-color`, `--dialog-width`, `--avatar-size-md`.
+  Size-variant knobs take the size suffix last: `--dialog-width-sm`.
+  (This list previously used `--badge-radius` and `--sidenav-item-color` as
+  examples; both were demoted on 2026-08-16 for aliasing a tier-2 role, so they
+  illustrated the naming shape with hooks that should not have existed.)
 - The component prefix is the element name minus `esa-` (esa-side-dialog →
   `--side-dialog-*`).
 
@@ -718,3 +734,120 @@ values, by hand, because nothing else will. Absent someone willing to own that,
 Never re-point a primitive; never style `.esa-*` internals from a theme. If a
 theme finds itself wanting to move `--radius-200` or `--shadow-blur-300`, the real
 problem is a missing semantic role — add the role, don't move the ingredient.
+
+## Assurance is a SEPARATE AXIS from the theme
+
+`data-theme` is the brand. `data-assurance` is a conformance profile — the
+defaults a project takes on when it has an accessibility obligation (Section 508,
+EN 301 549). They are orthogonal and they compose, because a project is entitled
+to be on-brand **and** assured:
+
+```html
+<html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa">
+```
+
+The profile is authored ONCE, in `src/assurance.css`, and `build.js` appends it to
+`dist/tokens.css`. It is **not** an opt-in import. That is deliberate: spokes
+override 3 of 26 brand-derived roles, so any rule of the form "a spoke must ALSO
+import X" gets forgotten — `focus.css` is the standing proof. The block is inert
+unless the attribute is present, so shipping it always costs nothing.
+
+**A spoke never declares these names itself.** It sets the attribute. If a spoke
+finds itself writing a profile name into its theme file, the profile is missing
+something and the fix belongs here.
+
+### The thing everyone gets wrong: the profile does NOT beat your theme
+
+`[data-theme="x"]` and `[data-assurance="y"]` have **identical specificity**
+(0,1,0) — a pseudo-class and an attribute selector weigh the same — and a spoke's
+theme stylesheet loads *after* `tokens.css`. So on any role a theme re-points, the
+theme wins, profile or no profile.
+
+This is the right outcome and not a loophole. The hub cannot know a spoke's brand
+ramp, and silently repainting a brand with hub green would be a worse failure than
+the contrast number it fixes. **The teeth are in the gate, not the cascade:**
+
+```bash
+node scripts/check-contrast.mjs src/styles/theme-*.css --assurance wcag-aa
+```
+
+composes them in the browser's own order and fails the spoke whose brand does not
+clear AA. Measured against the demo themes: `beacon` still fails
+`content-on-brand-secondary` at 3.64:1 with the profile on. That failure is the
+feature — it is the spoke being told which of its own colours to darken.
+
+### What may go in a profile, and what may not
+
+A profile is a **token scope**. It re-points values; it cannot add behaviour,
+markup, or a rule inside a shadow root. That boundary is not stylistic:
+`:host-context()` is Chromium-only and `@container style()` is not baseline, so
+**inherited custom properties are the only channel that crosses a shadow boundary
+in every engine** — and 34 of the 66 components live in one. Anything that cannot
+be expressed as a re-pointed token cannot be in a profile at all.
+
+Which means a profile can fix contrast, ring weight, minimum type size and the
+target-size floor, and can fix **none** of: `esa-date-picker`'s missing keyboard
+handling (SC 2.1.1, Level A), the nine popups that return focus nowhere, or any
+forced-colors gap (that overrides at the used-value layer, downstream of every
+token). Those are component fixes. Setting the attribute is a statement about the
+DEFAULTS, never a certificate — `npm run a11y:assured` is what makes it more than
+a promise.
+
+### A PROFILE MAY MOVE VALUES; IT MAY NOT MOVE THE RAMP
+
+This is the rule that cost the most to learn, so it is stated as a rule rather
+than as history.
+
+A `--target-size-min` floor shipped in the first version of the profile: 0px by
+default, 24px under `[data-assurance]`, read by twelve components as a
+`min-block-size` on their hit area. It cleared the technical objection that killed
+`--control-height-*` — a fixed px height cannot grow with its contents, whereas a
+`min-*` raises the bottom and never caps the top — and it measured well, taking 33
+component target-size failures to 0.
+
+It was withdrawn the same day. Under the profile, `xs` and `sm` rendered at the
+**same height** on chip-group, checkbox-group and radio-group. The bottom of the
+ramp silently collapsed, `size="xs"` stopped meaning xs, and the author who wrote
+it was never told.
+
+The distinction to carry:
+
+- A **colour role is a value.** Re-pointing it is exactly what a theme layer is
+  for, and every call site keeps meaning what it meant.
+- A **size step is a contract.** The ramp is a designed object with four
+  deliberate steps; a profile that redefines one is lying to every call site that
+  chose it.
+
+The same rule caught a SECOND attempt, and the second one is the instructive one
+because it looked harmless. A "type floor" re-pointed the eight `2xs` composites one
+rung up, to kill 8px text — no geometry token anywhere in it. But a box follows its
+contents: `esa-chip-group` went from `{xs:20, sm:22}` to `{xs:22, sm:22}`, and layout
+moved on 9 of 25 routes. **"It is only typography" is not a defence.** The test is not
+which token you touched, it is whether any component renders differently.
+
+When an accessible option is needed, there are exactly two answers:
+
+1. **A compliant option already exists** → guide the author to it. (`esa-checkbox`,
+   `esa-input-tag` and `esa-range-slider` are under the floor at `xs`, `sm` AND their
+   default `md` — but `lg` clears it, so the lint names `lg`.)
+2. **It does not exist** → build it, as a real variant. `check-size-usage.mjs` reports
+   that case separately, because no call-site edit can fix it.
+
+"Quietly make the existing option bigger" is not a third answer.
+
+So a profile moves COLOUR, and nothing that can reflow a component. Target size is
+handled by telling the author: `npm run a11y:sizes`
+(`scripts/check-size-usage.mjs`) reports every call site using a step that renders
+under the floor, from a map MEASURED in a real browser
+(`packages/tokens/size-floors.json`, generated by `npm run a11y:floors`). They
+change `xs` to `sm` in their own source; the ramp keeps its shape and the change
+shows up in their diff.
+
+**That report also finds what a floor would have hidden.** Three components —
+`esa-checkbox`, `esa-input-tag`, `esa-range-slider` — are under the floor at their
+**default** step, so there is no call site to change. They need a size variant that
+clears 24px, which is a `/request-lego` against the hub. A floor would have quietly
+patched over that and nobody would have known the kit had a gap.
+
+"Make the controls tighter" is still a `/request-lego` too, for the same reason:
+there is no density lever at any tier, by design.

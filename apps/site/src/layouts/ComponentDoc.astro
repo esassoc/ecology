@@ -11,11 +11,13 @@ interface Props {
   category: string;      // e.g. "Core"
   slug: string;          // component basename, e.g. "esa-button"
   type: '.astro' | 'wc' | 'reference';
-  status?: 'stable' | 'reference';
+  status?: 'stable' | 'reference' | 'deprecated';
   summary: string;
   wraps?: string;        // reference only, e.g. "AG Grid"
+  /** Deprecated only — what to use instead. Drives the banner; without it the page just says "don't". */
+  supersededBy?: string;
 }
-const { name, category, slug, type, status = 'stable', summary, wraps } = Astro.props;
+const { name, category, slug, type, status = 'stable', summary, wraps, supersededBy } = Astro.props;
 
 const activeHref = `/components/${slug}`;
 const pascal = slug.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
@@ -23,8 +25,14 @@ const importLine =
   type === '.astro' ? `import ${pascal} from '@esa/ecology/${slug}.astro';`
   : type === 'wc' ? `import '@esa/ecology/${slug}';`
   : null;
-const statusLabel = type === 'reference' ? 'Reference' : 'Stable';
-const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
+// The pill reads `status`, NOT `type`. It used to read `type`, which meant the
+// two deprecated pages wore a green "Stable" pill directly above a summary
+// opening with "⚠ DEPRECATED" — the badge a reader scans contradicting the prose
+// they don't. `type === 'reference'` still implies the reference status, since
+// no reference page passes one.
+const resolved = type === 'reference' && status === 'stable' ? 'reference' : status;
+const statusLabel = resolved === 'reference' ? 'Reference' : resolved === 'deprecated' ? 'Deprecated' : 'Stable';
+const statusClass = `pill--${resolved}`;
 
 // Build-time-extracted public theming surface (src/data/theming.ts) — every
 // token this component's CSS reads. Rendered on every component page so
@@ -64,6 +72,21 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
     {wraps && <span class="pill">wraps {wraps}</span>}
     {importLine && <code class="imp">{importLine}</code>}
   </div>
+
+  {resolved === 'deprecated' && (
+    <aside class="dep" role="note" aria-labelledby="dep-h">
+      <h2 id="dep-h" class="dep__h">Deprecated{supersededBy && <> — use <code>{supersededBy}</code></>}</h2>
+      <p class="dep__p">
+        This component still ships and still works: it is a shim that forwards to its
+        replacement and warns at build time, so nothing breaks the day you upgrade. The page
+        below documents what it did, for reading a call site you are migrating — don't reach
+        for it in new work. Rewrite a spoke's call sites with
+        {' '}<code>/update-tokens</code>, which drives the rewrite from the
+        {' '}<code>kind: "component"</code> row in <code>packages/tokens/migrations.json</code>.
+      </p>
+    </aside>
+  )}
+
   <slot />
 
   {(hooks.length > 0 || rolesWithReach.length > 0) && (
@@ -162,6 +185,20 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
 </DocsLayout>
 
 <style>
+  /* Deprecation banner. The status pill is defined in DocsShell's global block
+     alongside pill--stable, so only the page-level banner is scoped here. */
+  .dep {
+    border: 1px solid var(--color-border-utility-warning, #e6c88a);
+    background: var(--color-background-utility-warning-subtle, #fdf6ec);
+    border-radius: var(--radius-md, 8px);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    margin-block: var(--spacing-500, 1.25rem);
+  }
+  .dep__h { margin: 0 0 var(--spacing-100, 0.25rem); font-size: 1rem; color: var(--color-content-utility-warning, #8a5a00); }
+  .dep__p { margin: 0; color: var(--color-content-default-secondary, #444); max-width: 72ch; }
+  /* Forced colors flattens the tint to Canvas, leaving the border — which is
+     already the thing separating this block from the page — to carry it. */
+
   /* Token-table styling lives in _ThemingTable.astro (Astro styles are per-component),
      so the type-roles table below repeats the three rules it needs rather than
      reaching across a scope boundary that does not exist. */

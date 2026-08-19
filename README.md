@@ -96,7 +96,7 @@ docs/              governance, promotion path, gap analysis, improvement ledger
 
 1. **Primitive** — raw values (`tokens/primitive/*.json`) → `--color-teal-9`, `--spacing-400`
 2. **Semantic** — intent, references primitives (`tokens/semantic/*.json`) → `--color-primary`
-3. **Component** — per-component theming surface → `--form-border-color`, `--sidenav-bg`
+3. **Component** — per-component theming surface → `--form-border-color`, `--button-radius-md`
 
 Theming = override the semantic and/or component layer under a `[data-theme="x"]`
 scope. Primitives never move; component internals are never touched. Every

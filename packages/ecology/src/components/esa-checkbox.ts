@@ -1,4 +1,4 @@
-import { LitElement, html, css, svg } from 'lit';
+import { LitElement, html, css, svg, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
 
@@ -81,11 +81,24 @@ export class EsaCheckbox extends LitElement {
   };
 
   render() {
+    // A checkbox with no visible label is named from the HOST — <esa-checkbox
+    // aria-label="Select row">, the table-row usage. That attribute names the host,
+    // and the host is not the control: the role="checkbox" span inside is, and it
+    // was left nameless. Forward it. (Caught by axe's aria-toggle-field-name after
+    // the labelled cases were fixed — the one specimen on the page with no `label`.)
+    const hostLabel = this.getAttribute('aria-label');
     return html`
       <label class="wrapper" @keydown=${this.onKeydown} @click=${this.toggle}>
+        <!-- aria-labelledby, NOT the wrapping label. A label associates only with a
+             LABELABLE element — a form control — and an ARIA role does not make a
+             span into one. Measured 2026-08-16 against Chrome's accessibility tree:
+             this control's name was the empty string, with no name source at all.
+             The wrapping label still earns its keep for the click target. -->
         <span
           class="box"
           role="checkbox"
+          aria-labelledby=${this.label ? 'label' : nothing}
+          aria-label=${!this.label && hostLabel ? hostLabel : nothing}
           aria-checked=${this.indeterminate ? 'mixed' : String(this.checked)}
           aria-disabled=${String(this.disabled)}
           tabindex=${this.disabled ? -1 : 0}
@@ -99,7 +112,7 @@ export class EsaCheckbox extends LitElement {
               : null}
         </span>
         ${this.label
-          ? html`<span class="label typography-${VALUE_TYPE[this.size]}">${this.label}</span>`
+          ? html`<span id="label" class="label typography-${VALUE_TYPE[this.size]}">${this.label}</span>`
           : null}
       </label>
     `;
@@ -200,6 +213,34 @@ export class EsaCheckbox extends LitElement {
        labels now read like the rest. */
     .label {
       color: var(--color-content-default, #202020);
+    }
+
+    /* FORCED COLORS. The box is a span carrying role=checkbox, not an input, so it
+       gets none of the system styling a native checkbox does — no ButtonFace, and
+       no GrayText when disabled. aria-disabled is invisible to this mode; it
+       reads elements, never roles.
+
+       Checked survives on its own: the tick is a currentColor SVG, and a SHAPE
+       is not something force-adjustment can take away. What it can take away is
+       the brand fill behind it, which would leave a tick the same colour as the
+       box it sits in — hence the explicit Highlight/HighlightText pair.
+
+       Disabled is stated in GrayText because the custom grey above collapses onto
+       ordinary text colour. The opacity on the group wrapper does survive (opacity
+       is not force-adjusted), so this is belt and braces, not the only signal. */
+    @media (forced-colors: active) {
+      .box {
+        background: Canvas;
+        border-color: CanvasText;
+      }
+      :host([checked]) .box,
+      :host([indeterminate]) .box {
+        background: Highlight;
+        border-color: Highlight;
+        color: HighlightText;
+      }
+      :host([disabled]) .box { border-color: GrayText; }
+      :host([disabled]) .label { color: GrayText; }
     }
   `,
   ];

@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
 
@@ -89,10 +89,15 @@ export class EsaRangeSlider extends LitElement {
 
   render() {
     return html`
-      ${this.label ? html`<label class="label typography-${LABEL_TYPE[this.size]}">${this.label}</label>` : null}
+      ${this.label
+        ? html`<label for="input" class="label typography-${LABEL_TYPE[this.size]}"
+            >${this.label}</label
+          >`
+        : null}
       <div class="row">
         <div class="track-wrapper">
           <input
+            id="input"
             type="range"
             class="input"
             min=${this.min}
@@ -101,7 +106,7 @@ export class EsaRangeSlider extends LitElement {
             .value=${String(this.value)}
             ?disabled=${this.disabled}
             style="--_fill-percent: ${this.fillPercent}%"
-            aria-label=${this.label || 'Range slider'}
+            aria-label=${this.label ? nothing : 'Range slider'}
             aria-valuemin=${this.min}
             aria-valuemax=${this.max}
             aria-valuenow=${this.value}
@@ -226,6 +231,49 @@ export class EsaRangeSlider extends LitElement {
       text-align: right;
       color: var(--color-content-default, #202020);
       font-variant-numeric: tabular-nums;
+    }
+
+    /* FORCED COLORS. This is the kit's ONLY gradient, and it is the value fill —
+       non-url() background-image is forced to 'none', so the slider would read as
+       empty at every position. The thumb survives on its own (real 2px border).
+
+       The track opts OUT and re-states the fill in system colours, rather than
+       simply opting out and keeping the brand green. A plain opt-out would keep
+       author colours the user has explicitly asked not to see, and green-on-black
+       is exactly the contrast a theme may have been chosen to avoid. Highlight
+       and Canvas are the user's own values, so the fill stays legible in a theme
+       we cannot predict.
+
+       Gecko splits the same job across two pseudo-elements (-moz-range-track is
+       the trough, -moz-range-progress the fill), so it needs no gradient at all.
+
+       The 'forced-color-adjust: none' on a UA pseudo-element is the part of this
+       file to re-check in a real contrast theme. If it does not take, the fill is
+       lost but the component still reports its value: showValue defaults to true
+       and .value is real text. That fallback is why this is safe to ship. */
+    @media (forced-colors: active) {
+      .input::-webkit-slider-runnable-track {
+        forced-color-adjust: none;
+        border: 1px solid CanvasText;
+        background: linear-gradient(
+          to right,
+          Highlight 0%,
+          Highlight var(--_fill-percent, 0%),
+          Canvas var(--_fill-percent, 0%),
+          Canvas 100%
+        );
+      }
+      .input::-moz-range-track {
+        forced-color-adjust: none;
+        border: 1px solid CanvasText;
+        background: Canvas;
+      }
+      .input::-moz-range-progress {
+        forced-color-adjust: none;
+        background: Highlight;
+      }
+      .input:disabled::-webkit-slider-runnable-track,
+      .input:disabled::-moz-range-track { border-color: GrayText; }
     }
   `,
   ];

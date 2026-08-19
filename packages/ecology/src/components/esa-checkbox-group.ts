@@ -227,9 +227,16 @@ export class EsaCheckboxGroup extends LitElement {
                 : null}
             </legend>`
           : null}
-        ${this.options.map((option) => {
+        ${this.options.map((option, i) => {
           const checked = this.isChecked(option.value);
           const disabled = option.disabled ?? false;
+          // aria-labelledby, NOT the wrapping label. A label associates only with a
+          // LABELABLE element, and role="checkbox" does not make a span into one — so
+          // every option here had NO accessible name until 2026-08-16, measured against
+          // Chrome's own accessibility tree. The legend named the group and nothing
+          // named the choices inside it.
+          // Indexed because the ids must be unique within this shadow root.
+          const labelId = `opt-${i}-label`;
           return html`
             <label
               class="item ${disabled ? 'item--disabled' : ''}"
@@ -238,6 +245,7 @@ export class EsaCheckboxGroup extends LitElement {
               <span
                 class="box ${checked ? 'box--checked' : ''}"
                 role="checkbox"
+                aria-labelledby=${labelId}
                 aria-checked=${String(checked)}
                 aria-disabled=${String(disabled)}
                 tabindex=${disabled ? -1 : 0}
@@ -248,7 +256,9 @@ export class EsaCheckboxGroup extends LitElement {
                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${checkIcon}</svg>`
                   : null}
               </span>
-              <span class="item-label typography-${VALUE_TYPE[this.size]}">${option.label}</span>
+              <span id=${labelId} class="item-label typography-${VALUE_TYPE[this.size]}"
+                >${option.label}</span
+              >
             </label>
           `;
         })}
@@ -404,6 +414,25 @@ export class EsaCheckboxGroup extends LitElement {
       flex: none;
       width: 1em;
       height: 1em;
+    }
+
+    /* FORCED COLORS. Same shape as esa-checkbox — a span carrying role=checkbox gets
+       no system styling and 'aria-disabled' is invisible here. The tick is a
+       currentColor SVG and survives; the fill behind it does not, so the
+       checked pair is named explicitly. See esa-checkbox for the full argument. */
+    @media (forced-colors: active) {
+      .box {
+        background: Canvas;
+        border-color: CanvasText;
+      }
+      .box--checked,
+      .box--indeterminate {
+        background: Highlight;
+        border-color: Highlight;
+        color: HighlightText;
+      }
+      .item--disabled .box { border-color: GrayText; }
+      .item--disabled { color: GrayText; }
     }
   `,
   ];

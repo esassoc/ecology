@@ -739,9 +739,9 @@ export class EsaCombobox extends LitElement {
             @click=${() => this.selectOption(option)}
             @mouseenter=${() => (this._active = i)}
           >
-            ${this.multiple
-              ? html`<span class="check ${selected ? 'check--selected' : ''}">${this.checkIcon()}</span>`
-              : null}
+            <span class="check ${selected ? 'check--selected' : ''}"
+              >${this.checkIcon()}</span
+            >
             <span class="option__label">${this.highlight(option.label)}</span>
           </div>`;
         })}
@@ -1187,6 +1187,31 @@ export class EsaCombobox extends LitElement {
     .field--error .trigger--field:focus-visible {
       box-shadow: 0 0 0 var(--focus-ring-width, 2px)
         var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+    }
+
+    /* FORCED COLORS. Same treatment as esa-select, whose option CSS this file
+       duplicates verbatim — see the longer note there. --selected takes the fill,
+       --active takes an inset outline, so a row that is both still shows both.
+
+       .hl (the search-match highlight) is a background too, and it is the one
+       place here where the tint is the only channel. It gets Highlight so the
+       matched run stays visible; the surrounding row keeps Canvas. */
+    @media (forced-colors: active) {
+      .option--active {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+      .option--selected {
+        background: Highlight;
+        color: HighlightText;
+      }
+      /* The tick must follow the row rather than keep its own brand colour. */
+      .check { color: inherit; }
+      .option--disabled { color: GrayText; }
+      .hl {
+        background: Highlight;
+        color: HighlightText;
+      }
     }
   `,
   ];

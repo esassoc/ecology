@@ -200,6 +200,43 @@ fs.appendFileSync(
     `:root {\n${shims.join('\n')}\n}\n`,
 );
 
+/*
+ * THE ACCESSIBILITY ASSURANCE PROFILE, appended verbatim from src/assurance.css.
+ *
+ * Shipped inside tokens.css rather than exported as an opt-in import ON PURPOSE.
+ * The block is inert unless [data-assurance] is on the page, so it costs a spoke
+ * that never opts in nothing but bytes — and the alternative has a measured failure
+ * rate. Spokes override 3 of 26 brand-derived roles; any rule of the form "a spoke
+ * must ALSO import X" is forgotten. `focus.css` is the standing example: three
+ * files in the world import it, and a spoke that does not gets browser-default
+ * focus rings with no warning anywhere.
+ *
+ * Read from src/assurance.css for the same reason the typography classes are read
+ * from src/typography.css — one definition, not two that drift. It is pure CSS
+ * with no build-time derivation, so it is copied byte-for-byte.
+ *
+ * APPENDED LAST, AND THAT IS LOAD-BEARING. `:root` and `[data-assurance="x"]` have
+ * IDENTICAL specificity (0,1,0) — a pseudo-class and an attribute selector weigh
+ * the same — so nothing but source order decides which wins. Emitted before the
+ * deprecated-alias `:root` block, a future alias for any name this profile sets
+ * would silently beat it. There is no such collision today; this ordering is what
+ * keeps it that way without anyone having to remember.
+ *
+ * WHAT THIS ORDERING DOES *NOT* DO, because it is the first thing to assume it
+ * does: it does not beat a spoke's theme. A spoke's `[data-theme]` block is a
+ * separate stylesheet loaded AFTER tokens.css at the same specificity, so a theme
+ * that re-points --color-background-brand still wins, profile or no profile. That
+ * is deliberate — the hub cannot know a spoke's brand ramp, and silently
+ * overwriting a brand with hub green would be a worse failure than the one it
+ * fixes. The teeth are in the gate instead: check-contrast.mjs composes theme over
+ * profile and FAILS the spoke whose brand does not clear AA. See the note in
+ * src/assurance.css.
+ */
+const assuranceCss = fs.readFileSync('src/assurance.css', 'utf8');
+fs.appendFileSync('dist/tokens.css', `\n${assuranceCss}`);
+const assuranceDecls = (assuranceCss.match(/^ {2}--[a-z0-9-]+:/gm) || []).length;
+
 console.log('✓ tokens built → dist/tokens.css, dist/tokens.js');
 console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length} scales)`);
 console.log(`✓ ${shims.length} deprecated aliases appended (from migrations.json)`);
+console.log(`✓ assurance profile appended (${assuranceDecls} declarations, [data-assurance])`);

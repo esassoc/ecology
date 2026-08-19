@@ -16,6 +16,33 @@ import '../styles/theme-__SPOKE_SLUG__.css';
 // has a bundle at public/handoff/<slug>/ (generated via `npx handoff`).
 import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
 
+// ACCESSIBILITY ASSURANCE (optional). If this project has a conformance obligation
+// — Section 508, EN 301 549, a procurement clause — add data-assurance="wcag-aa" to
+// the <html> tag below. It composes with data-theme; the brand does not change:
+//
+//   <html lang="en" data-theme="__SPOKE_SLUG__" data-assurance="wcag-aa">
+//
+// It ships inside @esa/tokens and is inert until set, so there is nothing to import.
+//
+// IT CHANGES COLOUR AND NOTHING ELSE. Solid fills that carry text move to a
+// contrast-safe step. Your components do not change: not their size, not their type,
+// not one pixel of layout — verified across all 91 pages of the hub's own site. So
+// size="xs" still renders at xs, and your size ramp keeps all four distinct steps.
+//
+// Anything that WOULD require a component to change is reported instead, and names
+// the compliant option to use:
+//
+//   npm run a11y:sizes
+//
+// IT DOES NOT OVERRIDE YOUR THEME. Equal specificity, and theme-__SPOKE_SLUG__.css
+// loads after it, so any role your theme re-points still wins — including your brand.
+// Verify rather than assume:
+//
+//   node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --assurance wcag-aa
+//
+// Setting the attribute is a statement about DEFAULTS, not a conformance certificate.
+// See packages/tokens/src/assurance.css for what a profile cannot fix.
+
 interface Props {
   title?: string;
 }

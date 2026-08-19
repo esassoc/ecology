@@ -1,0 +1,210 @@
+/*
+ * beacon theme — GENERATED from a recipe by scripts/make-theme.mjs.
+ *
+ * Do not hand-edit: the next regeneration overwrites it. To change a value,
+ * change the recipe. To keep a value the generator would not choose, add it to
+ * the recipe's "pinned" map — pins are applied last and survive regeneration.
+ *
+ * Brand seed #1f7a6d (curve: Radix teal), neutral cool,
+ * corners flat.
+ *
+ * The brand hex sits EXACTLY on step 9 of the spoke ramp below; every other step
+ * is interpolated along the reference curve. Verify with:
+ *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-beacon.css
+ *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-beacon.css --scheme dark
+ */
+
+[data-theme="beacon"] {
+  --beacon-gray-1:                            #fcfcfd;
+  --beacon-gray-2:                            #f9f9fb;
+  --beacon-gray-3:                            #f0f0f3;
+  --beacon-gray-4:                            #e8e8ec;
+  --beacon-gray-5:                            #e0e1e6;
+  --beacon-gray-6:                            #d9d9e0;
+  --beacon-gray-7:                            #cdced6;
+  --beacon-gray-8:                            #b9bbc6;
+  --beacon-gray-9:                            #8b8d98;
+  --beacon-gray-10:                           #80838d;
+  --beacon-gray-11:                           #60646c;
+  --beacon-gray-12:                           #1c2024;
+  --beacon-brand-1:                           #fbfefd;
+  --beacon-brand-2:                           #f3f9f7;
+  --beacon-brand-3:                           #e1f2ee;
+  --beacon-brand-4:                           #cde9e2;
+  --beacon-brand-5:                           #b7dcd4;
+  --beacon-brand-6:                           #9ecac1;
+  --beacon-brand-7:                           #7eb2a9;
+  --beacon-brand-8:                           #50968b;
+  --beacon-brand-9:                           #1f7a6d;
+  --beacon-brand-10:                          #1e7467;
+  --beacon-brand-11:                          #1b6759;
+  --beacon-brand-12:                          #1c3b37;
+  --color-background-default:                 var(--beacon-gray-1);
+  --color-background-elevation-raised:        var(--beacon-gray-1);
+  --color-background-elevation-floating:      var(--beacon-gray-1);
+  --color-background-elevation-sunken:        var(--beacon-gray-3);
+  --color-background-default-hover:           var(--beacon-gray-4);
+  --color-background-disabled:                var(--beacon-gray-3);
+  --color-content-default:                    var(--beacon-gray-12);
+  --color-content-default-secondary:          var(--beacon-gray-11);
+  --color-content-default-tertiary:           var(--beacon-gray-11);
+  --color-content-default-muted:              var(--beacon-gray-10);
+  --color-content-disabled:                   var(--beacon-gray-9);
+  --color-border-default:                     var(--beacon-gray-7);
+  --color-border-default-subtle:              var(--beacon-gray-6);
+  --color-border-default-strong:              var(--beacon-gray-8);
+  --color-border-disabled:                    var(--beacon-gray-6);
+  --color-background-default-knockout:        var(--beacon-gray-12);
+  --color-background-default-knockout-hover:  var(--beacon-gray-11);
+  --color-content-default-knockout:           var(--beacon-gray-1);
+  --color-border-default-knockout:            #43484e;
+  --color-background-brand:                   var(--beacon-brand-9);
+  --color-background-brand-hover:             var(--beacon-brand-10);
+  --color-background-brand-active:            var(--beacon-brand-10);
+  --color-background-brand-subtle:            var(--beacon-brand-2);
+  --color-background-brand-muted:             var(--beacon-brand-3);
+  --color-background-brand-muted-hover:       var(--beacon-brand-4);
+  --color-background-brand-secondary:         var(--beacon-brand-8);
+  --color-background-brand-secondary-hover:   var(--beacon-brand-9);
+  --color-content-brand:                      var(--beacon-brand-11);
+  --color-content-brand-secondary:            var(--beacon-brand-11);
+  --color-content-link:                       var(--beacon-brand-11);
+  --color-content-link-hover:                 var(--beacon-brand-12);
+  --color-border-brand:                       var(--beacon-brand-6);
+  --color-content-on-brand:                   #fcfcfd;
+  --color-content-on-brand-secondary:         #1c2024;
+  --color-background-accent:                  #f76b15;
+  --color-background-accent-hover:            #ef5f00;
+  --color-content-on-accent:                  #1c2024;
+  --color-background-ai:                      #a18072;
+  --color-background-ai-hover:                #957468;
+  --color-content-on-ai:                      #1c2024;
+  --color-background-ai-subtle:               #fdf7f5;
+  --color-content-ai:                         #7d5e54;
+  --color-background-utility-info:            #0090ff;
+  --color-background-utility-info-hover:      #0588f0;
+  --color-content-on-utility-info:            #1c2024;
+  --color-background-utility-info-subtle:     #f4faff;
+  --color-content-utility-info:               #0d74ce;
+  --color-border-utility-info:                #acd8fc;
+  --color-background-utility-success:         #bdee63;
+  --color-background-utility-success-hover:   #b0e64c;
+  --color-content-on-utility-success:         #37401c;
+  --color-background-utility-success-subtle:  #f8faf3;
+  --color-content-utility-success:            #5c7c2f;
+  --color-border-utility-success:             #c2da91;
+  --color-background-utility-warning:         #ffc53d;
+  --color-background-utility-warning-hover:   #ffba18;
+  --color-content-on-utility-warning:         #4f3422;
+  --color-background-utility-warning-subtle:  #fefbe9;
+  --color-content-utility-warning:            #4f3422;
+  --color-border-utility-warning:             #f3d673;
+  --color-background-utility-danger:          #ce2c31;
+  --color-background-utility-danger-hover:    #641723;
+  --color-content-on-utility-danger:          #fcfcfd;
+  --color-background-utility-danger-subtle:   #fff7f7;
+  --color-content-utility-danger:             #ce2c31;
+  --color-border-utility-danger:              #fdbdbe;
+  --radius-xs:                                0;
+  --radius-sm:                                var(--radius-050);
+  --radius-md:                                var(--radius-100);
+  --radius-lg:                                var(--radius-200);
+}
+
+/*
+ * Dark scheme. The selector needs the element AND both attributes to outrank the
+ * hub's own html[data-scheme='dark'] block, which is (0,1,1) — see emitCss.
+ */
+html[data-scheme="dark"][data-theme="beacon"] {
+  --beacon-gray-0:                            #0d0d0f;
+  --beacon-gray-1:                            #111113;
+  --beacon-gray-2:                            #18191b;
+  --beacon-gray-3:                            #212225;
+  --beacon-gray-4:                            #272a2d;
+  --beacon-gray-5:                            #2e3135;
+  --beacon-gray-6:                            #363a3f;
+  --beacon-gray-7:                            #43484e;
+  --beacon-gray-8:                            #5a6169;
+  --beacon-gray-9:                            #696e77;
+  --beacon-gray-10:                           #777b84;
+  --beacon-gray-11:                           #b0b4ba;
+  --beacon-gray-12:                           #edeef0;
+  --beacon-brand-1:                           #0f1514;
+  --beacon-brand-2:                           #131b1b;
+  --beacon-brand-3:                           #162c29;
+  --beacon-brand-4:                           #163935;
+  --beacon-brand-5:                           #1f4641;
+  --beacon-brand-6:                           #2a544e;
+  --beacon-brand-7:                           #34665f;
+  --beacon-brand-8:                           #3f7a71;
+  --beacon-brand-9:                           #4ca092;
+  --beacon-brand-10:                          #51ad9c;
+  --beacon-brand-11:                          #62d1b6;
+  --beacon-brand-12:                          #bbecdd;
+  --color-background-default:                 var(--beacon-gray-1);
+  --color-background-elevation-raised:        var(--beacon-gray-2);
+  --color-background-elevation-floating:      var(--beacon-gray-3);
+  --color-background-elevation-sunken:        var(--beacon-gray-0);
+  --color-background-default-hover:           var(--beacon-gray-5);
+  --color-background-disabled:                var(--beacon-gray-4);
+  --color-content-default:                    var(--beacon-gray-12);
+  --color-content-default-secondary:          var(--beacon-gray-11);
+  --color-content-default-tertiary:           var(--beacon-gray-11);
+  --color-content-default-muted:              var(--beacon-gray-10);
+  --color-content-disabled:                   var(--beacon-gray-9);
+  --color-border-default:                     var(--beacon-gray-7);
+  --color-border-default-subtle:              var(--beacon-gray-6);
+  --color-border-default-strong:              var(--beacon-gray-8);
+  --color-border-disabled:                    var(--beacon-gray-6);
+  --color-background-default-knockout:        var(--beacon-gray-12);
+  --color-background-default-knockout-hover:  var(--beacon-gray-11);
+  --color-content-default-knockout:           var(--beacon-gray-1);
+  --color-border-default-knockout:            #cdced6;
+  --color-background-brand:                   var(--beacon-brand-9);
+  --color-background-brand-hover:             var(--beacon-brand-10);
+  --color-background-brand-active:            var(--beacon-brand-10);
+  --color-background-brand-subtle:            var(--beacon-brand-2);
+  --color-background-brand-muted:             var(--beacon-brand-3);
+  --color-background-brand-muted-hover:       var(--beacon-brand-4);
+  --color-background-brand-secondary:         var(--beacon-brand-9);
+  --color-background-brand-secondary-hover:   var(--beacon-brand-10);
+  --color-content-brand:                      var(--beacon-brand-11);
+  --color-content-brand-secondary:            var(--beacon-brand-11);
+  --color-content-link:                       var(--beacon-brand-11);
+  --color-content-link-hover:                 var(--beacon-brand-12);
+  --color-border-brand:                       var(--beacon-brand-6);
+  --color-content-on-brand:                   #111113;
+  --color-content-on-brand-secondary:         #111113;
+  --color-background-accent:                  #f76b15;
+  --color-background-accent-hover:            #ff801f;
+  --color-content-on-accent:                  #111113;
+  --color-background-ai:                      #a18072;
+  --color-background-ai-hover:                #ae8c7e;
+  --color-content-on-ai:                      #111113;
+  --color-background-ai-subtle:               #1c1917;
+  --color-content-ai:                         #d4b3a5;
+  --color-background-utility-info:            #0090ff;
+  --color-background-utility-info-hover:      #3b9eff;
+  --color-content-on-utility-info:            #111113;
+  --color-background-utility-info-subtle:     #111927;
+  --color-content-utility-info:               #70b8ff;
+  --color-border-utility-info:                #104d87;
+  --color-background-utility-success:         #bdee63;
+  --color-background-utility-success-hover:   #d4ff70;
+  --color-content-on-utility-success:         #111113;
+  --color-background-utility-success-subtle:  #151a10;
+  --color-content-utility-success:            #bde56c;
+  --color-border-utility-success:             #3d522a;
+  --color-background-utility-warning:         #ffc53d;
+  --color-background-utility-warning-hover:   #ffd60a;
+  --color-content-on-utility-warning:         #111113;
+  --color-background-utility-warning-subtle:  #1d180f;
+  --color-content-utility-warning:            #ffca16;
+  --color-border-utility-warning:             #5c3d05;
+  --color-background-utility-danger:          #e5484d;
+  --color-background-utility-danger-hover:    #ec5d5e;
+  --color-content-on-utility-danger:          #111113;
+  --color-background-utility-danger-subtle:   #201314;
+  --color-content-utility-danger:             #ff9592;
+  --color-border-utility-danger:              #72232d;
+}

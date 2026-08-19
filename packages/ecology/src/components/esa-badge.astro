@@ -8,13 +8,19 @@ interface Props {
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
   size?: 'xs' | 'sm' | 'md' | 'lg';
   dot?: boolean;
+  /** Accessible name for `dot` mode, which renders no visible text. Ignored otherwise. */
+  label?: string;
 }
-const { value, variant = 'primary', size = 'md', dot = false } = Astro.props;
+const { value, variant = 'primary', size = 'md', dot = false, label } = Astro.props;
 
 // Badge text is UI text at emphasis — the -strong label composite, one rung per size.
 // The import is the Astro half of the composite mechanism; Lit siblings get it via
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
+// `dot` mode renders no visible text, so its only channel is a background colour —
+// which reaches neither a screen reader nor a forced-colors user. `.visually-hidden`
+// carries the name for the first; the forced-colors block below handles the second.
+import '@esa/tokens/a11y.css';
 
 // A badge is microcopy: nowrap text in a padding-sized box. `-strong` because small
 // knocked-out text on a saturated fill needs the stroke — legibility, not emphasis.
@@ -37,6 +43,7 @@ const cls = [
 ---
 <span class={cls}>
   {!dot && <span class="esa-badge__text">{value}</span>}
+  {dot && label && <span class="visually-hidden">{label}</span>}
 </span>
 
 <style>
@@ -56,12 +63,22 @@ const cls = [
        sets --_btn-pad-y EQUAL to --_btn-padding-x, and it is a 40px control that can
        afford it; applying that to a chip renders it button-tall (measured: md went to
        38px). Wider-than-tall padding is the shape.
-       aspect-ratio squares the count case the way .esa-button--icon-only does;
-       min-width: fit-content is what keeps a long label from being squeezed by it —
-       min-width:auto resolves to 0 on a box that is not a flex ITEM, so the ratio
-       would otherwise crop a long label. */
-    aspect-ratio: 1;
-    min-width: fit-content;
+       THE SQUARE-COUNT FLOOR IS A min-width, NOT aspect-ratio. `aspect-ratio: 1`
+       shipped here 2026-08-16 and blew every text badge up into a giant square —
+       measured: "Secondary" at md went to 90x90px. The reasoning behind it had the
+       axes backwards. On a box with auto width AND auto height, the INLINE size is
+       the one resolved from content; the block size is then derived from it. So the
+       ratio stretched the height out to the label's width rather than clamping the
+       width in to the text's height, and `min-width: fit-content` could not stop it
+       — fit-content was already what the width was. .esa-button--icon-only gets away
+       with the same declaration only because its content is a square icon, so both
+       axes already agree.
+       A min-width equal to the box's own height is the honest form of "at least
+       square": a one- or two-character count reaches the floor and renders square,
+       a long label overruns it and stays a pill. 1lh is the line box this element's
+       own .typography-microcopy-*-strong class sets, and border-box sizing above is
+       what makes padding-y + leading the whole height. */
+    min-width: calc(1lh + 2 * var(--_badge-padding-y));
     padding-block: var(--_badge-padding-y);
     padding-inline: var(--_badge-padding-x);
     border-radius: var(--radius-sm, 0.25rem);
@@ -97,4 +114,27 @@ const cls = [
   .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning-hover,    #ffba18); }
   .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger-hover,     #dc3e42); }
   .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-background-utility-info-hover,       #0588f0); }
+
+  /* FORCED COLORS. A text badge survives: --_badge-bg and --_badge-text flatten,
+     but the NUMBER is still there, and a border keeps the pill readable as a pill.
+
+     Dot mode does not survive intact, and it is worth being exact about why. The
+     dot renders no text at all, so 100% of its meaning is one background colour —
+     and this mode replaces every background with the same system colour. There is
+     no honest repair: the eight system keywords mean canvas / button / selection /
+     disabled / link, and none of them means "warning". Painting the warning dot
+     Highlight would tell the user it is SELECTED, which is a different lie from
+     the one we started with.
+
+     So the dot is made VISIBLE (an outline, since the 8px box has no room for a
+     border) and its meaning is carried by the `label` prop's visually-hidden text
+     instead. Treat dot severity as decorative and always pass `label`. */
+  @media (forced-colors: active) {
+    .esa-badge { border: 1px solid CanvasText; }
+    .esa-badge--dot {
+      border: 0;
+      outline: 1px solid CanvasText;
+      background: CanvasText;
+    }
+  }
 </style>

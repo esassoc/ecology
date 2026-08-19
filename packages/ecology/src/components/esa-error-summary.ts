@@ -216,10 +216,19 @@ export class EsaErrorSummary extends LitElement {
         display: flex;
         gap: var(--spacing-300, 0.75rem);
         padding: var(--spacing-400, 1rem);
-        border: var(--error-summary-border-width, var(--border-width-200, 2px)) solid
-          var(--error-summary-border-color, var(--color-border-utility-danger, #fdbdbe));
-        border-radius: var(--error-summary-radius, var(--radius-md, 0.5rem));
-        background: var(--error-summary-bg, var(--color-background-utility-danger-subtle, #fff7f7));
+        /* The hairline role, not --border-width-200. This was 2px, reached via a
+           primitive — the last direct tier-1 width read in the kit, left behind
+           when --error-summary-border-width folded away. There is no tier-2
+           EMPHASIS width to fold onto (default is 1px, focus is 2px but means
+           the focus ring), so the choice was a heavier panel or the hairline
+           every other panel edge uses. The hairline: the danger COLOUR is what
+           marks this panel, and one component quietly running double-weight
+           chrome was the divergence nobody asked for. Renders 1px now, down
+           from 2px. */
+        border: var(--border-width-default, 1px) solid
+          var(--color-border-utility-danger, #fdbdbe);
+        border-radius: var(--radius-md, 0.5rem);
+        background: var(--color-background-utility-danger-subtle, #fff7f7);
         color: var(--color-content-default, #202020);
       }
 
@@ -236,7 +245,7 @@ export class EsaErrorSummary extends LitElement {
       .icon {
         flex: none;
         display: inline-flex;
-        color: var(--error-summary-icon-color, var(--color-content-utility-danger, #ce2c31));
+        color: var(--color-content-utility-danger, #ce2c31);
       }
 
       .body {
@@ -245,7 +254,7 @@ export class EsaErrorSummary extends LitElement {
 
       .heading {
         margin: 0;
-        color: var(--error-summary-heading-color, var(--color-content-utility-danger, #ce2c31));
+        color: var(--color-content-utility-danger, #ce2c31);
       }
 
       .list {

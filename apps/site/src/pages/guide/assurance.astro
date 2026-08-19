@@ -1,0 +1,166 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+---
+<DocsLayout title="Accessibility assurance — Ecology" activeHref="/guide/assurance">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Accessibility assurance</span></nav>
+  <h1>Accessibility assurance</h1>
+  <p class="lede">Some projects have to make guarantees — a Section 508 clause, EN 301 549, a procurement requirement. <code>data-assurance</code> is how a spoke opts into defaults that are confirmed accessible instead of merely intended to be. It is not a theme, and it does not cost you your brand.</p>
+
+  <Section id="axis" title="It is a third axis, not a theme">
+    <p>
+      A theme is a brand re-skin. Assurance is orthogonal to it, so the two compose — a
+      project is entitled to be on-brand <em>and</em> assured. There are three independent
+      attributes on <code>&lt;html&gt;</code>:
+    </p>
+    <table class="tk">
+      <thead><tr><th>Attribute</th><th>Answers</th><th>Who owns it</th></tr></thead>
+      <tbody>
+        <tr><td><code>data-theme</code></td><td>Which brand is this?</td><td>the spoke</td></tr>
+        <tr><td><code>data-scheme</code></td><td>Light or dark?</td><td>the reader</td></tr>
+        <tr><td><code>data-assurance</code></td><td>Which conformance profile?</td><td>the project</td></tr>
+      </tbody>
+    </table>
+    <pre><code>&lt;html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa"&gt;</code></pre>
+    <p>
+      That is the entire opt-in. The profile ships inside <code>@esa/tokens</code> and is
+      <strong>inert until the attribute is present</strong>, so there is nothing to import
+      and nothing to copy. It is deliberately not an opt-in import: spokes were measured
+      overriding 3 of 26 brand-derived roles, so any rule of the form &ldquo;you must also
+      import X&rdquo; gets forgotten.
+    </p>
+    <p>Try it live — the toolbar above has both switchers. Set a brand and a profile together.</p>
+  </Section>
+
+  <Section id="what" title="What the profile actually changes">
+    <table class="tk">
+      <thead><tr><th>Concern</th><th>Under <code>wcag-aa</code></th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Text contrast (SC 1.4.3)</td>
+          <td>A solid fill that carries text moves from Radix step 9 to step 11. Step 9 is engineered for 3:1 — UI components and large text — not the 4.5:1 body text needs. This clears all seven failures in the hub defaults.</td>
+        </tr>
+        <tr>
+          <td>Target size (SC 2.5.8)</td>
+          <td><strong>Nothing is resized.</strong> The profile never changes component geometry — see &ldquo;What happens to my <code>xs</code> components&rdquo; below. It is reported instead, and you change the call sites.</td>
+        </tr>
+        <tr>
+          <td>Minimum type size</td>
+          <td><strong>Nothing is resized.</strong> Raising the smallest type rung was tried and pulled — it moved layout on 9 of 25 pages, because a box follows its contents. Reported alongside target size instead.</td>
+        </tr>
+        <tr>
+          <td>Focus not obscured (SC 2.4.11)</td>
+          <td><code>--focus-scroll-margin</code> gets a real default, so a Tab-focused element is not parked under sticky chrome.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Nothing here is a rule — every line is a re-pointed token. That constraint is
+      structural, not stylistic: half the kit renders into shadow roots that no page-level
+      stylesheet can reach, and inherited custom properties are the only channel that
+      crosses a shadow boundary in every browser engine.
+    </p>
+  </Section>
+
+  <Section id="xs" title="What happens to my xs components?">
+    <p>
+      <strong>They keep rendering at <code>xs</code>.</strong> Nothing about them changes, and
+      that is deliberate. The profile does not touch component geometry at all.
+    </p>
+    <p>
+      Two versions tried to bend that, and both were pulled. The first carried a 24px minimum
+      hit area that every control read: it worked &mdash; 33 measured failures went to zero &mdash;
+      and under it <code>xs</code> and <code>sm</code> rendered at the <em>same</em> height on
+      chip-group, checkbox-group and radio-group. The bottom of the ramp quietly collapsed and
+      the developer who wrote <code>size="xs"</code> was never told.
+    </p>
+    <p>
+      The second is the instructive one, because it looked harmless: raise the smallest
+      <em>type</em> rung to kill 8px text. No size token anywhere in it. But a box follows its
+      contents &mdash; <code>esa-chip-group</code> went from <code>{'{xs: 20, sm: 22}'}</code> to
+      <code>{'{xs: 22, sm: 22}'}</code>, and layout moved on 9 of 25 pages.
+      <strong>&ldquo;It is only typography&rdquo; is not a defence.</strong> The test is not
+      which token you touched; it is whether any component renders differently.
+    </p>
+    <p>
+      A colour role is a <strong>value</strong>, and re-pointing a value is what a theme layer
+      is for. A size step is a <strong>contract</strong> &mdash; four deliberate steps that call
+      sites choose between. A profile that redefines one is lying to every call site that
+      chose it. So the profile reports, and you decide:
+    </p>
+    <pre><code>npm run a11y:sizes</code></pre>
+    <p>
+      It lists every call site using a step that renders under the floor, and what to use
+      instead. You change <code>size="xs"</code> to <code>size="sm"</code> in your own source,
+      the ramp keeps its shape at every step, and the change shows up in your diff rather
+      than hiding in a stylesheet you never opened.
+    </p>
+    <p>
+      There are only ever two answers, and &ldquo;quietly make the existing option bigger&rdquo;
+      is not one of them:
+    </p>
+    <ol>
+      <li><strong>A compliant option already exists</strong> &rarr; the report names it.</li>
+      <li><strong>It does not exist</strong> &rarr; it gets built, as a real variant. The report
+        flags that case separately, because no call-site edit can fix it.</li>
+    </ol>
+    <p>
+      The map it checks against is <em>measured</em>, not declared &mdash; regenerated from a
+      real browser run, so it stays correct when a component&rsquo;s padding or type rung
+      changes. It also catches the case a <code>grep</code> cannot: every component defaults
+      to <code>md</code>, so a bare <code>&lt;esa-checkbox&gt;</code> with no size attribute is
+      a finding too.
+    </p>
+    <p>
+      <strong>And it surfaces something a silent floor would have buried.</strong> Three
+      components &mdash; <code>esa-checkbox</code>, <code>esa-input-tag</code> and
+      <code>esa-range-slider</code> &mdash; are under the floor at <code>xs</code>,
+      <code>sm</code> <em>and</em> their default <code>md</code>. Only <code>lg</code> clears
+      it, so that is what the report tells you to use, and every call site that omits a size
+      is a finding too. A floor would have patched over all of that and left it invisible.
+    </p>
+  </Section>
+
+  <Section id="theme-wins" title="The part everyone gets wrong: your theme still wins">
+    <p>
+      <code>[data-theme]</code> and <code>[data-assurance]</code> have <strong>identical
+      specificity</strong>, and your theme stylesheet loads afterwards. So on any role your
+      theme re-points — your brand colour, above all — <strong>the theme wins, profile or
+      not</strong>.
+    </p>
+    <p>
+      That is the right outcome. The hub cannot know your brand ramp, and silently
+      repainting your brand with hub green would be a worse failure than the contrast
+      number it fixes. But it does mean the attribute alone proves nothing about your
+      colours. Run the check:
+    </p>
+    <pre><code>node ../ecology/scripts/check-contrast.mjs src/styles/theme-&lt;brand&gt;.css --assurance wcag-aa</code></pre>
+    <p>
+      It composes them in the browser&rsquo;s own order and fails on any pair under 4.5:1.
+      Measured against the demo themes, <code>beacon</code> still fails
+      <code>content-on-brand-secondary</code> at 3.64:1 with the profile on. That failure
+      is the feature — it is telling the spoke which of its own colours to darken.
+    </p>
+  </Section>
+
+  <Section id="limits" title="What it cannot do, and why that matters">
+    <p>
+      A profile is a token scope. It re-points values; it cannot add behaviour, markup, or
+      a rule inside a shadow root. Setting the attribute is a statement about the
+      <strong>defaults</strong>, never a conformance certificate. It does not fix:
+    </p>
+    <ul>
+      <li><code>esa-date-picker</code>, which has no keyboard handling at all — SC 2.1.1, <strong>Level A</strong>, and the most serious open finding in the kit.</li>
+      <li>The nine non-modal popups that return focus nowhere, three of which have no Escape key.</li>
+      <li>Anything in Windows Contrast Themes, which overrides at the used-value layer, downstream of every token.</li>
+    </ul>
+    <p>
+      Those are component fixes, tracked in the improvement ledger. What makes the profile
+      more than a promise is the gate — <code>npm run a11y:assured</code> composes the
+      contrast graph, measures rendered target geometry in a real browser, and runs the axe
+      and live-region audits. An assurance claim sourced from anything but a passing gate
+      is a guess.
+    </p>
+  </Section>
+</DocsLayout>

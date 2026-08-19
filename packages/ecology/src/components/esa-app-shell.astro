@@ -254,7 +254,12 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   }
   .esa-app-shell__search:hover { border-color: var(--color-border-default-strong, #bbbbbb); }
   .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-background-brand, #46a758); outline-offset: 2px; }
-  .esa-app-shell__search-label { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* clip/visible, not `overflow: hidden` — the search button carries a microcopy
+     composite, whose line-height `none` (1) leaves the line box 1em against DM Sans's
+     1.30em glyph box, so hiding the Y axis clips the descenders in a placeholder like
+     "Search sites and permits…". Same fix as esa-file-list's .file__name, where the
+     arithmetic is written out. */
+  .esa-app-shell__search-label { flex: 1; text-align: left; overflow-x: clip; overflow-y: visible; text-overflow: ellipsis; white-space: nowrap; }
   .esa-app-shell__search-kbd {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     min-width: 18px; height: 18px; padding: 0 5px;

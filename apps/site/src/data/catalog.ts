@@ -20,6 +20,7 @@ const COMPONENTS = path.join(ROOT, 'packages', 'ecology', 'src', 'components');
 const DOC_PAGES = path.join(ROOT, 'apps', 'site', 'src', 'pages', 'components');
 
 export type CatalogKind = '.astro' | 'wc' | 'reference';
+export type CatalogStatus = 'stable' | 'reference' | 'deprecated';
 
 export interface CatalogProp {
   name: string;
@@ -31,11 +32,13 @@ export interface CatalogEntry {
   slug: string; // esa-button
   name: string; // Button (display)
   kind: CatalogKind; // .astro | wc (Lit) | reference (wraps an external lib, no source)
-  status: 'stable' | 'reference';
+  status: CatalogStatus;
   summary: string; // one-liner, from the source header (or the doc page for reference)
   props: CatalogProp[]; // .astro only — Lit props live in `static properties`, not an interface
   hasDocPage: boolean; // a deep-dive page exists at /components/<slug>
   wraps?: string; // reference only, e.g. "AG Grid"
+  /** Deprecated only — what replaced it, rendered in the catalog and the sidebar. */
+  supersededBy?: string;
   /** Where the nav/catalog should link: the doc page if one exists, else the catalog anchor. */
   href: string;
 }
@@ -56,7 +59,7 @@ interface CategorySpec {
 const CATEGORIES: CategorySpec[] = [
   { label: 'Core', items: [
     ['esa-button', 'Button'], ['esa-button-group', 'Button Group'], ['esa-button-toggle', 'Button Toggle'],
-    ['esa-icon', 'Icon'], ['esa-icon-link', 'Icon Link'], ['esa-icon-button', 'Icon Button'],
+    ['esa-icon', 'Icon'],
   ] },
   { label: 'Layout & Sections', items: [
     ['esa-app-shell', 'App Shell'], ['esa-page-header', 'Page Header'], ['esa-stat', 'Stat'],
@@ -94,7 +97,30 @@ const CATEGORIES: CategorySpec[] = [
   { label: 'Data & Editors', items: [
     ['esa-grid', 'Data Grid'], ['esa-map', 'Map'], ['esa-rich-text-editor', 'Rich Text Editor'],
   ] },
+  // Kept LAST on purpose: a deprecated component is still shipped and still
+  // documented (spokes need the page to migrate off it), but it must not sit in
+  // the group a reader browses to pick a component. Every entry here must also
+  // appear in DEPRECATED below — the guard under it enforces that both ways.
+  { label: 'Deprecated', items: [
+    ['esa-icon-link', 'Icon Link'], ['esa-icon-button', 'Icon Button'],
+  ] },
 ];
+
+// ── Deprecated components ──────────────────────────────────────────────────
+// A component is deprecated when its source still ships (spokes importing it
+// keep working) but it is a shim over its replacement and warns at build time.
+// The successor string is the one thing a reader needs from the sidebar, so it
+// is data here rather than prose on the page — the doc pages, the catalog
+// index, and the nav all read it from this map.
+//
+// A component removal is a `kind: "component"` row in packages/tokens/
+// migrations.json; this is the docs-side half of the same event. Adding a row
+// there without adding the slug here leaves the component sitting in its old
+// group looking current.
+const DEPRECATED = new Map<string, string>([
+  ['esa-icon-button', 'esa-button variant="chrome" iconOnly'],
+  ['esa-icon-link', 'esa-button variant="chrome"'],
+]);
 
 // Non-component files in the components dir, excluded from the catalog.
 const EXCLUDE = new Set(['icon-registry']);
@@ -204,6 +230,7 @@ function buildEntry(slug: string, name: string): CatalogEntry {
   const hasDocPage = existsSync(docFile);
   const href = hasDocPage ? `/components/${slug}` : `/components#${slug}`;
   const ext = sourceSlugs.get(slug);
+  const supersededBy = DEPRECATED.get(slug);
 
   if (!ext) {
     // No source file → a reference entry (wraps an external library).
@@ -219,11 +246,12 @@ function buildEntry(slug: string, name: string): CatalogEntry {
     slug,
     name,
     kind: isAstro ? '.astro' : 'wc',
-    status: 'stable',
+    status: supersededBy ? 'deprecated' : 'stable',
     summary,
     props: isAstro ? parseProps(src) : [],
     hasDocPage,
     href,
+    supersededBy,
   };
 }
 
@@ -247,8 +275,30 @@ if (orphans.length) {
   });
 }
 
+// Second drift guard, for the OTHER half of a deprecation. The two facts —
+// "this slug is deprecated" (DEPRECATED) and "this slug is filed under
+// Deprecated" (CATEGORIES) — are written in two places, so they can disagree in
+// both directions, and each disagreement is silent on its own: a slug in
+// DEPRECATED but filed under Core renders a Deprecated badge inside the group
+// people shop from, and a slug filed under Deprecated but missing from
+// DEPRECATED renders with a green Stable pill under a Deprecated heading.
+const deprecatedGroup = new Set(
+  (CATEGORIES.find((c) => c.label === 'Deprecated')?.items ?? []).map(([slug]) => slug),
+);
+const misfiled = [...DEPRECATED.keys()].filter((s) => !deprecatedGroup.has(s)).sort();
+const unmarked = [...deprecatedGroup].filter((s) => !DEPRECATED.has(s)).sort();
+if (misfiled.length || unmarked.length) {
+  console.warn(
+    `\n⚠️  catalog.ts deprecation guard: DEPRECATED and the "Deprecated" category disagree.\n` +
+      (misfiled.length ? `   Marked deprecated but filed elsewhere: ${misfiled.join(', ')}.\n` : '') +
+      (unmarked.length ? `   Filed under Deprecated but not in DEPRECATED (no successor shown): ${unmarked.join(', ')}.\n` : ''),
+  );
+}
+
 /** Total component count (excludes reference entries, which have no source). */
 export const componentCount: number = [...sourceSlugs.keys()].length;
+/** How many of `componentCount` are deprecated shims, not components to reach for. */
+export const deprecatedCount: number = [...DEPRECATED.keys()].filter((s) => sourceSlugs.has(s)).length;
 /** Reference-entry count (grid/map/editor — documented wrappers, no source). */
 export const referenceCount: number = catalog.reduce(
   (n, g) => n + g.entries.filter((e) => e.kind === 'reference').length,

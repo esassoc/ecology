@@ -11,6 +11,68 @@ component), `hub-fix`, `skill`, `workflow` (planner/gate defaults), `process`.
 
 ---
 
+## Source: the tier-3 reduction pass (2026-08-16)
+Applied the three-tier framework's necessity test to all 306 tier-3 declarations:
+**306 → 116** (16 dead deleted, 3 misfiled relocated, 168 demoted to the tier-2 roles
+they aliased, 3 pre-existing rename rows repaired). Findings that were surfaced BY the
+pass but are not part of it, logged rather than fixed:
+
+- **`esa-alert-box` pins every variant to the INFO tint** · *Evidence:* the hookify
+  defaults set `--alert-box-bg` → `--color-background-utility-info-subtle` and
+  `--alert-box-border-color` → `--color-border-utility-info` for ALL variants, so success
+  and warning alerts render blue. air-exchange-tool works around it in its own theme with
+  `--alert-box-bg: initial`, with a comment naming it as a hub defect — meaning a spoke
+  found this, patched locally, and it never came back up. A zero-regression-rule miss: the
+  hook was spliced above a chain that was per-variant, and the default flattened it.
+  *Action:* the two hooks must derive from the variant's accent context, not from `info`.
+  Both survived the demotion pass (air-exchange declares them, which is demonstrated
+  divergence), so the fix is a value change, not a re-add · `hub-fix` · **P1**
+
+- **`--color-background-default-hover` is a tier-2 orphan, and three migrations rows point
+  spokes AT it** · *Evidence:* its only reader was `--topbar-icon-bg-hover`, deleted with
+  the topbar namespace. It was already effectively dead — its one reader was itself
+  unread — so the deletion revealed the orphan rather than creating it. The sharp edge is
+  that `form-bg-to-background-field` and two other rows name it as a rename DESTINATION,
+  so any spoke that ran `/update-tokens` was rewritten onto a role the hub reads nowhere.
+  *Action:* decide whether the role is real (wire it — a neutral hover surface is a
+  plausible intent) or dead (`removed: true`, and repoint the three rows). Do NOT leave it
+  declared-but-unread while rows aim at it · `hub-fix` · **P2**
+
+- **A rename row's destination is only as durable as the token it points at** ·
+  *Evidence:* the destination-resolves guard fired THREE times in one pass —
+  `tier3-border-to-border-color`, `filter-dropdown-border-shorthand-to-colour` and
+  `tier3-variant-before-property` all aliased onto tier-3 names being demoted. Each would
+  have shipped as an alias resolving to nothing while the manifest reported success, which
+  is the exact defect `form-height-to-control-height` records. *Action:* none needed — the
+  guard caught all three and they are folded into the removals. Logged because the *rate*
+  is the signal: any pass that deletes tier-3 names should expect to repair older rename
+  rows, and the guard is the only thing that finds them · `process` · **P3**
+
+- **`--focus-ring-halo` / `--focus-ring-halo-spread` are documented but declared nowhere** ·
+  *Evidence:* both appear in `apps/site/src/pages/foundations/focus.astro` (a live doc page
+  that lists them in a token table with `maps:` targets), in
+  `plugins/spoke-kit/skills/design-principles/SKILL.md:57` as a token to re-point, and in
+  `plugins/spoke-kit/skills/accessibility/forced-colors.md:83` inside a worked example.
+  Neither is declared in `tokens.css` or `component-tokens.css`. This is the reverted
+  contrast band CLAUDE.md records ("A second, non-brand contrast band was tried and reverted
+  the same day"): the TOKENS were reverted, the three documents referencing them were not.
+  *Impact:* the skill ships to spokes, so a spoke is being told to re-point a token that
+  does not exist — and because the read sites carry fallbacks, doing so fails silently.
+  *Action:* either land the halo tokens or strip all three references. Not touched by the
+  tier-3 pass — surfaced by its stale-reference sweep · `hub-fix` · **P1**
+
+- **The computed-style probe is too noisy to prove zero-regression** · *Evidence:* built
+  the Playwright probe the plan called for; it reported 48 routes differing — and the
+  control (same build, two runs) reported the same 48. Hydration/animation timing makes
+  per-element computed styles non-deterministic at this precision. *Action:* zero-regression
+  was argued by construction instead (160 of 174 substitutions are pure layer-strips; the
+  other 14 keep their own fallback with only the token name swapped). If a real visual gate
+  is wanted, it needs deterministic settling — disable animations, await
+  `customElements.whenDefined` per tag, and compare a stable ordering key rather than a
+  positional DOM path · `workflow` · **P2**
+
+---
+
 ## Source: an end-to-end spoke build (2026-06-13)
 A spoke built end-to-end by a planner→implementer→evaluator Workflow.
 Result: 6/6 pages passed both gates, 0 adherence errors, AA contrast — but Andy's review
@@ -509,8 +571,19 @@ codemod rather than a flag day.
   move them onto `--transition-*`. Until they do they **ignore the reduced-motion override**,
   which is what makes that block worth having. Not a codemod: each site needs the right role
   chosen, and 80ms sites have no exact rung · `hub-fix` · **P1**
-- **FOR THE TIER-3 PASS — adopting a typography composite removes the component's
-  typography hook** · *Evidence:* 13 tier-3 typography hooks exist (`--grid-font-size`,
+- ✅ **FOR THE TIER-3 PASS — adopting a typography composite removes the component's
+  typography hook** · *Closed 2026-08-16 as **option (c)**, by the tier-3 reduction pass
+  (306 declarations → 116).* Of the 13 hooks listed below, 5 were already gone; of the 8
+  that remained, the 4 `--grid-*` ones were KEPT (inside the staged data-grid surface —
+  a data grid is one of the three cases tier 3 exists for) and the 4 one-reader ones were
+  demoted: `--filter-pill-font-size`, `--link-column-heading-font-size`,
+  `--link-column-item-font-size`, `--pagination-font-size`. Each was a pure alias over a
+  `--typography-*` property or a `--font-size-*` rung, which is the fragmentation the
+  composites exist to prevent. **This unblocks the typography migration**, which the
+  entry below says was waiting on this decision. Original entry follows for the reasoning.
+
+  ~~**FOR THE TIER-3 PASS — adopting a typography composite removes the component's
+  typography hook**~~ · *Evidence:* 13 tier-3 typography hooks exist (`--grid-font-size`,
   `--grid-header-font-size`, `--grid-row-font-size`, `--grid-font-family`,
   `--form-font-size`, `--form-label-font-size`, `--form-label-font-weight`,
   `--form-line-height`, `--filter-pill-font-size`, `--icon-link-font-size`,
@@ -1679,3 +1752,356 @@ real `outline` two declarations below it in the same rule. The true count is 0.
   reports clean on a page that is unusable in a contrast theme. This is the third thing it cannot do,
   after name quality and live-region liveness. *Action:* none possible; verification is a Windows VM or
   Edge DevTools ▸ Rendering ▸ *Emulate forced-colors* · *Priority:* n/a.
+
+### Remediation — same day (2026-08-16)
+
+**Two corrections to the entry above before the work is described.** First, the
+"0 occurrences" baseline was stale by the time it was written: commit `7919570` added a
+forced-colors focus fallback to `packages/tokens/src/a11y.css`, so the focus layer was
+already solved. Second, the "15 components ring focus with box-shadow" figure was wrong —
+it came from reading `outline: none` and stopping, missing the real `outline` two
+declarations below in the same rule. The true count was 0. Re-measure before recording.
+
+- **24 components now carry a `@media (forced-colors: active)` block** · *Evidence:*
+  every fix is inside the query, because adding borders unconditionally is not layout-safe
+  here — only `esa-sidebar-nav` has a `box-sizing` reset in its shadow root, `esa-back-to-top`
+  is a hard 44×44 (the 2.5.5 floor), and `esa-switch-toggle`'s checked-thumb
+  `left: calc(--_track-w - --_thumb - 2px)` breaks outright when the track gains a border
+  (the block re-declares it at `-4px`). Normal rendering is unchanged. · `lego` ·
+  *Priority:* n/a.
+
+- **Borders where the shadow was the only edge** · dialog, confirm-dialog, side-dialog,
+  search-panel, tooltip, snackbar-item, back-to-top. The tooltip's arrow is `display: none`
+  in the query rather than bordered — it is a rotated 8px square, so a border renders as a
+  diamond floating outside the bubble. `esa-card--elevated` needed nothing: its
+  `border: 1px solid transparent` is already the canonical fix.
+
+- **Fills where a border would shift siblings** · `esa-button-toggle .option--selected`,
+  `esa-tab-layout` segmented/pill `.tab--active` (+ the underline `::after`, which is a
+  background-painted box and flattens too), `esa-sidebar-nav .link--active`. All three are
+  intrinsically-sized children in a row, so `Highlight`/`HighlightText` rather than an edge.
+
+- **A normal-mode bug fixed on the way past** · *Evidence:* in `esa-select`/`esa-combobox`,
+  `.option--selected` is declared after `.option--active` at equal specificity, so the
+  keyboard cursor disappeared whenever it landed on the selected row — in full colour, not
+  just forced colors. They now use different channels (fill vs inset outline) and compose.
+  The checkmark also no longer renders only when `multiple`; single-select selection was
+  background-colour-only, which was an SC 1.4.1 failure in every mode. · `lego` ·
+  *Priority:* n/a.
+
+- **Two opt-outs, both because the colour IS the content** · `esa-color-picker`'s preview
+  and swatches, and `esa-filter-dropdown`'s per-option colour dot. The color-picker opt-out
+  fixes selection twice over: its base `.swatch` is `border: 2px solid transparent`, and
+  without the opt-out forced colors would make every swatch's border visible — the same
+  border `--selected` uses to mark itself.
+
+- **The gradient** · `esa-range-slider` opts its track pseudo-elements out and re-states the
+  fill in `Highlight`/`Canvas` rather than keeping brand green, so it uses the user's own
+  palette. **`forced-color-adjust: none` on a UA pseudo-element is unverified** — it needs a
+  real contrast theme. Safe to ship because `showValue` defaults to true and `.value` is
+  real text, so the number survives either way.
+
+- **Deliberately NOT repaired, so it is not mistaken for an oversight** · `esa-badge` dot
+  mode and `esa-progress-bar` variants both encode severity in one background colour, and
+  there is no system keyword that means "warning" — painting the warning dot `Highlight`
+  would announce SELECTED, a different lie from the one we started with. Instead: the badge
+  gained a `label` prop rendering visually-hidden text (dot mode had no accessible name at
+  all), `showValue` now defaults to `true` on the progress bar, and both are made visible.
+  Same for `esa-dropdown-menu --danger`: no glyph channel exists (the `icon` string renders
+  an anonymous bullet), so the item's LABEL has to carry the warning. `esa-pill`,
+  `esa-danger-zone` and `esa-stat` keep real borders and literal text and were left alone.
+
+- **Links** · the one query-free change: `text-decoration: none` → `text-decoration-color:
+  transparent` in `esa-file-list`, `esa-breadcrumbs` and `esa-link-column` (×2).
+  `text-decoration-color` IS force-adjusted, so the underline returns in forced colors and
+  nothing moves in normal mode. `esa-link-column` was the worst case in the kit — both the
+  heading and the list items use `color: inherit`, so a linked and an unlinked item were
+  pixel-identical at rest in *every* mode, with a hover underline as the only tell.
+
+- **Two orphaned `<label>`s fixed because the gate blocked the work** · *Evidence:*
+  `check-a11y`'s label rule blocked edits to `esa-range-slider` and `esa-color-picker` — a
+  true positive from the forms pass, not a false one. The slider now uses `for`/`id`; the
+  colour picker's heading became a `<span>` with `role="group"` + `aria-labelledby`, since
+  it names three controls and `<label>` was the wrong element for that. `esa-input-tag`
+  still has one. · `lego` · *Priority:* high.
+
+- **`apps/site` was missing `a11y.css`** · *Evidence:* `packages/spoke-template` has
+  imported it since it was written; the hub's own BaseLayout imported only `focus.css`. So
+  `.visually-hidden` and the forced-colors focus fallback reached every spoke and none of
+  the specimen pages teams copy from. Fixed. · `hub-fix` · *Priority:* medium.
+
+- **Not done: 15 Lit components still do not import `a11y`** · *Evidence:* measured, then
+  judged not worth it — every one of them already paints a real `outline`, which forced
+  colors force-adjusts correctly on its own. The `a11y.css` fallback only rescues a
+  box-shadow-only ring, and there are none. Adding 15 copies of a rule that changes nothing
+  is cost without benefit. Revisit only if a component regresses. · *Priority:* low.
+
+## Source: accessible names, the form-validation pass's tail (2026-08-16)
+
+Opened by a single loose end from the focus pass — three components whose `<label>` the hook
+said "names nothing" — and settled by measuring instead of reading: Chrome's own accessibility
+tree, via CDP `Accessibility.getPartialAXTree`, over the built site, for every form-associated
+control in the kit. The measurement contradicted the static reading three times, which is the
+entry's main point.
+
+- **Two controls were named by their PLACEHOLDER, not their label** · *Evidence:*
+  `esa-input-tag` showed visible label "Tags" against accessible name **"Add a tag"**;
+  `esa-color-picker`'s hex field showed "Brand color" against **"#000000"**. Both had a visible
+  `<label>` with no `for`, so the browser fell through to the placeholder. This is **SC 2.5.3
+  Label in Name (Level A)** — a speech-control user saying "click Tags" matches nothing — and it
+  is invisible to axe, whose `label` rule a placeholder satisfies. On the input-tag page axe
+  flagged exactly ONE element: the disabled specimen, whose placeholder happens to be empty.
+  *Action:* the `<label for>` + `id` pairing the six passing controls already use (Chrome reports
+  their name source as `relatedElement`). It also makes the label clickable, which no
+  `aria-label` does · `lego` · *Priority:* done.
+
+- **Three option sets had no accessible name at all** · *Evidence:* `esa-checkbox`,
+  `esa-checkbox-group` and `esa-radio-group` each render `<label>` wrapping
+  `<span role="checkbox">` / `<span role="radio">`. A `<label>` associates only with a LABELABLE
+  element and an ARIA role does not make a span into one, so every option measured
+  `name=""` with no name source. The group was named by its legend and the choices inside it
+  were not — the user is told what is being asked and not what the answers are.
+  *Action:* `aria-labelledby` from each role element to its own text span, ids indexed for
+  uniqueness within the root · `lego` · *Priority:* done.
+
+- **`esa-color-picker` exposed two unnamed controls, not one** · *Evidence:* the swatch measured
+  `role=ColorWell name=""`, and the group's `aria-labelledby` does not reach it — a group name
+  does not name its members. *Action:* both inner controls take an `aria-label` that REPEATS the
+  visible label ("Brand color color swatch" / "Brand color hex value"). Verbose beside the group
+  name, and deliberate: 2.5.3 is about what the user can see and say · `lego` · *Priority:* done.
+
+- **THE HOOK GAP, and why the synthetic test lied** · *Evidence:* a synthetic
+  `<label>…<span role="checkbox">…</label>` WAS caught by check-a11y; the three real files were
+  not. The exemption that let them through is "a CALL in an interpolation may return a control we
+  cannot see" — and the call was `aria-checked=${String(this.checked)}`. A `String()` in an ARIA
+  attribute bought a blanket pass for the whole label. *Action:* a `<label>` wrapping an element
+  with a non-labelable interactive role is now decided BEFORE the content exemptions: unnamed is
+  a violation no interpolation can excuse, and `aria-label`/`aria-labelledby` on that element is
+  what clears it — the guard has to accept its own recommended fix or it gets ignored. Four
+  regression tests · `plugin` · *Priority:* done.
+
+- **A new check, because axe cannot ask this question** · *Evidence:* axe asks "is there a
+  name?"; the 2.5.3 half needs "is it the RIGHT one?" *Action:* `scripts/a11y-names.mjs` — serves
+  the build, drives Chromium, reads each control's name from the accessibility tree and compares
+  it to the host's visible `label`. Reports `NO NAME` (4.1.2) and `MISMATCH` (2.5.3) separately;
+  `--strict` gates. Two traps it encodes because both cost a run: the production `base` is
+  `/ecology/`, so a server that does not strip it 404s every asset and the audit reports zero
+  controls from a page that never hydrated; and a full 66-page sweep exceeds two minutes ·
+  `docs` · *Priority:* done.
+
+- **Two false positives I generated and had to retract** · *Evidence:* (1) `esa-file-upload`'s
+  `input[type=file]` is `display: none`, so it measures `ignored=true (notRendered)` — not in the
+  accessibility tree, therefore "no name" is true and meaningless. The real control is the
+  `role="button"` drop zone, correctly named from its contents. The script now skips ignored
+  nodes. (2) The first version compared every control to the host label, which flagged eight
+  correct option sets — `esa-radio-group`'s "Low" against the group's "Priority", and the same
+  for `esa-chip-group` and `esa-button-toggle`. A host with MANY controls is a group: its label
+  names the group, its members carry their own text. The script now only compares when a host
+  owns exactly one control. *Action:* both encoded in the script rather than remembered ·
+  *Priority:* n/a.
+
+- **Correction to the focus-pass entry above** · It records this as three components with a label
+  defect and high priority. It was **six controls across five components**, split across two
+  different criteria, and `esa-range-slider` was never one of them — it is named by `aria-label`
+  and was a hook false positive. Final state: 28 exposed controls measured, all named, every name
+  containing its visible label.
+
+- **The component count was 66 everywhere and has always been 65** · *Evidence:*
+  `ls packages/ecology/src/components | wc -l` returns 66; the 66th entry is
+  `icon-registry.ts`, which is not a component and is named in `EXCLUDE` in
+  `apps/site/src/data/catalog.ts` for that reason. `componentCount` — regex-matched
+  `esa-*.{astro,ts}` — has rendered **65** on `/components` the whole time, so the site and
+  the prose disagreed in public. "66" entered `CLAUDE.md` in `7919570` (2026-08-16), the
+  same commit that added `esa-error-summary.ts` and took the FILE count from 65 to 66;
+  `git ls-tree` at `7919570^` confirms 65 files / 64 components, and at `7919570` 66 files /
+  65 components. Nothing was ever deleted to explain a drop — `git log --diff-filter=D` over
+  `esa-*` is empty across the repo's history. CLAUDE.md also contradicted itself twice while
+  it stood: it says "all 34 Lit components" and there are 31 `.astro` (34 + 31 = 65), and it
+  says "every one of the 66 (+3 reference wrappers) still has a doc page" against 68 doc
+  pages on disk (65 + 3). Two derived numbers went with it: "28 of 66 components own a
+  namespace; the other 38" is 28 + 38 = 66, both halves back-derived from the wrong total —
+  the site's own `themingSurface` (`scope === 'exclusive'`, which is what the doc pages
+  render) gives **32 of 65**, the other 33. The independently-verified numerators were fine:
+  55 components read a tier-3 hook, 116 tier-3 declarations, 24 carry a `forced-colors`
+  block. *Action:* corrected in `CLAUDE.md` with the cause recorded inline, so the next
+  reader does not re-derive 66 from `ls | wc -l`. Dated entries in this ledger and in
+  `docs/typography-migration-log.md` still say 66 and were deliberately NOT rewritten —
+  they record what was measured at the time, and falsifying a log to fix a number is the
+  worse trade. Note some nearby 66s are a different quantity entirely (66 `--typography-*`
+  composites) and are not affected · `docs` · *Priority:* done.
+
+---
+
+## Source: the accessibility assurance profile (2026-08-16)
+A third document-level axis, `data-assurance`, orthogonal to `data-theme` (brand) and
+`data-scheme` (light/dark), letting a project with a conformance obligation opt into
+defaults that are confirmed rather than asserted. Authored in
+`packages/tokens/src/assurance.css`, appended into `dist/tokens.css` by `build.js`,
+inert unless the attribute is set. Contract in `SPEC.md` § "Assurance is a SEPARATE
+AXIS from the theme".
+
+- **The seven AA text-contrast failures are answered, as ONE decision** ·
+  *Evidence:* the batched pass recorded seven failures and noted six shared a cause —
+  near-white on a Radix step 9 fill — and that fixing them one at a time would produce
+  seven answers. It is now one rule: under assurance a solid fill that carries text
+  uses **step 11**. `check-contrast.mjs --hub` reports 7 failures; with
+  `--assurance wcag-aa`, 0. *The alternative was measured and rejected:* keeping the
+  step-9 fill and flipping the foreground dark (what grass-8/lime-9/yellow-9 already
+  do) fails on every scale in the set — step 12 on step 9 is 3.99 grass, 3.91 orange,
+  3.45 copper, 3.87 blue, 3.18 red. Mid fills are too light for white and too dark for
+  black; only moving the fill works. Accent needs step **12**, not 11: orange-11 lands
+  at 4.40:1 against gray-1, because Radix tunes step 11 against its own warm step 2 and
+  pure-ish gray-1 is colder. *Sink:* `hub-fix`. *Priority:* done.
+
+- **Re-pointing `--color-background-brand` fixed four rows at once** · *Evidence:*
+  `--color-content-link`, `--color-border-default-focus` and the 3:1 brand-on-raised UI
+  check all derive from it, so one declaration cleared all four. Recorded because the
+  obvious implementation — four separate re-points — would have been four chances to
+  move three and miss one. *Sink:* `hub-fix`. *Priority:* done.
+
+- **`--touch-target-min` stated a constant and enforced nothing** · *Evidence:* it held
+  44px and was read by **zero** components, while checkbox (14/16/20px), radio
+  (14/16/20px) and switch (16/18/22px) shipped hardcoded px under the AA floor. Its own
+  description called it "a role, not a ramp step" — the right instinct filed against the
+  wrong mechanism; a role nothing reads is a comment with `var()` syntax. *Action:*
+  removed (`touch-target-min-to-target-size-min`) and replaced by `--target-size-min`,
+  declared 0px and re-pointed to 24px by the profile. Not aliased, deliberately: 44px is
+  a CONSTANT and the new name is a LEVER, so aliasing would have shipped a 44px floor to
+  every default build the day readers landed. *Sink:* `hub-fix`. *Priority:* done.
+
+- **Target size went from 33 component failures to 0** · *Evidence:*
+  `check-target-size.mjs --scope components --strict` measures 11,046 rendered targets
+  across 88 pages; default reports 33 failures across 7 components (esa-input-tag,
+  esa-checkbox, esa-chip-group, esa-checkbox-group, esa-radio-group, esa-range-slider,
+  esa-file-list), and `--assurance wcag-aa` reports 0. *Two things this surfaced that
+  static reading would not have:* (1) the floor belongs on the **label row**, not the
+  glyph — measuring `[role="checkbox"]` reported esa-checkbox and esa-radio-group as
+  failures while the row was already 24px+, i.e. reported the correct implementation as
+  the defect; (2) `esa-pill__remove` was fixed by growing the real box rather than an
+  `::after` overlay, because pills sit shoulder to shoulder and invisible 24px targets
+  would overlap, trading one 2.5.8 failure for a worse one. *Sink:* `lego`.
+  *Priority:* done.
+
+- **axe is NOT blind to target size, and this header said it was until it was measured** ·
+  *Evidence:* the belief that motivated `check-target-size.mjs` was "axe-core has no
+  target-size rule". It does — axe 4.13 ships `target-size`, it is inside the `wcag22aa`
+  tag `a11y-audit.mjs` already runs, and it reads shadow roots. Run directly against
+  `/components/esa-pill/` and `/components/esa-input-tag/` — pages where the new tool
+  reports genuine 16×16 controls — axe returns **0 violations, 0 incomplete, all passes**.
+  The reason is the **spacing exception**: SC 2.5.8 passes an undersized target whose
+  24px-diameter circle does not overlap a neighbour's, and axe implements it faithfully.
+  Those buttons are small but well spaced, so they conform. *Action:* the script's header,
+  `CLAUDE.md` and the script's own stdout now state that it measures RAW SIZE with no
+  spacing exception, so a finding is a measurement and not a proven violation. The tool
+  still earns its place, for a reason worth keeping: conformance *via* the spacing
+  exception is a property of the LAYOUT, not the component — move a control nearer its
+  neighbour, or narrow a container, and a passing page starts failing with no code change.
+  A component that is 24px on its own cannot regress that way. *Sink:* `hub-fix` —
+  filed as a finding because the wrong claim was written into three files first and only
+  caught by running the thing. *Priority:* done.
+
+- **107 target-size failures remain in the SITE's own chrome, and are not gated** ·
+  *Evidence:* prose links in `apps/site` and `<summary>` rows on the debug pages. These
+  are the hub's documentation, not the kit a spoke installs. `--scope components`
+  narrows only the EXIT CODE, never the report, and the run prints both counts — a
+  visible flag rather than a silent carve-out, because a gate that can never go green
+  gets bypassed. *Action:* none yet. *Sink:* `docs`. *Priority:* low.
+
+- **The profile does NOT beat a spoke's theme, and that is the design** · *Evidence:*
+  `[data-theme]` and `[data-assurance]` have identical specificity (0,1,0) and a
+  spoke's theme loads later, so a re-pointed brand wins. Verified in the browser:
+  `data-theme="beacon" data-assurance="wcag-aa"` yields brand `#1f7a6d` (beacon's) with
+  `--target-size-min: 24px` (the profile's). The gate is what catches the gap —
+  `check-contrast.mjs beacon.css --assurance wcag-aa` still fails
+  `content-on-brand-secondary` at 3.64:1. *Sink:* recorded, not a defect. *Priority:*
+  resolved.
+
+- **`check-contrast.mjs` silently reported hub defaults as clean for one build** ·
+  *Evidence:* `parseDeclarations` swept every `--name: value;` regardless of selector,
+  which was safe while `:root` was the only top-level block (P3 and reduced-motion are
+  at-rules and were already stripped). The moment the assurance block was appended —
+  last, so last-one-wins — `--hub` went from 7 failures to "All text pairs pass AA" with
+  no code change and no warning. *Action:* the parser is scope-aware now; an assurance
+  block is read only when the caller names the profile, a typo'd name is a hard error
+  listing what exists, and the header prints the active profile. **This is the third
+  time this script's inputs have quietly stopped describing what it reports on** — the
+  @media-in-a-comment bug and the deleted-token bug were the other two. *Sink:*
+  `hub-fix`. *Priority:* done.
+
+- **`${...}` in a comment inside a Lit `css` template is an INTERPOLATION** ·
+  *Evidence:* a forced-colors comment in `esa-filter-dropdown.ts` read
+  `'background:${option.color}'` as illustrative text; `option` does not exist at module
+  scope, so the module threw `option is not defined` at runtime, the element never
+  upgraded, and `/components/esa-filter-dropdown/`, `/components/esa-filter-container/`
+  and `/patterns/list-filters/` rendered nothing. **The build stayed green** — it is
+  valid JavaScript. Found only because `check-target-size.mjs` inherited a11y-audit's
+  hydration guard, which flagged 3 pages and voided its own numbers. This is the same
+  family as the known backtick trap but a distinct trigger: a backtick ENDS the literal
+  and usually breaks the build loudly, whereas `${` compiles fine and fails at runtime.
+  *Action:* fixed by rewording. *Sink:* `hub-fix`. *Priority:* done — but the guard is
+  the finding: without it this was invisible.
+
+- **THE TARGET-SIZE FLOOR WAS WITHDRAWN THE DAY IT LANDED, and the reason is a design
+  rule worth more than the fix** · *Evidence:* `--target-size-min` (0px default, 24px
+  under `[data-assurance]`, read by 12 components as `min-block-size` on their hit area)
+  cleared every technical objection — a `min-*` raises the bottom and never caps the
+  top, so unlike `--control-height-*` it cannot clip rem text (1.4.4), and it was
+  verified to still double at 200% root font size. It measured 33 component failures →
+  0. It was withdrawn anyway: under the profile, `xs` and `sm` rendered at the SAME
+  height on chip-group, checkbox-group and radio-group. **The bottom of the ramp
+  silently collapsed**, `size="xs"` stopped meaning xs, and the author who wrote it was
+  never told. *The rule that came out of it:* a colour role is a VALUE and re-pointing
+  it is what a theme layer is for; a size step is a CONTRACT, and a profile that
+  redefines one lies to every call site that chose it. **A profile moves colours and
+  type rungs, never geometry.** *Action:* floor removed from all 12 components;
+  `--target-size-min` deleted; `--touch-target-min` (44px, tier 2, zero readers)
+  RESTORED, since the lever that justified removing it no longer exists and a dangling
+  `to` in a migrations row is worse than an inert constant. Replaced by
+  `scripts/check-size-usage.mjs`. *Sink:* `hub-fix`. *Priority:* done.
+
+- **The size lint is measured, not declared — and it found what the floor would have
+  hidden** · *Evidence:* `check-target-size.mjs --emit-floors` renders the specimen site
+  and writes `packages/tokens/size-floors.json` (11,857 targets across 91 routes), which
+  `check-size-usage.mjs` lints source against. Nothing hardcodes which steps are too
+  small, so a padding or type-rung change updates the lint on re-measure. Run against
+  `apps/site/src`: **68 call sites, 39 of them with NO size attribute** — every component
+  defaults to `md`, so a bare `<esa-checkbox>` is a finding that `grep size="xs"` cannot
+  see. *The finding that matters:* `esa-checkbox`, `esa-input-tag` and `esa-range-slider`
+  are under the floor at their **default** step, so no call-site change fixes them —
+  they need a size variant that clears 24px. A silent floor would have patched over that
+  and left the gap invisible. *Action:* the three components need a size variant. *Sink:*
+  `lego`. *Priority:* medium.
+
+- **`check-target-size.mjs` is deliberately NOT in the `a11y:assured` gate** ·
+  *Evidence:* it measures RAW size with no spacing exception, so it over-reports against
+  the letter of SC 2.5.8 (axe, which implements the exception, passes the same controls).
+  Gating on a tool that flags conformant markup produces a gate people bypass. The gate
+  runs the actionable size LINT instead, which is derived from the same measurement.
+  *Sink:* recorded. *Priority:* resolved.
+
+- **The TYPE floor was withdrawn too, and it is the more instructive of the two** ·
+  *Evidence:* after the target-size floor was pulled, the profile still re-pointed the
+  eight `2xs` typography composites one rung up (`--font-size-050` → `-100`) to kill 8px
+  text. It contained no geometry token at all, which is exactly why it looked safe. A
+  box follows its contents: `esa-chip-group` measured `{xs:20, sm:22}` by default and
+  `{xs:22, sm:22}` under the profile — the same ramp collapse — and geometry moved on 9
+  of 25 routes. **"It is only typography" is not a defence.** *The generalised rule,
+  now stated as absolute in three places:* the test is not which token you touched, it
+  is whether any component RENDERS differently. A profile changes colour. *Action:* the
+  eight declarations removed; the profile is now 13 colour roles plus
+  `--focus-scroll-margin` (a scroll offset, which cannot reflow anything). *Verified:*
+  geometry is byte-identical with and without `[data-assurance]` across **85 of 91**
+  routes, and the other 6 are unstable frame-to-frame WITHOUT the profile too — a
+  control run confirmed they carry spinners, progress bars and transitions, so the
+  difference is animation, not the profile. *Sink:* `hub-fix`. *Priority:* done.
+
+- **"Guide to the compliant option, or build one" — the two-answer rule** · *Evidence:*
+  the standing temptation each time was to make an existing size step bigger. That is
+  never an answer; there are exactly two. (1) A compliant option ALREADY EXISTS → guide
+  to it: `esa-checkbox`, `esa-input-tag` and `esa-range-slider` fail at `xs`, `sm` AND
+  their default `md`, but `lg` clears the floor, so `check-size-usage.mjs` names `lg`
+  and flags every call site that omits a size (39 of 70 in the hub's own site). (2) It
+  does NOT exist → build a real variant; the script reports that case in a separate
+  block because no call-site edit can fix it, and it is currently EMPTY — every
+  component in the floor map has at least one compliant step. *Sink:* recorded.
+  *Priority:* resolved.

@@ -1,5 +1,11 @@
 /**
- * DEBUG-ONLY audit of tier-2 token NAMES against the 6-slot naming rubric.
+ * Audit of tier-2 token NAMES against the 6-slot naming rubric.
+ *
+ * The audit itself no longer renders anywhere — /debug/tokens dropped the three
+ * naming sections. What /debug/tokens still imports from here is the CATEGORY
+ * and property GROUPING (`semanticCategories`, `propertyGroups`, the typography
+ * coverage), which the semantic tables are built from. The scoring exports are
+ * kept because they are what derive that grouping.
  *
  * Where `token-graph.ts` asks "what does this token resolve to and who reads
  * it", this asks a narrower question: does the NAME carry the information the
@@ -12,8 +18,8 @@
  * mapping, and the "what this means" prose are authored — they encode judgment
  * the parser can't make.
  *
- * Consumed only by /debug/tokens, which is excluded from production builds.
- * Delete alongside token-graph.ts when the refinement work is done.
+ * Consumed by /debug/tokens and _PropertyLevel.astro, both of which ARE emitted
+ * by `npm run build`.
  */
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';

@@ -14,8 +14,9 @@ const describe = {
   size: "Square footprint on the shared form size scale.",
 };
 ---
-<ComponentDoc name="Icon Button" category="Core" slug="esa-icon-button" type=".astro" status="stable"
-  summary="<strong>⚠ DEPRECATED (2026-08-14).</strong> Folded into <a href='/components/esa-button'>esa-button</a> as <code>&lt;EsaButton variant=&quot;chrome&quot; iconOnly&gt;</code> — this is now a shim that forwards and warns at build time. Migrate with <code>node ../ecology/scripts/migrate-tokens.mjs --write</code> (migrations.json: <code>icon-button-to-button-chrome</code>). Icon-only action for toolbars and chrome (search, close, overflow). Lightweight, transparent, and inherits <code>currentColor</code> — the chrome-grade counterpart to <code>esa-button</code>'s heavier <code>iconOnly</code> mode. <code>label</code> is required for accessibility.">
+<ComponentDoc name="Icon Button" category="Deprecated" slug="esa-icon-button" type=".astro" status="deprecated"
+  supersededBy={'<EsaButton variant="chrome" iconOnly>'}
+  summary="Deprecated 2026-08-14, folded into <a href='/components/esa-button'>esa-button</a> (migrations.json: <code>icon-button-to-button-chrome</code>). What it was: an icon-only action for toolbars and chrome (search, close, overflow) — lightweight, transparent, and inheriting <code>currentColor</code>, which is now what <code>variant=&quot;chrome&quot;</code> means. <code>label</code> was required for accessibility; on the button it can only be a build-time warning, since the label is a slot.">
 
   <Section id="preview" title="Preview">
     <Preview code={`<EsaIconButton icon="search" label="Search" />`}>

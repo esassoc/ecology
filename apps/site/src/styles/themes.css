@@ -8,28 +8,41 @@
  * are the roles. Re-point those, never --radius-100/200/… — moving a primitive moves
  * everything downstream of it, which is the blast radius the tier model exists to stop.
  *
- * In production each block lives in its own spoke repo (beacon-design/, qanat-design/)
- * and ideally is generated from a per-theme DTCG set. Hand-authored here to show it.
+ * In production each block lives in its own spoke repo (beacon-design/, qanat-design/).
  *
- * ⬇ CONTRIBUTION POINT (Andy): Beacon values below are placeholders.
- *   Drop in Beacon's real brand palette to prove the hub/spoke story with a
- *   project you actually know.
+ * ── THESE ARE NOW GENERATED (2026-08-16) ────────────────────────────────────────
+ *
+ * The two blocks below used to be hand-written here: five declarations each, with
+ * `TODO: real Beacon brand` markers that stood unresolved for months. Five
+ * declarations is not a theme — it is a brand fill and four things that happened to
+ * be noticed. What was missing is what always goes missing by hand:
+ *
+ *   - all eight --color-content-on-* foregrounds, every one a `fail`-level row in
+ *     check-contrast.mjs. beacon failed content-on-brand-secondary at 3.64:1 for
+ *     exactly this reason, and it is fixed now because a generator picked the
+ *     foreground against the fill instead of inheriting the hub's;
+ *   - the ~25 other brand-derived roles (--color-content-brand, --color-border-brand,
+ *     every -subtle wash), which stayed Ecology teal under both "themes";
+ *   - a dark scheme, which no theme in this repo has ever had.
+ *
+ * Each theme is now generated from a RECIPE — theme-<slug>.json beside this file,
+ * six seeds long. To change a theme, change its recipe and re-run:
+ *
+ *   node scripts/make-theme.mjs --recipe apps/site/src/styles/theme-beacon.json \
+ *     --out apps/site/src/styles --no-recipe --force
+ *
+ * Do not hand-edit the generated files; the next regeneration reverts it. A value
+ * the generator should not choose goes in the recipe's "pinned" map.
+ *
+ * SPLIT INTO ONE FILE PER THEME on purpose. check-contrast.mjs sweeps a file's
+ * declarations flat and last-one-wins, so two [data-theme] blocks in one file meant
+ * the audit only ever graded the second one — qanat — while printing the file's name.
+ * One theme per file is one audit per theme.
+ *
+ * beacon's brand hex is STILL A PLACEHOLDER; that TODO is real and lives in
+ * theme-beacon.json now. Dropping Beacon's actual teal in there is a one-line edit
+ * plus a regenerate.
  */
 
-[data-theme="beacon"] {
-  --color-background-brand:        #1f7a6d; /* TODO: real Beacon brand */
-  --color-background-brand-hover:  #155a50; /* TODO */
-  --color-background-brand-secondary:      #2a9d8f; /* TODO */
-  --color-background-elevation-sunken: #f0f6f4; /* TODO */
-  --radius-md:            6px;     /* flatter than the hub default — moves cards too,
-                                     which --radius-surface did not: qanat used to leave
-                                     cards at 8px behind a 10px dropdown. */
-}
-
-[data-theme="qanat"] {
-  --color-background-brand:        #1769aa;
-  --color-background-brand-hover:  #11507f;
-  --color-background-brand-secondary:      #4a90c2;
-  --color-background-elevation-sunken: #eef4f8;
-  --radius-md:            10px;    /* rounder than the hub default */
-}
+@import './theme-beacon.css';
+@import './theme-qanat.css';

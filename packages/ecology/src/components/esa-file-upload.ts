@@ -272,7 +272,13 @@ export class EsaFileUpload extends LitElement {
       justify-content: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-600, 32px) var(--spacing-400, 16px);
-      border: 2px dashed var(--form-border-color, #cecece);
+      /* The colour half was wired from the start; the width was a bare 2px until
+         2026-08-16, because no tier-2 width meant 2px (default is the 1px
+         hairline, focus means the ring). That literal is why the kit could keep
+         claiming no component needed an emphasis role — a hardcoded number does
+         not show up in a survey of token reads, so the one border that wanted
+         the role was the one border the survey could not see. */
+      border: var(--border-width-emphasis, 2px) dashed var(--form-border-color, #cecece);
       border-radius: var(--radius-md, 0.5rem);
       background: var(--color-background-field, transparent);
       cursor: pointer;
@@ -350,7 +356,13 @@ export class EsaFileUpload extends LitElement {
     .file__name {
       flex: 1;
       color: var(--color-content-default, #202020);
-      overflow: hidden;
+      /* clip/visible, not "overflow: hidden" — the span carries
+         .typography-microcopy-sm-subtle, whose line-height "none" (1) makes the line
+         box 1em against DM Sans's 1.30em glyph box, so hiding the Y axis slices the
+         descenders off every g/j/p/q/y in a filename. Same fix and same reasoning as
+         esa-file-list's .file__name, where it is written out in full. */
+      overflow-x: clip;
+      overflow-y: visible;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -380,6 +392,26 @@ export class EsaFileUpload extends LitElement {
     .file__remove:focus-visible {
       outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
+    }
+
+    /* FORCED COLORS. The dropzone keeps its 2px dashed border, so unlike the
+       other overlays it does not vanish. Two smaller losses:
+
+       DRAGGING differs from idle only by border-COLOUR, which is precisely what
+       gets overridden — the "you may drop here" feedback disappears at the moment
+       it matters. border-STYLE is not force-adjusted, so switching dashed to
+       solid restores the distinction using a channel the mode cannot touch.
+
+       DISABLED is 'aria-disabled' on a div carrying role=button, so there is no
+       GrayText for free; it is named here. (Tag syntax is spelled out rather
+       than written literally: check-a11y's markup scanner reads comments too,
+       and a literal tag in prose reads to it as a keyboard-unreachable role.) */
+    @media (forced-colors: active) {
+      :host([dragging]) .zone { border-style: solid; }
+      :host([disabled]) .zone {
+        border-color: GrayText;
+        color: GrayText;
+      }
     }
   `,
   ];
