@@ -1,1 +1,0 @@
-import"./esa-checkbox.BVSV47iN.js";import"./lit-element.D8DSg5zn.js";import"./typography.D6s5VeQm.js";const t=document.getElementById("cb-form");t?.addEventListener("submit",e=>{e.preventDefault();const n=new FormData(t);document.getElementById("cb-out").textContent="subscribe = "+JSON.stringify(n.get("subscribe"))});

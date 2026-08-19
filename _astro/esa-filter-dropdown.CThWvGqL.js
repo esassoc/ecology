@@ -1,0 +1,291 @@
+import{i as n,b as i,a as l}from"./lit-element.D8DSg5zn.js";import{t as d}from"./typography.KBHeYOQc.js";import"./esa-checkbox.yCusoDnT.js";const c={xs:"microcopy-xs",sm:"microcopy-sm",md:"microcopy-md",lg:"microcopy-lg"},p={xs:"microcopy-xs-strong",sm:"microcopy-sm-strong",md:"microcopy-md-strong",lg:"microcopy-lg-strong"},h={xs:"microcopy-xs-subtle",sm:"microcopy-sm-subtle",md:"microcopy-md-subtle",lg:"microcopy-lg-subtle"},f={xs:"microcopy-xs-subtle",sm:"microcopy-sm-subtle",md:"microcopy-md-subtle",lg:"microcopy-lg-subtle"};class u extends n{constructor(){super(),this.onDocClick=e=>{this._open&&!e.composedPath().includes(this)&&(this._open=!1)},this.onDocKeydown=e=>{e.key==="Escape"&&this._open&&(this._open=!1)},this.togglePanel=()=>{const e=!this._open;this._open=e,e&&(this._highlighted=-1,requestAnimationFrame(()=>{this.renderRoot?.querySelector(".esa-filter-dropdown__search-input")?.focus()}))},this.onSearchInput=e=>{this._searchText=e.target.value,this._highlighted=-1},this.onKeydown=e=>{const r=this.filteredOptions,o=r.length-1;let t=this._highlighted;switch(e.key){case"ArrowDown":for(e.preventDefault(),t=t<o?t+1:0;r[t]?.disabled&&t<o;)t++;this._highlighted=t;break;case"ArrowUp":for(e.preventDefault(),t=t>0?t-1:o;r[t]?.disabled&&t>0;)t--;this._highlighted=t;break;case"Enter":e.preventDefault(),t>=0&&t<=o&&this.selectOption(r[t]);break;case"Escape":this._open=!1;break}},this.clear=e=>{e.stopPropagation(),this._selected=[],this.emitChange([])},this.name="",this.label="",this.options=[],this.multiple=!1,this.placeholder="",this.size="md",this._open=!1,this._searchText="",this._selected=[],this._highlighted=-1}static{this.properties={name:{type:String},label:{type:String},options:{type:Array},multiple:{type:Boolean,reflect:!0},placeholder:{type:String},size:{type:String,reflect:!0},_open:{state:!0},_searchText:{state:!0},_selected:{state:!0},_highlighted:{state:!0}}}connectedCallback(){super.connectedCallback(),document.addEventListener("click",this.onDocClick,!0),document.addEventListener("keydown",this.onDocKeydown)}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener("click",this.onDocClick,!0),document.removeEventListener("keydown",this.onDocKeydown)}get filteredOptions(){const e=this._searchText.toLowerCase();return e?this.options.filter(r=>r.label.toLowerCase().includes(e)):this.options}get hasSelection(){return this._selected.length>0}get buttonLabel(){if(this.multiple||this._selected.length===0)return this.label;const e=this.options.find(r=>r.value===this._selected[0]);return`${this.label}: ${e?.label??this._selected[0]}`}isSelected(e){return this._selected.includes(e)}selectOption(e){if(e.disabled)return;const r=e.value;if(this.multiple){const t=this._selected.indexOf(r)>=0?this._selected.filter(s=>s!==r):[...this._selected,r];this._selected=t,this._searchText="",this.emitChange(t),requestAnimationFrame(()=>{this.renderRoot?.querySelector(".esa-filter-dropdown__search-input")?.focus()})}else this._selected=[r],this._searchText="",this._open=!1,this.emitChange([r])}emitChange(e){const r=this.multiple?e:e[0]??void 0;this.dispatchEvent(new CustomEvent("selection-change",{detail:{value:r},bubbles:!0,composed:!0}));const o=e.map(t=>{const s=this.options.find(a=>a.value===t);return{name:this.name,label:this.label,value:t,displayValue:s?.label??t}});this.dispatchEvent(new CustomEvent("esa-filter-change",{detail:{name:this.name,filters:o},bubbles:!0,composed:!0}))}render(){const e=this.filteredOptions,r=this.hasSelection?p[this.size]:c[this.size];return i`
+      <div class="esa-filter-dropdown">
+        <button
+          class="esa-filter-dropdown__trigger typography-${r} ${this.hasSelection?"esa-filter-dropdown__trigger--active":""}"
+          type="button"
+          aria-expanded=${this._open}
+          aria-haspopup="listbox"
+          @click=${this.togglePanel}
+        >
+          <span class="esa-filter-dropdown__label">${this.buttonLabel}</span>
+          ${this.multiple&&this._selected.length>0?i`<span class="esa-filter-dropdown__count typography-microcopy-xs-strong"
+                >${this._selected.length}</span
+              >`:null}
+          <span
+            class="esa-filter-dropdown__arrow ${this._open?"esa-filter-dropdown__arrow--open":""}"
+          >${g}</span>
+        </button>
+
+        ${this._open?i`<div class="esa-filter-dropdown__panel" role="listbox">
+              <div class="esa-filter-dropdown__search">
+                <input
+                  class="esa-filter-dropdown__search-input typography-${h[this.size]}"
+                  type="text"
+                  placeholder=${this.placeholder||"Search..."}
+                  .value=${this._searchText}
+                  @input=${this.onSearchInput}
+                  @keydown=${this.onKeydown}
+                  autocomplete="off"
+                />
+              </div>
+              <div class="esa-filter-dropdown__options" role="group" aria-label=${this.label}>
+                ${e.length===0?i`<div class="esa-filter-dropdown__empty">No options match.</div>`:e.map((o,t)=>i`<div
+                        class="esa-filter-dropdown__option typography-${f[this.size]}
+                          ${o.disabled?"esa-filter-dropdown__option--disabled":""}
+                          ${this._highlighted===t?"esa-filter-dropdown__option--highlighted":""}"
+                        role="option"
+                        aria-selected=${this.isSelected(o.value)}
+                        aria-disabled=${o.disabled??!1}
+                        @click=${()=>this.selectOption(o)}
+                      >
+                        <esa-checkbox
+                          class="esa-filter-dropdown__checkbox"
+                          size="sm"
+                          ?checked=${this.isSelected(o.value)}
+                          ?disabled=${o.disabled}
+                          aria-hidden="true"
+                          tabindex="-1"
+                        ></esa-checkbox>
+                        ${o.color?i`<span
+                              class="esa-filter-dropdown__option-dot"
+                              style="background:${o.color}"
+                            ></span>`:null}
+                        <span class="esa-filter-dropdown__option-label">${o.label}</span>
+                      </div>`)}
+              </div>
+              <div class="esa-filter-dropdown__footer">
+                <button
+                  type="button"
+                  class="esa-filter-dropdown__clear-link typography-microcopy-sm"
+                  ?disabled=${!this.hasSelection}
+                  @click=${this.clear}
+                >Clear all</button>
+              </div>
+            </div>`:null}
+      </div>
+    `}static{this.styles=[d,l`
+    :host {
+      display: inline-block;
+
+      --_filter-height: 40px;
+      --_filter-padding-x: var(--spacing-400, 1rem);
+      --_filter-radius: var(--radius-surface, 0.5rem);
+      --_filter-bg: var(--color-background-elevation-raised, #fff);
+      --_filter-bg-active: var(--color-background-brand-subtle, #f3f8fb);
+      --_filter-text: var(--color-content-default, #171717);
+      --_filter-text-active: var(--color-background-brand, #43608a);
+      --_filter-border: var(--color-border-default, #e5e5e5);
+      --_filter-border-active: var(--color-background-brand, #43608a);
+    }
+
+    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values.
+       The size steps carry geometry only — the text comes from a composite class
+       named in render() (TRIGGER_TYPE / TRIGGER_ACTIVE_TYPE / OPTION_TYPE), so the
+       trigger and the panel it opens stay on one rung by construction. */
+    :host([size='xs']) {
+      --_filter-height: 28px;
+      --_filter-padding-x: var(--spacing-200, 0.5rem);
+      --_filter-radius: var(--radius-control, 0.25rem);
+    }
+    :host([size='sm']) {
+      --_filter-height: 32px;
+      --_filter-padding-x: var(--spacing-300, 0.75rem);
+      --_filter-radius: var(--radius-control, 0.25rem);
+    }
+    :host([size='lg']) {
+      --_filter-height: 48px;
+      --_filter-padding-x: var(--spacing-500, 1.5rem);
+      --_filter-radius: var(--radius-card, 0.5rem);
+    }
+
+    .esa-filter-dropdown {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .esa-filter-dropdown__trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-100, 0.25rem);
+      height: var(--_filter-height);
+      padding-inline: var(--_filter-padding-x);
+      border: var(--border-width-default, 1px) solid var(--_filter-border);
+      border-radius: var(--_filter-radius);
+      background: var(--_filter-bg);
+      color: var(--_filter-text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition:
+        background var(--transition-fast, 150ms ease),
+        border-color var(--transition-fast, 150ms ease),
+        color var(--transition-fast, 150ms ease);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .esa-filter-dropdown__trigger:hover:not(.esa-filter-dropdown__trigger--active) {
+      border-color: var(--_filter-border-active);
+    }
+    .esa-filter-dropdown__trigger:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
+    /* Weight comes from TRIGGER_ACTIVE_TYPE (label-*-strong) — same rung as the
+       resting trigger, so applying a filter does not resize the bar. */
+    .esa-filter-dropdown__trigger--active {
+      background: var(--_filter-bg-active);
+      border-color: var(--_filter-border-active);
+      color: var(--_filter-text-active);
+    }
+    /* Open (panel showing) but nothing selected yet → just lift the border. */
+    .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
+      border-color: var(--_filter-border-active);
+    }
+
+    .esa-filter-dropdown__label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .esa-filter-dropdown__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding-inline: 0.3rem;
+      border-radius: var(--radius-pill, 9999px);
+      background: var(--color-background-brand, #43608a);
+      color: var(--color-content-default-knockout, #fff);
+    }
+
+    .esa-filter-dropdown__arrow {
+      display: inline-flex;
+      width: 20px;
+      height: 20px;
+      transition: transform var(--transition-fast, 150ms ease);
+    }
+    .esa-filter-dropdown__arrow svg { width: 20px; height: 20px; }
+    .esa-filter-dropdown__arrow--open {
+      transform: rotate(180deg);
+    }
+
+    .esa-filter-dropdown__clear {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity var(--transition-fast, 150ms ease);
+    }
+    .esa-filter-dropdown__clear:hover { opacity: 1; }
+    .esa-filter-dropdown__clear svg { width: 16px; height: 16px; }
+
+    .esa-filter-dropdown__panel {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: var(--z-dropdown, 50);
+      min-width: var(--filter-dropdown-min-width, 200px);
+      max-height: 300px;
+      background: var(--filter-dropdown-bg, var(--color-background-elevation-raised, #fff));
+      border: var(--border-width-default, 1px) solid
+        var(--filter-dropdown-border-color, var(--color-border-default, #e5e5e5));
+      border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
+      box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .esa-filter-dropdown__search {
+      padding: var(--spacing-200, 0.5rem);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+    }
+    .esa-filter-dropdown__search-input {
+      /* A real <input> — it cannot wrap, so leading only sets the box height. */
+      width: 100%;
+      box-sizing: border-box;
+      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-radius: var(--radius-control, 0.25rem);
+      background: var(--color-background-elevation-raised, #fff);
+      color: var(--color-content-default, #171717);
+      outline: none;
+    }
+    .esa-filter-dropdown__search-input:focus {
+      border-color: var(--color-background-brand, #43608a);
+      box-shadow: 0 0 0 1px var(--color-background-brand, #43608a);
+    }
+
+    .esa-filter-dropdown__options {
+      margin: 0;
+      padding: var(--spacing-100, 0.25rem) 0;
+      overflow-y: auto;
+      max-height: 240px;
+    }
+    .esa-filter-dropdown__option {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-200, 0.5rem);
+      padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
+      color: var(--color-content-default, #171717);
+      cursor: pointer;
+      user-select: none;
+      transition: background var(--transition-fast, 150ms ease);
+    }
+    .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
+    .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
+      background: var(--color-background-elevation-sunken, #f4f4f5);
+    }
+    .esa-filter-dropdown__option--disabled {
+      opacity: 0.5;
+      cursor: default;
+      pointer-events: none;
+    }
+    /* Display-only: the row owns the click so the box never double-toggles. */
+    .esa-filter-dropdown__checkbox {
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+    /* Optional per-option color dot (options[].color) */
+    .esa-filter-dropdown__option-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .esa-filter-dropdown__option-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .esa-filter-dropdown__empty {
+      padding: var(--spacing-300, 0.75rem);
+      color: var(--color-content-default-muted, #737373);
+      font-style: var(--font-style-italic, italic);
+      text-align: center;
+    }
+
+    .esa-filter-dropdown__footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: var(--spacing-200, 0.5rem);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+    }
+    .esa-filter-dropdown__clear-link {
+      background: none;
+      border: none;
+      color: var(--color-content-brand, #2a7e3b);
+      cursor: pointer;
+      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+      border-radius: var(--radius-control, 0.25rem);
+    }
+    .esa-filter-dropdown__clear-link:hover:not(:disabled) {
+      background: var(--color-background-elevation-sunken, #f4f4f5);
+    }
+    .esa-filter-dropdown__clear-link:disabled {
+      color: var(--color-content-default-muted, #a3a3a3);
+      cursor: not-allowed;
+    }
+  `]}}const g=i`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>`;customElements.get("esa-filter-dropdown")||customElements.define("esa-filter-dropdown",u);
