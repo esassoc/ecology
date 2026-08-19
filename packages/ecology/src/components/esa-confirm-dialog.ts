@@ -272,15 +272,15 @@ export class EsaConfirmDialog extends LitElement {
       margin-bottom: var(--spacing-300, 0.75rem);
     }
     .esa-confirm-dialog__icon--default {
-      background: var(--color-background-utility-info-subtle, #f4faff);
+      background: var(--color-background-utility-info-subtle, #fbfdff);
       color: var(--color-content-utility-info, #0d74ce);
     }
     .esa-confirm-dialog__icon--danger {
-      background: var(--color-background-utility-danger-subtle, #fff7f7);
+      background: var(--color-background-utility-danger-subtle, #fffcfc);
       color: var(--color-content-utility-danger, #ce2c31);
     }
     .esa-confirm-dialog__icon--warning {
-      background: var(--color-background-utility-warning-subtle, #fefbe9);
+      background: var(--color-background-utility-warning-subtle, #fefdfb);
       color: var(--color-content-utility-warning, #ab6400);
     }
     .esa-confirm-dialog__title {

@@ -9,6 +9,13 @@ const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label
 // The hex field is microcopy in the mono face — a single-line <input> sized by padding.
 const CODE_TYPE  = { xs: 'microcopy-code-sm', sm: 'microcopy-code-sm', md: 'microcopy-code-md', lg: 'microcopy-code-lg' } as const;
 
+/** A swatch is a bare hex, or a hex with the name of the thing it stands for. */
+export type ColorSwatch = string | { value: string; label?: string };
+
+const swatchValue = (s: ColorSwatch): string => (typeof s === 'string' ? s : s.value);
+const swatchLabel = (s: ColorSwatch): string | undefined =>
+  typeof s === 'string' ? undefined : s.label;
+
 /**
  * esa-color-picker — form-associated Lit Web Component.
  *
@@ -18,7 +25,11 @@ const CODE_TYPE  = { xs: 'microcopy-code-sm', sm: 'microcopy-code-sm', md: 'micr
  *   - host size/disabled classes       → reflected attributes + :host() selectors
  *   - native <input type=color> + hex input + swatch grid, same hex validation
  *
- * `swatches` accepts either a string[] property or a JSON-encoded `swatches` attribute.
+ * `swatches` accepts either a property or a JSON-encoded `swatches` attribute, and each
+ * entry is a hex string OR an object carrying a name: {"value": "#12a594", "label": "Teal"}.
+ * A grid of unnamed squares is a poor name for anyone not looking at it — a swatch that
+ * stands for something the system already has ("Teal", "Brand") should say so, and then
+ * the accessible name is the word rather than the hex.
  */
 export class EsaColorPicker extends LitElement {
   static formAssociated = true;
@@ -35,7 +46,7 @@ export class EsaColorPicker extends LitElement {
 
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
-  declare swatches: string[];
+  declare swatches: ColorSwatch[];
   declare disabled: boolean;
   /** Form field name — the key this control submits under. */
   declare name: string | undefined;
@@ -151,18 +162,21 @@ export class EsaColorPicker extends LitElement {
 
         ${this.swatches.length > 0
           ? html`<div class="swatches" role="listbox" aria-label="Color swatches">
-              ${this.swatches.map(
-                (color) => html`<button
+              ${this.swatches.map((swatch) => {
+                const color = swatchValue(swatch);
+                const name = swatchLabel(swatch);
+                return html`<button
                   type="button"
                   class="swatch ${this.isSelectedSwatch(color) ? 'swatch--selected' : ''}"
                   style="background-color: ${color}"
                   ?disabled=${this.disabled}
-                  aria-label=${'Select color ' + color}
+                  title=${name ? name + ' ' + color : color}
+                  aria-label=${name ? 'Select color ' + name + ' ' + color : 'Select color ' + color}
                   aria-selected=${this.isSelectedSwatch(color)}
                   role="option"
                   @click=${() => this.selectSwatch(color)}
-                ></button>`
-              )}
+                ></button>`;
+              })}
             </div>`
           : null}
       </div>

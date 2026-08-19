@@ -10,7 +10,8 @@
  * declares ZERO of the eight `--color-content-on-*` foregrounds, and all eight are
  * `fail`-level rows in check-contrast.mjs. So the documented hand-fill path ships a
  * brand fill audited against a foreground nobody chose — which is why `beacon` still
- * fails `content-on-brand-secondary` at 3.64:1. Picking those eight against the fills
+ * fails `content-on-brand-muted` at 3.64:1 (it was `-brand-secondary` until 2026-08-18).
+ * Picking those eight against the fills
  * it just generated is the job; the colour picker is incidental.
  *
  * Isomorphic — no `node:` imports. See color.mjs.
@@ -25,6 +26,7 @@ import {
   rampFrom,
   step,
 } from './ramp.mjs';
+import { datavizDeclarations, deriveDataviz } from './dataviz.mjs';
 
 export const SCHEMES = ['light', 'dark'];
 export { NEUTRAL_TEMPERATURES };
@@ -61,7 +63,7 @@ export const DEFAULT_INTENTION_SEEDS = {
   accent: '#f76b15', // orange-9
   ai: '#a18072', // copper-9 — the hub's own ramp; Radix has no `copper`
   info: '#0090ff', // blue-9
-  success: '#bdee63', // lime-9  (bright: needs dark text, and the picker will find that)
+  success: '#30a46c', // green-9 (was lime-9 until 2026-08-18 — a highlighter, not a state)
   warning: '#ffc53d', // yellow-9 (bright)
   danger: '#e5484d', // red-9
 };
@@ -153,8 +155,8 @@ export function validateRecipe(recipe) {
  * fill's OWN ramp (dark text carrying the same hue, which is what Radix intends for a
  * bright scale), then the neutral's darkest. First one clearing 4.5:1 wins.
  *
- * `movable` is the honest half. A generated fill — brand-secondary at step 8, the
- * utility colours, accent, AI — is OUR choice, so if nothing reads on it we walk it
+ * `movable` is the honest half. A generated fill — the utility colours, accent, AI — is
+ * OUR choice, so if nothing reads on it we walk it
  * darker (9 → 10 → 11) and say so. `--color-background-brand` is NOT movable: it is
  * the exact hex a client pointed at and said "that is our blue". When that hex cannot
  * carry readable text we report it and leave it alone, because silently shifting a
@@ -369,6 +371,42 @@ export function deriveTheme(input) {
     const g = (n) => `var(--${scope}-gray-${n})`;
     const b = (n) => `var(--${scope}-brand-${n})`;
 
+    /*
+     * A SEARCHED VALUE COMES BACK AS A HEX, AND A HEX IS THE END OF THE TRAIL.
+     *
+     * resolveFillAndForeground and resolveColouredText pick a step by measuring, so they
+     * return the colour rather than the step they found it at. Emitted raw, that breaks
+     * the one property this file exists to preserve: a tier-2 role points at tier 1, and
+     * re-pointing a ramp step moves every role that reads it. `--color-content-on-brand:
+     * #fcfcfc` is stranded — it happens to BE `--<scope>-gray-1`, and nothing says so, so
+     * a spoke tuning its neutral moves the surface and leaves the text behind.
+     *
+     * So: if a searched hex is exactly a step of a ramp this block DECLARES, emit the
+     * var() instead. Exact match only — no nearest-step rounding, because a value that is
+     * merely close is a different colour and pretending otherwise would silently re-tint
+     * it on the next regeneration.
+     *
+     * The utility, accent and AI families deliberately do NOT get this. Their ramps are
+     * computed and thrown away; only gray and brand are emitted as variables, so there is
+     * nothing to point at. Emitting six more 12-step ramps to give six roles a var() is a
+     * worse trade than the literals — that is 72 names for 18 declarations.
+     *
+     * --color-border-default-knockout is the other deliberate literal, and it must stay
+     * one: it reads step 7 of the OPPOSITE scheme's neutral, which this block does not
+     * declare. var(--<scope>-gray-7) would resolve to this scheme's step 7, which is the
+     * wrong colour and would look like it worked.
+     */
+    const rampVar = new Map();
+    for (let i = 1; i <= 12; i++) {
+      // Brand first, then gray, so a brand ramp that happens to collide with a neutral
+      // step still reads as the brand — a brand role is the one a spoke re-points.
+      if (!rampVar.has(step(brand, i))) rampVar.set(step(brand, i), b(i));
+    }
+    for (let i = 1; i <= 12; i++) {
+      if (!rampVar.has(step(neutral, i))) rampVar.set(step(neutral, i), g(i));
+    }
+    const asRamp = (hex) => rampVar.get(String(hex).toLowerCase()) ?? hex;
+
     // (2) The surface set. Radix step conventions, straight out of semantic/color.json:
     // 1 = canvas, 3 = sunken/disabled fill, 4 = hovered element, 6 = subtle border,
     // 7 = border, 8 = strong border, 9 = disabled text, 10 = muted text, 11 =
@@ -503,41 +541,42 @@ export function deriveTheme(input) {
     t.set('--color-background-brand', b(brandFill.fillStep));
     t.set('--color-background-brand-hover', b(Math.min(12, brandFill.fillStep + 1)));
     t.set('--color-background-brand-active', b(Math.min(12, brandFill.fillStep + 1)));
-    t.set('--color-background-brand-subtle', b(2));
-    t.set('--color-background-brand-muted', b(3));
-    t.set('--color-background-brand-muted-hover', b(4));
+    t.set('--color-background-brand-subtle', b(1));
 
-    const secondary = resolveFillAndForeground({
-      role: '--color-background-brand-secondary',
+    // The muted family carries the `secondary` button and badge variants as of
+    // 2026-08-18, and it is the FILL that moved rather than the foreground.
+    //
+    // It used to be a separate `--color-background-brand-secondary` at step 8 with its
+    // own searched foreground and `movable: true`. Step 8 is Radix's HOVERED UI ELEMENT
+    // BORDER step; as a solid fill it measured 3.51-5.47:1 in light and 3.82-4.67:1 in
+    // dark against its own step-12 text, so most brands were marginal or failing and the
+    // movable walk was papering over it. Step 3 is the UI-element background step and
+    // comes to 10.27-11.80:1 / 11.33-12.54:1 with the same foreground, every brand, both
+    // schemes. Step 3 was ALREADY `--color-background-brand-muted`, so the two families
+    // merged rather than both surviving — see brand-secondary-to-muted in migrations.json.
+    //
+    // Still searched rather than hardcoded to step 12: the search is what makes the
+    // foreground answer to a PINNED fill. A spoke pinning --color-background-brand-muted
+    // to a dark hex needs light text, and only the search notices.
+    const muted = resolveFillAndForeground({
+      role: '--color-background-brand-muted',
       ramp: brand,
       neutral,
-      fillStep: 8,
-      movable: true,
-      pinnedFill: pinnedHex('--color-background-brand-secondary'),
+      fillStep: 3,
+      movable: false,
+      pinnedFill: pinnedHex('--color-background-brand-muted'),
     });
-    if (secondary.warning) warnings.push({ scheme, ...secondary.warning });
-    if (secondary.moved) {
-      warnings.push({
-        level: 'info',
-        scheme,
-        role: '--color-background-brand-secondary',
-        message:
-          `moved from brand step ${secondary.movedFrom} to step ${secondary.fillStep} so its ` +
-          `foreground could reach AA (${secondary.ratio.toFixed(2)}:1). This is the fill that ` +
-          'beacon has been failing at 3.64:1.',
-      });
-    }
-    t.set('--color-background-brand-secondary', b(secondary.fillStep));
-    t.set('--color-background-brand-secondary-hover', b(Math.min(12, secondary.fillStep + 1)));
+    if (muted.warning) warnings.push({ scheme, ...muted.warning });
+    t.set('--color-background-brand-muted', b(muted.fillStep));
+    t.set('--color-background-brand-muted-hover', b(Math.min(12, muted.fillStep + 1)));
 
     const brandText = resolveColouredText({
       role: '--color-content-brand',
       ramp: brand,
-      onHex: pinnedHex('--color-background-brand-subtle') ?? step(brand, 2),
+      onHex: pinnedHex('--color-background-brand-subtle') ?? step(brand, 1),
     });
     if (brandText.warning) warnings.push({ scheme, ...brandText.warning });
     t.set('--color-content-brand', b(brandText.usedStep));
-    t.set('--color-content-brand-secondary', b(brandText.usedStep));
 
     // (4b) LINKS, and this is a departure worth reading.
     //
@@ -567,8 +606,8 @@ export function deriveTheme(input) {
     // each one is a MEASURED answer to "what reads on that fill", not a step someone
     // picked — pointing it at a ramp step would invite editing the step and silently
     // losing the measurement.
-    t.set('--color-content-on-brand', brandFill.fg);
-    t.set('--color-content-on-brand-secondary', secondary.fg);
+    t.set('--color-content-on-brand', asRamp(brandFill.fg));
+    t.set('--color-content-on-brand-muted', asRamp(muted.fg));
 
     // (6) Accent, AI, and the four utilities. Same shape each time.
     const intentions = [
@@ -602,10 +641,10 @@ export function deriveTheme(input) {
       const onName = fillName.replace('--color-background-', '--color-content-on-');
       t.set(fillName, r.fill);
       t.set(`${fillName}-hover`, step(ramp, Math.min(12, r.fillStep + 1)));
-      t.set(onName, r.fg);
+      t.set(onName, asRamp(r.fg));
       if (subtleName) {
-        const tint = pinnedHex(subtleName) ?? step(ramp, 2);
-        t.set(subtleName, step(ramp, 2));
+        const tint = pinnedHex(subtleName) ?? step(ramp, 1);
+        t.set(subtleName, step(ramp, 1));
         // `accent` has no -subtle and no coloured-text role in the token set, so the
         // text/border pair below is scoped to the intentions that do.
         const textName =
@@ -621,7 +660,7 @@ export function deriveTheme(input) {
     // else in this derivation covers.
     const bodyOnTint = contrastHex(
       pinnedHex('--color-content-default') ?? step(neutral, 12),
-      pinnedHex('--color-background-brand-subtle') ?? step(brand, 2),
+      pinnedHex('--color-background-brand-subtle') ?? step(brand, 1),
     );
     if (bodyOnTint < AA_TEXT) {
       warnings.push({
@@ -650,10 +689,82 @@ export function deriveTheme(input) {
     out[scheme] = t;
   }
 
+  /*
+   * (10) DATA-VIZ, AFTER THE LOOP BECAUSE IT IS NOT A PER-SCHEME DECISION.
+   *
+   * A slot ORDER has to satisfy protan, deutan and full-colour separation in BOTH
+   * schemes at once, so deriveDataviz searches once and returns both. Running it inside
+   * the loop would search twice and could pick two different hue orders — series 3 would
+   * change colour when the user flipped to dark, which is the one thing an identity
+   * palette must never do.
+   *
+   * WHY THIS EXISTS AT ALL: until 2026-08-18 no generated theme emitted a single data-viz
+   * declaration, in either scheme. @esa/tokens ships 22 of these tokens light-only and has
+   * no dark block; the hub's dark series palette lives in apps/site/src/styles/docs-dark.css,
+   * a SITE file no spoke installs. So a spoke in dark mode got the LIGHT series colours on
+   * a near-black page — measured across 8 brand seeds, identical failures every time
+   * (categorical-7 2.85:1, sequential-7 1.45:1 and 1.56:1), identical precisely because
+   * nothing on that path was brand-derived.
+   *
+   * The surfaces are the two a chart actually renders on — the page and the raised card.
+   * Charts do not open in popovers, and grading against a surface nothing draws on would
+   * reject usable hues.
+   */
+  const dataviz = deriveDataviz({
+    seedHex: seeds.brand,
+    neutral: seeds.neutral,
+    surfaces: {
+      light: [step(ramps.light.neutral, 1)],
+      dark: [step(ramps.dark.neutral, 1), step(ramps.dark.neutral, 2)],
+    },
+  });
+  for (const scheme of SCHEMES) {
+    for (const [name, hex] of Object.entries(datavizDeclarations(dataviz[scheme]))) {
+      out[scheme].set(name, hex);
+    }
+    // Pins run last everywhere else in this function; hold that here too.
+    for (const [k, v] of Object.entries(recipe.pinned)) if (k.includes('dataviz')) out[scheme].set(k, v);
+    if (scheme === 'dark')
+      for (const [k, v] of Object.entries(recipe.pinnedDark)) if (k.includes('dataviz')) out[scheme].set(k, v);
+  }
+  if (dataviz.chromaRelaxed) {
+    warnings.push({
+      level: 'info',
+      scheme: 'light',
+      role: '--color-background-dataviz-categorical-*',
+      message:
+        `the series palette was re-tinted at chroma ratio ${dataviz.chromaRelaxed.to.toFixed(2)} ` +
+        `rather than this brand's own ${dataviz.chromaRelaxed.from.toFixed(2)} — at the brand's ` +
+        'saturation no hue cleared the chroma floor, so the palette would not have existed at ' +
+        'all. The series colours are therefore more saturated than the brand.',
+    });
+  }
+  if (dataviz.tier === 'incomplete') {
+    warnings.push({
+      level: 'warn',
+      scheme: 'light',
+      role: '--color-background-dataviz-categorical-*',
+      message:
+        'this brand could not seat 8 colour-vision-separable categorical slots even at the ' +
+        'relaxed bars, so the palette is short. Use fewer series, or facet.',
+    });
+  } else if (dataviz.tier === 'floor') {
+    warnings.push({
+      level: 'info',
+      scheme: 'light',
+      role: '--color-background-dataviz-categorical-*',
+      message:
+        'the categorical slots were seated at the FLOOR bar (CVD separation 6-8), which is ' +
+        'legal only with a secondary encoding. esa-chart rotates marker shapes, so this holds ' +
+        'by construction — but a bare colour-only chart built on these tokens does not.',
+    });
+  }
+
   return {
     light: out.light,
     dark: out.dark,
     ramps,
+    dataviz,
     warnings,
     meta: {
       slug: recipe.slug,

@@ -3,8 +3,20 @@ import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
+import { withBase } from '@esa/docs/base';
 
 const brand = JSON.stringify(['#43608a', '#5787b9', '#f9a134', '#ef4444', '#3b82f6', '#22c55e']);
+
+// The same six with names on them — what a swatch grid should carry when the colours
+// stand for something the system already has.
+const named = JSON.stringify([
+  { value: '#43608a', label: 'Brand' },
+  { value: '#5787b9', label: 'Brand light' },
+  { value: '#f9a134', label: 'Warning' },
+  { value: '#ef4444', label: 'Danger' },
+  { value: '#3b82f6', label: 'Info' },
+  { value: '#22c55e', label: 'Success' },
+]);
 
 // Prose only — names, types and defaults are generated from the component
 // source by src/data/component-api.ts, so this table cannot drift.
@@ -13,7 +25,7 @@ const describe = {
   label: "Field label above the control.",
   value: "Current color as a hex string.",
   size: "Control size (reflected attribute).",
-  swatches: "Preset colors. Accepts a string[] property or a JSON-encoded swatches attribute.",
+  swatches: "Preset colors, as a property or a JSON-encoded attribute. Each entry is a hex string, or an object carrying a name: { value, label }. A named swatch announces the name instead of the hex.",
   "show-input": "Show the hex text input next to the preview.",
   disabled: "Disables interaction (reflected attribute).",
 };
@@ -32,9 +44,22 @@ const events = [
   </Section>
 
   <Section id="swatches" title="Swatches">
-    <p>Pass preset colors as a JSON-encoded <code>swatches</code> attribute (or a <code>string[]</code> property). The selected swatch is highlighted.</p>
+    <p>Pass preset colors as a JSON-encoded <code>swatches</code> attribute (or an array property). The selected swatch is highlighted.</p>
     <Preview code={`<esa-color-picker label="Pick a brand color" value="#43608a" swatches='["#43608a","#5787b9","#f9a134","#ef4444","#3b82f6","#22c55e"]'></esa-color-picker>`}>
       <esa-color-picker label="Pick a brand color" value="#43608a" swatches={brand}></esa-color-picker>
+    </Preview>
+
+    <h3>Name the swatches when they stand for something</h3>
+    <p>
+      An entry can be <code>{'{ value, label }'}</code> instead of a bare hex. The label becomes
+      the swatch tooltip and its accessible name, so it announces as <em>Select color Danger
+      #ef4444</em> rather than a hex nobody can picture. Reach for it whenever the presets are
+      a palette the system already has words for — a brand ramp, the utility intentions, the
+      Radix hues on <a href={withBase('/guide/theme-maker')}>the theme maker</a>. A one-off set
+      of arbitrary colours has no name to give, and a bare string is right there.
+    </p>
+    <Preview code={`<esa-color-picker label="Pick an intention" value="#43608a" swatches='[{"value":"#43608a","label":"Brand"},{"value":"#f9a134","label":"Warning"},{"value":"#ef4444","label":"Danger"}]'></esa-color-picker>`}>
+      <esa-color-picker label="Pick an intention" value="#43608a" swatches={named}></esa-color-picker>
     </Preview>
   </Section>
 
@@ -66,7 +91,7 @@ const events = [
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
       <li>The native <code>&lt;input type="color"&gt;</code> provides the OS color dialog and keyboard handling.</li>
-      <li>Swatches are a <code>role="listbox"</code> group; each swatch is <code>role="option"</code> with <code>aria-selected</code> and an <code>aria-label</code> ("Select color {'{hex}'}").</li>
+      <li>Swatches are a <code>role="listbox"</code> group; each swatch is <code>role="option"</code> with <code>aria-selected</code> and an <code>aria-label</code> — "Select color {'{label}'} {'{hex}'}" when the entry carries a label, "Select color {'{hex}'}" when it is a bare string.</li>
       <li>Hex input only commits valid <code>#rgb</code> / <code>#rrggbb</code> values, preventing invalid form state.</li>
       <li>Form-associated via <code>ElementInternals</code> — value submits with the enclosing form.</li>
     </ul>

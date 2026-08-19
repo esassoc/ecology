@@ -94,8 +94,8 @@ const cls = [
   .esa-badge--sm { --_badge-padding-y: var(--spacing-100, 0.25rem);  --_badge-padding-x: var(--spacing-150, 0.375rem); }
   .esa-badge--lg { --_badge-padding-y: var(--spacing-250, 0.625rem); --_badge-padding-x: var(--spacing-300, 0.75rem); }
 
-  .esa-badge--secondary { --_badge-bg: var(--color-background-brand-secondary, #65ba74); --_badge-text: var(--color-content-on-brand-secondary, #203c25); }
-  .esa-badge--success   { --_badge-bg: var(--color-background-utility-success, #bdee63); --_badge-text: var(--color-content-on-utility-success, #37401c); }
+  .esa-badge--secondary { --_badge-bg: var(--color-background-brand-muted, #e9f6e9); --_badge-text: var(--color-content-on-brand-muted, #203c25); }
+  .esa-badge--success   { --_badge-bg: var(--color-background-utility-success, #30a46c); --_badge-text: var(--color-content-on-utility-success, #202020); }
   .esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning, #ffc53d); --_badge-text: var(--color-content-on-utility-warning, #4f3422); }
   .esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger, #e5484d); }
   .esa-badge--info      { --_badge-bg: var(--color-background-utility-info, #0090ff); }
@@ -109,8 +109,12 @@ const cls = [
   }
 
   .esa-badge--dot.esa-badge--primary   { --_badge-bg: var(--color-background-brand-hover,   #3e9b4f); }
-  .esa-badge--dot.esa-badge--secondary { --_badge-bg: var(--color-background-brand-secondary-hover,  #46a758); }
-  .esa-badge--dot.esa-badge--success   { --_badge-bg: var(--color-background-utility-success-hover,    #b0e64c); }
+  /* A DOT IS 8px OF SOLID COLOUR WITH NO TEXT, so it needs a fill step, not the
+     surface step the filled badge above moved to. --color-background-brand is step 9,
+     which is the value --color-background-brand-secondary-hover already resolved to
+     here, so this dot is unchanged. */
+  .esa-badge--dot.esa-badge--secondary { --_badge-bg: var(--color-background-brand,  #46a758); }
+  .esa-badge--dot.esa-badge--success   { --_badge-bg: var(--color-background-utility-success-hover,    #2b9a66); }
   .esa-badge--dot.esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning-hover,    #ffba18); }
   .esa-badge--dot.esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger-hover,     #dc3e42); }
   .esa-badge--dot.esa-badge--info      { --_badge-bg: var(--color-background-utility-info-hover,       #0588f0); }

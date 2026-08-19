@@ -189,7 +189,7 @@ export class EsaDropdownMenu extends LitElement {
     }
     .esa-dropdown-menu__item--danger { color: var(--color-content-utility-danger, #ce2c31); }
     .esa-dropdown-menu__item--danger:hover:not(:disabled) {
-      background: var(--color-background-utility-danger-subtle, #fff7f7);
+      background: var(--color-background-utility-danger-subtle, #fffcfc);
     }
     .esa-dropdown-menu__item--disabled {
       opacity: 0.5;

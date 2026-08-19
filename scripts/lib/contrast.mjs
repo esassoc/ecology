@@ -48,7 +48,7 @@ export const PAIRS = [
 
   // Each intention's declared foreground against its own solid fill.
   ['--color-content-on-brand', '--color-background-brand', 4.5, 'fail'],
-  ['--color-content-on-brand-secondary', '--color-background-brand-secondary', 4.5, 'fail'],
+  ['--color-content-on-brand-muted', '--color-background-brand-muted', 4.5, 'fail'],
   ['--color-content-on-accent', '--color-background-accent', 4.5, 'fail'],
   ['--color-content-on-ai', '--color-background-ai', 4.5, 'fail'],
   ['--color-content-on-utility-info', '--color-background-utility-info', 4.5, 'fail'],
@@ -107,6 +107,22 @@ export const PAIRS = [
   // ground re-points the tier-3 --focus-ring-color locally, as esa-button variant="chrome"
   // already does via currentColor. Promote to `fail` once the dark-chrome components do.
   ['--color-border-default-focus', '--color-background-default-knockout', 3.0, 'warn'],
+
+  // ---- SC 1.4.3 · TEXT ON THE KNOCKOUT SURFACE ----
+  //
+  // 22 components put text on a knocked-out ground — app bars, tooltips, snackbars, the
+  // secondary-badge text, esa-card's knockout header — and until 2026-08-18 the ONLY
+  // knockout row here was the focus ring above. The pair everything actually depends on
+  // was ungraded.
+  //
+  // It passes comfortably today and always has: 15.88:1 on the hub's light defaults,
+  // 15.15:1 on its dark block, because both sides are step 12 and step 1 of the same
+  // neutral and the ramp guarantees the span. That is exactly why it is worth a row —
+  // it is correct by construction, so nothing would notice if a spoke pinned one half.
+  // `--color-background-default-knockout` is a documented spoke override (a theme whose
+  // ground is already dark re-points it to a LIGHT value), and a spoke that moves the
+  // surface without moving the text gets no warning from anything else in this file.
+  ['--color-content-default-knockout', '--color-background-default-knockout', 4.5, 'fail'],
 
   // ---- SC 1.4.11 · THE FOCUS RING ON AN INVALID FIELD ----
   //

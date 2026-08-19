@@ -178,7 +178,7 @@ test('the pair table still covers all eight content-on-* foregrounds', () => {
   const covered = new Set(PAIRS.map(([fg]) => fg));
   for (const name of [
     '--color-content-on-brand',
-    '--color-content-on-brand-secondary',
+    '--color-content-on-brand-muted',
     '--color-content-on-accent',
     '--color-content-on-ai',
     '--color-content-on-utility-info',
@@ -189,10 +189,11 @@ test('the pair table still covers all eight content-on-* foregrounds', () => {
     assert.ok(covered.has(name), `${name} is no longer in PAIRS`);
   }
   // Bumped 29 → 33 (four focus-ring surfaces) → 37 (four error-ring surfaces) → 63 (26
-  // data-viz mark rows). The bare count is a weak guard — it fires on any addition, which is
-  // noise — but it does catch a row being DELETED, which is the failure that matters. The
-  // per-family assertions below are the ones with teeth.
-  assert.equal(PAIRS.length, 63);
+  // data-viz mark rows) → 64 (knockout text on the knockout surface). The bare count is a
+  // weak guard — it fires on any addition, which is noise — but it does catch a row being
+  // DELETED, which is the failure that matters. The per-family assertions below are the
+  // ones with teeth.
+  assert.equal(PAIRS.length, 64);
 });
 
 test('the focus ring is graded on every surface, and it blocks', () => {

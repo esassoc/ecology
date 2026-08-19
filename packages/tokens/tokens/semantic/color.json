@@ -66,28 +66,19 @@
       "$description": "The PRESSED fill. Equal to `-hover` in this palette, and briefly deleted for that reason — a mistake. Identical default values do not make two tokens redundant at a layer whose whole job is being re-pointed; `background-elevation-raised` and `background-elevation-floating` are both gray-1 and stay separate on exactly this reasoning. cb-fish proved it by giving hover and active distinct navy steps. A token earns its slot by naming a real role, not by holding a distinct value. NOTE: 34 of 35 components style `:hover` and only one styles `:active`, so this role is declared but barely delivered — that gap is the real work, not this token."
     },
     "background-brand-subtle": {
-      "$value": "{color.grass.2}",
+      "$value": "{color.grass.1}",
       "$type": "color",
       "$description": "Step 2 = subtle brand-tinted surface. Section backgrounds, card tints."
     },
     "background-brand-muted": {
       "$value": "{color.grass.3}",
       "$type": "color",
-      "$description": "Step 3 = brand-tinted UI element at rest. Chips, tags, active filter pills."
+      "$description": "Step 3 = brand-tinted UI element at rest. Chips, tags, active filter pills, and the `secondary` button and badge variants. A VARIANT of brand rather than its own intention - a spoke that wants a genuinely different hue here (cb-fish uses blue) overrides this one token.\n\nA step-3 fill sits 1.09-1.28:1 against the page, so anything using it as a CONTROL carries its own border; esa-button paints one from `--color-border-default-strong`, matching what appearance=\"soft\" already did. No brand ramp step reaches 3:1 against the page (step 6 measures 1.46-1.75, step 7 1.74-2.32), so a brand-coloured boundary was measured and rejected."
     },
     "background-brand-muted-hover": {
       "$value": "{color.grass.4}",
       "$type": "color",
-      "$description": "Step 4 = brand-tinted UI element, hovered."
-    },
-    "background-brand-secondary": {
-      "$value": "{color.grass.8}",
-      "$type": "color",
-      "$description": "A second brand fill, for the `secondary` button and badge variants. A VARIANT of brand rather than its own intention — a spoke that wants a genuinely different hue here (cb-fish uses blue) overrides this one token."
-    },
-    "background-brand-secondary-hover": {
-      "$value": "{color.grass.9}",
-      "$type": "color"
+      "$description": "Step 4 = brand-tinted UI element, hovered. The hover partner for `background-brand-muted`."
     },
     "background-accent": {
       "$value": "{color.orange.9}",
@@ -108,7 +99,7 @@
       "$type": "color"
     },
     "background-ai-subtle": {
-      "$value": "{color.copper.2}",
+      "$value": "{color.copper.1}",
       "$type": "color"
     },
     "background-utility-info": {
@@ -121,21 +112,23 @@
       "$type": "color"
     },
     "background-utility-info-subtle": {
-      "$value": "{color.blue.2}",
+      "$value": "{color.blue.1}",
       "$type": "color",
       "$description": "Step 2 = subtle tinted surface. The usual alert/banner background."
     },
     "background-utility-success": {
-      "$value": "{color.lime.9}",
-      "$type": "color"
+      "$value": "{color.green.9}",
+      "$type": "color",
+      "$description": "\n\nWAS LIME UNTIL 2026-08-18. Lime read as a highlighter rather than a success state, and its step 9 sits 1.31:1 against the page — a fill you cannot see the edge of. green-9 is 3.08:1.\n\nTHE COST IS MEASURED AND REAL: against the hub's own grass brand, green-9 is OKLab deltaE 3.06 and 2.99 under simulated colour-vision deficiency — below even the 6-8 floor band dataviz.mjs treats as the minimum for telling two hues apart. On THIS site a success badge and a brand button are near enough the same colour. Lime was 24.51 / 22.89 away. That is a hub-default problem rather than a system one: a spoke re-points its brand, and for any non-green brand green is the conventional and correct success hue. If it ever needs solving without leaving green, green-11 is deltaE 11.7 from grass and takes white text at 4.60:1."
     },
     "background-utility-success-hover": {
-      "$value": "{color.lime.10}",
+      "$value": "{color.green.10}",
       "$type": "color"
     },
     "background-utility-success-subtle": {
-      "$value": "{color.lime.2}",
-      "$type": "color"
+      "$value": "{color.green.1}",
+      "$type": "color",
+      "$description": "\n\nSTEP 1, NOT STEP 2, ACROSS ALL SIX SUBTLE TINTS as of 2026-08-18. Radix engineers step 11 to clear 4.5:1 on step 2 and several scales land a hair under their own target — measured, green 4.49 and yellow 4.43 both failed, against blue 4.53, red 4.94. Fixing only the two that missed would have left one intention off-pattern, so all six moved together. Step 1 clears every one: brand 4.99, ai 5.69, info 4.67, success 4.65, warning 4.54, danger 5.11."
     },
     "background-utility-warning": {
       "$value": "{color.yellow.9}",
@@ -146,7 +139,7 @@
       "$type": "color"
     },
     "background-utility-warning-subtle": {
-      "$value": "{color.yellow.2}",
+      "$value": "{color.yellow.1}",
       "$type": "color"
     },
     "background-utility-danger": {
@@ -159,7 +152,7 @@
       "$type": "color"
     },
     "background-utility-danger-subtle": {
-      "$value": "{color.red.2}",
+      "$value": "{color.red.1}",
       "$type": "color"
     },
     "content-default": {
@@ -205,10 +198,6 @@
       "$type": "color",
       "$description": "Brand-coloured TEXT on a surface — link-style buttons, outline button labels. Step 11 is Radix's step for exactly this. Formerly `--color-primary-strong`, a name that read like a bolder fill and got used as one."
     },
-    "content-brand-secondary": {
-      "$value": "{color.grass.11}",
-      "$type": "color"
-    },
     "content-ai": {
       "$value": "{color.copper.11}",
       "$type": "color"
@@ -219,7 +208,7 @@
       "$description": "Step 11 = coloured text on a surface."
     },
     "content-utility-success": {
-      "$value": "{color.lime.11}",
+      "$value": "{color.green.11}",
       "$type": "color"
     },
     "content-utility-warning": {
@@ -235,11 +224,6 @@
       "$type": "color",
       "$description": "Foreground ON the matching solid fill. There is now one of these per intention, because five of them were missing and components hardcoded #fff instead — which silently fails contrast on the bright scales. Grass 9 is not bright, so light text is correct here; override if your brand ramp is."
     },
-    "content-on-brand-secondary": {
-      "$value": "{color.grass.12}",
-      "$type": "color",
-      "$description": "Grass 8 is a bright fill — light text fails contrast, so this is dark. Override when your secondary fill is a dark scale."
-    },
     "content-on-accent": {
       "$value": "{color.gray.1}",
       "$type": "color"
@@ -253,9 +237,9 @@
       "$type": "color"
     },
     "content-on-utility-success": {
-      "$value": "{color.lime.12}",
+      "$value": "{color.gray.12}",
       "$type": "color",
-      "$description": "Lime is one of Radix's bright scales — its step 9 needs DARK text. Override when your success colour is not a bright scale."
+      "$description": "Text on the success fill. NOT step 12 of its own ramp, which is the pattern `warning` still follows — that pattern belongs to the BRIGHT scales. Lime was one: lime-9 is so light that lime-12 on it reads 8.14:1. green-9 is a mid-tone fill, where green-12 comes to only 3.90:1 and fails AA, while the neutral's darkest reaches 5.16:1.\n\nWhite fails here too (green-9 is not dark enough), which is why this is neither of the two existing patterns: `danger` and `info` take {color.gray.1} because red-9 and blue-9 are dark, `warning` takes {color.yellow.12} because amber-9 is bright, and green-9 sits between them."
     },
     "content-on-utility-warning": {
       "$value": "{color.yellow.12}",
@@ -299,7 +283,7 @@
       "$type": "color"
     },
     "border-utility-success": {
-      "$value": "{color.lime.6}",
+      "$value": "{color.green.6}",
       "$type": "color"
     },
     "border-utility-warning": {
@@ -419,6 +403,11 @@
       "$value": "{color.red.11}",
       "$type": "color",
       "$description": "Polarity — which side of a baseline. Cool (1) through a neutral midpoint (4) to warm (7). Deliberately NOT brand-derived: a green brand would give green-vs-red, the worst pairing for the commonest colour-vision deficiency. Slot 7 of 7. GENERATED by scripts/lib/dataviz.mjs from the brand seed — edit the derivation, never this value."
+    },
+    "content-on-brand-muted": {
+      "$value": "{color.grass.12}",
+      "$type": "color",
+      "$description": "Text on `background-brand-muted`. Step 12 on a step-3 fill measures 10.27-11.80:1 in light and 11.33-12.54:1 in dark across every brand swept, which is why this pairing needs no contrast search and no movable fallback.\n\nIT WAS `content-on-brand-secondary`, ON A STEP-8 FILL, AND THAT PAIRING WAS THE PROBLEM. Step 8 is Radix's *hovered UI element border*, not a fill step; used as one it measured 3.51-5.47:1 in light and 3.82-4.67:1 in dark, failing AA outright for several brands. The generator papered over it with a movable walk that still left most brands marginal. Step 3 is Radix's UI-element background - the step this always wanted - and it is the value `background-brand-muted` already held, which is why the two families merged rather than both surviving. See the `brand-secondary-to-muted` row in migrations.json."
     }
   }
 }

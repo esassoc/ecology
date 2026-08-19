@@ -258,7 +258,7 @@ export class EsaSidebarNav extends LitElement {
       --_sidenav-item-color-active: var(--color-content-brand, #2a7e3b);
       --_sidenav-item-bg: var(--sidenav-link-bg, transparent);
       --_sidenav-item-bg-hover: var(--color-background-elevation-sunken, #f0f0f0);
-      --_sidenav-item-bg-active: var(--color-background-brand-subtle, #f5fbf5);
+      --_sidenav-item-bg-active: var(--color-background-brand-subtle, #fbfefb);
       --_sidenav-item-weight-active: var(--typography-font-weight-semibold, 550);
       --_sidenav-active-border-width: var(--sidenav-active-border-width, 0);
       --_sidenav-active-border-color: var(--color-background-brand, #46a758);
