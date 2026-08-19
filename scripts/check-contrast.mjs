@@ -103,8 +103,13 @@ if (assurance && !tokensCss.includes(`[data-a11y-assurance="${assurance}"]`)) {
 
 const base = new Map();
 const opts = { assurance, scheme };
-parseDeclarations(tokensCss, base, opts);
-parseDeclarations(readFileSync(path.join(HUB, 'packages/tokens/src/component-tokens.css'), 'utf8'), base, opts);
+let schemeBlocksSeen = 0;
+schemeBlocksSeen += parseDeclarations(tokensCss, base, opts).schemeBlocks;
+schemeBlocksSeen += parseDeclarations(
+  readFileSync(path.join(HUB, 'packages/tokens/src/component-tokens.css'), 'utf8'),
+  base,
+  opts,
+).schemeBlocks;
 if (assurance) console.log(`assurance profile: ${assurance} (composed UNDER the theme, as the browser resolves it)`);
 // Say which scheme is being graded whenever it is not the default, for the same reason
 // the assurance line exists: an audit that stops describing what it claims to report on
@@ -119,8 +124,23 @@ for (const [label, file] of targets) {
   const map = new Map(base);
   if (file) {
     if (!existsSync(file)) die(`not found: ${file}`);
-    parseDeclarations(readFileSync(file, 'utf8'), map, opts);
+    schemeBlocksSeen += parseDeclarations(readFileSync(file, 'utf8'), map, opts).schemeBlocks;
   }
+  // Refuse to report on a scheme that was never found. Without this the run
+  // composes the base (light) declarations, grades those, and prints them under a
+  // header naming the scheme you asked for — `--hub --scheme dark` produced output
+  // byte-identical to the light run, because dist/tokens.css has no [data-scheme]
+  // block at all (the hub's dark values live in the site's docs-dark.css). The
+  // sibling --assurance flag is validated for exactly this reason.
+  if (scheme !== 'light' && schemeBlocksSeen === 0) {
+    die(
+      `--scheme ${scheme} matched no [data-scheme="${scheme}"] block in ${label}.\n` +
+        `  Grading would report the base (light) values under a ${scheme} header.\n` +
+        `  Point this at a file that declares a ${scheme} block, e.g.\n` +
+        `    node scripts/check-contrast.mjs apps/site/src/styles/docs-dark.css --scheme ${scheme}`,
+    );
+  }
+
   console.log(`\n=== ${label} ===`);
   const { rows, manual, checked, failures: failed, underResolved } = auditPairs(map);
   failures += failed;

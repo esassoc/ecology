@@ -478,21 +478,23 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
        case is gone rather than generalised. */
     padding-block: var(--_btn-pad-y);
     padding-inline: var(--_btn-padding-x);
-    /* The label is white-space: nowrap, so it is one line always — leading here is
-       pure box height, not typography. Deleted twice now on the reasoning that a
-       flex-centred button never lets leading reach an edge; there is no fixed
-       height, so leading IS the term that sets the height. */
+    /* NO line-height HERE, and that is not the old deletion repeated. Leading comes
+       from .typography-label-* on this element, which declares it (typography.css) —
+       so the height is still `2 * padding-block + leading + border`, the term is just
+       owned by the composite rather than restated here. Restating it is what the
+       rule below forbids: Astro's [data-astro-cid-*] scoping outranks the composite's
+       single-class selector, so a local line-height would silently BEAT the composite
+       instead of agreeing with it. */
     border: var(--border-width-default, 1px) solid transparent;
     border-radius: var(--_btn-radius);
     /* Type comes from .typography-label-* on this element. Nothing font-related
        may be declared here: Astro scopes this rule with a [data-astro-cid-*]
        attribute, which outranks the composite's single-class selector, so a
        leftover declaration would silently beat the composite rather than
-       layering with it. line-height IS set above, and deliberately: it was deleted
-       here earlier on the grounds that "the button is a fixed-height centred flex
-       box, so leading never reached an edge." There is no fixed height any more,
-       so leading is exactly what reaches the edge — it is the term that decides
-       how tall the button is. */
+       layering with it. That includes line-height: there is no fixed height any
+       more, so leading is exactly what reaches the edge — it is the term that
+       decides how tall the button is, which is why it must come from the composite
+       and not from a declaration here that would outrank it. */
     text-decoration: none;
     cursor: pointer;
     transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
@@ -527,7 +529,9 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   }
   /* Chrome's ring is currentColor for the same reason its text is — a fixed ring
      color is invisible on a dark bar. */
-  .esa-button--variant-chrome summary.esa-button:focus-visible,
+  /* One selector, not two: with tag="summary" the <summary> carries BOTH classes
+     itself, so the descendant form (`.esa-button--variant-chrome summary.esa-button`)
+     could never match — an element is not its own descendant. */
   summary.esa-button--variant-chrome:focus-visible { outline-color: currentColor; }
 
   /* Label + loading */

@@ -94,6 +94,15 @@ const CATEGORIES: CategorySpec[] = [
     ['esa-filter-container', 'Filter Container'], ['esa-filter-dropdown', 'Filter Dropdown'],
     ['esa-filter-pills', 'Filter Pills'], ['esa-filter-clear-button', 'Filter Clear Button'],
   ] },
+  // NO `Maps` GROUP, and esa-map stays a lone reference wrapper here. A group of
+  // esa-map + esa-map-geojson/-marker/-popup was added and then removed: the three
+  // layer components have no source file in packages/ecology/src/components/ and no
+  // doc page on this branch — that work lives on the `map-work` branch. buildEntry
+  // therefore falls to the `reference` path, referenceDoc returns {summary: ''}
+  // because the page does not exist, and the catalog and sidebar render three rows
+  // with a blank summary pointing at /components#esa-map-geojson — an anchor to a
+  // section that is itself empty. Re-add the group in the same change that lands the
+  // components, not before.
   { label: 'Data & Editors', items: [
     ['esa-chart', 'Chart'], ['esa-grid', 'Data Grid'], ['esa-map', 'Map'], ['esa-rich-text-editor', 'Rich Text Editor'],
   ] },

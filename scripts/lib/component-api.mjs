@@ -77,14 +77,38 @@ export function commentAbove(lines, i) {
   return buf.length ? cleanComment(buf.join('\n')) : '';
 }
 
-/** Extract `{ … }` starting at `from`, balancing braces so nested types survive. */
+/**
+ * Blank out comments while PRESERVING every offset, so indices computed on the
+ * result still map back into the original source. Newlines survive; everything
+ * else inside a comment becomes a space.
+ */
+function stripComments(src) {
+  return src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
+}
+
+/**
+ * Extract `{ … }` starting at `from`, balancing braces so nested types survive.
+ *
+ * Brace-counting over RAW source counts braces inside comments and strings. A
+ * single `{` in a prose comment ends the block early and the rest of the props
+ * vanish from the table — silently, because a short block still parses.
+ */
 export function balancedBlock(src, from) {
-  const open = src.indexOf('{', from);
+  const clean = stripComments(src);
+  const open = clean.indexOf('{', from);
   if (open === -1) return null;
   let depth = 0;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
-    else if (src[i] === '}') {
+  let quote = null;
+  for (let i = open; i < clean.length; i++) {
+    const c = clean[i];
+    if (quote) {
+      if (c === '\\') { i++; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+    if (c === '{') depth++;
+    else if (c === '}') {
       depth--;
       if (depth === 0) return src.slice(open + 1, i);
     }
@@ -100,14 +124,26 @@ export function splitTopLevel(body) {
   const parts = [];
   let depth = 0;
   let quote = null;
+  let line = false;   // inside a // comment
+  let block = false;  // inside a /* */ comment
   let buf = '';
   for (let i = 0; i < body.length; i++) {
     const c = body[i];
+    const n = body[i + 1];
+    // Comments are COPIED but never interpreted. The prose is kept because the
+    // caller reads it back as each prop's `doc`; what it must not do is act as
+    // code — an apostrophe in "the field's state" opened a quote state that ran
+    // to the end of the block, and a comma or brace in prose split or unbalanced
+    // it. Measured before the fix: esa-text-field returned 4 of its 18 props.
+    if (line) { buf += c; if (c === '\n') line = false; continue; }
+    if (block) { buf += c; if (c === '*' && n === '/') { buf += n; i++; block = false; } continue; }
     if (quote) {
       buf += c;
       if (c === quote && body[i - 1] !== '\\') quote = null;
       continue;
     }
+    if (c === '/' && n === '/') { line = true; buf += c; continue; }
+    if (c === '/' && n === '*') { block = true; buf += c; continue; }
     if (c === "'" || c === '"' || c === '`') { quote = c; buf += c; continue; }
     if (c === '{' || c === '[' || c === '(') depth++;
     if (c === '}' || c === ']' || c === ')') depth--;
@@ -179,7 +215,11 @@ export function parseAstro(src) {
     if (d) {
       for (const part of splitTopLevel(d)) {
         // `class: className = ''` → key is the source-side name (`class`).
-        const m = part.trim().match(/^([a-zA-Z0-9_$]+)\s*(?::\s*[a-zA-Z0-9_$]+\s*)?=\s*([\s\S]+)$/);
+        // Same anchoring problem as the Lit branch below: a commented prop arrives
+        // with the comment attached, `^` misses, and the DEFAULT silently vanishes
+        // from the docs while the prop itself still lists (it comes from `Props`).
+        const bareA = part.replace(/^\s*(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)\s*/g, '').trim();
+        const m = bareA.match(/^([a-zA-Z0-9_$]+)\s*(?::\s*[a-zA-Z0-9_$]+\s*)?=\s*([\s\S]+)$/);
         if (m) defaults.set(m[1], m[2].trim());
       }
     }
@@ -229,7 +269,15 @@ export function parseLit(src) {
   // name → attribute name, in declaration order, skipping internal state.
   const declared = [];
   for (const part of splitTopLevel(block)) {
-    const m = part.trim().match(/^([a-zA-Z0-9_$]+)\s*:\s*\{([\s\S]*)\}$/);
+    // ANCHORED, so a leading comment must come off first. splitTopLevel now COPIES
+    // comments (it must — the caller reads them back as prose), which means a part
+    // can arrive as "/* … */ label: { … }" and `^` no longer matches the name. That
+    // dropped every prop a component documents here, which is why `label`,
+    // `placeholder` and `help-text` read as documented-but-absent across six
+    // components. The DESCRIPTION is not lost: it comes from commentAbove() on the
+    // `declare` line, not from this map.
+    const bare = part.replace(/^\s*(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)\s*/g, '').trim();
+    const m = bare.match(/^([a-zA-Z0-9_$]+)\s*:\s*\{([\s\S]*)\}$/);
     if (!m) continue;
     const opts = m[2];
     if (/\bstate\s*:\s*true\b/.test(opts)) continue;

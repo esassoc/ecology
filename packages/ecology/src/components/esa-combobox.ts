@@ -72,6 +72,14 @@ type EsaComboboxTriggerStyle = 'field' | 'text';
  *
  * Keyboard: ArrowDown/Up navigate, Enter selects, Escape & Tab close.
  */
+/**
+ * ONCE PER PAGE, not once per instance. Unlike the `mode="select"` notice — which
+ * reaches only the authors who opted in explicitly — this one fires for every call
+ * site that omitted the attribute, which was the majority. Per-instance would turn a
+ * deprecation notice into console spam on any page with a few comboboxes.
+ */
+let warnedDefaultModeFlip = false;
+
 export class EsaCombobox extends LitElement {
   static formAssociated = true;
 
@@ -197,6 +205,43 @@ export class EsaCombobox extends LitElement {
     super.connectedCallback();
     document.addEventListener('click', this.onDocClick);
     this.syncFormValue();
+    this.warnDefaultModeFlip();
+  }
+
+  /**
+   * THE WARNING THAT MATTERS FIRES ON THE PATH THAT DID NOT CHANGE, so this is the
+   * other half. `mode` defaulted to 'select' until 2026-08-15; the call sites hurt by
+   * that flip are the ones that never wrote the attribute at all, and they render
+   * renderAutocomplete(), which holds no warning. renderSelect()'s notice reaches only
+   * authors who already opted in explicitly — i.e. the ones whose rendering is
+   * unchanged.
+   *
+   * It cannot be a migrations.json rewrite either: `combobox-mode-select-to-select` is
+   * a deprecatedProps row with no `pairs`, so the codemod has nothing to write and no
+   * way to tell an omitted attribute from a deliberate one.
+   *
+   * Keyed on the ATTRIBUTE, not the property: an omitted attribute is the signal, and
+   * writing `mode="autocomplete"` is both the confirmation and the way to silence this.
+   *
+   * IT MUST RUN BEFORE THE FIRST UPDATE, because `mode` REFLECTS. Lit writes the
+   * resolved value back onto the element, so a few milliseconds later every instance
+   * carries `mode="autocomplete"` whether or not anyone typed it, and the check reads
+   * as "nobody is affected". connectedCallback is before first update on the initial
+   * upgrade, which is the moment this needs to be right. (A re-connection later is
+   * after reflection and would not warn — harmless only because the flag above is
+   * module-scoped and this has already fired once by then.)
+   */
+  private warnDefaultModeFlip(): void {
+    if (warnedDefaultModeFlip) return;
+    if (this.hasAttribute('mode')) return;
+    warnedDefaultModeFlip = true;
+    console.warn(
+      `⚠️  esa-combobox: \`mode\` now defaults to "autocomplete" (was "select" before ` +
+        `2026-08-15), so this instance renders a free-text input rather than a button ` +
+        `trigger. If that is what you want, write \`mode="autocomplete"\` to silence ` +
+        `this. If you wanted the button trigger over a fixed list, that is <esa-select>. ` +
+        `(migrations.json: combobox-mode-select-to-select)`,
+    );
   }
 
   disconnectedCallback(): void {

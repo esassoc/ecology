@@ -35,12 +35,12 @@ const claimedTokens = [
 // column that mattered: red-6 is a subtle BORDER step at 1.40:1, so three of these rings were
 // nearly invisible even when the token resolved. `now` is the single line that replaced it.
 const doubleRing = [
-  { file: 'esa-text-field.ts', base: '412 · .control:focus-within', err: '515 · outline-color', was: '--form-error-border-color (red-9, 3.43:1)' },
-  { file: 'esa-textarea.ts', base: '336 · .input:focus', err: '367 · outline-color', was: '--form-error-border-color (red-9, 3.43:1)' },
-  { file: 'esa-input-tag.ts', base: '587 · .container:focus-within', err: '619 · outline-color', was: '--form-error-border-color (red-9, 3.43:1)' },
-  { file: 'esa-select.ts', base: '854 · .input:focus', err: '1023 · outline-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
-  { file: 'esa-combobox.ts', base: '820 · .input:focus', err: '1139 · outline-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
-  { file: 'esa-date-picker.ts', base: '334 · .input:focus', err: '369 · outline-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
+  { file: 'esa-text-field.ts', base: '412 · .control:focus-within', err: '538 · --focus-ring-color', was: '--form-error-border-color (red-9, 3.43:1)' },
+  { file: 'esa-textarea.ts', base: '336 · .input:focus', err: '376 · --focus-ring-color', was: '--form-error-border-color (red-9, 3.43:1)' },
+  { file: 'esa-input-tag.ts', base: '587 · .container:focus-within', err: '627 · --focus-ring-color', was: '--form-error-border-color (red-9, 3.43:1)' },
+  { file: 'esa-select.ts', base: '854 · .input:focus', err: '1097 · --focus-ring-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
+  { file: 'esa-combobox.ts', base: '820 · .input:focus', err: '1199 · --focus-ring-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
+  { file: 'esa-date-picker.ts', base: '334 · .input:focus', err: '380 · --focus-ring-color', was: '--color-border-utility-danger (red-6, 1.40:1)' },
 ];
 
 // Finding 4 — every outline-offset in the kit, grouped by the value it uses.
@@ -142,9 +142,13 @@ const offsets = [
     <section class="find">
       <h2><span class="sev sev--fixed">FIXED</span> 2 · A focused error field painted two rings in two colours</h2>
       <p class="hint">
-        <strong>Resolved 2026-08-17.</strong> All six error rules are now
-        <code>outline-color: var(--form-error-border-color)</code> — a genuine override on the same
-        property the base rule uses, so it is one red band, not a second one. The cells below now
+        <strong>Resolved 2026-08-17.</strong> All six error rules now re-point the TOKEN —
+        <code>.field--error {'{'} --focus-ring-color: var(--form-error-border-color) {'}'}</code> —
+        rather than overriding <code>outline-color</code>, so it is one red band, not a second one.
+        The token form is what reaches the chip remove buttons too, which a property override on
+        the container would have missed. (This paragraph and the <code>err</code> column said
+        <code>outline-color</code> until 2026-08-19; no component ever declared that, so every
+        line number in the column pointed at nothing.) The cells below now
         show a single red ring. <strong>This was originally an override</strong> (both rules used
         <code>box-shadow</code>); the 2026-08-16 forced-colors pass converted the base rule to
         <code>outline</code> and left the error rule behind, which is what split them into two

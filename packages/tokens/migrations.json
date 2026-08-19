@@ -933,9 +933,8 @@
       "components": [
         "esa-select"
       ],
-      "module": "@esa/ecology/esa-select.astro",
       "pairs": [],
-      "why": "NO REWRITE PAIRS ON PURPOSE — this row exists so `doctor` and /update-tokens can NAME the affected files, not rewrite them. `searchable` defaulted to TRUE, so every existing <esa-select> is rendering an editable autocomplete: a codemod cannot know whether each call site wanted a filter or merely took the default. That is a human judgement per site. A select is a list opened by a BUTTON; a type-to-filter field is an autocomplete, i.e. esa-combobox. Most sites need NOTHING — dropping `searchable` leaves typeahead, which covers the common case. Sites over a genuinely long list (cb-fish-design's locality schedule is the example) should become <esa-combobox>. The component keeps `searchable` working and warns at runtime; that warning, not this row, is what reaches a binding no static scan can see.",
+      "why": "NO REWRITE PAIRS ON PURPOSE — this row exists so `doctor` and /update-tokens can NAME the affected files, not rewrite them. `searchable` defaulted to TRUE, so every existing <esa-select> is rendering an editable autocomplete: a codemod cannot know whether each call site wanted a filter or merely took the default. That is a human judgement per site. A select is a list opened by a BUTTON; a type-to-filter field is an autocomplete, i.e. esa-combobox. Most sites need NOTHING — dropping `searchable` leaves typeahead, which covers the common case. Sites over a genuinely long list (cb-fish-design's locality schedule is the example) should become <esa-combobox>. The component keeps `searchable` working and warns at runtime; that warning, not this row, is what reaches a binding no static scan can see. NO `module` KEY, DELIBERATELY: this component is a Lit custom element with no .astro wrapper, so the specifier that used to sit here resolved to a file that does not exist and importedAs() could never match it. It would not help even if corrected \u2014 a Lit element is registered by side-effect import and has no default binding to alias, so the `components` tag list is the whole scan. Do not re-add it: a dead `module` reads as \"aliased imports are covered\" when they are not.",
       "deprecatedProps": [
         "searchable"
       ]
@@ -947,9 +946,8 @@
       "components": [
         "esa-combobox"
       ],
-      "module": "@esa/ecology/esa-combobox.astro",
       "pairs": [],
-      "why": "Also no rewrite pairs. `mode=\"select\"` renders a button trigger over a fixed list — that is <esa-select>. The correct migration is a COMPONENT swap conditional on an attribute VALUE, which `renameComponent` cannot express (it matches on tag alone). Building that predicate was scoped and DROPPED: measured across every spoke, it would rewrite 4 call sites in one repo, against ~150 lines plus tests. A warning that names the file is the better tool at that size. `triggerStyle` is deprecated with it — it is read at exactly one site, inside renderSelect, so it only ever styled that button.",
+      "why": "Also no rewrite pairs. `mode=\"select\"` renders a button trigger over a fixed list — that is <esa-select>. The correct migration is a COMPONENT swap conditional on an attribute VALUE, which `renameComponent` cannot express (it matches on tag alone). Building that predicate was scoped and DROPPED: measured across every spoke, it would rewrite 4 call sites in one repo, against ~150 lines plus tests. A warning that names the file is the better tool at that size. `triggerStyle` is deprecated with it — it is read at exactly one site, inside renderSelect, so it only ever styled that button. NO `module` KEY, DELIBERATELY: this component is a Lit custom element with no .astro wrapper, so the specifier that used to sit here resolved to a file that does not exist and importedAs() could never match it. It would not help even if corrected \u2014 a Lit element is registered by side-effect import and has no default binding to alias, so the `components` tag list is the whole scan. Do not re-add it: a dead `module` reads as \"aliased imports are covered\" when they are not.",
       "deprecatedProps": [
         "mode",
         "triggerStyle"

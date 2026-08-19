@@ -111,6 +111,51 @@ export function renameProp(src, { components, from, to, module: moduleSpec }) {
 }
 
 /**
+ * One attribute of an opening tag: the NAME, plus the `="value"` that may follow it.
+ *
+ * THIS EXISTS BECAUSE A PROP NAME IS ALSO ORDINARY ENGLISH. Matching prop names with
+ * a bare `(?<![\\w-])name(?=[\\s=/]|$)` over the raw attribute string reaches inside
+ * quoted VALUES, and the codemod edits a spoke's source in place:
+ *
+ *     <esa-icon-link aria-label="Show active items">   renameProps {active: 'current'}
+ *  →  <esa-icon-link aria-label="Show current items">  user-visible copy, silently rewritten
+ *
+ * The same looseness inverts the addProps guard, which is worse because it fails
+ * QUIETLY in the other direction: `<esa-icon-link title="variant A">` satisfies the
+ * "call site already set it" test, so `variant="chrome"` is never added and the
+ * migrated button loses its variant with nothing in the report.
+ *
+ * Consuming the value as part of the match is what fixes both — a name inside a
+ * quoted value is never in name position on the next iteration. `{...}` is an
+ * alternative because an Astro/JSX expression value may contain spaces
+ * (`variant={a + b}`), which the unquoted branch would otherwise split into
+ * three bogus names.
+ *
+ * Tightening the lookahead to `(?=\\s*=)` instead would have traded one bug for
+ * another: a BOOLEAN attribute (`<esa-icon-link weight>`) has no `=` to anchor to,
+ * so every dropProps report on one would go silently missing.
+ */
+const ATTR_TOKEN = /([^\s=/>]+)(\s*=\s*(?:"[^"]*"|'[^']*'|\{[^}]*\}|[^\s>]+))?/g;
+
+/** Rewrite attribute NAMES via `fn`, leaving every value untouched. */
+function mapAttrNames(attrs, fn) {
+  return attrs.replace(ATTR_TOKEN, (m, name, value) => {
+    const next = fn(name);
+    return next === name ? m : next + (value || '');
+  });
+}
+
+/** The set of attribute NAMES an opening tag actually declares. */
+function attrNames(attrs) {
+  const names = new Set();
+  mapAttrNames(attrs, (n) => {
+    names.add(n);
+    return n;
+  });
+  return names;
+}
+
+/**
  * Rename a whole COMPONENT — the shape a prop rename cannot express.
  *
  * `esa-icon-button` did not lose a prop, it stopped existing: it is now
@@ -152,10 +197,6 @@ export function renameComponent(
   const tagNames = [...new Set([from, ...bindings])];
   if (!tagNames.length) return { text: src, count: 0, dropped: [] };
 
-  const added = Object.entries(addProps)
-    .map(([k, v]) => (v === true ? ` ${k}` : ` ${k}="${v}"`))
-    .join('');
-
   const openingTag = new RegExp(`<(${tagNames.map(esc).join('|')})(?![\\w-])([^>]*)(/?)>`, 'g');
   let count = 0;
   const dropped = [];
@@ -165,16 +206,19 @@ export function renameComponent(
     // Custom element → new element name. A local binding keeps its name; its
     // import is repointed below.
     const newTag = tagName === from ? to : tagName;
-    let a = attrs;
-    for (const [oldProp, newProp] of Object.entries(renameProps)) {
-      a = a.replace(new RegExp(`(?<![\\w-])${esc(oldProp)}(?=[\\s=/]|$)`, 'g'), newProp);
-    }
+    // Names as WRITTEN, for the drop report: a prop being renamed away is not the
+    // same prop as the one it becomes, so this is read before the rename lands.
+    const written = attrNames(attrs);
     for (const prop of dropProps) {
-      if (new RegExp(`(?<![\\w-])${esc(prop)}(?=[\\s=/]|$)`).test(a)) dropped.push({ tag: tagName, prop });
+      if (written.has(prop)) dropped.push({ tag: tagName, prop });
     }
-    // Only add a prop the call site has not already set itself.
+    const renamed = new Map(Object.entries(renameProps));
+    const a = mapAttrNames(attrs, (n) => renamed.get(n) ?? n);
+    // Only add a prop the call site has not already set itself — checked AFTER the
+    // rename, since a renameProps destination counts as the call site having set it.
+    const present = attrNames(a);
     const toAdd = Object.entries(addProps)
-      .filter(([k]) => !new RegExp(`(?<![\\w-])${esc(k)}(?=[\\s=/]|$)`).test(a))
+      .filter(([k]) => !present.has(k))
       .map(([k, v]) => (v === true ? ` ${k}` : ` ${k}="${v}"`))
       .join('');
     return `<${newTag}${toAdd}${a}${selfClose}>`;

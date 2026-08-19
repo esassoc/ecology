@@ -74,6 +74,15 @@ interface EsaOption {
  * Keyboard: ArrowDown/ArrowUp navigate, Enter selects, Escape closes, Tab closes.
  * Dropdown is positioned with plain absolute CSS (no CDK). Outside-click closes it.
  */
+/**
+ * ONCE PER PAGE. The `searchable` deprecation notice lives inside
+ * renderSearchableInput(), so it reaches only call sites that set the prop explicitly
+ * — whose rendering did NOT change. `searchable` defaulted to TRUE until 2026-08-15,
+ * so the sites that lost their search field are exactly the ones that never wrote it,
+ * and they had no notice at all. Same inversion as esa-combobox.warnDefaultModeFlip.
+ */
+let warnedSearchableFlip = false;
+
 export class EsaSelect extends LitElement {
   static formAssociated = true;
 
@@ -222,8 +231,27 @@ export class EsaSelect extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    this.warnSearchableFlip();
     document.addEventListener('click', this.onDocClick);
     this.syncFormValue();
+  }
+
+  /**
+   * Keyed on the ATTRIBUTE, not the property: an omitted attribute is the signal, and
+   * writing `searchable` (or dropping to typeahead deliberately) is how an author
+   * confirms the new behaviour and silences this.
+   */
+  private warnSearchableFlip(): void {
+    if (warnedSearchableFlip) return;
+    if (this.hasAttribute('searchable')) return;
+    warnedSearchableFlip = true;
+    console.warn(
+      `⚠️  esa-select: \`searchable\` now defaults to false (was true before ` +
+        `2026-08-15), so this instance renders a button trigger instead of a text ` +
+        `field. The list is still reachable by TYPEAHEAD, so most call sites need no ` +
+        `change. If you wanted filtering as you type, that is <esa-combobox>. ` +
+        `(migrations.json: select-searchable-to-combobox)`,
+    );
   }
 
   disconnectedCallback(): void {
@@ -426,6 +454,35 @@ export class EsaSelect extends LitElement {
         break;
       case 'Tab':
         this._open = false;
+        break;
+      case ' ':
+        // SPACE HAS TO BE HANDLED EXPLICITLY, and it was not until 2026-08-19.
+        // It used to fall through to onTypeahead(), which calls preventDefault()
+        // for any single printable character — and cancelling keydown's default on
+        // a <button> suppresses the activation click. So Space neither opened the
+        // listbox nor chose an option; it appended " " to the typeahead buffer,
+        // matched nothing, and did nothing visible. Harmless while this trigger was
+        // an <input readonly>, live the moment it became a real button.
+        //
+        // A buffer in flight keeps Space as TYPING, so a multi-word label
+        // ("New York") stays reachable by typeahead. Only an idle Space activates,
+        // which is the select-only combobox behaviour the trigger's docblock cites.
+        //
+        // The deprecated `searchable` path shares this handler and renders a real
+        // text <input>, where Space is a character and nothing else — the same
+        // carve-out onTypeahead() already makes, for the same reason.
+        if (this.searchable) break;
+        if (this._typeahead) {
+          this.onTypeahead(event);
+          break;
+        }
+        event.preventDefault();
+        if (!this._open) {
+          this.openDropdown();
+        } else if (this._active >= 0) {
+          const opt = opts[this._active];
+          if (opt && !opt.disabled) this.selectOption(opt);
+        }
         break;
       default:
         this.onTypeahead(event);
@@ -813,12 +870,16 @@ export class EsaSelect extends LitElement {
          line, and the space above and below it is invisible. Letting the body-*
          composite's relaxed leading through added 12px here at md and made this
          field 7px taller than esa-text-field on the same step, breaking the row
-         alignment component-tokens.css promises. Restated, not compensated for with
-         a smaller padding rung: leading scales with the fluid type (27px at 1600,
-         22px at 375) and is re-pointable by a theme, so a static padding offset
-         would cancel it at exactly one viewport. Same line esa-button,
-         esa-text-field, esa-button-toggle and esa-color-picker already carry.
-         esa-textarea deliberately does NOT — it is genuinely multi-line. */
+         alignment component-tokens.css promises.
+         CHOSEN, NOT RESTATED, and not compensated for with a smaller padding rung.
+         The tight leading comes from FIELD_TYPE picking a microcopy-*-subtle rung,
+         whose composite declares the line-height for us — there is deliberately no
+         line-height declaration in this rule, because one here would outrank the
+         composite rather than agree with it. A static padding offset was the other option and
+         is wrong: leading scales with the fluid type (27px at 1600, 22px at 375) and
+         is re-pointable by a theme, so an offset would cancel it at exactly one
+         viewport. esa-textarea stays on a body-* composite on purpose — it is
+         genuinely multi-line, so its leading has a typographic job. */
       color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);

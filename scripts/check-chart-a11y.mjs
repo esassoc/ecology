@@ -280,6 +280,22 @@ async function main() {
     results[motion] = { ...observed, dataNames };
     await ctx.close();
   }
+  /*
+   * BAIL BEFORE THE SWEEP, NOT AFTER IT. seriesTypeSweep() does
+   * `document.querySelector('esa-chart').data = ...` with no guard, so on a route with
+   * no <esa-chart> — a renamed page, a stale dist — the evaluate rejects. That used to
+   * happen while this check still sat 8 lines below, so the intended
+   * "✗ no <esa-chart> on the page" + exit 1 never printed; the process died on the
+   * rejection instead, with the static server still listening.
+   */
+  const noChart = results['no-preference'];
+  if (noChart?.error) {
+    await browser.close();
+    server?.close();
+    console.error(`✗ ${noChart.error}`);
+    process.exit(1);
+  }
+
   // Series-type sweep on its own page, since it mutates the chart it measures.
   const sweepCtx = await browser.newContext();
   const sweepPage = await sweepCtx.newPage();
@@ -293,10 +309,6 @@ async function main() {
   server?.close();
 
   const r = results['no-preference'];
-  if (r?.error) {
-    console.error(`✗ ${r.error}`);
-    process.exit(1);
-  }
 
   const legendMin = r.legendItems.length ? Math.min(...r.legendItems.map((i) => i.h)) : null;
 
@@ -388,4 +400,9 @@ async function main() {
   if (failed.length && strict) process.exit(1);
 }
 
-main();
+main().catch((err) => {
+  // Without this the whole script dies on an unhandled rejection — non-zero, but with
+  // no message a reader can act on, and any still-open handle keeps the process up.
+  console.error('✗ check-chart-a11y failed:', err?.stack || err);
+  process.exit(1);
+});

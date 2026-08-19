@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Ecology \u2014 the framework-agnostic design system hub (tokens + specs + Astro specimens).",
+  "description": "Ecology — the framework-agnostic design system hub (tokens + specs + Astro specimens).",
   "workspaces": [
     "packages/*",
     "apps/*"

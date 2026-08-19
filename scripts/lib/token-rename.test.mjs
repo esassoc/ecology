@@ -503,3 +503,27 @@ test('renameComponent does not rename a prop that merely ends with the old name'
   assert.match(text, /data-active="1"/);
   assert.doesNotMatch(text, /data-current/);
 });
+
+// The codemod edits a spoke's source IN PLACE, so a prop matcher that reaches inside a
+// quoted value does not merely miss — it rewrites user-visible copy, or silently skips
+// an addProps it was supposed to apply. Both directions are pinned here.
+test('renameComponent does NOT rewrite a prop name occurring inside an attribute value', () => {
+  const src = '<esa-icon-link aria-label="Show active items" icon="map" />';
+  const { text } = renameComponent(src, ICON_LINK);
+  assert.match(text, /aria-label="Show active items"/);
+  assert.doesNotMatch(text, /Show current items/);
+});
+
+test('renameComponent still ADDS a prop when only an attribute VALUE mentions its name', () => {
+  const src = '<esa-icon-link title="variant A" icon="map" />';
+  const { text } = renameComponent(src, ICON_LINK);
+  assert.match(text, /variant="chrome"/);
+  assert.match(text, /title="variant A"/);
+});
+
+test('renameComponent reports a dropped BOOLEAN prop, which has no `=` to anchor to', () => {
+  const src = '<esa-icon-link active weight icon="map" />';
+  const { text, dropped } = renameComponent(src, ICON_LINK);
+  assert.match(text, /(?<![\w-])current(?![\w-])/);
+  assert.deepEqual(dropped, [{ tag: 'esa-icon-link', prop: 'weight' }]);
+});
