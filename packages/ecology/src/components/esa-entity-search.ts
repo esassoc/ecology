@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 // unsafeSVG for icon markup (SVG namespace); unsafeHTML stays for text highlight.
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
@@ -325,6 +327,27 @@ export class EsaEntitySearch extends LitElement {
     `;
   }
 
+  /**
+   * Announce only the transition INTO no-results, and only while a query is live.
+   *
+   * The cue on the input already tells the user results filter as they type, so a
+   * running count on every keystroke would be noise layered on information they
+   * have. The dry query is the exception: a sighted user watches the list empty and
+   * corrects immediately, and without this a screen reader user keeps typing into
+   * nothing. Assertive for that reason. Guarded on the transition so an
+   * already-empty query does not re-announce with every further keystroke.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this.open && !!this.query.trim() && this.queryMatches.length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No results found', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
   render() {
     if (!this.open) return html``;
     const q = this.query.trim();
@@ -337,15 +360,26 @@ export class EsaEntitySearch extends LitElement {
       <div class="esa-entity-search" role="dialog" aria-label="Search">
         <div class="esa-entity-search__search">
           <svg class="esa-entity-search__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <!-- The input had NO accessible name: no label, no aria-label, only a
+               placeholder — which is not a name and disappears the moment you type.
+               aria-describedby carries the instructional cue, which is what makes
+               announcing the result list on every keystroke unnecessary. The visible
+               footer below says the same thing to sighted users. -->
           <input
             class="esa-entity-search__input typography-microcopy-lg-subtle"
             type="text"
+            aria-label=${this.placeholder || 'Search'}
+            aria-describedby="cue"
             placeholder=${this.placeholder}
             .value=${this.query}
             @input=${this.onSearch}
             @keydown=${this.onKeydown}
             autocomplete="off"
           />
+          <span class="visually-hidden" id="cue"
+            >Results filter as you type. Use the up and down arrows to review them,
+            Enter to open, Escape to close.</span
+          >
           <kbd class="esa-entity-search__kbd typography-label-xs">ESC</kbd>
         </div>
 
@@ -407,6 +441,7 @@ export class EsaEntitySearch extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host { display: contents; }
 
@@ -425,10 +460,10 @@ export class EsaEntitySearch extends LitElement {
       width: var(--entity-search-width, 600px);
       max-width: calc(100vw - 2rem);
       max-height: var(--entity-search-max-height, 70vh);
-      background: var(--entity-search-bg, var(--color-background-elevation-floating, #ffffff));
-      border: var(--border-width-default, 1px) solid var(--entity-search-border-color, var(--color-border-default, #dcdcdc));
-      border-radius: var(--entity-search-radius, var(--radius-overlay, 0.75rem));
-      box-shadow: var(--entity-search-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
+      background: var(--color-background-elevation-floating, #fcfcfc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-lg, 0.75rem);
+      box-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
@@ -446,18 +481,31 @@ export class EsaEntitySearch extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
-    .esa-entity-search__search-icon { color: var(--color-content-default-muted, #7c7c7c); flex-shrink: 0; }
+    /* The ring goes on the ROW, not the input. The input is chromeless by design
+       (it has no border of its own), so a ring drawn on it would float around bare
+       text; the row is the visible affordance. :focus-within rather than
+       :focus-visible for the same reason esa-text-field uses it — this is text
+       entry, where a ring on click is native behaviour and wanted.
+
+       Inset because the row runs edge to edge inside an overflow:hidden panel, so
+       an outline at positive offset would be clipped on both sides. */
+    .esa-entity-search__search:focus-within {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
+    }
+    .esa-entity-search__search-icon { color: var(--color-content-default-muted, #838383); flex-shrink: 0; }
     .esa-entity-search__input {
       flex: 1;
       border: none;
+      /* Suppressed only because the row above paints the ring — never bare. */
       outline: none;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       background: transparent;
       font-family: inherit;
     }
-    .esa-entity-search__input::placeholder { color: var(--color-content-default-muted, #7c7c7c); }
+    .esa-entity-search__input::placeholder { color: var(--color-content-default-muted, #838383); }
     .esa-entity-search__kbd, .esa-entity-search__footer kbd {
       display: inline-flex;
       align-items: center;
@@ -465,9 +513,9 @@ export class EsaEntitySearch extends LitElement {
       min-width: 19px;
       height: 19px;
       padding: 0 5px;
-      color: var(--color-content-default-muted, #7c7c7c);
-      background: var(--color-background-elevation-raised, #fff);
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
+      color: var(--color-content-default-muted, #838383);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-bottom-width: 2px;
       border-radius: 4px;
     }
@@ -477,25 +525,25 @@ export class EsaEntitySearch extends LitElement {
       flex-wrap: wrap;
       gap: var(--spacing-150, 0.375rem);
       padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
     .esa-entity-search__scope {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
       padding: 4px var(--spacing-250, 0.625rem);
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-elevation-raised, #fff);
-      color: var(--color-content-default-secondary, #525252);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-default-secondary, #646464);
       cursor: pointer;
       transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
     }
-    .esa-entity-search__scope:hover { border-color: var(--color-border-brand, #c6dcf1); color: var(--color-content-default, #171717); }
+    .esa-entity-search__scope:hover { border-color: var(--color-border-brand, #b2ddb5); color: var(--color-content-default, #202020); }
     .esa-entity-search__scope--active {
-      background: var(--color-background-brand, #1e5386);
-      border-color: var(--color-background-brand, #1e5386);
-      color: var(--entity-search-selected-text, var(--color-content-default-knockout, #fcfcfc));
+      background: var(--color-background-brand, #46a758);
+      border-color: var(--color-background-brand, #46a758);
+      color: var(--color-content-default-knockout, #fcfcfc);
     }
     .esa-entity-search__scope-count {
       font-variant-numeric: tabular-nums;
@@ -510,7 +558,7 @@ export class EsaEntitySearch extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      color: var(--color-content-default-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #838383);
     }
     .esa-entity-search__group-count { font-variant-numeric: tabular-nums; }
 
@@ -521,57 +569,57 @@ export class EsaEntitySearch extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
       border: none;
-      border-radius: var(--radius-surface, 0.5rem);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-entity-search__row--active { background: var(--entity-search-row-bg-active, var(--color-background-elevation-sunken, #f3f7fc)); }
-    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-default-muted, #7c7c7c); }
+    .esa-entity-search__row--active { background: var(--color-background-elevation-sunken, #f0f0f0); }
+    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-default-muted, #838383); }
     .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-content-brand, #2a7e3b); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .esa-entity-search__row-title {
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-subtitle {
-      color: var(--color-content-default-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #838383);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-title mark, .esa-entity-search__row-subtitle mark {
-      background: color-mix(in srgb, var(--color-background-brand, #1e5386) 18%, transparent);
+      background: color-mix(in srgb, var(--color-background-brand, #46a758) 18%, transparent);
       color: inherit;
       border-radius: 2px;
     }
-    .esa-entity-search__row-meta { flex-shrink: 0; color: var(--color-content-default-muted, #7c7c7c); font-variant-numeric: tabular-nums; }
+    .esa-entity-search__row-meta { flex-shrink: 0; color: var(--color-content-default-muted, #838383); font-variant-numeric: tabular-nums; }
     .esa-entity-search__row-actions { flex-shrink: 0; display: inline-flex; gap: var(--spacing-100, 0.25rem); opacity: 0; }
     .esa-entity-search__row:hover .esa-entity-search__row-actions,
     .esa-entity-search__row--active .esa-entity-search__row-actions { opacity: 1; }
     .esa-entity-search__row-action {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 8px;
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #dcdcdc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-elevation-raised, #fff);
-      color: var(--color-content-default-secondary, #525252);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-default-secondary, #646464);
       cursor: pointer;
     }
-    .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #1e5386); color: var(--color-background-brand, #1e5386); }
+    .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #46a758); color: var(--color-background-brand, #46a758); }
 
     .esa-entity-search__empty {
       padding: var(--spacing-700, 3rem) var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-content-default-muted, #7c7c7c);
+      color: var(--color-content-default-muted, #838383);
     }
 
     .esa-entity-search__footer {
       display: flex;
       gap: var(--spacing-400, 1rem);
       padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
-      border-top: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
-      color: var(--color-content-default-muted, #7c7c7c);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
+      color: var(--color-content-default-muted, #838383);
     }
     .esa-entity-search__footer span { display: inline-flex; align-items: center; gap: 4px; }
   `,

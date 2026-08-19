@@ -1,5 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 
 export interface EsaCommand {
   id: string;
@@ -163,6 +165,23 @@ export class EsaCommandPalette extends LitElement {
     this.close();
   }
 
+  /**
+   * Announce only the transition INTO no-results. See esa-combobox.announceEmptyResults
+   * for the full reasoning: the cue sets the expectation, so a per-keystroke count
+   * would be noise, but a query that has gone dry has no other signal for someone who
+   * cannot see the list empty out.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this.open && !!this.query.trim() && this.filteredGroups().length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No commands found', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
   render() {
     if (!this.open) return html``;
     const groups = this.filteredGroups();
@@ -171,15 +190,25 @@ export class EsaCommandPalette extends LitElement {
       <div class="esa-command-palette" role="dialog" aria-label="Command palette">
         <div class="esa-command-palette__search">
           <svg class="esa-command-palette__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <!-- The input had no accessible name — only a placeholder, which is not a
+               name and vanishes as soon as you type. The cue below is what makes
+               announcing the result list on every keystroke unnecessary; the visible
+               footer tells sighted users the same thing. -->
           <input
             class="esa-command-palette__input typography-microcopy-lg-subtle"
             type="text"
+            aria-label="Search commands"
+            aria-describedby="cue"
             placeholder="Type a command..."
             .value=${this.query}
             @input=${this.onSearch}
             @keydown=${this.onKeydown}
             autocomplete="off"
           />
+          <span class="visually-hidden" id="cue"
+            >Commands filter as you type. Use the up and down arrows to review them,
+            Enter to run one, Escape to close.</span
+          >
           <kbd class="esa-command-palette__kbd typography-body-xs">ESC</kbd>
         </div>
         <div class="esa-command-palette__results" role="listbox">
@@ -224,6 +253,7 @@ export class EsaCommandPalette extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host { display: contents; }
 
@@ -242,10 +272,10 @@ export class EsaCommandPalette extends LitElement {
       width: var(--command-palette-width, 560px);
       max-width: calc(100vw - 2rem);
       max-height: var(--command-palette-max-height, 440px);
-      background: var(--command-palette-bg, var(--color-background-elevation-floating, #ffffff));
-      border: var(--border-width-default, 1px) solid var(--command-palette-border-color, var(--color-border-default, #e5e5e5));
-      border-radius: var(--command-palette-radius, var(--radius-overlay, 0.75rem));
-      box-shadow: var(--command-palette-shadow, 0 20px 60px rgba(0, 0, 0, 0.2));
+      background: var(--color-background-elevation-floating, #fcfcfc);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-lg, 0.75rem);
+      box-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       display: flex;
       flex-direction: column;
@@ -263,29 +293,42 @@ export class EsaCommandPalette extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
+    }
+    /* The ring goes on the ROW, not the input. The input is chromeless by design,
+       so a ring drawn on it would float around bare text; the row is the visible
+       affordance. :focus-within rather than :focus-visible for the same reason
+       esa-text-field uses it — this is text entry, where a ring on click is native
+       behaviour and wanted.
+
+       Inset because the row runs edge to edge inside an overflow:hidden panel, so
+       an outline at positive offset would be clipped on both sides. */
+    .esa-command-palette__search:focus-within {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .esa-command-palette__search-icon {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       flex-shrink: 0;
     }
     .esa-command-palette__input {
       flex: 1;
       border: none;
+      /* Suppressed only because the row above paints the ring — never bare. */
       outline: none;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       background: transparent;
       font-family: inherit;
     }
-    .esa-command-palette__input::placeholder { color: var(--color-content-default-muted, #737373); }
+    .esa-command-palette__input::placeholder { color: var(--color-content-default-muted, #838383); }
 
     .esa-command-palette__kbd,
     .esa-command-palette__item-shortcut {
       padding: 2px 6px;
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
-      border-radius: var(--radius-control, 0.25rem);
-      color: var(--color-content-default-muted, #737373);
-      background: var(--color-background-elevation-sunken, #efefef);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-sm, 0.25rem);
+      color: var(--color-content-default-muted, #838383);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
 
     .esa-command-palette__results {
@@ -294,7 +337,7 @@ export class EsaCommandPalette extends LitElement {
     }
     .esa-command-palette__group-label {
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
 
     .esa-command-palette__item {
@@ -304,18 +347,18 @@ export class EsaCommandPalette extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
       border: none;
-      border-radius: var(--radius-surface, 0.5rem);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       font-family: inherit;
       cursor: pointer;
       text-align: left;
       transition: background 80ms ease;
     }
-    .esa-command-palette__item--active { background: var(--command-palette-item-bg-active, var(--color-background-elevation-sunken, #efefef)); }
+    .esa-command-palette__item--active { background: var(--color-background-elevation-sunken, #f0f0f0); }
     .esa-command-palette__item--disabled { opacity: 0.5; cursor: not-allowed; }
     .esa-command-palette__item:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: -2px;
     }
 
@@ -325,13 +368,13 @@ export class EsaCommandPalette extends LitElement {
       flex-direction: column;
     }
     .esa-command-palette__item-desc {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
 
     .esa-command-palette__empty {
       padding: var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
   `,
   ];

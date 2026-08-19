@@ -59,7 +59,33 @@ all new components follow.
    and the intent re-skins everywhere it's used. Every category gets a layer
    here, not just colour:
    - colour — `--color-background-brand`, `--color-background-elevation-raised`, `--color-content-default-secondary`
-   - shape — `--radius-control | -surface | -card | -overlay | -pill`
+   - shape — `--radius-{xs,sm,md,lg}`, plus `--radius-pill`.
+
+     **This category is a documented exception to "intent, not size", and it is
+     the only one.** Radius carried roles until 2026-08-16 —
+     `--radius-control | -surface | -card | -overlay` — and they asserted
+     distinctions they did not deliver: `--radius-200` and `--radius-300` are the
+     same `0.5rem`, so `-surface` and `-card` were one number wearing two names.
+     Both shipped themes re-pointed exactly one of the five, which produced a live
+     defect rather than a dormant one — in qanat a dropdown sat at 10px while the
+     card behind it stayed 8px, because `--radius-card` pointed at the primitive
+     that did not move.
+
+     **The precedent is spacing.** Spacing has no semantic layer at all (see the
+     CORE sets below): it is a scale, consumed directly, and nobody invented
+     `--spacing-card-gap`. Colour earns roles because `danger` cannot be derived
+     from a number; a corner can. What radius has that spacing does not is that
+     themes *do* move it and primitives never move — so radius needs a themeable
+     layer. It did not need a *role* layer.
+
+     `--radius-pill` is NOT a step and keeps its name: `full` is taken at tier 1,
+     and a squared-off brand re-points pill to `--radius-sm` without touching the
+     ramp. Migration: `radius-roles-to-scale`.
+
+     **Do not read this as licence to flatten another category.** The test it
+     passes is narrow — every role in the set resolved to a value already
+     identified by its position on a ramp, and no theme ever used the roles to
+     separate readers. Colour fails that test on the first clause.
    - size — `--chip-height-*`, and only that. `--control-height-{xs,sm,md,lg}` was
      deleted on 2026-08-14: a px height cannot grow with rem text, so it clipped.
      Inputs and buttons are now as tall as their padding plus their text, and that
@@ -329,16 +355,32 @@ Privates are internals — never themed, never documented as surface.
 ## Tier-3 naming
 
 - **Shared group surfaces** for things that must align across components:
-  `--form-radius-sm`, `--form-border-color-focus` — one scale so inputs, selects,
-  and buttons line up on a row. Prefer extending a group surface over duplicating
-  the same knob per component.
+  `--form-border-color-focus` — one scale so inputs, selects, and buttons line up
+  on a row. Prefer extending a group surface over duplicating the same knob per
+  component.
 
-  **This is the category to be most suspicious of, and the count says so.** Five
-  of its members were deleted or moved on 2026-08-14 alone: `--form-height-*`,
+  **This is the category to be most suspicious of, and the count says so.** Six
+  of its members are gone. Five went on 2026-08-14: `--form-height-*`,
   `--form-padding-*` and `--form-font-size-*` for being passthroughs that added a
   name and nothing else, and `--form-bg{,-hover,-disabled}` for a different
-  reason — see below. `--form-radius-*` survives because it encodes a real
-  mapping (xs/sm → `--radius-control`, md/lg → `--radius-surface`).
+  reason — see below.
+
+  `--form-radius-*` was held back that day as the one member that looked like it
+  was doing work: it encoded a mapping (xs/sm → the small corner, md/lg → the
+  default one) that 13 components would otherwise each restate. **It went on
+  2026-08-16 anyway, and how it failed is the useful part.** The 13 already
+  restated the mapping, one line per size — the hook only changed the spelling.
+  What it really did was hide the mapping: four names carried two values, and of
+  49 read sites, thirteen carried literal fallbacks describing a 4/6/8/10 ramp
+  that the tokens never produced. Seven components rendered 2px off their own
+  fallback whenever `component-tokens.css` was absent, for months, unnoticed —
+  by the hook that existed to make the mapping visible.
+
+  **A hook that "documents a relationship" is the hardest case to judge, because
+  the claim is unfalsifiable until you check the read sites.** Check them. If the
+  readers disagree with the token about what it resolves to, the hook was
+  documenting nothing. The replacement was a size axis at tier 2 (see shape,
+  above) — which is where the ramp had been trying to live all along.
 
   **The test that separates a group surface from a mis-tiered role: does the
   namespace bound its readers?** A tier-3 hook exists so a spoke can re-skin ONE
@@ -497,6 +539,56 @@ beats 25 noisy ones. The generated "Theming surface" table on each component's
 doc page is the audit: `component`-tier rows are declared surface, `ad-hoc`
 rows are candidates to either promote into `component-tokens.css` or fold away.
 
+### The test: WOULD this component diverge, not COULD it
+
+**This is the canonical rationale for the 2026-08-16 demotion pass, and every
+`*-hooks-removed` row in `migrations.json` refers back to here rather than
+restating it.**
+
+The audit that drove that pass measured all 306 tier-3 declarations. **249 were
+read by exactly ONE component, and 240 held no value of their own — a pure alias
+over a tier-2 role.** Fifteen distinct names aliased `--color-content-default`
+(`--dialog-color`, `--popover-color`, `--pill-text-color`, `--kbd-color`, …);
+thirteen aliased `--color-border-default`; eleven aliased
+`--color-background-elevation-raised`.
+
+A hook like that is **a role wearing a component's name.** It adds a name and no
+capability. Ask of every hook:
+
+> *Would* a theme make this component diverge from the role it points at — not
+> *could* it. Every hook could.
+
+`--card-radius` → no: a brand re-points `--radius-md` and wants the card to
+follow. `--button-radius-md` → yes: pill buttons beside square fields is an
+ordinary house style, and the shared token made it unreachable.
+
+**The cost of the extra name is not neutral, which is the part that surprises
+people.** A spoke re-pointing `--color-background-elevation-floating` *wants* the
+dialog, popover, dropdown menu, command palette, confirm-dialog and search-panel
+to move together. Six separate hooks in front of that role are six chances to
+move five of them and miss one — and the miss is silent, because each hook still
+resolves.
+
+Three consequences worth stating outright:
+
+- **A hook is earned by demonstrated divergence, not provided in anticipation of
+  it.** The pass kept every hook a real spoke had actually overridden and
+  demoted the rest. If a spoke later needs one back, that is a `/request-lego` —
+  a cheap, visible request — not a surface carried indefinitely on the chance
+  someone wants it.
+- **Removal, never rename.** These rows carry `removed: true` even though the
+  destination is known and value-identical. A rename row would emit
+  `--card-bg: var(--color-background-elevation-raised)` into `tokens.css`,
+  keeping the dead name shipped and in the baseline forever; worse,
+  `migrate-tokens.mjs` rewrites *declarations* as well as reads, so it would turn
+  a spoke's one-component override into a whole-role override and report success.
+  The destination rides in the pair's second element as **print-only guidance**.
+- **Literal micro-geometry is not in scope and must not be swept in.**
+  `--dialog-width: 480px`, `--side-dialog-width-lg`, `--tab-layout-height-md`
+  and the rest hold values with no tier-1 or tier-2 home. Demoting one does not
+  move the capability somewhere better — it deletes it and hardcodes the number.
+  The test above only applies to a hook that *has* a role to fall back to.
+
 ## Mechanics (zero-regression rule)
 
 Adding a hook NEVER changes rendered output:
@@ -519,10 +611,11 @@ the theming contract can be reviewed before code depends on it. `--grid-*` is
 staged today — no `esa-grid` component ships yet.
 
 `--topbar-*` **was** listed here and should not have been: `esa-app-shell`
-renders the bar, the sidebar toggle and the omnibox that those 12 tokens name.
+renders the bar, the sidebar toggle and the omnibox that those 12 tokens named.
 The premise of staging is *"the component does not exist yet"*, and because
 "staged" reads as *"arriving soon"* nobody re-checked it once that stopped
-being true. It is now a **chrome exemption** — see below.
+being true. It became a chrome exemption, and on **2026-08-16 it was deleted
+outright** — see below.
 
 A staged surface must:
 
@@ -534,6 +627,14 @@ A staged surface must:
 Removing a prefix from that list should mean **the component landed**, not that
 the finding got annoying. A staged surface that no one has claimed after a
 release cycle is dead surface — fold it away.
+
+**`--grid-*` is deliberately being held past that rule**, and the exception is
+recorded here so the next sweep does not delete it on this section's authority.
+The 24 tokens are the theming contract an AG Grid wrapper will read, and a data
+grid is one of the three cases tier 3 exists for. **Review it against the tier-3
+framework by the next release cycle**: either the wrapper has landed and the
+surface is wired, or the surface has to justify itself again from scratch. It is
+the largest unread block in the file and the only one exempt from its own rule.
 
 ## A shipped `.css` partial is a token READER
 
@@ -571,12 +672,31 @@ A chrome exemption must:
   `owner` (the component that renders the surface) and a `cost` sentence
   stating in plain terms what a spoke gives up;
 - keep every token rendered by name on `/debug/components` — an exemption that
-  hid them would be indistinguishable from having wired them.
+  hid them would be indistinguishable from having wired them;
+- **assert that its declared values match what the owner actually renders, and
+  re-check that.** This rule is new, and it is the one the category died of.
 
-`--topbar-*` → `esa-app-shell` is the only entry. The cost: a spoke overriding
-`--topbar-bg`, `--topbar-icon-bg-hover` or `--topbar-search-*` gets nothing;
-the chrome re-skins only through the semantic layer the component reads
-directly.
+**`CHROME_EXEMPT` IS EMPTY AS OF 2026-08-16.** `--topbar-*` → `esa-app-shell`
+was the only entry and all 12 tokens are gone (`migrations.json`:
+`topbar-chrome-exempt-removed`). The category is kept, empty, because *how* it
+failed is the useful part.
+
+Every disclosure rule above was satisfied. There was an owner, there was a
+stated cost, the tokens were rendered by name. And the block still rotted:
+**seven of the twelve defaults drifted from what `esa-app-shell` actually
+paints** — it claimed the bar sat on `background-elevation-sunken` and the
+toggle on `content-secondary` while the component painted `elevation-raised`
+and `content-tertiary`.
+
+Nothing could have caught that. The tokens had no readers, so no render
+depended on them, so no test, no audit and no visual diff could disagree with
+them. **An unread hook is inert; an unread hook with a wrong default is a
+published contract that lies** — a spoke reading it to learn the chrome learns
+something false, and a spoke overriding `--topbar-bg` gets silence.
+
+So the standing decision an exemption represents has to include re-verifying the
+values, by hand, because nothing else will. Absent someone willing to own that,
+**delete the surface instead**. That is what happened here.
 
 ## Themes consume the tiers like this
 
@@ -589,9 +709,9 @@ directly.
      `--control-height-md: 36px` beside the radius; that token was deleted on
      2026-08-14 and the padding hook that briefly replaced it went the same day.
      A theme cannot make its inputs tighter — see tokens/semantic/size.json. */
-  --radius-surface: 4px;
+  --radius-md: 4px;
   /* tier 3 — ONE component diverges from those defaults */
-  --card-radius: var(--radius-control);
+  --card-radius: var(--radius-sm);
 }
 ```
 

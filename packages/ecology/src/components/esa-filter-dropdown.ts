@@ -1,5 +1,7 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 // Options render as esa-checkbox rows (the ui-filter pattern) — import to register it.
 import './esa-checkbox';
 
@@ -233,6 +235,23 @@ export class EsaFilterDropdown extends LitElement {
     );
   }
 
+  /**
+   * Announce only the transition INTO no-matches. See esa-combobox.announceEmptyResults
+   * for the reasoning: the cue already sets the expectation that the list filters, so
+   * a per-keystroke count is noise — but a query that matches nothing has no other
+   * signal for someone who cannot see the list empty out.
+   */
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this._open && !!this._searchText.trim() && this.filteredOptions.length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No options match', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
   render() {
     const options = this.filteredOptions;
     const triggerRole = this.hasSelection
@@ -259,17 +278,36 @@ export class EsaFilterDropdown extends LitElement {
         </button>
 
         ${this._open
-          ? html`<div class="esa-filter-dropdown__panel" role="listbox">
+          ? html`<div class="esa-filter-dropdown__panel" role="listbox" id="listbox">
               <div class="esa-filter-dropdown__search">
+                <!-- The search input had no accessible name — only a placeholder,
+                     which is not a name and vanishes as soon as you type. The cue is
+                     what makes announcing the option list on every keystroke
+                     unnecessary. aria-activedescendant is what makes arrow-key
+                     navigation audible: focus stays here, so without it the
+                     highlighted option changes silently. Both IDREFs resolve inside
+                     this shadow root, which is the only place they can. -->
                 <input
                   class="esa-filter-dropdown__search-input typography-${FIELD_TYPE[this.size]}"
                   type="text"
+                  role="combobox"
+                  aria-expanded="true"
+                  aria-controls="listbox"
+                  aria-label=${'Filter ' + this.label}
+                  aria-describedby="cue"
+                  aria-activedescendant=${this._highlighted >= 0
+                    ? `opt-${this._highlighted}`
+                    : nothing}
                   placeholder=${this.placeholder || 'Search...'}
                   .value=${this._searchText}
                   @input=${this.onSearchInput}
                   @keydown=${this.onKeydown}
                   autocomplete="off"
                 />
+                <span class="visually-hidden" id="cue"
+                  >Options filter as you type. Use the up and down arrows to review
+                  them, Enter to toggle one.</span
+                >
               </div>
               <div class="esa-filter-dropdown__options" role="group" aria-label=${this.label}>
                 ${options.length === 0
@@ -280,6 +318,7 @@ export class EsaFilterDropdown extends LitElement {
                           ${option.disabled ? 'esa-filter-dropdown__option--disabled' : ''}
                           ${this._highlighted === i ? 'esa-filter-dropdown__option--highlighted' : ''}"
                         role="option"
+                        id="opt-${i}"
                         aria-selected=${this.isSelected(option.value)}
                         aria-disabled=${option.disabled ?? false}
                         @click=${() => this.selectOption(option)}
@@ -320,19 +359,20 @@ export class EsaFilterDropdown extends LitElement {
      carries the .typography-* composite classes across the shadow boundary. */
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: inline-block;
 
       --_filter-height: 40px;
       --_filter-padding-x: var(--spacing-400, 1rem);
-      --_filter-radius: var(--radius-surface, 0.5rem);
-      --_filter-bg: var(--color-background-elevation-raised, #fff);
-      --_filter-bg-active: var(--color-background-brand-subtle, #f3f8fb);
-      --_filter-text: var(--color-content-default, #171717);
-      --_filter-text-active: var(--color-background-brand, #43608a);
-      --_filter-border: var(--color-border-default, #e5e5e5);
-      --_filter-border-active: var(--color-background-brand, #43608a);
+      --_filter-radius: var(--radius-md, 0.5rem);
+      --_filter-bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_filter-bg-active: var(--color-background-brand-subtle, #f5fbf5);
+      --_filter-text: var(--color-content-default, #202020);
+      --_filter-text-active: var(--color-background-brand, #46a758);
+      --_filter-border: var(--color-border-default, #cecece);
+      --_filter-border-active: var(--color-background-brand, #46a758);
     }
 
     /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values.
@@ -342,17 +382,17 @@ export class EsaFilterDropdown extends LitElement {
     :host([size='xs']) {
       --_filter-height: 28px;
       --_filter-padding-x: var(--spacing-200, 0.5rem);
-      --_filter-radius: var(--radius-control, 0.25rem);
+      --_filter-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='sm']) {
       --_filter-height: 32px;
       --_filter-padding-x: var(--spacing-300, 0.75rem);
-      --_filter-radius: var(--radius-control, 0.25rem);
+      --_filter-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='lg']) {
       --_filter-height: 48px;
       --_filter-padding-x: var(--spacing-500, 1.5rem);
-      --_filter-radius: var(--radius-card, 0.5rem);
+      --_filter-radius: var(--radius-md, 0.5rem);
     }
 
     .esa-filter-dropdown {
@@ -383,7 +423,7 @@ export class EsaFilterDropdown extends LitElement {
       border-color: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* Weight comes from TRIGGER_ACTIVE_TYPE (label-*-strong) — same rung as the
@@ -412,8 +452,8 @@ export class EsaFilterDropdown extends LitElement {
       height: 1.25rem;
       padding-inline: 0.3rem;
       border-radius: var(--radius-pill, 9999px);
-      background: var(--color-background-brand, #43608a);
-      color: var(--color-content-default-knockout, #fff);
+      background: var(--color-background-brand, #46a758);
+      color: var(--color-content-default-knockout, #fcfcfc);
     }
 
     .esa-filter-dropdown__arrow {
@@ -444,11 +484,11 @@ export class EsaFilterDropdown extends LitElement {
       z-index: var(--z-dropdown, 50);
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
-      background: var(--filter-dropdown-bg, var(--color-background-elevation-raised, #fff));
+      background: var(--color-background-elevation-raised, #fcfcfc);
       border: var(--border-width-default, 1px) solid
-        var(--filter-dropdown-border-color, var(--color-border-default, #e5e5e5));
-      border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
-      box-shadow: var(--filter-dropdown-shadow, var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07)));
+        var(--color-border-default, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -456,22 +496,30 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__search {
       padding: var(--spacing-200, 0.5rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     .esa-filter-dropdown__search-input {
       /* A real <input> — it cannot wrap, so leading only sets the box height. */
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
-      border-radius: var(--radius-control, 0.25rem);
-      background: var(--color-background-elevation-raised, #fff);
-      color: var(--color-content-default, #171717);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-sm, 0.25rem);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-default, #202020);
+      /* Suppressed only because the :focus rule below paints the ring. */
       outline: none;
     }
-    .esa-filter-dropdown__search-input:focus {
-      border-color: var(--color-background-brand, #43608a);
-      box-shadow: 0 0 0 1px var(--color-background-brand, #43608a);
+    /* This ring was three problems in one rule until 2026-08-16: it was 1px, which
+       is half the area Focus Appearance asks for; it read --color-background-brand
+       directly, so a spoke re-pointing --focus-ring-color left this one field
+       behind; and it fired on mouse. Now the house shape. :focus-visible is safe
+       here even though it is a text input — engines match :focus-visible on text
+       entry whether it was clicked or tabbed to. */
+    .esa-filter-dropdown__search-input:focus-visible {
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .esa-filter-dropdown__options {
@@ -485,14 +533,14 @@ export class EsaFilterDropdown extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 0.5rem);
       padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-background-elevation-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
@@ -519,7 +567,7 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       font-style: var(--font-style-italic, italic);
       text-align: center;
     }
@@ -528,7 +576,7 @@ export class EsaFilterDropdown extends LitElement {
       display: flex;
       justify-content: flex-end;
       padding: var(--spacing-200, 0.5rem);
-      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     .esa-filter-dropdown__clear-link {
       background: none;
@@ -536,13 +584,13 @@ export class EsaFilterDropdown extends LitElement {
       color: var(--color-content-brand, #2a7e3b);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--radius-control, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
-      background: var(--color-background-elevation-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-content-default-muted, #a3a3a3);
+      color: var(--color-content-default-muted, #838383);
       cursor: not-allowed;
     }
   `,

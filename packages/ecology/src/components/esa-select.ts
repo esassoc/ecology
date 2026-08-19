@@ -1,5 +1,27 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry — see esa-text-field.ts for why
+// a Lit component inlines the glyph rather than reaching for <EsaIcon>.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
 
 /** Label / trigger text is UI text (label-*, medium); typed values, options and
     chips are prose (body-*, regular). See the FORMS header in component-tokens.css.
@@ -80,8 +102,10 @@ export class EsaSelect extends LitElement {
      * reassurance addressed to the user, nor a restatement of the field's state.
      */
     helpText: { type: String, attribute: 'help-text' },
+    cue: { type: String },
     errorText: { type: String, attribute: 'error-text' },
     required: { type: Boolean },
+    liveError: { type: Boolean, attribute: 'live-error' },
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
     multiple: { type: Boolean },
@@ -103,8 +127,24 @@ export class EsaSelect extends LitElement {
   declare size: 'sm' | 'md' | 'lg';
   declare placeholder: string;
   declare helpText: string;
+  /**
+   * Override the visually-hidden instructional cue read to screen reader users.
+   *
+   * The default explains how to review options and that typing jumps to a match —
+   * which is what makes announcing the list unnecessary as it changes. Do not blank
+   * it, or the option list becomes silent with nothing to set expectations.
+   */
+  declare cue: string;
   declare errorText: string;
   declare required: boolean;
+  /**
+   * Announce the error the moment it appears rather than only when the field is focused.
+   * OFF by default — see the long note on `esa-text-field.liveError`: the house pattern is
+   * validate-on-submit with `<esa-error-summary>`, under which a live region per field
+   * fires an assertive announcement for EVERY invalid field at once, racing the summary
+   * the user was just sent to. Turn it on for fields validated INLINE, on blur.
+   */
+  declare liveError: boolean;
   declare disabled: boolean;
   /** Form field name — the key this control submits under. */
   declare name: string | undefined;
@@ -137,8 +177,10 @@ export class EsaSelect extends LitElement {
     this.size = 'md';
     this.placeholder = 'Select...';
     this.helpText = '';
+    this.cue = '';
     this.errorText = '';
     this.required = false;
+    this.liveError = false;
     this.disabled = false;
     this.multiple = false;
     this.searchable = false;
@@ -498,6 +540,26 @@ export class EsaSelect extends LitElement {
    * puts it on a non-editable element. `aria-autocomplete="list"` is gone, because
    * there is no autocomplete here any more.
    */
+  /**
+   * The description id list, shared by both trigger shapes. Error FIRST, then help —
+   * BOTH, never one instead of the other: a format hint is most needed at exactly the
+   * moment the format was got wrong, and the old ternary deleted it right then.
+   */
+  private get describedBy(): string {
+    // The cue goes LAST: an error is about right now, help is about this field, the
+    // cue is about how the widget works. Descriptions are read in order, so the most
+    // situational thing must not sit behind a sentence about arrow keys.
+    return [this.errorText ? 'error' : '', this.helpText ? 'help' : '', 'cue']
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  /** See esa-combobox.cueText — same reasoning, different keyboard model. */
+  private get cueText(): string {
+    if (this.cue) return this.cue;
+    return 'Use the up and down arrows to review options, or type to jump to one. Enter to choose.';
+  }
+
   private renderTrigger() {
     const shown = this.multiple
       ? this.selectedOptions.map((o) => o.label).join(', ')
@@ -509,6 +571,12 @@ export class EsaSelect extends LitElement {
       role="combobox"
       aria-expanded=${this._open}
       aria-haspopup="listbox"
+      aria-labelledby=${this.label ? 'label' : nothing}
+      aria-required=${this.required ? 'true' : nothing}
+      aria-invalid=${this.errorText ? 'true' : nothing}
+      aria-describedby=${this.describedBy || nothing}
+      aria-controls=${this._open ? 'listbox' : nothing}
+      aria-activedescendant=${this._open && this._active >= 0 ? `opt-${this._active}` : nothing}
       ?disabled=${this.disabled}
       @keydown=${this.onKeydown}
     >
@@ -540,6 +608,12 @@ export class EsaSelect extends LitElement {
       aria-expanded=${this._open}
       aria-haspopup="listbox"
       aria-autocomplete="list"
+      aria-labelledby=${this.label ? 'label' : nothing}
+      aria-required=${this.required ? 'true' : nothing}
+      aria-invalid=${this.errorText ? 'true' : nothing}
+      aria-describedby=${this.describedBy || nothing}
+      aria-controls=${this._open ? 'listbox' : nothing}
+      aria-activedescendant=${this._open && this._active >= 0 ? `opt-${this._active}` : nothing}
       placeholder=${this.multiple && this.chipMode && this.selectedOptions.length
         ? ''
         : this.placeholder}
@@ -550,14 +624,44 @@ export class EsaSelect extends LitElement {
     />`;
   }
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
     const hasError = !!this.errorText;
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label typography-${LABEL_TYPE[this.size]}">
-              ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
-            </label>`
+          ? // A <span>, not a <label>. The thing being named is a <button role="combobox">
+            // in this shadow root — <label> names LABELABLE elements (input/textarea/select)
+            // and confers nothing on a button, so the old markup was an orphaned <label>
+            // and this control had no accessible name but its own VALUE. Named by
+            // REFERENCE via aria-labelledby, not by copying the string into aria-label:
+            // a copy silently unnames the control the moment `label` is empty.
+            html`<span class="field__label typography-${LABEL_TYPE[this.size]}" id="label">
+              ${this.label}${this.required
+                ? html`<span class="field__required" aria-hidden="true">*</span>`
+                : null}
+            </span>`
           : null}
 
         <div class="container">
@@ -573,7 +677,7 @@ export class EsaSelect extends LitElement {
           </div>
 
           ${this._open
-            ? html`<div class="dropdown" role="listbox">
+            ? html`<div class="dropdown" role="listbox" id="listbox">
                 ${this.filteredOptions.length === 0
                   ? html`<div class="option option--empty typography-${VALUE_TYPE[this.size]}">No results found</div>`
                   : this.filteredOptions.map((option, i) => {
@@ -583,6 +687,7 @@ export class EsaSelect extends LitElement {
                           ? 'option--selected'
                           : ''} ${option.disabled ? 'option--disabled' : ''}"
                         role="option"
+                        id="opt-${i}"
                         aria-selected=${selected}
                         aria-disabled=${option.disabled ?? false}
                         @click=${() => this.selectOption(option)}
@@ -598,11 +703,29 @@ export class EsaSelect extends LitElement {
             : null}
         </div>
 
-        ${hasError
-          ? html`<span class="field__error typography-body-sm">${this.errorText}</span>`
-          : this.helpText
-            ? html`<span class="field__help typography-body-sm">${this.helpText}</span>`
-            : null}
+        <!-- Both nodes always present: a live region created at the same moment as its
+             text is routinely not announced, so it has to already be there. .is-shown
+             rather than :empty — Lit's template whitespace defeats :empty in engines
+             following Selectors L3. -->
+        <span
+          class="field__error typography-body-sm ${hasError ? '' : 'visually-hidden'}"
+          id="error"
+          role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+        >${hasError
+            ? html`${alertIcon}<span class="visually-hidden">Error: </span
+                ><span>${this.errorText}</span>`
+            : nothing}</span
+        >
+        <span
+          class="field__help typography-body-sm ${this.helpText ? '' : 'visually-hidden'}"
+          id="help"
+          >${this.helpText || nothing}</span
+        >
+        <!-- Always hidden, always present: the instructional cue that means the option
+             list does not need to announce itself as it filters. See cueText. -->
+        <span class="visually-hidden" id="cue">${this.cueText}</span
+        >
       </div>
     `;
   }
@@ -622,13 +745,14 @@ export class EsaSelect extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: block;
       --_field-padding-y: var(--spacing-300, 0.75rem);
       --_field-padding-x: var(--spacing-300, 0.75rem);
-      --_field-radius: var(--form-radius-md, 8px);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-radius: var(--radius-md, 0.5rem);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
     /* No :host([size='xs']) — see the note on "declare size". "sm" is the floor by
        decision, and an out-of-range size is clamped to it before it reaches here.
@@ -636,12 +760,12 @@ export class EsaSelect extends LitElement {
     :host([size='sm']) {
       --_field-padding-y: var(--spacing-250, 0.625rem);
       --_field-padding-x: var(--spacing-250, 0.625rem);
-      --_field-radius: var(--form-radius-sm, 6px);
+      --_field-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--spacing-400, 1rem);
       --_field-padding-x: var(--spacing-400, 1rem);
-      --_field-radius: var(--form-radius-lg, 10px);
+      --_field-radius: var(--radius-md, 0.5rem);
     }
 
     .field {
@@ -653,18 +777,36 @@ export class EsaSelect extends LitElement {
       /* Was the last reader of --form-label-font-size and one of two readers of
          --form-label-font-weight. Both are retired with the rest of the size-only
          ramp; the composite carries size and weight together. */
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .field__required {
       color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
+    /* Three signals, not one: colour, the icon, and a visually-hidden "Error:" prefix.
+       Colour alone is SC 1.4.1 (Use of Color, Level A) — and colour alone is exactly
+       what separated this from .field__help, which is otherwise an identical span in
+       an identical slot. */
     .field__error {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
+    .field__error .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
+    }
+    /* Both message nodes are ALWAYS rendered — a live region created at the same moment
+       as its text is routinely not announced, so it has to already exist. When there is
+       nothing to say they carry .visually-hidden, which takes them out of flow: .field
+       is a flex column with a gap, so an in-flow empty node would spend 4px of dead
+       space per message. Deliberately NOT display:none, which would drop them from the
+       accessibility tree and defeat the arrangement entirely. */
 
     .container {
       position: relative;
@@ -695,8 +837,9 @@ export class EsaSelect extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input-wrapper--tags:focus-within {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .input-wrapper--tags .input {
       /* Compact tag filter: at most ONE token renders (a single chip, or an
@@ -715,7 +858,7 @@ export class EsaSelect extends LitElement {
       box-shadow: none;
     }
     .field--error .input-wrapper--tags {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .input {
       width: 100%;
@@ -737,7 +880,7 @@ export class EsaSelect extends LitElement {
          is re-pointable by a theme, so an offset would cancel it at exactly one
          viewport. esa-textarea stays on a body-* composite on purpose — it is
          genuinely multi-line, so its leading has a typographic job. */
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
       background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
@@ -749,7 +892,7 @@ export class EsaSelect extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
 
     /* The default trigger is a BUTTON, not an input — a select opens a list, it does
@@ -770,7 +913,7 @@ export class EsaSelect extends LitElement {
     /* ::placeholder cannot apply to a button — there is no placeholder attribute,
        only fallback text — so the muted colour is a class instead. */
     .input--placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     /* Hover moves the BORDER, not the fill — the field is transparent in every
        state so that it is the colour of whatever contains it.
@@ -780,8 +923,9 @@ export class EsaSelect extends LitElement {
       --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      --_field-border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
        whole triple — --color-background-disabled, --color-border-disabled,
@@ -808,7 +952,7 @@ export class EsaSelect extends LitElement {
       top: 50%;
       transform: translateY(-50%);
       display: inline-flex;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
     }
@@ -829,9 +973,9 @@ export class EsaSelect extends LitElement {
       margin-top: var(--spacing-100, 4px);
       max-height: 256px;
       overflow-y: auto;
-      background: var(--color-background-elevation-raised, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
-      border-radius: var(--form-radius-md, 8px);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overscroll-behavior: contain;
     }
@@ -841,21 +985,21 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .option:hover,
     .option--active {
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .option--selected {
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
     }
     .option--disabled {
-      color: var(--color-content-disabled, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -863,7 +1007,7 @@ export class EsaSelect extends LitElement {
       background: transparent;
     }
     .option--empty {
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
       cursor: default;
       font-style: var(--font-style-italic, italic);
     }
@@ -882,7 +1026,7 @@ export class EsaSelect extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -904,7 +1048,7 @@ export class EsaSelect extends LitElement {
       gap: var(--spacing-050, 2px);
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
       background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: var(--radius-pill, 9999px);
       user-select: none;
     }
@@ -920,7 +1064,7 @@ export class EsaSelect extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-content-brand, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -933,15 +1077,16 @@ export class EsaSelect extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-error-border-color, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
+        var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
     }
   `,
   ];

@@ -147,10 +147,13 @@ export class EsaSideDialog extends LitElement {
     .backdrop {
       position: fixed;
       inset: 0;
-      background: var(--side-dialog-backdrop-bg, var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5)));
-      /* Opt-in frosted backdrop — set --backdrop-filter (e.g. blur(4px)) on the host. */
-      backdrop-filter: var(--backdrop-filter, none);
-      -webkit-backdrop-filter: var(--backdrop-filter, none);
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
+      /* Opt-in frosted backdrop — set --side-dialog-backdrop-filter (e.g. blur(4px))
+         on the host. NOT named --backdrop-filter: that spelling shadowed the CSS
+         property of the same name and was declared at :root, so every element in
+         the kit inherited it. */
+      backdrop-filter: var(--side-dialog-backdrop-filter, none);
+      -webkit-backdrop-filter: var(--side-dialog-backdrop-filter, none);
       z-index: var(--z-modal-backdrop, 300);
       animation: fade var(--animation-enter, 150ms ease-out);
     }
@@ -164,8 +167,8 @@ export class EsaSideDialog extends LitElement {
       width: min(var(--_width), calc(100vw - var(--_inset) * 2));
       display: flex;
       flex-direction: column;
-      background: var(--side-dialog-bg, var(--color-background-elevation-raised, #fff));
-      border-radius: var(--side-dialog-radius, var(--radius-surface, 8px));
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border-radius: var(--radius-md, 0.5rem);
       box-shadow: var(--elevation-5, 0 8px 32px -8px rgba(0, 0, 0, 0.2));
       z-index: var(--z-modal, 400);
       outline: none;
@@ -187,18 +190,18 @@ export class EsaSideDialog extends LitElement {
       justify-content: space-between;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem);
-      border-bottom: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border-default, #e5e5e5));
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       flex: none;
     }
-    .title { margin: 0; color: var(--side-dialog-color, var(--color-content-default, #171717)); }
+    .title { margin: 0; color: var(--side-dialog-color, var(--color-content-default, #202020)); }
     .close {
       display: grid; place-items: center; width: 32px; height: 32px;
-      border: 0; border-radius: var(--radius-control, 4px); background: none;
-      color: var(--color-content-default-muted, #737373); cursor: pointer;
+      border: 0; border-radius: var(--radius-sm, 0.25rem); background: none;
+      color: var(--color-content-default-muted, #838383); cursor: pointer;
     }
-    .close:hover { background: var(--color-background-elevation-sunken, #efefef); color: var(--color-content-default, #171717); }
-    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-content-default-secondary, #525252)); }
-    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: var(--border-width-default, 1px) solid var(--side-dialog-border-color, var(--color-border-default, #e5e5e5)); }
+    .close:hover { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-default, #202020); }
+    .body { flex: 1; overflow-y: auto; padding: var(--spacing-500, 1.5rem); color: var(--side-dialog-color, var(--color-content-default-secondary, #646464)); }
+    .footer { flex: none; padding: var(--spacing-400, 1rem) var(--spacing-500, 1.5rem); border-top: var(--border-width-default, 1px) solid var(--color-border-default, #cecece); }
     .footer:not(:has(*)) { display: none; }
 
     @keyframes fade { from { opacity: 0; } }

@@ -92,9 +92,9 @@ const cls = [
 
 <style>
   .esa-pill {
-    --_pill-bg: var(--pill-bg, var(--color-background-elevation-sunken, #efefef));
-    --_pill-text: var(--pill-text-color, var(--color-content-default, #171717));
-    --_pill-border: var(--pill-border-color, var(--color-border-default-subtle, #efefef));
+    --_pill-bg: var(--color-background-elevation-sunken, #f0f0f0);
+    --_pill-text: var(--color-content-default, #202020);
+    --_pill-border: var(--color-border-default-subtle, #d9d9d9);
     --_pill-padding-y: var(--spacing-150, 0.375rem);
     --_pill-padding-x: var(--spacing-200, 0.5rem);
     --_pill-gap: var(--spacing-100, 0.25rem);
@@ -111,7 +111,7 @@ const cls = [
     padding-block: var(--_pill-padding-y);
     padding-inline: var(--_pill-padding-x);
     border: var(--border-width-default, 1px) solid var(--_pill-border);
-    border-radius: var(--pill-radius, var(--radius-pill, 9999px));
+    border-radius: var(--radius-sm, var(--radius-pill, 9999px));
     background: var(--_pill-bg);
     color: var(--_pill-text);
     white-space: nowrap;
@@ -191,11 +191,11 @@ const cls = [
 
   .esa-pill__remove:hover {
     opacity: 1;
-    background: var(--pill-remove-bg-hover, rgba(0, 0, 0, 0.1));
+    background: var(--color-background-overlay-heavy-hover, rgba(0, 0, 0, 0.1));
   }
 
   .esa-pill__remove:focus-visible {
-    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 </style>

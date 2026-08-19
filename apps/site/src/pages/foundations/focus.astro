@@ -1,0 +1,212 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import { withBase } from '@esa/docs/base';
+import Section from '@esa/docs/Section.astro';
+
+// Tier 3 — the surface a spoke reaches. All five live together in
+// component-tokens.css under FOCUS RING.
+const tokens = [
+  { token: '--focus-ring-color', maps: '--color-border-default-focus', role: 'The brand band, inner. Carries identity, not contrast.' },
+  { token: '--focus-ring-halo', maps: '--color-border-default-focus-halo', role: 'The contrast band, outer. This is the one that has to clear 3:1.' },
+  { token: '--focus-ring-width', maps: '--border-width-focus', role: 'Thickness of each band. 2px.' },
+  { token: '--focus-ring-offset', maps: '2px literal', role: 'Sizes the innermost halo band. 0 gives a plain two-band ring.' },
+  { token: '--focus-ring-halo-spread', maps: 'derived', role: 'The box-shadow spread that puts the halo one band beyond the outline. Never hand-write this.' },
+];
+
+const criteria = [
+  { sc: '2.4.7 Focus Visible', level: 'AA', asks: 'A visible indicator exists for anything that takes keyboard focus.', us: 'Every focusable element paints the ring. check-a11y blocks removal at write time — including the unconditional `.thing { outline: none }` shape that the guard missed until 2026-08-16.' },
+  { sc: '1.4.11 Non-Text Contrast', level: 'AA', asks: 'The indicator contrasts 3:1 with adjacent colours.', us: 'The halo band is outermost, so it is what sits against the page: 15.9:1 raised, 15.5:1 canvas, 14.3:1 sunken.' },
+  { sc: '2.4.13 Focus Appearance', level: 'AAA', asks: 'Contrasting area at least as large as a 2px perimeter of the element.', us: 'Two 2px bands outside the box — double the minimum. The three inset rings are flush 2px, which matches the perimeter exactly.' },
+  { sc: '2.4.11 / 2.4.12 Focus Not Obscured', level: 'AA / AAA', asks: 'The focused element is not hidden behind other content.', us: 'focus.css sets scroll-margin-block-start from --focus-scroll-margin. Any layout with sticky chrome must set it; the docs shell sets 76px for its 56px bar.' },
+];
+---
+<DocsLayout title="Focus — Ecology" activeHref="/foundations/focus">
+  <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Focus</span></nav>
+  <h1>Focus</h1>
+  <p class="lede">The focus indicator is the keyboard user's cursor. It is the one visual state you never get to remove — and the only one this system paints in two colours, because one is not enough to guarantee it can be seen.</p>
+
+  <Section id="ring" title="The ring is two bands">
+    <p>
+      Tab through anything on this site. The ring you see is a <strong>brand band</strong> with a
+      near-black <strong>halo</strong> outside it. Both are 2px.
+    </p>
+    <div class="stage">
+      <button class="demo">Tab to me</button>
+      <a class="demo demo--link" href="#ring">…and me</a>
+      <input class="demo demo--input" aria-label="Demo field" placeholder="…and me" />
+    </div>
+    <p>
+      The split exists because a single brand-coloured ring <em>cannot</em> be relied on to
+      conform. Measured on 2026-08-16, the default ring managed <strong>2.95:1</strong> against the
+      raised surface, 2.88:1 against the canvas and 2.66:1 against the sunken surface — all short
+      of the 3:1 that SC 1.4.11 requires. That is not a bad colour choice to be corrected: whatever
+      a spoke picks for its brand is picked for <em>brand</em> reasons and can land anywhere on the
+      luminance scale. So identity and contrast were split onto separate bands, and only the second
+      one carries the conformance obligation.
+    </p>
+    <p>
+      This is the accessibility literature's <strong>universal focus indicator</strong> — pair a
+      light and a dark outline so one of them always contrasts — with the brand kept as the inner
+      band rather than discarded.
+    </p>
+  </Section>
+
+  <Section id="tokens" title="The five tokens">
+    <table class="tbl">
+      <thead><tr><th>Token</th><th>Maps to</th><th>What it is</th></tr></thead>
+      <tbody>
+        {tokens.map((t) => (
+          <tr>
+            <td><code>{t.token}</code></td>
+            <td><code>{t.maps}</code></td>
+            <td>{t.role}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p>
+      A spoke re-points <code>--color-background-brand</code> and the inner band follows, because
+      <code>--color-border-default-focus</code> chains off the brand semantic rather than the
+      ramp. The halo deliberately does <em>not</em> follow: a spoke must not be able to break the
+      ring's conformance by changing its brand and not noticing.
+    </p>
+    <p class="note">
+      One surface genuinely inverts this — <code>esa-button variant="chrome"</code> sits on a dark
+      app bar and takes its ring from <code>currentColor</code>. A component on a dark ground
+      re-points <code>--focus-ring-halo</code> to a light value locally. That is what a tier-3 hook
+      is for.
+    </p>
+  </Section>
+
+  <Section id="writing" title="Writing a focus rule">
+    <p>The house shape, and the only one you should need:</p>
+    {/* tabindex="0" because the block scrolls horizontally: a scrollable region that
+        cannot take focus cannot be scrolled by keyboard at all. aria-label because
+        making it focusable means it now needs a name when it is landed on. */}
+    <pre class="code" tabindex="0" role="region" aria-label="Focus rule example"><code>{`.thing:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
+}`}</code></pre>
+    <ul class="rules">
+      <li>
+        <strong><code>outline</code> for the brand band, never <code>box-shadow</code>.</strong>
+        Forced-colors modes replace backgrounds, borders and box-shadows with system colours;
+        outlines survive. Fourteen components painted their ring with box-shadow alone until
+        2026-08-16 — every form control we ship — which meant the entire form layer had no
+        keyboard indicator in Windows High Contrast Mode. <code>outline</code> has followed
+        <code>border-radius</code> in every engine since 2021, so the rounded ring that motivated
+        box-shadow is no longer a reason.
+      </li>
+      <li>
+        <strong><code>:focus-visible</code>, not <code>:focus</code></strong> — the ring appears
+        for keyboard and programmatic focus but not on a mouse click. Two exceptions, both
+        deliberate: text entry uses <code>:focus-within</code> on the field wrapper (a ring on
+        click is native behaviour for something you are about to type into), and
+        <code>esa-error-summary</code> uses bare <code>:focus</code> because a user <em>sent</em>
+        there by a failed submit did not click anything and <code>:focus-visible</code> heuristics
+        can decline to paint.
+      </li>
+      <li>
+        <strong>Never a bare <code>outline: none</code>.</strong> If the ring belongs somewhere
+        else — a chromeless input inside a bordered row — put a <code>:focus-within</code> ring on
+        the row and say so in a comment. The reset on its own is a
+        <a href={withBase('/guide/toolkit')}>check-a11y</a> block.
+      </li>
+      <li>
+        <strong>Inset the ring only when the box is clipped.</strong>
+        <code>outline-offset: calc(var(--focus-ring-offset) * -1)</code> plus an
+        <code>inset</code> halo, for a full-bleed row inside an <code>overflow: hidden</code>
+        panel. A flush 2px inner ring has the same area as a 2px perimeter, so it still meets
+        Focus Appearance — but an outward ring is easier to see and should be the default.
+      </li>
+    </ul>
+  </Section>
+
+  <Section id="criteria" title="What each criterion asks, and how we meet it">
+    <table class="tbl">
+      <thead><tr><th>Success criterion</th><th>Level</th><th>Asks for</th><th>How we meet it</th></tr></thead>
+      <tbody>
+        {criteria.map((c) => (
+          <tr>
+            <td><strong>{c.sc}</strong></td>
+            <td>{c.level}</td>
+            <td>{c.asks}</td>
+            <td>{c.us}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p class="note">
+      <strong>axe does not evaluate focus indicators at all.</strong> <code>npm run a11y</code>
+      stayed green through every failure on this page, including three components that had deleted
+      their ring outright. The test is a keyboard and your eyes.
+    </p>
+  </Section>
+
+  <Section id="light-dom" title="Light DOM vs shadow DOM">
+    <p>
+      A stylesheet cannot cross a shadow boundary, so the ring is delivered twice from one source
+      of truth.
+    </p>
+    <ul class="rules">
+      <li>
+        <strong>Light DOM</strong> — <code>@esa/tokens/focus.css</code>, imported by the spoke
+        template's <code>BaseLayout</code>. It rings every <code>a, button, summary, input,
+        select, textarea, [tabindex]</code> at zero specificity (<code>:where()</code>), so a
+        component rule always wins. It also carries the <code>:focus:not(:focus-visible)</code>
+        undo, which is what suppresses the browser's own ring only where ours replaces it.
+      </li>
+      <li>
+        <strong>Shadow DOM</strong> — each Lit component paints its own from the same five tokens
+        (custom properties inherit through the boundary). The shared
+        <code>@esa/tokens/a11y.css</code> is bridged in via <code>a11y.ts</code> and carries the
+        forced-colors fallback, so a component listing <code>a11y</code> in
+        <code>static styles</code> keeps a ring even where its own colours are overridden.
+      </li>
+    </ul>
+    <p class="note">
+      Until 2026-08-16 the only correct page-level focus rule in the repo lived in the docs
+      shell — a file spokes never receive. Every light-DOM component we ship had a tokenised ring
+      here and the browser default everywhere else.
+    </p>
+  </Section>
+</DocsLayout>
+
+<style>
+  .lede { font-size: var(--font-size-400, 1.125rem); color: var(--color-content-default-secondary, #525252); max-width: 62ch; }
+  .stage {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-500, 1.5rem);
+    padding: var(--spacing-600, 2rem);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
+    border-radius: var(--radius-md, 0.5rem);
+    margin-block: var(--spacing-400, 1rem);
+  }
+  .demo {
+    font: inherit;
+    padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
+    border: var(--border-width-default, 1px) solid var(--color-border-default, #e5e5e5);
+    border-radius: var(--radius-md, 0.5rem);
+    background: var(--color-background-elevation-raised, #fff);
+    color: var(--color-content-default, #171717);
+    cursor: pointer;
+  }
+  .demo--link { text-decoration: underline; text-underline-offset: 2px; }
+  .demo--input { cursor: text; }
+  .tbl { width: 100%; border-collapse: collapse; margin-block: var(--spacing-400, 1rem); font-size: var(--font-size-200, 0.875rem); }
+  .tbl th, .tbl td { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-default, #e5e5e5); vertical-align: top; }
+  .tbl th { color: var(--color-content-default-secondary, #525252); font-weight: var(--typography-font-weight-semibold, 550); }
+  .code {
+    padding: var(--spacing-400, 1rem);
+    background: var(--color-background-elevation-sunken, #f0f0f0);
+    border-radius: var(--radius-md, 0.5rem);
+    overflow-x: auto;
+  }
+  .rules li { margin-block-end: var(--spacing-300, 0.75rem); line-height: var(--line-height-relaxed, 1.8); max-width: 72ch; }
+  .note {
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border-inline-start: var(--border-width-200, 2px) solid var(--color-border-default, #e5e5e5);
+    color: var(--color-content-default-secondary, #525252);
+    max-width: 72ch;
+  }
+</style>

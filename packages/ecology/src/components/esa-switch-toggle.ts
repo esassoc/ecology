@@ -109,9 +109,9 @@ export class EsaSwitchToggle extends LitElement {
       --_track-w: 40px;
       --_track-h: 22px;
       --_thumb: 18px;
-      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-default-strong, #d4d4d4));
-      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-background-brand, #43608a));
-      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-background-elevation-raised, #fff));
+      --_bg-off: var(--color-border-default-strong, #bbbbbb);
+      --_bg-on: var(--color-background-brand, #46a758);
+      --_thumb-color: var(--color-background-elevation-raised, #fcfcfc);
       display: inline-block;
     }
     :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
@@ -127,7 +127,7 @@ export class EsaSwitchToggle extends LitElement {
       border: 0;
       background: none;
       font: inherit;
-      color: var(--switch-toggle-label-color, var(--color-content-default, #171717));
+      color: var(--color-content-default, #202020);
       cursor: pointer;
     }
     .root:disabled { cursor: not-allowed; }
@@ -158,7 +158,7 @@ export class EsaSwitchToggle extends LitElement {
     :host([checked]) .thumb { left: calc(var(--_track-w) - var(--_thumb) - 2px); }
 
     .root:focus-visible .track {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 

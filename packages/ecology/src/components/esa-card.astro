@@ -111,13 +111,13 @@ const cls = [
 
 <style>
   .esa-card {
-    --_card-bg: var(--card-bg, var(--color-background-elevation-raised, #ffffff));
-    --_card-border: var(--card-border-color, var(--color-border-default, #e5e5e5));
-    --_card-radius: var(--card-radius, var(--radius-card, 0.5rem));
-    --_card-padding: var(--card-padding, var(--spacing-500, 1.5rem));
+    --_card-bg: var(--card-bg, var(--color-background-elevation-raised, #fcfcfc));
+    --_card-border: var(--card-border-color, var(--color-border-default, #cecece));
+    --_card-radius: var(--radius-md, 0.5rem);
+    --_card-padding: var(--spacing-500, 1.5rem);
     --_card-header-bg: var(--card-header-bg, transparent);
-    --_card-header-color: var(--card-header-color, var(--color-content-default, #171717));
-    --_card-header-border: var(--card-header-border-color, var(--color-border-default-subtle, #efefef));
+    --_card-header-color: var(--color-content-default, #202020);
+    --_card-header-border: var(--color-border-default-subtle, #d9d9d9);
 
     display: block;
     background: var(--_card-bg);
@@ -127,7 +127,7 @@ const cls = [
   }
 
   /* outlined: explicit (same as default) */
-  .esa-card--outlined { --_card-border: var(--color-border-default, #e5e5e5); }
+  .esa-card--outlined { --_card-border: var(--color-border-default, #cecece); }
 
   /* elevated: shadow, no border */
   .esa-card--elevated {
@@ -137,17 +137,17 @@ const cls = [
 
   /* filled: sunken background, no border */
   .esa-card--filled {
-    --_card-bg: var(--color-background-elevation-sunken, #efefef);
+    --_card-bg: var(--color-background-elevation-sunken, #f0f0f0);
     --_card-border: transparent;
   }
 
   .esa-card--header-primary .esa-card__header {
-    --_card-header-bg: var(--color-background-brand, #43608a);
-    --_card-header-color: var(--color-content-default-knockout, #ffffff);
+    --_card-header-bg: var(--color-background-brand, #46a758);
+    --_card-header-color: var(--color-content-default-knockout, #fcfcfc);
   }
 
   .esa-card--header-muted .esa-card__header {
-    --_card-header-bg: var(--color-background-elevation-sunken, #efefef);
+    --_card-header-bg: var(--color-background-elevation-sunken, #f0f0f0);
   }
 
   .esa-card--padding-none { --_card-padding: 0; }
@@ -183,7 +183,7 @@ const cls = [
   }
 
   .esa-card__subtitle {
-    color: var(--color-content-default-secondary, #525252);
+    color: var(--color-content-default-secondary, #646464);
     margin: 0;
   }
 
@@ -213,6 +213,6 @@ const cls = [
   .esa-card__footer {
     padding: var(--spacing-300, 0.75rem) var(--_card-padding);
     border-top: var(--border-width-default, 1px) solid var(--_card-header-border);
-    background: var(--card-footer-bg, var(--color-background-elevation-sunken, #efefef));
+    background: var(--color-background-elevation-sunken, #f0f0f0);
   }
 </style>

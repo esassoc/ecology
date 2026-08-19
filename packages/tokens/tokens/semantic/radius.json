@@ -1,29 +1,29 @@
 {
   "radius": {
-    "control": {
+    "xs": {
+      "$value": "{radius.050}",
+      "$type": "dimension",
+      "$description": "The tightest corner — swatches, colour chips, inline markers. 2px."
+    },
+    "sm": {
       "$value": "{radius.100}",
       "$type": "dimension",
-      "$description": "Small interactive controls — inputs at xs/sm, badges, pills, tooltips, kbd. The quiet 4px chip."
+      "$description": "4px. Inputs, buttons and selects at xs/sm; badges, tooltips, kbd, menu items."
     },
-    "surface": {
+    "md": {
       "$value": "{radius.200}",
       "$type": "dimension",
-      "$description": "The default surface corner — inputs at md/lg, dropdowns, popovers, panels, alerts, snackbars. The most-used role; re-point this to make a theme flatter or rounder overall."
+      "$description": "8px, the default corner and the most-used step — inputs, buttons and selects at md/lg; dropdowns, popovers, panels, cards, alerts, snackbars. Re-point this to make a theme flatter or rounder overall."
     },
-    "card": {
-      "$value": "{radius.300}",
-      "$type": "dimension",
-      "$description": "Content containers — cards, collapsibles. Separate from `surface` so a theme can round its cards without rounding every menu."
-    },
-    "overlay": {
+    "lg": {
       "$value": "{radius.400}",
       "$type": "dimension",
-      "$description": "Things that float above the page — dialogs, confirm dialogs, the command palette, entity search."
+      "$description": "12px. Things that float above the page — dialogs, confirm dialogs, the command palette, entity search."
     },
     "pill": {
       "$value": "{radius.full}",
       "$type": "dimension",
-      "$description": "Fully rounded — avatars, progress bars, filter pills, breadcrumb pills, the back-to-top button."
+      "$description": "Fully rounded — avatars, progress bars, filter pills, breadcrumb pills, the back-to-top button. NOT a step on the scale: it is a shape, and it stays a named role so a squared-off brand can re-point it to --radius-sm without touching the ramp."
     }
   }
 }

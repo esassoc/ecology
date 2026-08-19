@@ -125,13 +125,18 @@ export class EsaFileList extends LitElement {
          room without restyling the shadow DOM. Defaults reproduce the original tight row. */
       padding: var(--file-list-row-padding-y, 2px)
         var(--file-list-row-padding-x, var(--spacing-300, 12px));
-      border: var(--form-border-width, 1px) solid var(--color-border-default, #e5e5e5);
-      border-radius: var(--radius-control, 4px);
-      background: var(--color-background-elevation-raised, #fff);
+      /* --border-width-default, not --form-border-width: a file row is not a form
+         control, and the colour half of this very declaration already reads the
+         tier-2 role. --form-border-width is a thin alias over the same token, so
+         this is value-neutral and stops a spoke's input restyling from reaching
+         file rows. */
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-sm, 0.25rem);
+      background: var(--color-background-elevation-raised, #fcfcfc);
     }
     .file__icon {
       display: inline-flex;
-      color: var(--color-content-default-muted, #737373);
+      color: var(--color-content-default-muted, #838383);
     }
     .file__icon svg {
       width: 16px;
@@ -142,11 +147,11 @@ export class EsaFileList extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       text-decoration: none;
     }
     a.file__name {
-      color: var(--color-link, var(--color-background-brand, #43608a));
+      color: var(--color-content-brand, #2a7e3b);
     }
     a.file__name:hover {
       text-decoration: underline;
@@ -165,8 +170,8 @@ export class EsaFileList extends LitElement {
       padding: 0;
       border: 0;
       background: transparent;
-      color: var(--color-content-default-muted, #737373);
-      border-radius: var(--radius-control, 4px);
+      color: var(--color-content-default-muted, #838383);
+      border-radius: var(--radius-sm, 0.25rem);
       cursor: pointer;
       flex-shrink: 0;
       transition:
@@ -178,14 +183,14 @@ export class EsaFileList extends LitElement {
       height: 15px;
     }
     .file__btn:hover {
-      background: var(--color-background-elevation-sunken, #efefef);
-      color: var(--color-content-default, #171717);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
+      color: var(--color-content-default, #202020);
     }
     .file__btn--remove:hover {
       color: var(--color-content-utility-danger, #ce2c31);
     }
     .file__btn:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
       outline-offset: 1px;
     }
   `,

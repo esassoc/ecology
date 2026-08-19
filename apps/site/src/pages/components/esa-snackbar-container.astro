@@ -16,10 +16,14 @@ const methods = [
 const config = [
   { name: 'message', type: 'string', description: 'Toast body text.' },
   { name: 'variant', type: "'info' | 'success' | 'warning' | 'danger'", default: "'info'", description: 'Color and leading icon.' },
-  { name: 'duration', type: 'number', default: '5000', description: 'Auto-dismiss delay in ms; 0 keeps it until dismissed.' },
-  { name: 'action', type: 'string', description: 'Optional action button label.' },
+  { name: 'duration', type: 'number', default: '0', description: 'Auto-dismiss delay in ms. 0 (the default) keeps the toast until dismissed. This default changed from 5000 on 2026-08-16 — a timer the user cannot adjust is WCAG 2.2.1 Timing Adjustable, a Level A failure. Passing a duration still works and still auto-dismisses; it opts you out of 2.2.1 unless you provide the adjustment yourself.' },
+  { name: 'action', type: 'string', description: 'Optional action button label. Discouraged — see Accessibility below. Only safe when the same action is also reachable in the page itself.' },
   { name: 'dismissable', type: 'boolean', default: 'true', description: 'Renders the close button.' },
-  { name: 'uniqueKey', type: 'string', description: 'Dedupe key — a second show() with the same key is ignored.' },
+  { name: 'uniqueKey', type: 'string', description: 'Dedupe key. A second show() with the same key does not stack a second toast, but it DOES re-announce the message and restart any countdown — the second occurrence is a real event.' },
+];
+
+const props = [
+  { name: 'label', type: 'string', default: "'Notifications'", description: 'Accessible name for the region landmark that wraps the stack. Change it only if a page has more than one stack.' },
 ];
 
 const events = [
@@ -27,7 +31,7 @@ const events = [
 ];
 ---
 <ComponentDoc name="Snackbar Container" category="Overlays" slug="esa-snackbar-container" type="wc" status="stable"
-  summary="Bottom-right toast stack with auto-dismiss. Drive it imperatively — <code>show(config)</code>, the variant shorthands, <code>dismiss(id)</code>, and <code>clearAll()</code>. Defaults to info / 5000ms / dismissable, with <code>uniqueKey</code> dedupe.">
+  summary="Bottom-right toast stack. Drive it imperatively — <code>show(config)</code>, the variant shorthands, <code>dismiss(id)</code>, and <code>clearAll()</code>. Defaults to info / persistent / dismissable, with <code>uniqueKey</code> dedupe. Messages are announced through the shared announcer, not by the stack itself.">
 
   <Section id="preview" title="Preview">
     <p>Place one container on the page, then call its methods: <code>el.success('Saved.')</code>.</p>
@@ -39,6 +43,7 @@ const events = [
       <button class="trigger" data-kind="warning">Warning</button>
       <button class="trigger" data-kind="danger">Danger</button>
       <button class="trigger" data-kind="action">With action</button>
+      <button class="trigger" data-kind="timed">Auto-dismiss (5s)</button>
       <button class="trigger" data-kind="clear">Clear all</button>
       <esa-snackbar-container id="toasts"></esa-snackbar-container>
     </Preview>
@@ -49,13 +54,56 @@ const events = [
     <PropsTable rows={methods} />
     <h3>Config object (show)</h3>
     <PropsTable rows={config} />
+    <h3>Attributes</h3>
+    <PropsTable rows={props} />
     <Api events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">
+    <p>
+      Toasts are the hardest common pattern to make accessible, and most implementations
+      fail. This one is built persistent-first: the timed, animated version is the
+      enhancement, not the baseline.
+    </p>
+
+    <h3>The stack is not a live region</h3>
+    <p>
+      Announcing is handled by the shared announcer (<code>@esa/ecology/announcer</code>),
+      which owns the only two live regions in the kit — one polite, one assertive, in the
+      light DOM, mounted before anything happens. Putting <code>aria-live</code> on this
+      stack instead would fail three ways: each toast is created and populated in the same
+      tick, so the region would be born with its content and never announce; the text sits
+      two shadow roots deep, where live-region observation is unreliable; and every page
+      with a stack would own a third region competing with the other two.
+    </p>
+    <p>
+      What the stack does carry is <code>role="region"</code> with a name, so it is a
+      landmark. An announcement tells someone a toast exists; the landmark is how they
+      get to it.
+    </p>
+
+    <h3>Timing (SC 2.2.1, Level A)</h3>
     <ul class="a11y">
-      <li>Toasts auto-dismiss after <code>duration</code>; provide enough time to read, or set <code>duration: 0</code> for important messages.</li>
-      <li>Each toast renders an <a href={withBase('/components/esa-snackbar-item')}>esa-snackbar-item</a> with a labelled dismiss button.</li>
+      <li><code>duration</code> now defaults to <code>0</code> — the toast stays until dismissed. That is the only configuration that conforms without extra work.</li>
+      <li>If you pass a duration, hovering or focusing the stack pauses every countdown. That helps pointer and keyboard users. It does <strong>not</strong> help someone reading with a screen reader's virtual cursor, which fires neither event — so pausing is a mitigation, not a conformance argument.</li>
+      <li><kbd>Esc</kbd> dismisses the newest toast, but only while focus is inside the stack. A global handler would let someone closing a tooltip destroy a toast they had not read.</li>
+    </ul>
+
+    <h3>Action buttons</h3>
+    <p>
+      <code>action</code> is supported and discouraged. A live region announces raw text
+      with no roles, so "Undo" is read as a bare word with nothing to say it is a button;
+      focus is never moved to it; and there is no mechanism to navigate to a toast. Add one
+      only when the same action is <em>also</em> available in the page. If the toast is the
+      only route to it, that is not a status message — use
+      <a href={withBase('/components/esa-dialog')}>esa-dialog</a>, which moves focus and
+      persists.
+    </p>
+
+    <ul class="a11y">
+      <li>Dismissing a toast that held focus returns focus to wherever it came from, rather than dropping it to <code>&lt;body&gt;</code>.</li>
+      <li>Below 30rem the stack becomes a full-width strip instead of a 420px box overflowing the viewport (SC 1.4.10 Reflow, 1.4.4 Resize).</li>
+      <li>Each toast renders an <a href={withBase('/components/esa-snackbar-item')}>esa-snackbar-item</a> with a 32px dismiss target and a visible focus ring.</li>
       <li>The newest toast appears at the bottom of the stack (column-reverse), nearest the user's attention.</li>
     </ul>
   </Section>
@@ -75,6 +123,9 @@ const events = [
         case 'warning': toasts.warning('Low disk space.'); break;
         case 'danger': toasts.danger('Upload failed.'); break;
         case 'action': toasts.show({ message: 'Item archived.', variant: 'success', action: 'Undo' }); break;
+        // The opt-in path, shown next to the default so the difference is visible.
+        // Hover or focus the stack while this one is counting down — it pauses.
+        case 'timed': toasts.show({ message: 'Auto-dismisses in 5s.', duration: 5000 }); break;
         case 'clear': toasts.clearAll(); break;
       }
     }),

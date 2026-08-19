@@ -277,6 +277,14 @@ if (dest.size) {
 // catching it, which is exactly what makes this louder than a rename.
 for (const m of removedRows) {
   const hits = new Map();
+  // A removed pair's SECOND element is print-only guidance — "what to read
+  // instead" — and is optional; `""` means there is genuinely no destination
+  // (see control-height-removed). It is safe to populate because removed rows
+  // never reach the rewriter (they `continue` above), and nothing else consumes
+  // it: build.js, doctor.mjs and snapshot-tokens.mjs all read `[from]` only.
+  // Without it a 150-name tier-3 removal prints 150 names and one paragraph of
+  // `why`, which is not a migration instruction.
+  const guidance = new Map(m.pairs.filter(([, to]) => to).map(([from, to]) => [from, to]));
   for (const file of files) {
     const src = readFileSync(file, 'utf8');
     for (const [from] of m.pairs) {
@@ -293,7 +301,8 @@ for (const m of removedRows) {
     const parts = [];
     if (h.reads) parts.push(`${h.reads} read${h.reads === 1 ? '' : 's'} → resolve to nothing`);
     if (h.declares) parts.push(`${h.declares} declaration${h.declares === 1 ? '' : 's'} → inert, nothing reads it`);
-    console.log(`      ${t}  (${parts.join('; ')})`);
+    const to = guidance.get(t);
+    console.log(`      ${t}${to ? `  →  read ${to} instead` : ''}  (${parts.join('; ')})`);
   }
   console.log(`      ${m.why}`);
   console.log('      Not rewritten automatically — the replacement is not an equivalent value.');

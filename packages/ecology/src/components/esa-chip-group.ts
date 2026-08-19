@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** Chip text is UI text at the SEMIBOLD tier. It rendered `font-weight: 600` as a
     raw literal — 600 is not a token weight in this system (semibold is 550), so
@@ -226,20 +227,21 @@ export class EsaChipGroup extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
       --_pad-y: var(--spacing-150, 0.375rem);
       --_pad-x: var(--spacing-300, 0.75rem);
-      --_radius: var(--radius-control, 0.25rem);
+      --_radius: var(--radius-sm, 0.25rem);
 
       /* Resting (unselected) chrome. */
-      --_bg: var(--color-background-elevation-raised, #fff);
-      --_border: var(--color-border-default, #e5e5e5);
-      --_color: var(--color-content-default-secondary, #525252);
-      --_bg-hover: var(--color-background-elevation-sunken, #f5f5f5);
-      --_border-hover: var(--color-border-default-strong, #d4d4d4);
-      --_color-hover: var(--color-content-default, #171717);
+      --_bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_border: var(--color-border-default, #cecece);
+      --_color: var(--color-content-default-secondary, #646464);
+      --_bg-hover: var(--color-background-elevation-sunken, #f0f0f0);
+      --_border-hover: var(--color-border-default-strong, #bbbbbb);
+      --_color-hover: var(--color-content-default, #202020);
 
       display: inline-flex;
     }
@@ -291,32 +293,32 @@ export class EsaChipGroup extends LitElement {
     }
 
     .chip:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {
-      background: var(--color-background-elevation-sunken, #efefef);
-      border-color: var(--color-border-default-strong, #d4d4d4);
-      color: var(--color-content-default-secondary, #404040);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
+      border-color: var(--color-border-default-strong, #bbbbbb);
+      color: var(--color-content-default-secondary, #646464);
     }
     .chip--active.chip--neutral-strong {
-      background: var(--color-border-default, #e5e5e5);
-      border-color: var(--color-border-default-strong, #d4d4d4);
-      color: var(--color-content-default, #171717);
+      background: var(--color-border-default, #cecece);
+      border-color: var(--color-border-default-strong, #bbbbbb);
+      color: var(--color-content-default, #202020);
     }
     /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
        default is brand blue, a forest-green theme goes forest. */
     .chip--active.chip--brand {
-      background: var(--color-background-brand-subtle, #f3f8fb);
-      border-color: var(--color-border-brand, #cfe2ee);
-      color: var(--color-content-brand, #3a7c59);
+      background: var(--color-background-brand-subtle, #f5fbf5);
+      border-color: var(--color-border-brand, #b2ddb5);
+      color: var(--color-content-brand, #2a7e3b);
     }
     .chip--active.chip--amber {
-      background: var(--color-background-utility-warning-subtle, #fffbeb);
-      border-color: var(--color-border-utility-warning, #fde68a);
-      color: var(--color-content-utility-warning, #915930);
+      background: var(--color-background-utility-warning-subtle, #fefbe9);
+      border-color: var(--color-border-utility-warning, #f3d673);
+      color: var(--color-content-utility-warning, #ab6400);
     }
   `,
   ];

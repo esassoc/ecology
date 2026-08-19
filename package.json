@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Ecology \u2014 the framework-agnostic design system hub (tokens + specs + Astro specimens).",
+  "description": "Ecology — the framework-agnostic design system hub (tokens + specs + Astro specimens).",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -16,9 +16,14 @@
     "dev": "npm run build:tokens && npm run dev --workspace=@esa/site",
     "build": "npm run build:tokens && npm run build --workspace=@esa/site",
     "preview": "npm run preview --workspace=@esa/site",
-    "deploy": "npm run build:tokens && npm run deploy --workspace=@esa/site"
+    "deploy": "npm run build:tokens && npm run deploy --workspace=@esa/site",
+    "a11y": "node scripts/a11y-audit.mjs",
+    "a11y:live": "node scripts/live-region-audit.mjs"
   },
   "dependencies": {
     "@radix-ui/colors": "^3.0.0"
+  },
+  "devDependencies": {
+    "axe-core": "^4.13.0"
   }
 }

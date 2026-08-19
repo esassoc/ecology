@@ -8,7 +8,11 @@ re-skin via the semantic/component token layers, and hand off to dev teams (on a
 stack) who interpret the standard — increasingly with Claude's help.
 
 This repo is **Astro + plain web tech, not Angular.** The original Angular library +
-Storybook were the starting point and now live, archived, in `../ecology-angular`.
+Storybook were the starting point and are no longer checked out anywhere on this
+machine — do not send anyone to `../ecology-angular`, which is where this line
+pointed until 2026-08-16. If that archive is still wanted as prior art, it has to be
+recovered from GitHub first. `../ecology-storybook` DOES exist and is unrelated: it
+is this repo's own `storybook` branch in a git worktree.
 
 ## Architecture (npm workspaces monorepo)
 - **packages/tokens/** → `@esa/tokens`. DTCG JSON (`tokens/{primitive,semantic}/*.json`)
@@ -29,12 +33,45 @@ Storybook were the starting point and now live, archived, in `../ecology-angular
 the whole point of the tier is that a spoke can re-skin one component without
 moving the system. A token many components read is an INTENT, and intents live
 at tier 2. Applied across all 311 tier-3 declarations on 2026-08-14: **23
-violate, 248 are compliant.** The violators are `--form-*` (18 tokens, 18
-readers — five of them not forms), `--focus-ring-*` (3, read by 31) and
-`--loading-spinner-*` (2). The 18th reader used to be `_inject-styles`, which was
-not even a component; it was deleted on 2026-08-15 (dead module, zero importers,
-hand-written `.esa-field*` rules on raw `.875rem`/`600` literals), so 17 of the
-readers are now components and the shape of the violation is unchanged.
+violate, 248 are compliant.** Re-measured 2026-08-16 against 312 declarations, and
+only ONE of the three named violators is still one:
+
+- **`--form-*` — the live violation, and it SHRANK: 16 declared, 17 reader files**
+  (down from 18 declarations on 2026-08-14). The 18th reader used to be
+  `_inject-styles`, which was not even a component; it was deleted on 2026-08-15
+  (dead module, zero importers, hand-written `.esa-field*` rules on raw
+  `.875rem`/`600` literals).
+
+  **Count declarations with `^\s*--form-[a-z-]*:` — the trailing colon is load
+  bearing.** `^\s*--form-` alone returns 21, because five COMMENT lines in
+  `component-tokens.css` begin with a token name in the left margin. That is how a
+  shrinking namespace gets reported as a growing one.
+
+  What is actually wrong is not the count and not the alias depth — all 16 chain
+  straight to tier 2 and hold no values of their own. It is that **four non-form
+  components read form-named tokens**: `esa-button.astro` and `esa-button-group.ts`
+  (`--form-radius-*`), `esa-file-list.ts` (`--form-border-width`), and
+  `esa-button-toggle.ts` (ten of them, including `--form-label-color` and
+  `--form-error-color`). A spoke re-pointing `--form-border-color` to restyle its
+  inputs silently restyles buttons too.
+- **`--focus-ring-*` — resolved in substance, and the namespace stays on purpose.**
+  Both themeable properties are now thin aliases over tier-2 roles that already
+  exist: `--focus-ring-color` → `--color-border-default-focus`, `--focus-ring-width`
+  → `--border-width-focus`. A spoke re-points the ring at tier 2 and all 31 readers
+  follow, which is the entire point of promotion — so the count never needed to
+  drop. `--focus-ring-offset: 2px` stays a literal deliberately (the spacing scale
+  is a 4px grid; minting a 2px primitive for one consumer is what SPEC.md forbids),
+  and `focus-ring` is the naming rubric's own worked example of a `special` case in
+  the component slot. Read the comment above the declarations before reopening this.
+- **`--loading-spinner-*` — marginal.** 2 tokens, 2 readers, both tier-2 aliases;
+  the second reader is `esa-loading-overlay`, which composes a spinner. Not worth a
+  rename.
+
+**The lesson for the count itself:** "N components read it" does not measure the
+violation. A tier-3 token that is a pure alias over a tier-2 role is already
+promoted in every way that matters to a spoke — what matters is whether the
+re-skin surface a spoke reaches is a single point. Count HOLDERS OF VALUE, not
+readers of a name.
 
 Do NOT reach for "fan it out to per-component hooks" as the fix. That was
 measured for `--form-*` and comes to **162 names**, against SPEC.md's own
@@ -192,7 +229,97 @@ npm install
 npm run dev            # build tokens, then serve the site
 npm run build          # tokens + static site build
 npm run build:tokens   # just compile tokens → packages/tokens/dist/
+npm test               # token-name guard + hook regressions (scripts/**/*.test.mjs)
+npm run a11y           # axe-core over every built page (needs `npm run build` first)
+npm run a11y:live      # live-region structure audit (needs `npm run build` first)
 ```
+
+`npm run a11y` serves `apps/site/dist` on an ephemeral port, waits for custom
+elements to upgrade (auditing pre-hydration HTML is how you get a meaningless
+all-clear on a kit that is half web components), and reports grouped by rule. It
+does NOT gate — pass `--strict` for that. `--url http://localhost:4322` audits the
+dev server instead, which is the only way to reach debug pages (they return `[]`
+from `getStaticPaths`, so the build contains none of them).
+
+**Treat green as evidence of nothing much.** On 2026-08-16 it reported 5 rules
+across 84 pages and found **zero** naming failures in the `esa-*` components —
+while a manual audit found orphaned `<label>`s in six of eight text-entry
+components and nameless options in every checkbox and radio group. axe cannot see
+a `<label>` wrapping a `<span role="checkbox">`, cannot see a name that vanishes
+when the user types, and cannot see the keyboard at all. The judgment layer is
+`plugins/spoke-kit/skills/accessibility/` (start at `forms.md`).
+
+`npm run a11y:live` is the second thing axe cannot do. axe validates a live
+region's ATTRIBUTES and has no opinion on whether it will ever announce anything
+— which is the exact failure this kit shipped: `<span role="status"
+aria-label="Loading"></span>` on every spinner, for months, announcing nothing,
+with a clean axe run throughout. It walks the FLATTENED tree (shadow roots
+included, post-upgrade) and asserts the announcer invariants: exactly two
+regions and both owned by the announcer, none inside a shadow root, none
+permanently empty, no interactive control inside one, no politeness
+contradiction. It proves structure only — nothing automated proves an
+announcement reaches a screen reader. That needs NerdeRegion plus NVDA/Firefox
+and VoiceOver/Safari.
+
+**Forced colors is the third thing axe cannot do**, and unlike the other two there is
+no script to run: axe-core has no forced-colors rule at all, so `npm run a11y` reports
+clean on a page that is unusable in Windows Contrast Themes. As of the 2026-08-16 audit
+the kit has **zero** forced-colors support — `forced-colors`, `forced-color-adjust` and
+every system-colour keyword appear 0 times across all 66 components and both token
+packages. The findings are logged in `docs/system-improvement-ledger.md` and deferred to
+the batched accessibility pass; the judgment layer is
+`plugins/spoke-kit/skills/accessibility/forced-colors.md`.
+
+Two things about it that surprise people, and that no token can fix:
+- **It overrides at the USED-VALUE layer, downstream of every token.** The
+  `prefers-reduced-motion` trick — one generated `:root` block in `build.js` — does not
+  transfer. `box-shadow` and non-`url()` `background-image` are forced to `none`
+  whatever value you gave them, and all 34 Lit components are in shadow roots that no
+  global block reaches. Rules go inside each component's own `static styles`.
+- **It reads the HTML ELEMENT, never the ARIA role.** `<div role="button"
+  aria-disabled>` gets none of the system styling `<button disabled>` gets free, which
+  is a live cost for the eight `esa-*` widgets built that way.
+  A transparent `border` becomes VISIBLE (border-color is force-adjusted), which is why
+  most fixes need no media query at all. `esa-card--elevated` already does this.
+
+The one deterministic slice is enforced: `check-a11y` **check 9** blocks a focus ring
+painted only with `box-shadow`. It swept the 66 components at 0 flagged / 0 false
+positives, so it is a ratchet, not a cleanup.
+
+## Status messages — there is ONE announcer, and it is the last resort
+`packages/ecology/src/announcer.ts` owns the kit's ONLY two ARIA live regions —
+one polite, one assertive, in the LIGHT DOM, mounted before anything happens.
+Components call `announce(msg, { assertive })`; **no component writes
+`aria-live`.** Four reasons, each of which was a real bug here: a region created
+in the same tick as its text does not announce; regions interfere with each
+other (assertive can clear the polite queue), so the ceiling is ~2 per page;
+observation across a shadow boundary is unreliable (worst Safari/VoiceOver, and
+the toast's text was TWO roots deep); and re-setting `textContent` to the string
+it already holds is not a mutation, so a repeated message announces once.
+
+Light DOM also means **no cross-root reference is needed** — a component imports
+the function and the singleton mutates its own text. That matters because IDREFs
+never cross a shadow boundary in any engine.
+
+**Reach for a live region LAST.** In order: (1) an instructional cue via
+`aria-describedby` — the six filtering components use one, which is what makes
+per-keystroke announcements unnecessary; (2) moving focus — a change of context
+AT already surfaces, so SC 4.1.3 does not even apply, and this is what
+`esa-error-summary` does; (3) an ARIA state property (`aria-expanded`,
+`aria-valuenow`, `aria-busy`); (4) then `announce()`.
+
+Two consequences that surprise people:
+- **`esa-snackbar-container.duration` defaults to `0` (persistent)** as of
+  2026-08-16, down from `5000`. A timer the user cannot adjust is SC 2.2.1,
+  **Level A**. Auto-dismiss is opt-in per call. This is a behaviour change no
+  `migrations.json` row can express — the four kinds are all RENAMES — so it
+  warns once at runtime instead.
+- **A message with a control in it is a dialog, not a status message.** Live
+  regions announce raw text with no roles and cannot be focused or navigated to,
+  so a toast "Undo" is a bare word with no route to it. `check-a11y` blocks it.
+
+The full contract is
+`plugins/spoke-kit/skills/accessibility/status-messages.md`.
 
 ## Parallelism
 Component work parallelizes well (each component = independent files). Default to
@@ -209,8 +336,12 @@ composed from Ecology. Patterns that prove broadly useful get promoted back up h
 This repo is also a **Claude Code plugin marketplace** (`.claude-plugin/marketplace.json`).
 The **`spoke-kit`** plugin (`plugins/spoke-kit/`) ships everything Claude needs in a
 spoke: skills (`component-first`, `design-principles` — the canonical aesthetic/token
-rules, `spoke-init`, `spoke-precommit-review`), Node PreToolUse hooks
-(`check-component-first` — no bespoke UI primitives; `guard-hub-writes` — spoke
+rules, `accessibility` — the a11y judgment layer, whose `forms.md` is the naming/
+describedby/grouping contract for anything that collects a value, `spoke-init`,
+`spoke-precommit-review`), Node PreToolUse hooks
+(`check-component-first` — no bespoke UI primitives; `check-a11y` — the five
+deterministic a11y failures, and unlike the others it fires in the HUB TOO, since
+these components are what teams copy; `guard-hub-writes` — spoke
 sessions cannot edit this hub, even via the `node_modules/@esa/ecology` symlink;
 escape token `hub-edit-approved:` requires explicit human approval), a
 SessionStart hook (`check-hub-state` — warns spoke sessions when this checkout

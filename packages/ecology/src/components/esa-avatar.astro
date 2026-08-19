@@ -91,9 +91,9 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`, `typog
        below repeats the hook with its own literal, so an override wins whichever
        size is active rather than only at md. */
     --_avatar-font-size: var(--avatar-font-size, var(--typography-label-md-strong-font-size, var(--font-size-200, 0.9375rem)));
-    --_avatar-radius: var(--avatar-radius, var(--radius-pill, 9999px));
+    --_avatar-radius: var(--radius-pill, 9999px);
     --_avatar-bg: var(--avatar-bg, hsl(var(--_avatar-hue, 200) 45% 65%));
-    --_avatar-text: var(--avatar-text-color, var(--color-content-default-knockout, #fff));
+    --_avatar-text: var(--color-content-default-knockout, #fcfcfc);
 
     display: inline-flex;
     align-items: center;
@@ -117,7 +117,7 @@ const cls = ['esa-avatar', `esa-avatar--${size}`, `esa-avatar--${shape}`, `typog
   .esa-avatar--sm { --_avatar-size: var(--avatar-size-sm, 28px); --_avatar-font-size: var(--avatar-font-size, var(--typography-label-xs-strong-font-size, var(--font-size-100, 0.75rem))); }
   .esa-avatar--lg { --_avatar-size: var(--avatar-size-lg, 56px); --_avatar-font-size: var(--avatar-font-size, var(--typography-title-font-size, var(--font-size-400, 1.25rem))); }
 
-  .esa-avatar--square { --_avatar-radius: var(--radius-surface, 0.5rem); }
+  .esa-avatar--square { --_avatar-radius: var(--radius-md, 0.5rem); }
 
   .esa-avatar__image {
     width: 100%;

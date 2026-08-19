@@ -1,5 +1,25 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry — see esa-text-field.ts.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
 
 /** The group heading is UI text (label-*, medium); each option's own text is prose
     (body-*, regular). See the FORMS header in component-tokens.css for the mapping. */
@@ -34,6 +54,10 @@ export class EsaRadioGroup extends LitElement {
     orientation: { type: String, reflect: true },
     name: { type: String, reflect: true },
     value: { type: String },
+    required: { type: Boolean },
+    helpText: { type: String, attribute: 'help-text' },
+    errorText: { type: String, attribute: 'error-text' },
+    liveError: { type: Boolean, attribute: 'live-error' },
   };
 
   declare options: EsaOption[];
@@ -43,6 +67,20 @@ export class EsaRadioGroup extends LitElement {
   /** Form field name — the key this control submits under. */
   declare name: string | undefined;
   declare value: string | null;
+  /**
+   * Whether an option must be chosen. Marked on the GROUP, never on each radio — putting
+   * `aria-required` on every option announces "required" per option, which reads as
+   * "you must select all of these". The group is the thing that is required.
+   */
+  declare required: boolean;
+  declare helpText: string;
+  /** Validation message below the group; reddens the legend and renders the error line. */
+  declare errorText: string;
+  /**
+   * Announce the error the moment it appears rather than only when the group is entered.
+   * Off by default — see the long note on `esa-text-field.liveError`.
+   */
+  declare liveError: boolean;
 
   private internals: ElementInternals;
 
@@ -53,7 +91,35 @@ export class EsaRadioGroup extends LitElement {
     this.size = 'md';
     this.orientation = 'vertical';
     this.value = null;
+    this.required = false;
+    this.helpText = '';
+    this.errorText = '';
+    this.liveError = false;
     this.internals = this.attachInternals();
+  }
+
+  updated(): void {
+    this.syncValidity();
+  }
+
+  /**
+   * `required` has to actually BLOCK submission, not merely announce itself — the same
+   * contract the seven self-chromed controls already keep. There is no inner native
+   * control to mirror here (the radios are ARIA-role spans), so `valueMissing` is
+   * reported directly. The anchor is the first radio, so the browser's own bubble and
+   * `reportValidity()` land somewhere focusable.
+   */
+  private syncValidity(): void {
+    if (!this.required || this.value) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.circle') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Select ${this.label}.` : 'Select an option.',
+      anchor,
+    );
   }
 
   // Allow the `options` attribute to be a JSON string.
@@ -96,10 +162,62 @@ export class EsaRadioGroup extends LitElement {
     }
   };
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.circle--selected, .circle');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
+    const hasError = !!this.errorText;
+    // Error FIRST, then help — both, never one instead of the other.
+    const describedBy = [hasError ? 'error' : '', this.helpText ? 'help' : '']
+      .filter(Boolean)
+      .join(' ');
     return html`
-      ${this.label ? html`<span class="group-label typography-${LABEL_TYPE[this.size]}">${this.label}</span>` : null}
-      <div class="items" role="radiogroup" aria-label=${this.label}>
+      <!-- A real fieldset/legend, not a div with role=group + aria-label. Three reasons:
+           the legend NAMES the fieldset natively (measured to work inside a shadow
+           root); a name by REFERENCE cannot drift from the visible text the way the old
+           copied aria-label did, which also silently unnamed the group whenever label
+           was empty; and role=group is the weak one — support is poor on iOS VoiceOver
+           and Android TalkBack, i.e. exactly the users most likely to be filling this in
+           on a phone.
+
+           role=radiogroup overrides the fieldset's implicit group role because ARIA does
+           not allow aria-required on group, and radiogroup is what this actually is.
+           aria-labelledby is belt-and-braces: name-from-legend is an HTML-AAM mapping,
+           and overriding the role puts it on less certain ground. -->
+      <fieldset
+        class="items ${hasError ? 'items--error' : ''}"
+        role="radiogroup"
+        aria-labelledby=${this.label ? 'legend' : nothing}
+        aria-required=${this.required ? 'true' : nothing}
+        aria-invalid=${hasError ? 'true' : nothing}
+        aria-describedby=${describedBy || nothing}
+      >
+        ${this.label
+          ? html`<legend class="group-label typography-${LABEL_TYPE[this.size]}" id="legend">
+              ${this.label}${this.required
+                ? html`<span class="required" aria-hidden="true">*</span>`
+                : null}
+            </legend>`
+          : null}
         ${this.options.map((option) => {
           const selected = this.isSelected(option.value);
           const disabled = option.disabled ?? false;
@@ -122,12 +240,28 @@ export class EsaRadioGroup extends LitElement {
             </label>
           `;
         })}
-      </div>
+      </fieldset>
+
+      <!-- Both message nodes always present so the live region pre-exists its content;
+           .visually-hidden when empty keeps them out of flow. -->
+      <p
+        class="error typography-body-sm ${hasError ? 'is-shown' : 'visually-hidden'}"
+        id="error"
+        role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+      >${hasError
+          ? html`${alertIcon}<span class="visually-hidden">Error: </span
+              ><span>${this.errorText}</span>`
+          : nothing}</p>
+      <p class="help typography-body-sm ${this.helpText ? 'is-shown' : 'visually-hidden'}" id="help"
+        >${this.helpText || nothing}</p
+      >
     `;
   }
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_radio-size: 20px;
@@ -147,16 +281,32 @@ export class EsaRadioGroup extends LitElement {
       --_radio-dot-size: 12px;
     }
 
+    /* A <legend>, so it names the fieldset natively. The UA gives legend a float/
+       padding treatment inside a bordered fieldset; with the border reset off below
+       there is nothing to inset it from, and this restores plain block flow. */
     .group-label {
       display: block;
+      padding: 0;
       margin-bottom: var(--spacing-200, 8px);
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
+    }
+    .required {
+      color: var(--color-content-utility-danger, #ce2c31);
+      margin-inline-start: 2px;
     }
 
+    /* Now a <fieldset>, which arrives with a UA border, padding, margin and a
+       min-inline-size: min-content that breaks flex children. All four are reset —
+       the element is here for its SEMANTICS (name-from-legend, and disabled
+       propagation if a group-level disabled is ever added), not its chrome. */
     .items {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-200, 8px);
+      border: 0;
+      padding: 0;
+      margin: 0;
+      min-inline-size: 0;
     }
     :host([orientation='horizontal']) .items {
       flex-direction: row;
@@ -186,7 +336,7 @@ export class EsaRadioGroup extends LitElement {
       /* The size token is authoritative: without this, re-pointing the indicator
          border width would resize the control instead of thickening its edge. */
       box-sizing: border-box;
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: 50%;
       background: var(--color-background-field, transparent);
       transition:
@@ -194,13 +344,12 @@ export class EsaRadioGroup extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .circle--selected {
-      border-color: var(--color-background-brand, #43608a);
+      border-color: var(--color-background-brand, #46a758);
     }
     .circle:focus-visible {
-      outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width)
-        var(--focus-ring-color);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .dot {
@@ -211,7 +360,7 @@ export class EsaRadioGroup extends LitElement {
       transition: background var(--transition-fast, 150ms ease);
     }
     .circle--selected .dot {
-      background: var(--color-background-brand, #43608a);
+      background: var(--color-background-brand, #46a758);
     }
 
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -228,7 +377,40 @@ export class EsaRadioGroup extends LitElement {
     }
 
     .item-label {
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
+    }
+
+    /* An invalid group reddens its legend — the group is what is invalid, and there is
+       no single box to outline the way a text field has. */
+    .items--error .group-label {
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
+    }
+
+    /* Both message nodes always render (the live region has to pre-exist its content);
+       .visually-hidden takes the empty ones out of flow. Not display:none, which would
+       drop them from the accessibility tree. */
+    .help,
+    .error {
+      margin: 0;
+    }
+    .help.is-shown,
+    .error.is-shown {
+      margin-block-start: var(--form-help-gap, 4px);
+    }
+    .help {
+      color: var(--form-help-color, #838383);
+    }
+    /* Colour, icon AND a visually-hidden "Error:" — colour alone is SC 1.4.1. */
+    .error {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
+    }
+    .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
     }
   `,
   ];

@@ -9,27 +9,57 @@
 //
 // Matches the error styling esa-form-field uses: --color-background-utility-danger text at
 // the body-xs role. Collapses out of layout when empty so it doesn't reserve a
-// gap under the input. An optional leading icon mirrors common form patterns.
+// gap under the input.
+//
+// SCOPE, because this is easy to reach for wrongly: it is for an error that is ALREADY
+// THERE when the page loads — the message a server-validated form comes back with. It
+// cannot announce a message that appears later (see the note above the markup). For that,
+// use the control's own `error-text`.
 import EsaIcon from './esa-icon.astro';
 
 // TYPE: error text is small running text — the body-xs composite. The import is the
 // Astro half of the composite mechanism; Lit siblings get it via
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
+// The visually-hidden "Error:" prefix below. This is a light-DOM .astro component, so the
+// global class reaches it directly — the Lit siblings pull the same definitions into their
+// shadow roots via `static styles = [… a11y …]`.
+import '@esa/tokens/a11y.css';
 
 interface Props {
   /** Resolved error message. Renders nothing when null/empty. */
   message?: string | null;
-  /** Show a small leading alert icon. */
+  /**
+   * Show the small leading alert icon. ON by default: without it an error line and a help
+   * line are the same element in the same slot differing only by COLOUR, which is SC 1.4.1
+   * (Use of Color, Level A). Turn it off only where something else already marks the line.
+   */
   icon?: boolean;
+  /**
+   * The element id. This component exists to be the target of a control's
+   * `aria-describedby`, and it cannot be one without an id — it used to accept no id at
+   * all, so the association it was designed for could not actually be written.
+   */
+  id?: string;
 }
 
-const { message = '', icon = false } = Astro.props;
+const { message = '', icon = true, id } = Astro.props;
 const show = !!(message && String(message).trim());
 ---
+{/*
+  NO `role="alert"` and no `aria-live`. Both were here, together, which is itself a
+  contradiction — `alert` already implies assertive, so the `aria-live="polite"` beside it
+  silently downgraded it. But neither belongs here at all: this component renders NOTHING
+  when `message` is empty, so there is no node in the DOM for a live region to update, and
+  a region created at the same moment as its text is routinely not announced. A live region
+  has to pre-exist its content. The self-chromed controls keep a persistent empty message
+  node for exactly this reason; this one is for errors already present at page load, where
+  the user meets the message by reading rather than by being interrupted.
+*/}
 {show && (
-  <p class="esa-field-error typography-body-xs" role="alert" aria-live="polite">
+  <p class="esa-field-error typography-body-xs" id={id}>
     {icon && <span class="esa-field-error__icon"><EsaIcon name="circle-alert" size="xs" /></span>}
+    <span class="visually-hidden">Error: </span>
     <span class="esa-field-error__text">{message}</span>
   </p>
 )}

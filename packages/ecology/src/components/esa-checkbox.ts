@@ -1,5 +1,6 @@
 import { LitElement, html, css, svg } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** A choice label is the option's own text, not the group's heading — prose
     weight, so it reads body-* rather than label-*. See the FORMS header in
@@ -106,27 +107,28 @@ export class EsaCheckbox extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       --_checkbox-size: 20px;
-      --_checkbox-radius: var(--form-radius-md, 0.5rem);
+      --_checkbox-radius: var(--radius-md, 0.5rem);
       --_checkbox-icon-size: 16px;
       display: inline-block;
     }
     /* Box geometry only — the label's type is a composite named in render(). */
     :host([size='xs']) {
       --_checkbox-size: 14px;
-      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
+      --_checkbox-radius: var(--radius-sm, 0.25rem);
       --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
-      --_checkbox-radius: var(--form-radius-sm, 0.25rem);
+      --_checkbox-radius: var(--radius-sm, 0.25rem);
       --_checkbox-icon-size: 12px;
     }
     :host([size='lg']) {
       --_checkbox-size: 24px;
-      --_checkbox-radius: var(--form-radius-lg, 0.5rem);
+      --_checkbox-radius: var(--radius-md, 0.5rem);
       --_checkbox-icon-size: 20px;
     }
     :host([disabled]) .wrapper {
@@ -152,19 +154,19 @@ export class EsaCheckbox extends LitElement {
       /* The size token is authoritative: without this, re-pointing the indicator
          border width would resize the control instead of thickening its edge. */
       box-sizing: border-box;
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--_checkbox-radius);
       background: var(--color-background-field, transparent);
-      color: var(--color-content-default-knockout, #fff);
+      color: var(--color-content-default-knockout, #fcfcfc);
       transition:
         background var(--transition-fast, 150ms ease),
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box:focus-visible {
-      outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      border-color: var(--form-border-color-focus, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .icon {
@@ -174,8 +176,8 @@ export class EsaCheckbox extends LitElement {
 
     :host([checked]) .box,
     :host([indeterminate]) .box {
-      background: var(--color-background-brand, #43608a);
-      border-color: var(--color-background-brand, #43608a);
+      background: var(--color-background-brand, #46a758);
+      border-color: var(--color-background-brand, #46a758);
     }
 
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -197,7 +199,7 @@ export class EsaCheckbox extends LitElement {
        kit led at 1.6; that was a local special case, not a decision, and choice
        labels now read like the rest. */
     .label {
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
     }
   `,
   ];

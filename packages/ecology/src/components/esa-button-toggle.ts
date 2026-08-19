@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
 
 /** Group label and segment text are both UI text (medium). The SELECTED segment
     steps up to semibold, which is what the -strong weight axis is for — it is not
@@ -266,6 +267,7 @@ export class EsaButtonToggle extends LitElement {
 
   static styles = [
     typography,
+    a11y,
     css`
     :host {
       display: flex;
@@ -273,32 +275,32 @@ export class EsaButtonToggle extends LitElement {
       gap: var(--spacing-100, 4px);
       --_pad-y: var(--spacing-300, 0.75rem);
       --_padding-x: var(--spacing-300, 0.75rem);
-      --_radius: var(--form-radius-md, 8px);
+      --_radius: var(--radius-md, 0.5rem);
       --_border-width: var(--form-border-width, 1px);
-      --_border-color: var(--form-border-color, #d4d4d4);
+      --_border-color: var(--form-border-color, #cecece);
       --_icon-size: 18px;
     }
     :host([size='xs']) {
       --_pad-y: var(--spacing-200, 0.5rem);
       --_padding-x: var(--spacing-200, 0.5rem);
-      --_radius: var(--form-radius-xs, 4px);
+      --_radius: var(--radius-sm, 0.25rem);
       --_icon-size: 14px;
     }
     :host([size='sm']) {
       --_pad-y: var(--spacing-250, 0.625rem);
       --_padding-x: var(--spacing-250, 0.625rem);
-      --_radius: var(--form-radius-sm, 6px);
+      --_radius: var(--radius-sm, 0.25rem);
       --_icon-size: 16px;
     }
     :host([size='lg']) {
       --_pad-y: var(--spacing-400, 1rem);
       --_padding-x: var(--spacing-400, 1rem);
-      --_radius: var(--form-radius-lg, 10px);
+      --_radius: var(--radius-md, 0.5rem);
       --_icon-size: 20px;
     }
 
     .label {
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .required {
       color: var(--color-content-utility-danger, #ce2c31);
@@ -314,12 +316,12 @@ export class EsaButtonToggle extends LitElement {
       max-width: 100%;
       gap: 2px;
       padding: 2px;
-      background: var(--color-background-elevation-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
     }
     .group--error {
-      --_border-color: var(--form-error-border-color, #ef4444);
+      --_border-color: var(--form-error-border-color, #e5484d);
     }
 
     .option {
@@ -332,7 +334,7 @@ export class EsaButtonToggle extends LitElement {
          height token the segment is its own text plus padding, and the track wraps
          it — the compensation has nothing left to compensate for. */
       padding: var(--_pad-y) var(--_padding-x);
-      color: var(--color-content-default-secondary, #525252);
+      color: var(--color-content-default-secondary, #646464);
       background: transparent;
       border: 0;
       border-radius: calc(var(--_radius) - 2px);
@@ -352,13 +354,13 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:hover:not(:disabled):not(.option--selected) {
-      color: var(--color-content-default, #171717);
+      color: var(--color-content-default, #202020);
       background: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
     }
 
     .option:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline-offset: var(--focus-ring-offset, 2px);
       position: relative;
       z-index: 1;
     }
@@ -371,16 +373,16 @@ export class EsaButtonToggle extends LitElement {
 
     .option:disabled {
       cursor: not-allowed;
-      color: var(--color-content-disabled, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       background: transparent;
     }
     .option--selected:disabled {
       background: var(--color-background-elevation-raised, #fcfcfc);
-      color: var(--color-content-disabled, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
     }
 
     .help {
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
     .error {
       color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));

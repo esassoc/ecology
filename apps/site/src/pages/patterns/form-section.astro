@@ -1,8 +1,6 @@
 ---
 import PatternDoc from '../../layouts/PatternDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import EsaFormField from '@esa/ecology/esa-form-field.astro';
-import EsaFieldError from '@esa/ecology/esa-field-error.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
 
 const pathwayOptions = JSON.stringify([
@@ -15,17 +13,18 @@ const pathwayOptions = JSON.stringify([
 <PatternDoc
   name="Form section"
   slug="form-section"
-  summary="A titled group of <code>esa-form-field</code>-wrapped controls that ends in an action row — the unit intake forms, settings panels, and dialog bodies are assembled from."
+  summary="A titled group of self-labelling controls that ends in an action row — the unit intake forms, settings panels, and dialog bodies are assembled from."
   whenToUse="Any screen that collects more than a couple of values — intake forms, settings panels, dialog bodies. One section per topic; stack sections to build a full form."
-  composedOf={['esa-form-field', 'esa-text-field', 'esa-select', 'esa-textarea', 'esa-radio-group', 'esa-field-error', 'esa-button']}
+  composedOf={['esa-text-field', 'esa-select', 'esa-textarea', 'esa-radio-group', 'esa-error-summary', 'esa-button']}
 >
   <Section id="default" title="Default">
     <p>
-      A project-details section from an environmental review intake. Each control sits in an
-      <code>esa-form-field</code> wrapper, which owns the label, required asterisk, and help text —
-      the controls themselves render chrome-free. Short, related fields (lead agency / county) pair
-      on one row; everything else runs single column. The action row closes the section: primary
-      submit first, ghost cancel beside it.
+      A project-details section from an environmental review intake. <strong>Each control carries
+      its own <code>label</code>, <code>help-text</code> and required state</strong> — that is what
+      wires the name to the input inside its shadow root, and it is the whole field chrome, so no
+      wrapper is involved. Short, related fields (lead agency / county) pair on one row; everything
+      else runs single column. The action row closes the section: primary submit first, ghost
+      cancel beside it.
     </p>
     <div class="pattern-stage">
       <section class="form-section" aria-labelledby="fs-default-title">
@@ -34,26 +33,21 @@ const pathwayOptions = JSON.stringify([
           <p class="form-section__desc">Tell us about the project under review. Fields marked * are required.</p>
         </header>
 
-        <EsaFormField label="Project name" required helpText="As it appears on the notice of preparation.">
-          <esa-text-field placeholder="e.g. Cypress Creek Trail Improvements" required></esa-text-field>
-        </EsaFormField>
+        <esa-text-field label="Project name" required
+          help-text="As it appears on the notice of preparation."
+          placeholder="e.g. Cypress Creek Trail Improvements"></esa-text-field>
 
         <div class="field-pair">
-          <EsaFormField label="Lead agency" required>
-            <esa-text-field placeholder="e.g. City of San Rafael" required></esa-text-field>
-          </EsaFormField>
-          <EsaFormField label="County" required>
-            <esa-select class="fs-county" placeholder="Select a county" required></esa-select>
-          </EsaFormField>
+          <esa-text-field label="Lead agency" required
+            placeholder="e.g. City of San Rafael"></esa-text-field>
+          <esa-select label="County" class="fs-county" placeholder="Select a county" required></esa-select>
         </div>
 
-        <EsaFormField label="Project description" required helpText="Summarize the location, scope, and anticipated construction activity.">
-          <esa-textarea rows="4" placeholder="The project would construct…" required></esa-textarea>
-        </EsaFormField>
+        <esa-textarea label="Project description" required rows="4"
+          help-text="Summarize the location, scope, and anticipated construction activity."
+          placeholder="The project would construct…"></esa-textarea>
 
-        <EsaFormField label="Review pathway" required>
-          <esa-radio-group options={pathwayOptions}></esa-radio-group>
-        </EsaFormField>
+        <esa-radio-group label="Review pathway" required options={pathwayOptions}></esa-radio-group>
 
         <div class="form-section__actions">
           <EsaButton type="submit">Save and continue</EsaButton>
@@ -66,11 +60,21 @@ const pathwayOptions = JSON.stringify([
   <Section id="validation" title="Validation state">
     <p>
       The same section after a failed submit: the name is missing and no pathway is selected.
-      Errors attach at the lowest level that can render them. Self-chromed controls
-      (<code>esa-text-field</code>, <code>esa-select</code>, <code>esa-textarea</code>) take
-      <code>error-text</code> — one attribute turns the border red, sets <code>aria-invalid</code>,
-      and renders the message in place of help text. Option groups have no error prop, so an
-      <code>esa-field-error</code> line goes directly after the control, inside the same wrapper.
+      <strong>Two things happen, and both are needed.</strong>
+    </p>
+    <p>
+      An <code>esa-error-summary</code> goes above the form and <em>takes focus</em>. Without it,
+      pressing Submit appears to do nothing: focus is on the button at the bottom, the errors are
+      added off-screen above, and a screen reader — which is on one element at a time — is told
+      nothing at all. It is also what a page-zoom user, seeing only the region around the button,
+      gets instead of silence.
+    </p>
+    <p>
+      Then every invalid control takes <code>error-text</code>. One attribute reddens the border,
+      sets <code>aria-invalid</code>, points <code>aria-describedby</code> at the message, and
+      renders it with an icon and a visually-hidden "Error:" so the line is not distinguished from
+      a help line by colour alone. Option groups take it too now. Word the summary and the inline
+      message the same.
     </p>
     <div class="pattern-stage">
       <section class="form-section" aria-labelledby="fs-invalid-title">
@@ -79,27 +83,24 @@ const pathwayOptions = JSON.stringify([
           <p class="form-section__desc">Tell us about the project under review. Fields marked * are required.</p>
         </header>
 
-        <EsaFormField label="Project name" required>
-          <esa-text-field placeholder="e.g. Cypress Creek Trail Improvements" error-text="Project name is required." required></esa-text-field>
-        </EsaFormField>
+        <esa-error-summary id="fs-summary"></esa-error-summary>
+
+        <esa-text-field id="fs-name" label="Project name" required
+          placeholder="e.g. Cypress Creek Trail Improvements"
+          error-text="Enter a project name."></esa-text-field>
 
         <div class="field-pair">
-          <EsaFormField label="Lead agency" required>
-            <esa-text-field value="City of San Rafael" required></esa-text-field>
-          </EsaFormField>
-          <EsaFormField label="County" required>
-            <esa-select id="fs-county-filled" class="fs-county" placeholder="Select a county" required></esa-select>
-          </EsaFormField>
+          <esa-text-field label="Lead agency" required value="City of San Rafael"></esa-text-field>
+          <esa-select label="County" id="fs-county-filled" class="fs-county"
+            placeholder="Select a county" required></esa-select>
         </div>
 
-        <EsaFormField label="Project description" required helpText="Summarize the location, scope, and anticipated construction activity.">
-          <esa-textarea rows="4" value="A 0.8-mile multi-use path along Cypress Creek between Lindaro Street and Andersen Drive, with two prefabricated pedestrian bridges and native riparian planting." required></esa-textarea>
-        </EsaFormField>
+        <esa-textarea label="Project description" required rows="4"
+          help-text="Summarize the location, scope, and anticipated construction activity."
+          value="A 0.8-mile multi-use path along Cypress Creek between Lindaro Street and Andersen Drive, with two prefabricated pedestrian bridges and native riparian planting."></esa-textarea>
 
-        <EsaFormField label="Review pathway" required>
-          <esa-radio-group options={pathwayOptions}></esa-radio-group>
-          <EsaFieldError message="Select a review pathway." icon />
-        </EsaFormField>
+        <esa-radio-group id="fs-pathway" label="Review pathway" required options={pathwayOptions}
+          error-text="Select a review pathway."></esa-radio-group>
 
         <div class="form-section__actions">
           <EsaButton type="submit">Save and continue</EsaButton>
@@ -112,15 +113,36 @@ const pathwayOptions = JSON.stringify([
   <Section id="composition-notes" title="Composition notes">
     <ul class="notes">
       <li>
-        Every control gets an <code>esa-form-field</code> wrapper, and the wrapper owns the field
-        chrome — label, required asterisk, help text. Leave the control's own <code>label</code> /
-        <code>help-text</code> attributes unset so the field isn't labeled twice.
+        <strong>Self-chromed controls label themselves.</strong> <code>esa-text-field</code>,
+        <code>esa-textarea</code> and the other Lit controls render into shadow DOM, so a
+        <code>&lt;label&gt;</code> outside them can never be associated with the input inside —
+        <code>esa-form-field</code>'s <code>label</code> is a visual caption only, and a control
+        wrapped in it with its own <code>label</code> unset has <em>no accessible name</em>.
+        Set the control's own <code>label</code> / <code>help-text</code> and leave the wrapper's
+        unset. Reach for <code>esa-form-field</code>'s label only around a native
+        <code>&lt;input&gt;</code> you can wire a <code>for</code>/<code>id</code> pair to yourself,
+        or around a group that has no label of its own.
       </li>
       <li>
-        Error messages live in components, never ad-hoc styled spans: <code>error-text</code> on
-        controls with built-in chrome, an <code>esa-field-error</code> directly after controls
-        without one (radio and checkbox groups). The error replaces the field's help text — don't
-        stack both.
+        <strong>A failed submit needs an <code>esa-error-summary</code>, not just red fields.</strong>
+        Focus is on the Submit button when the form fails; the errors appear above it, off-screen,
+        and nothing announces them. The summary is the thing that takes focus and says how many
+        problems there are and where each one is. Set its <code>errors</code> and call
+        <code>focus()</code> in the same handler that sets each field's <code>error-text</code>,
+        and word the two the same.
+      </li>
+      <li>
+        Error messages live in components, never ad-hoc styled spans. Every control that collects
+        a value now takes <code>error-text</code> — including <code>esa-radio-group</code> and
+        <code>esa-checkbox-group</code>, which previously had no error channel at all.
+        <code>esa-field-error</code> is the escape hatch for a server-rendered message that is
+        already on the page at load.
+      </li>
+      <li>
+        The error no longer <em>replaces</em> help text — both render, and
+        <code>aria-describedby</code> announces the error first, then the hint. A format
+        requirement is most needed at the moment the format was got wrong, and the old
+        either/or deleted it exactly then.
       </li>
       <li>
         The action row belongs to the section, not to any field: primary action first, ghost cancel
@@ -195,6 +217,7 @@ const pathwayOptions = JSON.stringify([
   import '@esa/ecology/esa-textarea';
   import '@esa/ecology/esa-select';
   import '@esa/ecology/esa-radio-group';
+  import '@esa/ecology/esa-error-summary';
 
   const counties = [
     'Alameda', 'Contra Costa', 'Marin', 'Napa', 'Sacramento',
@@ -209,5 +232,19 @@ const pathwayOptions = JSON.stringify([
     // The validation specimen shows a partially completed section.
     const filled = document.getElementById('fs-county-filled');
     if (filled) (filled as any).value = 'marin';
+  });
+
+  // The validation specimen's summary. Errors are set so the specimen SHOWS the
+  // post-submit state; focus() is deliberately NOT called — a doc page that grabs focus
+  // on load is a worse bug than the one the summary fixes. In a real form the same
+  // handler that sets these calls focus() as its last step.
+  customElements.whenDefined('esa-error-summary').then(() => {
+    const summary = document.getElementById('fs-summary') as any;
+    if (summary) {
+      summary.errors = [
+        { field: 'fs-name', message: 'Enter a project name.' },
+        { field: 'fs-pathway', message: 'Select a review pathway.' },
+      ];
+    }
   });
 </script>
