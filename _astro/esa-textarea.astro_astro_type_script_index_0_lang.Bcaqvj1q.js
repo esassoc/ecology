@@ -1,1 +1,0 @@
-import"./esa-textarea.NZXISw1f.js";import"./lit-element.D8DSg5zn.js";import"./typography.KBHeYOQc.js";import"./a11y.sqk3bMt7.js";const t=document.getElementById("ta-form");t?.addEventListener("submit",e=>{e.preventDefault();const n=new FormData(t);document.getElementById("ta-out").textContent="notes = "+JSON.stringify(n.get("notes"))});
