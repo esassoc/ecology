@@ -254,7 +254,7 @@ export class EsaChart extends LitElement {
     this.themeObserver = new MutationObserver(() => this.rerender());
     this.themeObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme', 'data-scheme', 'data-assurance'],
+      attributeFilter: ['data-theme', 'data-scheme', 'data-a11y-assurance'],
     });
 
     // The library never asks for either of these, so we ask and re-ask: a preference

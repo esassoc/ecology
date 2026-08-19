@@ -33,7 +33,6 @@ export const patterns: NavGroup = {
   label: 'Patterns',
   items: [
     { label: 'Overview', href: '/patterns' },
-    { label: 'App shell', href: '/patterns/app-shell' },
     { label: 'List + filters', href: '/patterns/list-filters' },
     { label: 'Record detail', href: '/patterns/record-detail' },
     { label: 'Form section', href: '/patterns/form-section' },

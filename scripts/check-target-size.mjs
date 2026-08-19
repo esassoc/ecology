@@ -215,7 +215,7 @@ async function main() {
     // Set the attribute BEFORE waiting for layout, so the measured geometry is the
     // profile's. Setting it after would measure the default and report a pass the
     // profile did not earn.
-    if (assurance) await page.evaluate((a) => document.documentElement.setAttribute('data-assurance', a), assurance);
+    if (assurance) await page.evaluate((a) => document.documentElement.setAttribute('data-a11y-assurance', a), assurance);
     const up = await page.evaluate(AWAIT_UPGRADE);
     if (up.notUpgraded.length) {
       deadPages++;

@@ -155,7 +155,10 @@ for (const p of opts['no-recipe'] ? [cssPath] : [cssPath, jsonPath]) {
 writeFileSync(cssPath, css);
 console.log(
   `wrote ${path.relative(process.cwd(), cssPath)} — ` +
-    `${derived.light.size} light + ${derived.dark.size} dark declarations`,
+    `${derived.light.size} light + ${derived.dark.size} dark declarations` +
+    (derived.assurance.light.size
+      ? ` + ${derived.assurance.light.size} under [data-a11y-assurance="wcag-aa"]`
+      : ''),
 );
 
 if (!opts['no-recipe']) {
@@ -173,11 +176,24 @@ if (!opts['no-recipe']) {
   console.log(`wrote ${path.relative(process.cwd(), jsonPath)} — the recipe; regenerate with --recipe`);
 }
 
+const CONTRAST = path.relative(process.cwd(), path.join(import.meta.dirname, 'check-contrast.mjs'));
 console.log(
   `\nbrand ${derived.meta.seeds.brand} sits exactly on step 9 (curve: Radix ${derived.meta.brandScale}).\n` +
-    `verify:  node ${path.relative(process.cwd(), path.join(import.meta.dirname, 'check-contrast.mjs'))} ` +
-    `${path.relative(process.cwd(), cssPath)}\n` +
+    `verify:  node ${CONTRAST} ${path.relative(process.cwd(), cssPath)}\n` +
     `         (add --scheme dark for the dark block)`,
 );
+
+// The accessible option is worth nothing if nobody knows it was written. Say what it is,
+// what turns it on, and how to grade it — the last one because no npm script covers a
+// generated theme file, in either scheme, with or without the profile.
+if (derived.assurance.light.size) {
+  console.log(
+    `\naccessible option: ${derived.assurance.light.size} declaration(s) under ` +
+      `[data-a11y-assurance="wcag-aa"], inert until you opt in:\n` +
+      `         <html data-theme="${derived.meta.slug}" data-a11y-assurance="wcag-aa">\n` +
+      `verify:  node ${CONTRAST} ${path.relative(process.cwd(), cssPath)} --assurance wcag-aa\n` +
+      `         (add --scheme dark for the dark block)`,
+  );
+}
 
 process.exit(byLevel('fail').length ? 1 : 0);

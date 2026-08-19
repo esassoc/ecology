@@ -8,10 +8,17 @@ because of two facts about how the enforcement travels.
 
 1. **The legos' built-in a11y doesn't come along in a hand-port.** When you
    *use* `esa-dialog`, you inherit its focus trap, its Esc handling, its
-   `role="dialog"` + `aria-modal`, its focus-return-on-close — all tested. When
-   you **re-implement** that dialog as a `<div>` in another framework because
-   "we can't use the web component here," you inherit *none* of it. The visual
-   copy looks identical and is a fraction as accessible.
+   `role="dialog"` + `aria-modal`, and its focus-return-on-close. When you
+   **re-implement** that dialog as a `<div>` in another framework because "we
+   can't use the web component here," you inherit *none* of it. The visual copy
+   looks identical and is a fraction as accessible.
+
+   Two corrections to how that used to be stated. It said "all tested" — there
+   is **no component test harness in this repo**; `npm test` is static-source
+   ratchets, and a browser check for overlay focus behaviour only arrived in
+   2026-08. And it generalised from `esa-dialog` to the kit: audited 2026-08-18,
+   that full choreography held in three of seventeen overlays. **Inherit the
+   named component's behaviour, not the category's.**
 
 2. **The hooks only fire where spoke-kit is installed.** `check-a11y` is a
    PreToolUse gate that ships *with the plugin*. A non-Astro clone that never
@@ -44,6 +51,10 @@ screen and every re-implemented component:
       where the role implies them — tabs, radios, menus, sliders).
 - [ ] Every overlay (dialog, drawer, menu) is escapable: Esc closes it, focus
       returns to the trigger, and Tab does not leak to the page behind it.
+- [ ] Every **modal** overlay makes the page behind it `inert` — not merely
+      covered by a backdrop. A backdrop stops the mouse; it does nothing for the
+      keyboard, a screen reader's virtual cursor, or find-in-page. `aria-modal`
+      without `inert` announces a modality that is not enforced.
 - [ ] No keyboard trap — you can always Tab/Esc your way back out.
 
 ### Focus visibility

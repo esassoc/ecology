@@ -7,7 +7,7 @@
  *
  * The obvious implementation was tried first and withdrawn: a `--target-size-min`
  * token that components read as a `min-block-size`, 0 by default and 24px under
- * `[data-assurance]`. It worked — 33 measured component failures went to 0 — and it
+ * `[data-a11y-assurance]`. It worked — 33 measured component failures went to 0 — and it
  * was still wrong, for a reason that is about design rather than code.
  *
  * A floor SILENTLY FLATTENS THE BOTTOM OF THE RAMP. Under the profile, `xs` and `sm`

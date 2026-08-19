@@ -1,4 +1,5 @@
-import { LitElement, html, css } from 'lit';
+// `nothing` (not undefined) is what REMOVES an attribute — see esa-dialog's import.
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { boolish } from '../boolish.js';
 
@@ -25,6 +26,7 @@ export class EsaPopover extends LitElement {
     offset: { type: Number },
     open: { type: Boolean, reflect: true },
     appearance: { type: String, reflect: true },
+    label: { type: String },
   };
 
   declare position: PopoverPosition;
@@ -32,6 +34,16 @@ export class EsaPopover extends LitElement {
   declare hasArrow: boolean;
   declare offset: number;
   declare open: boolean;
+  /**
+   * Accessible name for the popover. When set, the panel is exposed as a `dialog`;
+   * when not, it carries NO role and is announced as the plain content it is.
+   *
+   * It used to be an unconditional `role="dialog"` with no name at all, which is
+   * worse than no role: a screen reader announces "dialog" and then has nothing to
+   * say about it, and the role promises focus management this non-modal popover
+   * does not implement. A role you cannot name is a role you should not claim.
+   */
+  declare label: string;
   /** Aligned to Beacon's PopoverAppearance: light surface vs dark inverse. */
   declare appearance: 'default' | 'inverse';
 
@@ -45,6 +57,7 @@ export class EsaPopover extends LitElement {
     this.offset = 8;
     this.open = false;
     this.appearance = 'default';
+    this.label = '';
   }
 
   disconnectedCallback(): void {
@@ -59,13 +72,65 @@ export class EsaPopover extends LitElement {
     if (this.trigger === 'click') {
       document.addEventListener('click', this.onDocumentClick, true);
     }
+    // SC 1.4.13 requires hoverable/persistent content to be dismissible without
+    // moving the pointer. The old Escape handler sat on the anchor wrapper, so it
+    // only fired if focus happened to be in there — which for trigger="hover" it
+    // never was. A document-level listener is the only thing that covers both.
+    document.addEventListener('keydown', this.onDocumentKeydown, true);
   }
 
   private hide(): void {
     if (!this.open) return;
     this.open = false;
     document.removeEventListener('click', this.onDocumentClick, true);
+    document.removeEventListener('keydown', this.onDocumentKeydown, true);
+    // Focus return, but ONLY if focus is currently inside — this is a non-modal
+    // popover, so yanking focus back from wherever the user has since moved to
+    // would be the bug, not the fix.
+    const active = (this.renderRoot as ShadowRoot).activeElement;
+    if (active) this.triggerEl?.focus?.();
   }
+
+  /**
+   * The slotted trigger — this component renders only a wrapper around <slot>.
+   * Resolves THROUGH a wrapper to the control that actually takes focus: esa-button
+   * renders <span class="esa-button"><button class="esa-button__native">, and
+   * putting aria-expanded on the span would announce from an element no screen
+   * reader reads it from.
+   */
+  private get triggerEl(): HTMLElement | null {
+    const slot = (this.renderRoot as ShadowRoot).querySelector('slot:not([name])');
+    const assigned = slot?.assignedElements({ flatten: true }) ?? [];
+    const outer = assigned.find((el) => el instanceof HTMLElement) as HTMLElement | undefined;
+    if (!outer) return null;
+    const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    if (outer.matches(FOCUSABLE)) return outer;
+    return outer.querySelector<HTMLElement>(FOCUSABLE) ?? outer;
+  }
+
+  /**
+   * The trigger had no popup semantics: no aria-expanded, no aria-controls, no
+   * aria-haspopup. Open and closed sounded identical. Applied to the slotted node
+   * on every update, since `open` is part of what is being announced.
+   */
+  private syncTrigger(): void {
+    const el = this.triggerEl;
+    if (!el) return;
+    el.setAttribute('aria-expanded', String(this.open));
+    el.setAttribute('aria-controls', 'popover');
+    if (this.label) el.setAttribute('aria-haspopup', 'dialog');
+  }
+
+  updated(): void {
+    this.syncTrigger();
+  }
+
+  private onDocumentKeydown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape' && this.open) {
+      event.preventDefault();
+      this.hide();
+    }
+  };
 
   private onTriggerClick = (): void => {
     if (this.trigger !== 'click') return;
@@ -79,12 +144,42 @@ export class EsaPopover extends LitElement {
 
   private onMouseLeave = (): void => {
     if (this.trigger !== 'hover') return;
+    this.cancelPending();
+    this.hide();
+  };
+
+  /**
+   * KEYBOARD PARITY FOR trigger="hover" — SC 2.1.1 (Level A), which this failed
+   * outright until 2026-08-18: the hover mode wired mouseenter/mouseleave and
+   * nothing else, so the content was unreachable without a pointer. focusin/
+   * focusout are the keyboard's mouseenter/mouseleave, and they fire for the
+   * panel's own contents too (they bubble), which is what keeps the popover open
+   * while you Tab through a link inside it.
+   *
+   * No 200ms delay on the focus path: the delay exists to stop a pointer sweeping
+   * across a trigger from flashing it open, and focus does not sweep.
+   */
+  private onFocusIn = (): void => {
+    if (this.trigger !== 'hover') return;
+    this.cancelPending();
+    this.show();
+  };
+
+  private onFocusOut = (event: FocusEvent): void => {
+    if (this.trigger !== 'hover') return;
+    // Ignore focus moving BETWEEN the trigger and the panel content.
+    const next = event.relatedTarget as Node | null;
+    if (next && this.contains(next)) return;
+    this.cancelPending();
+    this.hide();
+  };
+
+  private cancelPending(): void {
     if (this.showTimeout) {
       clearTimeout(this.showTimeout);
       this.showTimeout = null;
     }
-    this.hide();
-  };
+  }
 
   private onDocumentClick = (event: MouseEvent): void => {
     if (!this.contains(event.target as Node) && event.target !== this) {
@@ -92,12 +187,9 @@ export class EsaPopover extends LitElement {
     }
   };
 
-  private onKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' && this.open) {
-      event.preventDefault();
-      this.hide();
-    }
-  };
+  // The anchor-scoped Escape handler that used to live here is now
+  // onDocumentKeydown, bound only while open — see show(). It only ever fired when
+  // focus was inside the anchor, which for trigger="hover" was never.
 
   render() {
     return html`
@@ -106,14 +198,17 @@ export class EsaPopover extends LitElement {
         @click=${this.onTriggerClick}
         @mouseenter=${this.onMouseEnter}
         @mouseleave=${this.onMouseLeave}
-        @keydown=${this.onKeydown}
+        @focusin=${this.onFocusIn}
+        @focusout=${this.onFocusOut}
       >
         <slot></slot>
         ${this.open
           ? html`
               <div
                 class="esa-popover esa-popover--${this.position}"
-                role="dialog"
+                id="popover"
+                role=${this.label ? 'dialog' : nothing}
+                aria-label=${this.label || nothing}
                 style="--_offset: ${this.offset}px"
               >
                 ${this.hasArrow

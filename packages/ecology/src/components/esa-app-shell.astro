@@ -4,14 +4,19 @@
 // The house chrome: NEUTRAL off-white surfaces layered by value (canvas < bar <
 // rail), a FULL-HEIGHT sidenav carrying the logo and its own collapse toggle, a
 // compact CENTERED omnibox, and a profile dropdown. A composition of
-// esa-app-bar + esa-sidebar-nav + esa-search-panel + esa-dropdown-menu — it owns
+// esa-app-bar + esa-sidebar-nav + esa-entity-search + esa-dropdown-menu — it owns
 // no new visual primitives.
 //
 // HOUSE DECISIONS baked in: brand color never fills the chrome (only the active
 // nav item + primary actions); the wordmark lives in the SIDENAV (not the top
 // bar); the SIDENAV RUNS THE FULL HEIGHT and the collapse toggle belongs to it.
-// `accent` (off by default) adds a faint brand-TINTED neutral wash to the bar
-// (a color-mix, not a fill).
+// `accent` (off by default) WAS a faint brand-TINTED neutral wash on the bar (a
+// color-mix, not a fill). IT HAS DONE NOTHING SINCE 2026-08-16: its whole
+// implementation was one `--app-bar-bg` declaration, and that hook was deleted by
+// the tier-3 demotion pass, so the prop has been adding a class that styles
+// nothing. The dead declaration was removed on 2026-08-18 rather than left to look
+// deliberate. The prop is kept — it names a real intent — but it needs a REAL
+// implementation (an esa-app-bar tone) before it does anything again.
 //
 // THE TOGGLE USED TO BE A BUTTON IN THE TOP-LEFT OF THE BAR, and this component
 // re-implemented one — 20 lines of markup, CSS and wiring — while setting
@@ -82,6 +87,7 @@ interface Props {
   /** Raw inline SVG (full <svg>…</svg>) for the sidenav logo mark. */
   mark?: string;
   brandHref?: string;
+  /** Currently INERT — see the note at the top of this file. */
   accent?: boolean;
   collapsed?: boolean;
   /** Stable id base — required when more than one shell is on a page. */
@@ -199,6 +205,40 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     // rail's own toggle is now the only one — this used to read
     // `nav.collapsible = false` to make room for a button in the top bar.
     if (nav) nav.items = cfg.nav;
+
+    // ---- MOBILE DRAWER (Practical Accessibility ch. 13) ----
+    //
+    // The rail is 280px at every width. Below this breakpoint that was 280 of a
+    // 375px viewport, and `.esa-app-shell { overflow: hidden }` clipped the rest
+    // rather than reflowing — so the shell had no mobile navigation mode at all.
+    //
+    // The SHELL owns the switch, not the rail, because the two halves have to
+    // agree: the layout half is a media query, but the behaviour half (inerting
+    // the page, moving focus, Escape) is script, and a CSS-only breakpoint would
+    // leave the rail overlaying a fully interactive page.
+    const frame = document.querySelector(`[data-shell="${uid}"] .esa-app-shell__frame`);
+    if (nav && frame) {
+      const mq = window.matchMedia('(max-width: 720px)');
+      const applyMode = () => {
+        nav.drawer = mq.matches;
+        if (!mq.matches) {
+          nav.drawerOpen = false;
+          frame.removeAttribute('inert');
+        }
+      };
+      applyMode();
+      mq.addEventListener('change', applyMode);
+
+      // Chapter 13: while the drawer is shown, the page's content must be INERT.
+      // A Tab trap would not be enough — a screen reader user browsing with a
+      // virtual cursor can arrow into content the drawer is covering. The rail
+      // cannot do this to its own siblings, so it asks and the shell acts.
+      nav.addEventListener('drawerchange', (ev) => {
+        const isOpen = (ev as CustomEvent<{ open: boolean }>).detail?.open;
+        if (isOpen) frame.setAttribute('inert', '');
+        else frame.removeAttribute('inert');
+      });
+    }
     if (menu) menu.items = cfg.menu;
 
     if (panel) {
@@ -217,16 +257,27 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 </script>
 
 <style>
-  /* Neutral chrome via SEMANTIC tokens (a spoke re-points these to its off-whites). */
-  .esa-app-shell {
-    --app-bar-bg: var(--color-background-elevation-sunken, #f0f0f0);
-    --app-bar-text: var(--color-content-default, #202020);
-    --app-bar-pad-y: var(--spacing-200, 8px);
-    --app-bar-pad-x: var(--spacing-400, 16px);
-    --app-bar-gap: var(--spacing-300, 12px);
-    --sidenav-bg: var(--color-background-default, #fcfcfc);
-    --sidenav-border-color: var(--color-border-default, #cecece);
+  /* SEVEN INERT DECLARATIONS WERE REMOVED FROM HERE ON 2026-08-18 —
+     --app-bar-{bg,text,pad-y,pad-x,gap} and --sidenav-{bg,border-color}. They had
+     stopped doing anything on 2026-08-16, when the tier-3 demotion pass deleted
+     those hooks (migrations.json: app-bar-hooks-removed, sidenav-hooks-removed)
+     and pointed esa-app-bar and esa-sidebar-nav straight at the tier-2 roles the
+     hooks had been aliasing.
 
+     A codemod cannot clean this up, and that is the general lesson rather than a
+     detail of this file: an alias rescues `var(--old)` and can NEVER rescue
+     `--old: value`. Reads got rewritten; declarations like these were left behind,
+     still valid CSS, still looking deliberate, resolving to nothing. Two spokes are
+     carrying the same residue (cb-fish 23, air-exchange 24).
+
+     WHAT WENT WITH THEM. These were not decoration — they carried three intents
+     that are simply not expressed anywhere now, and have not been since 2026-08-16:
+     a SUNKEN bar (this shell rendered #f0f0f0, it now renders #fcfcfc), a COMPACT
+     bar (12px gap / 16px+8px padding, now 32px / 32px+16px), and a white rail.
+     Restoring any of them is a component-API change — a tone value, a density step
+     — NOT a re-added hook: "both bars want to be compact" is a variant, not a
+     per-instance theming knob. See SPEC.md's divergence test. */
+  .esa-app-shell {
     /* A ROW, not a column: the rail is the first child and stretches to the
        shell's full height, and the bar spans only the content beside it. When
        the bar owned the top edge this was `column` with a nested `__body` row. */
@@ -236,9 +287,6 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     min-height: 0;
     overflow: hidden;
     background: var(--color-background-default, #fcfcfc);
-  }
-  .esa-app-shell--accent {
-    --app-bar-bg: color-mix(in srgb, var(--color-background-brand, #46a758) 5%, var(--color-background-elevation-sunken, #f0f0f0));
   }
 
   .esa-app-shell__bar { flex: none; border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-strong, #bbbbbb); }
@@ -317,5 +365,15 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   @media (max-width: 720px) {
     .esa-app-shell__search-label, .esa-app-shell__search-kbd { display: none; }
     .esa-app-shell__search { flex: none; width: 34px; padding: 0; justify-content: center; }
+
+    /* DRAWER WIDTHS. The rail stops being a column and becomes an overlay, so the
+       shell stacks: the nav (now just its toggle) above the frame. `overflow` has
+       to go from `hidden` to `visible` on this axis or the fixed-position drawer
+       inside the rail's shadow root is clipped by the shell box. */
+    .esa-app-shell {
+      flex-direction: column;
+      overflow: visible;
+    }
+    .esa-app-shell__nav { flex: none; }
   }
 </style>

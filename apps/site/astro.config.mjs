@@ -80,6 +80,18 @@ const base = process.env.NODE_ENV === 'production' ? '/ecology/' : '/';
 export default defineConfig({
   site: 'https://esassoc.github.io',
   base,
+  /*
+   * /patterns/app-shell was a pattern page that predated esa-app-shell and hand-rolled
+   * the same chrome from esa-app-bar + a script-wired esa-sidebar-nav. Once the shell
+   * shipped as one component the page's premise was gone — PatternDoc documents shapes
+   * the kit does NOT ship as a component — so it was retired and this keeps the URL alive.
+   *
+   * The KEY is base-less (Astro applies `base` when it places the generated file), but
+   * the DESTINATION is not — Astro copies it into the meta-refresh verbatim, so a bare
+   * '/components/…' 404s on the GitHub Pages subpath. Measured: it emitted
+   * `content="0;url=/components/esa-app-shell"` under base '/ecology/'. Hence the interpolation.
+   */
+  redirects: { '/patterns/app-shell': `${base}components/esa-app-shell` },
   vite: {
     plugins: [watchTokenSources()],
     resolve: {

@@ -24,6 +24,7 @@ import {
   belowFirstStep,
   nearestChromaticScale,
   neutralRamp,
+  radixScaleMatch,
   rampFrom,
   step,
 } from './ramp.mjs';
@@ -41,11 +42,23 @@ export { NEUTRAL_SCALES, NEUTRAL_TEMPERATURES };
  * --radius-pill is not emitted at all: every corner language wants it fully round, so
  * a generated `--radius-pill: var(--radius-full)` would be a dead alias over the value
  * it already has. A squared-off brand pins it.
+ *
+ * `chip` IS THE ONE RUNG THAT DOES NOT TRACK THE SCALE, and that is why it exists.
+ * It follows `sm` exactly under flat and soft — so those themes are byte-identical to
+ * before it was added — and under `round` it becomes the capsule, which is a decision
+ * no step on the xs/sm/md/lg ramp can express. Read by esa-pill, esa-badge and
+ * esa-chip-group; see the $description on radius.chip for why it is a role rather than
+ * three component hooks.
+ *
+ * Round points at `--radius-pill`, the tier-2 SHAPE role, rather than the `--radius-full`
+ * primitive the other rungs use. Deliberate: radius.json says a squared-off brand may
+ * re-point `--radius-pill`, and when it does the chips must square off with the filter
+ * pills and avatars rather than staying capsules on their own.
  */
 export const CORNERS = {
-  flat: { xs: '0', sm: 'var(--radius-050)', md: 'var(--radius-100)', lg: 'var(--radius-200)' },
-  soft: { xs: 'var(--radius-050)', sm: 'var(--radius-100)', md: 'var(--radius-200)', lg: 'var(--radius-400)' },
-  round: { xs: 'var(--radius-100)', sm: 'var(--radius-200)', md: 'var(--radius-400)', lg: 'var(--radius-500)' },
+  flat: { xs: '0', sm: 'var(--radius-050)', md: 'var(--radius-100)', lg: 'var(--radius-200)', chip: 'var(--radius-050)' },
+  soft: { xs: 'var(--radius-050)', sm: 'var(--radius-100)', md: 'var(--radius-200)', lg: 'var(--radius-400)', chip: 'var(--radius-100)' },
+  round: { xs: 'var(--radius-100)', sm: 'var(--radius-200)', md: 'var(--radius-400)', lg: 'var(--radius-500)', chip: 'var(--radius-pill)' },
 };
 
 /**
@@ -170,7 +183,7 @@ export function validateRecipe(recipe) {
  * produced a foreground chosen against a different blue, and it passed by luck. A pinned
  * fill is therefore treated exactly like the brand's: authoritative, and not movable.
  */
-function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, movable, pinnedFill = null }) {
+function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, maxStep = 11, movable, pinnedFill = null }) {
   const candidatesFor = (fillHex) =>
     [
       ['neutral step 1', step(neutral, 1)],
@@ -183,7 +196,9 @@ function resolveFillAndForeground({ role, ramp, neutral, fillStep = 9, movable, 
   }
 
   const attempts = [];
-  const lastStep = movable ? 11 : fillStep;
+  // maxStep exists for the assurance pass, which starts the walk AT 11 and therefore
+  // needs room to reach 12. Base callers pass neither and keep the historical 9→11 walk.
+  const lastStep = movable ? Math.max(fillStep, maxStep) : fillStep;
   for (let s = fillStep; s <= lastStep; s++) {
     const fillHex = pinnedFill ?? step(ramp, s);
     const best = candidatesFor(fillHex).sort((a, b) => b.ratio - a.ratio)[0];
@@ -318,6 +333,9 @@ export function deriveTheme(input) {
   const { seeds, scope } = recipe;
   const warnings = [];
   const out = {};
+  // The assurance variant, derived in the same pass so it measures against the same
+  // ramps and the same surfaces. See section (9.5).
+  const assur = { light: new Map(), dark: new Map() };
   const ramps = {};
 
   const seedFor = (key) => (seeds[key] === 'derive' ? DEFAULT_INTENTION_SEEDS[key] : seeds[key]);
@@ -387,7 +405,26 @@ export function deriveTheme(input) {
     // OKLCH factor, a rung that exists in no Radix scale, so there is nothing to point at.
     if (scheme === 'dark') t.set(`--${scope}-neutral-0`, belowFirstStep(neutral));
     for (let i = 1; i <= 12; i++) t.set(`--${scope}-neutral-${i}`, `var(--color-${nPrimitive}-${i})`);
-    for (let i = 1; i <= 12; i++) t.set(`--${scope}-brand-${i}`, step(brand, i));
+    // THE BRAND RAMP POINTS AT TIER 1 ONLY WHEN IT IS LITERALLY A RADIX SCALE.
+    //
+    // Unlike the neutral, a brand ramp usually IS bespoke: `rampFrom` puts an arbitrary
+    // client hex on step 9 and interpolates the other eleven, and no Radix scale matches
+    // that. Which is why "a brand ramp is never a primitive" is the general rule.
+    //
+    // The theme maker's swatch grid is the exception it does not cover. Picking "Teal"
+    // seeds with the real teal-9, and the ramp that comes back is byte-identical to the
+    // twelve primitives already shipped under that name — so the theme should say
+    // `var(--color-teal-7)` rather than restating the hex. `radixScaleMatch` is
+    // all-or-nothing per ramp per scheme and checks only the scale the ramp was SHAPED
+    // by; see its docblock for why both of those matter more than they look.
+    //
+    // Null is the normal answer. A bespoke brand, or a hex one bit off a swatch, keeps
+    // its literals — and so does grass/lime/yellow in DARK, where the shipped primitive
+    // disagrees with the curve.
+    const brandPrimitive = radixScaleMatch(brand, nearestChromaticScale(seeds.brand), scheme);
+    for (let i = 1; i <= 12; i++) {
+      t.set(`--${scope}-brand-${i}`, brandPrimitive ? `var(--color-${brandPrimitive}-${i})` : step(brand, i));
+    }
 
     const g = (n) => `var(--${scope}-neutral-${n})`;
     const b = (n) => `var(--${scope}-brand-${n})`;
@@ -532,6 +569,12 @@ export function deriveTheme(input) {
     }
     if (brandFill.warning) warnings.push({ scheme, ...brandFill.warning });
 
+    // Every fill that carries text, recorded as it is resolved so section (9.5) can
+    // re-resolve the same set one step darker without a second list to keep in sync.
+    const textFills = [
+      { fillName: '--color-background-brand', ramp: brand, base: brandFill, emitStep: b, alsoActive: true },
+    ];
+
     // The focus ring. Graded against THIS THEME'S OWN surfaces, not the hub's — a spoke
     // re-points its neutral ramp too, and a ring measured against the wrong ground is this
     // tool's recorded headline bug (see resolveFillAndForeground's note on pinnedFill).
@@ -634,21 +677,33 @@ export function deriveTheme(input) {
     t.set('--color-content-on-brand-muted', asRamp(muted.fg));
 
     // (6) Accent, AI, and the four utilities. Same shape each time.
+    // The 4th element is KNOCKOUT: the fill starts at step 11 and keeps a near-white
+    // foreground, rather than staying light and darkening the text.
+    //
+    // The default walk optimises for the lightest fill that any foreground can sit on,
+    // which for `success` stops at step 9 with neutral-12 — a solid mid-tone fill with
+    // dark text. That reads as a CONTROL, and a control is exactly what a status colour
+    // usually is not: badges/chips/pills take the step-3 `-muted` tint below, and the
+    // solid fill is reserved for buttons. A button wants the knockout treatment.
+    //
+    // `warning` is NOT knockout, and cannot be: yellow is a bright scale, so yellow-9
+    // under dark text is 7.21:1 while yellow-11 under the same text is 2.47:1. It keeps
+    // the walk. `accent` and `ai` keep it too — this pass is scoped to the utilities.
     const intentions = [
-      ['accent', '--color-background-accent', null],
-      ['ai', '--color-background-ai', '--color-background-ai-subtle'],
-      ['info', '--color-background-utility-info', '--color-background-utility-info-subtle'],
-      ['success', '--color-background-utility-success', '--color-background-utility-success-subtle'],
-      ['warning', '--color-background-utility-warning', '--color-background-utility-warning-subtle'],
-      ['danger', '--color-background-utility-danger', '--color-background-utility-danger-subtle'],
+      ['accent', '--color-background-accent', null, false],
+      ['ai', '--color-background-ai', '--color-background-ai-subtle', false],
+      ['info', '--color-background-utility-info', '--color-background-utility-info-subtle', true],
+      ['success', '--color-background-utility-success', '--color-background-utility-success-subtle', true],
+      ['warning', '--color-background-utility-warning', '--color-background-utility-warning-subtle', false],
+      ['danger', '--color-background-utility-danger', '--color-background-utility-danger-subtle', true],
     ];
-    for (const [key, fillName, subtleName] of intentions) {
+    for (const [key, fillName, subtleName, knockout] of intentions) {
       const ramp = R[key];
       const r = resolveFillAndForeground({
         role: fillName,
         ramp,
         neutral,
-        movable: true,
+        ...(knockout ? { fillStep: 11, movable: false } : { movable: true }),
         pinnedFill: pinnedHex(fillName),
       });
       if (r.warning) warnings.push({ scheme, ...r.warning });
@@ -662,6 +717,7 @@ export function deriveTheme(input) {
             `reach AA (${r.ratio.toFixed(2)}:1).`,
         });
       }
+      textFills.push({ fillName, ramp, base: r, emitStep: null, alsoActive: false });
       const onName = fillName.replace('--color-background-', '--color-content-on-');
       t.set(fillName, r.fill);
       t.set(`${fillName}-hover`, step(ramp, Math.min(12, r.fillStep + 1)));
@@ -669,6 +725,9 @@ export function deriveTheme(input) {
       if (subtleName) {
         const tint = pinnedHex(subtleName) ?? step(ramp, 1);
         t.set(subtleName, step(ramp, 1));
+        // The tinted marker surface: step 3, Radix's UI-ELEMENT background step, as
+        // against `-subtle` (step 1, the app/surface step). `ai` has no marker form.
+        if (key !== 'ai') t.set(`${fillName}-muted`, step(ramp, 3));
         // `accent` has no -subtle and no coloured-text role in the token set, so the
         // text/border pair below is scoped to the intentions that do.
         const textName =
@@ -709,6 +768,106 @@ export function deriveTheme(input) {
     // that is the whole point of recording them separately from the seeds.
     for (const [k, v] of Object.entries(recipe.pinned)) t.set(k, v);
     if (scheme === 'dark') for (const [k, v] of Object.entries(recipe.pinnedDark)) t.set(k, v);
+
+    /*
+     * (9.5) THE ASSURANCE VARIANT — the accessible option, generated alongside the theme.
+     *
+     * WHY A THEME HAS TO CARRY ITS OWN. The hub ships one, at
+     * packages/tokens/src/assurance.css, under a bare `[data-a11y-assurance="wcag-aa"]` — and on
+     * a generated spoke it is INERT. It re-points 16 names; a generated theme declares 15 of
+     * them; `[data-theme="x"]` and `[data-a11y-assurance="y"]` are both specificity (0,1,0) and
+     * the theme's stylesheet loads later, so the theme wins every one. Measured on
+     * theme-beacon.css, check-contrast's output is byte-identical with and without
+     * `--assurance wcag-aa`. It could not be otherwise even if it won: the hub's block points
+     * at `var(--color-grass-11)`, its OWN brand, which would be wrong to paint onto a spoke.
+     * A per-theme block is the only form that can say "step 11 of YOUR ramp".
+     *
+     * THE ONE DECISION is the same one assurance.css makes: a solid fill that carries text
+     * uses step 11, not step 9. Hue survives — step 11 is the same colour, darker in light
+     * and lighter in dark, and both directions move away from their own surface.
+     *
+     * IT MOVES ONLY WHAT FAILS, and the obvious alternative is a trap worth naming because it
+     * was written first. "Emit the darker fill whenever it READS BETTER than the base" sounds
+     * like the measured, generator-shaped version of the rule. It is degenerate: contrast is
+     * monotonic toward the ends of a ramp, so a step-12 fill under white text always scores
+     * higher than anything before it, and the test reduces to "always take the darkest step".
+     * Run against beacon it turned `warning` — yellow #ffc53d — into #4f3422, a near-black
+     * brown that clears AA comfortably and is no longer a warning colour at all. Exactly the
+     * outcome assurance.css refuses by hand when it excludes `warning` with "adding it for
+     * consistency would darken a fill that was never broken".
+     *
+     * So the condition is the base theme's own verdict: a fill moves iff no foreground reached
+     * AA on it (`base.warning`), which is the same set the hub moved and no larger. On a
+     * generated theme that is usually just ONE role — the LIGHT brand fill, which is the
+     * client's exact hex and is the one fill the base derivation is forbidden to move. Every
+     * other fill was already walked to a passing step during derivation, so a small block here
+     * is the correct output and not a missing feature: it means the theme was already AA.
+     *
+     * WHAT IT DELIBERATELY DOES NOT DO. No `--focus-scroll-margin`: the hub's 76px is the hub
+     * app-shell's bar height, and guessing a spoke's chrome height into the spoke's own file
+     * is worse than letting the hub's floor apply. No `--color-content-disabled`: WCAG 1.4.3
+     * exempts inactive controls, and raising it makes disabled read as enabled. And it is
+     * still only a token scope — it cannot fix a keyboard trap, a focus return, or forced
+     * colors. See "WHAT THIS PROFILE CANNOT DO" at the bottom of assurance.css.
+     */
+    const assured = assur[scheme];
+    const setAssured = (name, value) => {
+      // A pin is a human decision; a profile does not get to overrule it. And a value equal
+      // to the base one is not an override, it is noise — the block says what CHANGES.
+      if (pins[name] === undefined && t.get(name) !== value) assured.set(name, value);
+    };
+
+    for (const { fillName, ramp: fillRamp, base, emitStep, alsoActive } of textFills) {
+      if (pins[fillName] !== undefined) continue;
+      const a = resolveFillAndForeground({
+        role: fillName,
+        ramp: fillRamp,
+        neutral,
+        fillStep: 11,
+        maxStep: 12,
+        movable: true,
+      });
+      // `base.warning` is set exactly when no foreground reached AA on the base fill.
+      if (!base.warning || !(a.ratio > base.ratio)) continue;
+      const hoverStep = Math.min(12, a.fillStep + 1);
+      const emit = (n) => (emitStep ? emitStep(n) : step(fillRamp, n));
+      setAssured(fillName, emitStep ? emitStep(a.fillStep) : a.fill);
+      setAssured(`${fillName}-hover`, emit(hoverStep));
+      if (alsoActive) setAssured(`${fillName}-active`, emit(hoverStep));
+      setAssured(fillName.replace('--color-background-', '--color-content-on-'), asRamp(a.fg));
+
+      // The strongest argument for the profile existing, so it is reported rather than left
+      // to be discovered: the LIGHT brand fill is the client's exact hex and is never moved
+      // automatically, so a mid-tone brand that no foreground reads on is a `fail` the base
+      // theme has to live with. The profile is precisely the place that constraint is lifted.
+      if (base.warning && a.ratio >= AA_TEXT) {
+        warnings.push({
+          level: 'info',
+          scheme,
+          role: fillName,
+          message:
+            `no foreground reaches ${AA_TEXT}:1 on this fill (best ${base.ratio.toFixed(2)}:1), ` +
+            `but step ${a.fillStep} of the same ramp reaches ${a.ratio.toFixed(2)}:1 — so the ` +
+            'generated [data-a11y-assurance="wcag-aa"] block resolves it. Set the attribute to get ' +
+            'the AA pair; the base theme keeps the brand hex.',
+        });
+      }
+    }
+
+    // The one non-fill row, and it is the hub's own line. `--color-content-default-muted` is
+    // "the least prominent readable text" — placeholders, timestamps, help text, all of which
+    // a user has to actually read. Neutral step 10 is the muted-text step and lands under
+    // 4.5:1 on the surfaces it sits on; step 11 is the supporting-text step and clears it.
+    // check-contrast grades that pair at `warn`, not `fail`, which is exactly why the base
+    // theme is allowed to keep step 10 and why this block is where it moves.
+    const mutedOn =
+      pinnedHex('--color-background-elevation-raised') ?? step(neutral, dark ? 2 : 1);
+    if (
+      contrastHex(step(neutral, 10), mutedOn) < AA_TEXT &&
+      contrastHex(step(neutral, 11), mutedOn) >= AA_TEXT
+    ) {
+      setAssured('--color-content-default-muted', g(11));
+    }
 
     out[scheme] = t;
   }
@@ -784,9 +943,37 @@ export function deriveTheme(input) {
     });
   }
 
+  /*
+   * (11) THE TWO ASSURANCE BLOCKS ARE UNIONED ACROSS SCHEMES, AND THAT IS A SPECIFICITY
+   * FIX RATHER THAN A TIDINESS ONE.
+   *
+   * Count the selectors. The base dark block is `html[data-scheme="dark"][data-theme="x"]`
+   * — (0,2,1). The light assurance block is `html[data-theme="x"][data-a11y-assurance="wcag-aa"]`
+   * — ALSO (0,2,1), and it comes later in the file. It carries no [data-scheme], so in dark
+   * mode with the profile on it MATCHES, ties with the base dark block, and wins on source
+   * order. The dark assurance block (0,3,1) outranks both — but only for the names it
+   * happens to declare. Any name the light block moved and the dark block did not is a hole,
+   * and a light-scheme colour drops through it onto a near-black page.
+   *
+   * So both blocks declare the same key set: a scheme that had no change of its own restates
+   * its base value, which costs a few lines and closes the hole outright. check-contrast's
+   * parseDeclarations resolves these in the same order for the same reason (a block with no
+   * [data-scheme] is always read), so the gate and the browser agree.
+   */
+  const assuredKeys = [...new Set([...assur.light.keys(), ...assur.dark.keys()])];
+  for (const scheme of SCHEMES) {
+    const full = new Map();
+    for (const k of assuredKeys) {
+      const v = assur[scheme].get(k) ?? out[scheme].get(k);
+      if (v !== undefined) full.set(k, v);
+    }
+    assur[scheme] = full;
+  }
+
   return {
     light: out.light,
     dark: out.dark,
+    assurance: { light: assur.light, dark: assur.dark },
     ramps,
     dataviz,
     warnings,
@@ -829,6 +1016,10 @@ function block(selector, map, indent = '  ') {
 export function emitCss(derived, { schemes = SCHEMES } = {}) {
   const { meta, warnings } = derived;
   const failing = warnings.filter((w) => w.level === 'fail');
+  // Older derived objects (a cached recipe run through a previous version) have no
+  // `assurance` key. Treat its absence as "no variant" rather than throwing.
+  const assurance = derived.assurance ?? { light: new Map(), dark: new Map() };
+  const assured = assurance.light.size || assurance.dark.size;
 
   const header = [
     '/*',
@@ -846,6 +1037,16 @@ export function emitCss(derived, { schemes = SCHEMES } = {}) {
     ' * is interpolated along the reference curve. Verify with:',
     ` *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-${meta.slug}.css`,
     ` *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-${meta.slug}.css --scheme dark`,
+    ...(assured
+      ? [
+          ' *',
+          ` * This file also carries a wcag-aa ASSURANCE variant (${assured} declarations per`,
+          ' * scheme), inert until <html data-a11y-assurance="wcag-aa"> is set. Nothing needs to import',
+          ' * it and nothing renders differently until the attribute is there. Verify it with:',
+          ` *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-${meta.slug}.css --assurance wcag-aa`,
+          ` *   node ../ecology/scripts/check-contrast.mjs src/styles/theme-${meta.slug}.css --assurance wcag-aa --scheme dark`,
+        ]
+      : []),
     ...(failing.length
       ? [
           ' *',
@@ -871,5 +1072,45 @@ export function emitCss(derived, { schemes = SCHEMES } = {}) {
       ].join('\n'),
     );
   }
+
+  /*
+   * THE ASSURANCE VARIANT. Inert until <html data-a11y-assurance="wcag-aa"> is set, so it costs a
+   * project that never opts in exactly nothing — the same reason the hub ships its own profile
+   * inside dist/tokens.css rather than as an import a spoke has to remember.
+   *
+   * BOTH SELECTORS CARRY THE ELEMENT AND EVERY ATTRIBUTE THEY NEED, and the counts are the
+   * whole design. The hub's own profile is a bare `[data-a11y-assurance="wcag-aa"]` — (0,1,0) —
+   * which ties with `[data-theme="x"]` and loses to it on source order, so it cannot move a
+   * spoke's brand at all. Light here is (0,2,1) and beats the base light block (0,1,0); dark
+   * is (0,3,1) and beats both the base dark block (0,2,1) and the light assurance block it
+   * ties with on attribute count. See section (11) of deriveTheme for why both blocks declare
+   * the same key set rather than only their own changes.
+   */
+  if (assured) {
+    if (schemes.includes('light')) {
+      parts.push(
+        [
+          '/*',
+          ' * Accessibility assurance profile — wcag-aa. Composes with the brand above rather',
+          ' * than replacing it: a solid fill that carries text moves to step 11 of THIS theme\'s',
+          ' * own ramp, so the hue survives and only the step changes. Opt in per project with',
+          ` *   <html data-theme="${meta.slug}" data-a11y-assurance="wcag-aa">`,
+          ' * A profile is a statement about DEFAULTS, not a conformance certificate — it cannot',
+          ' * reach keyboard behaviour, focus return, or forced colors.',
+          ' */',
+          block(`html[data-theme="${meta.slug}"][data-a11y-assurance="wcag-aa"]`, assurance.light),
+        ].join('\n'),
+      );
+    }
+    if (schemes.includes('dark')) {
+      parts.push(
+        block(
+          `html[data-scheme="dark"][data-theme="${meta.slug}"][data-a11y-assurance="wcag-aa"]`,
+          assurance.dark,
+        ),
+      );
+    }
+  }
+
   return parts.join('\n\n') + '\n';
 }

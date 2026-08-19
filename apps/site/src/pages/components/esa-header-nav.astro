@@ -26,6 +26,7 @@ const user = { name: 'Jordan Rivers', email: 'jordan@esassoc.com' };
 // source by src/data/component-api.ts, so this table cannot drift.
 const describe = {
   items: "Primary nav links. Each is { label; href?; icon?; children? }; an item with children renders a dropdown.",
+  navLabel: "Accessible name for the navigation landmark around the links. The links now sit in a real <nav> inside the banner; before 2026-08-18 they were loose in the header and the primary site navigation was not a landmark at all.",
   user: "Optional signed-in user { name; email?; avatarUrl?; initials? }. When present, renders the avatar + user menu.",
 };
 

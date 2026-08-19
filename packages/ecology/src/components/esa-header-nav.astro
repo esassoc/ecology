@@ -49,8 +49,14 @@ export interface EsaHeaderNavUser {
 interface Props {
   items?: EsaHeaderNavItem[];
   user?: EsaHeaderNavUser;
+  /**
+   * Accessible name for the navigation landmark wrapping `items`. Do NOT include
+   * the word "navigation" — the role is announced already, so this reads as
+   * "Main, navigation".
+   */
+  navLabel?: string;
 }
-const { items = [], user } = Astro.props;
+const { items = [], user, navLabel = 'Main' } = Astro.props;
 
 function initialsFor(u: EsaHeaderNavUser): string {
   if (u.initials) return u.initials;
@@ -65,24 +71,34 @@ function initialsFor(u: EsaHeaderNavUser): string {
 <EsaAppBar tone="surface" as="header" class="esa-header-nav">
   <div slot="start" class="esa-header-nav__brand typography-label-md"><slot name="brand" /></div>
 
-  {items.map((item) =>
-    item.children && item.children.length ? (
-      <EsaNavDropdown label={item.label} icon={item.icon}>
-        <ul class="esa-header-nav__menu" role="list">
-          {item.children.map((child) => (
-            <li>
-              {child.href ? (
-                <a class="esa-header-nav__menu-item typography-body-md" href={child.href}>{child.label}</a>
-              ) : (
-                <span class="esa-header-nav__menu-item esa-header-nav__menu-item--inert typography-body-md">{child.label}</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </EsaNavDropdown>
-    ) : (
-      <EsaButton variant="chrome" href={item.href} icon={item.icon}>{item.label}</EsaButton>
-    )
+  {/* The links go inside a REAL <nav>. Until 2026-08-18 they sat loose in the bar's
+      default slot, so this component — the primary site navigation on most pages —
+      exposed a `banner` full of links and NO navigation landmark at all. Landmark
+      navigation (NVDA's D, VoiceOver's rotor) found nothing to jump to, which is
+      the first thing a screen reader user reaches for. `banner` > `navigation` is
+      the standard nesting; the bar keeps `as="header"`. */}
+  {items.length > 0 && (
+    <nav class="esa-header-nav__items" aria-label={navLabel}>
+      {items.map((item) =>
+        item.children && item.children.length ? (
+          <EsaNavDropdown label={item.label} icon={item.icon}>
+            <ul class="esa-header-nav__menu" role="list">
+              {item.children.map((child) => (
+                <li>
+                  {child.href ? (
+                    <a class="esa-header-nav__menu-item typography-body-md" href={child.href}>{child.label}</a>
+                  ) : (
+                    <span class="esa-header-nav__menu-item esa-header-nav__menu-item--inert typography-body-md">{child.label}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </EsaNavDropdown>
+        ) : (
+          <EsaButton variant="chrome" href={item.href} icon={item.icon}>{item.label}</EsaButton>
+        )
+      )}
+    </nav>
   )}
 
   <Fragment slot="end">
@@ -114,15 +130,38 @@ function initialsFor(u: EsaHeaderNavUser): string {
 
 <style>
   /* The .esa-header-nav class lands on esa-app-bar's root (a child component), so
-     it doesn't carry this file's scope hash — target it with :global. The custom
-     props inherit into the app-bar internals; the border sits on the bar itself. */
+     it doesn't carry this file's scope hash — target it with :global. The border
+     sits on the bar itself.
+
+     THREE INERT DECLARATIONS WERE REMOVED FROM THIS RULE ON 2026-08-18 —
+     --app-bar-{gap,pad-x,pad-y}, asking for a COMPACT bar (12px gap, 24px/6px
+     padding). They stopped doing anything on 2026-08-16 when the tier-3 demotion
+     pass deleted those hooks (migrations.json: app-bar-hooks-removed); the codemod
+     rewrote reads and cannot rewrite declarations, so these were left behind
+     looking deliberate while resolving to nothing. This bar has rendered at the
+     app-bar's own 32px gap and 32px/16px padding ever since.
+
+     If the compact bar is still wanted it is an esa-app-bar DENSITY VARIANT, not a
+     re-added hook — esa-app-shell was asking for the same thing, and two callers
+     wanting one treatment is the definition of a variant. See SPEC.md's
+     "WOULD this component diverge, not COULD it". */
   :global(.esa-header-nav) {
-    --app-bar-gap: var(--spacing-300, 12px);
-    --app-bar-pad-x: var(--spacing-500, 24px);
-    --app-bar-pad-y: var(--spacing-150, 6px);
     border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
   }
   .esa-header-nav__brand { display: inline-flex; align-items: center; }
+
+  /* The <nav> wrapper added for the landmark is one flex CHILD of the bar's main
+     region where the links used to be N children, so it has to re-create the row
+     itself or they stack. It uses the same step the bar itself applies
+     (--spacing-600), so wrapping the links in a landmark changed no spacing.
+     Keep the two in step: if esa-app-bar ever gains a density variant, this gap
+     has to follow it or the nav items will sit at 32px inside a 12px bar. */
+  .esa-header-nav__items {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-600, 32px);
+    min-width: 0;
+  }
   .esa-header-nav__actions { display: inline-flex; align-items: center; gap: var(--spacing-200, 8px); }
 
   /* Dropdown menu list (rendered inside esa-nav-dropdown's panel) */

@@ -166,7 +166,7 @@ if (srcVersion && cached.length) {
 if (isSpoke) {
   const tokensCss = path.join(CWD, 'node_modules', '@esa', 'tokens', 'dist', 'tokens.css');
   const profiles = existsSync(tokensCss)
-    ? [...new Set([...readFileSync(tokensCss, 'utf8').matchAll(/\[data-assurance="([^"]+)"\]/g)].map((m) => m[1]))]
+    ? [...new Set([...readFileSync(tokensCss, 'utf8').matchAll(/\[data-a11y-assurance="([^"]+)"\]/g)].map((m) => m[1]))]
     : [];
 
   // Look for the attribute in the spoke's own layouts — that is where a spoke sets
@@ -176,7 +176,7 @@ if (isSpoke) {
   const layoutDir = path.join(CWD, 'src', 'layouts');
   if (existsSync(layoutDir)) {
     for (const f of readdirSync(layoutDir)) {
-      const m = readFileSync(path.join(layoutDir, f), 'utf8').match(/data-assurance=["']([^"']+)["']/);
+      const m = readFileSync(path.join(layoutDir, f), 'utf8').match(/data-a11y-assurance=["']([^"']+)["']/);
       if (m) { declared = m[1]; break; }
     }
   }
@@ -187,7 +187,7 @@ if (isSpoke) {
     warn(
       `accessibility assurance profile: ${declared}`,
       profiles.includes(declared),
-      `no [data-assurance="${declared}"] block exists in @esa/tokens${profiles.length ? ` — available: ${profiles.join(', ')}` : ''}. The attribute is set but matches nothing, so NO profile is applied and nothing says so.`,
+      `no [data-a11y-assurance="${declared}"] block exists in @esa/tokens${profiles.length ? ` — available: ${profiles.join(', ')}` : ''}. The attribute is set but matches nothing, so NO profile is applied and nothing says so.`,
     );
     if (profiles.includes(declared)) {
       console.log(
@@ -202,7 +202,7 @@ if (isSpoke) {
       null,
     );
     console.log(
-      `      If this project has a conformance obligation, set data-assurance="${profiles[0]}" on <html>\n` +
+      `      If this project has a conformance obligation, set data-a11y-assurance="${profiles[0]}" on <html>\n` +
         `      in your layouts, then verify with check-contrast.mjs --assurance. It is inert until set.`,
     );
   }

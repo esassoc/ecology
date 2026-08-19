@@ -12,6 +12,7 @@
  */
 
 import curvesData from './radix-curves.json' with { type: 'json' };
+import primitiveColor from '../../packages/tokens/tokens/primitive/color.json' with { type: 'json' };
 import { hueDistance, oklchToHex, parseHex, srgbToOklch } from './color.mjs';
 
 export const NEUTRAL_TEMPERATURES = Object.keys(curvesData.neutrals);
@@ -122,6 +123,46 @@ export function rampFrom(seedHex, { scheme = 'light', scale = null } = {}) {
 
   if (anchored) steps[SOLID] = normaliseHex(seedHex);
   return steps;
+}
+
+/**
+ * Does `rampHexes` reproduce a SHIPPED Radix scale EXACTLY? Returns the primitive
+ * scale key (`teal`, `teal-dark`) or null.
+ *
+ * WHY THIS EXISTS. `rampFrom` lands the seed on step 9 and interpolates the rest along
+ * that scale's own curve — so seeding with a real Radix step 9, which is exactly what the
+ * theme maker's swatch grid hands you, reproduces the scale rather than approximating it.
+ * Measured across all 25 chromatic hues: 25/25 in light, 22/25 in dark. When that happens
+ * the generated ramp is a byte-for-byte duplicate of twelve primitives already on disk,
+ * and the theme may as well point at them.
+ *
+ * ALL TWELVE OR NOTHING, and this is the part that looks over-strict and is not. A hex
+ * ONE BIT off teal-9 (#12a595) still matches 6 of 12 steps, because the OKLCH round-trip
+ * quantises neighbouring seeds onto the same 8-bit values. Per-step matching would emit a
+ * half-var(), half-hex block for a brand that is NOT Radix teal — a ramp that looks like
+ * it points at the palette while six of its steps silently would not follow if the
+ * palette moved. So: every step matches, or none of them do.
+ *
+ * IT CHECKS ONE NAMED SCALE, NEVER A REVERSE HEX LOOKUP. 59 primitive hexes are claimed
+ * by more than one name — `yellow` IS `amber` and `copper` IS `bronze`, both documented
+ * aliases — so "which token holds #ffc53d" has no single answer. The caller passes the
+ * scale the ramp was actually SHAPED by, and that is the only one considered.
+ *
+ * It compares against the shipped PRIMITIVE, not the curve, because the emitted var()
+ * resolves to the primitive. Those two disagree for `grass-dark`, `lime-dark` and
+ * `yellow-dark` (the PRESERVEd transcription drift) — so those three correctly fail here
+ * in dark and keep their literals, rather than being silently re-coloured.
+ */
+export function radixScaleMatch(rampHexes, scale, scheme = 'light') {
+  const key = scheme === 'dark' ? `${scale}-dark` : scale;
+  const shipped = primitiveColor.color[key];
+  if (!shipped || !Array.isArray(rampHexes) || rampHexes.length < 12) return null;
+  for (let i = 1; i <= 12; i++) {
+    const mine = String(rampHexes[i - 1] ?? '').toLowerCase();
+    const theirs = String(shipped[i]?.$value ?? '').toLowerCase();
+    if (!mine || mine !== theirs) return null;
+  }
+  return key;
 }
 
 /** A Radix neutral, by temperature name (`warm` | `cool` | `pure` | …). 12 hex steps. */

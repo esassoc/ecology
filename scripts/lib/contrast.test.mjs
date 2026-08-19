@@ -58,7 +58,7 @@ test('an assurance block is read only when the caller names that profile', () =>
   // pass AA" with no code change and no warning.
   const css = `
     :root { --x: #111111; }
-    [data-assurance="wcag-aa"] { --x: #000000; }
+    [data-a11y-assurance="wcag-aa"] { --x: #000000; }
   `;
   assert.equal(mapOf(css).get('--x'), '#111111');
   assert.equal(mapOf(css, { assurance: 'wcag-aa' }).get('--x'), '#000000');
@@ -99,7 +99,7 @@ test("the hub's single-quoted dark selector is matched too", () => {
 test('scheme and assurance scoping compose', () => {
   const css = `
     :root { --c: #ffffff; }
-    [data-assurance="wcag-aa"] { --c: #eeeeee; }
+    [data-a11y-assurance="wcag-aa"] { --c: #eeeeee; }
     html[data-scheme="dark"] { --c: #000000; }
   `;
   assert.equal(mapOf(css, { scheme: 'dark', assurance: 'wcag-aa' }).get('--c'), '#000000');

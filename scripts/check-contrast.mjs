@@ -60,7 +60,7 @@ for (let i = 0; i < argv.length; i++) {
     // --assurance <profile> composes the accessibility assurance block OVER the theme,
     // which is the order the browser resolves them in and therefore the only order worth
     // auditing. Note what that order means for a spoke: `[data-theme]` and
-    // `[data-assurance]` have identical specificity and the theme's stylesheet loads
+    // `[data-a11y-assurance]` have identical specificity and the theme's stylesheet loads
     // later, so A THEME STILL WINS. The profile cannot rescue a brand colour it does not
     // know about — this run is what tells a spoke its brand needs a darker step.
     assurance = argv[++i];
@@ -93,10 +93,10 @@ const tokensCss = readFileSync(path.join(HUB, 'packages/tokens/dist/tokens.css')
 // Assert the profile EXISTS before reporting on it. A typo'd name would otherwise
 // match no block, compose nothing, and print a clean run under a header claiming the
 // profile was applied — the most expensive possible way to be wrong here.
-if (assurance && !tokensCss.includes(`[data-assurance="${assurance}"]`)) {
-  const found = [...tokensCss.matchAll(/\[data-assurance="([^"]+)"\]/g)].map((m) => m[1]);
+if (assurance && !tokensCss.includes(`[data-a11y-assurance="${assurance}"]`)) {
+  const found = [...tokensCss.matchAll(/\[data-a11y-assurance="([^"]+)"\]/g)].map((m) => m[1]);
   die(
-    `✗ no [data-assurance="${assurance}"] block in dist/tokens.css` +
+    `✗ no [data-a11y-assurance="${assurance}"] block in dist/tokens.css` +
       (found.length ? ` — profiles that exist: ${[...new Set(found)].join(', ')}` : ''),
   );
 }
