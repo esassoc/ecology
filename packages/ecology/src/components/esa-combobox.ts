@@ -360,8 +360,20 @@ export class EsaCombobox extends LitElement {
 
   private closeDropdown(): void {
     if (!this._open) return;
+    const root = this.renderRoot as unknown as ShadowRoot;
+    // MODE="SELECT" ONLY. In autocomplete mode the input IS the trigger and stays
+    // mounted, so focus never moves. In select mode the search input renders INSIDE
+    // the dropdown (`.search-input`), and closing unmounts it — dropping focus to
+    // <body> and returning a keyboard user to the top of the document. Guarded on
+    // focus actually being inside, so an outside click that moved focus somewhere the
+    // user chose is not yanked back.
+    const returnFocus = this.mode !== 'autocomplete' && !!root.activeElement;
     this._open = false;
     this._search = '';
+    if (!returnFocus) return;
+    void this.updateComplete.then(() => {
+      root.querySelector<HTMLElement>('.trigger')?.focus();
+    });
   }
 
   // --- Selection ---

@@ -46,8 +46,11 @@ import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
 // values point at ITS brand ramp (grass), which would be wrong here anyway. That is why
 // the block in your own theme file exists. Verify rather than assume, in both schemes:
 //
-//   node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --assurance wcag-aa
-//   node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --assurance wcag-aa --scheme dark
+//   node ../ecology/scripts/check-themes.mjs
+//
+// That one command grades every theme-*.css in src/styles across both schemes, with and
+// without each profile — the four runs per theme that check-contrast.mjs takes one at a
+// time. It exits 1 on any failure, so it belongs in this project's own `npm test`.
 //
 // DO NOT HAND-DECLARE THESE NAMES in a block of your own. Regenerating the theme is the
 // channel; a hand-written override at the same specificity loses to whichever loads last.

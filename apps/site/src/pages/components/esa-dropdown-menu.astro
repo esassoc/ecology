@@ -1,6 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 import ApiTable from '../../components/ApiTable.astro';
@@ -32,7 +33,7 @@ const events = [
   <button>Actions ▾</button>
 </esa-dropdown-menu>`}>
       <esa-dropdown-menu id="dd-start" position="below-start">
-        <button class="trigger">Actions ▾</button>
+        <EsaButton variant="secondary">Actions ▾</EsaButton>
       </esa-dropdown-menu>
       <p id="result" class="result"></p>
     </Preview>
@@ -42,7 +43,7 @@ const events = [
     <Preview code={`<esa-dropdown-menu position="below-start">…</esa-dropdown-menu>
 <esa-dropdown-menu position="below-end">…</esa-dropdown-menu>`}>
       <esa-dropdown-menu id="dd-end" position="below-end">
-        <button class="trigger">below-end ▾</button>
+        <EsaButton variant="secondary">below-end ▾</EsaButton>
       </esa-dropdown-menu>
     </Preview>
   </Section>
@@ -85,15 +86,5 @@ const events = [
 </script>
 
 <style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-elevation-raised, #fff);
-    color: var(--color-content-default, #171717);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
   .result { color: var(--color-content-default-muted, #737373); min-height: 1.5em; width: 100%; }
 </style>

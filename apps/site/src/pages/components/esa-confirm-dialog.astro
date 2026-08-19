@@ -1,6 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 import ApiTable from '../../components/ApiTable.astro';
@@ -42,7 +43,7 @@ const events = [
   message="Your changes will be applied immediately."
   confirm-label="Save"
 ></esa-confirm-dialog>`}>
-      <button class="trigger" data-target="cd-default">Save changes</button>
+      <EsaButton variant="secondary" data-target="cd-default">Save changes</EsaButton>
       <esa-confirm-dialog
         id="cd-default"
         heading="Save changes?"
@@ -58,8 +59,8 @@ const events = [
   message="You have unsaved changes that will be lost." confirm-label="Discard"></esa-confirm-dialog>
 <esa-confirm-dialog variant="danger" heading="Delete project?"
   message="This action cannot be undone." confirm-label="Delete"></esa-confirm-dialog>`}>
-      <button class="trigger" data-target="cd-warning">Warning</button>
-      <button class="trigger" data-target="cd-danger">Danger</button>
+      <EsaButton variant="secondary" data-target="cd-warning">Warning</EsaButton>
+      <EsaButton variant="secondary" data-target="cd-danger">Danger</EsaButton>
       <p id="result" class="result"></p>
 
       <esa-confirm-dialog
@@ -99,7 +100,7 @@ const events = [
 <script>
   import '@esa/ecology/esa-confirm-dialog';
   const result = document.getElementById('result')!;
-  document.querySelectorAll('.trigger').forEach((btn) =>
+  document.querySelectorAll('[data-target]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const el = document.getElementById((btn as HTMLElement).dataset.target!) as any;
       el?.show();
@@ -114,15 +115,5 @@ const events = [
 </script>
 
 <style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-elevation-raised, #fff);
-    color: var(--color-content-default, #171717);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
   .result { color: var(--color-content-default-muted, #737373); min-height: 1.5em; width: 100%; }
 </style>

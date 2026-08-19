@@ -1,6 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
@@ -35,11 +36,11 @@ const methods = [
   summary="A scoped entity-search overlay — a sibling to the command palette, but for <em>navigating to records</em> rather than firing actions. Set <code>entities</code> + <code>scopes</code>; it filters client-side, shows per-scope counts, highlights matches, groups by scope, and emits events the consumer handles.">
 
   <Section id="preview" title="Preview">
-    <p>Data is set as properties in a script. Open with the button or <kbd>/</kbd>. Try a query (e.g. “ri”) to see counts + highlighting; <kbd>Tab</kbd> cycles scopes; <kbd>⌘/Ctrl + Enter</kbd> fires <code>show-all</code>.</p>
+    <p>Data is set as properties in a script. Open with the button or <kbd>/</kbd>. Try a query (e.g. “ri”) to see counts + highlighting; <kbd>←</kbd> / <kbd>→</kbd> change the scope; <kbd>⌘/Ctrl + Enter</kbd> fires <code>show-all</code>.</p>
     <Preview code={`<button id="open-es">Open entity search</button>
 
 <esa-entity-search id="es" hotkey="slash" placeholder="Search projects, people, documents…"></esa-entity-search>`}>
-      <button class="trigger" id="open-es">Open entity search</button>
+      <EsaButton variant="primary" id="open-es">Open entity search</EsaButton>
       <esa-entity-search id="es" hotkey="slash" placeholder="Search projects, people, documents…"></esa-entity-search>
       <p id="es-result" class="result"></p>
     </Preview>
@@ -53,9 +54,10 @@ const methods = [
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>The overlay is <code>role="dialog"</code>; results are <code>role="listbox"</code> / <code>role="option"</code> with <code>aria-selected</code>; facets are a <code>role="tablist"</code>.</li>
-      <li>ArrowUp / ArrowDown move the active row (wrapping across groups), Enter selects, Esc closes, Tab / Shift+Tab cycle facets.</li>
-      <li>The input is focused automatically on open.</li>
+      <li>A native modal <code>&lt;dialog&gt;</code>, opened with <code>showModal()</code> — so the page behind it is genuinely inert, focus is contained, Esc closes, and focus returns to the trigger. None of that is our code.</li>
+      <li>The input is a <code>role="combobox"</code> driving a <code>role="listbox"</code> of <code>role="option"</code> rows via <code>aria-activedescendant</code>. The rows are <code>&lt;div&gt;</code>s, not buttons: an option may not be an interactive widget, and while they were buttons the per-row action buttons were nested inside them.</li>
+      <li>ArrowUp / ArrowDown move the active row (wrapping across groups), Enter selects, ⌘/Ctrl + Enter fires <code>show-all</code>, Esc closes.</li>
+      <li>Facets are a <code>role="radiogroup"</code> navigated with <kbd>←</kbd> / <kbd>→</kbd>. <strong>Until 2026-08-18 they claimed <code>role="tablist"</code> and bound <kbd>Tab</kbd> instead</strong> — the exact inversion of what the role promises, and it cost the per-row action buttons any keyboard route at all (SC 2.1.1, Level A). Tab is now plain Tab.</li>
     </ul>
   </Section>
 
@@ -101,16 +103,6 @@ const methods = [
 </script>
 
 <style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-brand, #43608a);
-    color: var(--color-content-default-knockout, #fff);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
   .result { color: var(--color-content-default-muted, #737373); min-height: 1.5em; width: 100%; font-variant-numeric: tabular-nums; }
   kbd {
     padding: 1px 5px;

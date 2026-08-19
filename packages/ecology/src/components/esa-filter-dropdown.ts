@@ -83,15 +83,38 @@ export class EsaFilterDropdown extends LitElement {
   declare _selected: string[];
   declare _highlighted: number;
 
+  /**
+   * The single close path, so focus return cannot be forgotten on one of four.
+   *
+   * Opening focuses the panel's search input, which lives INSIDE the panel — so every
+   * close unmounts the focused node and drops focus to `<body>`, returning a keyboard
+   * user to the top of the document with no idea where they were. That happened on all
+   * four exits (outside click, document Esc, in-panel Esc, and picking an option in
+   * single-select mode) and each one set `_open = false` on its own.
+   *
+   * Guarded on focus actually being inside: an outside CLICK has already moved focus
+   * somewhere the user chose, and yanking it back to the trigger would undo that.
+   */
+  private closePanel(): void {
+    if (!this._open) return;
+    const root = this.renderRoot as ShadowRoot;
+    const focusWasInside = !!root.activeElement;
+    this._open = false;
+    if (!focusWasInside) return;
+    void this.updateComplete.then(() => {
+      root.querySelector<HTMLElement>('.esa-filter-dropdown__trigger')?.focus();
+    });
+  }
+
   private onDocClick = (e: MouseEvent): void => {
     if (this._open && !e.composedPath().includes(this)) {
-      this._open = false;
+      this.closePanel();
     }
   };
 
   private onDocKeydown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && this._open) {
-      this._open = false;
+      this.closePanel();
     }
   };
 
@@ -172,8 +195,8 @@ export class EsaFilterDropdown extends LitElement {
     } else {
       this._selected = [value];
       this._searchText = '';
-      this._open = false;
       this.emitChange([value]);
+      this.closePanel();
     }
   }
 
@@ -205,7 +228,7 @@ export class EsaFilterDropdown extends LitElement {
         if (idx >= 0 && idx <= max) this.selectOption(options[idx]);
         break;
       case 'Escape':
-        this._open = false;
+        this.closePanel();
         break;
     }
   };

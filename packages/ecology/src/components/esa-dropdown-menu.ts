@@ -1,5 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+// The focusable selector and focus restore come from the ONE module that owns them.
+// A local copy lived here until 2026-08-18 and had already drifted the way overlay.ts
+// warns about: it dropped every :not([disabled]) clause, so a DISABLED slotted button
+// resolved as the trigger and took the menu's aria-expanded and its focus return.
+import { FOCUSABLE_SELECTOR, deepActiveElement, restoreFocus } from '../overlay.js';
 
 export interface EsaMenuItem {
   label: string;
@@ -27,9 +32,6 @@ type DropdownPosition = 'below-start' | 'below-end' | 'above-start' | 'above-end
  * Note: `icon` strings on items render a small bullet dot placeholder rather than
  * pulling in a Lucide icon set (kept dependency-free per the migration brief).
  */
-/** What counts as "already a control" when resolving a slotted trigger. */
-const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
 export class EsaDropdownMenu extends LitElement {
   static properties = {
     items: { type: Array },
@@ -60,24 +62,44 @@ export class EsaDropdownMenu extends LitElement {
     this.open ? this.close() : this.openMenu();
   };
 
+  /**
+   * THE SIDE EFFECTS HANG OFF `open` ITSELF, not off the method that sets it.
+   *
+   * `open` is a public reactive property, so `menu.open = true` and `<esa-dropdown-menu
+   * open>` are both supported ways to open this. Until 2026-08-18 the outside-click
+   * listener and the focus-into-menu lived in the private `openMenu()`, which only
+   * `toggle()` called — so opening it the documented way produced a menu with no
+   * outside-click close, no route for Esc, and no focus in it. It looked identical on
+   * screen, which is why it survived; the overlay focus audit caught it by opening the
+   * component the way a consumer would rather than the way the trigger does.
+   *
+   * A public property and the method that sets it must not do different things.
+   */
+  updated(changed: Map<string, unknown>): void {
+    if (!changed.has('open')) return;
+    if (this.open) {
+      document.addEventListener('click', this.onDocumentClick, true);
+      // A menu takes focus on open — that is the whole difference between a menu and
+      // a list of links that happens to be in a box.
+      void this.updateComplete.then(() => this.focusItem(0));
+    } else {
+      document.removeEventListener('click', this.onDocumentClick, true);
+    }
+  }
+
   private openMenu(): void {
     this.open = true;
-    document.addEventListener('click', this.onDocumentClick, true);
-    // A menu takes focus on open — that is the whole difference between a menu and
-    // a list of links that happens to be in a box.
-    this.updateComplete.then(() => this.focusItem(0));
   }
 
   close(): void {
     if (!this.open) return;
     this.open = false;
-    document.removeEventListener('click', this.onDocumentClick, true);
     // FOCUS RETURN, absent until 2026-08-18. Keyboard-only use survived it by
     // accident, because focus never entered the menu in the first place — but
     // CLICKING an item put focus on that button, and close() then deleted it from
     // the DOM, dropping focus to <body>. Now that focus does move in on open, this
     // is load-bearing rather than a nicety.
-    this.triggerEl?.focus?.();
+    restoreFocus(this.triggerEl);
   }
 
   /**
@@ -97,8 +119,8 @@ export class EsaDropdownMenu extends LitElement {
     // button — axe's `nested-interactive`, and aria-expanded on an element no
     // screen reader would read it from. Resolve to the control that actually takes
     // focus, and only fall back to the wrapper when there is nothing inside.
-    if (outer.matches(FOCUSABLE)) return outer;
-    return outer.querySelector<HTMLElement>(FOCUSABLE) ?? outer;
+    if (outer.matches(FOCUSABLE_SELECTOR)) return outer;
+    return outer.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? outer;
   }
 
   /**
@@ -115,7 +137,7 @@ export class EsaDropdownMenu extends LitElement {
     el.setAttribute('aria-haspopup', 'menu');
     el.setAttribute('aria-expanded', String(this.open));
     el.setAttribute('aria-controls', 'menu');
-    if (!el.matches(FOCUSABLE)) {
+    if (!el.matches(FOCUSABLE_SELECTOR)) {
       if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
       if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
     }
@@ -152,8 +174,7 @@ export class EsaDropdownMenu extends LitElement {
   }
 
   private get focusedIndex(): number {
-    const active = (this.renderRoot as ShadowRoot).activeElement as HTMLElement | null;
-    return this.menuItems.indexOf(active as HTMLElement);
+    return this.menuItems.indexOf(deepActiveElement() as HTMLElement);
   }
 
   private onKeydown = (event: KeyboardEvent): void => {

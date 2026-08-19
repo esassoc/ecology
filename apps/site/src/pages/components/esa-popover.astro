@@ -1,6 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
 import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 
@@ -25,7 +26,7 @@ const describe = {
   <div slot="content">Popover below the trigger.</div>
 </esa-popover>`}>
       <esa-popover position="bottom">
-        <button class="trigger">Open popover</button>
+        <EsaButton variant="secondary">Open popover</EsaButton>
         <div slot="content">Popover below the trigger.</div>
       </esa-popover>
     </Preview>
@@ -37,19 +38,19 @@ const describe = {
 <esa-popover position="left">…</esa-popover>
 <esa-popover position="right">…</esa-popover>`}>
       <esa-popover position="top">
-        <button class="trigger">Top</button>
+        <EsaButton variant="secondary">Top</EsaButton>
         <div slot="content">Popover above the trigger.</div>
       </esa-popover>
       <esa-popover position="bottom">
-        <button class="trigger">Bottom</button>
+        <EsaButton variant="secondary">Bottom</EsaButton>
         <div slot="content">Popover below the trigger.</div>
       </esa-popover>
       <esa-popover position="left">
-        <button class="trigger">Left</button>
+        <EsaButton variant="secondary">Left</EsaButton>
         <div slot="content">Left side.</div>
       </esa-popover>
       <esa-popover position="right">
-        <button class="trigger">Right</button>
+        <EsaButton variant="secondary">Right</EsaButton>
         <div slot="content">Right side.</div>
       </esa-popover>
     </Preview>
@@ -60,11 +61,11 @@ const describe = {
     <Preview align="center" code={`<esa-popover appearance="default">…</esa-popover>
 <esa-popover appearance="inverse">…</esa-popover>`}>
       <esa-popover position="bottom" appearance="default">
-        <button class="trigger">Default</button>
+        <EsaButton variant="secondary">Default</EsaButton>
         <div slot="content">Light surface panel.</div>
       </esa-popover>
       <esa-popover position="bottom" appearance="inverse">
-        <button class="trigger">Inverse</button>
+        <EsaButton variant="secondary">Inverse</EsaButton>
         <div slot="content">Dark panel, light text — for help content.</div>
       </esa-popover>
     </Preview>
@@ -75,11 +76,11 @@ const describe = {
     <Preview align="center" code={`<esa-popover position="bottom" trigger="hover">…</esa-popover>
 <esa-popover position="bottom" has-arrow={false}>…</esa-popover>`}>
       <esa-popover position="bottom" trigger="hover">
-        <button class="trigger">Hover me</button>
+        <EsaButton variant="secondary">Hover me</EsaButton>
         <div slot="content">Opens on hover after 200ms.</div>
       </esa-popover>
       <esa-popover position="bottom" has-arrow={false}>
-        <button class="trigger">No arrow</button>
+        <EsaButton variant="secondary">No arrow</EsaButton>
         <div slot="content">Arrowless popover.</div>
       </esa-popover>
     </Preview>
@@ -101,15 +102,3 @@ const describe = {
 
 <script>import '@esa/ecology/esa-popover';</script>
 
-<style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-elevation-raised, #fff);
-    color: var(--color-content-default, #171717);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
-</style>
