@@ -1,3 +1,17 @@
 # Normalize line endings: Windows clones of this repo (it's also a Claude
 # plugin marketplace) must not CRLF the scripts and hooks.
 * text=auto eol=lf
+
+# Generated artifacts: verify by regenerating, not by reading the diff.
+# `linguist-generated` collapses these in GitHub's diff view by default.
+#   token-names.json        <- npm run tokens:snapshot
+#   primitive/color.json    <- npm run tokens:primitives
+#   radix-curves.json       <- npm run theme:curves
+#   size-floors.json        <- npm run a11y:floors
+# NOTE: packages/tokens/migrations.json is deliberately NOT listed. It is
+# hand-authored and is the most review-critical file in the repo — every
+# rename's alias, codemod rewrite and doctor warning starts from a row in it.
+packages/tokens/token-names.json            linguist-generated=true
+packages/tokens/tokens/primitive/color.json linguist-generated=true
+packages/tokens/size-floors.json            linguist-generated=true
+scripts/lib/radix-curves.json               linguist-generated=true
