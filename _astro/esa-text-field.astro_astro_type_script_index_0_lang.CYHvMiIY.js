@@ -1,1 +1,0 @@
-import"./esa-text-field.DZGm8L7U.js";import"./lit-element.D8DSg5zn.js";import"./typography.KBHeYOQc.js";const t=document.getElementById("tf-form");t?.addEventListener("submit",e=>{e.preventDefault();const n=new FormData(t);document.getElementById("tf-out").textContent="contact = "+JSON.stringify(n.get("contact"))});
