@@ -1,0 +1,131 @@
+---
+/**
+ * One collapsible group of token rows. Extracted so the flat tier-2/3 render
+ * and the nested tier-1 (category -> ramp) render share exactly one copy of the
+ * row markup.
+ *
+ * Underscore-prefixed, so Astro never treats it as a route. Carries no <style>
+ * of its own — the debug page owns all styling, namespaced under .tokens-debug,
+ * because that page's styles are is:inline and therefore unscoped.
+ */
+import type { TokenGroup, TokenNode } from '../../data/token-graph';
+
+interface Props {
+  group: TokenGroup;
+  /** Suppress the summary row when the group IS its category (single flat list). */
+  bare?: boolean;
+}
+const { group, bare = false } = Astro.props;
+---
+
+{bare ? (
+  <table class="tok-table">
+    <thead>
+      <tr><th>Token</th><th>Resolution chain</th><th>Value</th><th>Used by</th></tr>
+    </thead>
+    <tbody>
+      {group.tokens.map((t: TokenNode) => (
+        <tr data-token={t.name} title={t.description ?? undefined}>
+          <td class="c-name">
+            <code>{t.name}</code>
+            {t.description && <span class="has-note" aria-hidden="true">*</span>}
+          </td>
+          <td class="c-chain">
+            {t.lineage.length === 0 ? (
+              <span class="dim">—</span>
+            ) : (
+              t.lineage.map((link, i) => (
+                <>
+                  {i > 0 && <span class="arrow">→</span>}
+                  <span class={`chip k-${link.kind}`}>{link.ref}</span>
+                </>
+              ))
+            )}
+          </td>
+          <td class="c-value">
+            {t.isColor && <span class="swatch" style={`background:${t.resolved}`} />}
+            <code>{t.resolved}</code>
+          </td>
+          <td class="c-used">
+            {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 ? (
+              <span class="orphan-flag">orphan</span>
+            ) : (
+              <details class="uses">
+                <summary>
+                  {t.usedByTokens.length > 0 && <span class="pill">{t.usedByTokens.length} tok</span>}
+                  {t.usedByComponents.length > 0 && <span class="pill">{t.usedByComponents.length} comp</span>}
+                </summary>
+                {t.usedByTokens.length > 0 && <p><b>Tokens:</b> {t.usedByTokens.join(', ')}</p>}
+                {t.usedByComponents.length > 0 && <p><b>Components:</b> {t.usedByComponents.join(', ')}</p>}
+              </details>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+) : group.tokens.length === 0 ? (
+  /* An expected sub-group with nothing in it. Rendered rather than skipped so a
+     missing property is a visible hole in the set, not a silent absence. */
+  <div class="tok-group is-empty" data-group>
+    <div class="empty-head">
+      <code class="group-label">{group.label}</code>
+      <span class="group-count none">none defined</span>
+    </div>
+  </div>
+) : (
+  <details class="tok-group" data-group>
+    <summary>
+      <code class="group-label">{group.label}</code>
+      <span class="summary-right">
+        {group.core && <span class="core-flag" title="Shared across all themes — see the Core / universal section">core</span>}
+        <span class="group-count">{group.tokens.length}</span>
+      </span>
+    </summary>
+    <table class="tok-table">
+      <thead>
+        <tr><th>Token</th><th>Resolution chain</th><th>Value</th><th>Used by</th></tr>
+      </thead>
+      <tbody>
+        {group.tokens.map((t: TokenNode) => (
+          <tr data-token={t.name} title={t.description ?? undefined}>
+            <td class="c-name">
+              <code>{t.name}</code>
+              {t.description && <span class="has-note" aria-hidden="true">*</span>}
+            </td>
+            <td class="c-chain">
+              {t.lineage.length === 0 ? (
+                <span class="dim">—</span>
+              ) : (
+                t.lineage.map((link, i) => (
+                  <>
+                    {i > 0 && <span class="arrow">→</span>}
+                    <span class={`chip k-${link.kind}`}>{link.ref}</span>
+                  </>
+                ))
+              )}
+            </td>
+            <td class="c-value">
+              {t.isColor && <span class="swatch" style={`background:${t.resolved}`} />}
+              <code>{t.resolved}</code>
+            </td>
+            <td class="c-used">
+              {t.usedByTokens.length === 0 && t.usedByComponents.length === 0 ? (
+                <span class="orphan-flag">orphan</span>
+              ) : (
+                <details class="uses">
+                  <summary>
+                    {t.usedByTokens.length > 0 && <span class="pill">{t.usedByTokens.length} tok</span>}
+                    {t.usedByComponents.length > 0 && <span class="pill">{t.usedByComponents.length} comp</span>}
+                  </summary>
+                  {t.usedByTokens.length > 0 && <p><b>Tokens:</b> {t.usedByTokens.join(', ')}</p>}
+                  {t.usedByComponents.length > 0 && <p><b>Components:</b> {t.usedByComponents.join(', ')}</p>}
+                </details>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </details>
+)}
