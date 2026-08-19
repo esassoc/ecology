@@ -1,7 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
 
@@ -20,7 +20,32 @@ const events = [
   summary="Groups buttons with connected borders. Use it purely for visual grouping, or as a radio-like segmented control that emits a composed <code>change</code> event.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<esa-button-group>
+    {/* OVERRIDE. The transform refuses this sample, correctly: its children are
+        `<EsaButton>`, an .astro component with no custom element behind it, so
+        there is nothing for Angular to instantiate. But the GROUP is a real
+        element, and it is built to take native buttons — `::slotted(button)` sits
+        beside `::slotted(esa-button)` in its own styles, and its selection logic
+        matches `button, [role="button"]` directly. So the Angular form is the
+        group wrapping plain buttons, which is a fact about the component rather
+        than an invention. */}
+    <Preview
+      angular={`import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@esa/ecology/esa-button-group';
+
+@Component({
+  selector: 'app-button-group-demo',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: \`
+    <esa-button-group>
+      <button type="button">Day</button>
+      <button type="button">Week</button>
+      <button type="button">Month</button>
+    </esa-button-group>
+  \`,
+})
+export class ButtonGroupDemo {}`}
+      code={`<esa-button-group>
   <EsaButton variant="primary">Day</EsaButton>
   <EsaButton variant="primary">Week</EsaButton>
   <EsaButton variant="primary">Month</EsaButton>
@@ -37,7 +62,28 @@ const events = [
 
   <Section id="modes" title="Modes">
     <p><code>selection-mode="none"</code> is the default — buttons are visually connected but each acts independently.</p>
-    <Preview code={`<esa-button-group selection-mode="none">
+    {/* Same override, same reason as the one above — see that comment. Both are
+        here rather than just one so the page does not show an Angular tab on two
+        of its three examples and leave the reader wondering what is different
+        about the third. */}
+    <Preview
+      angular={`import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@esa/ecology/esa-button-group';
+
+@Component({
+  selector: 'app-button-group-modes-demo',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: \`
+    <esa-button-group selection-mode="none">
+      <button type="button">Day</button>
+      <button type="button">Week</button>
+      <button type="button">Month</button>
+    </esa-button-group>
+  \`,
+})
+export class ButtonGroupModesDemo {}`}
+      code={`<esa-button-group selection-mode="none">
   <EsaButton variant="primary">Day</EsaButton>
   <EsaButton variant="primary">Week</EsaButton>
   <EsaButton variant="primary">Month</EsaButton>

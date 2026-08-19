@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
 import { announce } from '../announcer.js';
@@ -155,16 +155,47 @@ export class EsaEntitySearch extends LitElement {
     this.query = '';
     this.activeScope = '';
     this.activeId = null;
-    requestAnimationFrame(() => {
-      (this.renderRoot as ShadowRoot)
-        .querySelector<HTMLInputElement>('.esa-entity-search__input')
-        ?.focus();
-    });
+    requestAnimationFrame(() => this.focusInput());
+  }
+
+  /**
+   * The input is the overlay's ONLY tab stop, so every other control returns focus
+   * here after a click. Without this, clicking a facet left focus on that button —
+   * and onKeydown was bound to the input, so Tab stopped being intercepted and
+   * walked the facets, the rows and then straight out of the dialog, ringless.
+   */
+  private focusInput(): void {
+    (this.renderRoot as ShadowRoot)
+      .querySelector<HTMLInputElement>('.esa-entity-search__input')
+      ?.focus();
   }
 
   close(): void {
     this.open = false;
   }
+
+  private get dialogEl(): HTMLDialogElement | null {
+    return (this.renderRoot as ShadowRoot).querySelector('dialog');
+  }
+
+  /**
+   * Focus return, absent until 2026-08-18 — `close()` only flipped `open`, and
+   * render() then deleted the subtree focus was in, so every exit dropped focus to
+   * <body>. showModal() restores it to the real trigger node. See esa-dialog.
+   */
+  private syncDialog(): void {
+    const el = this.dialogEl;
+    if (!el) return;
+    if (this.open) {
+      if (!el.open) el.showModal();
+    } else {
+      el.close();
+    }
+  }
+
+  private onNativeClose = (): void => {
+    this.open = false;
+  };
 
   private emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
@@ -214,10 +245,32 @@ export class EsaEntitySearch extends LitElement {
     this.activeId = null;
   };
 
+  /**
+   * Focus follows whichever control changed the scope.
+   *
+   * Arrowing between facets is roving-tabindex navigation, so focus has to land on the
+   * newly checked radio — yanking it back to the input (which this did, as a leftover
+   * from before showModal() contained focus) would make Left/Right unusable the moment
+   * the user tabbed onto a facet. Changing scope from the input, by contrast, must not
+   * move focus at all: the user is mid-query.
+   */
   private setScope(scopeId: string): void {
+    const fromInput = this.activeInput();
     this.activeScope = scopeId;
     this.activeId = null;
     this.emit('scope-change', { scope: scopeId });
+    if (fromInput) return;
+    void this.updateComplete.then(() => {
+      (this.renderRoot as ShadowRoot)
+        .querySelector<HTMLElement>('.esa-entity-search__scope[tabindex="0"]')
+        ?.focus();
+    });
+  }
+
+  /** Is focus in the search input right now? */
+  private activeInput(): boolean {
+    const root = this.renderRoot as ShadowRoot;
+    return root.activeElement === root.querySelector('.esa-entity-search__input');
   }
 
   private cycleScope(dir: 1 | -1): void {
@@ -233,9 +286,30 @@ export class EsaEntitySearch extends LitElement {
       this.close();
       return;
     }
-    if (event.key === 'Tab') {
+    // TAB IS NO LONGER HIJACKED, and freeing it is the point of this block.
+    //
+    // It used to cycle the facets — first as a workaround for having no focus trap,
+    // then because every facet was tabindex="-1" and Tab was the only route to them.
+    // The cost was invisible and Level A: the per-row action buttons could be reached
+    // by NO key at all, because the one key that would have reached them was spent on
+    // something else. Left/Right now drive the facets (which is what their role means),
+    // roving tabindex gives the checked one a real tab stop, and showModal() keeps Tab
+    // inside the dialog — so plain Tab is both safe and necessary. Up/Down stay with
+    // the result list below.
+    //
+    // NOT WHILE THE CARET IS IN THE INPUT. This handler moved from the <input> onto the
+    // <dialog> in the same change that bound Left/Right, so it now sees keydowns from the
+    // search field too — and an unguarded preventDefault() here stops the caret moving at
+    // all. Typing a query and pressing Left to fix a typo changed the search scope
+    // instead. The facets own these keys only once focus is actually on them; the Enter
+    // branch below already draws the line in the same place.
+    if (
+      this.scopes.length &&
+      !this.activeInput() &&
+      (event.key === 'ArrowRight' || event.key === 'ArrowLeft')
+    ) {
       event.preventDefault();
-      this.cycleScope(event.shiftKey ? -1 : 1);
+      this.cycleScope(event.key === 'ArrowRight' ? 1 : -1);
       return;
     }
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
@@ -244,30 +318,62 @@ export class EsaEntitySearch extends LitElement {
       this.close();
       return;
     }
+    // UP/DOWN DRIVE THE RESULT LIST FROM ANYWHERE INSIDE THE OVERLAY.
+    //
+    // They used to bail unless focus was already in the input, on the reasoning that
+    // a facet or a row-action button should keep its own arrow keys. Neither wants
+    // these two: the facets are a radiogroup and take Left/Right (bound above), and
+    // the row actions are plain buttons with no arrow semantics. What the guard
+    // actually did was hand Up/Down back to the DOCUMENT the moment a pointer user
+    // clicked a facet — a real click focuses the button — so the keys scrolled the
+    // page behind the modal while the footer went on promising "↑ ↓ Navigate".
+    // Measured: one click on People, then ArrowDown, scrolled the page 80px and never
+    // moved the highlight.
+    //
+    // Focus returns to the input rather than staying put, because aria-activedescendant
+    // only announces from the element that HAS focus. Moving the highlight while focus
+    // sat on a facet would be a sighted-only change — the exact half-fix that reads as
+    // working and is not.
     const flat = this.flatItems;
-    if (flat.length === 0) return;
-    const currentIndex = flat.findIndex((e) => e.id === this.activeId);
-    switch (event.key) {
-      case 'ArrowDown': {
-        event.preventDefault();
-        const next = currentIndex < flat.length - 1 ? currentIndex + 1 : 0;
-        this.activeId = flat[next].id;
-        break;
-      }
-      case 'ArrowUp': {
-        event.preventDefault();
-        const prev = currentIndex > 0 ? currentIndex - 1 : flat.length - 1;
-        this.activeId = flat[prev].id;
-        break;
-      }
-      case 'Enter': {
-        event.preventDefault();
-        const active = flat.find((e) => e.id === this.activeId) ?? (flat.length === 1 ? flat[0] : null);
-        if (active) this.selectEntity(active);
-        break;
-      }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!flat.length) return;
+      if (!this.activeInput()) this.focusInput();
+      const currentIndex = flat.findIndex((e) => e.id === this.activeId);
+      const next =
+        event.key === 'ArrowDown'
+          ? currentIndex < flat.length - 1
+            ? currentIndex + 1
+            : 0
+          : currentIndex > 0
+            ? currentIndex - 1
+            : flat.length - 1;
+      this.activeId = flat[next].id;
+      this.scrollActiveIntoView();
+      return;
+    }
+    // Enter stays with whatever has focus — on a facet or a row action it must
+    // activate THAT control, which is native behaviour we should not intercept.
+    if (!this.activeInput()) return;
+    if (event.key === 'Enter' && flat.length) {
+      event.preventDefault();
+      const active = flat.find((e) => e.id === this.activeId) ?? (flat.length === 1 ? flat[0] : null);
+      if (active) this.selectEntity(active);
     }
   };
+
+  /**
+   * Keep the highlighted row in view. The list scrolls, and a highlight that walks
+   * off the bottom of it looks exactly like the arrow keys having stopped working.
+   * `block: 'nearest'` so a row already visible does not jolt the list.
+   */
+  private scrollActiveIntoView(): void {
+    void this.updateComplete.then(() => {
+      (this.renderRoot as ShadowRoot)
+        .querySelector<HTMLElement>('.esa-entity-search__row--active')
+        ?.scrollIntoView({ block: 'nearest' });
+    });
+  }
 
   private selectEntity(entity: EsaSearchEntity): void {
     this.emit('select', { entity });
@@ -276,6 +382,7 @@ export class EsaEntitySearch extends LitElement {
 
   private onRowAction(event: Event, action: EsaSearchRowAction, entity: EsaSearchEntity): void {
     event.stopPropagation();
+    this.focusInput();
     this.emit('row-action', { action: action.id, entity });
   }
 
@@ -290,11 +397,35 @@ export class EsaEntitySearch extends LitElement {
     return html`<svg class="esa-entity-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${unsafeSVG(inner)}</svg>`;
   }
 
+  /**
+   * DOM id for a row, by its position in keyboard order.
+   *
+   * Indexed rather than derived from `entity.id`: consumer ids are arbitrary strings,
+   * and one containing a space silently breaks the `aria-activedescendant` IDREF —
+   * the attribute still parses, it just points at nothing. `esa-filter-dropdown` sets
+   * the same `opt-N` precedent.
+   */
+  private domId(entity: EsaSearchEntity): string {
+    return this.domIdFromId(entity.id);
+  }
+
+  private domIdFromId(entityId: string): string {
+    return `opt-${this.flatItems.findIndex((e) => e.id === entityId)}`;
+  }
+
   private renderRow(entity: EsaSearchEntity) {
     const actions = this.rowActions.filter((a) => !a.scopes || a.scopes.includes(entity.scope));
+    // A <div>, NOT a <button>. Two defects went away together here. An `option` may
+    // not be an interactive widget, and while it was a <button> the per-row action
+    // buttons were nested INSIDE it — a button inside a button, which is invalid HTML
+    // and what axe's nested-interactive rule flags. The keyboard route is the input's
+    // arrow keys plus aria-activedescendant, which is the listbox contract and what
+    // esa-command-palette, esa-select, esa-combobox and esa-filter-dropdown all do.
+    // Pointer users keep the click.
     return html`
-      <button
+      <div
         class="esa-entity-search__row ${entity.id === this.activeId ? 'esa-entity-search__row--active' : ''}"
+        id=${this.domId(entity)}
         role="option"
         aria-selected=${entity.id === this.activeId}
         @click=${() => this.selectEntity(entity)}
@@ -323,7 +454,7 @@ export class EsaEntitySearch extends LitElement {
               )}
             </span>`
           : null}
-      </button>
+      </div>
     `;
   }
 
@@ -344,20 +475,19 @@ export class EsaEntitySearch extends LitElement {
     this.wasEmpty = isEmpty;
   }
 
-  updated(): void {
+  updated(changed: Map<string, unknown>): void {
+    if (changed.has('open')) this.syncDialog();
     this.announceEmptyResults();
   }
 
   render() {
-    if (!this.open) return html``;
     const q = this.query.trim();
     const groups = this.renderGroups;
     const showingRecent = this.showingRecent;
     const totalCount = this.queryMatches.length;
 
     return html`
-      <div class="esa-entity-search__backdrop" @click=${this.close}></div>
-      <div class="esa-entity-search" role="dialog" aria-label="Search">
+      <dialog class="esa-entity-search" closedby="any" aria-label="Search" @keydown=${this.onKeydown} @close=${this.onNativeClose}>
         <div class="esa-entity-search__search">
           <svg class="esa-entity-search__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <!-- The input had NO accessible name: no label, no aria-label, only a
@@ -368,27 +498,39 @@ export class EsaEntitySearch extends LitElement {
           <input
             class="esa-entity-search__input typography-microcopy-lg-subtle"
             type="text"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="listbox"
+            aria-activedescendant=${this.activeId ? this.domIdFromId(this.activeId) : nothing}
             aria-label=${this.placeholder || 'Search'}
             aria-describedby="cue"
             placeholder=${this.placeholder}
             .value=${this.query}
             @input=${this.onSearch}
-            @keydown=${this.onKeydown}
             autocomplete="off"
           />
           <span class="visually-hidden" id="cue"
-            >Results filter as you type. Use the up and down arrows to review them,
-            Enter to open, Escape to close.</span
+            >Results filter as you type. Use the up and down arrows to review them and
+            Enter to open. Tab to the scope buttons, then left and right arrows to change
+            scope. Escape closes.</span
           >
           <kbd class="esa-entity-search__kbd typography-label-xs">ESC</kbd>
         </div>
 
         ${this.scopes.length
-          ? html`<div class="esa-entity-search__scopes" role="tablist">
+          ? html`<!-- A RADIOGROUP, NOT A TABLIST. These facets narrow a list; they
+                   control no tabpanel, and nothing here is a tab. The role mattered
+                   beyond pedantry: tablist PROMISES Left/Right Arrow, and while the
+                   component claimed it, Left/Right did nothing and Tab — the one key
+                   a tablist never uses — was bound to cycling them instead. Radio is
+                   the single-select-filter role, and it means the same arrow keys the
+                   component now actually implements. -->
+              <div class="esa-entity-search__scopes" role="radiogroup" aria-label="Search scope">
               <button
                 class="esa-entity-search__scope typography-body-xs ${this.activeScope === '' ? 'esa-entity-search__scope--active' : ''}"
-                role="tab"
-                aria-selected=${this.activeScope === ''}
+                role="radio"
+                tabindex=${this.activeScope === '' ? '0' : '-1'}
+                aria-checked=${this.activeScope === ''}
                 @click=${() => this.setScope('')}
               >
                 ${this.allLabel}${q ? html`<span class="esa-entity-search__scope-count typography-body-xs">${totalCount}</span>` : null}
@@ -396,8 +538,9 @@ export class EsaEntitySearch extends LitElement {
               ${this.scopes.map(
                 (s) => html`<button
                   class="esa-entity-search__scope typography-body-xs ${this.activeScope === s.id ? 'esa-entity-search__scope--active' : ''}"
-                  role="tab"
-                  aria-selected=${this.activeScope === s.id}
+                  role="radio"
+                  tabindex=${this.activeScope === s.id ? '0' : '-1'}
+                  aria-checked=${this.activeScope === s.id}
                   @click=${() => this.setScope(s.id)}
                 >
                   ${this.renderIcon(s.icon)}${s.label}${q
@@ -408,7 +551,7 @@ export class EsaEntitySearch extends LitElement {
             </div>`
           : null}
 
-        <div class="esa-entity-search__results" role="listbox">
+        <div class="esa-entity-search__results" id="listbox" role="listbox">
           ${showingRecent
             ? html`<div class="esa-entity-search__group">
                 <div class="esa-entity-search__group-head typography-eyebrow-md"><span>Recent</span></div>
@@ -431,11 +574,11 @@ export class EsaEntitySearch extends LitElement {
           <span><kbd class="typography-label-xs">↑</kbd><kbd class="typography-label-xs">↓</kbd> Navigate</span>
           <span><kbd class="typography-label-xs">↵</kbd> Select</span>
           ${this.scopes.length
-            ? html`<span><kbd class="typography-label-xs">Tab</kbd> Scope</span>`
+            ? html`<span><kbd class="typography-label-xs">←</kbd><kbd class="typography-label-xs">→</kbd> Scope</span>`
             : null}
           <span><kbd class="typography-label-xs">Esc</kbd> Close</span>
         </div>
-      </div>
+      </dialog>
     `;
   }
 
@@ -443,34 +586,49 @@ export class EsaEntitySearch extends LitElement {
     typography,
     a11y,
     css`
+    /* The light-DOM box-sizing reset does not cross the shadow boundary, so set it
+       here — the same fix esa-sidebar-nav already carries. Without it .__row
+       (width: 100% + 0.75rem of inline padding) computes 24px WIDER than the
+       results box, and .__results has overflow-y: auto, which per CSS forces
+       overflow-x to auto too. So the list grew a horizontal scrollbar that no
+       amount of extra panel width could remove: the overflow was a fixed 24px,
+       not a proportion. Measured at 720px: scrollWidth 736 vs clientWidth 720. */
+    *, *::before, *::after { box-sizing: border-box; }
+
     :host { display: contents; }
 
-    .esa-entity-search__backdrop {
-      position: fixed;
-      inset: 0;
+    /* ::backdrop replaces the scrim div; the top layer replaces the z-index pair.
+       Literal fallback is the real value where ::backdrop does not inherit custom
+       properties — see esa-dialog. */
+    dialog.esa-entity-search::backdrop {
       background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
-      z-index: var(--z-modal-backdrop, 300);
     }
 
-    .esa-entity-search {
+    dialog.esa-entity-search {
+      /* Docked 12% down, so explicit insets and a zeroed margin rather than the
+         UA's centering 'margin: auto'; its border/padding and max-* clamps go too. */
       position: fixed;
       top: 12%;
       left: 50%;
       transform: translateX(-50%);
-      width: var(--entity-search-width, 600px);
+      margin: 0;
+      padding: 0;
+      width: var(--entity-search-width, 720px);
       max-width: calc(100vw - 2rem);
-      max-height: var(--entity-search-max-height, 70vh);
+      /* Docked at top: 12%, so 70vh left 18vh of dead space below the panel while
+         the results list was already scrolling at eight rows. 78vh spends that
+         slack and keeps a 10vh gap at the bottom. */
+      max-height: var(--entity-search-max-height, 78vh);
       background: var(--color-background-elevation-floating, #fcfcfc);
+      color: var(--color-content-default, #202020);
       border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-lg, 0.75rem);
       box-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
-      z-index: var(--z-modal, 400);
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
       font-family: var(--typography-font-family-sans, sans-serif);
       animation: esa-entity-enter var(--animation-enter, 150ms ease-out);
     }
+    dialog.esa-entity-search[open] { display: flex; flex-direction: column; }
     @keyframes esa-entity-enter {
       from { opacity: 0; transform: translateX(-50%) scale(0.96); }
       to { opacity: 1; transform: translateX(-50%) scale(1); }
@@ -482,6 +640,15 @@ export class EsaEntitySearch extends LitElement {
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
+      /* The panel is --radius-lg (12px) with overflow: hidden, so its inner clip
+         curve is (12 - 1px border) = 11px. A SQUARE row inside it puts the focus
+         ring's corner at (2,2) from the padding box, which is 12.7px from the
+         curve's centre and therefore outside it — ~4.7px was bitten off each end
+         of the ring's top edge. Matching the inner radius makes the outline follow
+         the curve instead; at outline-offset -2px the browser draws it 2px smaller,
+         which is exactly the curve 2px in, so nothing is clipped. */
+      border-radius: calc(var(--radius-lg, 0.75rem) - var(--border-width-default, 1px))
+        calc(var(--radius-lg, 0.75rem) - var(--border-width-default, 1px)) 0 0;
     }
     /* The ring goes on the ROW, not the input. The input is chromeless by design
        (it has no border of its own), so a ring drawn on it would float around bare
@@ -495,7 +662,11 @@ export class EsaEntitySearch extends LitElement {
       outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
-    .esa-entity-search__search-icon { color: var(--color-content-default-muted, #838383); flex-shrink: 0; }
+    /* Same rung as the text beside it. An icon is non-text content, so 3:1 (SC 1.4.11)
+       would have been enough and -muted cleared it — but a search glyph sitting next to
+       its own placeholder in a different grey reads as a rendering bug, not as a
+       hierarchy. Matching is the design call; the contrast is a free upgrade. */
+    .esa-entity-search__search-icon { color: var(--color-content-default-secondary, #646464); flex-shrink: 0; }
     .esa-entity-search__input {
       flex: 1;
       border: none;
@@ -505,7 +676,9 @@ export class EsaEntitySearch extends LitElement {
       background: transparent;
       font-family: inherit;
     }
-    .esa-entity-search__input::placeholder { color: var(--color-content-default-muted, #838383); }
+    /* -secondary: a placeholder is TEXT under SC 1.4.3, and axe cannot evaluate
+       ::placeholder — so this one was invisible to the audit as well as to readers. */
+    .esa-entity-search__input::placeholder { color: var(--color-content-default-secondary, #646464); }
     .esa-entity-search__kbd, .esa-entity-search__footer kbd {
       display: inline-flex;
       align-items: center;
@@ -513,7 +686,8 @@ export class EsaEntitySearch extends LitElement {
       min-width: 19px;
       height: 19px;
       padding: 0 5px;
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary: the key glyphs are text. 3.70:1 vs 5.77:1 on the raised chip. */
+      color: var(--color-content-default-secondary, #646464);
       background: var(--color-background-elevation-raised, #fcfcfc);
       border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-bottom-width: 2px;
@@ -539,11 +713,32 @@ export class EsaEntitySearch extends LitElement {
       cursor: pointer;
       transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
     }
-    .esa-entity-search__scope:hover { border-color: var(--color-border-brand, #b2ddb5); color: var(--color-content-default, #202020); }
+    /* Hover moves the SURFACE, like every other control in the kit
+       (esa-chip-group, esa-filter-dropdown): a value step down to sunken plus the
+       stronger neutral border. It used to tint the border brand and darken the
+       text only, which read as a link rather than a button — and it carried no
+       :not(--active), so hovering the SELECTED facet repainted its knockout label
+       to --color-content-default on the brand fill (2.4:1, unreadable). The
+       selected pill gets its own hover below, on the brand ramp's hover step. */
+    .esa-entity-search__scope:hover:not(.esa-entity-search__scope--active) {
+      background: var(--color-background-elevation-sunken, #f0f0f0);
+      border-color: var(--color-border-default-strong, #bbbbbb);
+      color: var(--color-content-default, #202020);
+    }
+    /* Outward, per /foundations/focus: inset the ring only where the box is
+       clipped. These pills sit inside a padded row, so nothing clips them. */
+    .esa-entity-search__scope:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
     .esa-entity-search__scope--active {
       background: var(--color-background-brand, #46a758);
       border-color: var(--color-background-brand, #46a758);
       color: var(--color-content-default-knockout, #fcfcfc);
+    }
+    .esa-entity-search__scope--active:hover {
+      background: var(--color-background-brand-hover, #3e9b4f);
+      border-color: var(--color-background-brand-hover, #3e9b4f);
     }
     .esa-entity-search__scope-count {
       font-variant-numeric: tabular-nums;
@@ -558,7 +753,9 @@ export class EsaEntitySearch extends LitElement {
       align-items: center;
       justify-content: space-between;
       padding: var(--spacing-200, 0.5rem) var(--spacing-200, 0.5rem) var(--spacing-100, 0.25rem);
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary, not -muted: the scope label and its count are text at 12px —
+         3.70:1 on the dialog surface, 5.77:1 here. */
+      color: var(--color-content-default-secondary, #646464);
     }
     .esa-entity-search__group-count { font-variant-numeric: tabular-nums; }
 
@@ -577,15 +774,24 @@ export class EsaEntitySearch extends LitElement {
       text-align: left;
       transition: background 80ms ease;
     }
+    .esa-entity-search__row:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
     .esa-entity-search__row--active { background: var(--color-background-elevation-sunken, #f0f0f0); }
-    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-default-muted, #838383); }
+    /* Matches the row's own text, per the search icon above. The ACTIVE row overrides
+       this to the brand colour on the next line, which is the only intended split. */
+    .esa-entity-search__row-icon { flex-shrink: 0; display: inline-flex; color: var(--color-content-default-secondary, #646464); }
     .esa-entity-search__row--active .esa-entity-search__row-icon { color: var(--color-content-brand, #2a7e3b); }
     .esa-entity-search__row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .esa-entity-search__row-title {
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-subtitle {
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary: WORST CASE is the ACTIVE row, whose sunken fill takes muted
+         down to 3.33:1 — the row the keyboard user is looking at is the one that
+         read worst. 5.19:1 there, 5.77:1 at rest. */
+      color: var(--color-content-default-secondary, #646464);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .esa-entity-search__row-title mark, .esa-entity-search__row-subtitle mark {
@@ -593,9 +799,16 @@ export class EsaEntitySearch extends LitElement {
       color: inherit;
       border-radius: 2px;
     }
-    .esa-entity-search__row-meta { flex-shrink: 0; color: var(--color-content-default-muted, #838383); font-variant-numeric: tabular-nums; }
+    /* -secondary: same active-row worst case as the subtitle. */
+    .esa-entity-search__row-meta { flex-shrink: 0; color: var(--color-content-default-secondary, #646464); font-variant-numeric: tabular-nums; }
     .esa-entity-search__row-actions { flex-shrink: 0; display: inline-flex; gap: var(--spacing-100, 0.25rem); opacity: 0; }
+    /* :focus-within is not decoration here. A button at opacity 0 is still focusable,
+       so once Tab was freed to reach these buttons the reveal-on-hover rule alone
+       would have put focus on something the user cannot see — SC 2.4.7, and the kind
+       of thing that reads as "the ring disappeared" rather than as a missing rule.
+       Anything reachable by Tab has to become visible when it is. */
     .esa-entity-search__row:hover .esa-entity-search__row-actions,
+    .esa-entity-search__row:focus-within .esa-entity-search__row-actions,
     .esa-entity-search__row--active .esa-entity-search__row-actions { opacity: 1; }
     .esa-entity-search__row-action {
       display: inline-flex; align-items: center; gap: 4px;
@@ -607,11 +820,16 @@ export class EsaEntitySearch extends LitElement {
       cursor: pointer;
     }
     .esa-entity-search__row-action:hover { border-color: var(--color-background-brand, #46a758); color: var(--color-background-brand, #46a758); }
+    .esa-entity-search__row-action:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
 
     .esa-entity-search__empty {
       padding: var(--spacing-700, 3rem) var(--spacing-600, 2rem);
       text-align: center;
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary: only renders on a no-results state, which the audit never saw. */
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .esa-entity-search__footer {
@@ -619,7 +837,8 @@ export class EsaEntitySearch extends LitElement {
       gap: var(--spacing-400, 1rem);
       padding: var(--spacing-250, 0.625rem) var(--spacing-400, 1rem);
       border-top: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
-      color: var(--color-content-default-muted, #838383);
+      /* -secondary: the Navigate/Select/Scope/Close labels are text. 3.70 -> 5.77:1. */
+      color: var(--color-content-default-secondary, #646464);
     }
     .esa-entity-search__footer span { display: inline-flex; align-items: center; gap: 4px; }
   `,

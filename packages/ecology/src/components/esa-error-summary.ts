@@ -228,7 +228,7 @@ export class EsaErrorSummary extends LitElement {
         border: var(--border-width-default, 1px) solid
           var(--color-border-utility-danger, #fdbdbe);
         border-radius: var(--radius-md, 0.5rem);
-        background: var(--color-background-utility-danger-subtle, #fff7f7);
+        background: var(--color-background-utility-danger-subtle, #fffcfc);
         color: var(--color-content-default, #202020);
       }
 

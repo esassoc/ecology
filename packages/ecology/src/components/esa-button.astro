@@ -126,8 +126,38 @@ const {
   target,
   rel,
   class: className = '',
+  /*
+   * `slot` IS HOISTED TO THE WRAPPER, and it is the one attribute that cannot ride in
+   * ...rest. Everything else in rest is a property OF the button and belongs on the
+   * native element. `slot` is not — it is a PLACEMENT instruction, and it only means
+   * anything on a DIRECT CHILD of the shadow host. This component renders
+   * `<span class="esa-button"><button class="esa-button__native"></button></span>`, so
+   * a slot left in rest lands on the inner button, which is one level too deep to be
+   * seen. Measured before the fix: `<esa-dialog><EsaButton slot="footer">` rendered
+   * `<esa-dialog><span …><button slot="footer">`, and the button went to the DEFAULT
+   * slot with nothing reporting a problem — the dialog footer was simply empty.
+   *
+   * AN ASTRO-COMPONENT PARENT IS UNAFFECTED, but not for the reason you would guess.
+   * Astro does NOT consume the attribute — measured on the esa-page-header page, `slot`
+   * arrives in these props even when Astro has already used it to place the content in a
+   * compile-time `<slot name="actions">`. So it renders into the output either way; it
+   * simply moved from the inner button to the wrapper. That is inert, because a `slot`
+   * attribute means nothing on an element that is not the child of a shadow host — which
+   * is also why the bug this fixes was invisible for so long.
+   */
+  slot,
   ...rest
 } = Astro.props;
+
+/*
+ * SPREAD IT, never write `slot={slot}`. Astro special-cases a LITERAL `slot=` attribute
+ * on an element inside a component template — it reads it as its own compile-time slot
+ * directive and strips it from the output, so the attribute silently disappears rather
+ * than moving. Measured: the literal form rendered no slot at all on either element.
+ * A spread is opaque to that check, which is exactly how the attribute reached the inner
+ * button through ...rest in the first place.
+ */
+const slotAttr = slot === undefined ? {} : { slot };
 
 // Explicit `variant` always wins, so a spoke mid-migration can pass both without
 // the stale one overriding the fixed one. Tested against Astro.props rather than
@@ -230,7 +260,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     since they are all `.esa-button--x .esa-button__native` descendant selectors and
     a single element is not a descendant of itself. */}
 {isSummary ? (
-  <summary class={cls} {...summaryAttrs} {...rest}>
+  <summary class={cls} {...slotAttr} {...summaryAttrs} {...rest}>
     <span class={`esa-button__native typography-${LABEL_TYPE[size]}`}>
       {icon && <EsaIcon name={icon} size={size} />}
       {!iconOnly && (
@@ -240,7 +270,7 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
     </span>
   </summary>
 ) : (
-<span class={cls}>
+<span class={cls} {...slotAttr}>
   {isLink ? (
     <a class={`esa-button__native typography-${LABEL_TYPE[size]}`} {...linkAttrs} {...rest}>
       {loading && <span class="esa-button__spinner" aria-hidden="true" />}
@@ -306,11 +336,24 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   .esa-button--variant-primary {
     --_accent-text: var(--color-content-brand);
   }
+  /* Step 3, not step 8. Step 8 is Radix's HOVERED UI ELEMENT BORDER step; used as a
+     solid fill it measured 3.51-5.47:1 against its own foreground in light and
+     3.82-4.67:1 in dark, and the theme generator was hiding that behind a movable
+     walk. Step 3 is the UI-element background step and measures 10.27-11.80:1 /
+     11.33-12.54:1 with the same foreground, for every brand, with no search.
+
+     The cost is that a step-3 fill sits 1.09-1.28:1 against the page, so this is the
+     one variant whose FILL appearance needs a drawn border. It is the neutral
+     --color-border-default-strong rather than a brand step because no brand step
+     reaches 3:1 against the page either (step 6 = 1.46-1.75, step 7 = 1.74-2.32) —
+     measured, not assumed — and because appearance="soft" already draws exactly this
+     border for exactly this reason. */
   .esa-button--variant-secondary {
-    --_accent: var(--color-background-brand-secondary);
-    --_accent-hover: var(--color-background-brand-secondary-hover);
-    --_on: var(--color-content-on-brand-secondary, var(--color-content-default));
-    --_accent-text: var(--color-content-brand-secondary);
+    --_accent: var(--color-background-brand-muted);
+    --_accent-hover: var(--color-background-brand-muted-hover);
+    --_on: var(--color-content-on-brand-muted, var(--color-content-default));
+    --_accent-text: var(--color-content-brand);
+    --_accent-border: var(--color-border-default-strong, #bbbbbb);
   }
   .esa-button--variant-danger {
     --_accent: var(--color-background-utility-danger);
@@ -344,7 +387,10 @@ const summaryAttrs = { ...stateAttrs, ...nameAttrs };
   .esa-button--appearance-fill .esa-button__native {
     background: var(--_accent);
     color: var(--_on);
-    border-color: transparent;
+    /* transparent by default, so every other variant renders byte-identically. A
+       transparent border is also what keeps forced-colors working here: border-color
+       is force-adjusted, so the box becomes visible with no media query. */
+    border-color: var(--_accent-border, transparent);
   }
   .esa-button--appearance-fill .esa-button__native:hover:not(:disabled) { background: var(--_accent-hover); }
   .esa-button--appearance-fill.esa-button--active .esa-button__native { background: var(--_accent-hover); }

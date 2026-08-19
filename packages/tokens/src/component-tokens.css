@@ -212,9 +212,9 @@
      with --form-error-color below: one error treatment, two properties. */
   --form-error-border-color: var(--color-background-utility-danger);
   --form-text-color: var(--color-content-default);
-  --form-placeholder-color: var(--color-content-default-muted);
+  --form-placeholder-color: var(--color-content-default-secondary, #646464);
   --form-label-color: var(--color-content-default-secondary);
-  --form-help-color: var(--color-content-default-muted);
+  --form-help-color: var(--color-content-default-secondary, #646464);
   --form-error-color: var(--color-content-utility-danger);
   /* The prefix/suffix slab on a text field — a leading `$`, a trailing `.com`.
      Read by esa-text-field, declared here rather than there because the affix is
@@ -495,10 +495,7 @@
 :root {
 
   /* esa-alert-box */
-  --alert-box-bg: var(--color-background-utility-info-subtle, #eff6ff);
-  --alert-box-border-color: var(--color-border-utility-info, #bfdbfe);
   --alert-box-text-color: var(--color-content-default-secondary, #525252);
-  --alert-box-title-color: var(--color-content-default, #171717);
 
   /* esa-app-shell */
   --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
@@ -602,8 +599,8 @@
   --empty-state-icon-size-xs: 24px;
 
   /* esa-entity-search */
-  --entity-search-max-height: 70vh;
-  --entity-search-width: 600px;
+  --entity-search-max-height: 78vh;
+  --entity-search-width: 720px;
 
   /* esa-file-list */
   /* Row density. The one hook in the 2026-08-16 sweep with a named human behind
@@ -712,7 +709,7 @@
      all. Sizes stay pointed at tier-2 font-size roles (NOT at a type role
      class) because the value deliberately sits at a large-but-tasteful step,
      below the display/900 roles. */
-  --stat-accent-color: var(--color-content-brand-secondary, #3a7c59);
+  --stat-accent-color: var(--color-content-brand, #3a7c59);
   --stat-value-color: var(--color-content-default, #171717);
   --stat-value-size: var(--font-size-700, 2.25rem);
 

@@ -52,8 +52,9 @@ const describe = {
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>The spinner carries <code>role="status"</code> and <code>aria-label="Loading"</code>.</li>
-      <li>The backdrop sits at <code>z-index: 10</code> over the parent and intercepts interaction while active.</li>
+      <li>The backdrop is a single named graphic — <code>role="img"</code> with <code>message</code> as its accessible name, plus <code>aria-busy</code> — and the visual content inside it is <code>aria-hidden</code> so the name is not read twice. It is <strong>not</strong> a <code>role="status"</code> live region: this page said so until 2026-08-18 and the source had already moved off it, because a region created in the same tick as its text does not announce.</li>
+      <li>The backdrop sits at <code>z-index: 10</code> over the parent and intercepts <strong>pointer</strong> interaction while active.</li>
+      <li><strong>It does not stop the keyboard, and it cannot.</strong> The overlay is <code>position: absolute</code>, scoped to its nearest positioned ancestor — so a keyboard user can still Tab into controls sitting under an opaque backdrop, and the component cannot make that region <code>inert</code> because it does not own it. Making the covered region inert while loading is the <em>call site's</em> job.</li>
       <li>For long operations, consider moving focus or announcing the busy state at the call site.</li>
     </ul>
   </Section>

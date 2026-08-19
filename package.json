@@ -25,10 +25,12 @@
     "contrast": "node scripts/check-contrast.mjs --hub",
     "contrast:dark": "node scripts/check-contrast.mjs apps/site/src/styles/docs-dark.css --scheme dark",
     "theme:make": "node scripts/make-theme.mjs",
+    "theme:check": "node scripts/check-themes.mjs",
     "theme:curves": "node scripts/gen-radix-curves.mjs",
     "tokens:primitives": "node scripts/gen-radix-primitives.mjs",
     "a11y:sizes": "node scripts/check-size-usage.mjs",
-    "a11y:floors": "node scripts/check-target-size.mjs --assurance wcag-aa --emit-floors packages/tokens/size-floors.json"
+    "a11y:floors": "node scripts/check-target-size.mjs --assurance wcag-aa --emit-floors packages/tokens/size-floors.json",
+    "a11y:overlays": "node scripts/check-overlay-focus.mjs"
   },
   "dependencies": {
     "@radix-ui/colors": "^3.0.0"

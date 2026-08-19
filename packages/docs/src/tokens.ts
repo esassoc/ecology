@@ -5,7 +5,7 @@
 // live cascade at runtime (see foundation-hydrate.ts) so each spoke's page shows
 // whatever its theme CSS set — not the teal defaults compiled into @esa/tokens.
 //
-// Primitive ramps (--cbf-blue-*, --bcn-gray-*) are deliberately NOT here: they're
+// Primitive ramps (--cbf-blue-*, --bcn-neutral-*) are deliberately NOT here: they're
 // per-brand, named by the spoke. Foundation components take those as a prop.
 
 export interface TokenRole {

@@ -1,7 +1,8 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 import { withBase } from '@esa/docs/base';
@@ -38,13 +39,13 @@ const events = [
     <Preview code={`<button data-kind="success">Success</button>
 
 <esa-snackbar-container id="toasts"></esa-snackbar-container>`}>
-      <button class="trigger" data-kind="info">Info</button>
-      <button class="trigger" data-kind="success">Success</button>
-      <button class="trigger" data-kind="warning">Warning</button>
-      <button class="trigger" data-kind="danger">Danger</button>
-      <button class="trigger" data-kind="action">With action</button>
-      <button class="trigger" data-kind="timed">Auto-dismiss (5s)</button>
-      <button class="trigger" data-kind="clear">Clear all</button>
+      <EsaButton variant="secondary" data-kind="info">Info</EsaButton>
+      <EsaButton variant="secondary" data-kind="success">Success</EsaButton>
+      <EsaButton variant="secondary" data-kind="warning">Warning</EsaButton>
+      <EsaButton variant="secondary" data-kind="danger">Danger</EsaButton>
+      <EsaButton variant="secondary" data-kind="action">With action</EsaButton>
+      <EsaButton variant="secondary" data-kind="timed">Auto-dismiss (5s)</EsaButton>
+      <EsaButton variant="secondary" data-kind="clear">Clear all</EsaButton>
       <esa-snackbar-container id="toasts"></esa-snackbar-container>
     </Preview>
   </Section>
@@ -114,7 +115,7 @@ const events = [
   import '@esa/ecology/esa-snackbar-container';
 
   const toasts = document.getElementById('toasts') as any;
-  document.querySelectorAll('.trigger').forEach((btn) =>
+  document.querySelectorAll('[data-kind]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const kind = (btn as HTMLElement).dataset.kind;
       switch (kind) {
@@ -132,15 +133,3 @@ const events = [
   );
 </script>
 
-<style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-elevation-raised, #fff);
-    color: var(--color-content-default, #171717);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
-</style>

@@ -71,6 +71,10 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
     {type !== 'reference' && <span class="pill">{type}</span>}
     {wraps && <span class="pill">wraps {wraps}</span>}
     {importLine && <code class="imp">{importLine}</code>}
+    {/* Only on `wc` pages, because only those have an Angular tab to explain. The
+        caveat that the package is not yet installable from a stock Angular build
+        is stated ONCE, there — repeating it under 101 snippets would be noise. */}
+    {type === 'wc' && <a class="ng-link" href={withBase('/guide/angular')}>Angular usage</a>}
   </div>
 
   {resolved === 'deprecated' && (
@@ -185,6 +189,16 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
 </DocsLayout>
 
 <style>
+  /* Sits beside .imp in the meta row and deliberately looks quieter than it —
+     the import line is what you need on this page; this is a pointer off it. */
+  .ng-link {
+    font-size: 12.5px;
+    color: var(--color-content-default-secondary, #646464);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-default, #dcdcdc);
+  }
+  .ng-link:hover { color: var(--color-content-default, #171717); }
+
   /* Deprecation banner. The status pill is defined in DocsShell's global block
      alongside pill--stable, so only the page-level banner is scoped here. */
   .dep {
@@ -205,16 +219,16 @@ const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
   .ts-table { width: 100%; border-collapse: collapse; }
   .ts-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border-default, #e5e5e5); }
   .ts-table td { padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-default, #e5e5e5); vertical-align: top; }
-  .ts-only { color: var(--color-content-default-muted, #888); }
+  .ts-only { color: var(--color-content-default-secondary, #646464); }
   .ts-tokens { margin: 0; padding: 0; list-style: none; }
   .ts-tokens code { font-size: 0.8125rem; }
   .ts-tokens li { margin-block-end: var(--spacing-150, 0.375rem); }
   .ts-val { display: block; font-size: 0.8125rem; color: var(--color-content-default, #171717); }
-  .ts-via { display: block; font-size: 0.75rem; color: var(--color-content-default-muted, #999); }
-  .ts-readers { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-content-default-muted, #999); }
+  .ts-via { display: block; font-size: 0.75rem; color: var(--color-content-default-secondary, #646464); }
+  .ts-readers { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-content-default-secondary, #646464); }
   .ts-warn { color: var(--color-content-utility-danger, #ce2c31); }
   .ts-note { color: var(--color-content-default-secondary, #444); }
   .ts-h { margin: var(--spacing-600, 2rem) 0 var(--spacing-100, 0.25rem); }
   .ts-sub { margin: 0 0 var(--spacing-300, 0.75rem); color: var(--color-content-default-secondary, #444); }
-  .ts-empty { color: var(--color-content-default-muted, #888); }
+  .ts-empty { color: var(--color-content-default-secondary, #646464); }
 </style>

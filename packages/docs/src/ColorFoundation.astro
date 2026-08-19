@@ -12,7 +12,7 @@ interface Ramp { name: string; steps: { step: string; value?: string; token?: st
 interface Props {
   brand?: string;       // crumb label, e.g. "Beacon"; omit to hide the crumb
   brandHref?: string;
-  ramps?: Ramp[];       // spoke-specific primitive ramps (--bcn-gray-*, etc.)
+  ramps?: Ramp[];       // spoke-specific primitive ramps (--bcn-neutral-*, etc.)
 }
 const { brand, brandHref = '/design-system', ramps = [] } = Astro.props;
 ---
@@ -61,7 +61,7 @@ const { brand, brandHref = '/design-system', ramps = [] } = Astro.props;
 
 <style>
   .grp { margin-bottom: var(--spacing-600, 2rem); }
-  .grp__note { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 14px; color: var(--color-content-default-muted, #7c7c7c); }
+  .grp__note { margin: 0 0 var(--spacing-300, 0.75rem); font-size: 14px; color: var(--color-content-default-secondary, #646464); }
   .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--spacing-300, 0.75rem); }
   .role { display: flex; align-items: center; gap: var(--spacing-300, 0.75rem); }
   .role__sw {
@@ -70,6 +70,6 @@ const { brand, brandHref = '/design-system', ramps = [] } = Astro.props;
   }
   .role__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .role__body code { font-family: var(--typography-font-family-mono, monospace); font-size: 12.5px; color: var(--color-content-default, #171717); }
-  .role__val { font-family: var(--typography-font-family-mono, monospace); font-size: 12px; color: var(--color-content-default-muted, #7c7c7c); }
-  .role__note { font-size: 12px; color: var(--color-content-default-muted, #7c7c7c); }
+  .role__val { font-family: var(--typography-font-family-mono, monospace); font-size: 12px; color: var(--color-content-default-secondary, #646464); }
+  .role__note { font-size: 12px; color: var(--color-content-default-secondary, #646464); }
 </style>

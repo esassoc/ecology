@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-back-to-top — interactive (Lit Web Component).
@@ -19,7 +20,7 @@ import { LitElement, html, css } from 'lit';
 export class EsaBackToTop extends LitElement {
   static properties = {
     threshold: { type: Number },
-    smoothScroll: { type: Boolean, attribute: 'smooth-scroll' },
+    smoothScroll: { type: Boolean, attribute: 'smooth-scroll', converter: boolish },
     scrollTarget: { attribute: false },
     visible: { type: Boolean, reflect: true },
   };

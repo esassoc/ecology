@@ -37,18 +37,22 @@ export { contrastRatio as ratio };
 // ride on a deprecated alias.
 export const PAIRS = [
   // Neutral text on neutral surfaces.
-  ['--color-content-primary', '--color-background-raised', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-sunken', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-floating', 4.5, 'fail'],
-  ['--color-content-secondary', '--color-background-raised', 4.5, 'fail'],
-  ['--color-content-muted', '--color-background-raised', 4.5, 'warn'], // genuine meta text — review, don't block
-  ['--color-content-link', '--color-background-raised', 4.5, 'fail'],
-  ['--color-content-inverse', '--color-background-inverse', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-elevation-raised', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-default', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-elevation-sunken', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-elevation-floating', 4.5, 'fail'],
+  ['--color-content-default-secondary', '--color-background-elevation-raised', 4.5, 'fail'],
+  // WAS TWO ROWS. --color-content-muted and --color-content-secondary are both aliases of
+  // --color-content-default-secondary, so the table graded ONE value twice — once at
+  // `fail`, once at `warn` with the note "genuine meta text — review, don't block". The
+  // stricter row already governed, so the softer one changed no verdict in either scheme
+  // and only made the count look like coverage it did not have. If meta text ever wants a
+  // softer bar it needs its own ROLE first, not a second name for this one.
+  ['--color-content-link', '--color-background-elevation-raised', 4.5, 'fail'],
 
   // Each intention's declared foreground against its own solid fill.
   ['--color-content-on-brand', '--color-background-brand', 4.5, 'fail'],
-  ['--color-content-on-brand-secondary', '--color-background-brand-secondary', 4.5, 'fail'],
+  ['--color-content-on-brand-muted', '--color-background-brand-muted', 4.5, 'fail'],
   ['--color-content-on-accent', '--color-background-accent', 4.5, 'fail'],
   ['--color-content-on-ai', '--color-background-ai', 4.5, 'fail'],
   ['--color-content-on-utility-info', '--color-background-utility-info', 4.5, 'fail'],
@@ -62,21 +66,41 @@ export const PAIRS = [
   ['--color-content-utility-success', '--color-background-utility-success-subtle', 4.5, 'fail'],
   ['--color-content-utility-warning', '--color-background-utility-warning-subtle', 4.5, 'fail'],
   ['--color-content-utility-danger', '--color-background-utility-danger-subtle', 4.5, 'fail'],
+  // ---- SC 1.4.3 · TINTED STATUS FILLS (step 3) ----
+  //
+  // The four `-muted` fills are NEW in this change and arrived ungraded, which is how
+  // the dark half stayed invisible: measured at 1.67-1.96:1, because the hub's dark
+  // block re-points `-subtle` (step 1), `border` (6) and `content` (11) and never got
+  // the new step-3 rung — so a light tint kept its light value under light text on a
+  // near-black page. Generated themes emitted all four in both schemes throughout, so
+  // `theme:check` was green and only the HUB was broken. Fixed in docs-dark.css.
+  //
+  // Light still fails three of four at 4.21-4.25:1, and that is the DESIGNED position
+  // rather than an oversight: `-muted` is Radix's UI-element background step, which is
+  // the whole thing separating it from `-subtle`, so it cannot follow `-subtle` down to
+  // step 1 without collapsing the two roles. Verified the profile is the answer —
+  // `check-contrast.mjs --hub --assurance wcag-aa` passes all 66, because step 12 text
+  // clears every one. Graded `fail` and not `warn` on purpose: these paint badges and
+  // chips, and a warn would let the base theme quietly ship unreadable status text.
+  ['--color-content-utility-info', '--color-background-utility-info-muted', 4.5, 'fail'],
+  ['--color-content-utility-success', '--color-background-utility-success-muted', 4.5, 'fail'],
+  ['--color-content-utility-warning', '--color-background-utility-warning-muted', 4.5, 'fail'],
+  ['--color-content-utility-danger', '--color-background-utility-danger-muted', 4.5, 'fail'],
 
   // Body text on the subtle tints, which is how the alert bodies are actually built.
-  ['--color-content-primary', '--color-background-brand-subtle', 4.5, 'fail'],
-  ['--color-content-primary', '--color-background-utility-success-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-utility-warning-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-utility-danger-subtle', 4.5, 'warn'],
-  ['--color-content-primary', '--color-background-utility-info-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-brand-subtle', 4.5, 'fail'],
+  ['--color-content-default', '--color-background-utility-success-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-utility-warning-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-utility-danger-subtle', 4.5, 'warn'],
+  ['--color-content-default', '--color-background-utility-info-subtle', 4.5, 'warn'],
 
   ['--color-content-disabled', '--color-background-disabled', 4.5, 'warn'], // disabled is exempt from AA; informational
-  ['--color-background-brand', '--color-background-raised', 3.0, 'warn'], // as a UI/graphic color
+  ['--color-background-brand', '--color-background-elevation-raised', 3.0, 'warn'], // as a UI/graphic color
 
   // ---- SC 1.4.11 · THE FOCUS RING, on every surface it can land on ----
   //
   // These five replace ONE row that was wrong three ways:
-  //   ['--color-border-focus', '--color-background-raised', 3.0, 'warn']
+  //   ['--color-border-default-focus', '--color-background-elevation-raised', 3.0, 'warn']
   // It named a PRE-RENAME token that resolved only through a compatibility alias; it was
   // `warn`, so it reported a Level AA failure to nobody; and it tested a single surface,
   // never the SUNKEN one, which is the ring's worst (2.66:1 against 2.95 on raised).
@@ -108,6 +132,26 @@ export const PAIRS = [
   // already does via currentColor. Promote to `fail` once the dark-chrome components do.
   ['--color-border-default-focus', '--color-background-default-knockout', 3.0, 'warn'],
 
+  // ---- SC 1.4.3 · TEXT ON THE KNOCKOUT SURFACE ----
+  //
+  // 22 components put text on a knocked-out ground — app bars, tooltips, snackbars, the
+  // secondary-badge text, esa-card's knockout header.
+  //
+  // THIS ROW WAS ADDED AS "the pair was ungraded", AND THAT WAS WRONG — it was graded, up
+  // in the neutral group, as --color-content-inverse on --color-background-inverse. Those
+  // are the pre-rename names for exactly these two tokens, so the row read as a different
+  // pair while resolving to the same one. That is the cost of grading deprecated names:
+  // the table cannot see its own duplicates, and the second row looked like new coverage.
+  //
+  // It passes comfortably today and always has: 15.88:1 on the hub's light defaults,
+  // 15.15:1 on its dark block, because both sides are step 12 and step 1 of the same
+  // neutral and the ramp guarantees the span. That is exactly why it is worth a row —
+  // it is correct by construction, so nothing would notice if a spoke pinned one half.
+  // `--color-background-default-knockout` is a documented spoke override (a theme whose
+  // ground is already dark re-points it to a LIGHT value), and a spoke that moves the
+  // surface without moving the text gets no warning from anything else in this file.
+  ['--color-content-default-knockout', '--color-background-default-knockout', 4.5, 'fail'],
+
   // ---- SC 1.4.11 · THE FOCUS RING ON AN INVALID FIELD ----
   //
   // The ring turns red on a field in its error state — the same band, same width, same
@@ -119,7 +163,7 @@ export const PAIRS = [
   // the components actually paint and it is declared in component-tokens.css, which this
   // script parses. It chains to --color-background-utility-danger, so a spoke re-pointing
   // the tier-2 role is still caught. Resolves to red-9 (#e5484d, 3.43:1 worst) by default
-  // and red-11 (4.57:1) under [data-assurance="wcag-aa"].
+  // and red-11 (4.57:1) under [data-a11y-assurance="wcag-aa"].
   //
   // WHAT THESE ROWS WOULD HAVE CAUGHT: until 2026-08-17 three of the six painted this ring
   // from --color-border-utility-danger, which is red-6 — a SUBTLE BORDER step, 1.40:1 on a
@@ -234,7 +278,7 @@ export function parseBlocks(css) {
   return blocks;
 }
 
-const ASSURANCE_SCOPE = /\[data-assurance/;
+const ASSURANCE_SCOPE = /\[data-a11y-assurance/;
 const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
 
 /*
@@ -244,7 +288,7 @@ const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
  * It swept every `--name: value;` in the file regardless of which rule it sat in,
  * which was fine while the only top-level block was `:root` (the P3 and
  * reduced-motion blocks are at-rules and were already stripped). Then the
- * accessibility assurance profile was appended as a plain `[data-assurance]`
+ * accessibility assurance profile was appended as a plain `[data-a11y-assurance]`
  * block — and because it comes LAST, last-one-wins handed the audit the assured
  * colours as if they were the hub defaults. `--hub` went from 7 failures to
  * "All text pairs pass AA" with no code change and no warning.
@@ -263,17 +307,16 @@ const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
  * audited. Blocks with no [data-scheme] at all are the base and are always read,
  * which is what lets a dark run resolve the roles the dark block does not re-point.
  */
-/**
- * @returns {{ schemeBlocks: number }} how many [data-scheme] blocks matched the
- * requested scheme. The caller needs this to tell "graded the dark values" apart
- * from "found no dark values and graded the light ones under a dark header" —
- * the two are otherwise indistinguishable in the output.
- */
 export function parseDeclarations(css, map, { assurance = null, scheme = 'light' } = {}) {
+  // COUNT THE SCHEME BLOCKS WE ACTUALLY MATCHED, and hand it back. A file holding
+  // both a light and a dark block gets swept flat otherwise, the dark one wins on
+  // last-one-wins, and the audit grades dark values under a header claiming light.
+  // The caller dies when a non-default --scheme matched nothing, which is the only
+  // way to tell "this file has no dark block" from "its dark block passed".
   let schemeBlocks = 0;
   for (const [selector, body] of parseBlocks(css)) {
     if (ASSURANCE_SCOPE.test(selector)) {
-      if (!assurance || !selector.includes(`[data-assurance="${assurance}"]`)) continue;
+      if (!assurance || !selector.includes(`[data-a11y-assurance="${assurance}"]`)) continue;
     }
     const sm = SCHEME_SCOPE.exec(selector);
     if (sm && sm[1] !== scheme) continue;

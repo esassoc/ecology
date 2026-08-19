@@ -18,7 +18,7 @@
  * be noticed. What was missing is what always goes missing by hand:
  *
  *   - all eight --color-content-on-* foregrounds, every one a `fail`-level row in
- *     check-contrast.mjs. beacon failed content-on-brand-secondary at 3.64:1 for
+ *     check-contrast.mjs. beacon failed content-on-brand-muted at 3.64:1 for
  *     exactly this reason, and it is fixed now because a generator picked the
  *     foreground against the fill instead of inheriting the hub's;
  *   - the ~25 other brand-derived roles (--color-content-brand, --color-border-brand,

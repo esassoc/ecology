@@ -56,6 +56,14 @@ const showToggle = colorScheme === 'toggle';
         document.documentElement.setAttribute('data-scheme', s);
       </script>
     )}
+    {/* The code-language choice (HTML vs Angular) persists across pages, so it
+        has to be applied BEFORE first paint or every navigation flashes the HTML
+        panel before switching. Ungated by `showToggle` — a spoke with no scheme
+        toggle still has previews. Harmless when nothing was ever stored. */}
+    <script is:inline>
+      const cl = localStorage.getItem('esa-code-lang');
+      if (cl) document.documentElement.setAttribute('data-code-lang', cl);
+    </script>
     <slot name="head" />
     <style is:global>
       *, *::before, *::after { box-sizing: border-box; }
@@ -124,7 +132,7 @@ const showToggle = colorScheme === 'toggle';
       .brand .brand-mark-slot { display: inline-flex; width: 30px; height: 30px; flex: none; }
       .brand .brand-mark-slot :global(svg) { width: 100%; height: 100%; display: block; }
       .brand b { font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
-      .brand .ver { font-size: 12px; color: var(--color-content-default-muted, #7c7c7c); }
+      .brand .ver { font-size: 12px; color: var(--color-content-default-secondary, #646464); }
 
       .nav { padding: var(--spacing-400, 1rem) var(--spacing-300, 0.75rem) 0; }
       .nav-group { margin-bottom: var(--spacing-500, 1.5rem); }
@@ -149,7 +157,7 @@ const showToggle = colorScheme === 'toggle';
       }
       .nav-link .tag {
         font-size: 11px; font-family: var(--typography-font-family-mono, monospace);
-        color: var(--color-content-default-muted, #7c7c7c);
+        color: var(--color-content-default-secondary, #646464);
         border: 1px solid var(--color-border-default, #dcdcdc);
         border-radius: 5px; padding: 0 5px; line-height: 16px;
       }
@@ -177,7 +185,7 @@ const showToggle = colorScheme === 'toggle';
         width: 280px; max-width: 40%;
         padding: 7px var(--spacing-300, 0.75rem);
         border: 1px solid var(--color-border-default, #dcdcdc); border-radius: 9px;
-        color: var(--color-content-default-muted, #7c7c7c); font-size: 14px; cursor: text;
+        color: var(--color-content-default-secondary, #646464); font-size: 14px; cursor: text;
         background: var(--color-background-elevation-raised, #fff);
         font-family: inherit; text-align: left;
       }
@@ -185,7 +193,7 @@ const showToggle = colorScheme === 'toggle';
       .search kbd {
         margin-left: auto; font-family: var(--typography-font-family-mono, monospace); font-size: 11px;
         border: 1px solid var(--color-border-default, #dcdcdc); border-radius: 5px;
-        padding: 1px 5px; color: var(--color-content-default-muted, #7c7c7c);
+        padding: 1px 5px; color: var(--color-content-default-secondary, #646464);
       }
       .topbar .spacer { flex: 1; }
       /* Generic style for consumer-slotted topbar actions (back-links, GitHub, etc.) */
@@ -221,10 +229,23 @@ const showToggle = colorScheme === 'toggle';
       @media (max-width: 760px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
 
       /* ---------- Shared content typography ---------- */
-      .article h1 { font-family: var(--typography-font-family-display, var(--typography-font-family-sans)); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--spacing-200, 0.5rem); line-height: 1.2; }
-      .article .lede { font-size: 18px; color: var(--color-content-default-secondary, #525252); margin: 0 0 var(--spacing-600, 2rem); line-height: 1.55; }
-      .article h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-background-brand, #1e5386); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border-default, #dcdcdc); scroll-margin-top: 76px; }
-      .article h3 { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-content-default, #171717); }
+      /* PROSE TYPOGRAPHY STOPS AT THE SPECIMEN BOUNDARY. Every one of these
+         selectors is (0,1,1) — one class plus a type selector — which beats a
+         component's own composite class (.typography-title-sm-strong, (0,1,0)).
+         So a heading rendered INSIDE a <Preview> was taking the doc column's
+         type instead of its own: measured, esa-card's title came out 16px/600
+         here against the 17px/550 the same component renders in a real app, and
+         under anthropic-meta.css it was Libre Baskerville as well — a serif this
+         design system does not define, on five component pages.
+         `:not(.preview__canvas *)` is the fix rather than a stronger counter-rule
+         in the guard below: a counter-rule has to name every property it wants
+         back and guess the value, where not matching at all leaves the specimen
+         governed by the component's own CSS, which is the whole point of a
+         specimen. Complex selectors inside :not() are Baseline. */
+      .article h1:not(.preview__canvas *) { font-family: var(--typography-font-family-display, var(--typography-font-family-sans)); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--spacing-200, 0.5rem); line-height: 1.2; }
+      .article .lede:not(.preview__canvas *) { font-size: 18px; color: var(--color-content-default-secondary, #525252); margin: 0 0 var(--spacing-600, 2rem); line-height: 1.55; }
+      .article h2:not(.preview__canvas *) { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--color-background-brand, #1e5386); margin: var(--spacing-700, 3rem) 0 var(--spacing-300, 0.75rem); padding-bottom: var(--spacing-200, 0.5rem); border-bottom: 1px solid var(--color-border-default, #dcdcdc); scroll-margin-top: 76px; }
+      .article h3:not(.preview__canvas *) { font-size: 16px; font-weight: 600; margin: var(--spacing-500, 1.5rem) 0 var(--spacing-250, 0.625rem); color: var(--color-content-default, #171717); }
       .article p { color: var(--color-content-default-secondary, #525252); }
       /* INLINE code only — `:not(pre) >` is load-bearing. Shiki gives a fenced
          block a dark background via inline style, and colors each token with its
@@ -286,13 +307,13 @@ const showToggle = colorScheme === 'toggle';
       .article a.prose-link:hover { text-decoration-thickness: 2px; }
 
       /* ---------- Shared page header ---------- */
-      .crumbs { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--color-content-default-muted, #7c7c7c); margin-bottom: var(--spacing-300, 0.75rem); }
+      .crumbs { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--color-content-default-secondary, #646464); margin-bottom: var(--spacing-300, 0.75rem); }
       .crumbs a:hover { color: var(--color-content-default, #171717); }
       .meta-row { display: flex; align-items: center; gap: var(--spacing-250, 0.625rem); flex-wrap: wrap; margin-bottom: var(--spacing-600, 2rem); }
       .pill { font-size: 12.5px; font-weight: 500; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--color-border-default, #dcdcdc); color: var(--color-content-default-secondary, #525252); }
       .pill--stable { color: var(--color-content-utility-success, #1a9b54); border-color: var(--color-border-utility-success); background: var(--color-background-utility-success-subtle); }
       .pill--deprecated { color: var(--color-content-utility-warning, #8a5a00); border-color: var(--color-border-utility-warning); background: var(--color-background-utility-warning-subtle); }
-      .imp { font-family: var(--typography-font-family-mono, monospace); font-size: 13px; color: var(--color-content-default-muted, #7c7c7c); background: var(--color-background-elevation-sunken, #f3f7fc); padding: 4px 10px; border-radius: 7px; }
+      .imp { font-family: var(--typography-font-family-mono, monospace); font-size: 13px; color: var(--color-content-default-secondary, #646464); background: var(--color-background-elevation-sunken, #f3f7fc); padding: 4px 10px; border-radius: 7px; }
     </style>
   </head>
   <body>

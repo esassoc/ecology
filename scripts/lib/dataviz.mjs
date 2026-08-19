@@ -335,9 +335,44 @@ export function deriveDataviz({ seedHex, neutral = 'pure', surfaces }) {
   const refAnchor = srgbToOklch(parseHex(step(referenceRamp(brandScale, 'light'), 9)));
   const chromaRatio = refAnchor.c > 1e-4 ? Math.min(1.15, Math.max(0.45, seed.c / refAnchor.c)) : 1;
 
-  // Every hue at every step that clears the bars. Hues with none drop out entirely.
-  const variants = WHEEL.flatMap((scale) => hueVariants(scale, surfaces, chromaRatio));
+  /*
+   * Every hue at every step that clears the bars. Hues with none drop out entirely.
+   *
+   * THE CHROMA RE-TINT HAS TO GIVE WAY, AND UNTIL 2026-08-18 IT THREW INSTEAD. The
+   * ratio above exists so a muted brand yields a muted palette — a preference. The
+   * CHROMA_FLOOR inside usableSteps is the point below which a hue stops reading as a
+   * hue at all — a legibility bar. For a near-black brand (#101418) or a pale mint
+   * (#c8f0e2) the ratio clamps to 0.45, which pushes EVERY hue under the floor, and the
+   * two bars deadlock: no variants, and deriveDataviz threw.
+   *
+   * Nothing had ever hit it because nothing called this with a hostile seed. Wiring it
+   * into theme-recipe.mjs did, and there the throw is much worse than the symptom — it
+   * killed generation of the whole theme, for brands that had generated fine before.
+   *
+   * So the preference yields to the bar: walk the ratio back toward 1 until a palette
+   * seats, and report where it landed. A series palette exists to be told apart; a brand
+   * with no chroma to lend has no opinion to impose here.
+   */
+  const distinctHues = (vs) => new Set(vs.map((v) => v.scale)).size;
+  let ratio = chromaRatio;
+  let variants = WHEEL.flatMap((scale) => hueVariants(scale, surfaces, ratio));
+  /*
+   * RELAX UNTIL THE POOL CAN SEAT THE CONTRACT, NOT MERELY UNTIL IT IS NON-EMPTY.
+   * `!variants.length` was the original condition and it is half a bar. A pool of 5
+   * hues is not empty, so the walk stopped — and then NOTHING downstream could
+   * recover, because both the ladder and the pad block below draw from this same
+   * pool. Measured before this: #f9a8d4 emitted 5 categorical slots of 8, #101418
+   * and #0f172a emitted 7. The token contract is 8, esa-chart's palette() needs all
+   * 8 to resolve, so those themes fell back to the built-in ramp while warning the
+   * tokens were MISSING when five of them were present — the least useful place to
+   * end up, since the theme looks generated and the chart is not using it.
+   */
+  while (distinctHues(variants) < DATAVIZ_LENGTHS.categorical && ratio < 1) {
+    ratio = Math.min(1, ratio + 0.05);
+    variants = WHEEL.flatMap((scale) => hueVariants(scale, surfaces, ratio));
+  }
   if (!variants.length) throw new Error('deriveDataviz: no hue clears the contrast, band and chroma bars');
+  const chromaRelaxed = ratio > chromaRatio ? { from: chromaRatio, to: ratio } : null;
 
   // A very light or very desaturated brand can have no usable step of its own hue.
   const start = variants.some((v) => v.scale === brandScale) ? brandScale : variants[0].scale;
@@ -410,6 +445,7 @@ export function deriveDataviz({ seedHex, neutral = 'pure', surfaces }) {
   }
   out.hues = order.map((v) => v.scale);
   out.tier = tier.name;
+  out.chromaRelaxed = chromaRelaxed;
   return out;
 }
 

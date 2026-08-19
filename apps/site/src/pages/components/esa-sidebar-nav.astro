@@ -1,7 +1,7 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
@@ -11,6 +11,9 @@ const describe = {
   items: "Nav items (property, set via JS). Each is { label; href?; icon?; badge?; children?; disabled?; group?; active? }. Consecutive items sharing a group render under a group heading.",
   collapsed: "Collapses to an icon rail. Reflected as an attribute.",
   collapsible: "Shows the collapse toggle. Set false to lock the sidebar open.",
+  label: "Accessible name for the navigation landmark. Do not include the word \"navigation\" — the role is announced with it. Give two rails on one page distinct labels so the landmark list can tell them apart.",
+  drawer: "Drawer mode: the rail becomes a slide-out overlay instead of an in-flow column, for narrow viewports. esa-app-shell sets this from a matchMedia. The <nav> landmark stays on the page in both modes — only its contents hide — and the toggle stays inside the landmark, so navigating to it while shut lands on the control that opens it.",
+  "drawer-open": "Whether the drawer is shown. Only meaningful with drawer. While open, the drawer emits drawerchange so the host can make the rest of the page inert.",
 };
 
 const events = [

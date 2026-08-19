@@ -758,13 +758,13 @@ problem is a missing semantic role — add the role, don't move the ingredient.
 
 ## Assurance is a SEPARATE AXIS from the theme
 
-`data-theme` is the brand. `data-assurance` is a conformance profile — the
+`data-theme` is the brand. `data-a11y-assurance` is a conformance profile — the
 defaults a project takes on when it has an accessibility obligation (Section 508,
 EN 301 549). They are orthogonal and they compose, because a project is entitled
 to be on-brand **and** assured:
 
 ```html
-<html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa">
+<html data-theme="cb-fish" data-scheme="light" data-a11y-assurance="wcag-aa">
 ```
 
 The profile is authored ONCE, in `src/assurance.css`, and `build.js` appends it to
@@ -779,7 +779,7 @@ something and the fix belongs here.
 
 ### The thing everyone gets wrong: the profile does NOT beat your theme
 
-`[data-theme="x"]` and `[data-assurance="y"]` have **identical specificity**
+`[data-theme="x"]` and `[data-a11y-assurance="y"]` have **identical specificity**
 (0,1,0) — a pseudo-class and an attribute selector weigh the same — and a spoke's
 theme stylesheet loads *after* `tokens.css`. So on any role a theme re-points, the
 theme wins, profile or no profile.
@@ -820,7 +820,7 @@ This is the rule that cost the most to learn, so it is stated as a rule rather
 than as history.
 
 A `--target-size-min` floor shipped in the first version of the profile: 0px by
-default, 24px under `[data-assurance]`, read by twelve components as a
+default, 24px under `[data-a11y-assurance]`, read by twelve components as a
 `min-block-size` on their hit area. It cleared the technical objection that killed
 `--control-height-*` — a fixed px height cannot grow with its contents, whereas a
 `min-*` raises the bottom and never caps the top — and it measured well, taking 33

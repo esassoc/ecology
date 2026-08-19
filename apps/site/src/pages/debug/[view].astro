@@ -1154,7 +1154,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .group-count.none {
     background: transparent;
     border: 1px dashed var(--color-border-default, #d4d4d4);
-    color: var(--color-content-default-muted, #999);
+    color: var(--color-content-default-secondary, #646464);
     font-style: italic;
   }
   .tokens-debug .cat-body { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
@@ -1194,7 +1194,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     display: block;
     margin-block-start: 2px;
     font-size: 0.68rem;
-    color: var(--color-content-default-muted, #8d8d8d);
+    color: var(--color-content-default-secondary, #646464);
   }
   .tokens-debug .c-variant .composite-edges {
     display: flex;
@@ -1220,7 +1220,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--color-content-default-muted, #8d8d8d);
+    color: var(--color-content-default-secondary, #646464);
   }
   /* Each chip carries its own property word, so two of them cannot read as one
      string the way the earlier `family-sans` / `weight-regular` pair did. */
@@ -1230,7 +1230,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     border-radius: 2px;
     background: var(--color-background-elevation-sunken, #f2f2f2);
     border: 1px solid var(--color-border-default-subtle, #e4e4e4);
-    color: var(--color-content-default-muted, #8d8d8d);
+    color: var(--color-content-default-secondary, #646464);
   }
   .tokens-debug .c-variant .wired-ing code b {
     font-weight: 600;
@@ -1275,7 +1275,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     font-size: 0.62rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--color-content-default-muted, #8d8d8d);
+    color: var(--color-content-default-secondary, #646464);
     border: 1px dashed var(--color-border-default-subtle, #d9d9d9);
     border-radius: var(--radius-100, 4px);
     cursor: help;
@@ -1297,8 +1297,8 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     vertical-align: top;
   }
   .tokens-debug code { font-family: var(--typography-font-family-mono, ui-monospace, monospace); font-size: 0.95em; }
-  .tokens-debug .dim { color: var(--color-content-default-muted, #999); }
-  .tokens-debug .has-note { color: var(--color-content-default-muted, #999); margin-left: 2px; }
+  .tokens-debug .dim { color: var(--color-content-default-secondary, #646464); }
+  .tokens-debug .has-note { color: var(--color-content-default-secondary, #646464); margin-left: 2px; }
   .tokens-debug .c-chain { line-height: 1.9; }
   .tokens-debug .chip {
     display: inline-block;
@@ -1313,7 +1313,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug .k-primitive { background: var(--color-background-utility-info-subtle, #eff6ff); border-color: var(--color-border-utility-info, #93c5fd); }
   .tokens-debug .k-raw { background: var(--color-background-elevation-sunken, #f4f4f4); border-color: var(--color-border-default, #d4d4d4); }
   .tokens-debug .k-unknown { background: var(--color-background-utility-danger-subtle, #fef2f2); border-color: var(--color-background-utility-danger, #dc2626); }
-  .tokens-debug .arrow { color: var(--color-content-default-muted, #999); margin: 0 4px; }
+  .tokens-debug .arrow { color: var(--color-content-default-secondary, #646464); margin: 0 4px; }
   .tokens-debug .c-value { white-space: nowrap; }
   .tokens-debug .swatch {
     display: inline-block;
@@ -1386,7 +1386,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
     background: var(--color-background-elevation-sunken, #f4f4f4);
     border-color: var(--color-border-default, #d4d4d4);
   }
-  .tokens-debug tr.row-zero code { color: var(--color-content-default-muted, #999); }
+  .tokens-debug tr.row-zero code { color: var(--color-content-default-secondary, #646464); }
 
   .tokens-debug code.vocab {
     display: inline-block;
@@ -1470,7 +1470,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   .tokens-debug table.type-table { min-width: 60rem; }
   .tokens-debug table.type-table td { white-space: nowrap; }
   .tokens-debug table.type-table .resolved { display: block; font-size: 0.68rem; margin-top: 2px; }
-  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-content-default-muted, #999); margin-top: 2px; }
+  .tokens-debug table.type-table .fb { display: block; font-size: 0.65rem; color: var(--color-content-default-secondary, #646464); margin-top: 2px; }
   /* The tier-1 token behind the hook. Same shape as the colour rows' tier-1
      column — the value alone says what renders, this says which step of the
      scale it came from. */
@@ -1482,7 +1482,7 @@ const total = tierCounts.primitive + tierCounts.semantic + tierCounts.component;
   }
   .tokens-debug table.type-table .t1 .arrow { margin: 0 3px 0 0; }
   /* The end of the chain — the tier-1 step the composite actually lands on. */
-  .tokens-debug table.type-table .t1 .t1-ref { color: var(--color-content, #171717); font-weight: 600; }
+  .tokens-debug table.type-table .t1 .t1-ref { color: var(--color-content-default, #202020); font-weight: 600; }
   .tokens-debug table.type-table .t1.direct { color: var(--color-content-utility-warning, #a35200); }
   /* An unset property is the finding, not an absence — mark it, don't blank it.
      The quiet hatch is opt-in-unset; is-required is the one that's a defect. */

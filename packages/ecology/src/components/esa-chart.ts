@@ -256,7 +256,7 @@ export class EsaChart extends LitElement {
     this.themeObserver = new MutationObserver(() => this.rerender());
     this.themeObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme', 'data-scheme', 'data-assurance'],
+      attributeFilter: ['data-theme', 'data-scheme', 'data-a11y-assurance'],
     });
 
     // The library never asks for either of these, so we ask and re-ask: a preference
@@ -787,7 +787,7 @@ export class EsaChart extends LitElement {
       .wrap {
         margin: 0;
         background: var(--color-background-elevation-raised, #fff);
-        border: 1px solid var(--color-border-default, #dcdddd);
+        border: 1px solid var(--color-border-default, #cecece);
         border-radius: var(--radius-md, 0.5rem);
         padding: var(--spacing-300, 0.75rem);
       }

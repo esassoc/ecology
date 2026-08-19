@@ -66,12 +66,44 @@ below from scratch.
 
 But "the legos are accessible, so reuse is enough" would be too strong a claim,
 and a spoke that believes it will ship inaccessible forms. What actually holds
-today: **overlay behavior** (focus trap, Esc, focus return), **icon-button naming**
-(contextual `aria-label` throughout), and **decorative SVGs** (`aria-hidden`
-throughout). What does **not** hold yet is most of the forms surface — accessible
-names on option groups, `aria-describedby` for hints and errors, live regions,
-and `autocomplete`/`inputmode`. Assume you own those until §3.5 says otherwise,
+today: **icon-button naming** (contextual `aria-label` throughout) and
+**decorative SVGs** (`aria-hidden` throughout). What does **not** hold yet is
+most of the forms surface — accessible names on option groups,
+`aria-describedby` for hints and errors, live regions, and
+`autocomplete`/`inputmode`. Assume you own those until §3.5 says otherwise,
 and read [forms.md](forms.md) before building or reviewing a form.
+
+**"Overlay behavior (focus trap, Esc, focus return)" was on that list until
+2026-08-18 and did not belong there.** Measured across all seventeen overlays,
+the full choreography held in three, `inert` was used nowhere in the repo, and
+every `aria-modal` the kit shipped was therefore a promise to assistive tech
+that nothing enforced.
+
+**The MODALS are fixed, and the fix was to stop hand-rolling them.** All six now
+use native `<dialog>` + `showModal()`, which supplies inertness, focus
+containment, focus return against the real trigger node, Esc (including OS-level
+close requests no keydown handler would ever see) and the top layer. If you are
+building a modal in a spoke, do that — do not reimplement it, and do not add
+`aria-modal`, which ARIA in HTML forbids on a dialog opened this way.
+
+**The NON-modals are not fixed.** `esa-popover`, `esa-dropdown-menu`,
+`esa-filter-dropdown` and `esa-combobox` in `mode="select"` still strand focus at
+`<body>` when they close.
+
+Two durable lessons, both of which cost this kit months:
+
+1. **A focus trap that is slightly wrong looks exactly like one that is right.**
+   Focus still moves, just to the wrong place. The build, the types and axe are
+   all silent — `npm run a11y` stayed green through every defect above.
+2. **Going native moves the problem, it does not always delete it.** `showModal()`
+   blocks *everything* outside the dialog, including the announcer's live regions,
+   which live in `document.body`. That silenced every in-modal announcement the day
+   the migration landed, and nothing could see it: `region.inert` reads `false` in
+   all three engines, because the IDL attribute reflects the content attribute and
+   not modal blocking. `announcer.ts` now re-homes the regions into the open modal.
+
+Do not take an overlay's behaviour on trust from a list in a document. Open it,
+Tab through it, and try to get out.
 
 - One `<h1>` per page; headings descend in order (`h1 -> h2 -> h3`), never
   chosen for size — style with type roles (design-principles), not heading level.

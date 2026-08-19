@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { a11y } from '../a11y.js';
+import { boolish } from '../boolish.js';
 
 /** Both slots are UI text at medium: the field label, and the numeric readout —
     a readout is chrome, not something the user typed, so it stays label-*. */
@@ -29,7 +30,7 @@ export class EsaRangeSlider extends LitElement {
     step: { type: Number },
     size: { type: String, reflect: true },
     label: { type: String },
-    showValue: { type: Boolean, attribute: 'show-value' },
+    showValue: { type: Boolean, attribute: 'show-value', converter: boolish },
     disabled: { type: Boolean, reflect: true },
     name: { type: String, reflect: true },
     value: { type: Number },

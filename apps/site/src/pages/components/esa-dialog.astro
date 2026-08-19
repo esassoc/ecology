@@ -1,7 +1,8 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
 import ApiTable from '../../components/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
@@ -34,10 +35,10 @@ const events = [
   <p>The default md dialog. The close button, backdrop click, and Esc all dismiss it.</p>
   <button slot="footer" data-close="dlg-md">Close</button>
 </esa-dialog>`}>
-      <button class="trigger" data-target="dlg-md">Open dialog</button>
+      <EsaButton variant="primary" data-target="dlg-md">Open dialog</EsaButton>
       <esa-dialog id="dlg-md" heading="Medium dialog">
         <p>The default md dialog (480px). The close button, backdrop click, and Esc all dismiss it.</p>
-        <button slot="footer" class="trigger-close" data-close="dlg-md">Close</button>
+        <EsaButton variant="ghost" slot="footer" data-close="dlg-md">Close</EsaButton>
       </esa-dialog>
     </Preview>
   </Section>
@@ -49,31 +50,31 @@ const events = [
 <esa-dialog heading="Medium dialog">…</esa-dialog>
 <esa-dialog size="lg" heading="Large dialog">…</esa-dialog>
 <esa-dialog size="fullscreen" heading="Fullscreen dialog">…</esa-dialog>`}>
-      <button class="trigger" data-target="dlg-xs">Open xs</button>
-      <button class="trigger" data-target="dlg-sm">Open sm</button>
-      <button class="trigger" data-target="dlg-md-sizes">Open md</button>
-      <button class="trigger" data-target="dlg-lg">Open lg</button>
-      <button class="trigger" data-target="dlg-fullscreen">Open fullscreen</button>
+      <EsaButton variant="primary" data-target="dlg-xs">Open xs</EsaButton>
+      <EsaButton variant="primary" data-target="dlg-sm">Open sm</EsaButton>
+      <EsaButton variant="primary" data-target="dlg-md-sizes">Open md</EsaButton>
+      <EsaButton variant="primary" data-target="dlg-lg">Open lg</EsaButton>
+      <EsaButton variant="primary" data-target="dlg-fullscreen">Open fullscreen</EsaButton>
 
       <esa-dialog id="dlg-xs" size="xs" heading="Extra small dialog">
         <p>The most compact dialog (280px), one step below sm. Tab cycles within; Esc closes.</p>
-        <button slot="footer" class="trigger-close" data-close="dlg-xs">Close</button>
+        <EsaButton variant="ghost" slot="footer" data-close="dlg-xs">Close</EsaButton>
       </esa-dialog>
       <esa-dialog id="dlg-sm" size="sm" heading="Small dialog">
         <p>A compact dialog (360px). Tab cycles within; Esc closes.</p>
-        <button slot="footer" class="trigger-close" data-close="dlg-sm">Close</button>
+        <EsaButton variant="ghost" slot="footer" data-close="dlg-sm">Close</EsaButton>
       </esa-dialog>
       <esa-dialog id="dlg-md-sizes" size="md" heading="Medium dialog">
         <p>The default md dialog (480px).</p>
-        <button slot="footer" class="trigger-close" data-close="dlg-md-sizes">Close</button>
+        <EsaButton variant="ghost" slot="footer" data-close="dlg-md-sizes">Close</EsaButton>
       </esa-dialog>
       <esa-dialog id="dlg-lg" size="lg" heading="Large dialog">
         <p>A large dialog (640px) for richer content.</p>
-        <button slot="footer" class="trigger-close" data-close="dlg-lg">Close</button>
+        <EsaButton variant="ghost" slot="footer" data-close="dlg-lg">Close</EsaButton>
       </esa-dialog>
       <esa-dialog id="dlg-fullscreen" size="fullscreen" heading="Fullscreen dialog">
         <p>Edge-to-edge dialog for immersive flows.</p>
-        <button slot="footer" class="trigger-close" data-close="dlg-fullscreen">Close</button>
+        <EsaButton variant="ghost" slot="footer" data-close="dlg-fullscreen">Close</EsaButton>
       </esa-dialog>
     </Preview>
   </Section>
@@ -98,13 +99,13 @@ const events = [
 
 <script>
   import '@esa/ecology/esa-dialog';
-  document.querySelectorAll('.trigger').forEach((btn) =>
+  document.querySelectorAll('[data-target]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const el = document.getElementById((btn as HTMLElement).dataset.target!) as any;
       el?.show();
     }),
   );
-  document.querySelectorAll('.trigger-close').forEach((btn) =>
+  document.querySelectorAll('[data-close]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const el = document.getElementById((btn as HTMLElement).dataset.close!) as any;
       el?.close();
@@ -112,16 +113,3 @@ const events = [
   );
 </script>
 
-<style>
-  .trigger, .trigger-close {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-brand, #43608a);
-    color: var(--color-content-default-knockout, #fff);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
-  .trigger-close { background: transparent; color: var(--color-content-default, #171717); }
-</style>

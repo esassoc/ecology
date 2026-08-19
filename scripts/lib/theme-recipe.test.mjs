@@ -1,14 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { contrastHex, parseHex, srgbToOklch } from './color.mjs';
-import { CORNERS, deriveTheme, emitCss, resolveFocusRing, validateRecipe } from './theme-recipe.mjs';
+import { CORNERS, NEUTRAL_SCALES, NEUTRAL_TEMPERATURES, deriveTheme, emitCss, resolveFocusRing, validateRecipe } from './theme-recipe.mjs';
+import { neutralRamp, radixScaleMatch, rampFrom } from './ramp.mjs';
 
 const recipe = ({ seeds, ...over } = {}) => ({
   slug: 'testbrand',
   ...over,
   seeds: { brand: '#1f7a6d', ...(seeds || {}) },
 });
+
+/**
+ * The tier-1 colour primitives, keyed by the CSS name they compile to.
+ *
+ * A DERIVED THEME NO LONGER RESOLVES ON ITS OWN, and that is the point rather than a
+ * regression. Since 2026-08-18 the scoped neutral ramp points at the hub's primitives
+ * (`--<scope>-neutral-7: var(--color-slate-7)`) instead of copying their hexes, so a
+ * chain that used to end inside the derived map now ends one hop outside it — exactly
+ * as check-contrast.mjs has always seen it, since that tool loads dist/tokens.css first
+ * and overlays the theme on top.
+ *
+ * Read from the DTCG source rather than dist/tokens.css because dist is gitignored:
+ * token-rename.test.mjs has to guard its equivalent with `if (!existsSync(dist)) return`,
+ * and a neutral-contrast test that silently skips on an unbuilt checkout is worth very
+ * little. The JSON is committed, so this resolves everywhere.
+ */
+const PRIMITIVES = (() => {
+  const url = new URL('../../packages/tokens/tokens/primitive/color.json', import.meta.url);
+  const { color } = JSON.parse(readFileSync(url, 'utf8'));
+  const m = new Map();
+  for (const [scale, steps] of Object.entries(color)) {
+    for (const [k, v] of Object.entries(steps)) {
+      if (k.startsWith('$')) continue;
+      m.set(`--color-${scale}-${k}`, v.$value);
+    }
+  }
+  return m;
+})();
 
 /**
  * Resolve a var() chain inside one derived scheme, the way check-contrast.mjs does.
@@ -19,7 +49,7 @@ const recipe = ({ seeds, ...over } = {}) => ({
  */
 function resolve(map, name, depth = 0) {
   assert.ok(depth < 12, `var() chain too deep at ${name}`);
-  const raw = map.get(name);
+  const raw = map.get(name) ?? PRIMITIVES.get(name);
   assert.ok(raw !== undefined, `${name} is not declared`);
   const m = /^var\((--[a-zA-Z0-9-_]+)\)$/.exec(raw);
   return m ? resolve(map, m[1], depth + 1) : raw;
@@ -53,11 +83,12 @@ test('validateRecipe fills in the defaults and expands the utility shorthand', (
 test('every content-on-* foreground clears AA, for brands chosen to be hostile', () => {
   // This is the whole reason the tool exists. The spoke template declares NONE of these
   // eight, so the hand-fill path ships a brand fill audited against a foreground nobody
-  // chose — which is why beacon has been failing content-on-brand-secondary at 3.64:1
-  // and why the hub's own defaults fail seven pairs today.
+  // chose — which is why beacon has been failing content-on-brand-muted at 3.64:1
+  // (it was `-brand-secondary` on a step-8 fill until 2026-08-18) and why the hub's own
+  // defaults fail seven pairs today.
   const PAIRS = [
     ['--color-content-on-brand', '--color-background-brand'],
-    ['--color-content-on-brand-secondary', '--color-background-brand-secondary'],
+    ['--color-content-on-brand-muted', '--color-background-brand-muted'],
     ['--color-content-on-accent', '--color-background-accent'],
     ['--color-content-on-ai', '--color-background-ai'],
     ['--color-content-on-utility-info', '--color-background-utility-info'],
@@ -116,8 +147,196 @@ test('coloured text clears AA on its own subtle tint', () => {
   }
 });
 
+// --- the scoped brand ramp ---------------------------------------------------
+
+test('a brand seeded from a Radix swatch POINTS AT that scale; a bespoke one does not', () => {
+  // The theme maker's swatch grid hands over a real Radix step 9, and rampFrom
+  // reproduces the scale from it — so the ramp is a byte-for-byte duplicate of twelve
+  // shipped primitives and should say so. An arbitrary client hex reproduces nothing,
+  // which is why "a brand ramp is never a primitive" remains the general rule.
+  const teal = deriveTheme(recipe({ seeds: { brand: '#12a594' } }));
+  for (let i = 1; i <= 12; i++) {
+    assert.equal(teal.light.get(`--testbrand-brand-${i}`), `var(--color-teal-${i})`);
+    assert.equal(teal.dark.get(`--testbrand-brand-${i}`), `var(--color-teal-dark-${i})`);
+  }
+
+  const bespoke = deriveTheme(recipe({ seeds: { brand: '#43608a' } }));
+  for (const scheme of ['light', 'dark']) {
+    for (let i = 1; i <= 12; i++) {
+      assert.match(
+        bespoke[scheme].get(`--testbrand-brand-${i}`),
+        /^#[0-9a-f]{6}$/,
+        `${scheme} step ${i}: a bespoke brand must keep its literals`,
+      );
+    }
+  }
+});
+
+test('ALL TWELVE OR NOTHING — a near-miss brand keeps every literal', () => {
+  // THE MEASUREMENT THAT FORCED THIS. #12a595 is one bit off teal-9, and 6 of its 12
+  // steps still land on real teal values because the OKLCH round-trip quantises
+  // neighbouring seeds onto the same 8-bit hexes. Per-step matching would emit a
+  // half-var(), half-hex ramp for a brand that is NOT Radix teal.
+  const near = deriveTheme(recipe({ seeds: { brand: '#12a595' } }));
+  for (const scheme of ['light', 'dark']) {
+    const vars = [];
+    for (let i = 1; i <= 12; i++) {
+      const v = near[scheme].get(`--testbrand-brand-${i}`);
+      if (/^var\(/.test(v)) vars.push(i);
+    }
+    assert.deepEqual(vars, [], `${scheme}: a near-miss must not point at the palette at all`);
+  }
+});
+
+test('radixScaleMatch compares against the SHIPPED primitive, not the curve', () => {
+  // grass-dark, lime-dark and yellow-dark are PRESERVEd in gen-radix-primitives.mjs and
+  // disagree with current Radix. The emitted var() resolves to the PRIMITIVE, so those
+  // three must fail the match in dark and keep their literals — pointing at them would
+  // silently re-colour the theme. Light is unaffected and still matches.
+  for (const [scale, seedStep9] of [['grass', '#46a758'], ['lime', '#bdee63']]) {
+    const ramp = rampFrom(seedStep9, { scheme: 'light' });
+    assert.equal(radixScaleMatch(ramp, scale, 'light'), scale, `${scale} should match in light`);
+    assert.equal(
+      radixScaleMatch(rampFrom(seedStep9, { scheme: 'dark' }), scale, 'dark'),
+      null,
+      `${scale}-dark is PRESERVEd drift — it must NOT match`,
+    );
+  }
+  // The hub's own brand is grass, so this is not a hypothetical.
+  const hub = deriveTheme(recipe({ seeds: { brand: '#46a758' } }));
+  assert.equal(hub.light.get('--testbrand-brand-9'), 'var(--color-grass-9)');
+  assert.match(hub.dark.get('--testbrand-brand-9'), /^#[0-9a-f]{6}$/);
+});
+
+// --- the scoped neutral ramp -------------------------------------------------
+
+test('the scoped ramp is named `neutral`, and nothing is still called `gray`', () => {
+  // It was `--<scope>-gray-*` for every temperature until 2026-08-18 — so theme-beacon.css
+  // shipped `--beacon-gray-7: #cdced6`, which is Radix SLATE-7, under a name claiming
+  // otherwise. Nothing asserted the segment, which is why the lie survived unnoticed.
+  for (const neutral of NEUTRAL_TEMPERATURES) {
+    const d = deriveTheme(recipe({ seeds: { neutral } }));
+    for (const scheme of ['light', 'dark']) {
+      const keys = [...d[scheme].keys()];
+      assert.deepEqual(
+        keys.filter((k) => /-gray-\d+$/.test(k)),
+        [],
+        `${neutral} [${scheme}]: a scoped ramp step is still called gray`,
+      );
+      const steps = keys
+        .filter((k) => /^--testbrand-neutral-\d+$/.test(k))
+        .map((k) => Number(k.split('-').pop()))
+        .sort((a, b) => a - b);
+      // Dark carries step 0 — the sunken well below the canvas, which a 12-step ramp
+      // has no room for. Light does not.
+      const expected = scheme === 'dark'
+        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      assert.deepEqual(steps, expected, `${neutral} [${scheme}] ramp steps`);
+    }
+  }
+});
+
+test('the scoped neutral ramp POINTS AT tier 1 rather than copying its hexes', () => {
+  // The hub's own semantic layer has always done this (--color-background-default:
+  // var(--color-gray-1)); generated themes were the outlier, interposing a literal copy
+  // of a value already on disk under its real name. Step 0 is the one exception and has
+  // to be: belowFirstStep() is a derived rung that exists in no Radix scale.
+  for (const neutral of NEUTRAL_TEMPERATURES) {
+    const scale = NEUTRAL_SCALES[neutral];
+    const d = deriveTheme(recipe({ seeds: { neutral } }));
+    for (const scheme of ['light', 'dark']) {
+      const primitive = scheme === 'dark' ? `${scale}-dark` : scale;
+      for (let i = 1; i <= 12; i++) {
+        assert.equal(
+          d[scheme].get(`--testbrand-neutral-${i}`),
+          `var(--color-${primitive}-${i})`,
+          `${neutral} [${scheme}] step ${i}`,
+        );
+      }
+      if (scheme === 'dark') {
+        assert.match(
+          d.dark.get('--testbrand-neutral-0'),
+          /^#[0-9a-f]{6}$/,
+          'step 0 is derived and has no tier-1 home — it must stay a literal',
+        );
+      }
+    }
+  }
+});
+
+test('every temperature emits the same set of names', () => {
+  // A temperature must change VALUES and nothing else. If one of them ever emits a
+  // different key set, a spoke switching neutral silently gains or loses a role.
+  const keysFor = (neutral, scheme) =>
+    [...deriveTheme(recipe({ seeds: { neutral } }))[scheme].keys()].sort().join('\n');
+  for (const scheme of ['light', 'dark']) {
+    const base = keysFor(NEUTRAL_TEMPERATURES[0], scheme);
+    for (const neutral of NEUTRAL_TEMPERATURES.slice(1)) {
+      assert.equal(keysFor(neutral, scheme), base, `${neutral} [${scheme}] emits a different key set`);
+    }
+  }
+});
+
+test('neutralRamp agrees with the primitives it now points at', () => {
+  // TWO INDEPENDENT TRANSCRIPTIONS OF RADIX: radix-curves.json (which neutralRamp
+  // interpolates from) and primitive/color.json (which the emitted var() resolves to).
+  // Now that the ramp POINTS at the primitive, any disagreement silently re-colours a
+  // theme — so it is pinned here rather than left to be rediscovered.
+  //
+  // THE ONE KNOWN EXCEPTION is gray-dark step 12: the curve gives #eeeeee (real Radix),
+  // the primitive ships #ededef. It is in PRESERVE in gen-radix-primitives.mjs and
+  // CLAUDE.md marks it "Unresolved". Measured cost on the dark canvas: 16.275:1 ->
+  // 16.150:1 on --color-content-default. Resolving the pin is a separate change that
+  // moves every hub dark surface reading gray-dark-12; when it lands, delete this row.
+  const KNOWN = new Map([['--color-gray-dark-12', '#eeeeee']]);
+  let compared = 0;
+  for (const neutral of NEUTRAL_TEMPERATURES) {
+    const scale = NEUTRAL_SCALES[neutral];
+    for (const scheme of ['light', 'dark']) {
+      const ramp = neutralRamp(neutral, scheme);
+      const primitive = scheme === 'dark' ? `${scale}-dark` : scale;
+      for (let i = 1; i <= 12; i++) {
+        const name = `--color-${primitive}-${i}`;
+        const declared = PRIMITIVES.get(name);
+        assert.ok(declared, `${name} is not a shipped primitive`);
+        compared++;
+        if (KNOWN.get(name) === ramp[i - 1].toLowerCase()) continue;
+        assert.equal(
+          ramp[i - 1].toLowerCase(),
+          String(declared).toLowerCase(),
+          `${neutral} [${scheme}] step ${i}: the curve and the primitive disagree`,
+        );
+      }
+    }
+  }
+  assert.equal(compared, 144, 'six temperatures x two schemes x twelve steps');
+});
+
+test('the theme maker offers every temperature the recipe accepts', () => {
+  // THE BUG THIS WHOLE CHANGE EXISTS TO FIX. The page hardcoded three of six, so mauve,
+  // sage and olive were generated, tested, CLI-reachable and completely unreachable from
+  // the editor. The page now derives its list, but its PROSE map is still hand-written —
+  // this is what stops that half drifting the same way.
+  const src = readFileSync(
+    new URL('../../apps/site/src/pages/guide/theme-maker.astro', import.meta.url),
+    'utf8',
+  );
+  const block = /const NEUTRAL_COPY[^=]*=\s*\{([\s\S]*?)\n\};/.exec(src);
+  assert.ok(block, 'NEUTRAL_COPY not found — did the theme maker stop carrying the copy map?');
+  const labelled = [...block[1].matchAll(/^\s*([a-z][a-z0-9]*)\s*:/gm)].map((m) => m[1]);
+  assert.deepEqual(
+    labelled.sort(),
+    [...NEUTRAL_TEMPERATURES].sort(),
+    'the theme maker\'s copy map and NEUTRAL_TEMPERATURES have drifted apart',
+  );
+});
+
 test('the neutral text chain clears AA on every surface it lands on', () => {
-  for (const neutral of ['pure', 'cool', 'warm']) {
+  // ALL SIX, not the three the theme maker used to offer. `mauve`, `sage` and `olive`
+  // were supported by the generator and reachable from the CLI for months while this
+  // loop — and the page — pretended they did not exist.
+  for (const neutral of NEUTRAL_TEMPERATURES) {
     const d = deriveTheme(recipe({ seeds: { neutral } }));
     for (const scheme of ['light', 'dark']) {
       for (const bg of [
@@ -433,10 +652,35 @@ test('corners: soft reproduces the hub defaults exactly', () => {
     sm: 'var(--radius-100)',
     md: 'var(--radius-200)',
     lg: 'var(--radius-400)',
+    // Matches the hub's own `--radius-chip: var(--radius-100)`, so adding the rung
+    // left `soft` a no-op. Every entry here must equal what tokens.css already says.
+    chip: 'var(--radius-100)',
   });
   const d = deriveTheme(recipe({ seeds: { corners: 'flat' } }));
   assert.equal(d.light.get('--radius-md'), 'var(--radius-100)');
   assert.ok(!d.light.has('--radius-pill'), 'pill would be a dead alias over --radius-full');
+});
+
+test('the chip corner tracks the scale everywhere except `round`', () => {
+  // The whole reason --radius-chip exists. Under flat and soft it holds the SAME
+  // primitive as --radius-sm, so those themes are byte-identical to before it was
+  // added; under round it becomes the capsule, which no step on the ramp can say.
+  // If this ever collapses to tracking `sm` in all three, the role is a pure alias
+  // and belongs deleted alongside --radius-control and friends.
+  for (const corners of ['flat', 'soft']) {
+    assert.equal(
+      CORNERS[corners].chip,
+      CORNERS[corners].sm,
+      `${corners}: chip must track sm exactly`,
+    );
+  }
+  assert.equal(CORNERS.round.chip, 'var(--radius-pill)');
+  assert.notEqual(CORNERS.round.chip, CORNERS.round.sm, 'round is where it diverges');
+
+  const round = deriveTheme(recipe({ seeds: { corners: 'round' } }));
+  assert.equal(round.light.get('--radius-chip'), 'var(--radius-pill)');
+  // Still light-block only, like every other shape declaration.
+  assert.ok(!round.dark.has('--radius-chip'));
 });
 
 test('shape and type live only in the light block', () => {
@@ -540,7 +784,11 @@ test('a brand hex that cannot carry text is reported, never quietly moved', () =
   // The fill is still the seed, untouched.
   assert.equal(resolve(d.light, '--color-background-brand'), '#e5399f');
   // …and the best available foreground is still emitted, so the theme is usable.
-  assert.ok(d.light.get('--color-content-on-brand').startsWith('#'));
+  // Asserted through resolve() rather than on the raw declaration: since 2026-08-18 a
+  // searched foreground that lands exactly on a declared ramp step is emitted as that
+  // step's var() instead of a stranded hex, so the shape of the value is not the point —
+  // that it resolves to a real colour is.
+  assert.match(resolve(d.light, '--color-content-on-brand'), /^#[0-9a-f]{6}$/);
 });
 
 test('a fail warning that does happen is written into the file, not just returned', () => {
@@ -569,4 +817,201 @@ test('derivation is deterministic', () => {
   const a = emitCss(deriveTheme(recipe({ seeds: { brand: '#1769aa', neutral: 'warm' } })));
   const b = emitCss(deriveTheme(recipe({ seeds: { brand: '#1769aa', neutral: 'warm' } })));
   assert.equal(a, b);
+});
+
+// --- DATA-VIZ ----------------------------------------------------------------
+
+test('every theme emits the full data-viz family, in BOTH schemes', () => {
+  // Until 2026-08-18 it emitted NONE, in either scheme. @esa/tokens ships these 22 names
+  // light-only and has no dark block at all; the hub's dark series palette lives in
+  // apps/site/src/styles/docs-dark.css, a site file no spoke installs. So a spoke in dark
+  // mode painted its charts in the LIGHT series colours on a near-black page — measured
+  // across 8 seeds, the same three failures every time, identical because nothing on that
+  // path was brand-derived.
+  const d = deriveTheme(recipe({ seeds: { brand: '#3e63dd' } }));
+  for (const scheme of ['light', 'dark']) {
+    for (const [family, n] of Object.entries({ categorical: 8, sequential: 7, diverging: 7 })) {
+      for (let i = 1; i <= n; i++) {
+        const name = `--color-background-dataviz-${family}-${i}`;
+        assert.match(
+          resolve(d[scheme], name),
+          /^#[0-9a-f]{6}$/,
+          `${name} is missing or unresolvable in ${scheme}`,
+        );
+      }
+    }
+  }
+});
+
+test('the two schemes get DIFFERENT series colours, but the same hue ORDER', () => {
+  // The order is searched once for both schemes on purpose. If it were searched per
+  // scheme the two could disagree, and series 3 would change identity when the user
+  // flipped to dark — the one thing a categorical palette must never do.
+  const d = deriveTheme(recipe({ seeds: { brand: '#1f7a6d' } }));
+  const light = [], dark = [];
+  for (let i = 1; i <= 8; i++) {
+    light.push(resolve(d.light, `--color-background-dataviz-categorical-${i}`));
+    dark.push(resolve(d.dark, `--color-background-dataviz-categorical-${i}`));
+  }
+  assert.notDeepEqual(light, dark, 'dark reused the light values');
+  assert.equal(d.dataviz.hues.length, 8);
+  assert.deepEqual(d.dataviz.hues, [...new Set(d.dataviz.hues)], 'a hue was seated twice');
+});
+
+test('a brand with no chroma to lend still gets a palette, and says so', () => {
+  // A near-black brand clamps the chroma re-tint to 0.45, which pushed every hue under
+  // CHROMA_FLOOR — the preference and the legibility bar deadlocked and deriveDataviz
+  // THREW. Harmless while nothing called it; fatal once theme-recipe did, because it
+  // killed generation of the whole theme for a brand that had generated fine before.
+  for (const brand of ['#101418', '#c8f0e2']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    assert.match(resolve(d.dark, '--color-background-dataviz-categorical-1'), /^#[0-9a-f]{6}$/);
+    assert.ok(d.dataviz.chromaRelaxed, `${brand}: expected the chroma ratio to be relaxed`);
+    assert.ok(
+      d.warnings.some((w) => w.message.includes('re-tinted at chroma ratio')),
+      `${brand}: relaxing the ratio must be reported, not silent`,
+    );
+  }
+});
+
+// --- the assurance variant ---------------------------------------------------
+
+test('an AA theme emits an EMPTY assurance variant; only a failing brand earns rows', () => {
+  // THIS TEST USED TO ASSERT THE OPPOSITE, and that assertion was resting on a bug.
+  // Its floor was the muted-text rung — `--color-content-default-muted` at neutral step 10,
+  // which misses 4.5:1 on every surface, for every brand, in both schemes — so it guaranteed
+  // every theme at least one row. A profile row that fires unconditionally is not a
+  // conformance profile; it is the base value being wrong. That role has since been merged
+  // into `--color-content-default-secondary` (migrations.json § content-default-muted-to-secondary),
+  // and with it gone a well-formed generated theme has NOTHING to move — a generated theme is
+  // already 64/64 in both schemes.
+  //
+  // So the shape of the check inverts: emptiness is the expected result, and the mechanism
+  // still has to EXIST, which is what the hostile brand below proves.
+  for (const brand of ['#1f7a6d', '#1769aa', '#101418', '#ffe629', '#46a758']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    for (const scheme of ['light', 'dark']) {
+      assert.equal(d.assurance[scheme].size, 0, `${brand} / ${scheme} moved a role in an already-AA theme`);
+    }
+  }
+  // #e5399f is the case the mechanism exists for: the brand hex is the one fill the base
+  // derivation is forbidden to move, so it fails at 4.20:1 in light and the profile rescues it.
+  const hostile = deriveTheme(recipe({ seeds: { brand: '#e5399f' } }));
+  for (const scheme of ['light', 'dark']) {
+    assert.ok(hostile.assurance[scheme].size > 0, `#e5399f / ${scheme} has an empty assurance block`);
+    assert.ok(hostile.assurance[scheme].has('--color-background-brand'));
+  }
+});
+
+test('BOTH assurance blocks declare the same keys — the specificity hole', () => {
+  // `html[data-theme="x"][data-a11y-assurance="wcag-aa"]` is (0,2,1). So is the base dark block
+  // `html[data-scheme="dark"][data-theme="x"]`. The light assurance block carries no
+  // [data-scheme], so in dark mode with the profile on it MATCHES, ties, and wins on source
+  // order. Any name light declares and dark does not is a hole a LIGHT colour drops through
+  // onto a near-black page. #e5399f is the case that exercises it: the light brand fill fails
+  // and moves to step 11, the dark one already passes and does not move.
+  const d = deriveTheme(recipe({ seeds: { brand: '#e5399f' } }));
+  assert.deepEqual(
+    [...d.assurance.light.keys()].sort(),
+    [...d.assurance.dark.keys()].sort(),
+  );
+  // ...and the hole-filling restatement must be the DARK base value, not the light one.
+  assert.equal(d.assurance.dark.get('--color-background-brand'), d.dark.get('--color-background-brand'));
+  assert.notEqual(d.assurance.light.get('--color-background-brand'), d.light.get('--color-background-brand'));
+});
+
+test('the assurance selectors outrank the base blocks AND the hub\'s own profile', () => {
+  // Specificity is (ids, attributes+classes, elements). The hub's profile is a bare
+  // [data-a11y-assurance="wcag-aa"] — (0,1,0) — which TIES with [data-theme="x"] and loses to it
+  // on source order. That is why a generated theme has to carry its own; see section (9.5).
+  // A HOSTILE BRAND, because the blocks are only emitted when they have something to say —
+  // the default seed is already AA and now emits no assurance block at all (see above).
+  const css = emitCss(deriveTheme(recipe({ slug: 'qanat', seeds: { brand: '#e5399f' } })));
+  const spec = (sel) => [
+    (sel.match(/\[/g) || []).length,
+    /^html/.test(sel) ? 1 : 0,
+  ];
+  const light = 'html[data-theme="qanat"][data-a11y-assurance="wcag-aa"]';
+  const dark = 'html[data-scheme="dark"][data-theme="qanat"][data-a11y-assurance="wcag-aa"]';
+  assert.ok(css.includes(`${light} {`), 'light assurance block missing');
+  assert.ok(css.includes(`${dark} {`), 'dark assurance block missing');
+  assert.deepEqual(spec(light), [2, 1]);        // beats [data-theme="qanat"] at (0,1,0)
+  assert.deepEqual(spec(dark), [3, 1]);         // beats the base dark block at (0,2,1)
+  assert.deepEqual(spec('[data-a11y-assurance="wcag-aa"]'), [1, 0]); // the hub's, which loses
+});
+
+test('a brand that cannot carry text in the base theme is RESCUED by the profile', () => {
+  // The headline reason the variant exists. The LIGHT brand fill is the client's exact hex
+  // and the base derivation is forbidden to move it, so a mid-tone brand is a `fail` the
+  // theme has to live with. The profile is exactly where that constraint is lifted.
+  const d = deriveTheme(recipe({ seeds: { brand: '#e5399f' } }));
+  const base = d.warnings.find(
+    (w) => w.level === 'fail' && w.scheme === 'light' && w.role === '--color-background-brand',
+  );
+  assert.ok(base, 'expected the base theme to report this brand as unreadable');
+
+  // Resolved through the base map merged with the profile, which is how the browser and
+  // check-contrast both see it — the ramp itself is declared in the base block.
+  const merged = new Map([...d.light, ...d.assurance.light]);
+  const fill = resolve(merged, '--color-background-brand');
+  const fg = resolve(merged, '--color-content-on-brand');
+  assert.ok(
+    contrastHex(fg, fill) >= 4.5,
+    `the profile must reach AA, got ${contrastHex(fg, fill).toFixed(2)}:1`,
+  );
+  // ...and it must SAY so, rather than leaving it to be discovered.
+  assert.ok(
+    d.warnings.some((w) => w.level === 'info' && /data-a11y-assurance/.test(w.message)),
+    'the rescue is not reported',
+  );
+});
+
+test('a bright scale that already passes is NOT darkened for consistency', () => {
+  // The degenerate rule this replaced — "emit the darker fill whenever it reads BETTER" —
+  // turned beacon's warning yellow #ffc53d into #4f3422, a near-black brown. Contrast is
+  // monotonic toward the ends of a ramp, so "better" always means "darkest step". The rule
+  // is the base theme's own verdict instead: a fill moves only if nothing read on it.
+  for (const slug of ['beacon', 'qanat']) {
+    const d = deriveTheme(JSON.parse(
+      readFileSync(new URL(`../../apps/site/src/styles/theme-${slug}.json`, import.meta.url), 'utf8'),
+    ));
+    for (const scheme of ['light', 'dark']) {
+      for (const name of d.assurance[scheme].keys()) {
+        assert.ok(
+          !name.includes('utility-warning') && !name.includes('accent') && !name.includes('-ai'),
+          `[${slug}/${scheme}] ${name} moved, but its base fill already passed`,
+        );
+      }
+    }
+  }
+});
+
+test('the profile never overrules a pin', () => {
+  // Pins are the channel for "a value the generator should not choose". A profile is still
+  // the generator choosing.
+  const pinned = '#e5399f';
+  const d = deriveTheme(recipe({
+    seeds: { brand: pinned },
+    pinned: { '--color-background-brand': pinned },
+  }));
+  for (const scheme of ['light', 'dark']) {
+    assert.equal(d[scheme].get('--color-background-brand'), pinned);
+    assert.ok(!d.assurance[scheme].has('--color-background-brand'), 'the profile moved a pinned fill');
+  }
+});
+
+test('every assurance value is a hex or a var chain, and every chain resolves', () => {
+  // Same contract as the base blocks: check-contrast.mjs's parseColor reads hex/rgb()/
+  // white/black and nothing else, and it grades this block whenever --assurance is passed.
+  for (const brand of ['#1f7a6d', '#e5399f', '#101418']) {
+    const d = deriveTheme(recipe({ seeds: { brand } }));
+    for (const scheme of ['light', 'dark']) {
+      for (const [name, value] of d.assurance[scheme]) {
+        assert.match(value, /^(#[0-9a-f]{6}|var\(--[a-zA-Z0-9-_]+\))$/, `[${scheme}] ${name} = ${value}`);
+        // Resolved through the SCHEME's own base map, which is where the ramp lives.
+        const merged = new Map([...d[scheme], ...d.assurance[scheme]]);
+        assert.match(resolve(merged, name), /^#[0-9a-f]{6}$/i);
+      }
+    }
+  }
 });

@@ -1,7 +1,8 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 
 // Prose only — names, types and defaults are generated from the component
@@ -21,7 +22,7 @@ const describe = {
   <button>Hover me</button>
 </esa-tooltip>`}>
       <esa-tooltip text="Tooltip above" position="above">
-        <button class="trigger">Hover me</button>
+        <EsaButton variant="secondary">Hover me</EsaButton>
       </esa-tooltip>
     </Preview>
   </Section>
@@ -32,16 +33,16 @@ const describe = {
 <esa-tooltip text="Left side" position="left">…</esa-tooltip>
 <esa-tooltip text="Right side" position="right">…</esa-tooltip>`}>
       <esa-tooltip text="Tooltip above" position="above">
-        <button class="trigger">Above</button>
+        <EsaButton variant="secondary">Above</EsaButton>
       </esa-tooltip>
       <esa-tooltip text="Tooltip below" position="below">
-        <button class="trigger">Below</button>
+        <EsaButton variant="secondary">Below</EsaButton>
       </esa-tooltip>
       <esa-tooltip text="Left side" position="left">
-        <button class="trigger">Left</button>
+        <EsaButton variant="secondary">Left</EsaButton>
       </esa-tooltip>
       <esa-tooltip text="Right side" position="right">
-        <button class="trigger">Right</button>
+        <EsaButton variant="secondary">Right</EsaButton>
       </esa-tooltip>
     </Preview>
   </Section>
@@ -52,7 +53,7 @@ const describe = {
   <a href="#">Tab to me</a>
 </esa-tooltip>`}>
       <esa-tooltip text="Shows on focus too" position="above">
-        <a href="#" class="trigger">Tab to me</a>
+        <EsaButton variant="secondary" href="#">Tab to me</EsaButton>
       </esa-tooltip>
     </Preview>
   </Section>
@@ -73,17 +74,3 @@ const describe = {
 
 <script>import '@esa/ecology/esa-tooltip';</script>
 
-<style>
-  .trigger {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-elevation-raised, #fff);
-    color: var(--color-content-default, #171717);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-    text-decoration: none;
-  }
-</style>

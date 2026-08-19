@@ -105,11 +105,85 @@ function hide(el: HTMLElement): void {
     'overflow:hidden;white-space:nowrap;clip:rect(0 0 0 0);clip-path:inset(50%);';
 }
 
+/**
+ * THE TOP LAYER EATS LIVE REGIONS, AND NOTHING IN THE DOM SHOWS IT.
+ *
+ * A modal `<dialog>` opened with `showModal()` renders in the top layer and blocks
+ * everything else in the document — not merely from the pointer, but from focus and
+ * from the accessibility tree. These regions live in `document.body`, which is
+ * outside every dialog. So from the moment the kit moved its six modals onto
+ * `showModal()` (2026-08-18), every `announce()` made from inside one of them went
+ * nowhere: `esa-entity-search`'s assertive "No results found", and the same call in
+ * `esa-command-palette` and `esa-search-panel`.
+ *
+ * MEASURED, because none of it is visible from the DOM. In Chromium, Firefox AND
+ * WebKit, a body-level element cannot take focus while a modal dialog is open, and
+ * Chromium's real accessibility tree (CDP `Accessibility.getFullAXTree`) no longer
+ * contains the region's text at all. But `region.inert` reads **false** in all three
+ * — the IDL attribute does not reflect modal-dialog blocking, it reflects only the
+ * `inert` content attribute. So there is no property to assert, no attribute to
+ * grep, and axe has no rule for it. The region is still in the DOM, still receives
+ * its text, and simply reaches nobody.
+ *
+ * The fix is to put the region where the user is. `announce()` clears the region and
+ * sets the text one timer later, so re-homing here — before that clear — leaves a
+ * full tick between the move and the mutation, which is the gap a live region needs
+ * to be observed in its new position.
+ *
+ * REJECTED: a live region per dialog. That is the many-regions failure this module
+ * exists to prevent — the ceiling is about two per page, and they interfere.
+ * REJECTED: having each dialog call in. Six call sites nobody can be made to
+ * remember is the `focus.css` mistake; this file already owns the singleton, so it
+ * owns this.
+ */
+function announcerHost(): HTMLElement {
+  // `showModal()` blocks focus outside the dialog, so when one is open the focused
+  // node is necessarily inside the topmost one — which makes walking up from focus
+  // both cheaper and more reliable than sweeping the tree for `dialog:modal`
+  // (a sweep would also have to descend every shadow root to find ours).
+  let node: Node | null = document.activeElement;
+  while (node) {
+    const el = node as Element;
+    if (el.shadowRoot?.activeElement) {
+      node = el.shadowRoot.activeElement;
+      continue;
+    }
+    break;
+  }
+  while (node) {
+    const el = node as Element;
+    if (el.localName === 'dialog' && isModal(el)) return el as HTMLElement;
+    const parent: HTMLElement | null = el.parentElement;
+    if (parent) {
+      node = parent;
+      continue;
+    }
+    const root = el.getRootNode?.() as ShadowRoot | Document | undefined;
+    node = root && 'host' in root ? root.host : null;
+  }
+  return document.body;
+}
+
+/** `:modal` is baseline but throws on an unknown selector in older engines. */
+function isModal(el: Element): boolean {
+  try {
+    return el.matches(':modal');
+  } catch {
+    return (el as HTMLDialogElement).open === true;
+  }
+}
+
 function ensureRegions(): AnnouncerRegions | null {
   // SSR / prerender: Astro renders these components on the server, where there is
   // no document. Returning null makes announce() a no-op rather than a build error.
   if (typeof document === 'undefined') return null;
   if (regions && regions.polite.isConnected && regions.assertive.isConnected) {
+    // Re-home on every call, in both directions: into a modal when one opens, back
+    // to <body> when it closes. A closed <dialog> is `display: none`, so regions
+    // left behind in one would be silent for the opposite reason.
+    const host = announcerHost();
+    if (regions.polite.parentNode !== host) host.appendChild(regions.polite);
+    if (regions.assertive.parentNode !== host) host.appendChild(regions.assertive);
     return regions;
   }
 
@@ -132,7 +206,7 @@ function ensureRegions(): AnnouncerRegions | null {
     el.setAttribute('aria-atomic', 'true');
     el.dataset.esaAnnouncer = live;
     hide(el);
-    document.body.appendChild(el);
+    announcerHost().appendChild(el);
     return el;
   };
 

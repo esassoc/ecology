@@ -50,7 +50,13 @@ import '@esa/tokens/typography.css';
 
 <style>
   .esa-filter-clear-button {
-    --_clear-text: var(--color-content-default-muted, var(--color-content-brand, #2a7e3b));
+    /* -secondary, not -muted. muted is gray-10 and measures 3.70:1 at this 14px
+       rung — under the 4.5:1 AA bar, and 3.33:1 if the button lands on a sunken
+       surface. gray-11 gives 5.77:1 / 5.19:1.
+       The old chain fell back to --color-content-brand (a GREEN literal) behind a
+       neutral role, which could never have been right; the literal now matches the
+       token it backs. */
+    --_clear-text: var(--color-content-default-secondary, #646464);
     --_clear-text-hover: var(--color-content-utility-danger, var(--color-content-brand, #2a7e3b));
     --_clear-icon-size: 18px;
 

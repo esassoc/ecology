@@ -1,7 +1,8 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
 import ApiTable from '../../components/ApiTable.astro';
 
 // Prose only — names, types and defaults are generated from the component
@@ -29,7 +30,7 @@ const events = [
     <Preview code={`<button id="open-right">Open search</button>
 
 <esa-search-panel id="sp-right" position="right"></esa-search-panel>`}>
-      <button class="trigger" id="open-right">Open search</button>
+      <EsaButton variant="primary" id="open-right">Open search</EsaButton>
       <esa-search-panel id="sp-right" position="right"></esa-search-panel>
       <p id="status-right" class="result"></p>
     </Preview>
@@ -39,7 +40,7 @@ const events = [
     <p>The panel slides in from the <code>right</code> (default) or the <code>left</code>.</p>
     <Preview code={`<esa-search-panel position="right"></esa-search-panel>
 <esa-search-panel position="left"></esa-search-panel>`}>
-      <button class="trigger" id="open-left">Open search (left)</button>
+      <EsaButton variant="primary" id="open-left">Open search (left)</EsaButton>
       <esa-search-panel id="sp-left" position="left"></esa-search-panel>
     </Preview>
   </Section>
@@ -47,7 +48,7 @@ const events = [
   <Section id="states" title="States">
     <p>Set <code>loading</code> to show a searching message while results are fetched.</p>
     <Preview code={`<esa-search-panel position="right" loading></esa-search-panel>`}>
-      <button class="trigger" id="open-loading">Open (loading)</button>
+      <EsaButton variant="primary" id="open-loading">Open (loading)</EsaButton>
       <esa-search-panel id="sp-loading" position="right" loading></esa-search-panel>
     </Preview>
   </Section>
@@ -101,15 +102,5 @@ const events = [
 </script>
 
 <style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-default-strong, #d4d4d4);
-    background: var(--color-background-brand, #43608a);
-    color: var(--color-content-default-knockout, #fff);
-    font-family: inherit;
-    font-size: var(--font-size-200, 0.9375rem);
-    cursor: pointer;
-  }
-  .result { color: var(--color-content-default-muted, #737373); min-height: 1.5em; width: 100%; }
+  .result { color: var(--color-content-default-secondary, #646464); min-height: 1.5em; width: 100%; }
 </style>

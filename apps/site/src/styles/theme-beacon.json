@@ -1,5 +1,4 @@
 {
-  "$comment": "Seeds for the beacon demo theme. Values carried over from the hand-written themes.css block; the TODO markers there were never resolved, so brand/#1f7a6d is still a placeholder for Beacon's real teal. Replacing this hex and regenerating is the whole edit. NOTE: make-theme.mjs does not preserve this key — it was dropped by the 2026-08-17 regeneration and restored by hand. Check for it after any regenerate.",
   "slug": "beacon",
   "scope": "beacon",
   "seeds": {

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
 import { announce } from '../announcer.js';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-pagination — Lit Web Component.
@@ -33,8 +34,8 @@ export class EsaPagination extends LitElement {
     pageSize: { type: Number, attribute: 'page-size' },
     currentPage: { type: Number, attribute: 'current-page' },
     pageSizeOptions: { type: Array, attribute: 'page-size-options' },
-    showPageSizeSelector: { type: Boolean, attribute: 'show-page-size-selector' },
-    showFirstLastButtons: { type: Boolean, attribute: 'show-first-last-buttons' },
+    showPageSizeSelector: { type: Boolean, attribute: 'show-page-size-selector', converter: boolish },
+    showFirstLastButtons: { type: Boolean, attribute: 'show-first-last-buttons', converter: boolish },
     disabled: { type: Boolean, reflect: true },
   };
 

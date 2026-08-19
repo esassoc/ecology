@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 export interface EsaFile {
   /** File name shown in the row. */
@@ -29,7 +30,7 @@ export class EsaFileList extends LitElement {
   static properties = {
     files: { type: Array },
     removable: { type: Boolean, reflect: true },
-    downloadable: { type: Boolean, reflect: true },
+    downloadable: { type: Boolean, reflect: true, converter: boolish },
   };
 
   declare files: EsaFile[];
@@ -136,7 +137,7 @@ export class EsaFileList extends LitElement {
     }
     .file__icon {
       display: inline-flex;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
     }
     .file__icon svg {
       width: 16px;
@@ -186,7 +187,7 @@ export class EsaFileList extends LitElement {
       padding: 0;
       border: 0;
       background: transparent;
-      color: var(--color-content-default-muted, #838383);
+      color: var(--color-content-default-secondary, #646464);
       border-radius: var(--radius-sm, 0.25rem);
       cursor: pointer;
       flex-shrink: 0;

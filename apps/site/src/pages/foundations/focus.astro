@@ -247,6 +247,71 @@ const criteria = [
     </ul>
   </Section>
 
+  <Section id="management" title="Where focus GOES — the other half">
+    <p>
+      Everything above is about drawing the ring. This is about moving it, which is the half
+      that has no CSS in it at all and where every defect this kit has shipped actually lived.
+      <strong>A focus trap that is slightly wrong looks exactly like one that is right</strong> —
+      focus still moves, just somewhere you did not mean — and the build, the types and axe are
+      silent about all of it. <code>npm run a11y</code> stayed green through every finding below.
+    </p>
+    <ul class="rules">
+      <li>
+        <strong>A modal is a native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code>.</strong>
+        Do not hand-roll one. The platform supplies inertness, focus containment, focus return
+        against the real trigger node, Esc including OS-level close requests, and the top layer.
+        Until 2026-08-18 all six of ours were <code>position: fixed</code> divs simulating that,
+        and <code>inert</code> appeared nowhere in the repo — so every <code>aria-modal</code>
+        we shipped announced a modality nothing enforced.
+      </li>
+      <li>
+        <strong>Do not write <code>aria-modal</code> on a dialog you opened with <code>showModal()</code>.</strong>
+        ARIA in HTML forbids it, and the platform already says it. The attribute is only ever
+        needed by the hand-rolled version that should not exist.
+      </li>
+      <li>
+        <strong>A NON-modal overlay must not inert anything, and must not steal focus on open.</strong>
+        Menus, popovers, tooltips and anchored dropdowns annotate the page; making it inert
+        behind them, or yanking the caret out of the field they describe, is the bug rather
+        than the fix. What they owe is the reverse trip: <strong>focus back to the trigger on
+        close</strong>, guarded on focus actually being inside — an outside click has already
+        moved focus somewhere the user chose.
+      </li>
+      <li>
+        <strong>Capture with <code>deepActiveElement()</code>, never <code>document.activeElement</code>.</strong>
+        The latter retargets to the shadow HOST when focus is inside a shadow root, so
+        restoring to it lands on the wrapper rather than the control the user was in — silently,
+        because the wrapper is usually focusable enough to look like it worked. It lives in
+        <code>@esa/ecology/overlay</code>, along with the kit's one focusable-element selector.
+      </li>
+      <li>
+        <strong>Anything reachable by Tab has to be visible when it is.</strong> A button at
+        <code>opacity: 0</code> is still focusable. <code>esa-entity-search</code>'s row actions
+        reveal on <code>:hover</code>, and the moment Tab could reach them that rule alone would
+        have put the ring on something invisible — so they reveal on <code>:focus-within</code> too.
+      </li>
+      <li>
+        <strong>Do not spend Tab on something else.</strong> <code>esa-entity-search</code> bound
+        it to cycling its facets, which left the per-row action buttons reachable by no key at
+        all — SC 2.1.1, <strong>Level A</strong>, hiding behind a widget that looked fully
+        keyboard-operable. Arrow keys navigate <em>within</em> a widget; Tab moves between them.
+      </li>
+    </ul>
+    <p class="note">
+      <strong>The top layer takes the announcer with it, and nothing in the DOM shows that.</strong>
+      A modal <code>&lt;dialog&gt;</code> blocks everything outside itself — from the pointer,
+      from focus, and from the accessibility tree. The kit's two live regions live in
+      <code>document.body</code>, outside every dialog, so in-modal announcements reached nobody
+      the day we went native. Measured in Chromium, Firefox and WebKit;
+      <code>region.inert</code> reads <strong>false</strong> in all three, because the IDL
+      attribute reflects the <code>inert</code> content attribute and not modal blocking. A
+      <code>[popover]</code> region promoted to the top layer was tried and does not help — the
+      dialog blocks everything outside <em>itself</em>, top layer or not.
+      <code>announcer.ts</code> now re-homes its regions into the open modal.
+      <code>npm run a11y:overlays</code> is what proves it, in a real browser; nothing static can.
+    </p>
+  </Section>
+
   <Section id="criteria" title="What each criterion asks, and how we meet it">
     <table class="tbl">
       <thead><tr><th>Success criterion</th><th>Level</th><th>Asks for</th><th>How we meet it</th></tr></thead>
