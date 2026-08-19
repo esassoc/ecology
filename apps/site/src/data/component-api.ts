@@ -82,14 +82,40 @@ function commentAbove(lines: string[], i: number): string {
   return buf.length ? cleanComment(buf.join('\n')) : '';
 }
 
-/** Extract `{ … }` starting at `from`, balancing braces so nested types survive. */
+/**
+ * Strip comments so prose cannot be read as code.
+ *
+ * A doc comment inside `static properties` is ordinary here — every form control
+ * documents its props in one. An apostrophe in that prose ("the field's state")
+ * opened a quote state that swallowed the rest of the block, and a `{` in prose
+ * left the braces permanently unbalanced. Both fail SILENTLY: the table renders
+ * with the surviving props and the build prints one ⚠️ API drift line.
+ */
+function stripComments(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, ' '));
+}
+
+/**
+ * Extract `{ … }` starting at `from`, balancing braces so nested types survive.
+ * Braces inside strings and comments are skipped — a `{` in prose would otherwise
+ * leave the block permanently unbalanced and return null.
+ */
 function balancedBlock(src: string, from: number): string | null {
-  const open = src.indexOf('{', from);
+  const clean = stripComments(src);
+  const open = clean.indexOf('{', from);
   if (open === -1) return null;
   let depth = 0;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
-    else if (src[i] === '}') {
+  let quote: string | null = null;
+  for (let i = open; i < clean.length; i++) {
+    const c = clean[i];
+    if (quote) {
+      if (c === '\\') { i++; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+    if (c === '{') depth++;
+    else if (c === '}') {
       depth--;
       if (depth === 0) return src.slice(open + 1, i);
     }
@@ -105,14 +131,26 @@ function splitTopLevel(body: string): string[] {
   const parts: string[] = [];
   let depth = 0;
   let quote: string | null = null;
+  let line = false;   // inside a // comment
+  let block = false;  // inside a /* */ comment
   let buf = '';
   for (let i = 0; i < body.length; i++) {
     const c = body[i];
+    const n = body[i + 1];
+    // Comments are COPIED but never interpreted. The prose is kept because the
+    // caller reads it back as each prop's `doc`; what it must not do is act as
+    // code — an apostrophe in "the field's state" opened a quote state that ran
+    // to the end of the block, and a comma or brace in prose split or unbalanced
+    // it. Measured on main: esa-text-field returned 4 of its 18 props.
+    if (line) { buf += c; if (c === '\n') line = false; continue; }
+    if (block) { buf += c; if (c === '*' && n === '/') { buf += n; i++; block = false; } continue; }
     if (quote) {
       buf += c;
       if (c === quote && body[i - 1] !== '\\') quote = null;
       continue;
     }
+    if (c === '/' && n === '/') { line = true; buf += c; continue; }
+    if (c === '/' && n === '*') { block = true; buf += c; continue; }
     if (c === "'" || c === '"' || c === '`') { quote = c; buf += c; continue; }
     if (c === '{' || c === '[' || c === '(') depth++;
     if (c === '}' || c === ']' || c === ')') depth--;

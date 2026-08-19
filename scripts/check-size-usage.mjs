@@ -117,11 +117,15 @@ for (const file of walk(rootDir)) {
   for (const [component, badSizes] of Object.entries(TOO_SMALL)) {
     if (!src.includes(component) && !src.includes(component.replace(/^esa-/, ''))) continue;
     for (const [index, attrs] of findTags(src, component)) {
-      const m = /(?<![\w-])size\s*=\s*["'{]?\s*([a-z]+)/.exec(attrs);
+      // `size={expr}` is not judgeable from source. The old pattern let `{` through
+      // and then matched an IDENTIFIER, so `size={rowSize}` captured "row" — truthy,
+      // so the dynamic branch below never fired and the call site was neither judged
+      // nor counted as skipped. A literal must be quoted or bare; a `{` means dynamic.
+      const m = /(?<![\w-])size\s*=\s*(?:"([a-z]+)"|'([a-z]+)'|([a-z]+))(?![\w-])/.exec(attrs);
       // A dynamic size (size={x}) cannot be judged from source. Skipped rather than
       // guessed — and counted, so the report never reads as full coverage.
       if (attrs.includes('size=') && !m) { dynamic.push(`${path.relative(CWD, file)}:${lineOf(src, index)} ${component}`); continue; }
-      const size = m ? m[1] : DEFAULT_SIZE;
+      const size = m ? (m[1] ?? m[2] ?? m[3]) : DEFAULT_SIZE;
       if (!badSizes.includes(size)) continue;
       const smallestOk = ORDER.find((s) => ORDER.indexOf(s) > ORDER.indexOf(size) && !badSizes.includes(s));
       findings.push({

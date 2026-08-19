@@ -307,9 +307,20 @@ async function main() {
           .map(([k, v]) => [k, [...v].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b))]),
       ),
     };
-    writeFileSync(emitFloors, JSON.stringify(out, null, 2) + '\n');
-    const n = Object.keys(out.components).length;
-    console.log(`\n✓ floor map written → ${emitFloors} (${n} component(s) with an unusable size step)`);
+    // Never write the committed map from a run that measured a pre-hydration
+    // shell. check-size-usage.mjs reads `floors.components ?? {}`, so an empty
+    // map makes it iterate nothing and report "no call sites below the floor" —
+    // a green lint built on a measurement that did not happen.
+    if (deadPages) {
+      console.log(
+        `\n✗ NOT writing ${emitFloors} — ${deadPages} page(s) never upgraded, so the ` +
+          `measurement is invalid. Fix the build (usually its base path) and re-run.`,
+      );
+    } else {
+      writeFileSync(emitFloors, JSON.stringify(out, null, 2) + '\n');
+      const n = Object.keys(out.components).length;
+      console.log(`\n✓ floor map written → ${emitFloors} (${n} component(s) with an unusable size step)`);
+    }
   }
 
   const gated = scope === 'components' ? findings.filter(isComponent) : findings;
