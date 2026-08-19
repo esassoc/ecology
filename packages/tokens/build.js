@@ -204,7 +204,7 @@ fs.appendFileSync(
  * THE ACCESSIBILITY ASSURANCE PROFILE, appended verbatim from src/assurance.css.
  *
  * Shipped inside tokens.css rather than exported as an opt-in import ON PURPOSE.
- * The block is inert unless [data-assurance] is on the page, so it costs a spoke
+ * The block is inert unless [data-a11y-assurance] is on the page, so it costs a spoke
  * that never opts in nothing but bytes — and the alternative has a measured failure
  * rate. Spokes override 3 of 26 brand-derived roles; any rule of the form "a spoke
  * must ALSO import X" is forgotten. `focus.css` is the standing example: three
@@ -215,7 +215,7 @@ fs.appendFileSync(
  * from src/typography.css — one definition, not two that drift. It is pure CSS
  * with no build-time derivation, so it is copied byte-for-byte.
  *
- * APPENDED LAST, AND THAT IS LOAD-BEARING. `:root` and `[data-assurance="x"]` have
+ * APPENDED LAST, AND THAT IS LOAD-BEARING. `:root` and `[data-a11y-assurance="x"]` have
  * IDENTICAL specificity (0,1,0) — a pseudo-class and an attribute selector weigh
  * the same — so nothing but source order decides which wins. Emitted before the
  * deprecated-alias `:root` block, a future alias for any name this profile sets
@@ -239,4 +239,4 @@ const assuranceDecls = (assuranceCss.match(/^ {2}--[a-z0-9-]+:/gm) || []).length
 console.log('✓ tokens built → dist/tokens.css, dist/tokens.js');
 console.log(`✓ P3 block appended (${lines.length} vars across ${P3_SCALES.length} scales)`);
 console.log(`✓ ${shims.length} deprecated aliases appended (from migrations.json)`);
-console.log(`✓ assurance profile appended (${assuranceDecls} declarations, [data-assurance])`);
+console.log(`✓ assurance profile appended (${assuranceDecls} declarations, [data-a11y-assurance])`);

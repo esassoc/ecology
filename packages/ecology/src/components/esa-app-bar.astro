@@ -11,11 +11,20 @@
 //   tone="brand"        → --color-background-brand bg, inverse text          (primary bar)
 //   tone="brand-strong" → --color-background-default-knockout bg, inverse text  (dark sub-bar)
 //
-// Tune spacing per instance with the public component tokens --app-bar-gap /
-// --app-bar-pad-x / --app-bar-pad-y (each falls back to an ecology spacing step).
-// Each tone's surface is also hookable: --app-bar-bg/--app-bar-text (surface),
-// --app-bar-brand-bg/--app-bar-brand-text, --app-bar-brand-strong-bg/
-// --app-bar-brand-strong-text — defaults are the semantic chains above.
+// THIS COMPONENT HAS NO TIER-3 SURFACE, and the paragraph that used to sit here
+// claimed nine hooks it had not read since 2026-08-16 — --app-bar-{gap,pad-x,pad-y}
+// and the six per-tone colour hooks. The tier-3 demotion pass deleted all nine
+// (migrations.json: app-bar-hooks-removed) because each was read by exactly one
+// component and held no value of its own, aliasing a tier-2 role it had no reason
+// to diverge from. The stylesheet below points straight at those roles, which is
+// the intended end state — do NOT re-add the hooks.
+//
+// The comment outlived the tokens by six weeks and cost real time: it reads as a
+// wiring bug ("documented hooks the CSS forgot to read"), and the honest-looking
+// fix — making the CSS read them again — would have re-added nine tier-2 aliases
+// AND silently applied two callers' stale overrides, moving this bar from 32px to
+// 12px gaps and from #fcfcfc to #f0f0f0. Retheme by re-pointing the tier-2 roles;
+// change DENSITY by adding a variant here, not a per-instance knob.
 type AppBarTone = 'surface' | 'brand' | 'brand-strong';
 
 interface Props {
@@ -25,6 +34,15 @@ interface Props {
   maxWidth?: string;
   /** Semantic host element. */
   as?: 'header' | 'nav' | 'footer' | 'div';
+  /**
+   * Accessible name for the host element. REQUIRED whenever `as="nav"` — an
+   * unnamed navigation landmark is indistinguishable from every other one in a
+   * screen reader's landmark list, and this component spreads no rest props, so
+   * without this there was no way to name one at all. Do NOT include the word
+   * "navigation": the role is already announced, so `label="Main"` reads as
+   * "Main, navigation" while `label="Main navigation"` stutters.
+   */
+  ariaLabel?: string;
   /** Extra class on the root — e.g. to set --app-bar-gap per instance. */
   class?: string;
 }
@@ -36,14 +54,14 @@ interface Props {
 // `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
 
-const { tone = 'surface', contained = false, maxWidth = '1556px', as = 'div', class: className } = Astro.props;
+const { tone = 'surface', contained = false, maxWidth = '1556px', as = 'div', ariaLabel, class: className } = Astro.props;
 const Tag = as;
 const hasStart = Astro.slots.has('start');
 const hasEnd = Astro.slots.has('end');
 const cls = ['esa-app-bar', `esa-app-bar--${tone}`, className].filter(Boolean).join(' ');
 const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].filter(Boolean).join(' ');
 ---
-<Tag class={cls}>
+<Tag class={cls} aria-label={ariaLabel}>
   <div class={rowCls} style={contained ? `--_bar-max:${maxWidth}` : undefined}>
     {hasStart && (
       <div class="esa-app-bar__start typography-label-md"><slot name="start" /></div>
@@ -57,7 +75,9 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
 
 <style>
   .esa-app-bar {
-    /* Public component tokens — override per instance; each defaults to a step. */
+    /* PRIVATE. These are --_ prefixed for a reason: there is no public knob behind
+       them any more (app-bar-hooks-removed, 2026-08-16). They read tier-1 spacing
+       steps directly. Density belongs in a variant, not a per-instance override. */
     --_bar-gap: var(--spacing-600, 32px);
     --_bar-pad-x: var(--spacing-600, 32px);
     --_bar-pad-y: var(--spacing-400, 16px);

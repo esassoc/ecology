@@ -1,4 +1,5 @@
-import { LitElement, html, css } from 'lit';
+// `nothing` (not undefined) is what REMOVES an attribute — see esa-dialog's import.
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { boolish } from '../boolish.js';
 
@@ -13,9 +14,13 @@ type ConfirmVariant = 'default' | 'danger' | 'warning';
  * boolean result is delivered via a `confirm` / `cancel` CustomEvent plus a
  * convenient `resolved` event carrying { confirmed: boolean }.
  *
- * Self-contained modal (own backdrop, Esc-to-cancel, focus trap, restore focus)
- * so it needs no esa-dialog dependency. Inline icon (✓ default / triangle / etc.)
+ * Built on the native <dialog> element (showModal), like esa-dialog — see that
+ * file's header for why the hand-rolled backdrop/trap/focus-restore went away.
+ * It needs no esa-dialog dependency. Inline icon (✓ default / triangle / etc.)
  * keyed off the variant.
+ *
+ * `role="alertdialog"` is kept on the native element: <dialog> maps to `dialog`,
+ * and this one interrupts to demand an answer.
  */
 export class EsaConfirmDialog extends LitElement {
   static properties = {
@@ -39,8 +44,6 @@ export class EsaConfirmDialog extends LitElement {
   declare showIcon: boolean;
   declare showCloseButton: boolean;
 
-  private previousFocus: HTMLElement | null = null;
-
   constructor() {
     super();
     this.open = false;
@@ -56,28 +59,62 @@ export class EsaConfirmDialog extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.addEventListener('keydown', this.onKeydown);
+    // Light dismiss where `closedby` is missing (Safari). See esa-dialog.
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      this.addEventListener('click', this.onLightDismiss);
+    }
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.removeEventListener('keydown', this.onKeydown);
+    this.removeEventListener('click', this.onLightDismiss);
+  }
+
+  private get dialogEl(): HTMLDialogElement | null {
+    return (this.renderRoot as ShadowRoot).querySelector('dialog');
   }
 
   updated(changed: Map<string, unknown>): void {
-    if (changed.has('open')) {
-      if (this.open) {
-        this.previousFocus = document.activeElement as HTMLElement;
-        requestAnimationFrame(() => {
-          const root = this.renderRoot as ShadowRoot;
-          root.querySelector<HTMLElement>('.esa-confirm-dialog__confirm')?.focus();
-        });
-      } else if (this.previousFocus) {
-        this.previousFocus.focus?.();
-        this.previousFocus = null;
-      }
+    if (!changed.has('open')) return;
+    const el = this.dialogEl;
+    if (!el) return;
+    if (this.open) {
+      if (!el.open) el.showModal();
+      // INITIAL FOCUS goes to Cancel, not Confirm. Until 2026-08-18 this focused
+      // `.esa-confirm-dialog__confirm` unconditionally — including variant="danger",
+      // where that button is the delete. Landing pre-focused on the destructive
+      // choice turns a stray Enter into the thing the dialog exists to guard.
+      requestAnimationFrame(() => {
+        const root = this.renderRoot as ShadowRoot;
+        root.querySelector<HTMLElement>('.esa-confirm-dialog__btn--outline')?.focus();
+      });
+    } else {
+      el.close();
     }
   }
+
+  /**
+   * Native `close` fires for Esc and for platform close requests. Both are a
+   * DISMISS here (aborted without answering), which is the distinction this
+   * component's `dismissed` flag exists to carry — so it must not resolve as a
+   * plain cancel. Guarded on `open` so our own resolve() paths do not re-enter.
+   */
+  private onNativeClose = (): void => {
+    if (this.open) this.dismiss();
+  };
+
+  private onLightDismiss = (event: MouseEvent): void => {
+    const el = this.dialogEl;
+    if (!el || !this.open) return;
+    if (event.composedPath()[0] !== el) return;
+    const r = el.getBoundingClientRect();
+    const inside =
+      r.top <= event.clientY &&
+      event.clientY <= r.top + r.height &&
+      r.left <= event.clientX &&
+      event.clientX <= r.left + r.width;
+    if (!inside) this.dismiss();
+  };
 
   show(): void {
     this.open = true;
@@ -109,30 +146,6 @@ export class EsaConfirmDialog extends LitElement {
   // apart from an explicit "cancel" choice (the cancel button stays dismissed:false).
   dismiss = (): void => this.resolve(false, true);
 
-  private onKeydown = (event: KeyboardEvent): void => {
-    if (!this.open) return;
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.dismiss();
-    } else if (event.key === 'Tab') {
-      const root = this.renderRoot as ShadowRoot;
-      const items = Array.from(
-        root.querySelectorAll<HTMLElement>('button:not([disabled])'),
-      );
-      if (items.length === 0) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      const active = root.activeElement;
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-  };
-
   private icon() {
     if (!this.showIcon) return null;
     if (this.variant === 'danger') {
@@ -145,37 +158,46 @@ export class EsaConfirmDialog extends LitElement {
   }
 
   render() {
-    if (!this.open) return html``;
+    // NAME. This was `aria-label=${this.heading}` with `heading` defaulting to '',
+    // so a confirm dialog opened without a heading shipped aria-label="" — an
+    // alertdialog with NO accessible name at all, which is worse than having no
+    // role. It now points at the real <h2> (same shadow root, so the IDREF
+    // resolves) and falls back to a literal only when there is no heading to use.
     // hub-edit-approved: user approved (2026-06-29) — backdrop click is a dismiss, not a cancel choice.
     return html`
-      <div class="esa-confirm-dialog__backdrop" @click=${this.dismiss}></div>
-      <div class="esa-confirm-dialog__panel">
-        <div class="esa-confirm-dialog" role="alertdialog" aria-modal="true" aria-label=${this.heading}>
-          ${/* hub-edit-approved: user approved (2026-06-29) — X close button dismisses (abort, not submit). */ ''}
-          ${this.showCloseButton
-            ? html`<button
-                class="esa-confirm-dialog__close"
-                type="button"
-                aria-label="Close"
-                @click=${this.dismiss}
-              ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+      <dialog
+        class="esa-confirm-dialog"
+        role="alertdialog"
+        closedby="any"
+        aria-labelledby=${this.heading ? 'esa-confirm-dialog-title' : nothing}
+        aria-label=${this.heading ? nothing : 'Confirm'}
+        aria-describedby=${this.message ? 'esa-confirm-dialog-message' : nothing}
+        @close=${this.onNativeClose}
+      >
+        ${/* hub-edit-approved: user approved (2026-06-29) — X close button dismisses (abort, not submit). */ ''}
+        ${this.showCloseButton
+          ? html`<button
+              class="esa-confirm-dialog__close"
+              type="button"
+              aria-label="Close"
+              @click=${this.dismiss}
+            ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`
+          : null}
+        <div class="esa-confirm-dialog__content">
+          ${this.showIcon
+            ? html`<div class="esa-confirm-dialog__icon esa-confirm-dialog__icon--${this.variant}">${this.icon()}</div>`
             : null}
-          <div class="esa-confirm-dialog__content">
-            ${this.showIcon
-              ? html`<div class="esa-confirm-dialog__icon esa-confirm-dialog__icon--${this.variant}">${this.icon()}</div>`
-              : null}
-            <h2 class="esa-confirm-dialog__title typography-title">${this.heading}</h2>
-            <p class="esa-confirm-dialog__message typography-body-md">${this.message}</p>
-          </div>
-          <div class="esa-confirm-dialog__footer">
-            <button class="esa-confirm-dialog__btn esa-confirm-dialog__btn--outline typography-label-md" @click=${this.cancel}>${this.cancelLabel}</button>
-            <button
-              class="esa-confirm-dialog__confirm esa-confirm-dialog__btn typography-label-md esa-confirm-dialog__btn--${this.variant === 'default' ? 'primary' : this.variant}"
-              @click=${this.confirm}
-            >${this.confirmLabel}</button>
-          </div>
+          <h2 id="esa-confirm-dialog-title" class="esa-confirm-dialog__title typography-title">${this.heading}</h2>
+          <p id="esa-confirm-dialog-message" class="esa-confirm-dialog__message typography-body-md">${this.message}</p>
         </div>
-      </div>
+        <div class="esa-confirm-dialog__footer">
+          <button class="esa-confirm-dialog__btn esa-confirm-dialog__btn--outline typography-label-md" @click=${this.cancel}>${this.cancelLabel}</button>
+          <button
+            class="esa-confirm-dialog__confirm esa-confirm-dialog__btn typography-label-md esa-confirm-dialog__btn--${this.variant === 'default' ? 'primary' : this.variant}"
+            @click=${this.confirm}
+          >${this.confirmLabel}</button>
+        </div>
+      </dialog>
     `;
   }
 
@@ -184,39 +206,34 @@ export class EsaConfirmDialog extends LitElement {
     css`
     :host { display: contents; }
 
-    .esa-confirm-dialog__backdrop {
-      position: fixed;
-      inset: 0;
-      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
-      z-index: var(--z-modal-backdrop, 300);
-    }
-    .esa-confirm-dialog__panel {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: var(--z-modal, 400);
-      pointer-events: none;
-    }
+    /* The backdrop and centering divs are gone — ::backdrop paints the scrim and
+       the UA centers a modal <dialog> with 'margin: auto'. See esa-dialog. */
     /* hub-edit-approved: user approved (2026-06-29) — relative + close button styles. */
-    .esa-confirm-dialog {
+    dialog.esa-confirm-dialog {
       position: relative;
-      pointer-events: auto;
+      border: none;
+      padding: 0;
+      margin: auto;
       width: var(--confirm-dialog-width, 360px);
       max-width: calc(100vw - 2rem);
       background: var(--color-background-elevation-floating, #fcfcfc);
+      color: var(--color-content-default, #202020);
       border-radius: var(--radius-lg, 0.75rem);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       font-family: var(--typography-font-family-sans, 'DM Sans', sans-serif);
     }
+    dialog.esa-confirm-dialog[open] { display: block; }
+    /* Literal fallback is the real value where ::backdrop does not inherit. */
+    dialog.esa-confirm-dialog::backdrop {
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
+    }
 
     /* hub-edit-approved: user approved hub edits this session (2026-06-30) — on mobile
        the confirm dialog docks to the bottom as a full-width sheet, matching esa-dialog. */
     @media (max-width: 600px) {
-      .esa-confirm-dialog__panel { align-items: flex-end; }
-      .esa-confirm-dialog {
+      dialog.esa-confirm-dialog {
+        margin: auto auto 0;
         width: 100%;
         max-width: 100%;
         border-bottom-left-radius: 0;
@@ -325,22 +342,25 @@ export class EsaConfirmDialog extends LitElement {
     }
     .esa-confirm-dialog__btn--primary:hover { background: var(--color-background-brand-hover, #3e9b4f); }
     .esa-confirm-dialog__btn--danger {
-      background: var(--color-background-utility-danger, #e5484d);
-      color: var(--color-content-default-knockout, #fcfcfc);
+      background: var(--color-background-utility-danger, #ce2c31);
+      color: var(--color-content-on-utility-danger, #fcfcfc);
     }
-    .esa-confirm-dialog__btn--danger:hover { background: #dc2626; }
+    .esa-confirm-dialog__btn--danger:hover { background: var(--color-background-utility-danger-hover, #641723); }
+    /* Knockout text here measured 1.54:1 — yellow-9 is a bright scale, so the
+       foreground is dark (7.21:1). This is the one intent whose fill does NOT move
+       to step 11: yellow-11 under dark text drops to 2.47:1. */
     .esa-confirm-dialog__btn--warning {
       background: var(--color-background-utility-warning, #ffc53d);
-      color: var(--color-content-default-knockout, #fcfcfc);
+      color: var(--color-content-on-utility-warning, #4f3422);
     }
-    .esa-confirm-dialog__btn--warning:hover { background: #d97706; }
+    .esa-confirm-dialog__btn--warning:hover { background: var(--color-background-utility-warning-hover, #ffba18); }
 
     /* FORCED COLORS. box-shadow is forced to 'none', so the panel needs a real
        edge. The danger/warning BUTTONS lose their tint here too and there is no
        system colour that means "destructive" — the button's own label is what
        carries that, which is why confirm dialogs must never ship a bare "OK". */
     @media (forced-colors: active) {
-      .esa-confirm-dialog { border: 1px solid CanvasText; }
+      dialog.esa-confirm-dialog { border: 1px solid CanvasText; }
     }
   `,
   ];

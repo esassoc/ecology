@@ -197,12 +197,13 @@ const activity = [
     <PropsTable rows={slots} nameHeader="Slot" />
     <p style="margin-top: 1rem;">
       Composed from <a href={withBase('/components/esa-app-bar')}><code>esa-app-bar</code></a>,
+      <a href={withBase('/components/esa-button')}><code>esa-button</code></a>,
       <a href={withBase('/components/esa-sidebar-nav')}><code>esa-sidebar-nav</code></a>,
-      <a href={withBase('/components/esa-entity-search')}><code>esa-entity-search</code></a>,
-      <a href={withBase('/components/esa-dropdown-menu')}><code>esa-dropdown-menu</code></a>, and
-      <a href={withBase('/components/esa-icon-link')}><code>esa-icon-link</code></a>. Those four
-      register themselves — no extra imports at the call site. For the wider frame in context, see the
-      <a href={withBase('/patterns/app-shell')}>App shell pattern</a>.
+      <a href={withBase('/components/esa-entity-search')}><code>esa-entity-search</code></a>, and
+      <a href={withBase('/components/esa-dropdown-menu')}><code>esa-dropdown-menu</code></a>. The
+      three custom elements register themselves — no extra imports at the call site. To judge the
+      proportions at the size an app shell is actually used at, see
+      <a href={withBase('/demos/app-shell')} target="_blank" rel="noreferrer">the full-size demo</a>.
     </p>
   </Section>
 
@@ -243,8 +244,7 @@ const activity = [
     border: 0;
     border-radius: 11px 11px 0 0;
     /* A narrower rail leaves the content region room to be a page. This is the
-       documented tier-3 re-skin path (the same knob /patterns/app-shell uses),
-       not a patch on the component. */
+       documented tier-3 re-skin path, not a patch on the component. */
     --sidenav-width: 236px;
   }
   .shell-page {

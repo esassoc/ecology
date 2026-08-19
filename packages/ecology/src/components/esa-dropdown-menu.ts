@@ -27,6 +27,9 @@ type DropdownPosition = 'below-start' | 'below-end' | 'above-start' | 'above-end
  * Note: `icon` strings on items render a small bullet dot placeholder rather than
  * pulling in a Lucide icon set (kept dependency-free per the migration brief).
  */
+/** What counts as "already a control" when resolving a slotted trigger. */
+const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export class EsaDropdownMenu extends LitElement {
   static properties = {
     items: { type: Array },
@@ -60,12 +63,66 @@ export class EsaDropdownMenu extends LitElement {
   private openMenu(): void {
     this.open = true;
     document.addEventListener('click', this.onDocumentClick, true);
+    // A menu takes focus on open — that is the whole difference between a menu and
+    // a list of links that happens to be in a box.
+    this.updateComplete.then(() => this.focusItem(0));
   }
 
   close(): void {
     if (!this.open) return;
     this.open = false;
     document.removeEventListener('click', this.onDocumentClick, true);
+    // FOCUS RETURN, absent until 2026-08-18. Keyboard-only use survived it by
+    // accident, because focus never entered the menu in the first place — but
+    // CLICKING an item put focus on that button, and close() then deleted it from
+    // the DOM, dropping focus to <body>. Now that focus does move in on open, this
+    // is load-bearing rather than a nicety.
+    this.triggerEl?.focus?.();
+  }
+
+  /**
+   * The trigger is whatever the consumer slotted. It is read rather than rendered
+   * because the component only ever owned a wrapper <div> around <slot> — which is
+   * also why the ARIA below has to be applied to the assigned node instead of
+   * written in this file's template.
+   */
+  private get triggerEl(): HTMLElement | null {
+    const slot = (this.renderRoot as ShadowRoot).querySelector('slot');
+    const assigned = slot?.assignedElements({ flatten: true }) ?? [];
+    const outer = assigned.find((el) => el instanceof HTMLElement) as HTMLElement | undefined;
+    if (!outer) return null;
+    // THE SLOTTED ELEMENT IS OFTEN A WRAPPER, NOT THE CONTROL. esa-button renders
+    // <span class="esa-button"><button class="esa-button__native">, so treating the
+    // outer node as the trigger put role="button" tabindex="0" around a real
+    // button — axe's `nested-interactive`, and aria-expanded on an element no
+    // screen reader would read it from. Resolve to the control that actually takes
+    // focus, and only fall back to the wrapper when there is nothing inside.
+    if (outer.matches(FOCUSABLE)) return outer;
+    return outer.querySelector<HTMLElement>(FOCUSABLE) ?? outer;
+  }
+
+  /**
+   * The trigger had NO menu-button semantics at all: no role, no aria-haspopup, no
+   * aria-expanded, no aria-controls. Open or closed sounded identical. These land
+   * on the slotted element on every update, since `open` is in the announcement.
+   *
+   * If the consumer slotted something that is not natively focusable this also
+   * makes it operable — a bare <span> trigger was keyboard-dead before.
+   */
+  private syncTrigger(): void {
+    const el = this.triggerEl;
+    if (!el) return;
+    el.setAttribute('aria-haspopup', 'menu');
+    el.setAttribute('aria-expanded', String(this.open));
+    el.setAttribute('aria-controls', 'menu');
+    if (!el.matches(FOCUSABLE)) {
+      if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+      if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+    }
+  }
+
+  updated(): void {
+    this.syncTrigger();
   }
 
   private onDocumentClick = (event: MouseEvent): void => {
@@ -74,10 +131,65 @@ export class EsaDropdownMenu extends LitElement {
     }
   };
 
+  /** Enabled menu items, in DOM order — the roving-tabindex ring. */
+  private get menuItems(): HTMLElement[] {
+    return Array.from(
+      (this.renderRoot as ShadowRoot).querySelectorAll<HTMLElement>(
+        '.esa-dropdown-menu__item:not([disabled])',
+      ),
+    );
+  }
+
+  private focusItem(index: number): void {
+    const items = this.menuItems;
+    if (!items.length) return;
+    const i = (index + items.length) % items.length;
+    // Roving tabindex: the menu is ONE tab stop, not one per item. Every item was
+    // a plain <button> with implicit tabindex="0", so Tab walked the whole list —
+    // which is a toolbar's contract, not a menu's.
+    items.forEach((el, n) => el.setAttribute('tabindex', n === i ? '0' : '-1'));
+    items[i].focus();
+  }
+
+  private get focusedIndex(): number {
+    const active = (this.renderRoot as ShadowRoot).activeElement as HTMLElement | null;
+    return this.menuItems.indexOf(active as HTMLElement);
+  }
+
   private onKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' && this.open) {
-      event.preventDefault();
-      this.close();
+    // Down/Up open the menu from the trigger, which is the menu-button contract.
+    if (!this.open) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        this.openMenu();
+      }
+      return;
+    }
+    switch (event.key) {
+      case 'Escape':
+        event.preventDefault();
+        this.close();
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusItem(this.focusedIndex + 1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusItem(this.focusedIndex - 1);
+        break;
+      case 'Home':
+        event.preventDefault();
+        this.focusItem(0);
+        break;
+      case 'End':
+        event.preventDefault();
+        this.focusItem(this.menuItems.length - 1);
+        break;
+      case 'Tab':
+        // A menu is not a place Tab navigates within. Let it move on, and close.
+        this.close();
+        break;
     }
   };
 
@@ -99,7 +211,7 @@ export class EsaDropdownMenu extends LitElement {
         </div>
         ${this.open
           ? html`
-              <div class="esa-dropdown-menu__panel esa-dropdown-menu__panel--${this.position}" role="menu">
+              <div class="esa-dropdown-menu__panel esa-dropdown-menu__panel--${this.position}" id="menu" role="menu">
                 ${this.items.map((item) =>
                   item.divider
                     ? html`<div class="esa-dropdown-menu__divider" role="separator"></div>`
@@ -110,6 +222,7 @@ export class EsaDropdownMenu extends LitElement {
                             : ''} ${item.disabled ? 'esa-dropdown-menu__item--disabled' : ''}"
                           ?disabled=${item.disabled}
                           role="menuitem"
+                          tabindex="-1"
                           @click=${() => this.selectItem(item)}
                         >
                           ${item.icon ? html`<span class="esa-dropdown-menu__bullet" aria-hidden="true"></span>` : null}

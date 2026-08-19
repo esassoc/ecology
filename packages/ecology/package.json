@@ -7,6 +7,7 @@
     "./typography": "./src/typography.ts",
     "./a11y": "./src/a11y.ts",
     "./announcer": "./src/announcer.ts",
+    "./overlay": "./src/overlay.ts",
     "./*.astro": "./src/components/*.astro",
     "./*": "./src/components/*.ts"
   },

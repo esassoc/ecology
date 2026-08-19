@@ -133,6 +133,18 @@ Two checks that follow from this, and the second is the one that bites:
   and one hub consumer, and folding it would have silently broken
   `esa-header-nav`'s 32px avatar.
 
+**There is a THIRD disposition, and `esa-pill`'s category ramp is the only case.**
+Promote or fold assumes the hub is the one who declares. `--category-{2,6,11}` is a
+component token the **SPOKE** declares — the mechanism is the hub's, the twelve steps are
+the project's vocabulary, which the hub cannot enumerate. A hub declaration would be
+actively wrong rather than merely redundant: a declared value beats the inline fallback, so
+every categorised pill in every project would render the hub's colour and "an unknown
+category renders an ordinary pill" would be gone. So it is tier 3, classified `component`,
+via `SPOKE_DECLARED` in `apps/site/src/data/theming.ts` — a named regex, because the
+decision has to live somewhere a reader can find it. Do NOT read this as a general escape
+from declaring: everything without a line there is still `ad-hoc`, and the ratchet below
+still holds it at zero.
+
 The detector stays live at zero — `/debug/components` § "Under-promise" and
 `/debug/tokens` § "Ad-hoc hooks". Both render **None.** A row in either is a
 regression, not a backlog.
@@ -219,6 +231,63 @@ Four consequences, and the last one is the one that bites:
   Both shipped themes are `cool` and did not move — all 4,040 role resolutions across
   beacon and qanat, both schemes, are unchanged. A test pins the 144-step comparison with
   that single row as a documented exception; when the pin is resolved, delete the row.
+
+## A BRAND POINTS AT TIER 1 ONLY WHEN IT LITERALLY IS ONE (2026-08-18)
+`rampFrom` lands the seed on step 9 and interpolates the other eleven along that scale's
+curve — so a seed taken from the theme maker's **swatch grid** (a real Radix step 9)
+reproduces the scale rather than approximating it. Measured across all 25 chromatic hues:
+**25/25 exact in light, 22/25 in dark.** When that happens the generated ramp is a
+byte-for-byte duplicate of twelve primitives already on disk, so it now emits
+`var(--color-teal-7)` instead of restating the hex. **A bespoke brand still emits
+literals**, which is why "a brand ramp is never a primitive" is still the general rule —
+an arbitrary client hex reproduces no Radix scale at all.
+
+`radixScaleMatch` (`ramp.mjs`) makes the call. Three things about it are load-bearing:
+
+- **ALL TWELVE OR NOTHING.** A hex ONE BIT off teal-9 (`#12a595`) still matches **6 of 12**
+  steps, because the OKLCH round-trip quantises neighbouring seeds onto the same 8-bit
+  values. Per-step matching would emit a half-`var()`, half-hex ramp for a brand that is
+  not Radix teal — six steps that would silently follow the palette and six that would not.
+- **It checks ONE NAMED SCALE, never a reverse hex lookup.** **59** primitive hexes are
+  claimed by more than one name (`yellow`≡`amber`, `copper`≡`bronze`), so "which token holds
+  `#ffc53d`" has no single answer. The caller passes the scale the ramp was *shaped* by.
+- **It compares against the shipped PRIMITIVE, not the curve**, because the emitted `var()`
+  resolves to the primitive. Those disagree for `grass-dark`, `lime-dark` and `yellow-dark`
+  — the PRESERVEd drift — so those three correctly fail in dark and keep their literals.
+  **The hub's own brand is `grass`, so this is not hypothetical:** a grass theme emits
+  `var(--color-grass-9)` in light and a hex in dark.
+
+**The cost is in the theme maker's bundle.** `ramp.mjs` now imports
+`packages/tokens/tokens/primitive/color.json` directly, so the whole palette ships in the
+page's client script: **98.6 KB raw / 26.9 KB gzipped**, of which the primitives are ~5.5 KB
+gzipped. Passing the map in as a parameter would avoid that and was rejected — an argument
+a caller can forget is the `focus.css` failure mode, and the page's preview MUST agree with
+what the CLI writes.
+
+## `--radius-chip` — the one radius role that does not track the scale (2026-08-18)
+A theme's corner language now reaches the chip family. `--radius-chip` is read by
+**`esa-pill`, `esa-badge` and `esa-chip-group`**, and `CORNERS` maps it per language:
+`flat`→`--radius-050`, `soft`→`--radius-100`, `round`→**`--radius-pill`**. So a `round`
+theme renders chips as capsules without anyone setting a prop; `esa-pill shape="round"`
+remains the per-instance opt-in that holds under every language.
+
+**It is not an alias, and that is the whole justification.** `--radius-control`,
+`--radius-card`, `--radius-surface` and `--radius-overlay` were all deprecated by
+`radius-roles-to-scale` for being exactly that — one name in front of one scale step,
+carrying no decision. This one **diverges under `round`**, which no step on the
+xs/sm/md/lg ramp can express. Under `flat` and `soft` it holds the *same primitive* as
+`--radius-sm`, so those themes are byte-identical to before it existed — verified:
+regenerating `theme-beacon.css` (flat) added one line and changed no rendered value.
+`theme-qanat.css` (round) is the only shipped theme that moves, which is the point.
+
+**Round points at `--radius-pill`, not at the `--radius-full` primitive the other rungs
+use.** `radius.json` says a squared-off brand may re-point `--radius-pill`; when it does,
+chips must square off *with* the filter pills and avatars rather than staying capsules
+alone.
+
+**A role, not three component hooks** — the three are meant to agree (esa-pill's own note
+says its 4px corner exists to match esa-badge), and three hooks would let them drift apart
+silently, which is the failure the 2026-08-16 demotion pass removed 168 instances of.
 
 **No npm script grades the two generated theme files.** `npm run contrast` is `--hub` only
 and `contrast:dark` targets `docs-dark.css`, so `check-contrast.mjs
@@ -451,7 +520,7 @@ colour. `lime` is in the wheel and was the old one, so this closed a collision a
 opening one.
 
 ## Assurance is a THIRD axis, orthogonal to the theme
-`data-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
+`data-a11y-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
 composes with `data-theme` (brand) and `data-scheme` (light/dark) — a project is
 entitled to be on-brand AND assured. Authored ONCE in
 `packages/tokens/src/assurance.css`, appended into `dist/tokens.css` by `build.js`,
@@ -460,27 +529,85 @@ Not an opt-in import on purpose: spokes override 3 of 26 brand-derived roles, so
 "you must ALSO import X" gets forgotten — `focus.css` is the standing proof. A
 spoke sets the attribute and declares none of these names itself.
 
-**IT DOES NOT BEAT A SPOKE'S THEME, and that is the design.** `[data-theme]` and
-`[data-assurance]` have identical specificity (0,1,0) and the theme's stylesheet
-loads later, so a re-pointed brand wins. The hub cannot know a spoke's brand ramp.
-The teeth are in the gate, not the cascade:
-`check-contrast.mjs <theme>.css --assurance wcag-aa` composes them in the browser's
-order and fails the spoke whose brand misses AA (`beacon` still fails
-`content-on-brand-secondary` at 3.64:1 with the profile on — that failure is the
-feature).
+**THE HUB'S PROFILE DOES NOT BEAT A SPOKE'S THEME, and on a generated theme it is
+INERT.** `[data-theme]` and `[data-a11y-assurance]` have identical specificity (0,1,0)
+and the theme's stylesheet loads later, so a re-pointed brand wins. Measured
+2026-08-18: `check-contrast.mjs theme-beacon.css` and the same run with
+`--assurance wcag-aa` produce **byte-identical output**. The profile re-points 16
+names and a generated theme declares 15 of them; only `--focus-scroll-margin`
+survives. It could not be otherwise even if it won — the hub's block points at
+`var(--color-grass-11)`, its OWN brand, which would be wrong to paint onto a spoke.
+The hub cannot know a spoke's brand ramp.
+
+**SO THE GENERATOR EMITS A PER-THEME PROFILE, and that is the half that moves a
+brand (2026-08-18).** `theme-recipe.mjs` § (9.5) derives an assurance variant in the
+same pass as the theme — same ramps, same surfaces — and `emitCss` writes two more
+blocks: `html[data-theme="x"][data-a11y-assurance="wcag-aa"]` (0,2,1) and
+`html[data-scheme="dark"][data-theme="x"][data-a11y-assurance="wcag-aa"]` (0,3,1). A spoke
+sets the attribute and gets step 11 of ITS OWN ramp. Nothing to import; inert until set.
+
+Four things that are easy to get wrong here:
+
+- **IT MOVES ONLY WHAT FAILS, and the obvious rule is degenerate.** "Emit the darker
+  fill whenever it reads BETTER than the base" sounds like the measured version and was
+  written first. Contrast is **monotonic toward the ends of a ramp**, so a step-12 fill
+  under white always outscores everything before it and the test reduces to "always take
+  the darkest step" — run against beacon it turned `warning` (yellow `#ffc53d`) into
+  `#4f3422`, a near-black brown that clears AA and is no longer a warning colour. That is
+  exactly what `assurance.css` refuses by hand when it excludes `warning`. The condition
+  is the base theme's own verdict instead: a fill moves iff no foreground reached AA on
+  it. Radix's five bright scales then keep step 9 with no special case naming them.
+- **A SMALL BLOCK IS THE CORRECT OUTPUT.** Both shipped themes emit exactly one row
+  (`--color-content-default-muted` → neutral 11, the `warn`-graded muted-text rung).
+  That is not a missing feature — it means the theme was already AA, which a generated
+  theme is, 64/64 in both schemes. The block earns itself on a **hostile brand**: seed
+  `#e5399f` fails at 4.20:1 in light (the brand hex is the one fill the base derivation
+  is forbidden to move) and the profile rescues it to 4.91:1 at step 11, with an `info`
+  warning saying so.
+- **BOTH BLOCKS DECLARE THE SAME KEY SET, and that is a specificity fix.** The light
+  assurance block is (0,2,1) — **so is the base dark block** — and it carries no
+  `[data-scheme]`, so in dark mode with the profile on it matches, ties, and wins on
+  source order. Any name light moves and dark does not is a hole a LIGHT colour drops
+  through onto a near-black page. So a scheme with no change of its own **restates its
+  base value**. `#e5399f` is the live case: light moves the brand to step 11, dark
+  restates step 9.
+- **No `--focus-scroll-margin` and no `--color-content-disabled`.** The hub's 76px is
+  the hub app-shell's bar height; guessing a spoke's chrome height into the spoke's own
+  file is worse than letting the hub's floor apply. Disabled text is exempt under WCAG
+  1.4.3 and raising it makes disabled read as enabled.
+
+`beacon`'s old `content-on-brand-secondary` failure at 3.64:1 is **gone** — the
+`secondary` → `muted` merge earlier the same day removed the role. Both shipped themes
+now pass 64/64 in both schemes with and without the profile. The teeth are still in the
+gate rather than the cascade, and **no npm script runs it**: `npm run contrast` is
+`--hub` only, so `check-contrast.mjs <theme>.css --assurance wcag-aa [--scheme dark]`
+is a by-hand run. That is a gap in the gate, not a property of this change.
 
 **A profile is a TOKEN SCOPE.** It re-points values; it cannot add behaviour,
 markup, or a rule inside a shadow root — `:host-context()` is Chromium-only and
 `@container style()` is not baseline, so **inherited custom properties are the only
 channel that crosses a shadow boundary in every engine**. So it fixes contrast,
 ring weight, min type size and the target-size floor, and fixes NONE of:
-`esa-date-picker`'s absent keyboard handling (SC 2.1.1, Level A), the nine popups
-that return focus nowhere, or anything in forced colors. Setting the attribute is a
+the NON-modal overlays, or anything in forced colors. The modals are fixed: on
+2026-08-18 all six moved onto native `<dialog>` + `showModal()`, which supplies
+inertness, focus containment, focus return against the real trigger node, Esc
+(including OS close requests) and the top layer. Still open: `esa-popover`,
+`esa-dropdown-menu`, `esa-filter-dropdown` and `esa-combobox` (`mode="select"`
+only) strand focus at `<body>` on close, and `esa-entity-search` binds Tab to
+cycling its facets, leaving its row-action buttons reachable by no key at all.
+
+(The line here through 2026-08-17 named `esa-date-picker`'s "absent keyboard
+handling (SC 2.1.1, Level A)" and "the nine popups". Both were wrong — the date
+picker is a native `<input type="date">` with no popup, and the nine was
+miscounted in both directions. See the struck entries under "the batched
+accessibility pass" in `docs/system-improvement-ledger.md`: **a count was the
+wrong shape for this and went stale in silence**, which is why the guard in
+`scripts/lib/overlay.test.mjs` holds a list of names instead.) Setting the attribute is a
 statement about DEFAULTS, never a certificate — `npm run a11y:assured` is what makes
 it more than a promise.
 
 **A PROFILE CHANGES COLOUR. IT NEVER CHANGES A COMPONENT.** Verified: geometry is
-byte-identical with and without `[data-assurance]` across all 91 built pages. Two
+byte-identical with and without `[data-a11y-assurance]` across all 91 built pages. Two
 attempts to bend this were made and both were withdrawn, so the rule is absolute
 rather than a preference. (1) `--target-size-min`, a 24px `min-block-size` read by 12
 components — measured 33 failures → 0, and made `xs` and `sm` render at the SAME

@@ -14,6 +14,7 @@ const describe = {
   contained: "Constrain the inner row to maxWidth and center it.",
   maxWidth: "Inner row max-width when contained.",
   as: "Semantic host element.",
+  ariaLabel: "Accessible name for the host element. REQUIRED when as=\"nav\" — an unnamed navigation landmark cannot be told apart from any other in a screen reader's landmark list, and this component spreads no rest props, so there was previously no way to name one. Omit the word \"navigation\": the role is announced already.",
 };
 const tokens = [
   {

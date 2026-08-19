@@ -19,9 +19,15 @@ interface Props {
    */
   category?: string;
   /**
-   * Corner language. `default` is the squared 4px corner (`--radius-sm`) the kit's
-   * chips and badges share; `round` is the fully-rounded capsule (`--radius-pill`).
-   * A SHAPE axis, not a colour one — it composes with every `variant`.
+   * Corner language. `default` is the resting corner the kit's chips and badges
+   * share (`--radius-chip`, 4px); `round` is the fully-rounded capsule
+   * (`--radius-pill`). A SHAPE axis, not a colour one — it composes with every
+   * `variant`.
+   *
+   * NOTE `default` is not always squared any more: under a theme whose corner
+   * language is `round`, `--radius-chip` IS `--radius-pill`, so the whole chip
+   * family renders as capsules without anyone setting this prop. `round` remains
+   * the per-instance opt-in that holds under every corner language.
    */
   shape?: 'default' | 'round';
 }
@@ -121,16 +127,18 @@ const cls = [
     /* Sized by padding + text — --pill-height-* and the shared --chip-height-* ramp
        behind it were deleted 2026-08-15. --_pill-padding-y sits one rung below
        --_pill-padding-x (see esa-badge for why esa-button's equal-axis rule does not
-       transfer to a chip). The radius is --radius-sm, matching esa-badge — the
-       adopted rule is that chips read as quiet 4px marks, not bulky capsules; the
-       capsule is opt-in via shape="round" below. Either way the corner follows
-       whatever height the text and padding resolve to. Note this box has a 1px
+       transfer to a chip). The radius is --radius-chip, shared with esa-badge and
+       esa-chip-group — the adopted rule is that chips read as quiet 4px marks, not
+       bulky capsules. THAT RULE IS NOW THEME-SCOPED rather than absolute: a `round`
+       corner language re-points --radius-chip to --radius-pill and all three become
+       capsules together. shape="round" below is still the per-instance opt-in.
+       Either way the corner follows whatever height the text and padding resolve to. Note this box has a 1px
        border on each side, so it renders 2px taller than esa-badge at the same
        rung. */
     padding-block: var(--_pill-padding-y);
     padding-inline: var(--_pill-padding-x);
     border: var(--border-width-default, 1px) solid var(--_pill-border);
-    border-radius: var(--radius-sm, var(--radius-pill, 9999px));
+    border-radius: var(--radius-chip, var(--radius-sm, 0.25rem));
     background: var(--_pill-bg);
     color: var(--_pill-text);
     white-space: nowrap;
@@ -198,14 +206,20 @@ const cls = [
      and is deliberately closed; this axis is open, because the set is the spoke's
      and the hub cannot enumerate it.
 
-     THE THREE NAMES BELOW ARE NOT HUB TOKENS AND MUST NOT BECOME ONE. They are
-     declared by the SPOKE, scoped to its own vocabulary, and read here — the
-     inverse of every other var() in this file. That is the whole point: the
-     mechanism is ours, the values are the project's, so there is nothing for
-     component-tokens.css to hold and no row in token-names.json. Each read keeps
-     the default pill's own chain as its fallback, so a category with no ramp
-     defined (or a typo in the name) renders an ordinary pill rather than losing
-     the declaration.
+     THE THREE NAMES BELOW ARE COMPONENT TOKENS THE SPOKE DECLARES, AND THE HUB
+     MUST NEVER DECLARE THEM. They are scoped to the project's own vocabulary and
+     read here — the inverse of every other var() in this file. That is the whole
+     point: the mechanism is ours, the values are the project's, so there is
+     nothing for component-tokens.css to hold and no row in token-names.json.
+     A hub declaration would be actively wrong, not merely redundant: a declared
+     value beats the inline fallback, so every categorised pill everywhere would
+     render the hub's colour. Each read keeps the default pill's own chain as its
+     fallback, so a category with no ramp defined (or a typo in the name) renders
+     an ordinary pill rather than losing the declaration.
+
+     They are therefore tier 3, NOT the site's `ad-hoc` label — that one means an
+     undeclared read nobody decided on, and is held at zero as a ratchet. The
+     decision is recorded as `SPOKE_DECLARED` in apps/site/src/data/theming.ts.
 
      STEPS 2 / 6 / 11, matching the semantic variants above line for line — fill,
      border, text. That is not a coincidence to preserve loosely: it is what makes

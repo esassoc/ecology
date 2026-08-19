@@ -169,6 +169,29 @@ export class EsaEntitySearch extends LitElement {
     this.open = false;
   }
 
+  private get dialogEl(): HTMLDialogElement | null {
+    return (this.renderRoot as ShadowRoot).querySelector('dialog');
+  }
+
+  /**
+   * Focus return, absent until 2026-08-18 — `close()` only flipped `open`, and
+   * render() then deleted the subtree focus was in, so every exit dropped focus to
+   * <body>. showModal() restores it to the real trigger node. See esa-dialog.
+   */
+  private syncDialog(): void {
+    const el = this.dialogEl;
+    if (!el) return;
+    if (this.open) {
+      if (!el.open) el.showModal();
+    } else {
+      el.close();
+    }
+  }
+
+  private onNativeClose = (): void => {
+    this.open = false;
+  };
+
   private emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
@@ -237,9 +260,24 @@ export class EsaEntitySearch extends LitElement {
       this.close();
       return;
     }
+    // TAB CYCLES SCOPES, and it has to stay that way. This started life as a
+    // workaround for having no focus trap (Tab used to walk out of the overlay
+    // entirely), and showModal() has since made that part unnecessary — but every
+    // scope button is role="tab" tabindex="-1", so Tab is now the ONLY keyboard
+    // route to the tablist. Removing the hijack would leave the scopes reachable
+    // by pointer alone.
+    //
+    // Left/Right are the conventional tablist keys and are accepted too, so the
+    // widget is operable the way someone would guess as well as the way it was
+    // built. Up/Down stay with the result list below.
     if (event.key === 'Tab') {
       event.preventDefault();
       this.cycleScope(event.shiftKey ? -1 : 1);
+      return;
+    }
+    if (this.scopes.length && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+      event.preventDefault();
+      this.cycleScope(event.key === 'ArrowRight' ? 1 : -1);
       return;
     }
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
@@ -351,20 +389,19 @@ export class EsaEntitySearch extends LitElement {
     this.wasEmpty = isEmpty;
   }
 
-  updated(): void {
+  updated(changed: Map<string, unknown>): void {
+    if (changed.has('open')) this.syncDialog();
     this.announceEmptyResults();
   }
 
   render() {
-    if (!this.open) return html``;
     const q = this.query.trim();
     const groups = this.renderGroups;
     const showingRecent = this.showingRecent;
     const totalCount = this.queryMatches.length;
 
     return html`
-      <div class="esa-entity-search__backdrop" @click=${this.close}></div>
-      <div class="esa-entity-search" role="dialog" aria-label="Search" @keydown=${this.onKeydown}>
+      <dialog class="esa-entity-search" closedby="any" aria-label="Search" @keydown=${this.onKeydown} @close=${this.onNativeClose}>
         <div class="esa-entity-search__search">
           <svg class="esa-entity-search__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <!-- The input had NO accessible name: no label, no aria-label, only a
@@ -443,7 +480,7 @@ export class EsaEntitySearch extends LitElement {
             : null}
           <span><kbd class="typography-label-xs">Esc</kbd> Close</span>
         </div>
-      </div>
+      </dialog>
     `;
   }
 
@@ -453,32 +490,35 @@ export class EsaEntitySearch extends LitElement {
     css`
     :host { display: contents; }
 
-    .esa-entity-search__backdrop {
-      position: fixed;
-      inset: 0;
+    /* ::backdrop replaces the scrim div; the top layer replaces the z-index pair.
+       Literal fallback is the real value where ::backdrop does not inherit custom
+       properties — see esa-dialog. */
+    dialog.esa-entity-search::backdrop {
       background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
-      z-index: var(--z-modal-backdrop, 300);
     }
 
-    .esa-entity-search {
+    dialog.esa-entity-search {
+      /* Docked 12% down, so explicit insets and a zeroed margin rather than the
+         UA's centering 'margin: auto'; its border/padding and max-* clamps go too. */
       position: fixed;
       top: 12%;
       left: 50%;
       transform: translateX(-50%);
+      margin: 0;
+      padding: 0;
       width: var(--entity-search-width, 600px);
       max-width: calc(100vw - 2rem);
       max-height: var(--entity-search-max-height, 70vh);
       background: var(--color-background-elevation-floating, #fcfcfc);
+      color: var(--color-content-default, #202020);
       border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
       border-radius: var(--radius-lg, 0.75rem);
       box-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
-      z-index: var(--z-modal, 400);
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
       font-family: var(--typography-font-family-sans, sans-serif);
       animation: esa-entity-enter var(--animation-enter, 150ms ease-out);
     }
+    dialog.esa-entity-search[open] { display: flex; flex-direction: column; }
     @keyframes esa-entity-enter {
       from { opacity: 0; transform: translateX(-50%) scale(0.96); }
       to { opacity: 1; transform: translateX(-50%) scale(1); }

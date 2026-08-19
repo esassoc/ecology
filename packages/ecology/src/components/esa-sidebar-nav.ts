@@ -1,7 +1,8 @@
 // hub-edit-approved: Andy approved (2026-06-15) — resolve item.icon by registry
 // NAME (via ./icon-registry) so spokes pass icon: 'chef-hat' instead of pasting
 // raw <svg> blobs into nav data. Raw-SVG strings still work (back-compat).
-import { LitElement, html, css } from 'lit';
+// `nothing` (not undefined) is what REMOVES an attribute — see esa-dialog's import.
+import { LitElement, html, css, nothing } from 'lit';
 import { typography } from '../typography.js';
 import { iconSvg } from './icon-registry';
 import { boolish } from '../boolish.js';
@@ -47,27 +48,116 @@ const CHEVRONS_LEFT = iconSvg('chevrons-left', 16) ?? '';
 const CHEVRONS_RIGHT = iconSvg('chevrons-right', 16) ?? '';
 const CHEVRON_UP = iconSvg('chevron-up', 16) ?? '';
 const CHEVRON_DOWN = iconSvg('chevron-down', 16) ?? '';
+// Drawer mode's own two icons. Both are decorative — each sits beside a real text
+// label — so the registry's aria-hidden="true" on the <svg> is what we want.
+const MENU = iconSvg('menu', 20) ?? '';
+const CLOSE = iconSvg('x', 16) ?? '';
 
 export class EsaSidebarNav extends LitElement {
   static properties = {
     items: { type: Array },
+    label: { type: String },
     collapsed: { type: Boolean, reflect: true },
     collapsible: { type: Boolean, converter: boolish },
+    drawer: { type: Boolean, reflect: true },
+    drawerOpen: { type: Boolean, reflect: true, attribute: 'drawer-open' },
     _expanded: { state: true },
   };
 
   declare items: EsaSidebarNavItem[];
+  declare label: string;
   declare collapsed: boolean;
   declare collapsible: boolean;
+  /**
+   * Drawer mode — the rail becomes a slide-out overlay instead of an in-flow
+   * column. Set by the host (esa-app-shell drives it from a matchMedia), not by a
+   * media query in here, because the BEHAVIOUR half (inerting the page, moving
+   * focus, Escape) cannot be expressed in CSS and must agree with the layout half.
+   */
+  declare drawer: boolean;
+  declare drawerOpen: boolean;
   private declare _expanded: Set<string>;
 
   constructor() {
     super();
     this.items = [];
+    // Names the navigation landmark. NOT "Sidebar navigation": the role is
+    // announced with it, so that read as "Sidebar navigation, navigation". A page
+    // with two rails gives each its own label so the landmark list can tell them
+    // apart — which is the whole reason this is a prop and not a constant.
+    this.label = 'Sidebar';
     this.collapsed = false;
     this.collapsible = true;
+    this.drawer = false;
+    this.drawerOpen = false;
     this._expanded = new Set<string>();
   }
+
+  // ---- drawer (Practical Accessibility ch. 13) ----
+
+  private toggleDrawer = (): void => {
+    this.drawerOpen ? this.closeDrawer() : this.openDrawer();
+  };
+
+  private openDrawer(): void {
+    this.drawerOpen = true;
+    this.emitDrawerChange();
+    // Focus moves to the Close button: the drawer covers the page including the
+    // toggle that opened it, so leaving focus behind it would strand a keyboard
+    // user on something they cannot see (SC 2.4.11).
+    this.updateComplete.then(() => {
+      (this.renderRoot as ShadowRoot).querySelector<HTMLElement>('.drawer-close')?.focus();
+    });
+  }
+
+  private closeDrawer(returnFocus = true): void {
+    if (!this.drawerOpen) return;
+    this.drawerOpen = false;
+    this.emitDrawerChange();
+    if (returnFocus) {
+      this.updateComplete.then(() => {
+        (this.renderRoot as ShadowRoot).querySelector<HTMLElement>('.toggle')?.focus();
+      });
+    }
+  }
+
+  /**
+   * The host inerts the REST of the page on this event. A component cannot inert
+   * its own siblings — it has no business reaching outside itself — and the shell
+   * is the thing that knows which landmarks are the page.
+   */
+  private emitDrawerChange(): void {
+    this.dispatchEvent(
+      new CustomEvent('drawerchange', {
+        detail: { open: this.drawerOpen },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private onDrawerKeydown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape' && this.drawer && this.drawerOpen) {
+      event.preventDefault();
+      this.closeDrawer();
+    }
+  };
+
+  /**
+   * Chapter 13 offers two ways to stop Tab walking out of an open drawer: trap
+   * focus and call it a `dialog`, or DON'T trap and close when focus leaves. This
+   * takes the second — it needs no trap code, and the whole point of the native
+   * <dialog> migration elsewhere in this kit was deleting hand-rolled traps rather
+   * than adding a fourth. The content is `role="group"` named by the toggle, which
+   * is what that option requires.
+   */
+  private onDrawerFocusOut = (event: FocusEvent): void => {
+    if (!this.drawer || !this.drawerOpen) return;
+    const next = event.relatedTarget as Node | null;
+    if (next && (this.renderRoot as ShadowRoot).contains(next)) return;
+    // Focus left under its own steam, so it must not be dragged back.
+    this.closeDrawer(false);
+  };
 
   private get groupedSections(): GroupedNavSection[] {
     const sections: GroupedNavSection[] = [];
@@ -196,39 +286,96 @@ export class EsaSidebarNav extends LitElement {
   }
 
   render() {
+    // TWO STATES, ONE BUTTON, AND THEY ARE NOT THE SAME THING.
+    //
+    // Desktop `collapsed` shrinks the rail to a 72px icon strip. The links are
+    // still there and still named, so aria-expanded="false" would be a LIE — it
+    // says the controlled content is hidden. The swapping "Expand/Collapse
+    // sidebar" name is the honest description of that state, and it stays.
+    //
+    // `drawer` mode is the one Chapter 13 is about: the content really is hidden
+    // and really is inert, so there aria-expanded is exactly right.
+    const inDrawer = this.drawer;
     return html`
-      <nav class="nav typography-label-md" aria-label="Sidebar navigation">
+      <!-- The <nav> is rendered UNCONDITIONALLY, in every state. Hiding it would
+           take the navigation landmark off the page, and landmark navigation is the
+           first thing a screen reader user reaches for — so what hides in drawer
+           mode is .nav-content, never this element. -->
+      <nav
+        class="nav typography-label-md"
+        aria-label=${this.label}
+        @keydown=${this.onDrawerKeydown}
+        @focusout=${this.onDrawerFocusOut}
+      >
         <!-- The header slot and the collapse toggle share ONE row, so a rail
              carrying a brand puts the toggle beside it rather than stranding it
              on a full-width row of its own underneath. With no header content
              the row holds only the toggle, which its auto margin keeps at the
              trailing edge. Collapsed, the row stacks (see the CSS) - 32px of
-             toggle will not fit next to a mark in a 72px rail. -->
+             toggle will not fit next to a mark in a 72px rail.
+
+             The toggle lives INSIDE the landmark on purpose. Navigate to the
+             landmark while the drawer is shut and you land on the control that
+             opens it, rather than in an empty region. -->
         <div class="rail-head">
           <slot name="header"></slot>
-          ${this.collapsible
+          ${inDrawer
             ? html`<button
+                id="nav-toggle"
                 class="toggle"
                 type="button"
-                aria-label=${this.collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                @click=${this.toggleCollapse}
+                aria-expanded=${this.drawerOpen ? 'true' : 'false'}
+                aria-controls="nav-content"
+                @click=${this.toggleDrawer}
               >
-                <span .innerHTML=${this.collapsed ? CHEVRONS_RIGHT : CHEVRONS_LEFT}></span>
+                <span .innerHTML=${MENU}></span>
+                <span class="toggle-label">${this.label}</span>
+              </button>`
+            : this.collapsible
+              ? html`<button
+                  class="toggle"
+                  type="button"
+                  aria-label=${this.collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  @click=${this.toggleCollapse}
+                >
+                  <span .innerHTML=${this.collapsed ? CHEVRONS_RIGHT : CHEVRONS_LEFT}></span>
+                </button>`
+              : null}
+        </div>
+
+        <!-- A real scrim ELEMENT, not Chapter 13's box-shadow trick. Forced colors
+             forces box-shadow to 'none' at the used-value layer, so that scrim
+             would simply not exist in Windows Contrast Themes. -->
+        ${inDrawer && this.drawerOpen
+          ? html`<div class="scrim" @click=${() => this.closeDrawer()}></div>`
+          : null}
+
+        <div
+          id="nav-content"
+          class="nav-content"
+          role=${inDrawer ? 'group' : nothing}
+          aria-labelledby=${inDrawer ? 'nav-toggle' : nothing}
+          ?inert=${inDrawer && !this.drawerOpen}
+        >
+          ${inDrawer
+            ? html`<button class="drawer-close" type="button" @click=${() => this.closeDrawer()}>
+                <span .innerHTML=${CLOSE}></span>
+                <span>Close</span>
               </button>`
             : null}
+          <ul class="list" role="list">
+            ${this.groupedSections.map(
+              (section) => html`
+                ${section.group
+                  ? html`<li class="group-heading" role="presentation">
+                      <span class="group-label typography-eyebrow-md">${section.group}</span>
+                    </li>`
+                  : null}
+                ${section.items.map((item) => this.renderItem(item))}
+              `
+            )}
+          </ul>
         </div>
-        <ul class="list" role="list">
-          ${this.groupedSections.map(
-            (section) => html`
-              ${section.group
-                ? html`<li class="group-heading" role="presentation">
-                    <span class="group-label typography-eyebrow-md">${section.group}</span>
-                  </li>`
-                : null}
-              ${section.items.map((item) => this.renderItem(item))}
-            `
-          )}
-        </ul>
       </nav>
     `;
   }
@@ -339,6 +486,83 @@ export class EsaSidebarNav extends LitElement {
       flex-direction: column;
       height: 100%;
       padding: var(--spacing-200, 8px);
+    }
+    .nav-content {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+    }
+
+    /* ---- DRAWER MODE (Practical Accessibility ch. 13) ----
+       The host stops reserving a column and the CONTENT becomes the overlay. The
+       <nav> itself never moves off-screen, so the landmark stays reachable and the
+       toggle inside it stays the thing you land on. */
+    :host([drawer]) {
+      width: auto;
+      height: auto;
+      overflow: visible;
+      background: none;
+      border: none;
+    }
+    :host([drawer]) .nav { height: auto; padding: 0; }
+    :host([drawer]) .rail-head { margin-bottom: 0; }
+
+    :host([drawer]) .nav-content {
+      position: fixed;
+      z-index: var(--z-modal, 400);
+      inset-block: 0;
+      inset-inline-start: 0;
+      /* Reuses the existing rail token — a drawer width is not a new idea, and
+         75vw is Chapter 13's own cap so the page stays visible behind it. */
+      width: min(var(--_sidenav-width), 75vw);
+      padding: var(--spacing-200, 8px);
+      overflow-y: auto;
+      background: var(--_sidenav-bg);
+      border-inline-end: var(--border-width-default, 1px) solid var(--_sidenav-border);
+      transform: translateX(-100%);
+      transition: transform var(--animation-overlay-enter, 250ms ease-out);
+    }
+    :host([drawer][drawer-open]) .nav-content { transform: translateX(0); }
+
+    /* The transform alone would only hide it from SIGHT — it would still be in the
+       tab order and still in the accessibility tree. The inert attribute in the
+       template is what removes it; this is the visual half of the same state. */
+    :host([drawer]) .nav-content[inert] { visibility: hidden; }
+    :host([drawer][drawer-open]) .nav-content { visibility: visible; }
+
+    :host([drawer]) .scrim {
+      position: fixed;
+      inset: 0;
+      z-index: calc(var(--z-modal, 400) - 1);
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.5));
+    }
+
+    :host([drawer]) .toggle-label { margin-inline-start: var(--spacing-200, 8px); }
+    .drawer-close {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-200, 8px);
+      align-self: flex-start;
+      margin-bottom: var(--spacing-300, 12px);
+      padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
+      background: none;
+      color: var(--color-content-default, #202020);
+      font: inherit;
+      cursor: pointer;
+    }
+    .drawer-close:focus-visible,
+    :host([drawer]) .toggle:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
+    }
+
+    /* The rail slides; honour the preference to sit still. The generated :root
+       reduced-motion block cannot reach inside this shadow root. */
+    @media (prefers-reduced-motion: reduce) {
+      :host([drawer]) .nav-content { transition: none; }
     }
 
     /* Brand and toggle on one row. min-width:0 so a long wordmark ellipsises
@@ -526,6 +750,10 @@ export class EsaSidebarNav extends LitElement {
          to Canvas and vanishes — the one signal a collapsed rail has left for
          where one group ends and the next begins. */
       :host([collapsed]) .group-heading::after { background: CanvasText; }
+      /* The drawer's only separation from the page behind it is the scrim's
+         translucent fill, which is force-adjusted to Canvas here — an opaque
+         panel edge is what replaces it. */
+      :host([drawer]) .nav-content { border: 1px solid CanvasText; }
     }
   `,
   ];

@@ -58,6 +58,11 @@ const liveRole = live && !dismissable ? (variant === 'danger' ? 'alert' : 'statu
 // message text inherits it, `label-sm-strong` on the title. The import is the Astro
 // half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
 import '@esa/tokens/typography.css';
+// The selector only, not the focus helpers — this looks OUTWARD for the next focusable
+// in the document after the box is removed, which is the opposite job from finding what
+// is focusable inside an overlay. Sharing the string is the point; sharing the function
+// would be wrong.
+import { FOCUSABLE_SELECTOR } from '../overlay.js';
 
 const cls = ['esa-alert-box', `esa-alert-box--${variant}`, 'typography-body-sm'].join(' ');
 
@@ -146,7 +151,7 @@ const iconPath = ICON_PATHS[variant];
     // if the box was last.
     const focusables = Array.from(
       document.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        FOCUSABLE_SELECTOR,
       ),
     ).filter((el) => !box.contains(el) && el.offsetParent !== null);
 

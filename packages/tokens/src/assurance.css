@@ -10,7 +10,7 @@
  * cb-fish has to be able to be cb-fish *and* assured. So this is a third axis, and
  * the three compose:
  *
- *   <html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa">
+ *   <html data-theme="cb-fish" data-scheme="light" data-a11y-assurance="wcag-aa">
  *
  * Because it is a separate axis, it is maintained ONCE, here, rather than
  * re-solved (and re-got-wrong) in every spoke's theme file. A spoke opts in by
@@ -77,7 +77,7 @@
  * What survives here is colour, plus one scroll offset that cannot reflow anything.
  */
 
-[data-assurance="wcag-aa"] {
+[data-a11y-assurance="wcag-aa"] {
   /* ---- Text contrast · SC 1.4.3 (AA) ----
      THE ONE DECISION, made once. Seven pairs fail in the hub defaults and six
      share a single cause: near-white text (gray-1) on a Radix STEP 9 fill. Step 9
@@ -120,19 +120,27 @@
   --color-background-ai: var(--color-copper-11);
   --color-background-ai-hover: var(--color-copper-12);
 
-  --color-background-utility-info: var(--color-blue-11);
-  --color-background-utility-info-hover: var(--color-blue-12);
+  /* The utility FILLS are no longer here, and that is the point. They used to be:
+     info and danger were re-pointed from step 9 to step 11 so their knockout text
+     could reach AA, which meant the profile was what made a status button legible.
+     Step 11 is the DEFAULT now, so those rows became no-ops and were deleted. A
+     profile should tighten an edge case, not carry the default over the line.
+     `warning` was never here — yellow-9 is a bright scale taking dark text (7.21:1),
+     and darkening it to yellow-11 would drop that pair to 2.47:1.
 
-  --color-background-utility-danger: var(--color-red-11);
-  --color-background-utility-danger-hover: var(--color-red-12);
+     What IS here is the tinted marker's text. A badge/chip/pill paints
+     `background-utility-<intent>-muted` (step 3) with `content-utility-<intent>`
+     (step 11), which measures 4.21-4.54:1 — danger clears 4.5, the other three miss
+     by 0.25-0.29. Step 12 takes all four to 10.47-11.26:1 on that fill.
+     This is a colour re-point and nothing else: same fill, same geometry, same
+     component. `warning` was already on this list for the older reason below. */
+  --color-content-utility-info: var(--color-blue-12);
+  --color-content-utility-success: var(--color-green-12);
+  --color-content-utility-danger: var(--color-red-12);
 
-  /* Success and warning are NOT here on purpose. lime-9 and yellow-9 are bright
-     scales that already carry a dark step-12 foreground and already pass. Adding
-     them "for consistency" would darken two fills that were never broken. */
-
-  /* The seventh failure, and the only one that is not a fill: coloured text on its
-     own subtle tint. yellow-11 on yellow-2 is 4.43:1 — a miss of 0.07, which is
-     still a miss. Yellow is the scale where step 11 has the least room. */
+  /* Coloured text on its own subtle tint: yellow-11 on yellow-2 is 4.43:1 — a miss
+     of 0.07, which is still a miss. Yellow is the scale where step 11 has the least
+     room, which is why this row predates the three above. */
   --color-content-utility-warning: var(--color-yellow-12);
 
   /* Not a failure, a warning that is real anyway: gray-10 is 3.70:1 on a raised
@@ -165,7 +173,7 @@
  *
  * The attribute is a token scope. It re-points values; it cannot add behaviour,
  * markup, or a rule inside a shadow root. Everything below is a real open failure
- * in this kit that setting `data-assurance` does NOT fix, and each one is a
+ * in this kit that setting `data-a11y-assurance` does NOT fix, and each one is a
  * component change tracked in docs/system-improvement-ledger.md:
  *
  *   - esa-date-picker has zero keydown handlers. The calendar cannot be opened,

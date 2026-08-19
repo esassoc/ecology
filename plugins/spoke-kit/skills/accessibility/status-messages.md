@@ -136,15 +136,25 @@ keystroke reads the whole list back. Instead:
    Focus stays on the input, so without it the active option changes in complete
    silence. Both IDREFs must resolve inside the same shadow root.
 
-`esa-combobox.ts` does all three; `esa-filter-dropdown.ts`, `esa-input-tag.ts`,
-`esa-entity-search.ts`, `esa-command-palette.ts` and `esa-search-panel.ts` do 1
-and 2.
+`esa-combobox.ts`, `esa-command-palette.ts`, `esa-filter-dropdown.ts` and
+`esa-select.ts` do all three. `esa-input-tag.ts` and `esa-search-panel.ts` do 1
+and 2. `esa-entity-search.ts` is the last one out and is being moved onto 3.
 
-**A note on 3:** components whose options are real `<button>`s
-(`esa-entity-search`, `esa-command-palette`, `esa-input-tag`) use a different,
-also-valid keyboard model — the options are tab stops. Do not bolt
-`aria-activedescendant` onto those without also making them non-tabbable; half
-of each model is worse than either.
+**A note on 3, corrected 2026-08-18.** This used to say that components whose
+options are real `<button>`s (`esa-entity-search`, `esa-command-palette`,
+`esa-input-tag`) use "a different, also-valid keyboard model — the options are
+tab stops." Two things were wrong with that. `esa-command-palette` had already
+moved off it — its options are `<div role="option">` behind
+`aria-activedescendant`, and the source comment at `esa-command-palette.ts:261`
+says why: *"A `<button role="option">` is invalid: an option may not be an
+interactive widget, and it also made every command its own tab stop."* And
+`esa-entity-search` was never really on the other model either — it bound Tab to
+cycling its facets, so its options were tab stops that Tab could not reach.
+
+The warning underneath it still stands and is the reason to read this: **half of
+each model is worse than either.** Non-focusable options with no
+`aria-activedescendant` change in silence; focusable options with one fight each
+other for where focus actually is. Pick one and wire it completely.
 
 ## Forms
 

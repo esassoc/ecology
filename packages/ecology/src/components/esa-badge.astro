@@ -81,7 +81,10 @@ const cls = [
     min-width: calc(1lh + 2 * var(--_badge-padding-y));
     padding-block: var(--_badge-padding-y);
     padding-inline: var(--_badge-padding-x);
-    border-radius: var(--radius-sm, 0.25rem);
+    /* --radius-chip, not --radius-sm: the chip family (badge, pill, chip-group) shares
+       one resting corner, and a `round` corner language turns all three into capsules.
+       Tracks --radius-sm exactly under flat and soft. */
+    border-radius: var(--radius-chip, var(--radius-sm, 0.25rem));
     background: var(--_badge-bg);
     color: var(--_badge-text);
     white-space: nowrap;
@@ -95,10 +98,30 @@ const cls = [
   .esa-badge--lg { --_badge-padding-y: var(--spacing-250, 0.625rem); --_badge-padding-x: var(--spacing-300, 0.75rem); }
 
   .esa-badge--secondary { --_badge-bg: var(--color-background-brand-muted, #e9f6e9); --_badge-text: var(--color-content-on-brand-muted, #203c25); }
-  .esa-badge--success   { --_badge-bg: var(--color-background-utility-success, #30a46c); --_badge-text: var(--color-content-on-utility-success, #202020); }
-  .esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning, #ffc53d); --_badge-text: var(--color-content-on-utility-warning, #4f3422); }
-  .esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger, #e5484d); }
-  .esa-badge--info      { --_badge-bg: var(--color-background-utility-info, #0090ff); }
+  /* A badge is a LABEL, not a control, so it takes the tinted treatment: step-3 fill
+     + step-11 text. The solid fill is reserved for things you can act on — that is
+     the whole split, and it stops a status annotation shouting as loud as a submit
+     button. Buttons keep a solid step-11 fill with knockout text.
+     Measured on the page: danger 4.54:1, info 4.25:1, success 4.21:1, warning 4.25:1.
+     The three under 4.5 are lifted to step 12 (10.47-11.26:1) by
+     [data-a11y-assurance="wcag-aa"], which re-points the text token and touches nothing
+     here. */
+  .esa-badge--success   { --_badge-bg: var(--color-background-utility-success-muted, #e6f6eb); --_badge-text: var(--color-content-utility-success, #218358); --_badge-border: var(--color-border-utility-success, #adddc0); }
+  .esa-badge--warning   { --_badge-bg: var(--color-background-utility-warning-muted, #fff7c2); --_badge-text: var(--color-content-utility-warning, #ab6400); --_badge-border: var(--color-border-utility-warning, #f3d673); }
+  .esa-badge--danger    { --_badge-bg: var(--color-background-utility-danger-muted,  #feebec); --_badge-text: var(--color-content-utility-danger,  #ce2c31); --_badge-border: var(--color-border-utility-danger,  #fdbdbe); }
+  .esa-badge--info      { --_badge-bg: var(--color-background-utility-info-muted,    #e6f4fe); --_badge-text: var(--color-content-utility-info,    #0d74ce); --_badge-border: var(--color-border-utility-info,    #acd8fc); }
+
+  /* A step-3 fill sits 1.06-1.12:1 against the page — invisible without an edge. A
+     real `border`, not an inset box-shadow, so it survives forced colors
+     (border-color is force-adjusted; box-shadow is dropped to none).
+     :not(--dot) because a dot IS a fill and keeps its solid mark.
+     These four variants are 2px taller than the borderless ones. */
+  .esa-badge--success:not(.esa-badge--dot),
+  .esa-badge--warning:not(.esa-badge--dot),
+  .esa-badge--danger:not(.esa-badge--dot),
+  .esa-badge--info:not(.esa-badge--dot) {
+    border: 1px solid var(--_badge-border, transparent);
+  }
 
   .esa-badge--dot {
     width: 8px;

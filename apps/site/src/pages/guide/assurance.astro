@@ -6,7 +6,7 @@ import Section from '@esa/docs/Section.astro';
 <DocsLayout title="Accessibility assurance — Ecology" activeHref="/guide/assurance">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Guide</span> <span>/</span> <span>Accessibility assurance</span></nav>
   <h1>Accessibility assurance</h1>
-  <p class="lede">Some projects have to make guarantees — a Section 508 clause, EN 301 549, a procurement requirement. <code>data-assurance</code> is how a spoke opts into defaults that are confirmed accessible instead of merely intended to be. It is not a theme, and it does not cost you your brand.</p>
+  <p class="lede">Some projects have to make guarantees — a Section 508 clause, EN 301 549, a procurement requirement. <code>data-a11y-assurance</code> is how a spoke opts into defaults that are confirmed accessible instead of merely intended to be. It is not a theme, and it does not cost you your brand.</p>
 
   <Section id="axis" title="It is a third axis, not a theme">
     <p>
@@ -19,10 +19,10 @@ import Section from '@esa/docs/Section.astro';
       <tbody>
         <tr><td><code>data-theme</code></td><td>Which brand is this?</td><td>the spoke</td></tr>
         <tr><td><code>data-scheme</code></td><td>Light or dark?</td><td>the reader</td></tr>
-        <tr><td><code>data-assurance</code></td><td>Which conformance profile?</td><td>the project</td></tr>
+        <tr><td><code>data-a11y-assurance</code></td><td>Which conformance profile?</td><td>the project</td></tr>
       </tbody>
     </table>
-    <pre><code>&lt;html data-theme="cb-fish" data-scheme="light" data-assurance="wcag-aa"&gt;</code></pre>
+    <pre><code>&lt;html data-theme="cb-fish" data-scheme="light" data-a11y-assurance="wcag-aa"&gt;</code></pre>
     <p>
       That is the entire opt-in. The profile ships inside <code>@esa/tokens</code> and is
       <strong>inert until the attribute is present</strong>, so there is nothing to import
@@ -124,7 +124,7 @@ import Section from '@esa/docs/Section.astro';
 
   <Section id="theme-wins" title="The part everyone gets wrong: your theme still wins">
     <p>
-      <code>[data-theme]</code> and <code>[data-assurance]</code> have <strong>identical
+      <code>[data-theme]</code> and <code>[data-a11y-assurance]</code> have <strong>identical
       specificity</strong>, and your theme stylesheet loads afterwards. So on any role your
       theme re-points — your brand colour, above all — <strong>the theme wins, profile or
       not</strong>.
@@ -151,8 +151,8 @@ import Section from '@esa/docs/Section.astro';
       <strong>defaults</strong>, never a conformance certificate. It does not fix:
     </p>
     <ul>
-      <li><code>esa-date-picker</code>, which has no keyboard handling at all — SC 2.1.1, <strong>Level A</strong>, and the most serious open finding in the kit.</li>
-      <li>The nine non-modal popups that return focus nowhere, three of which have no Escape key.</li>
+      <li>The non-modal overlays. <code>esa-popover</code>, <code>esa-dropdown-menu</code>, <code>esa-filter-dropdown</code> and <code>esa-combobox</code> (in <code>mode="select"</code>) strand focus at <code>&lt;body&gt;</code> when they close, so a keyboard user is returned to the top of the document. The <em>modals</em> are fixed — all six moved to native <code>&lt;dialog&gt;</code> + <code>showModal()</code> on 2026-08-18, which supplies inertness, focus containment and focus return that no amount of JS was getting right.</li>
+      <li>Custom keyboard models. <code>esa-entity-search</code> binds Tab to cycling its facets, which leaves its per-row action buttons reachable by no key at all — SC 2.1.1, <strong>Level A</strong>.</li>
       <li>Anything in Windows Contrast Themes, which overrides at the used-value layer, downstream of every token.</li>
     </ul>
     <p>

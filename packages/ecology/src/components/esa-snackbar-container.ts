@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { announce } from '../announcer.js';
+import { deepActiveElement } from '../overlay.js';
 import './esa-snackbar-item';
 import type { EsaSnackbarVariant } from './esa-snackbar-item';
 
@@ -245,7 +246,11 @@ export class EsaSnackbarContainer extends LitElement {
     // If focus is inside the toast being removed, put it back where it came from.
     // Otherwise removing the node drops focus to <body>, and a keyboard user is
     // returned to the top of the document with no idea where they were.
-    const active = this.renderRoot.activeElement ?? document.activeElement;
+    // deepActiveElement(), not document.activeElement: the latter retargets to the
+    // shadow HOST when focus is inside a shadow root, so a focused control inside a
+    // snackbar's own action button reported as the container and the containment test
+    // below could answer the wrong question.
+    const active = this.renderRoot.activeElement ?? deepActiveElement();
     const focusWasInside = !!active && this.renderRoot.contains(active as Node);
 
     this.snackbars = this.snackbars.filter((s) => s.id !== id);

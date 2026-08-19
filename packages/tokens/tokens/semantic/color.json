@@ -103,13 +103,18 @@
       "$type": "color"
     },
     "background-utility-info": {
-      "$value": "{color.blue.9}",
+      "$value": "{color.blue.11}",
       "$type": "color",
       "$description": "Step 9 = Radix solid fill."
     },
     "background-utility-info-hover": {
-      "$value": "{color.blue.10}",
+      "$value": "{color.blue.12}",
       "$type": "color"
+    },
+    "background-utility-info-muted": {
+      "$value": "{color.blue.3}",
+      "$type": "color",
+      "$description": "Tinted fill for a status marker that is NOT a control — badge, chip, pill. Step 3 is Radix's UI-ELEMENT background step, which is what separates it from `-subtle` (step 1, the app/surface step used by alert-box and danger-zone). Parallel to `background-brand-muted`, which is grass-3 for the same reason.\n\nPairs with `content-utility-<intent>` (step 11): 4.21-4.54:1, under the 4.5 AA bar for three of four intents. `[data-a11y-assurance=\"wcag-aa\"]` moves that text to step 12 and clears all four at 10.47-11.26:1. A solid step-11 fill with knockout text is the CONTROL treatment (buttons); the split is affordance — a solid fill means actionable.\n\nAt 1.06-1.12:1 against the page this fill needs a drawn edge to read at all; `border-utility-<intent>` (step 6) is that edge."
     },
     "background-utility-info-subtle": {
       "$value": "{color.blue.1}",
@@ -117,13 +122,18 @@
       "$description": "Step 2 = subtle tinted surface. The usual alert/banner background."
     },
     "background-utility-success": {
-      "$value": "{color.green.9}",
+      "$value": "{color.green.11}",
       "$type": "color",
       "$description": "\n\nWAS LIME UNTIL 2026-08-18. Lime read as a highlighter rather than a success state, and its step 9 sits 1.31:1 against the page — a fill you cannot see the edge of. green-9 is 3.08:1.\n\nTHE COST IS MEASURED AND REAL: against the hub's own grass brand, green-9 is OKLab deltaE 3.06 and 2.99 under simulated colour-vision deficiency — below even the 6-8 floor band dataviz.mjs treats as the minimum for telling two hues apart. On THIS site a success badge and a brand button are near enough the same colour. Lime was 24.51 / 22.89 away. That is a hub-default problem rather than a system one: a spoke re-points its brand, and for any non-green brand green is the conventional and correct success hue. If it ever needs solving without leaving green, green-11 is deltaE 11.7 from grass and takes white text at 4.60:1."
     },
     "background-utility-success-hover": {
-      "$value": "{color.green.10}",
+      "$value": "{color.green.12}",
       "$type": "color"
+    },
+    "background-utility-success-muted": {
+      "$value": "{color.green.3}",
+      "$type": "color",
+      "$description": "Tinted fill for a status marker that is NOT a control — badge, chip, pill. Step 3 is Radix's UI-ELEMENT background step, which is what separates it from `-subtle` (step 1, the app/surface step used by alert-box and danger-zone). Parallel to `background-brand-muted`, which is grass-3 for the same reason.\n\nPairs with `content-utility-<intent>` (step 11): 4.21-4.54:1, under the 4.5 AA bar for three of four intents. `[data-a11y-assurance=\"wcag-aa\"]` moves that text to step 12 and clears all four at 10.47-11.26:1. A solid step-11 fill with knockout text is the CONTROL treatment (buttons); the split is affordance — a solid fill means actionable.\n\nAt 1.06-1.12:1 against the page this fill needs a drawn edge to read at all; `border-utility-<intent>` (step 6) is that edge."
     },
     "background-utility-success-subtle": {
       "$value": "{color.green.1}",
@@ -138,18 +148,28 @@
       "$value": "{color.yellow.10}",
       "$type": "color"
     },
+    "background-utility-warning-muted": {
+      "$value": "{color.yellow.3}",
+      "$type": "color",
+      "$description": "Tinted fill for a status marker that is NOT a control — badge, chip, pill. Step 3 is Radix's UI-ELEMENT background step, which is what separates it from `-subtle` (step 1, the app/surface step used by alert-box and danger-zone). Parallel to `background-brand-muted`, which is grass-3 for the same reason.\n\nPairs with `content-utility-<intent>` (step 11): 4.21-4.54:1, under the 4.5 AA bar for three of four intents. `[data-a11y-assurance=\"wcag-aa\"]` moves that text to step 12 and clears all four at 10.47-11.26:1. A solid step-11 fill with knockout text is the CONTROL treatment (buttons); the split is affordance — a solid fill means actionable.\n\nAt 1.06-1.12:1 against the page this fill needs a drawn edge to read at all; `border-utility-<intent>` (step 6) is that edge."
+    },
     "background-utility-warning-subtle": {
       "$value": "{color.yellow.1}",
       "$type": "color"
     },
     "background-utility-danger": {
-      "$value": "{color.red.9}",
+      "$value": "{color.red.11}",
       "$type": "color",
       "$description": "Error and destructive intent."
     },
     "background-utility-danger-hover": {
-      "$value": "{color.red.10}",
+      "$value": "{color.red.12}",
       "$type": "color"
+    },
+    "background-utility-danger-muted": {
+      "$value": "{color.red.3}",
+      "$type": "color",
+      "$description": "Tinted fill for a status marker that is NOT a control — badge, chip, pill. Step 3 is Radix's UI-ELEMENT background step, which is what separates it from `-subtle` (step 1, the app/surface step used by alert-box and danger-zone). Parallel to `background-brand-muted`, which is grass-3 for the same reason.\n\nPairs with `content-utility-<intent>` (step 11): 4.21-4.54:1, under the 4.5 AA bar for three of four intents. `[data-a11y-assurance=\"wcag-aa\"]` moves that text to step 12 and clears all four at 10.47-11.26:1. A solid step-11 fill with knockout text is the CONTROL treatment (buttons); the split is affordance — a solid fill means actionable.\n\nAt 1.06-1.12:1 against the page this fill needs a drawn edge to read at all; `border-utility-<intent>` (step 6) is that edge."
     },
     "background-utility-danger-subtle": {
       "$value": "{color.red.1}",
@@ -237,9 +257,9 @@
       "$type": "color"
     },
     "content-on-utility-success": {
-      "$value": "{color.gray.12}",
+      "$value": "{color.gray.1}",
       "$type": "color",
-      "$description": "Text on the success fill. NOT step 12 of its own ramp, which is the pattern `warning` still follows — that pattern belongs to the BRIGHT scales. Lime was one: lime-9 is so light that lime-12 on it reads 8.14:1. green-9 is a mid-tone fill, where green-12 comes to only 3.90:1 and fails AA, while the neutral's darkest reaches 5.16:1.\n\nWhite fails here too (green-9 is not dark enough), which is why this is neither of the two existing patterns: `danger` and `info` take {color.gray.1} because red-9 and blue-9 are dark, `warning` takes {color.yellow.12} because amber-9 is bright, and green-9 sits between them."
+      "$description": "Text on the success fill — the same {color.gray.1} `danger` and `info` use, NOT step 12 of its own ramp. That step-12 pattern belongs to the BRIGHT scales, which is why `warning` on amber-9 still follows it; green-12 on green-9 comes to only 3.90:1.\n\ngreen-9 is a mid-tone fill, so white is a deliberate trade rather than a match: it measures 3.08:1, which clears the 3:1 non-text/large-text bar and MISSES AA for normal text. {color.gray.12}, the neutral's darkest, is the only foreground here that passes AA (5.16:1) — go back to it if this row has to."
     },
     "content-on-utility-warning": {
       "$value": "{color.yellow.12}",

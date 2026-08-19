@@ -17,12 +17,18 @@ import '../styles/theme-__SPOKE_SLUG__.css';
 import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
 
 // ACCESSIBILITY ASSURANCE (optional). If this project has a conformance obligation
-// — Section 508, EN 301 549, a procurement clause — add data-assurance="wcag-aa" to
+// — Section 508, EN 301 549, a procurement clause — add data-a11y-assurance="wcag-aa" to
 // the <html> tag below. It composes with data-theme; the brand does not change:
 //
-//   <html lang="en" data-theme="__SPOKE_SLUG__" data-assurance="wcag-aa">
+//   <html lang="en" data-theme="__SPOKE_SLUG__" data-a11y-assurance="wcag-aa">
 //
 // It ships inside @esa/tokens and is inert until set, so there is nothing to import.
+//
+// YOUR THEME CARRIES ITS OWN, and that is the half that actually moves your brand. A
+// theme written by `npm run theme:make` emits its own [data-a11y-assurance="wcag-aa"] block
+// alongside the brand block, scoped so it outranks both. Grep theme-__SPOKE_SLUG__.css
+// for `data-a11y-assurance` to see exactly what the attribute changes for this project — it
+// is usually short, because a generated theme is already AA in both schemes.
 //
 // IT CHANGES COLOUR AND NOTHING ELSE. Solid fills that carry text move to a
 // contrast-safe step. Your components do not change: not their size, not their type,
@@ -34,11 +40,17 @@ import HandoffInspector from '@esa/handoff/HandoffInspector.astro';
 //
 //   npm run a11y:sizes
 //
-// IT DOES NOT OVERRIDE YOUR THEME. Equal specificity, and theme-__SPOKE_SLUG__.css
-// loads after it, so any role your theme re-points still wins — including your brand.
-// Verify rather than assume:
+// THE HUB'S HALF CANNOT REACH YOUR BRAND, and do not expect it to. `[data-theme]` and
+// a bare `[data-a11y-assurance]` have equal specificity and theme-__SPOKE_SLUG__.css loads
+// later, so every role your theme re-points wins over the hub's profile — and the hub's
+// values point at ITS brand ramp (grass), which would be wrong here anyway. That is why
+// the block in your own theme file exists. Verify rather than assume, in both schemes:
 //
 //   node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --assurance wcag-aa
+//   node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --assurance wcag-aa --scheme dark
+//
+// DO NOT HAND-DECLARE THESE NAMES in a block of your own. Regenerating the theme is the
+// channel; a hand-written override at the same specificity loses to whichever loads last.
 //
 // Setting the attribute is a statement about DEFAULTS, not a conformance certificate.
 // See packages/tokens/src/assurance.css for what a profile cannot fix.

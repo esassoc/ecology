@@ -13,6 +13,7 @@ const describe = {
   offset: "Gap in pixels between trigger and panel.",
   appearance: "Panel style (aligned to Beacon): default is a light surface; inverse is a dark panel with light text, for documentation/help content. Reflected as an attribute.",
   open: "Reflected open state.",
+  label: "Accessible name for the panel. When set, the panel is exposed as a dialog; when omitted it carries no role. It used to be an unconditional role=\"dialog\" with no name, which is worse than no role — a screen reader announces \"dialog\" and has nothing to say about it, and the role promises focus management a non-modal popover does not implement.",
 };
 ---
 <ComponentDoc name="Popover" category="Overlays" slug="esa-popover" type="wc" status="stable"

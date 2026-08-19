@@ -135,7 +135,7 @@ export const PAIRS = [
   // the components actually paint and it is declared in component-tokens.css, which this
   // script parses. It chains to --color-background-utility-danger, so a spoke re-pointing
   // the tier-2 role is still caught. Resolves to red-9 (#e5484d, 3.43:1 worst) by default
-  // and red-11 (4.57:1) under [data-assurance="wcag-aa"].
+  // and red-11 (4.57:1) under [data-a11y-assurance="wcag-aa"].
   //
   // WHAT THESE ROWS WOULD HAVE CAUGHT: until 2026-08-17 three of the six painted this ring
   // from --color-border-utility-danger, which is red-6 — a SUBTLE BORDER step, 1.40:1 on a
@@ -250,7 +250,7 @@ export function parseBlocks(css) {
   return blocks;
 }
 
-const ASSURANCE_SCOPE = /\[data-assurance/;
+const ASSURANCE_SCOPE = /\[data-a11y-assurance/;
 const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
 
 /*
@@ -260,7 +260,7 @@ const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
  * It swept every `--name: value;` in the file regardless of which rule it sat in,
  * which was fine while the only top-level block was `:root` (the P3 and
  * reduced-motion blocks are at-rules and were already stripped). Then the
- * accessibility assurance profile was appended as a plain `[data-assurance]`
+ * accessibility assurance profile was appended as a plain `[data-a11y-assurance]`
  * block — and because it comes LAST, last-one-wins handed the audit the assured
  * colours as if they were the hub defaults. `--hub` went from 7 failures to
  * "All text pairs pass AA" with no code change and no warning.
@@ -282,7 +282,7 @@ const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
 export function parseDeclarations(css, map, { assurance = null, scheme = 'light' } = {}) {
   for (const [selector, body] of parseBlocks(css)) {
     if (ASSURANCE_SCOPE.test(selector)) {
-      if (!assurance || !selector.includes(`[data-assurance="${assurance}"]`)) continue;
+      if (!assurance || !selector.includes(`[data-a11y-assurance="${assurance}"]`)) continue;
     }
     const sm = SCHEME_SCOPE.exec(selector);
     if (sm && sm[1] !== scheme) continue;

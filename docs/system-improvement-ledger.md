@@ -120,7 +120,7 @@ Closes the "contrast is UNRESOLVED" note that `component-tokens.css` and
   tier 3 is what the components paint and it is declared in `component-tokens.css`, which the
   gate parses; it chains to `--color-background-utility-danger`, so a spoke re-pointing the
   tier-2 role is still caught. Measured: red-9 **3.43:1** worst by default, red-11 **4.57:1**
-  under `[data-assurance="wcag-aa"]`. Both pass · `hub-fix` · **done**
+  under `[data-a11y-assurance="wcag-aa"]`. Both pass · `hub-fix` · **done**
 
 - **THREE OF THE SIX ERROR RINGS WERE ALL BUT INVISIBLE, and this is what the new rows would
   have caught** · *Evidence:* `esa-select`, `esa-combobox` and `esa-date-picker` painted the
@@ -196,7 +196,7 @@ Closes the "contrast is UNRESOLVED" note that `component-tokens.css` and
   `color(display-p3 0.344 0.598 0.342)`, which is not the sRGB value the gate measures.
   *Action:* none taken — a bare 3:1 was the chosen rule and `AA_NON_TEXT` in
   `theme-recipe.mjs` is a one-line change. Worth noting that a 3.5 threshold would send the hub
-  to step 11 (`#2a7e3b`, 4.44:1), which is the step `[data-assurance="wcag-aa"]` already picks,
+  to step 11 (`#2a7e3b`, 4.44:1), which is the step `[data-a11y-assurance="wcag-aa"]` already picks,
   so the two mechanisms would agree — and it would clear the hub's knockout row too · `hub-fix`
   · **open, low**
 
@@ -1517,22 +1517,90 @@ for keyboard, focus and target size.
   or an admission that button labels are large text. Fixing them one at a time will
   produce seven different answers. *Priority:* high.
 
-- **`esa-date-picker` has no keyboard handling of any kind** · *Evidence:* zero
-  `keydown` listeners, zero key comparisons, zero `.focus()` calls in the whole file.
-  The calendar popup cannot be opened, navigated, or dismissed from the keyboard.
-  *Action:* none yet. *Sink:* `lego` — WCAG 2.1.1 Keyboard is Level A, and this is a
-  form control. It is the single most serious finding in this pass and is not in the
-  same category as the contrast numbers. *Priority:* highest.
+- **~~`esa-date-picker` has no keyboard handling of any kind~~ — WITHDRAWN 2026-08-18,
+  IT WAS NEVER A FINDING** · *Original evidence:* zero `keydown` listeners, zero key
+  comparisons, zero `.focus()` calls in the whole file; "the calendar popup cannot be
+  opened, navigated, or dismissed from the keyboard." Filed *highest* priority and
+  repeated on `/guide/assurance` as "the most serious open finding in the kit."
 
-- **The three true modals are complete; the nine non-modal popups return focus
-  nowhere** · *Evidence:* `esa-dialog`, `esa-side-dialog` and `esa-confirm-dialog`
-  each have Escape + a Tab trap + focus return + `aria-modal`. The other nine
-  (dropdown-menu, command-palette, popover, combobox, date-picker, entity-search,
-  filter-dropdown, nav-dropdown, tooltip) have no focus return to their trigger, and
-  three have no Escape at all: date-picker, nav-dropdown, tooltip. Tooltip is a named
-  AA failure on its own — WCAG 1.4.13 requires hover/focus content to be dismissible.
-  *Action:* none yet. *Sink:* `lego`. *Priority:* high for the three missing Escape,
-  medium for focus return.
+  **There is no calendar popup.** `esa-date-picker.ts` renders exactly one native
+  `<input type="date">` (`:221-235`) behind a real `<label for>`; it has no `open`
+  state, no panel, and no click handler anywhere in its 378 lines. The browser
+  supplies the calendar *and its keyboard* — you type the date directly, and
+  Alt+Down opens the picker. Zero `keydown` listeners is not the absence of keyboard
+  handling here; **it is what a correct native wrapper looks like**, and the same
+  count would be damning on a custom widget and meaningless on this one.
+
+  The lesson worth keeping: **the evidence was true and the conclusion did not
+  follow.** A grep counts what a file *does*; it cannot see what the platform is
+  doing on the file's behalf. Every "zero X listeners" finding needs one more step —
+  open the component and ask what element is actually there. Two documents carried
+  this for two days on the strength of a count nobody re-read the source behind.
+  `esa-color-picker` is the same shape (native `<input type="color">` at `:139`) and
+  was never filed, which is the inconsistency that should have prompted the check.
+
+- **~~The three true modals are complete; the nine non-modal popups return focus
+  nowhere~~ — RE-MEASURED 2026-08-18; the count was wrong in both directions and the
+  headline understated it** · *Original evidence:* the other nine were listed as
+  dropdown-menu, command-palette, popover, combobox, date-picker, entity-search,
+  filter-dropdown, nav-dropdown, tooltip.
+
+  **A count was the wrong shape for this and went stale silently.** Four of the nine
+  did not belong: `date-picker` has no popup at all (see the withdrawn entry above);
+  `nav-dropdown` is a zero-JS native `<details>` that nothing closes programmatically,
+  so it cannot strand focus — its gap is no Esc; `tooltip` never takes focus, so its
+  gap is dismissal (SC 1.4.13), not return; and `combobox` loses focus only in
+  `mode="select"`, where `.search-input` (`:659`) renders inside the dropdown that
+  `closeDropdown()` unmounts. `esa-select` was never on the list and correctly so —
+  its `.input` sits inside `.trigger` (`:607-608`), which never unmounts. Missing from
+  the list: **`esa-search-panel`**.
+
+  Measured, focus is stranded at `<body>` on close by: `esa-command-palette`,
+  `esa-entity-search`, `esa-search-panel`, `esa-popover`, `esa-dropdown-menu`,
+  `esa-filter-dropdown`, and `esa-combobox` in `mode="select"`.
+
+  **The headline understated the real defect.** "The three true modals are complete"
+  was true of everything the entry measured and still missed that **`inert` is used
+  nowhere in this repo** — zero occurrences in real code, every grep hit the English
+  word in a comment. So all three "complete" modals declare `aria-modal="true"` while
+  nothing enforces the modality: a Tab trap constrains one key on one input device and
+  does nothing for a screen reader's virtual cursor, find-in-page, or programmatic
+  focus. And three components paint a full-viewport backdrop while declaring no
+  modality whatsoever — `esa-command-palette`, `esa-entity-search` and
+  `esa-search-panel`, the last carrying `role="search"` (a **landmark**) on an element
+  covering the viewport at `--z-modal-backdrop`, which is why nothing ever flagged it.
+
+  *Action:* **RESOLVED for the modals, 2026-08-18** — all six moved to native `<dialog>`
+  + `showModal()`, which supplies inertness, focus containment, focus return against the
+  real trigger node, Esc including OS-level close requests, and the top layer. The
+  hand-rolled `ModalFocus`/`inert` module written for this was deleted before it shipped;
+  `packages/ecology/src/overlay.ts` kept only what the platform does NOT give you and the
+  non-modals still need. Still open: `esa-popover`, `esa-dropdown-menu`,
+  `esa-filter-dropdown` and `esa-combobox` (`mode="select"`) strand focus on close.
+  *Sink:* `lego`. *Priority:* medium.
+
+  **GOING NATIVE MOVED ONE DEFECT RATHER THAN DELETING IT, and it was invisible.** A modal
+  `<dialog>` blocks everything outside itself — from the pointer, from focus, and from the
+  accessibility tree. `announcer.ts` mounts the kit's two live regions in `document.body`,
+  outside every dialog, so from the moment the migration landed every `announce()` made
+  from inside a modal reached nobody: `esa-entity-search`'s assertive "No results found",
+  and the same call in `esa-command-palette` and `esa-search-panel`.
+
+  Measured in all three engines, because none of it is visible from the DOM: a body-level
+  element cannot take focus while a modal is open, and Chromium's real accessibility tree
+  (CDP `Accessibility.getFullAXTree`) no longer contains the region's text — but
+  **`region.inert` reads `false` in Chromium, Firefox AND WebKit**, because the IDL
+  attribute reflects the `inert` content attribute and not modal blocking. There is no
+  property to assert, no attribute to grep, and axe has no rule for it. `npm run a11y:live`
+  cannot see it either: it audits pages at rest and never opens a dialog.
+
+  A `[popover]` region promoted to the top layer was tried and **measured not to work** —
+  Chromium drops it from the a11y tree too, because the dialog blocks everything outside
+  *itself* regardless of top-layer membership. So `announcer.ts` re-homes its regions into
+  the open modal and back to `<body>` on close, which knowingly bends the "no live region
+  inside a shadow root" invariant: one root deep, inside the surface the user is currently
+  focused in, against the alternative of guaranteed silence. Guarded by
+  `scripts/lib/overlay.test.mjs`.
 
 - **Two focus rings suppressed with no alternative** · *Evidence:* `.input` in
   `esa-search-panel` and `.esa-entity-search__input` both declare `outline: none`
@@ -2131,7 +2199,16 @@ entry's main point.
 ---
 
 ## Source: the accessibility assurance profile (2026-08-16)
-A third document-level axis, `data-assurance`, orthogonal to `data-theme` (brand) and
+> **RENAMED 2026-08-18: the attribute is `data-a11y-assurance`, not `data-assurance`.**
+> Every occurrence in this file has been rewritten to the current name so a grep returns
+> one answer rather than two. No `migrations.json` row exists or can: the four kinds are
+> `token`, `class`, `prop` and `component`, and an HTML ATTRIBUTE is none of them. It was
+> safe to rename outright because it was two days old and **no spoke had adopted it** —
+> verified by grep across every spoke checked out on this machine. `doctor.mjs` reads the
+> profile names out of `dist/tokens.css`, so it reports the new name automatically. The
+> CLI flag stays `--assurance <profile>`; it names the axis, not the attribute.
+
+A third document-level axis, `data-a11y-assurance`, orthogonal to `data-theme` (brand) and
 `data-scheme` (light/dark), letting a project with a conformance obligation opt into
 defaults that are confirmed rather than asserted. Authored in
 `packages/tokens/src/assurance.css`, appended into `dist/tokens.css` by `build.js`,
@@ -2206,9 +2283,9 @@ AXIS from the theme".
   gets bypassed. *Action:* none yet. *Sink:* `docs`. *Priority:* low.
 
 - **The profile does NOT beat a spoke's theme, and that is the design** · *Evidence:*
-  `[data-theme]` and `[data-assurance]` have identical specificity (0,1,0) and a
+  `[data-theme]` and `[data-a11y-assurance]` have identical specificity (0,1,0) and a
   spoke's theme loads later, so a re-pointed brand wins. Verified in the browser:
-  `data-theme="beacon" data-assurance="wcag-aa"` yields brand `#1f7a6d` (beacon's) with
+  `data-theme="beacon" data-a11y-assurance="wcag-aa"` yields brand `#1f7a6d` (beacon's) with
   `--target-size-min: 24px` (the profile's). The gate is what catches the gap —
   `check-contrast.mjs beacon.css --assurance wcag-aa` still fails
   `content-on-brand-secondary` at 3.64:1. *Sink:* recorded, not a defect. *Priority:*
@@ -2241,7 +2318,7 @@ AXIS from the theme".
 
 - **THE TARGET-SIZE FLOOR WAS WITHDRAWN THE DAY IT LANDED, and the reason is a design
   rule worth more than the fix** · *Evidence:* `--target-size-min` (0px default, 24px
-  under `[data-assurance]`, read by 12 components as `min-block-size` on their hit area)
+  under `[data-a11y-assurance]`, read by 12 components as `min-block-size` on their hit area)
   cleared every technical objection — a `min-*` raises the bottom and never caps the
   top, so unlike `--control-height-*` it cannot clip rem text (1.4.4), and it was
   verified to still double at 200% root font size. It measured 33 component failures →
@@ -2288,7 +2365,7 @@ AXIS from the theme".
   is whether any component RENDERS differently. A profile changes colour. *Action:* the
   eight declarations removed; the profile is now 13 colour roles plus
   `--focus-scroll-margin` (a scroll offset, which cannot reflow anything). *Verified:*
-  geometry is byte-identical with and without `[data-assurance]` across **85 of 91**
+  geometry is byte-identical with and without `[data-a11y-assurance]` across **85 of 91**
   routes, and the other 6 are unstable frame-to-frame WITHOUT the profile too — a
   control run confirmed they carry spinners, progress bars and transitions, so the
   difference is animation, not the profile. *Sink:* `hub-fix`. *Priority:* done.
@@ -2384,3 +2461,67 @@ and the ramp it generated was called `gray` whichever one you picked.
   failed; but the swatch DISPLAYED lime, and nudging it from there pinned a seed derived
   from a default that no longer existed. Same class as the three-of-six list: a hardcoded
   copy of exported data. Now derived. *Sink:* `hub-fix`. *Priority:* resolved.
+
+---
+
+## Source: brand-ramp tier-1 linkage and the chip corner (2026-08-18)
+
+Two follow-ons to the neutral pass, both driven by the same question — when does a
+generated value have a name already?
+
+- **A SWATCH BRAND WAS DUPLICATING TWELVE PRIMITIVES.** `rampFrom` puts the seed on step 9
+  and interpolates along that scale's curve, so a seed taken from the theme maker's swatch
+  grid reproduces the Radix scale rather than approximating it. *Evidence:* measured all 25
+  chromatic hues — **25/25 exact in light, 22/25 in dark**. *Action:* emit
+  `var(--color-teal-7)` when the ramp IS the scale; keep literals otherwise. Both shipped
+  themes are bespoke brands and regenerated to **0 changed lines**. *Sink:* `hub-fix`.
+  *Priority:* resolved.
+
+- **THE NEAR-MISS IS WHY IT IS ALL-OR-NOTHING.** A hex ONE BIT off teal-9 (`#12a595`) still
+  matches **6 of 12** steps — the OKLCH round-trip quantises neighbouring seeds onto the
+  same 8-bit values. A per-step rule would have emitted a half-`var()`, half-hex ramp for a
+  brand that is not Radix teal: six steps that follow the palette and six that do not,
+  looking identical in the file. Found by measuring before implementing, not after.
+  *Sink:* `hub-fix`. *Priority:* resolved.
+
+- **A REVERSE HEX LOOKUP CANNOT WORK HERE.** **59** primitive hexes are claimed by more than
+  one name — `yellow`≡`amber` and `copper`≡`bronze` are documented aliases, and bright
+  scales do not invert at step 9 so several light and dark names collide too. `#ffc53d`
+  alone is claimed by four. The match therefore takes the scale the ramp was *shaped* by and
+  considers only that one. *Sink:* `process`. *Priority:* recorded.
+
+- **IT COMPARES AGAINST THE PRIMITIVE, NOT THE CURVE — and the hub's own brand proves why.**
+  The emitted `var()` resolves to the primitive, and `grass-dark` / `lime-dark` /
+  `yellow-dark` are PRESERVEd drift that disagrees with the curve. So a `grass` theme emits
+  `var(--color-grass-9)` in light and a literal in dark. That asymmetry is the drift becoming
+  *visible* rather than being silently absorbed. *Sink:* `hub-fix`. *Priority:* resolved —
+  but it is the third finding this month pointing at the same unresolved `PRESERVE` pin.
+
+- **THE COST IS BUNDLE WEIGHT, AND THE ALTERNATIVE WAS WORSE.** `ramp.mjs` imports the
+  primitive JSON directly, so the whole palette ships in the theme maker's client script:
+  **98.6 KB raw / 26.9 KB gzipped**, primitives ~5.5 KB of that. Passing the map in as a
+  parameter would have avoided it and was rejected — an argument a caller can forget is
+  exactly the `focus.css` failure mode, and the page's preview must agree with what the CLI
+  writes or the tool lies. *Sink:* `hub-fix`. *Priority:* recorded.
+
+- **A THEME'S CORNER LANGUAGE COULD NOT REACH THE CHIP FAMILY.** `esa-pill`, `esa-badge` and
+  `esa-chip-group` all read `--radius-sm` for their resting corner, and `--radius-sm` is read
+  by **30** components — so it could not be re-pointed. Under `corners: round` chips stayed
+  squared while everything else rounded. *Action:* one new tier-2 role, `--radius-chip`,
+  mapped per corner language with `round` → `--radius-pill`. *Sink:* `hub-fix`.
+  *Priority:* resolved.
+
+- **THE ROLE HAD TO EARN ITSELF AGAINST A MIGRATION THAT DELETED FOUR LIKE IT.**
+  `--radius-control`, `--radius-card`, `--radius-surface` and `--radius-overlay` are all
+  deprecated by `radius-roles-to-scale` — one name in front of one scale step, no decision of
+  their own. `--radius-chip` passes where they failed only because it **diverges**: under
+  `flat` and `soft` it holds the same primitive as `--radius-sm` (so those themes are
+  byte-identical — beacon regenerated with one added line and no rendered change), and under
+  `round` it becomes the capsule, which no step on the ramp can say. If it ever collapses to
+  tracking `sm` everywhere it should be deleted alongside the other four; a test asserts the
+  divergence. *Sink:* `process`. *Priority:* recorded.
+
+- **ONE SHIPPED THEME CHANGES VISUALLY, DELIBERATELY.** `theme-qanat` is `corners: round`, so
+  its pills, badges and chips are now capsules. `theme-beacon` is `flat` and is unchanged.
+  Verified in a real browser through the shadow boundary for all three components, hub theme
+  and qanat. *Sink:* `hub-fix`. *Priority:* resolved.

@@ -20,7 +20,9 @@ export interface LineageLink {
 export interface ThemingHook {
   token: string;
   /**
-   * component/semantic/primitive = declared in the token files.
+   * component/semantic/primitive = declared in the token files — plus the
+   * SPOKE_DECLARED names below, which are component tokens the hub deliberately
+   * leaves for the project to declare.
    * ad-hoc = read with an inline fallback but declared nowhere. Settable, and
    * NOT a fourth tier — it is a tier-3 token missing its declaration, and wants
    * either a line in component-tokens.css or a fold onto the role it aliases.
@@ -144,8 +146,27 @@ const owners = new Map<string, TokenOwner>();
   }
 }
 
+// --- Component tokens the SPOKE declares -----------------------------------
+// A tier-3 name the hub deliberately does NOT declare, because the values are
+// the project's vocabulary rather than ours. `esa-pill`'s `data-category` ramp
+// is the only case today: the mechanism is the hub's, the twelve steps are the
+// spoke's.
+//
+// It is a component token by every test SPEC.md applies — a component-scoped
+// name occupying the component-theming slot, read with the default pill's own
+// chain as its fallback. The one thing it must never have is a hub
+// DECLARATION: a declared value wins over the inline fallback, so every
+// categorised pill in every project would render the hub's colour and the
+// "unknown category falls back to an ordinary pill" behaviour would be gone.
+//
+// So it is not `ad-hoc`. That tier means an undeclared read nobody decided on —
+// held at zero as a ratchet (see component-promises.ts `adHoc`), wanting either
+// a declaration or a fold. Naming the ramp here IS the decision, and it keeps
+// the ratchet live for every name that hasn't had one.
+const SPOKE_DECLARED = /^--category-(?:[1-9]|1[0-2])$/;
+
 const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
-  componentTier.has(t) ? 'component'
+  componentTier.has(t) || SPOKE_DECLARED.test(t) ? 'component'
   : baseTier.has(t) ? (isPrimitive(t) ? 'primitive' : 'semantic')
   : fallback ? 'ad-hoc' : 'undefined';
 

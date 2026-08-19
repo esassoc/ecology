@@ -38,10 +38,41 @@ export class EsaTooltip extends LitElement {
     this.open = false;
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener('keydown', this.onGlobalKeydown);
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    document.removeEventListener('keydown', this.onGlobalKeydown);
     if (this.showTimeout) clearTimeout(this.showTimeout);
   }
+
+  /**
+   * Esc dismisses the tooltip — SC 1.4.13 Content on Hover or Focus, Level AA.
+   *
+   * The criterion asks for three things and this component only ever had two.
+   * HOVERABLE holds by construction: the bubble is a child of the anchor, so moving the
+   * pointer onto it never fires the anchor's `mouseleave`. PERSISTENT holds too — there
+   * is no auto-hide timer, only the show delay. DISMISSIBLE was missing outright, and
+   * for a tooltip that matters more than it looks: it can obscure the very content the
+   * user is trying to read, and until now the only way to get rid of it was to move the
+   * pointer, which a keyboard or magnifier user may not be doing.
+   *
+   * ON `document`, NOT ON THE ANCHOR, and that is the whole reason this is not a
+   * template binding. The mouse path opens a tooltip whose anchor never receives focus,
+   * so a keydown listener on the anchor hears nothing — the user presses Esc and the
+   * event goes to whatever they were actually focused on. `esa-filter-dropdown` reaches
+   * for `document` for the same reason.
+   *
+   * It does NOT preventDefault: Esc here is a dismissal, not a consumption, and a
+   * tooltip inside an open dialog must not swallow the key that closes the dialog.
+   */
+  private onGlobalKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !this.open) return;
+    this.onLeave();
+  };
 
   private onEnter = (): void => {
     if (this.open || !this.text) return;
