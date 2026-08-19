@@ -154,11 +154,80 @@ The pipeline now has a middle: **`/guide/theme-maker`** (the editor) and
 **`scripts/make-theme.mjs`** (the writer), both over one pure derivation in
 `scripts/lib/theme-recipe.mjs`, with `theme-<slug>.json` as the durable artifact.
 `create-spoke.mjs --theme <recipe>` writes the real file. **Six seeds** (brand hex,
-neutral temperature, corner language, two font stacks, optional per-intention colours)
+neutral temperature — one of SIX, see below — corner language, two font stacks, optional
+per-intention colours)
 produce ~114 light + ~111 dark declarations that pass 64/64 pairs in **both** schemes —
 against a hub whose own defaults fail 8 and whose dark block fails 5. It was ~95/~92 and
 "33/33" until 2026-08-18; the pair table had grown to 64 while the generator still emitted
 nothing for 22 of the names it graded (see the data-viz note below).
+
+## THE NEUTRAL IS A SEED, AND THE RAMP IS CALLED `neutral` (2026-08-18)
+`seeds.neutral` picks one of **six** Radix neutrals — `pure`→gray, `cool`→slate,
+`warm`→sand, plus `mauve`, `sage`, `olive` (`radix-curves.json` § `neutrals`, exported as
+`NEUTRAL_SCALES` beside `NEUTRAL_TEMPERATURES`). All six have shipped at tier 1, light and
+dark, since the palette generation on 2026-08-17; all six derive identically-shaped themes
+(114 light / 111 dark) and grade identically. **The theme maker offered three of them** —
+a hardcoded array next to the imported list it should have been derived from — so `mauve`,
+`sage` and `olive` were generated, tested and CLI-reachable while being invisible in the
+editor. The page now derives its list, and a test asserts its prose map covers
+`NEUTRAL_TEMPERATURES`.
+
+**The scoped ramp was named `gray` for every temperature, and that was wrong five times
+out of six.** `theme-beacon.css` is a `cool` theme, so it shipped `--beacon-gray-7:
+#cdced6` — Radix **slate**-7 — under a name claiming otherwise, with the word "cool" in a
+header comment as the only clue. It is `--<scope>-neutral-*` now: a ROLE name, parallel to
+the `--<scope>-brand-*` beside it, and one that survives a temperature change. Moving a
+spoke cool→warm re-points twelve values instead of renaming twelve properties out from
+under whatever reads them — which is exactly why naming it after the resolved scale
+(`--beacon-slate-*`) was rejected. **No `migrations.json` row**: these are theme-scoped
+names emitted into a spoke's own file, absent from `token-names.json`, and `build.js`
+cannot emit an alias for a scope the hub does not know. `token-rename.test.mjs` would in
+fact FAIL such a row, because its destination does not resolve in the hub. Regeneration is
+the channel.
+
+**The ramp now POINTS AT tier 1 instead of copying hexes** — `--<scope>-neutral-7:
+var(--color-slate-7)` in light, `var(--color-slate-dark-7)` in dark. `neutralRamp`
+reproduces a Radix scale verbatim and the hub ships all six, so the old literal was a
+second, unlabelled transcription of a value already on disk under its real name. The hub's
+own semantic layer has always done it this way (`--color-background-default:
+var(--color-gray-1)`); generated themes were the outlier. **The scoped name survives as the
+spoke's tuning surface** — overriding `--<scope>-neutral-7` still works and still moves
+every role reading it; only the default moved, from a copy to a reference.
+
+Four consequences, and the last one is the one that bites:
+
+- **`--color-border-default-knockout` became expressible.** It reads step 7 of the
+  OPPOSITE scheme's neutral, which the scoped ramp never declared, so it was a stranded
+  literal. Tier-1 dark scales are flat `:root` names rather than scheme-scoped blocks, so
+  the light block can say `var(--color-slate-dark-7)` outright — which is what the hub's
+  own `{color.gray-dark.7}` already did.
+- **`--<scope>-neutral-0` stays a literal, and must.** `belowFirstStep()` is step 1
+  darkened by an OKLCH factor — a rung that exists in no Radix scale. Dark therefore emits
+  12 `var()`s and one hex.
+- **A derived theme no longer resolves on its own.** Chains end one hop outside the map,
+  exactly as `check-contrast.mjs` has always seen it (it loads `dist/tokens.css` first and
+  overlays the theme). `theme-recipe.test.mjs`'s local resolver needed a tier-1 fallback,
+  read from the **committed DTCG JSON** rather than the gitignored `dist/tokens.css` — a
+  neutral-contrast test that silently skips on an unbuilt checkout is worth very little.
+- **IT IS NOT VALUE-PRESERVING, and the one change hides in the default.**
+  `radix-curves.json` and `primitive/color.json` are two independent transcriptions of
+  Radix. 143 of 144 neutral steps are byte-identical; the exception is **`pure` / dark /
+  step 12**, where the curve gives `#eeeeee` (real Radix) and the primitive ships
+  `#ededef` (PRESERVEd in `gen-radix-primitives.mjs`, marked "Unresolved" below). Step 12
+  is `--color-content-default` and `pure` is the DEFAULT temperature, so this lands where
+  it is least likely to be noticed. Measured on the dark canvas: **16.275:1 → 16.150:1**.
+  Both shipped themes are `cool` and did not move — all 4,040 role resolutions across
+  beacon and qanat, both schemes, are unchanged. A test pins the 144-step comparison with
+  that single row as a documented exception; when the pin is resolved, delete the row.
+
+**No npm script grades the two generated theme files.** `npm run contrast` is `--hub` only
+and `contrast:dark` targets `docs-dark.css`, so `check-contrast.mjs
+apps/site/src/styles/theme-{beacon,qanat}.css [--scheme dark]` has to be run by hand. That
+is a gap in the gate, not a property of this change.
+
+**`packages/spoke-template` moved with it**, and it was further out than the name: both its
+ramps were on the 50/100/…/1000 **web-palette** vocabulary, so the hand-fill path and
+`make-theme.mjs` disagreed on the step scale as well as the word. Both are 1–12 now.
 
 Things that are easy to get wrong here:
 
@@ -230,8 +299,11 @@ scales / 261 tokens, and the baseline went 1,061 → **1,601 names**.
 **Why the whole palette rather than the hues in use.** Tier 1 is the shared VOCABULARY
 a project composes a theme from. A partial palette is not restraint, it is a vocabulary
 with words missing, and the missing word is found by whichever project needs a purple.
-Two of the six neutral temperatures `theme-recipe.mjs` already ACCEPTS had no primitive
-behind them, so this closed a live gap as well as a future one.
+**FIVE** of the six neutral temperatures `theme-recipe.mjs` already ACCEPTS had no
+primitive behind them — the pre-generation scale list held `gray` and no
+mauve/slate/sage/olive/sand at all — so this closed a live gap as well as a future one.
+(This line read "Two" until 2026-08-18; the generator's own comment at
+`gen-radix-primitives.mjs` L47-50 was right and this was not.)
 
 **A brand ramp is still never a primitive**, and the model is oversold without this:
 `rampFrom` lands the client's hex exactly on step 9, so no Radix ramp matches an

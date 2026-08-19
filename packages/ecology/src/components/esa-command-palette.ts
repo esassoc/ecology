@@ -288,6 +288,12 @@ export class EsaCommandPalette extends LitElement {
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
       border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
+      /* Same clip as esa-entity-search: the panel is --radius-lg with
+         overflow: hidden, so a square row's inset ring loses ~4.7px off each end
+         of its top edge. Match the panel's INNER curve (radius minus its border)
+         and the outline follows it. See that component for the geometry. */
+      border-radius: calc(var(--radius-lg, 0.75rem) - var(--border-width-default, 1px))
+        calc(var(--radius-lg, 0.75rem) - var(--border-width-default, 1px)) 0 0;
     }
     /* The ring goes on the ROW, not the input. The input is chromeless by design,
        so a ring drawn on it would float around bare text; the row is the visible

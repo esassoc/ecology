@@ -18,8 +18,14 @@ interface Props {
    * for the open set. See the "Custom colors" section on the doc page.
    */
   category?: string;
+  /**
+   * Corner language. `default` is the squared 4px corner (`--radius-sm`) the kit's
+   * chips and badges share; `round` is the fully-rounded capsule (`--radius-pill`).
+   * A SHAPE axis, not a colour one — it composes with every `variant`.
+   */
+  shape?: 'default' | 'round';
 }
-const { label, variant = 'default', removable = true, size = 'md', category } = Astro.props;
+const { label, variant = 'default', removable = true, size = 'md', category, shape = 'default' } = Astro.props;
 
 // Pill text is UI text — the label composite, one rung per size. The import is the
 // Astro half of the composite mechanism; Lit siblings get it via
@@ -34,7 +40,10 @@ const cls = [
   `esa-pill--${variant}`,
   `esa-pill--${size}`,
   `typography-${LABEL_TYPE[size]}`,
-].join(' ');
+  shape === 'round' && 'esa-pill--round',
+]
+  .filter(Boolean)
+  .join(' ');
 ---
 <span class={cls} data-category={category}>
   {hasIconSlot && (
@@ -112,9 +121,12 @@ const cls = [
     /* Sized by padding + text — --pill-height-* and the shared --chip-height-* ramp
        behind it were deleted 2026-08-15. --_pill-padding-y sits one rung below
        --_pill-padding-x (see esa-badge for why esa-button's equal-axis rule does not
-       transfer to a chip). The radius is 9999px, so the capsule follows whatever
-       height the text and padding resolve to. Note this box has a 1px border on each
-       side, so it renders 2px taller than esa-badge at the same rung. */
+       transfer to a chip). The radius is --radius-sm, matching esa-badge — the
+       adopted rule is that chips read as quiet 4px marks, not bulky capsules; the
+       capsule is opt-in via shape="round" below. Either way the corner follows
+       whatever height the text and padding resolve to. Note this box has a 1px
+       border on each side, so it renders 2px taller than esa-badge at the same
+       rung. */
     padding-block: var(--_pill-padding-y);
     padding-inline: var(--_pill-padding-x);
     border: var(--border-width-default, 1px) solid var(--_pill-border);
@@ -139,6 +151,15 @@ const cls = [
   .esa-pill--lg {
     --_pill-padding-y: var(--spacing-200, 0.5rem);
     --_pill-padding-x: var(--spacing-300, 0.75rem);
+  }
+
+  /* SHAPE, not colour — so it stacks with any --<variant> class and needs no
+     per-variant pairing. --radius-pill is the tier-2 role that already means
+     "fully rounded" (avatars, progress bars, filter pills); a squared-off brand
+     re-points that one role and this variant follows it, which is exactly why
+     there is no --pill-radius hook to add back (demoted 2026-08-16). */
+  .esa-pill--round {
+    border-radius: var(--radius-pill, 9999px);
   }
 
   .esa-pill--primary {

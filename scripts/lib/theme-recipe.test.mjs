@@ -1,14 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { contrastHex, parseHex, srgbToOklch } from './color.mjs';
-import { CORNERS, deriveTheme, emitCss, resolveFocusRing, validateRecipe } from './theme-recipe.mjs';
+import { CORNERS, NEUTRAL_SCALES, NEUTRAL_TEMPERATURES, deriveTheme, emitCss, resolveFocusRing, validateRecipe } from './theme-recipe.mjs';
+import { neutralRamp } from './ramp.mjs';
 
 const recipe = ({ seeds, ...over } = {}) => ({
   slug: 'testbrand',
   ...over,
   seeds: { brand: '#1f7a6d', ...(seeds || {}) },
 });
+
+/**
+ * The tier-1 colour primitives, keyed by the CSS name they compile to.
+ *
+ * A DERIVED THEME NO LONGER RESOLVES ON ITS OWN, and that is the point rather than a
+ * regression. Since 2026-08-18 the scoped neutral ramp points at the hub's primitives
+ * (`--<scope>-neutral-7: var(--color-slate-7)`) instead of copying their hexes, so a
+ * chain that used to end inside the derived map now ends one hop outside it — exactly
+ * as check-contrast.mjs has always seen it, since that tool loads dist/tokens.css first
+ * and overlays the theme on top.
+ *
+ * Read from the DTCG source rather than dist/tokens.css because dist is gitignored:
+ * token-rename.test.mjs has to guard its equivalent with `if (!existsSync(dist)) return`,
+ * and a neutral-contrast test that silently skips on an unbuilt checkout is worth very
+ * little. The JSON is committed, so this resolves everywhere.
+ */
+const PRIMITIVES = (() => {
+  const url = new URL('../../packages/tokens/tokens/primitive/color.json', import.meta.url);
+  const { color } = JSON.parse(readFileSync(url, 'utf8'));
+  const m = new Map();
+  for (const [scale, steps] of Object.entries(color)) {
+    for (const [k, v] of Object.entries(steps)) {
+      if (k.startsWith('$')) continue;
+      m.set(`--color-${scale}-${k}`, v.$value);
+    }
+  }
+  return m;
+})();
 
 /**
  * Resolve a var() chain inside one derived scheme, the way check-contrast.mjs does.
@@ -19,7 +49,7 @@ const recipe = ({ seeds, ...over } = {}) => ({
  */
 function resolve(map, name, depth = 0) {
   assert.ok(depth < 12, `var() chain too deep at ${name}`);
-  const raw = map.get(name);
+  const raw = map.get(name) ?? PRIMITIVES.get(name);
   assert.ok(raw !== undefined, `${name} is not declared`);
   const m = /^var\((--[a-zA-Z0-9-_]+)\)$/.exec(raw);
   return m ? resolve(map, m[1], depth + 1) : raw;
@@ -117,8 +147,135 @@ test('coloured text clears AA on its own subtle tint', () => {
   }
 });
 
+// --- the scoped neutral ramp -------------------------------------------------
+
+test('the scoped ramp is named `neutral`, and nothing is still called `gray`', () => {
+  // It was `--<scope>-gray-*` for every temperature until 2026-08-18 — so theme-beacon.css
+  // shipped `--beacon-gray-7: #cdced6`, which is Radix SLATE-7, under a name claiming
+  // otherwise. Nothing asserted the segment, which is why the lie survived unnoticed.
+  for (const neutral of NEUTRAL_TEMPERATURES) {
+    const d = deriveTheme(recipe({ seeds: { neutral } }));
+    for (const scheme of ['light', 'dark']) {
+      const keys = [...d[scheme].keys()];
+      assert.deepEqual(
+        keys.filter((k) => /-gray-\d+$/.test(k)),
+        [],
+        `${neutral} [${scheme}]: a scoped ramp step is still called gray`,
+      );
+      const steps = keys
+        .filter((k) => /^--testbrand-neutral-\d+$/.test(k))
+        .map((k) => Number(k.split('-').pop()))
+        .sort((a, b) => a - b);
+      // Dark carries step 0 — the sunken well below the canvas, which a 12-step ramp
+      // has no room for. Light does not.
+      const expected = scheme === 'dark'
+        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      assert.deepEqual(steps, expected, `${neutral} [${scheme}] ramp steps`);
+    }
+  }
+});
+
+test('the scoped neutral ramp POINTS AT tier 1 rather than copying its hexes', () => {
+  // The hub's own semantic layer has always done this (--color-background-default:
+  // var(--color-gray-1)); generated themes were the outlier, interposing a literal copy
+  // of a value already on disk under its real name. Step 0 is the one exception and has
+  // to be: belowFirstStep() is a derived rung that exists in no Radix scale.
+  for (const neutral of NEUTRAL_TEMPERATURES) {
+    const scale = NEUTRAL_SCALES[neutral];
+    const d = deriveTheme(recipe({ seeds: { neutral } }));
+    for (const scheme of ['light', 'dark']) {
+      const primitive = scheme === 'dark' ? `${scale}-dark` : scale;
+      for (let i = 1; i <= 12; i++) {
+        assert.equal(
+          d[scheme].get(`--testbrand-neutral-${i}`),
+          `var(--color-${primitive}-${i})`,
+          `${neutral} [${scheme}] step ${i}`,
+        );
+      }
+      if (scheme === 'dark') {
+        assert.match(
+          d.dark.get('--testbrand-neutral-0'),
+          /^#[0-9a-f]{6}$/,
+          'step 0 is derived and has no tier-1 home — it must stay a literal',
+        );
+      }
+    }
+  }
+});
+
+test('every temperature emits the same set of names', () => {
+  // A temperature must change VALUES and nothing else. If one of them ever emits a
+  // different key set, a spoke switching neutral silently gains or loses a role.
+  const keysFor = (neutral, scheme) =>
+    [...deriveTheme(recipe({ seeds: { neutral } }))[scheme].keys()].sort().join('\n');
+  for (const scheme of ['light', 'dark']) {
+    const base = keysFor(NEUTRAL_TEMPERATURES[0], scheme);
+    for (const neutral of NEUTRAL_TEMPERATURES.slice(1)) {
+      assert.equal(keysFor(neutral, scheme), base, `${neutral} [${scheme}] emits a different key set`);
+    }
+  }
+});
+
+test('neutralRamp agrees with the primitives it now points at', () => {
+  // TWO INDEPENDENT TRANSCRIPTIONS OF RADIX: radix-curves.json (which neutralRamp
+  // interpolates from) and primitive/color.json (which the emitted var() resolves to).
+  // Now that the ramp POINTS at the primitive, any disagreement silently re-colours a
+  // theme — so it is pinned here rather than left to be rediscovered.
+  //
+  // THE ONE KNOWN EXCEPTION is gray-dark step 12: the curve gives #eeeeee (real Radix),
+  // the primitive ships #ededef. It is in PRESERVE in gen-radix-primitives.mjs and
+  // CLAUDE.md marks it "Unresolved". Measured cost on the dark canvas: 16.275:1 ->
+  // 16.150:1 on --color-content-default. Resolving the pin is a separate change that
+  // moves every hub dark surface reading gray-dark-12; when it lands, delete this row.
+  const KNOWN = new Map([['--color-gray-dark-12', '#eeeeee']]);
+  let compared = 0;
+  for (const neutral of NEUTRAL_TEMPERATURES) {
+    const scale = NEUTRAL_SCALES[neutral];
+    for (const scheme of ['light', 'dark']) {
+      const ramp = neutralRamp(neutral, scheme);
+      const primitive = scheme === 'dark' ? `${scale}-dark` : scale;
+      for (let i = 1; i <= 12; i++) {
+        const name = `--color-${primitive}-${i}`;
+        const declared = PRIMITIVES.get(name);
+        assert.ok(declared, `${name} is not a shipped primitive`);
+        compared++;
+        if (KNOWN.get(name) === ramp[i - 1].toLowerCase()) continue;
+        assert.equal(
+          ramp[i - 1].toLowerCase(),
+          String(declared).toLowerCase(),
+          `${neutral} [${scheme}] step ${i}: the curve and the primitive disagree`,
+        );
+      }
+    }
+  }
+  assert.equal(compared, 144, 'six temperatures x two schemes x twelve steps');
+});
+
+test('the theme maker offers every temperature the recipe accepts', () => {
+  // THE BUG THIS WHOLE CHANGE EXISTS TO FIX. The page hardcoded three of six, so mauve,
+  // sage and olive were generated, tested, CLI-reachable and completely unreachable from
+  // the editor. The page now derives its list, but its PROSE map is still hand-written —
+  // this is what stops that half drifting the same way.
+  const src = readFileSync(
+    new URL('../../apps/site/src/pages/guide/theme-maker.astro', import.meta.url),
+    'utf8',
+  );
+  const block = /const NEUTRAL_COPY[^=]*=\s*\{([\s\S]*?)\n\};/.exec(src);
+  assert.ok(block, 'NEUTRAL_COPY not found — did the theme maker stop carrying the copy map?');
+  const labelled = [...block[1].matchAll(/^\s*([a-z][a-z0-9]*)\s*:/gm)].map((m) => m[1]);
+  assert.deepEqual(
+    labelled.sort(),
+    [...NEUTRAL_TEMPERATURES].sort(),
+    'the theme maker\'s copy map and NEUTRAL_TEMPERATURES have drifted apart',
+  );
+});
+
 test('the neutral text chain clears AA on every surface it lands on', () => {
-  for (const neutral of ['pure', 'cool', 'warm']) {
+  // ALL SIX, not the three the theme maker used to offer. `mauve`, `sage` and `olive`
+  // were supported by the generator and reachable from the CLI for months while this
+  // loop — and the page — pretended they did not exist.
+  for (const neutral of NEUTRAL_TEMPERATURES) {
     const d = deriveTheme(recipe({ seeds: { neutral } }));
     for (const scheme of ['light', 'dark']) {
       for (const bg of [

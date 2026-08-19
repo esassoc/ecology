@@ -14,6 +14,7 @@ const describe = {
   size: "Pill height and text size.",
   removable: "Shows a remove (×) button.",
   category: "Project vocabulary this pill labels — emits data-category for a spoke-defined color ramp. See Custom colors.",
+  shape: "Corner language. Composes with every variant and size.",
 };
 
 const slots = [
@@ -61,6 +62,31 @@ const events = [
     </Preview>
   </Section>
 
+  <Section id="shape" title="Shape">
+    <p>
+      Pills are <strong>squared by default</strong> — a 4px corner (<code>--radius-sm</code>),
+      the same one <a href="../esa-badge/">badge</a> uses, so chips across a table or a
+      filter bar read as one quiet family. <code>shape="round"</code> opts into the fully
+      rounded capsule (<code>--radius-pill</code>) where the tag is the emphasis rather
+      than the data beside it. Both follow the tier-2 radius roles, so a squared-off
+      brand re-points one role and every pill follows.
+    </p>
+    <Preview code={`<Pill label="Squared" variant="primary" removable={false} />
+<Pill label="Rounded" variant="primary" shape="round" removable={false} />`}>
+      <Pill label="Squared" variant="primary" removable={false} />
+      <Pill label="Rounded" variant="primary" shape="round" removable={false} />
+    </Preview>
+    <Preview code={`<Pill label="Extra small" size="xs" shape="round" removable={false} />
+<Pill label="Small" size="sm" shape="round" removable={false} />
+<Pill label="Medium" size="md" shape="round" removable={false} />
+<Pill label="Large" size="lg" shape="round" removable={false} />`}>
+      <Pill label="Extra small" size="xs" shape="round" removable={false} />
+      <Pill label="Small" size="sm" shape="round" removable={false} />
+      <Pill label="Medium" size="md" shape="round" removable={false} />
+      <Pill label="Large" size="lg" shape="round" removable={false} />
+    </Preview>
+  </Section>
+
   <Section id="states" title="Icon & removable">
     <p>Pass a leading icon via the <code>icon</code> slot. With <code>removable</code> (the default), a × button emits a <code>removed</code> event and removes the pill from the DOM.</p>
     <Preview code={`<Pill label="Tagged" variant="primary" removable={false}>
@@ -93,56 +119,69 @@ const events = [
       of the set rather than a foreign object.
     </p>
     <p>
-      <strong>Pick a scale, don't pick colors.</strong> The hub already ships eleven full Radix scales
-      as tier-1 primitives, twelve steps each. Point the three names at one of them and you're done —
-      no hex anywhere:
+      <strong>Pick a scale, don't pick colors.</strong> Tier 1 ships the <strong>whole Radix
+      palette</strong> — all 25 chromatic hues and all 6 neutral temperatures, twelve steps each, in
+      light and dark. Point the three names at one of them and you're done — no hex anywhere:
     </p>
     <Preview code={`<Pill label="Permit expired" category="permit-expired" removable={false} />
 <Pill label="Awaiting survey" category="awaiting-survey" removable={false} />
 
 /* in your <project>-theme.css — one block per category */
 [data-category="permit-expired"] {
-  --category-2:  var(--color-teal-2);
-  --category-6:  var(--color-teal-6);
-  --category-11: var(--color-teal-11);
+  --category-2:  var(--color-iris-2);
+  --category-6:  var(--color-iris-6);
+  --category-11: var(--color-iris-11);
 }`}>
       <Pill label="Permit expired" category="permit-expired" removable={false} />
       <Pill label="Awaiting survey" category="awaiting-survey" removable={false} />
       <Pill label="Prescribed burn" category="prescribed-burn" removable={false} />
     </Preview>
     <p>
-      <strong>Start with <code>teal</code>, <code>gold</code> or <code>green</code>.</strong> Those three
-      are the scales no semantic role has claimed, so they carry no borrowed meaning. The other eight —
-      <code>grass</code>, <code>blue</code>, <code>lime</code>, <code>yellow</code>, <code>red</code>,
-      <code>orange</code>, <code>copper</code>, <code>gray</code> — already back brand, info, success,
-      warning and danger. Reusing one makes a category look like a status it isn't, which is worse than
-      leaving it neutral.
+      <strong>Start with <code>iris</code>, <code>gold</code> or <code>plum</code>.</strong> They carry
+      no borrowed meaning: no semantic role points at them, and the hub's default chart series doesn't
+      seat them. <strong>Eight scales are spoken for</strong> — <code>grass</code> (brand),
+      <code>blue</code> (info), <code>green</code> (success), <code>yellow</code> (warning),
+      <code>red</code> (danger), <code>copper</code> (AI), <code>orange</code> (accent) and
+      <code>gray</code> (chrome). Reusing one makes a category look like a status it isn't, which is
+      worse than leaving it neutral.
     </p>
     <p>
-      Two rungs down from there, in order. <strong>Need a hue we don't ship?</strong>
-      <code>@radix-ui/colors</code> is already a dependency and carries all thirty scales —
-      <code>@import '@radix-ui/colors/purple.css'</code> in your theme, then point at
-      <code>--purple-2/6/11</code>. <strong>Need a brand color that isn't a Radix hue at all?</strong>
-      Only then reach for
+      A second, softer conflict: <code>crimson</code>, <code>cyan</code>, <code>indigo</code>,
+      <code>teal</code> and <code>violet</code> are seated in the hub's default
+      <code>--color-background-dataviz-*</code> series, so a category in one of those will match a chart
+      line on the same page. That's a resemblance, not a false status — take it if the hue is right and
+      the page has no charts.
+    </p>
+    <p>
+      <strong>There used to be a middle rung here and there isn't any more.</strong> When tier 1 shipped
+      eleven scales, reaching the rest meant <code>@import '@radix-ui/colors/purple.css'</code> in your
+      own theme. Since 2026-08-17 the whole palette is generated into tier 1, so
+      <code>--color-purple-2/6/11</code> is already declared and the import is dead weight.
+      <strong>Need a brand color that isn't a Radix hue at all?</strong> Only then reach for
       <a href="https://www.radix-ui.com/colors/custom" rel="external">radix-ui.com/colors/custom</a>,
       which fits your color to a 12-step perceptual scale; copy steps 2, 6 and 11 and rename the
       <code>--accent-</code> prefix.
     </p>
     <p>
-      All three rungs exist to avoid the same thing: a fill and a text color chosen independently. That
+      Both rungs exist to avoid the same thing: a fill and a text color chosen independently. That
       is how dark purple ends up on near-black, and nothing in the build will tell you.
     </p>
     <p>
       <strong>Know where the line is.</strong> Step 11 is tuned to APCA, not WCAG 2, so on step 2 it
-      sits <em>at</em> the AA boundary rather than above it. Measured across all nine Radix scales the
-      hub ships: <code>gold</code> 5.60, <code>red</code> 4.94, <code>grass</code> 4.82,
-      <code>lime</code> 4.56, <code>blue</code> 4.53 — then <code>green</code> 4.49,
-      <code>yellow</code> 4.42, <code>teal</code> 4.34 and <code>orange</code> 4.25, all under 4.5:1.
-      Four of nine miss AA for normal text, and the rest pass by a hair.
+      sits <em>at</em> the AA boundary rather than above it. Measured across all 26 chromatic scales
+      tier 1 ships, <strong>six miss 4.5:1</strong> for normal text: <code>orange</code> 4.25,
+      <code>teal</code> 4.34, <code>yellow</code> 4.43, <code>amber</code> 4.43, <code>jade</code> 4.43
+      and <code>green</code> 4.49. <code>cyan</code> lands exactly on 4.50. The rest pass, most of them
+      by a hair — <code>blue</code> 4.53, <code>lime</code> 4.56, <code>grass</code> 4.82 — and the
+      widest margin in the palette is <code>violet</code> at 5.86. The three starters above sit near the
+      top of that range: <code>violet</code>-adjacent <code>iris</code> 5.74, <code>plum</code> 5.69,
+      <code>gold</code> 5.60.
     </p>
     <p>
       This is a property of the scale, not of this mechanism — the built-in <code>warning</code> variant
-      measures 4.43 and always has. <strong>Step 12 clears AA on every scale at 10:1 or better</strong>,
+      measures 4.43 and always has, and <code>success</code> joined it at 4.49 when it moved off lime.
+      <strong>Step 12 clears AA on every one of the 26 at 10.44:1 or better</strong> (the floor is
+      <code>lime</code>),
       so a category carrying real weight should point <code>--category-11</code> at step 12 instead; the
       cost is a visibly darker label than the semantic pills beside it. Which step the system settles on
       is a question for the contrast pass, not one to answer per component.
@@ -189,7 +228,11 @@ const events = [
      otherwise scope these to this page's own elements and they would never reach
      the pill's [data-category] rule. -->
 <style is:global>
-  [data-category="permit-expired"]  { --category-2: var(--color-teal-2);  --category-6: var(--color-teal-6);  --category-11: var(--color-teal-11); }
-  [data-category="awaiting-survey"] { --category-2: var(--color-gold-2);  --category-6: var(--color-gold-6);  --category-11: var(--color-gold-11); }
-  [data-category="prescribed-burn"] { --category-2: var(--color-green-2); --category-6: var(--color-green-6); --category-11: var(--color-green-11); }
+  /* The demo ramps. iris / gold / plum, not teal / gold / green — green backs
+     `success` as of 2026-08-18 and teal is seated in the hub's default chart
+     series, so both would have demonstrated the borrowed meaning this section
+     tells you to avoid. */
+  [data-category="permit-expired"]  { --category-2: var(--color-iris-2); --category-6: var(--color-iris-6); --category-11: var(--color-iris-11); }
+  [data-category="awaiting-survey"] { --category-2: var(--color-gold-2); --category-6: var(--color-gold-6); --category-11: var(--color-gold-11); }
+  [data-category="prescribed-burn"] { --category-2: var(--color-plum-2); --category-6: var(--color-plum-6); --category-11: var(--color-plum-11); }
 </style>

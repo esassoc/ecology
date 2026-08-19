@@ -12,7 +12,7 @@ interface Ramp { name: string; steps: { step: string; value?: string; token?: st
 interface Props {
   brand?: string;       // crumb label, e.g. "Beacon"; omit to hide the crumb
   brandHref?: string;
-  ramps?: Ramp[];       // spoke-specific primitive ramps (--bcn-gray-*, etc.)
+  ramps?: Ramp[];       // spoke-specific primitive ramps (--bcn-neutral-*, etc.)
 }
 const { brand, brandHref = '/design-system', ramps = [] } = Astro.props;
 ---

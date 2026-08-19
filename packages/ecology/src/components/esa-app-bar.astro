@@ -96,6 +96,11 @@ const rowCls = ['esa-app-bar__row', contained && 'esa-app-bar__row--contained'].
     gap: var(--_bar-gap);
   }
   .esa-app-bar__start { flex: none; }
-  .esa-app-bar__main { flex: 1 1 auto; }
+  /* min-width: 0 or this never shrinks. A flex item's automatic minimum size is
+     its content's min-content size, so a bar whose middle region holds anything
+     with a fixed width pushes the `end` slot straight out through the bar's own
+     right edge rather than compressing. Measured on esa-app-shell once its bar
+     stopped spanning the full window: the profile button overflowed by 16px. */
+  .esa-app-bar__main { flex: 1 1 auto; min-width: 0; }
   .esa-app-bar__end { flex: none; margin-left: auto; }
 </style>

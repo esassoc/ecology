@@ -17,6 +17,20 @@ import { hueDistance, oklchToHex, parseHex, srgbToOklch } from './color.mjs';
 export const NEUTRAL_TEMPERATURES = Object.keys(curvesData.neutrals);
 export const CHROMATIC_SCALES = curvesData.chromatic;
 
+/**
+ * Temperature name -> the Radix scale behind it. `cool` IS `slate`; nothing is derived.
+ *
+ * Exported because two callers need to say which scale a theme landed on, and both were
+ * guessing before. theme-recipe.mjs emits `var(--color-slate-7)` and has to know the word
+ * `slate`; the theme maker prints "Radix slate" under the swatch. Deriving that string in
+ * either place would be a second copy of this table — which is exactly how the maker came
+ * to offer three of the six temperatures.
+ *
+ * DATA ONLY. The human-facing half ("Cool", "blue-leaning") stays in the page: this file
+ * is isomorphic colour maths imported by the CLI, and UI copy does not belong in it.
+ */
+export const NEUTRAL_SCALES = curvesData.neutrals;
+
 const SOLID = 8; // zero-based index of step 9
 
 function curve(scale, scheme) {
