@@ -18,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Resolves against THIS script's path, not the spoke's cwd — spokes run the
 // hub's copy directly as `../ecology/scripts/doctor.mjs`.
-import { renameProp, renameComponent, declPattern } from './lib/token-rename.mjs';
+import { renameProp, renameComponent, declPattern, readPattern } from './lib/token-rename.mjs';
 
 const HUB_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CWD = process.cwd();
@@ -235,6 +235,37 @@ if (isSpoke) {
           from, kind: m.kind, components: m.components ?? [], module: m.module, removed: !!m.removed,
         })),
       );
+    /*
+     * NAMES THE SHIPPED KIT STILL READS ARE NOT DEAD, whatever the token
+     * baseline says, and this exclusion is the difference between a gate and a
+     * gate that lies.
+     *
+     * `--sidebar-width` is the case that forced it. The semantic token was
+     * demoted on 2026-08-15, so it carries a `removed: true` row — but the name
+     * ALSO belongs to the `.sidebar` layout primitive, where `layouts.css`
+     * declares it and reads it (`flex-basis: var(--sidebar-width)`). That file's
+     * own comment says so: "Sole owner of this name since 2026-08-15 … if a
+     * spoke declares --sidebar-width it now unambiguously means THIS knob."
+     *
+     * Without this, every spoke using the sidebar primitive gets a FAIL whose
+     * fix line says to delete the override — which silently collapses the
+     * layout. cb-fish-design was in exactly that state: five declarations, all
+     * on elements carrying `class="… sidebar"`, all correct, all reported as
+     * dead. A gate that tells you to break your app is worse than no gate.
+     *
+     * Read from the INSTALLED package, not this checkout, so the answer matches
+     * the version the spoke actually resolves.
+     */
+    const liveKnobs = new Set();
+    const tokensSrc = path.join(CWD, 'node_modules', '@esa', 'tokens', 'src');
+    if (existsSync(tokensSrc)) {
+      for (const f of readdirSync(tokensSrc)) {
+        if (!f.endsWith('.css')) continue;
+        const css = readFileSync(path.join(tokensSrc, f), 'utf8');
+        for (const m of css.matchAll(/var\(\s*(--[a-z0-9-]+)/gi)) liveKnobs.add(m[1]);
+      }
+    }
+
     const srcDir = path.join(CWD, 'src');
     let hits = 0;
     const seen = new Set();
@@ -256,6 +287,7 @@ if (isSpoke) {
         if (!/\.(astro|ts|tsx|js|mjs|css|scss|svelte|vue)$/.test(e.name)) continue;
         const src = readFileSync(fp, 'utf8');
         for (const { from, kind, components, module: moduleSpec, removed } of names) {
+          if (kind === 'token' && liveKnobs.has(from)) continue;
           // A prop has to be counted INSIDE its component's tag. Counting `color`
           // as a bare word would flag every CSS `color:` declaration in the spoke
           // and bury the real finding under hundreds of false positives.
@@ -265,7 +297,19 @@ if (isSpoke) {
                 ? new RegExp(`${from}(?![\\w-])`, 'g')
                 : new RegExp(`(?<![\\w-])${from}(?![\\w-])`, 'g')) ?? []).length;
           if (n) {
-            if (removed) removedRead.add(from);
+            // A REMOVED name is matched STRICTLY — `var(--name)` only, never a
+            // bare mention. The loose match counted prose: a doc page writing
+            // `<code>--container-gutter</code>` to explain why the hook is gone,
+            // or a `name: "--app-bar-gap"` string in a data array, both scored as
+            // reads. There is no rewrite for a removed name, so a false positive
+            // here is a FAIL a spoke cannot clear except by deleting its own
+            // documentation.
+            //
+            // Deprecated (renamed) names keep the loose match deliberately: an
+            // alias exists, `migrate-tokens --write` rewrites bare mentions too,
+            // and a doc page naming a superseded token SHOULD be updated. It is a
+            // warning either way.
+            if (removed) { if (readPattern(from).test(src)) removedRead.add(from); }
             else { hits += n; seen.add(kind === 'prop' ? `${from}=` : from); }
           }
           if (kind === 'token' && declPattern(from).test(src)) {
