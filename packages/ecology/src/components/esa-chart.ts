@@ -228,6 +228,8 @@ export class EsaChart extends LitElement {
   declare height: string;
 
   private chart: ChartInstance | null = null;
+  /** Bumped on every disconnect, so an import still in flight knows it is stale. */
+  private mountGeneration = 0;
   private themeObserver: MutationObserver | null = null;
   private nameObserver: MutationObserver | null = null;
   private overlayObserver: MutationObserver | null = null;
@@ -263,10 +265,24 @@ export class EsaChart extends LitElement {
     this.forcedQuery = window.matchMedia('(forced-colors: active)');
     this.motionQuery.addEventListener('change', this.rerender);
     this.forcedQuery.addEventListener('change', this.rerender);
+
+    /*
+     * REBUILD AFTER A RECONNECT. firstUpdated() runs ONCE per element in Lit, and
+     * disconnectedCallback() destroys the chart — so before this, any re-parenting
+     * left a permanently blank .canvas: moving a chart into a dialog, a tab panel
+     * that re-appends its content, a list re-order, an Astro view transition. It
+     * failed silently, because connectedCallback re-armed the observers and
+     * rerender() returns on `if (!this.chart) return`, so nothing threw and nothing
+     * warned. Guarded on hasUpdated so this does not race the FIRST render, which
+     * firstUpdated still owns.
+     */
+    if (this.hasUpdated && !this.chart) void this.createChart();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    // Any createChart() awaiting its dynamic import is now stale; see the guard there.
+    this.mountGeneration += 1;
     this.themeObserver?.disconnect();
     this.themeObserver = null;
     this.nameObserver?.disconnect();
@@ -633,7 +649,16 @@ export class EsaChart extends LitElement {
     return { ...computed, ...this.options };
   }
 
-  protected async firstUpdated(): Promise<void> {
+  protected firstUpdated(): void {
+    void this.createChart();
+  }
+
+  /**
+   * Build the chart. Called by firstUpdated() and again by connectedCallback() after
+   * a reconnect — NOT once per element, which is what firstUpdated alone guaranteed.
+   */
+  private async createChart(): Promise<void> {
+    const generation = this.mountGeneration;
     if (!this.label) {
       console.warn(
         '[esa-chart] no `label`. AG Charts will fall back to a generated name like ' +
@@ -670,6 +695,14 @@ export class EsaChart extends LitElement {
       );
       return;
     }
+
+    /*
+     * The element can be disconnected while `await import(...)` is in flight. Assigning
+     * this.chart now would hand an instance to a component disconnectedCallback has
+     * already swept, leaking it with nothing left holding a reference to destroy it —
+     * and the reconnect path above would then see a non-null chart and skip the rebuild.
+     */
+    if (generation !== this.mountGeneration || !this.isConnected) return;
 
     if (!modulesRegistered) {
       mod.ModuleRegistry.registerModules([mod.AllCommunityModule]);

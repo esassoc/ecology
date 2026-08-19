@@ -642,8 +642,19 @@ export class EsaInputTag extends LitElement {
        back is also the version that needs no specificity trick — the old outline-color form
        needed a .field--error in the selector to reach (0,3,0) and beat the error rule.
        Restoring the NORMAL ring colour rather than removing the outline, because an element
-       that CAN take focus still owes SC 2.4.7 a visible ring even when it is inert. */
-    .container--disabled {
+       that CAN take focus still owes SC 2.4.7 a visible ring even when it is inert.
+       SCOPED TO .field--error, and it must be. This rule cancels the ERROR ring, so
+       outside the error state it has nothing to cancel — and unscoped it did damage:
+       a declaration ON the element beats an INHERITED value at any specificity, so it
+       also overrode a tier-3 --focus-ring-color inherited from an ancestor. That is
+       the documented dark-app-bar escape hatch (component-tokens.css, and the
+       design-principles skill; esa-button variant="chrome" is the worked example), so
+       a disabled tag field on a knockout surface reverted to the brand ring — the one
+       ring that is invisible there, measured 2.82:1 / 2.54:1 in this same change.
+       The .field--error prefix costs no specificity trick: this is still a declaration
+       on the container itself, which is what beats the value inherited from
+       .field--error above. */
+    .field--error .container--disabled {
       --focus-ring-color: var(--color-border-default-focus, #3e9b4f);
     }
     .container--disabled:focus-within {

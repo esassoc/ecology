@@ -19,14 +19,10 @@
   "peerDependencies": {
     "@esa/tokens": "^0.1.0",
     "ag-charts-community": "^14.0.0",
-    "astro": "^5.0.0",
-    "maplibre-gl": "^6.0.0"
+    "astro": "^5.0.0"
   },
   "peerDependenciesMeta": {
     "ag-charts-community": {
-      "optional": true
-    },
-    "maplibre-gl": {
       "optional": true
     }
   }

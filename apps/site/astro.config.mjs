@@ -75,27 +75,6 @@ export default defineConfig({
   base,
   vite: {
     plugins: [watchTokenSources()],
-    /*
-     * MAPLIBRE MUST NOT BE PRE-BUNDLED, and the failure is silent where it matters.
-     *
-     * MapLibre parses tiles in a real module Worker whose URL it picks at runtime
-     * between `maplibre-gl-worker.mjs` and its `-dev` sibling. The dep optimizer
-     * rewrites the main entry into `.vite/deps/` but never emits that sibling, so
-     * the worker URL points at nothing: the request fails with `net::ERR_FAILED`,
-     * no tile ever parses, and the map sits at `styleLoaded === false` forever.
-     *
-     * Measured, because the symptom hides: the CONSOLE STAYS CLEAN. The only signal
-     * is a Vite warning in the terminal ("The file does not exist at ... which is in
-     * the optimize deps directory"), and a blank-style map is unaffected — it has no
-     * tiles to parse — so a smoke test that only checks `style-url="blank"` passes
-     * while every tiled map is broken.
-     *
-     * Dev-only: production goes through rollup, which resolves the worker correctly,
-     * so the built site was never affected.
-     */
-    optimizeDeps: {
-      exclude: ['maplibre-gl'],
-    },
     resolve: {
       /*
        * The theme maker runs the SAME derivation in the browser that make-theme.mjs
