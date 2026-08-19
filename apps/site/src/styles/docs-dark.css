@@ -76,12 +76,16 @@ html[data-scheme='dark'] {
      lockstep visible in this block, four names taking the identical step at
      every role, is the evidence that made it one. */
   --color-background-utility-info-subtle:    var(--color-blue-dark-1);
+  --color-background-utility-info-muted:  var(--color-blue-dark-3);
   --color-border-utility-info:    var(--color-blue-dark-6);
   --color-background-utility-success-subtle: var(--color-green-dark-1);
+  --color-background-utility-success-muted:  var(--color-green-dark-3);
   --color-border-utility-success: var(--color-green-dark-6);
   --color-background-utility-warning-subtle: var(--color-yellow-dark-1);
+  --color-background-utility-warning-muted:  var(--color-yellow-dark-3);
   --color-border-utility-warning: var(--color-yellow-dark-6);
   --color-background-utility-danger-subtle:  var(--color-red-dark-1);
+  --color-background-utility-danger-muted:  var(--color-red-dark-3);
   --color-border-utility-danger:  var(--color-red-dark-6);
 
   /* Utility coloured text — light step-11 values are dark and unreadable on dark surfaces.

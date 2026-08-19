@@ -303,20 +303,36 @@ export function resolveFocusRing({ ramp, neutral, surfaces }) {
  * Used for the `-subtle` tint pairings AND for links, where the surface is the page.
  */
 function resolveColouredText({ role, ramp, onHex, label = 'the subtle tint' }) {
+  /*
+   * EVERY SURFACE THIS TEXT LANDS ON, not just one. `onHex` took a single colour and
+   * the caller passed the `-subtle` tint (step 1) — but the same token is also painted
+   * on `-muted` (step 3), which is darker, so a step that cleared AA on the lighter
+   * tint could miss on the other and nothing looked. Measured across beacon and qanat:
+   * info 4.25:1, success 4.21:1, warning 4.25:1 on `-muted`, identical to three
+   * decimal places on both brands — which is what gives it away as a surface the
+   * derivation never saw, rather than anything brand-derived.
+   *
+   * Same shape as resolveFocusRing: walk the ramp, take the first step that clears the
+   * bar on EVERY surface in this scheme.
+   */
+  const surfaces = (Array.isArray(onHex) ? onHex : [onHex]).filter(Boolean);
   for (const s of [11, 12]) {
     const hex = step(ramp, s);
-    const r = contrastHex(hex, onHex);
-    if (r >= AA_TEXT) return { hex, ratio: r, usedStep: s, warning: null };
+    const ratios = surfaces.map((bg) => contrastHex(hex, bg));
+    if (ratios.every((r) => r >= AA_TEXT)) {
+      return { hex, ratio: Math.min(...ratios), usedStep: s, warning: null };
+    }
   }
   const hex = step(ramp, 12);
+  const worst = Math.min(...surfaces.map((bg) => contrastHex(hex, bg)));
   return {
     hex,
-    ratio: contrastHex(hex, onHex),
+    ratio: worst,
     usedStep: 12,
     warning: {
       level: 'fail',
       role,
-      message: `step 12 still misses ${AA_TEXT}:1 on ${label} ${onHex} (${contrastHex(hex, onHex).toFixed(2)}:1)`,
+      message: `step 12 still misses ${AA_TEXT}:1 on ${label} (worst surface ${worst.toFixed(2)}:1)`,
     },
   };
 }
@@ -731,7 +747,14 @@ export function deriveTheme(input) {
         // text/border pair below is scoped to the intentions that do.
         const textName =
           key === 'ai' ? '--color-content-ai' : `--color-content-utility-${key}`;
-        const text = resolveColouredText({ role: textName, ramp, onHex: tint });
+        // BOTH tinted surfaces this text is painted on: `-subtle` (step 1) and, for the
+        // four utilities, `-muted` (step 3). `ai` has no marker form and so has one.
+        const text = resolveColouredText({
+          role: textName,
+          ramp,
+          onHex: key === 'ai' ? [tint] : [tint, step(ramp, 3)],
+          label: key === 'ai' ? 'the subtle tint' : 'the subtle and muted tints',
+        });
         if (text.warning) warnings.push({ scheme, ...text.warning });
         t.set(textName, text.hex);
         if (key !== 'ai') t.set(`--color-border-utility-${key}`, step(ramp, 6));

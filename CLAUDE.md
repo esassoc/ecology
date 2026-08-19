@@ -168,13 +168,15 @@ The pipeline now has a middle: **`/guide/theme-maker`** (the editor) and
 `create-spoke.mjs --theme <recipe>` writes the real file. **Six seeds** (brand hex,
 neutral temperature — one of SIX, see below — corner language, two font stacks, optional
 per-intention colours)
-produce ~114 light + ~111 dark declarations that pass 62/62 pairs in **both** schemes —
-against a hub whose own defaults fail 4 and whose dark block fails 3. It was ~95/~92 and
+produce ~114 light + ~111 dark declarations that pass 66/66 pairs in **both** schemes —
+against a hub whose own defaults fail 7 and whose dark block fails 3. It was ~95/~92 and
 "33/33" until 2026-08-18; the pair table had grown to 64 while the generator still emitted
 nothing for 22 of the names it graded (see the data-viz note below). **The table is 62,
 not 64** — 14 rows were grading pre-rename names that resolved only through the
 compatibility aliases, and two of those turned out to be the same pair twice under two
-spellings. Migrating them onto the canonical names moved no verdict in either scheme.
+spellings. Migrating them onto the canonical names moved no verdict in either scheme. It then went
+to **66**: the four `-muted` status fills this pass adds were shipping ungraded, and in
+dark they measured 1.67-1.96:1.
 
 ## THE NEUTRAL IS A SEED, AND THE RAMP IS CALLED `neutral` (2026-08-18)
 `seeds.neutral` picks one of **six** Radix neutrals — `pure`→gray, `cool`→slate,
@@ -591,7 +593,7 @@ Four things that are easy to get wrong here:
 - **A SMALL BLOCK IS THE CORRECT OUTPUT.** Both shipped themes emit exactly one row
   (`--color-content-default-muted` → neutral 11, the `warn`-graded muted-text rung).
   That is not a missing feature — it means the theme was already AA, which a generated
-  theme is, 62/62 in both schemes. The block earns itself on a **hostile brand**: seed
+  theme is, 66/66 in both schemes. The block earns itself on a **hostile brand**: seed
   `#e5399f` fails at 4.20:1 in light (the brand hex is the one fill the base derivation
   is forbidden to move) and the profile rescues it to 4.91:1 at step 11, with an `info`
   warning saying so.
@@ -609,7 +611,7 @@ Four things that are easy to get wrong here:
 
 `beacon`'s old `content-on-brand-secondary` failure at 3.64:1 is **gone** — the
 `secondary` → `muted` merge earlier the same day removed the role. Both shipped themes
-now pass 62/62 in both schemes with and without the profile. The teeth are still in the
+now pass 66/66 in both schemes with and without the profile. The teeth are still in the
 gate rather than the cascade, and **no npm script runs it**: `npm run contrast` is
 `--hub` only, so `check-contrast.mjs <theme>.css --assurance wcag-aa [--scheme dark]`
 is a by-hand run. That is a gap in the gate, not a property of this change.
@@ -1095,7 +1097,7 @@ npm test               # token-name guard + hook regressions (scripts/**/*.test.
 npm run a11y           # axe-core over every built page (needs `npm run build` first)
 npm run a11y:live      # live-region structure audit (needs `npm run build` first)
 npm run a11y:charts    # re-score AG Charts against the 5-question rubric (needs `npm run build`)
-npm run contrast       # 62 pairs against the hub defaults — currently FAILS with 4
+npm run contrast       # 66 pairs against the hub defaults — currently FAILS with 7
 npm run contrast:dark  # the same pairs against the hub's dark block — fails with 3
 npm run theme:make     # recipe (or --brand/--slug) → theme-<slug>.css + .json
 npm run theme:curves   # regenerate scripts/lib/radix-curves.json from @radix-ui/colors
@@ -1106,7 +1108,7 @@ npm run tokens:primitives  # regenerate tier-1 colour ramps from @radix-ui/color
 failures, `content-on-brand` at 2.95:1 among them. That is not a regression to chase
 on sight; `npm run a11y:assured` passes because the assurance profile moves those
 fills from Radix step 9 to step 11, which is what the profile is for. A GENERATED
-theme passes 62/62 in both schemes, so a spoke can be cleaner than the hub.
+theme passes 66/66 in both schemes, so a spoke can be cleaner than the hub.
 
 `npm run a11y` serves `apps/site/dist` on an ephemeral port, waits for custom
 elements to upgrade (auditing pre-hydration HTML is how you get a meaningless

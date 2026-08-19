@@ -66,6 +66,26 @@ export const PAIRS = [
   ['--color-content-utility-success', '--color-background-utility-success-subtle', 4.5, 'fail'],
   ['--color-content-utility-warning', '--color-background-utility-warning-subtle', 4.5, 'fail'],
   ['--color-content-utility-danger', '--color-background-utility-danger-subtle', 4.5, 'fail'],
+  // ---- SC 1.4.3 · TINTED STATUS FILLS (step 3) ----
+  //
+  // The four `-muted` fills are NEW in this change and arrived ungraded, which is how
+  // the dark half stayed invisible: measured at 1.67-1.96:1, because the hub's dark
+  // block re-points `-subtle` (step 1), `border` (6) and `content` (11) and never got
+  // the new step-3 rung — so a light tint kept its light value under light text on a
+  // near-black page. Generated themes emitted all four in both schemes throughout, so
+  // `theme:check` was green and only the HUB was broken. Fixed in docs-dark.css.
+  //
+  // Light still fails three of four at 4.21-4.25:1, and that is the DESIGNED position
+  // rather than an oversight: `-muted` is Radix's UI-element background step, which is
+  // the whole thing separating it from `-subtle`, so it cannot follow `-subtle` down to
+  // step 1 without collapsing the two roles. Verified the profile is the answer —
+  // `check-contrast.mjs --hub --assurance wcag-aa` passes all 66, because step 12 text
+  // clears every one. Graded `fail` and not `warn` on purpose: these paint badges and
+  // chips, and a warn would let the base theme quietly ship unreadable status text.
+  ['--color-content-utility-info', '--color-background-utility-info-muted', 4.5, 'fail'],
+  ['--color-content-utility-success', '--color-background-utility-success-muted', 4.5, 'fail'],
+  ['--color-content-utility-warning', '--color-background-utility-warning-muted', 4.5, 'fail'],
+  ['--color-content-utility-danger', '--color-background-utility-danger-muted', 4.5, 'fail'],
 
   // Body text on the subtle tints, which is how the alert bodies are actually built.
   ['--color-content-default', '--color-background-brand-subtle', 4.5, 'fail'],

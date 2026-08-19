@@ -193,7 +193,7 @@ test('the pair table still covers all eight content-on-* foregrounds', () => {
   // weak guard — it fires on any addition, which is noise — but it does catch a row being
   // DELETED, which is the failure that matters. The per-family assertions below are the
   // ones with teeth.
-  assert.equal(PAIRS.length, 62);
+  assert.equal(PAIRS.length, 66);
 });
 
 test('the focus ring is graded on every surface, and it blocks', () => {
