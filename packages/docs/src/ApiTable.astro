@@ -2,7 +2,7 @@
 // The API table for a component doc page.
 //
 // The rows are GENERATED from the component source at build time
-// (src/data/component-api.ts) — prop names, types and defaults are read off
+// (./component-api.ts) — prop names, types and defaults are read off
 // `interface Props` + `Astro.props` destructuring (.astro) or `static
 // properties` + `declare` + constructor (Lit). A page cannot omit a prop, and
 // it cannot describe a type that the component no longer has.
@@ -13,9 +13,8 @@
 // Events stay authored: a CustomEvent's `detail` shape is not declared anywhere
 // machine-readable. Their NAMES are still checked against the component's
 // actual `dispatchEvent` calls.
-import PropsTable from '@esa/docs/PropsTable.astro';
-import { componentApi, reportApiDrift } from '../data/component-api';
-import { isCustomElement } from '../data/angular-snippet';
+import PropsTable from './PropsTable.astro';
+import { componentApi, reportApiDrift, isCustomElement } from './component-api';
 
 interface EventRow { name: string; type: string; description: string }
 interface Props {
@@ -59,6 +58,9 @@ const rows = (api?.props ?? []).map((p) => {
 // invent an event binding, only mirroring listeners a sample really shows.
 //
 // Only for web components: an .astro component has no custom element to bind to.
+// `isCustomElement` is derived in component-api's own walk (a `.ts` file that
+// calls customElements.define), NOT from the hub's angular-snippet oracle — that
+// module reads hub sources a spoke does not install.
 const angularEvents = !isCustomElement(slug) ? [] : (api?.eventNames ?? []).map((name) => {
   const handler = name.replace(/[^a-z0-9]+(.)?/gi, (_, c) => (c ? c.toUpperCase() : ''));
   return `(${name})="on${handler.charAt(0).toUpperCase()}${handler.slice(1)}($event.detail)"`;
