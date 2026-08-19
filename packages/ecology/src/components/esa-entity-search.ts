@@ -296,7 +296,18 @@ export class EsaEntitySearch extends LitElement {
     // roving tabindex gives the checked one a real tab stop, and showModal() keeps Tab
     // inside the dialog — so plain Tab is both safe and necessary. Up/Down stay with
     // the result list below.
-    if (this.scopes.length && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+    //
+    // NOT WHILE THE CARET IS IN THE INPUT. This handler moved from the <input> onto the
+    // <dialog> in the same change that bound Left/Right, so it now sees keydowns from the
+    // search field too — and an unguarded preventDefault() here stops the caret moving at
+    // all. Typing a query and pressing Left to fix a typo changed the search scope
+    // instead. The facets own these keys only once focus is actually on them; the Enter
+    // branch below already draws the line in the same place.
+    if (
+      this.scopes.length &&
+      !this.activeInput() &&
+      (event.key === 'ArrowRight' || event.key === 'ArrowLeft')
+    ) {
       event.preventDefault();
       this.cycleScope(event.key === 'ArrowRight' ? 1 : -1);
       return;
@@ -500,8 +511,8 @@ export class EsaEntitySearch extends LitElement {
           />
           <span class="visually-hidden" id="cue"
             >Results filter as you type. Use the up and down arrows to review them and
-            Enter to open. Left and right arrows change the search scope. Escape
-            closes.</span
+            Enter to open. Tab to the scope buttons, then left and right arrows to change
+            scope. Escape closes.</span
           >
           <kbd class="esa-entity-search__kbd typography-label-xs">ESC</kbd>
         </div>

@@ -114,6 +114,37 @@ export class EsaSideDialog extends LitElement {
     this.close();
   };
 
+  /**
+   * THE PLATFORM CAN CLOSE US WITHOUT ASKING, and onCancel does not cover that.
+   *
+   * `cancel` is only cancelable when the dialog was opened WITH user activation. A
+   * side dialog shown programmatically — from a timer, a route change, a fetch
+   * settling — gets a close watcher that Esc dismisses outright, and a
+   * `<form method="dialog">` submit in the footer slot closes it with no `cancel` at
+   * all. Both left `open` stuck at true against a closed <dialog>: updated() then
+   * never fired again and show() was a no-op, so the drawer could not be reopened for
+   * the rest of the session.
+   *
+   * Every other overlay in the kit already binds this; this one was the exception.
+   */
+  private onNativeClose = (): void => {
+    // CLEAR BOTH FLAGS; do NOT route through close(). The dialog is already out of the
+    // top layer by the time this fires, so there is no slide-out left to play — and
+    // close() sets `closing = true`, which makes updated() compute shouldBeOpen = true
+    // against a closed element and call showModal() AGAIN. The drawer would flash back
+    // open for the length of the exit timer.
+    clearTimeout(this.closeTimer);
+    const wasOpen = this.open;
+    this.open = false;
+    this.closing = false;
+    // Only when the platform beat us to it. On the animated path this handler is
+    // re-entered at the END (updated() calls the native close()), and close() has
+    // already emitted — so the guard is what stops a second `close` event per dismissal.
+    if (wasOpen) {
+      this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+    }
+  };
+
   private onLightDismiss = (event: MouseEvent): void => {
     const el = this.dialogEl;
     if (!el || !this.open) return;
@@ -139,6 +170,7 @@ export class EsaSideDialog extends LitElement {
         aria-labelledby=${this.heading ? 'esa-side-dialog-title' : nothing}
         aria-label=${this.heading ? nothing : slottedHeader || 'Side dialog'}
         @cancel=${this.onCancel}
+        @close=${this.onNativeClose}
       >
         ${hasHeader
           ? html`<header class="header typography-title">

@@ -114,6 +114,22 @@ function grade(file, scheme, profile) {
   const failed = /(\d+) AA text-contrast failure\(s\)/.exec(out);
   const rows = out.split('\n').filter((l) => l.startsWith('FAIL ') || (verbose && l.startsWith('warn ')));
   if (/only \d+\/\d+ pairs resolved/.test(out)) return { status: 'unresolved', checked, rows };
+  /*
+   * A RUN THAT NEVER GRADED ANYTHING IS NOT A PASS, and inferring `pass` from the
+   * ABSENCE of a failure line made every die() path report one. check-contrast.mjs exits
+   * via die() for a missing file, an unknown flag, a bad profile name — none of which
+   * print "N AA text-contrast failure(s)", so all of them scored `ok`. Measured: a
+   * nonexistent theme path printed `standard ? ok / wcag-aa ? ok` in all four cells
+   * before this script crashed on it two lines later.
+   *
+   * The "checked N/M pairs" line is the proof the grader got as far as grading. Without
+   * it, whatever came back is a diagnostic, not a verdict — which is the same failure
+   * this file's own header describes ("checked 0 pairs and exited 0 with All text pairs
+   * pass AA"). Reported as `error` so the reason is on screen rather than swallowed.
+   */
+  if (!checked) {
+    return { status: 'error', detail: out.trim().split('\n').filter(Boolean).pop() ?? 'no output', rows };
+  }
   return {
     status: failed ? 'fail' : 'pass',
     failures: failed ? Number(failed[1]) : 0,
@@ -149,6 +165,8 @@ for (const file of themes) {
           : 'ERROR';
       cells.push(cell.padEnd(14));
       if (r.rows.length) detail.push([`${COLUMNS[i]} / ${scheme}`, r.rows]);
+      // An ERROR cell with no reason under it is the same dead end as a false `ok`.
+      if (r.status === 'error' && r.detail) detail.push([`${COLUMNS[i]} / ${scheme}`, [r.detail]]);
     }
     console.log(`  ${COLUMNS[i].padEnd(W)}${cells.join('')}`);
   }
@@ -169,8 +187,18 @@ if (profiles.length) {
   // header comment ("inert until <html data-a11y-assurance=...> is set"), so a substring
   // test reports every file as having a block — including one whose blocks were deleted.
   // Comments come out first, then a real rule is a selector followed by `{`.
-  const hasBlock = (f) =>
-    /\[data-a11y-assurance="[^"]+"\][^{}]*\{/.test(readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
+  // Unreadable is NOT "has no block": this used to throw ENOENT and take the whole run
+  // down after the matrix had already printed, which is how the false-pass above stayed
+  // invisible. A file that cannot be read has already been reported as an error cell.
+  const hasBlock = (f) => {
+    let css;
+    try {
+      css = readFileSync(f, 'utf8');
+    } catch {
+      return true;
+    }
+    return /\[data-a11y-assurance="[^"]+"\][^{}]*\{/.test(css.replace(/\/\*[\s\S]*?\*\//g, ''));
+  };
   const flat = themes.filter((f) => !hasBlock(f));
   if (flat.length) {
     // AN ABSENT BLOCK IS THE NORMAL RESULT, and this note used to say the opposite.

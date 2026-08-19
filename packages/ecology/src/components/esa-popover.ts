@@ -67,6 +67,13 @@ export class EsaPopover extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener('click', this.onDocumentClick, true);
+    // BOTH document listeners, not just the click one. show() binds a capture-phase
+    // keydown on `document` and only hide() unbinds it — so a popover removed while
+    // OPEN (a route change, a conditional render, a list re-key) left a listener on the
+    // document holding a reference to a detached element, still swallowing Escape with
+    // preventDefault() for the rest of the session. Unbinding is cheap and unbinding
+    // something that was never bound is a no-op, so neither needs an `if (this.open)`.
+    document.removeEventListener('keydown', this.onDocumentKeydown, true);
     if (this.showTimeout) clearTimeout(this.showTimeout);
   }
 
