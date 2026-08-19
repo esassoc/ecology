@@ -365,6 +365,22 @@ function matchBracket(s, from, open, close) {
 const INDENT = '  ';
 
 /** `esa-switch-toggle` → `SwitchToggle`. */
+/**
+ * Wrap an attribute value in quotes that its own contents cannot break.
+ *
+ * Emission hardcoded `"` with no escaping, so a value the tokenizer had CORRECTLY read
+ * out of a single-quoted attribute came back out as label="he said "hi"" — markup that
+ * does not parse, in a generator whose whole job is to not hand an Angular developer
+ * something wrong. Prefer double quotes (every existing snippet keeps its shape); fall
+ * back to single when the value contains one, and to &quot; only if it contains both.
+ */
+function quoted(value) {
+  const v = String(value);
+  if (!v.includes('"')) return `"${v}"`;
+  if (!v.includes("'")) return `'${v}'`;
+  return `"${v.replace(/"/g, '&quot;')}"`;
+}
+
 function pascal(slug) {
   return slug.replace(/^esa-/, '').split('-')
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
@@ -509,11 +525,11 @@ export function toAngular(code, ctx) {
       if (how === 'property') {
         const prop = nodeApi.props.find((p) => p.name === a.name);
         const propName = prop?.propertyName ?? a.name;
-        parts.push(`[${propName}]="${a.value ?? ''}"`);
+        parts.push(`[${propName}]=${quoted(a.value ?? '')}`);
         continue;
       }
       // VERBATIM — including bare booleans and JSON-in-an-attribute.
-      parts.push(a.value === null ? a.name : `${a.name}="${a.value}"`);
+      parts.push(a.value === null ? a.name : `${a.name}=${quoted(a.value)}`);
     }
     for (const b of node.bindings ?? []) parts.push(b);
 
