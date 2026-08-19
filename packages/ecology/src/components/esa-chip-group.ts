@@ -218,7 +218,7 @@ export class EsaChipGroup extends LitElement {
       --_pad-y: var(--spacing-150, 0.375rem);
       --_pad-x: var(--form-padding-x-md, 0.75rem);
       --_font: var(--form-font-size-md, 0.9375rem);
-      --_radius: var(--radius-100, 0.25rem);
+      --_radius: var(--radius-control, 0.25rem);
 
       /* Resting (unselected) chrome. */
       --_bg: var(--color-surface, #fff);
@@ -253,7 +253,7 @@ export class EsaChipGroup extends LitElement {
       font: inherit;
       font-size: var(--_font);
       font-weight: 600;
-      line-height: 1;
+      line-height: var(--line-height-none, 1);
       white-space: nowrap;
       cursor: pointer;
       transition:
@@ -273,7 +273,7 @@ export class EsaChipGroup extends LitElement {
       box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
     }
 
-    .chip__label { line-height: 1; }
+    .chip__label { line-height: var(--line-height-none, 1); }
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {

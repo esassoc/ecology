@@ -157,7 +157,7 @@ export class EsaDialog extends LitElement {
   static styles = css`
     :host {
       --_dialog-bg: var(--dialog-bg, var(--color-surface-elevated, #ffffff));
-      --_dialog-border-radius: var(--dialog-radius, var(--radius-400, 0.75rem));
+      --_dialog-border-radius: var(--dialog-radius, var(--radius-overlay, 0.75rem));
       --_dialog-padding: var(--spacing-500, 1.5rem);
       --_dialog-header-border: var(--dialog-border-color, var(--color-border-light, #efefef));
       /* Optional header/footer surface tints — a spoke fills these to frame the
@@ -240,7 +240,7 @@ export class EsaDialog extends LitElement {
       flex-shrink: 0;
     }
     .esa-dialog__title {
-      font-size: var(--type-size-400, 1.125rem);
+      font-size: var(--font-size-400, 1.125rem);
       font-weight: var(--font-weight-semibold, 550);
       margin: 0;
       color: var(--dialog-color, var(--color-text-primary, #171717));
@@ -252,7 +252,7 @@ export class EsaDialog extends LitElement {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: var(--radius-200, 0.5rem);
+      border-radius: var(--radius-surface, 0.5rem);
       background: transparent;
       color: var(--color-text-secondary, #525252);
       cursor: pointer;

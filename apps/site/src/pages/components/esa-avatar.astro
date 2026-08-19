@@ -7,6 +7,7 @@ import Avatar from '@esa/ecology/esa-avatar.astro';
 
 const props = [
   { name: 'name', type: 'string', default: "''", description: 'Used to derive initials and a deterministic background hue.' },
+  { name: 'initials', type: 'string', description: 'Explicit initials, overriding the first+last derivation from name. For callers that carry their own rule — esa-header-nav takes the first letter of every word capped at two, so "Mary Jane Watson" is MJ there and MW by default here.' },
   { name: 'src', type: 'string', default: "''", description: 'Image URL. When set, renders the photo instead of initials.' },
   { name: 'icon', type: 'string', default: "''", description: 'Lucide icon name for an icon fallback (defaults to a user glyph).' },
   { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Avatar diameter (20 / 28 / 40 / 56px).' },

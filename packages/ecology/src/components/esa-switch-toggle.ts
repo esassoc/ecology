@@ -127,7 +127,7 @@ export class EsaSwitchToggle extends LitElement {
       flex: none;
       width: var(--_track-w);
       height: var(--_track-h);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--_bg-off);
       transition: background var(--transition-fast, 150ms ease);
     }
@@ -140,9 +140,9 @@ export class EsaSwitchToggle extends LitElement {
       width: var(--_thumb);
       height: var(--_thumb);
       transform: translateY(-50%);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--_thumb-color);
-      box-shadow: var(--shadow-50, 0 1px 4px rgba(0, 0, 0, 0.2));
+      box-shadow: var(--elevation-1, 0 1px 4px rgba(0, 0, 0, 0.2));
       transition: left var(--transition-fast, 150ms ease);
     }
     :host([checked]) .thumb { left: calc(var(--_track-w) - var(--_thumb) - 2px); }
@@ -153,7 +153,7 @@ export class EsaSwitchToggle extends LitElement {
     }
 
     .label {
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       line-height: var(--line-height-normal, 1.6);
     }
   `;

@@ -79,24 +79,24 @@ const cls = [
     font-family: var(--font-sans, system-ui, sans-serif);
     font-size: var(--_il-font);
     font-weight: var(--font-weight-medium, 500);
-    line-height: 1;
+    line-height: var(--line-height-none, 1);
     text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
   }
   .esa-icon-link--sm { --_il-font: var(--icon-link-font-size-sm, 0.875rem); } /* 14px */
 
-  .esa-icon-link--regular  { font-weight: var(--font-weight-regular, 400); }
+  .esa-icon-link--regular  { font-weight: var(--font-weight-regular, 350); }
   .esa-icon-link--medium   { font-weight: var(--font-weight-medium, 500); }
-  .esa-icon-link--semibold { font-weight: var(--font-weight-semibold, 600); }
+  .esa-icon-link--semibold { font-weight: var(--font-weight-semibold, 550); }
 
   .esa-icon-link:hover { text-decoration: underline; }
   .esa-icon-link:focus-visible {
     outline: var(--focus-ring-width) solid currentColor;
     outline-offset: var(--focus-ring-offset, 2px);
-    border-radius: var(--radius-100, 4px);
+    border-radius: var(--radius-control, 4px);
   }
-  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold, 600); }
+  .esa-icon-link.is-active { font-weight: var(--font-weight-semibold, 550); }
 
   .esa-icon-link__label { display: inline-block; }
 

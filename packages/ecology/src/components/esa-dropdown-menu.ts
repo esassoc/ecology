@@ -137,8 +137,8 @@ export class EsaDropdownMenu extends LitElement {
       z-index: var(--z-dropdown, 50);
       background: var(--dropdown-menu-bg, var(--color-surface-elevated, #ffffff));
       border: 1px solid var(--dropdown-menu-border-color, var(--color-border, #e5e5e5));
-      border-radius: var(--dropdown-menu-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
+      border-radius: var(--dropdown-menu-radius, var(--radius-surface, 0.5rem));
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       min-width: var(--dropdown-menu-min-width, 160px);
       max-width: var(--dropdown-menu-max-width, 280px);
       padding: var(--spacing-100, 0.25rem);
@@ -166,11 +166,11 @@ export class EsaDropdownMenu extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem);
       border: none;
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-control, 0.25rem);
       background: transparent;
       color: var(--dropdown-menu-item-color, var(--color-text-primary, #171717));
       font-family: inherit;
-      font-size: var(--type-size-200, 0.9375rem);
+      font-size: var(--font-size-200, 0.9375rem);
       cursor: pointer;
       text-align: left;
       transition: background 100ms ease;
@@ -182,7 +182,7 @@ export class EsaDropdownMenu extends LitElement {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: -2px;
     }
-    .esa-dropdown-menu__item--danger { color: var(--color-danger, #ef4444); }
+    .esa-dropdown-menu__item--danger { color: var(--color-danger-strong, #ce2c31); }
     .esa-dropdown-menu__item--danger:hover:not(:disabled) {
       background: var(--color-danger-subtle, #fef2f2);
     }
@@ -194,7 +194,7 @@ export class EsaDropdownMenu extends LitElement {
     .esa-dropdown-menu__bullet {
       width: 6px;
       height: 6px;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: currentColor;
       flex-shrink: 0;
       opacity: 0.6;

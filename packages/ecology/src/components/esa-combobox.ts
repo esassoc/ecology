@@ -529,7 +529,7 @@ export class EsaCombobox extends LitElement {
     .field__label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #171717);
     }
     .field__required {
@@ -537,11 +537,11 @@ export class EsaCombobox extends LitElement {
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
     .field__error {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
     }
 
@@ -593,8 +593,8 @@ export class EsaCombobox extends LitElement {
       animation: esa-cb-spin 1s linear infinite;
     }
     .spinner svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .spinner--inline {
       position: absolute;
@@ -633,7 +633,7 @@ export class EsaCombobox extends LitElement {
       color: var(--color-primary-strong, #3a7c59);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
       max-width: 100%;
     }
@@ -701,8 +701,8 @@ export class EsaCombobox extends LitElement {
       flex-shrink: 0;
     }
     .arrow svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .arrow--open {
       transform: rotate(180deg);
@@ -718,7 +718,7 @@ export class EsaCombobox extends LitElement {
       background: var(--color-surface, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
       overflow: hidden;
     }
 
@@ -730,8 +730,8 @@ export class EsaCombobox extends LitElement {
       border-bottom: 1px solid var(--color-border, #e5e5e5);
     }
     .search__icon {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
       color: var(--color-text-muted, #737373);
       flex-shrink: 0;
     }
@@ -750,7 +750,7 @@ export class EsaCombobox extends LitElement {
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      font-size: var(--type-size-100, 11px);
+      font-size: var(--font-size-100, 11px);
       color: var(--color-text-muted, #737373);
       border-bottom: 1px solid var(--color-border-light, #efefef);
     }
@@ -831,10 +831,10 @@ export class EsaCombobox extends LitElement {
       padding: var(--spacing-050, 2px) var(--spacing-100, 4px) var(--spacing-050, 2px) var(--spacing-200, 8px);
       background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
       color: var(--color-primary-strong, #3a7c59);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
-      line-height: 1.4;
+      font-size: var(--font-size-150, 12px);
+      line-height: var(--line-height-tight, 1.3);
       user-select: none;
     }
     .chip__label {
@@ -874,7 +874,7 @@ export class EsaCombobox extends LitElement {
       padding: var(--spacing-300, 12px);
       color: var(--color-text-muted, #737373);
       font-size: var(--_field-font-size);
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
     }
 
     .field--error .input,

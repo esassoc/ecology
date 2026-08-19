@@ -51,9 +51,14 @@ faces loaded via `__FONT_LINKS__`. Leave a token out to inherit the hub default.
 The hub's SEMANTIC `--color-success/warning/info/ai` default to **generic
 brights** that often differ from the source's actual button palette *even when the
 underlying primitive ramps match*. Re-point each onto the exact color the source's
-button renders. Beacon example: `--color-success: var(--color-green-700)`
-(`#2e7571`, not the hub's `#22c55e`); `--color-info: #228be6` (a standalone azure,
-not on the blue ramp); `--color-ai: var(--color-blue-500)` (hub default is copper).
+button renders. Beacon example: `--color-success: #2e7571` (a dark teal-green that
+sits on no hub ramp, so it terminates in a literal — not the hub's lime `#bdee63`);
+`--color-info: #228be6` (a standalone azure, not on the blue ramp);
+`--color-ai: var(--color-blue-9)` (hub default is copper).
+
+Ramp steps are Radix's 1–12 scale — step 9 is the solid fill, 10 its hover, 2 a
+subtle surface, 11 coloured text. There is no `-500`/`-700` step; that was an
+earlier scale and those names resolve to nothing.
 
 ### (e) Form sizing + control radius
 Re-point `--form-height-{xs,sm,md,lg}` and `--form-radius-{xs,sm,md,lg}` if the

@@ -185,7 +185,7 @@ const buttonAttrs = {
   .esa-button--color-secondary {
     --_accent: var(--color-secondary);
     --_accent-hover: var(--color-secondary-hover);
-    --_on: var(--color-secondary-on-fill, var(--color-gray-12));
+    --_on: var(--color-secondary-on-fill, var(--color-text-primary));
     --_accent-text: var(--color-secondary-strong);
   }
   .esa-button--color-danger {
@@ -202,7 +202,7 @@ const buttonAttrs = {
   .esa-button--color-warning {
     --_accent: var(--color-warning);
     --_accent-hover: var(--color-warning-hover);
-    --_on: var(--button-on-warning, var(--color-gray-12));
+    --_on: var(--button-on-warning, var(--color-warning-on-fill, #4f3422));
     --_accent-text: var(--color-warning-strong);
   }
   .esa-button--color-info {
@@ -279,7 +279,7 @@ const buttonAttrs = {
     font-size: var(--_btn-font-size);
     font-family: var(--font-sans, system-ui, sans-serif);
     font-weight: var(--font-weight-medium, 500);
-    line-height: 1;
+    line-height: var(--line-height-none, 1);
     text-decoration: none;
     cursor: pointer;
     transition: background var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);

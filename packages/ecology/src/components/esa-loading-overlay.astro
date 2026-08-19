@@ -62,7 +62,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
     height: 48px;
     border: 4px solid var(--loading-spinner-track-color, var(--color-border-light, #efefef));
     border-top-color: var(--loading-spinner-color, var(--color-primary, #43608a));
-    border-radius: var(--radius-full, 9999px);
+    border-radius: var(--radius-pill, 9999px);
     animation: esa-overlay-spinner-rotate 0.75s linear infinite;
     box-sizing: border-box;
   }
@@ -73,7 +73,7 @@ const cls = ['esa-loading-overlay', transparent && 'esa-loading-overlay--transpa
 
   .esa-loading-overlay__message {
     margin: 0;
-    font-size: var(--type-size-150, 0.875rem);
+    font-size: var(--font-size-150, 0.875rem);
     color: var(--loading-overlay-message-color, var(--color-text-secondary, #525252));
     text-align: center;
   }

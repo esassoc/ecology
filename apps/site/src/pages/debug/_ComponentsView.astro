@@ -1,0 +1,493 @@
+---
+/**
+ * /debug/components — the tier-3 surface as a promise, checked against delivery.
+ *
+ * Underscore-prefixed so Astro never routes it directly; the dev-only [view]
+ * router renders it. Unlike _TokenGroup.astro this DOES carry its own <style>,
+ * because it is a whole view rather than a row partial shared with the tokens
+ * page — there is nothing to keep in sync with .tokens-debug.
+ */
+import Section from '@esa/docs/Section.astro';
+import {
+  namespaces,
+  adHoc,
+  undefinedReads,
+  tally,
+  chromeExemptions,
+  nestedComponents,
+  GAP_KIND_NOTE,
+  type GapKind,
+  type NestingStatus,
+} from '../../data/component-promises';
+
+const NESTING_LABEL: Record<NestingStatus, string> = {
+  open: 'open',
+  accepted: 'accepted',
+  resolved: 'resolved',
+};
+
+const KIND_LABEL: Record<GapKind, string> = {
+  'no-component': 'no component',
+  'missing-part': 'missing part',
+  unwired: 'unwired',
+  exempt: 'exempt',
+};
+
+/** Gaps grouped by part, so a missing part reads as ONE finding, not five. */
+const partsOf = (gaps: (typeof namespaces)[number]['gaps']) => {
+  const map = new Map<string, typeof gaps>();
+  for (const g of gaps) {
+    const key = g.part ?? '(root)';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(g);
+  }
+  return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+};
+
+const isExempt = (n: (typeof namespaces)[number]) => n.gaps.some((g) => g.kind === 'exempt');
+const withGaps = namespaces.filter((n) => n.gaps.length > 0 && !isExempt(n));
+const exempt = namespaces.filter(isExempt);
+const clean = namespaces.filter((n) => n.gaps.length === 0);
+const pct = (n: number) => `${Math.round(n * 100)}%`;
+---
+
+<article class="article promises-debug">
+  <h1>Component promises</h1>
+
+  <p class="dev-banner">
+    <strong>Debug page — not shipped.</strong> Emitted only under <code>astro dev</code>;
+    <code>npm run build</code> produces no HTML for it.
+  </p>
+
+  <p class="lede">
+    Tier 3 is a <em>promise</em>: every token in <code>component-tokens.css</code> tells a spoke
+    &ldquo;override this and the component moves.&rdquo; This page checks that promise against
+    delivery — what each component&rsquo;s source actually reads.
+  </p>
+
+  <p class="why">
+    The three existing views each see one half of this. The token graph&rsquo;s
+    <b>orphan hooks</b> check knows a token is unread but reports a flat list of names with no
+    owner, so six tokens describing one component&rsquo;s missing user block read as six unrelated
+    findings. The shipped <b>Theming surface</b> table on every component page is built from what
+    the component <em>reads</em> — by construction it can only show hooks that are delivered, so an
+    over-promised token is invisible on the exact page where the promise is published. And the
+    tier-3 <b>naming audit</b> scores the names, indifferent to whether anything reads them.
+  </p>
+
+  <div class="tally">
+    <div class="tally-cell"><b>{tally.declared}</b><span>tier-3 declared</span></div>
+    <div class="tally-cell ok"><b>{tally.read}</b><span>read ({pct(tally.read / tally.declared)})</span></div>
+    <div class={`tally-cell ${tally.gaps ? 'warn' : 'ok'}`}><b>{tally.gaps}</b><span>gaps, across {tally.affected} of {tally.total} namespaces</span></div>
+    <div class="tally-cell"><b>{tally.exempt}</b><span>exempt by decision</span></div>
+    <div class={`tally-cell ${tally.nestedOpen ? 'warn' : ''}`}><b>{tally.nested}</b><span>name a component ({tally.nestedOpen} open)</span></div>
+    <div class="tally-cell"><b>{tally.adHoc}</b><span>ad-hoc (under-promised)</span></div>
+    <div class={`tally-cell ${tally.undefinedReads ? 'bad' : 'ok'}`}><b>{tally.undefinedReads}</b><span>undefined reads</span></div>
+  </div>
+
+  <Section id="kinds" title="Why the split matters">
+    <p>
+      &ldquo;Unread&rdquo; is one word for three different defects with three different fixes, and
+      only one of them is a wiring job. The kind is <b>derived, not authored</b>:
+      <code>missing-part</code> falls out of &ldquo;are ALL of this part&rsquo;s tokens
+      unread&rdquo;, which is the same evidence a human uses. A part of one token can never be
+      called missing — there are no siblings to compare against, so it stays
+      <code>unwired</code> and a person decides.
+    </p>
+    <dl class="kinds">
+      {(Object.keys(KIND_LABEL) as GapKind[]).map((k) => (
+        <div class={`kind-row k-${k}`}>
+          <dt>
+            <span class={`kind-flag k-${k}`}>{KIND_LABEL[k]}</span>{' '}
+            <span class="kind-n">{
+              k === 'no-component' ? tally.noComponent
+              : k === 'missing-part' ? tally.missingPart
+              : k === 'unwired' ? tally.unwired
+              : tally.exempt
+            }</span>
+          </dt>
+          <dd>{GAP_KIND_NOTE[k]}</dd>
+        </div>
+      ))}
+    </dl>
+  </Section>
+
+  <Section id="gaps" title="Over-promise — declared, not read">
+    {withGaps.length === 0 ? (
+      <p class="empty">None. Every declared tier-3 token is read by something.</p>
+    ) : (
+      withGaps.map((n) => (
+        <details class="ns" open>
+          <summary>
+            <span class="ns-name">
+              <code>--{n.ns}-*</code>
+              {n.slug ? (
+                <a class="ns-slug" href={`/components/${n.slug}`}>{n.slug}</a>
+              ) : (
+                <span class="ns-slug none">no component</span>
+              )}
+            </span>
+            <span class="summary-right">
+              <span class="bar" title={`${n.read} of ${n.declared} read`}>
+                <i style={`width:${pct(n.coverage)}`}></i>
+              </span>
+              <span class="ns-count">{n.read}/{n.declared}</span>
+            </span>
+          </summary>
+
+          {partsOf(n.gaps).map(([part, gaps]) => (
+            <div class="part">
+              <p class="part-head">
+                <span class={`kind-flag k-${gaps[0].kind}`}>{KIND_LABEL[gaps[0].kind]}</span>
+                {part === '(root)' ? (
+                  <span class="part-name dim">no part</span>
+                ) : (
+                  <span class="part-name"><code>{part}</code></span>
+                )}
+                <span class="part-n">
+                  {gaps[0].partRead}/{gaps[0].partSize} of this part read
+                </span>
+              </p>
+              <table class="findings">
+                <thead><tr><th>Token</th><th>Resolves to</th></tr></thead>
+                <tbody>
+                  {gaps.map((g) => (
+                    <tr><td><code>{g.token}</code></td><td class="dim">{g.resolved}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+
+          {n.readElsewhere.length > 0 && (
+            <div class="part">
+              <p class="part-head">
+                <span class="kind-flag k-elsewhere">read elsewhere</span>
+                <span class="part-n">
+                  Declared under this namespace but read only by other components — the name
+                  attributes the hook to the wrong owner.
+                </span>
+              </p>
+              <table class="findings">
+                <thead><tr><th>Token</th><th>Read by</th></tr></thead>
+                <tbody>
+                  {n.readElsewhere.map((r) => (
+                    <tr><td><code>{r.token}</code></td><td class="dim">{r.by.join(', ')}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </details>
+      ))
+    )}
+
+    {exempt.length > 0 && (
+      <>
+        <h3 class="sub">Exempt by decision</h3>
+        <p class="part-n">
+          Unread, and <em>deliberately</em> so — the component exists and these map onto real
+          elements in it. Listed in full rather than filtered out, because an exemption that
+          removed them from the page would be indistinguishable from having wired them. Each
+          entry has to say what a spoke gives up; that sentence is the price of the exemption.
+        </p>
+        <table class="findings exemptions">
+          <thead><tr><th>Namespace</th><th>Owner</th><th>What a spoke loses</th></tr></thead>
+          <tbody>
+            {chromeExemptions.map((c) => (
+              <tr>
+                <td><code>{c.prefix}*</code></td>
+                <td><code>{c.owner}</code></td>
+                <td class="dim">{c.cost}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {exempt.map((n) => (
+          <details class="ns">
+            <summary>
+              <span class="ns-name">
+                <code>--{n.ns}-*</code>
+                {n.slug && <a class="ns-slug" href={`/components/${n.slug}`}>{n.slug}</a>}
+                <span class="kind-flag k-exempt">exempt</span>
+              </span>
+              <span class="summary-right"><span class="ns-count">{n.read}/{n.declared}</span></span>
+            </summary>
+            <table class="findings">
+              <thead><tr><th>Token</th><th>Resolves to</th></tr></thead>
+              <tbody>
+                {n.gaps.map((g) => (
+                  <tr><td><code>{g.token}</code></td><td class="dim">{g.resolved}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
+        ))}
+      </>
+    )}
+
+    <details class="ns clean">
+      <summary>
+        <span class="ns-name"><code>Fully delivered</code></span>
+        <span class="summary-right"><span class="ns-count">{clean.length} namespaces</span></span>
+      </summary>
+      <p class="part-n pad">
+        Every declared token in these is read. Listed so the page shows the whole surface, not
+        only its failures.
+      </p>
+      <ul class="clean-list">
+        {clean.map((n) => (
+          <li>
+            <code>--{n.ns}-*</code>
+            <span class="dim">{n.declared}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
+  </Section>
+
+  <Section id="nested" title="Tokens naming another component">
+    <p>
+      A tier-3 token is for a part the component draws <em>itself</em>. When the &ldquo;part&rdquo; is
+      really another component, it should be <b>composed</b> and themed through <em>its</em> tokens.
+      <code>--sidenav-user-avatar-bg</code> was the first of these found — <code>esa-avatar</code>
+      already owns <code>--avatar-bg</code>, so the token was a second avatar implementation living
+      in the token file. The tell is in the name: two nested part words means you have stopped
+      naming a part and started naming a component tree.
+    </p>
+    <p class="part-n">
+      Reported apart from the gap tally, and deliberately so — this is a different defect class, and
+      folding classes into one bucket is what let <code>--topbar-*</code> hide. A group appears only
+      when at least one of its tokens has a <b>direct counterpart</b> in the child&rsquo;s namespace;
+      that filter is what removes the noise. The 13 tokens naming <code>icon</code> are suppressed
+      because <code>esa-icon</code> has no tier-3 surface at all, so a parent sizing a glyph inside
+      its own layout is correct. <code>--pagination-button-color</code> is suppressed because
+      <code>esa-button</code> declares only <code>--button-on-warning</code> — there is no
+      <code>--button-color</code> to duplicate.
+    </p>
+    {nestedComponents.map((g) => (
+      <details class="ns" open={g.status === 'open'}>
+        <summary>
+          <span class="ns-name">
+            <code>--{g.ns}-*</code>
+            <span class="dim">names</span>
+            <a class="ns-slug" href={`/components/${g.slug}`}>{g.slug}</a>
+            <span class={`kind-flag n-${g.status}`}>{NESTING_LABEL[g.status]}</span>
+          </span>
+          <span class="summary-right"><span class="ns-count">{g.tokens.length}</span></span>
+        </summary>
+        {g.note && <p class="part-n pad">{g.note}</p>}
+        <table class="findings">
+          <thead><tr><th>Token</th><th>Counterpart it duplicates</th></tr></thead>
+          <tbody>
+            {g.tokens.map((t) => (
+              <tr>
+                <td><code>{t.token}</code></td>
+                <td>{t.counterpart ? <code>{t.counterpart}</code> : <span class="dim">— (same family, no direct counterpart)</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    ))}
+  </Section>
+
+  <Section id="adhoc" title="Under-promise — read, declared nowhere">
+    <p>
+      The inverse failure. These hooks <em>work</em> — the component reads them with an inline
+      fallback, and <code>SPEC.md</code> permits the pattern — but no token file declares them, so
+      nothing outside the component&rsquo;s own source records that they exist. They show on the
+      component&rsquo;s Theming surface table as tier <code>ad-hoc</code>; they do not show in
+      <code>component-tokens.css</code>, which is where a spoke author looks first.
+    </p>
+    {adHoc.map((g) => (
+      <details class="ns">
+        <summary>
+          <span class="ns-name">
+            <a class="ns-slug" href={`/components/${g.slug}`}>{g.slug}</a>
+            {g.type && <span class="ns-type">{g.type}</span>}
+          </span>
+          <span class="summary-right"><span class="ns-count">{g.tokens.length}</span></span>
+        </summary>
+        <table class="findings">
+          <thead><tr><th>Token</th><th>Fallback</th></tr></thead>
+          <tbody>
+            {g.tokens.map((t) => (
+              <tr>
+                <td><code>{t.token}</code></td>
+                <td class="dim">{t.fallback ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    ))}
+  </Section>
+
+  {undefinedReads.length > 0 && (
+    <Section id="undef" title="Undefined reads">
+      <p>
+        Read with <b>no fallback</b> and declared nowhere, so the declaration drops entirely.
+        Unambiguous bugs.
+      </p>
+      <table class="findings">
+        <thead><tr><th>Component</th><th>Token</th></tr></thead>
+        <tbody>
+          {undefinedReads.map((u) => (
+            <tr><td><code>{u.slug}</code></td><td><code>{u.token}</code></td></tr>
+          ))}
+        </tbody>
+      </table>
+    </Section>
+  )}
+</article>
+
+<style is:inline>
+  /* Page-scoped styles are normally banned in this system — allowed here only
+     because this page is debug-only and never ships. Namespaced under
+     .promises-debug for the same reason .tokens-debug is: is:inline is unscoped. */
+  .promises-debug .dev-banner {
+    border: 1px dashed var(--color-warning-strong, #ab6400);
+    background: var(--color-warning-subtle, #fffbeb);
+    color: var(--color-text-primary, #111);
+    padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
+    border-radius: var(--radius-surface, 6px);
+    font-size: 0.9rem;
+  }
+  .promises-debug .why {
+    border-left: 2px solid var(--color-border, #d4d4d4);
+    padding-left: var(--spacing-400, 16px);
+    color: var(--color-text-secondary, #666);
+    font-size: 0.9rem;
+  }
+  .promises-debug .tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-300, 12px);
+    margin: var(--spacing-500, 20px) 0;
+  }
+  .promises-debug .tally-cell {
+    flex: 1 1 8rem;
+    padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
+    border: 1px solid var(--color-border, #d4d4d4);
+    border-radius: var(--radius-surface, 6px);
+    background: var(--color-surface, #fff);
+  }
+  .promises-debug .tally-cell b { display: block; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .promises-debug .tally-cell span { font-size: 0.75rem; color: var(--color-text-secondary, #666); }
+  .promises-debug .tally-cell.ok { border-left: 3px solid var(--color-success-strong, #5c7c2f); }
+  .promises-debug .tally-cell.warn { border-left: 3px solid var(--color-warning-strong, #ab6400); }
+  .promises-debug .tally-cell.bad { border-left: 3px solid var(--color-danger-strong, #ce2c31); }
+
+  .promises-debug .kinds { margin: 0; }
+  .promises-debug .kind-row {
+    display: grid;
+    grid-template-columns: 10rem 1fr;
+    gap: var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) 0;
+    border-top: 1px solid var(--color-border-light, #e5e5e5);
+  }
+  .promises-debug .kind-row dt { margin: 0; }
+  .promises-debug .kind-row dd { margin: 0; font-size: 0.875rem; color: var(--color-text-secondary, #666); }
+  .promises-debug .kind-n { font-variant-numeric: tabular-nums; color: var(--color-text-muted, #888); font-size: 0.8rem; }
+
+  .promises-debug .kind-flag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: var(--radius-control, 4px);
+    font-size: 0.7rem;
+    font-weight: 550;
+    white-space: nowrap;
+  }
+  /* -strong (step 11) is the "coloured text on surfaces" step; -subtle is the
+     wash behind it. Step 9 is a solid FILL and would fail contrast as text. */
+  .promises-debug .kind-flag.k-no-component { background: var(--color-danger-subtle, #ffefef); color: var(--color-danger-strong, #ce2c31); }
+  .promises-debug .kind-flag.k-missing-part { background: var(--color-warning-subtle, #fffbeb); color: var(--color-warning-strong, #ab6400); }
+  .promises-debug .kind-flag.k-unwired { background: var(--color-info-subtle, #eff6ff); color: var(--color-info-strong, #0d74ce); }
+  .promises-debug .kind-flag.k-elsewhere { background: var(--color-surface-sunken, #f0f0f0); color: var(--color-text-secondary, #666); }
+  .promises-debug .kind-flag.k-exempt { background: var(--color-surface-sunken, #f0f0f0); color: var(--color-text-secondary, #666); }
+  .promises-debug .kind-flag.n-open { background: var(--color-warning-subtle, #fffbeb); color: var(--color-warning-strong, #ab6400); }
+  .promises-debug .kind-flag.n-accepted { background: var(--color-surface-sunken, #f0f0f0); color: var(--color-text-secondary, #666); }
+  .promises-debug .kind-flag.n-resolved { background: var(--color-success-subtle, #f3fbf0); color: var(--color-success-strong, #5c7c2f); }
+  .promises-debug h3.sub { margin-top: var(--spacing-500, 20px); font-size: 0.95rem; }
+  .promises-debug table.exemptions { margin-bottom: var(--spacing-300, 12px); }
+  .promises-debug table.exemptions td:last-child { font-size: 0.8rem; }
+
+  .promises-debug details.ns {
+    border: 1px solid var(--color-border-light, #e5e5e5);
+    border-radius: var(--radius-surface, 6px);
+    margin-bottom: var(--spacing-250, 10px);
+    background: var(--color-surface, #fff);
+  }
+  .promises-debug details.ns > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-300, 12px);
+    padding: var(--spacing-250, 10px) var(--spacing-300, 12px);
+    cursor: pointer;
+    font-size: 0.9rem;
+    /* Generous target: the whole summary row is clickable, not just the marker. */
+  }
+  .promises-debug .ns-name { display: inline-flex; align-items: center; gap: var(--spacing-250, 10px); flex-wrap: wrap; }
+  .promises-debug .ns-slug { font-size: 0.8rem; color: var(--color-text-secondary, #666); }
+  .promises-debug .ns-slug.none { color: var(--color-danger-strong, #ce2c31); }
+  .promises-debug .ns-type { font-size: 0.7rem; color: var(--color-text-muted, #888); }
+  .promises-debug .summary-right { display: inline-flex; align-items: center; gap: var(--spacing-250, 10px); }
+  .promises-debug .ns-count { font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--color-text-secondary, #666); }
+  .promises-debug .bar {
+    display: inline-block;
+    width: 6rem;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-surface-sunken, #f0f0f0);
+    overflow: hidden;
+  }
+  .promises-debug .bar i { display: block; height: 100%; background: var(--color-success-strong, #5c7c2f); }
+
+  .promises-debug .part { padding: 0 var(--spacing-300, 12px) var(--spacing-300, 12px); }
+  .promises-debug .part-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-250, 10px);
+    flex-wrap: wrap;
+    margin: var(--spacing-250, 10px) 0;
+  }
+  .promises-debug .part-n { font-size: 0.8rem; color: var(--color-text-secondary, #666); }
+  .promises-debug .part-n.pad { padding: 0 var(--spacing-300, 12px); }
+
+  .promises-debug table.findings { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .promises-debug table.findings th {
+    text-align: left;
+    font-weight: 550;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary, #666);
+    border-bottom: 1px solid var(--color-border-light, #e5e5e5);
+    padding: var(--spacing-150, 6px) var(--spacing-200, 8px);
+  }
+  .promises-debug table.findings td {
+    padding: var(--spacing-150, 6px) var(--spacing-200, 8px);
+    border-bottom: 1px solid var(--color-border-light, #e5e5e5);
+    vertical-align: top;
+  }
+  .promises-debug .dim { color: var(--color-text-muted, #888); }
+  .promises-debug .empty { color: var(--color-text-secondary, #666); font-size: 0.9rem; }
+
+  .promises-debug .clean-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-200, 8px);
+    list-style: none;
+    margin: 0;
+    padding: var(--spacing-300, 12px);
+  }
+  .promises-debug .clean-list li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--spacing-150, 6px);
+    padding: 2px 8px;
+    border: 1px solid var(--color-border-light, #e5e5e5);
+    border-radius: var(--radius-control, 4px);
+    font-size: 0.8rem;
+  }
+</style>

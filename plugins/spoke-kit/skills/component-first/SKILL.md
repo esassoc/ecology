@@ -1,6 +1,6 @@
 ---
 name: component-first
-description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, type-roles, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, on writing UI-generating JavaScript (innerHTML, template-literal markup, DOM-built controls, public/scripts/*.js, or any non-Astro/runtime-rendered app), and on "make a component", "build a page/screen", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order AND the manifest-first / sections-are-components discipline (every page section resolves to an esa-* lego or a <spoke>-* component; zero page <style>). NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides, and NEVER inline a page section as bare markup + page <style>. Runtime/JS-built UI does NOT exempt you: the .astro legos are compile-time, but the Lit web components (esa-dialog, esa-select, esa-text-field, esa-tab-layout, …) are real custom elements usable from any JS string — and the PreToolUse hooks CANNOT see string-built markup, so a green hook run is not evidence of compliance.
+description: MANDATORY before building ANY UI in this @esa/ecology spoke — components, forms, dialogs, drawers, dropzones, file uploads, buttons, cards, badges, pills, chips, empty states, tooltips, AND page layout/composition (layouts.css primitives, typography composites, page-header/stat/app-shell, filter bars, omniboxes). Triggers on editing .astro/.css/.scss, on writing UI-generating JavaScript (innerHTML, template-literal markup, DOM-built controls, public/scripts/*.js, or any non-Astro/runtime-rendered app), and on "make a component", "build a page/screen", "style this", "lay out this page", "add a modal/drawer/dropzone/file upload". Enforces the Ecology → Beacon → bcn- lookup order AND the manifest-first / sections-are-components discipline (every page section resolves to an esa-* lego or a <spoke>-* component; zero page <style>). NEVER hand-roll a UI primitive OR bespoke flex/grid CSS that an esa-* lego or layout primitive already provides, and NEVER inline a page section as bare markup + page <style>. Runtime/JS-built UI does NOT exempt you: the .astro legos are compile-time, but the Lit web components (esa-dialog, esa-select, esa-text-field, esa-tab-layout, …) are real custom elements usable from any JS string — and the PreToolUse hooks CANNOT see string-built markup, so a green hook run is not evidence of compliance.
 ---
 
 # Component-First (Legos, Never Reinvent)
@@ -72,8 +72,8 @@ esa-tooltip
   `.sidebar` `.switcher` `.frame` `.reel` — composable utility classes, gap via
   `data-gap="xs|sm|md|lg|xl"`, per-primitive knobs like `--grid-min`. Use these instead of
   bespoke flex/grid CSS.
-- **Typography roles** (`@esa/tokens/type-roles.css`): `.type-page-title` `.type-card-title`
-  `.type-body` `.type-label` … — style text with role classes, **never** raw `--type-size-*`
+- **Typography composites** (`@esa/tokens/typography.css`): `.typography-heading-lg` `.typography-title`
+  `.typography-body-md` `.typography-label` … — style text with a composite class, **never** raw `--font-size-*`
   in pages.
 - **Mid-tier legos**: `esa-page-header` (title/lede/actions), `esa-stat` (value/label/sub/
   accent), `esa-app-shell` (the canonical neutral chrome).
@@ -144,7 +144,7 @@ the hub's component catalog (`/components`) and Pattern Library (`/patterns`), a
 
 **NEVER inline a section as page markup + page `<style>`.** Primitives
 (`@esa/tokens/layouts.css`: stack/cluster/repel/grid/sidebar/switcher/frame/reel/`center`)
-and type roles (`@esa/tokens/type-roles.css`) are the page SPINE and live *inside*
+and typography composites (`@esa/tokens/typography.css`) are the page SPINE and live *inside*
 components — they are never themselves a section.
 
 ### "Page CSS" is a smell — target ZERO page `<style>`

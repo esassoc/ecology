@@ -12,7 +12,7 @@ Precedence rule for this shape: **when the app already resolves the domain input
 
 State the API divergence from Beacon in the report as deliberate (following the hub's presentational split).
 
-**Visual delta to expect (intentional).** On HEAD `input-errors` rendered each error as an `<esa-alert-box variant="danger">` — a pink callout box (a Slice-1 bridge from the original `<note noteType="danger">`). The swap turns that into the hub's lightweight **inline danger line** (no box/border/fill; `--color-danger` text at `--type-size-100`, line-height 1.4, `margin-block-start` ≈ `--spacing-100`). That's the intended design-system end state, not a regression.
+**Visual delta to expect (intentional).** On HEAD `input-errors` rendered each error as an `<esa-alert-box variant="danger">` — a pink callout box (a Slice-1 bridge from the original `<note noteType="danger">`). The swap turns that into the hub's lightweight **inline danger line** (no box/border/fill; `--color-danger` text at `--font-size-100`, line-height 1.4, `margin-block-start` ≈ `--spacing-100`). That's the intended design-system end state, not a regression.
 
 **Token gap:** `--form-help-gap` isn't in the app theme — use it as a hook with a `--spacing-100` fallback and flag it (dormant until the Ecology form tokens land).
 

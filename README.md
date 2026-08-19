@@ -94,7 +94,7 @@ docs/              governance, promotion path, gap analysis, improvement ledger
 
 ### Token tiers
 
-1. **Primitive** — raw values (`tokens/primitive/*.json`) → `--color-teal-900`, `--spacing-400`
+1. **Primitive** — raw values (`tokens/primitive/*.json`) → `--color-teal-9`, `--spacing-400`
 2. **Semantic** — intent, references primitives (`tokens/semantic/*.json`) → `--color-primary`
 3. **Component** — per-component theming surface → `--form-border-color`, `--sidenav-bg`
 
@@ -147,7 +147,7 @@ the first spoke):
 
 1. **Primitives never move.** To change a neutral or ramp value, re-point the
    *semantic* token that consumes it (`--color-border`, `--color-text-muted`) — do
-   **not** override the primitive (`--color-gray-200`). Primitives are the shared
+   **not** override the primitive (`--color-gray-3`). Primitives are the shared
    floor; moving them breaks the contract for every component.
 2. **The type contract is a matched set.** A brand swaps two faces — `--font-sans`
    (body) and `--font-display` (headlines; defaults to sans, read by the display/

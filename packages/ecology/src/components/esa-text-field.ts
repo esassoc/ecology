@@ -135,7 +135,7 @@ export class EsaTextField extends LitElement {
       --_field-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 0.5rem);
       --_field-border-color: var(--form-border-color, #e5e5e5);
-      --_label-font-size: var(--type-size-200, 0.9375rem);
+      --_label-font-size: var(--font-size-200, 0.9375rem);
       display: block;
       font-family: var(--font-sans, sans-serif);
     }
@@ -145,7 +145,7 @@ export class EsaTextField extends LitElement {
       --_field-font-size: var(--form-font-size-xs, 0.8125rem);
       --_field-height: var(--form-height-xs, 28px);
       --_field-radius: var(--form-radius-xs, 0.25rem);
-      --_label-font-size: var(--type-size-050, 0.8125rem);
+      --_label-font-size: var(--font-size-050, 0.8125rem);
     }
     :host([size='sm']) {
       --_field-padding-y: var(--form-padding-y-sm, 0.375rem);
@@ -153,7 +153,7 @@ export class EsaTextField extends LitElement {
       --_field-font-size: var(--form-font-size-sm, 0.875rem);
       --_field-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 0.25rem);
-      --_label-font-size: var(--type-size-150, 0.875rem);
+      --_label-font-size: var(--font-size-150, 0.875rem);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--form-padding-y-lg, 0.75rem);
@@ -161,7 +161,7 @@ export class EsaTextField extends LitElement {
       --_field-font-size: var(--form-font-size-lg, 1.125rem);
       --_field-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 0.5rem);
-      --_label-font-size: var(--type-size-300, 1.125rem);
+      --_label-font-size: var(--font-size-300, 1.125rem);
     }
 
     .field {
@@ -171,7 +171,7 @@ export class EsaTextField extends LitElement {
 
     .label {
       color: var(--form-label-color, #171717);
-      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 450));
+      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 500));
       font-size: var(--form-label-font-size, var(--_label-font-size));
       margin-block-end: var(--form-label-gap, 4px);
     }
@@ -194,6 +194,10 @@ export class EsaTextField extends LitElement {
       transition:
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
+    }
+    /* Defaults to --form-bg, so the field is flat on hover unless a theme opts in. */
+    .control:hover:not(:has(.input:disabled)) {
+      background: var(--form-bg-hover, var(--form-bg, #fff));
     }
     .control:focus-within {
       --_field-border-color: var(--form-border-color-focus, #43608a);
@@ -259,7 +263,7 @@ export class EsaTextField extends LitElement {
     .error {
       margin: 0;
       margin-block-start: var(--form-help-gap, 4px);
-      font-size: var(--type-size-100, 0.75rem);
+      font-size: var(--font-size-100, 0.75rem);
     }
     .help {
       color: var(--form-help-color, #737373);

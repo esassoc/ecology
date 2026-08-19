@@ -168,7 +168,7 @@ export class EsaColorPicker extends LitElement {
       margin-bottom: var(--spacing-100, 4px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-primary, #171717);
     }
     .controls {

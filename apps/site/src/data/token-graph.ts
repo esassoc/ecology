@@ -188,7 +188,33 @@ if (existsSync(COMPONENTS)) {
 
 /* -------------------------------------------------------------- build nodes */
 
-const COLOR_RE = /^(#|rgb|hsl|oklch|color\()/i;
+const COLOR_RE = /^(#|rgb|hsl|oklch|color\(|color-mix\()/i;
+
+/**
+ * A value that is nothing but a var() reference. `lineageOf` resolves these by
+ * walking to the terminal literal, which is right — the token IS its referent.
+ */
+const PURE_VAR = /^var\(\s*--[a-zA-Z][a-zA-Z0-9-]*\s*(,[\s\S]*)?\)$/;
+
+/**
+ * A value that WRAPS a reference — `color-mix(in srgb, var(--color-primary) 8%,
+ * transparent)`. Walking to the terminal here throws the wrapper away and
+ * reports the solid brand colour, so a 8% wash rendered as a swatch came out as
+ * a solid block. Substitute into the expression instead, which is both accurate
+ * and still valid CSS for the swatch to paint.
+ */
+const resolveEmbedded = (value: string): string =>
+  value.replace(/var\(\s*(--[a-zA-Z][a-zA-Z0-9-]*)\s*(?:,[^()]*)?\)/g, (whole, ref: string) => {
+    const end = lineageOf(`var(${ref})`).at(-1);
+    return end?.kind === 'raw' ? end.ref : whole;
+  });
+
+const resolveValue = (value: string, terminal: LineageLink | undefined): string =>
+  PURE_VAR.test(value.trim())
+    ? terminal?.kind === 'raw'
+      ? terminal.ref
+      : value
+    : resolveEmbedded(value);
 
 const nodes = new Map<string, TokenNode>();
 
@@ -201,8 +227,8 @@ for (const [name, value] of defs) {
     name,
     tier,
     value,
-    resolved: terminal?.kind === 'raw' ? terminal.ref : value,
-    isColor: COLOR_RE.test((terminal?.kind === 'raw' ? terminal.ref : value).trim()),
+    resolved: resolveValue(value, terminal),
+    isColor: COLOR_RE.test(resolveValue(value, terminal).trim()),
     description: tier === 'semantic' ? semanticSrc.get(name) : primitiveSrc.get(name),
     lineage,
     refs: refsOf(value),
@@ -348,20 +374,23 @@ const PRIMITIVE_CATEGORIES: {
   {
     label: 'Typography',
     note:
-      'The individual values available for font-family, font-size, font-weight, line-height, letter-spacing, and text-transform. These are meant to be combined into COMPOSITE tokens at tier 2 — a type role names one family + size + weight + line-height together, so components reference the role rather than assembling four primitives at the call site.',
-    gap:
-      'Two divergences. (1) There are no text-transform primitives at all. (2) There is no tier-2 typography composite — tokens/semantic/ contains only color.json, layout.json, and effect.json. The composite job is currently done by src/type-roles.css, which ships CSS utility CLASSES rather than tokens, so a type role cannot be referenced by a token, re-pointed by a theme, or exported to Figma the way a composite token could.',
-    match: (n) => /^--(font-|type-size-|line-height-|letter-spacing-|text-transform-|text-case-)/.test(n),
-    // Order matters: --font-weight-bold also starts with --font-, so weight has
-    // to be claimed before family.
+      'The individual values available for font-family, font-size, font-weight, font-style, line-height, letter-spacing, and text-transform. Every one is named `--<css-property>-<value>` — the property it sets plus the value it holds — so the name reads as the declaration it ends up in. They are combined into COMPOSITE tokens at tier 2 (`--typography-<intention>[-<size>]-<property>`), which src/typography.css assembles into the `.type-*` classes. Components and spokes reference a role; nothing outside this tier assembles primitives at the call site.',
+    gap: undefined,
+    match: (n) => /^--(font-|line-height-|letter-spacing-|text-transform-|font-style-)/.test(n),
+    // Order matters and is fragile: every key here is a prefix of `--font-`, so
+    // the most specific has to be claimed first. `--font-family-dm-sans` and
+    // `--font-size-200` both start with `--font-`, so a bare `--font-` test
+    // placed above them silently swallows both — which is exactly what happened
+    // when --type-size-* was renamed to --font-size-*.
     subGroupKey: (n) =>
       n.startsWith('--font-weight-') ? 'font-weight'
-      : n.startsWith('--font-') ? 'font-family'
-      : n.startsWith('--type-size-') ? 'font-size'
+      : n.startsWith('--font-size-') ? 'font-size'
+      : n.startsWith('--font-family-') ? 'font-family'
+      : n.startsWith('--font-style-') ? 'font-style'
       : n.startsWith('--line-height-') ? 'line-height'
       : n.startsWith('--letter-spacing-') ? 'letter-spacing'
       : 'text-transform',
-    expect: ['font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform'],
+    expect: ['font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'text-transform'],
   },
   {
     label: 'Spacing',
@@ -404,10 +433,17 @@ const PRIMITIVE_CATEGORIES: {
 
 /**
  * The universal/core set: tier-1 tokens shared by EVERY theme, as opposed to the
- * brand ramps a theme re-points. Three sets qualify —
+ * brand ramps a theme re-points. Two sets qualify —
  *   - the neutral (gray) palette: the greyscale the UI is built on
- *   - the utility palette: fixed error / warning / success / info values
  *   - spacing: explicit values every theme follows, so there is nothing to re-skin
+ *
+ * There was a third, the utility palette (error / warning / success / info). It
+ * matched `--color-status-*`, a block of tier-1 ALIASES that existed mainly to
+ * give the utility palette a tier-1 home — see the tier-1 naming audit. Those
+ * are gone: the tier-2 roles they fed now point straight at their ramp steps.
+ * The concept did not disappear, it moved tiers, and since Core is by definition
+ * a view over tier 1 it no longer has members here. Whether those roles are
+ * theme-invariant is now a tier-2 question.
  *
  * This is an ORTHOGONAL axis, not an eighth property category. A gray step is
  * both "Color -> gray ramp" and "core"; filing it under Core INSTEAD of Color
@@ -421,11 +457,6 @@ const CORE_SETS: { label: string; note: string; match: (n: string) => boolean }[
     label: 'neutral color palette',
     note: 'The greyscale values the UI is built on — surfaces, text, borders. Defined once here rather than per theme because every theme shares them.',
     match: (n) => /^--color-(gray|black-a|white-a)/.test(n),
-  },
-  {
-    label: 'utility color palette',
-    note: 'Messaging values — error, warning, success, info. Fixed across themes so a danger state means the same thing everywhere.',
-    match: (n) => n.startsWith('--color-status-'),
   },
   {
     label: 'spacing',
@@ -554,13 +585,68 @@ export const adHocHooks: Finding[] = undeclared
     where: [...componentUse.get(t)!].sort().join(', '),
   }));
 
+/**
+ * Namespaces declared AHEAD of the component that will read them, so the
+ * theming contract is reviewable before code depends on it. Unread by
+ * definition — they are not orphans, and counting them as such buries the
+ * hooks that really are dead. Each entry must be documented in SPEC.md
+ * ("Staged surfaces") and have a component doc page describing the contract.
+ *
+ * Removing a name from here should mean the component landed, not that the
+ * finding got annoying.
+ */
+export const STAGED_PREFIXES = ['--grid-'] as const;
+const isStaged = (name: string) => STAGED_PREFIXES.some((p) => name.startsWith(p));
+
+/**
+ * Chrome namespaces held EXEMPT by decision: the component exists and could
+ * read these, and we are choosing not to wire it. Distinct from staged, which
+ * means the component does not exist yet — `--topbar-*` sat under STAGED for
+ * months on that false premise, and because "staged" reads as "arriving soon"
+ * nobody re-checked it. The two must not share a bucket.
+ *
+ * `owner` is required and is the whole point: it records which component the
+ * surface belongs to, so the exemption can never again imply "nothing owns
+ * this". `cost` states plainly what a spoke loses, because an exemption that
+ * only says "ignore me" is how the last one went quiet.
+ */
+export const CHROME_EXEMPT: { prefix: string; owner: string; why: string; cost: string }[] = [
+  {
+    prefix: '--topbar-',
+    owner: 'esa-app-shell',
+    why: 'App chrome. esa-app-shell renders the bar, the sidebar toggle and the omnibox, and these 12 map onto them exactly — but chrome is held exempt from the wire-or-delete rule by decision.',
+    cost: 'A spoke overriding --topbar-bg, --topbar-icon-bg-hover or --topbar-search-* gets nothing. The chrome re-skins only through the semantic layer the component reads directly.',
+  },
+];
+const CHROME_PREFIXES = CHROME_EXEMPT.map((c) => c.prefix);
+const isChrome = (name: string) => CHROME_PREFIXES.some((p) => name.startsWith(p));
+
+const unread = allTokens.filter(
+  (t) => t.tier !== 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length,
+);
+
 /** Declared at tier 2 or 3 but nothing reads it — dead surface, or a hook
  *  nobody wired up. Primitives are deliberately excluded: an unused ramp step
  *  is normal (a 12-step scale is a palette, not a checklist) and 290-odd of
- *  them would bury every other finding on this page. See `unusedRampSteps`. */
-export const orphans: Finding[] = allTokens
-  .filter((t) => t.tier !== 'primitive' && !t.usedByTokens.length && !t.usedByComponents.length)
+ *  them would bury every other finding on this page. See `unusedRampSteps`.
+ *  Staged and chrome-exempt surfaces are excluded too — see below. */
+export const orphans: Finding[] = unread
+  .filter((t) => !isStaged(t.name) && !isChrome(t.name))
   .map((t) => ({ token: t.name, detail: `tier-${t.tier === 'semantic' ? 2 : 3} ${t.tier}, resolves to ${t.resolved}` }));
+
+/** Unread because the component hasn't been built yet. Inventory, not a defect. */
+export const stagedSurfaces: Finding[] = unread
+  .filter((t) => isStaged(t.name))
+  .map((t) => ({ token: t.name, detail: `staged — resolves to ${t.resolved}` }));
+
+/** Unread by DECISION, not by accident. The component exists; see CHROME_EXEMPT. */
+export const chromeSurfaces: Finding[] = unread
+  .filter((t) => isChrome(t.name))
+  .map((t) => ({
+    token: t.name,
+    detail: `exempt — resolves to ${t.resolved}`,
+    where: CHROME_EXEMPT.find((c) => t.name.startsWith(c.prefix))?.owner,
+  }));
 
 /** Ramp steps nothing references. Informational — this is the palette headroom,
  *  not a defect. Useful for spotting a scale that's carried but never used. */
@@ -612,16 +698,34 @@ export const themePrimitiveOverrides: Finding[] = (() => {
 
 /** Tier-3 token wired straight to a primitive, skipping the semantic layer.
  *  Sometimes correct (geometry has no semantic peer) — but a color doing this
- *  means a spoke re-pointing the semantic layer will NOT re-skin it. */
+ *  means a spoke re-pointing the semantic layer will NOT re-skin it.
+ *
+ *  Tested on what the token IS (`isColor`), not on whether its NAME contains
+ *  "color". The name test missed 19 of 22, because this system spells content
+ *  colour `bg` / `text` / `color` depending on the component —
+ *  `--snackbar-item-bg-danger` is plainly a colour and matches no name pattern. */
 export const tierSkips: Finding[] = byTier('component')
-  .filter((t) => t.lineage[0]?.kind === 'primitive' && t.name.includes('color'))
+  .filter((t) => t.lineage[0]?.kind === 'primitive' && t.isColor)
   .map((t) => ({ token: t.name, detail: `-> ${t.lineage[0].ref} directly (no semantic hop)` }));
 
-/** Semantic token that terminates in a raw literal without passing through a
- *  primitive — a hardcoded value hiding at tier 2. */
-export const semanticHardcodes: Finding[] = byTier('semantic')
-  .filter((t) => !t.lineage.some((l) => l.kind === 'primitive') && t.lineage.at(-1)?.kind === 'raw')
+const semanticRaw = byTier('semantic').filter(
+  (t) => !t.lineage.some((l) => l.kind === 'primitive') && t.lineage.at(-1)?.kind === 'raw',
+);
+
+/** Semantic COLOR terminating in a raw literal without passing through a ramp —
+ *  a magic value hiding at the intent layer, and a real defect: it is off the
+ *  palette, so nothing about the ramp constrains it. */
+export const semanticHardcodes: Finding[] = semanticRaw
+  .filter((t) => t.isColor)
   .map((t) => ({ token: t.name, detail: `raw ${t.resolved} — never touches a ramp` }));
+
+/** Semantic DIMENSION holding a literal. Not a defect: there is no tier-1 ramp
+ *  behind control heights, chip heights, or layout widths, so tier 2 is where
+ *  the definition legitimately lives. Listed as inventory so the set stays
+ *  visible — if one of these ever grows a tier-1 ramp, it should move onto it. */
+export const dimensionRoles: Finding[] = semanticRaw
+  .filter((t) => !t.isColor)
+  .map((t) => ({ token: t.name, detail: `defines ${t.resolved} — no tier-1 ramp behind it` }));
 
 /** Only the actionable checks count toward the headline number. Ad-hoc hooks
  *  and unused ramp steps are inventory, not defects — folding them in would

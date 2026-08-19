@@ -123,10 +123,10 @@ export class EsaFileList extends LitElement {
       padding: var(--file-list-row-padding-y, 2px)
         var(--file-list-row-padding-x, var(--spacing-300, 12px));
       border: var(--form-border-width, 1px) solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-100, 4px);
+      border-radius: var(--radius-control, 4px);
       background: var(--color-surface, #fff);
       font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
     }
     .file__icon {
       display: inline-flex;
@@ -165,7 +165,7 @@ export class EsaFileList extends LitElement {
       border: 0;
       background: transparent;
       color: var(--color-text-muted, #737373);
-      border-radius: var(--radius-100, 4px);
+      border-radius: var(--radius-control, 4px);
       cursor: pointer;
       flex-shrink: 0;
       transition:
@@ -181,7 +181,7 @@ export class EsaFileList extends LitElement {
       color: var(--color-text-primary, #171717);
     }
     .file__btn--remove:hover {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-danger-strong, #ce2c31);
     }
     .file__btn:focus-visible {
       outline: var(--focus-ring-width) solid var(--focus-ring-color);

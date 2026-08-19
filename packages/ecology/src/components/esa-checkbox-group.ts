@@ -164,7 +164,7 @@ export class EsaCheckboxGroup extends LitElement {
       margin-bottom: var(--spacing-200, 8px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_checkbox-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-primary, #171717);
     }
 
@@ -227,7 +227,7 @@ export class EsaCheckboxGroup extends LitElement {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_checkbox-font-size);
       color: var(--color-text-primary, #171717);
-      line-height: 1.4;
+      line-height: var(--line-height-tight, 1.3);
     }
   `;
 }

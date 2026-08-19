@@ -83,7 +83,7 @@ if (primClassAttr.test(content)) {
 
 // --- card / badge / pill / chip / tag primitives (class tokens only) ---
 // The primitive token must be the SUFFIX of a class name (followed by end-of-name,
-// not a hyphen continuation) so legit compound roles like `type-card-title` or a
+// not a hyphen continuation) so legit compound roles like `typography-title` or a
 // `--card-*` token don't false-positive. `.user-card`/`class="status-badge"` still hit.
 const CHIP = '(eoc|count-?badge|status-?badge|[a-z]+-badge|[a-z]+-pill|[a-z]+-chip|[a-z]+-tag|[a-z]+-card)';
 if (
@@ -106,8 +106,11 @@ if (/[\\/]src[\\/]pages[\\/]/i.test(file)) {
   if (/grid-template(?:-columns|-rows|-areas)?\s*:/i.test(content)) {
     violations.push('bespoke grid-template in a page -> use .grid (knob --grid-min) or .sidebar / .switcher, not a hand-rolled track list');
   }
-  if (/var\(\s*--type-size-/i.test(content) || /font-family\s*:/i.test(content)) {
-    violations.push('raw --type-size-*/font-family in a page -> apply a type role (@esa/tokens/type-roles.css): .type-page-title / .type-section-title / .type-card-title / .type-body / .type-label / .type-caption');
+  // `--font-size-<digit>` is the tier-1 ramp; `--font-size-ui-*` is a tier-2 role
+  // and is legitimate in a page. The digit is the only thing separating them —
+  // this prefix straddles two tiers until the namespace question is settled.
+  if (/var\(\s*--font-size-\d/i.test(content) || /font-family\s*:/i.test(content)) {
+    violations.push('raw --font-size-<step>/font-family in a page -> apply a type role (@esa/tokens/typography.css): .typography-heading-lg / .typography-heading-md / .typography-title / .typography-body-md / .typography-label / .typography-meta');
   }
 }
 
@@ -145,7 +148,7 @@ if (violations.length) {
       'Lookup order (do this, in order):',
       '  1. Ecology esa-* legos  -> ls node_modules/@esa/ecology/src/components/',
       '  2. Layout: @esa/tokens/layouts.css primitives (.stack/.cluster/.repel/.grid/.sidebar/.switcher/.frame).',
-      '     Type:   @esa/tokens/type-roles.css roles (.type-page-title/.type-section-title/.type-body/.type-label/...).',
+      '     Type:   @esa/tokens/typography.css roles (.typography-heading-lg/.typography-heading-md/.typography-body-md/.typography-label/...).',
       '  3. Beacon prod patterns (optional, if cloned) -> ~/Dev/Beacon/Beacon.Web/src/app/shared/ui/components/ + src/scss/',
       '  4. ONLY then a documented bcn- component.',
       '',

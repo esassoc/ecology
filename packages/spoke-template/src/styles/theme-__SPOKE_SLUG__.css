@@ -64,24 +64,32 @@
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
      where it's standalone. */
-  --color-success:  var(--color-green-700);  /* __FILL__ */
-  --color-warning:  var(--color-orange-500); /* __FILL__ */
+  --color-success:  var(--color-green-9);   /* __FILL__ */
+  --color-warning:  var(--color-orange-9);  /* __FILL__ */
   --color-info:     /* __FILL__ */ #228be6;
-  --color-ai:       var(--color-blue-500);   /* __FILL__ */
-  --color-ai-hover: var(--color-blue-700);   /* __FILL__ */
+  --color-ai:       var(--color-blue-9);    /* __FILL__ */
+  --color-ai-hover: var(--color-blue-10);   /* __FILL__ */
 
-  /* ===== (5) FORM SIZING + RADIUS — match this spoke's control heights =====
-     The hub defaults to xs 28 / sm 32 / md 40 / lg 48 and md/lg radius 8px.
-     Re-point if this spoke runs more compact / flatter. */
-  --form-height-xs: /* __FILL__ */ 24px;
-  --form-height-sm: /* __FILL__ */ 28px;
-  --form-height-md: /* __FILL__ */ 36px;
-  --form-height-lg: /* __FILL__ */ 44px;
+  /* ===== (5) CONTROL SIZING + SHAPE — match this spoke's density =====
+     These are SEMANTIC roles, so re-pointing one moves every component that
+     reads it. The hub defaults to controls xs 28 / sm 32 / md 40 / lg 48, and
+     surface corners at 8px. Re-point if this spoke runs more compact/flatter.
 
-  --form-radius-xs: /* __FILL__ */ var(--radius-100);
-  --form-radius-sm: /* __FILL__ */ var(--radius-100);
-  --form-radius-md: /* __FILL__ */ var(--radius-100);
-  --form-radius-lg: /* __FILL__ */ var(--radius-100);
+     Never re-point --radius-100/200/… or --spacing-*: those are primitives, and
+     moving one moves everything downstream of it. Move the ROLE. */
+  --control-height-xs: /* __FILL__ */ 24px;
+  --control-height-sm: /* __FILL__ */ 28px;
+  --control-height-md: /* __FILL__ */ 36px;
+  --control-height-lg: /* __FILL__ */ 44px;
+
+  --radius-control: /* __FILL__ small controls, badges, pills */ var(--radius-100);
+  --radius-surface: /* __FILL__ inputs, menus, panels — the most-used role */ var(--radius-100);
+  --radius-card:    /* __FILL__ cards, collapsibles */ var(--radius-200);
+  --radius-overlay: /* __FILL__ dialogs, command palette */ var(--radius-200);
+
+  /* Tier 3 is for a component that must diverge from the roles above — e.g.
+     inputs flatter than everything else. Delete if this spoke doesn't need it. */
+  /* --form-radius-md: var(--radius-050); */
 
   /* ===== (6) --button-on-warning — text color on a filled warning button =====
      Set to #fff if this spoke's warning fill is dark enough for white text;

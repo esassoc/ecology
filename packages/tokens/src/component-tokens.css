@@ -13,11 +13,15 @@
 
 :root {
   /* ===================== BUTTON ===================== */
-  /* Text/icon color painted on a solid `warning` fill. The right choice depends
-     on the themed --color-warning shade: a light amber wants dark text (the hub
-     default), a darker orange wants white. Themeable so a spoke whose warning is
-     dark (e.g. Beacon's #f2770e) can flip it to white without forking the button. */
-  --button-on-warning: var(--color-gray-12);
+  /* Text/icon color painted on a solid `warning` fill. Defaults to the tier-2
+     role so a filled warning button and an esa-badge warning agree by default —
+     they paint on the same --color-warning fill and must not diverge.
+     The hook stays because the right choice depends on the themed
+     --color-warning shade: a light amber wants dark text (the hub default), a
+     darker orange wants white. A spoke whose warning is dark (e.g. Beacon's
+     #f2770e) flips the button to white here without forking the component;
+     to move BOTH, re-point --color-warning-on-fill instead. */
+  --button-on-warning: var(--color-warning-on-fill);
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
@@ -25,27 +29,27 @@
   /* size — xs */
   --form-padding-y-xs: var(--spacing-100);
   --form-padding-x-xs: var(--spacing-200);
-  --form-font-size-xs: var(--type-size-050);
-  --form-height-xs: 28px;
-  --form-radius-xs: var(--radius-100);
+  --form-font-size-xs: var(--font-size-ui-xs);
+  --form-height-xs: var(--control-height-xs, 28px);
+  --form-radius-xs: var(--radius-control);
   /* size — sm */
   --form-padding-y-sm: var(--spacing-150);
   --form-padding-x-sm: var(--spacing-250);
-  --form-font-size-sm: var(--type-size-100);
-  --form-height-sm: 32px;
-  --form-radius-sm: var(--radius-100);
+  --form-font-size-sm: var(--font-size-ui-sm);
+  --form-height-sm: var(--control-height-sm, 32px);
+  --form-radius-sm: var(--radius-control);
   /* size — md (default) */
   --form-padding-y-md: var(--spacing-200);
   --form-padding-x-md: var(--spacing-300);
-  --form-font-size-md: var(--type-size-200);
-  --form-height-md: 40px;
-  --form-radius-md: var(--radius-200);
+  --form-font-size-md: var(--font-size-ui-md);
+  --form-height-md: var(--control-height-md, 40px);
+  --form-radius-md: var(--radius-surface);
   /* size — lg */
   --form-padding-y-lg: var(--spacing-300);
   --form-padding-x-lg: var(--spacing-400);
-  --form-font-size-lg: var(--type-size-300);
-  --form-height-lg: 48px;
-  --form-radius-lg: var(--radius-200);
+  --form-font-size-lg: var(--font-size-ui-lg);
+  --form-height-lg: var(--control-height-lg, 48px);
+  --form-radius-lg: var(--radius-surface);
   /* colors */
   --form-bg: var(--color-surface);
   --form-bg-hover: var(--color-surface);
@@ -55,6 +59,7 @@
   --form-border-color-focus: var(--color-border-focus);
   --focus-ring-color: var(--color-border-focus);
   --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
   --form-border-color-error: var(--color-danger);
   --form-text-color: var(--color-text-primary);
   --form-placeholder-color: var(--color-text-muted);
@@ -72,97 +77,180 @@
 
   /* ===================== FILTERS ===================== */
   --filter-container-gap: var(--spacing-200);
-  --filter-container-padding: var(--spacing-200) 0;
+  /* 0, not the old `spacing-200 0` — the bar has always rendered flush, so the
+     declared value was describing padding no spoke could have been seeing. */
+  --filter-container-padding: 0;
   --filter-dropdown-bg: var(--color-surface);
   --filter-dropdown-border: 1px solid var(--color-border);
-  --filter-dropdown-radius: var(--radius-200);
-  --filter-dropdown-shadow: var(--shadow-200);
+  --filter-dropdown-radius: var(--radius-surface);
+  --filter-dropdown-shadow: var(--elevation-3);
   --filter-dropdown-min-width: 200px;
+  /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
+     that is ACCEPTED, not an oversight — do not re-open it without new evidence.
+     esa-filter-pills hand-rolls its chip because the chip is not an esa-pill:
+     it renders a two-tone `label: value` where esa-pill takes one string in one
+     colour, and its remove button emits { name, value } for a parent to update
+     filter state where esa-pill removes ITSELF from the DOM (wrong for a
+     controlled list — the source of truth is the filter state, not the markup).
+     Composing would mean adding a default slot and an opt-out of self-removal to
+     esa-pill, which is `stable` and already read by esa-pillbox and
+     esa-file-list, to serve one caller.
+     Revisit only if esa-pill grows those two capabilities for other reasons;
+     then this collapses to scoped --pill-* aliases the way esa-header-nav's
+     avatar did. */
   --filter-pill-bg: var(--color-primary-bg);
   --filter-pill-bg-hover: var(--color-primary-bg-hover);
   --filter-pill-label-color: var(--color-text-secondary);
   --filter-pill-text: var(--color-primary-strong);
-  --filter-pill-radius: var(--radius-full);
-  --filter-pill-font-size: var(--type-size-100);
+  --filter-pill-radius: var(--radius-pill);
+  --filter-pill-font-size: var(--font-size-ui-sm);
   --filter-pill-remove-color: var(--color-text-secondary);
   --filter-pill-remove-color-hover: var(--color-danger-strong);
   --filter-clear-color: var(--color-text-muted);
   --filter-clear-color-hover: var(--color-danger-strong);
 
-  /* ===================== DATA GRID ===================== */
-  --grid-header-bg: var(--color-gray-2);
+  /* ===================== DATA GRID (STAGED) =====================
+     No esa-grid component ships yet — this is the theming contract the AG Grid
+     wrapper will read, and it is what /components/esa-grid documents. Declared
+     ahead of the component ON PURPOSE so the contract is reviewable before code
+     depends on it; see SPEC.md "Staged surfaces". Border tokens hold a COLOUR,
+     not a `1px solid …` shorthand, so a theme can re-point the colour without
+     restating width and style. */
+  --grid-bg: var(--color-surface);
+  --grid-border-color: var(--color-border);
+  --grid-radius: var(--radius-surface);
+  --grid-shadow: var(--elevation-3);
+  --grid-font-family: var(--font-sans);
+  --grid-font-size: var(--font-size-ui-md);
+  --grid-header-bg: var(--color-background);
   --grid-header-color: var(--color-text-primary);
   --grid-header-weight: var(--font-weight-semibold);
-  --grid-header-font-size: var(--type-size-100);
-  --grid-header-border: 1px solid var(--color-border);
+  --grid-header-font-size: var(--font-size-ui-sm);
+  --grid-header-border-color: var(--color-border);
   --grid-row-bg: var(--color-surface);
-  --grid-row-bg-hover: var(--color-gray-3);
+  --grid-row-bg-hover: var(--color-surface-sunken);
   --grid-row-bg-selected: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --grid-row-stripe-bg: var(--color-gray-2);
-  --grid-row-border: 1px solid var(--color-border-light);
-  --grid-row-font-size: var(--type-size-150);
-  --grid-cell-padding: var(--spacing-200) var(--spacing-300);
+  --grid-row-stripe-bg: var(--color-background);
+  --grid-row-border-color: var(--color-border-light);
+  --grid-row-font-size: var(--font-size-150);
+  --grid-cell-padding-x: var(--spacing-300);
+  --grid-cell-padding-y: var(--spacing-200);
   --grid-pagination-bg: var(--color-surface);
-  --grid-pagination-border: 1px solid var(--color-border);
+  --grid-pagination-border-color: var(--color-border);
   --grid-toolbar-bg: var(--color-surface);
   --grid-toolbar-gap: var(--spacing-200);
   --grid-toolbar-padding: var(--spacing-200) var(--spacing-300);
-  --grid-radius: var(--radius-200);
 
   /* ===================== NAVIGATION — SIDEBAR ===================== */
-  --sidenav-bg: #f5f5f5;
-  --sidenav-border: #e4e4e7;
-  --sidenav-item-padding-y: var(--spacing-250);
+  /* Were #f5f5f5 / #e4e4e7 — neither is a step on our gray ramp, and #e4e4e7
+     carried a blue tint (B+3 over R) that no Radix gray has. Both are Tailwind
+     values that predate this palette. On the roles now, so a spoke re-pointing
+     its neutrals moves the rail too. */
+  /* Every hook below is READ by esa-sidebar-nav. Defaults were re-pointed to the
+     values the component actually shipped — several were aspirational and had
+     drifted (nested-indent said 36px while the rail rendered 16px; link-bg-hover
+     said `transparent` while the row washed to surface-sunken), so declaring one
+     thing and painting another made the surface unusable: a spoke overriding a
+     "default" it could already see was the only way to get the shipped look back.
+     Hooks for behaviour the component does not do by default are declared at
+     their INERT value (0 / same-as-resting) so they stay zero-regression and
+     opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
+  --sidenav-bg: var(--color-surface-sunken);
+  --sidenav-border: var(--color-border-light);
+  /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
+     --sidenav-item-padding-y, which nothing could ever have read. */
+  --sidenav-item-height: 40px;
   --sidenav-item-padding-x: var(--spacing-300);
-  --sidenav-item-gap: var(--spacing-200);
-  --sidenav-icon-gap: var(--spacing-300);
-  --sidenav-icon-size: 20px;
-  --sidenav-icon-size-collapsed: 22px;
+  /* Gap BETWEEN rows. 0 = the shipped stacked rail; raise it for an airier one. */
+  --sidenav-item-gap: 0;
+  /* Gap between a row's icon and its label. */
+  --sidenav-icon-gap: var(--spacing-200);
+  --sidenav-icon-size: 18px;
+  --sidenav-icon-size-collapsed: 18px;
   --sidenav-section-text: var(--color-text-muted);
-  --sidenav-section-spacing: var(--spacing-400);
-  --sidenav-section-margin-top: var(--spacing-500);
-  --sidenav-nested-gap: var(--spacing-150);
-  --sidenav-nested-indent: 36px;
+  --sidenav-section-spacing: var(--spacing-300);
+  /* Extra breathing room above a group heading that follows another section. */
+  --sidenav-section-margin-top: 0;
+  --sidenav-nested-gap: 0;
+  --sidenav-nested-indent: var(--spacing-400);
   --sidenav-link-text: var(--color-text-secondary);
   --sidenav-link-bg: transparent;
-  --sidenav-link-text-hover: var(--color-text-primary);
-  --sidenav-link-bg-hover: transparent;
+  /* Inherits the resting colour by default — the rail signals hover with the
+     background wash alone. Re-point to also shift the text. */
+  --sidenav-link-text-hover: var(--sidenav-link-text);
+  --sidenav-link-bg-hover: var(--color-surface-sunken);
   --sidenav-link-text-active: var(--color-primary-strong);
-  --sidenav-link-bg-active: transparent;
-  --sidenav-link-weight-active: var(--font-weight-medium);
-  --sidenav-active-border-width: 2px;
+  --sidenav-link-bg-active: var(--color-primary-subtle);
+  --sidenav-link-weight-active: var(--font-weight-semibold);
+  /* Inset marker on the active row. Width 0 = off, which is what ships. */
+  --sidenav-active-border-width: 0;
   --sidenav-active-border-color: var(--color-primary);
-  --sidenav-user-border: var(--color-border-light);
-  --sidenav-user-text: var(--color-text-secondary);
-  --sidenav-user-text-hover: var(--color-text-primary);
-  --sidenav-user-avatar-bg: var(--color-gray-4);
-  --sidenav-user-avatar-text: var(--color-text-secondary);
-  --sidenav-divider: var(--color-border-light);
 
-  /* ===================== NAVIGATION — HEADER / TOPBAR ===================== */
-  --topbar-bg: var(--color-gray-3);
-  --topbar-border: var(--color-gray-6);
+  /* DELETED (2026-08-13) — six tokens describing a user/account block at the
+     foot of the rail: --sidenav-user-{border,text,text-hover,avatar-bg,
+     avatar-text} and --sidenav-divider. esa-sidebar-nav never had that block;
+     its published API has one slot, `header`, and it holds the brand lockup.
+     The chrome puts the user menu in the app bar instead (esa-app-shell ->
+     esa-dropdown-menu), which is the documented pattern.
+
+     They are not coming back in this shape. Two of them were a SECOND avatar
+     implementation — esa-avatar already owns --avatar-bg / --avatar-text-color
+     — two were plain text colours with no component-specific behaviour, and
+     two were one divider named twice. A tier-3 token is for a part the
+     component draws ITSELF; when the part is really another component it gets
+     composed, and it themes through its own tokens. The give-away was in the
+     name: --sidenav-user-avatar-bg nests two part words, which means it had
+     stopped naming a part and started naming a component tree.
+
+     If a rail user block is ever built, compose esa-avatar and add ONE divider
+     hook — not this namespace. */
+
+  /* ============ NAVIGATION — HEADER / TOPBAR (CHROME, EXEMPT) ============
+     Read by NOTHING, by decision. esa-app-shell renders every surface these
+     name — the bar, the sidebar toggle (--topbar-icon-*) and the omnibox
+     (--topbar-search-*) — and styles them from the semantic layer directly
+     instead. Held exempt from the wire-or-delete rule; see SPEC.md "Chrome
+     exemptions" and CHROME_EXEMPT in apps/site/src/data/token-graph.ts.
+
+     NOT staged. This block carried a STAGED banner for months on the premise
+     that no component existed to read it, which was never true.
+
+     The values below therefore document intent, not what paints. Seven of the
+     twelve already disagree with esa-app-shell's actual chrome (it renders the
+     bar on --color-surface, not surface-sunken; the toggle on text-tertiary,
+     not text-secondary). Do not trust them as a record of the shipped look —
+     read esa-app-shell.astro. If this is ever wired, reconcile there first. */
+  --topbar-bg: var(--color-surface-sunken);
+  --topbar-border: var(--color-border-light);
   --topbar-shadow: none;
-  --topbar-icon-color: var(--color-gray-11);
+  --topbar-icon-color: var(--color-text-secondary);
   --topbar-icon-color-hover: var(--color-primary);
   --topbar-icon-bg: transparent;
-  --topbar-icon-bg-hover: var(--color-gray-4);
+  --topbar-icon-bg-hover: var(--color-surface-hover);
   --topbar-icon-radius: 6px;
-  --topbar-search-bg: var(--color-gray-1);
-  --topbar-search-bg-hover: var(--color-gray-2);
-  --topbar-search-text: var(--color-gray-10);
-  --topbar-search-radius: 8px;
+  --topbar-search-bg: var(--color-surface);
+  --topbar-search-bg-hover: var(--color-background);
+  --topbar-search-text: var(--color-text-muted);
+  --topbar-search-radius: var(--radius-surface, 8px);
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
   --breadcrumbs-bg: transparent;
-  --breadcrumbs-text-color: var(--color-text-secondary);
+  /* The trail's non-link text — i.e. the current (last) crumb. Was declared as
+     text-secondary while the component painted text-primary; on the shipped
+     value now. */
+  --breadcrumbs-text-color: var(--color-text-primary);
   --breadcrumbs-link-color: var(--color-text-secondary);
   --breadcrumbs-link-hover: var(--color-text-primary);
-  --breadcrumbs-separator-color: var(--color-gray-8);
-  --breadcrumbs-pill-bg: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --breadcrumbs-pill-bg-hover: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  --breadcrumbs-pill-radius: var(--radius-full);
-  --breadcrumbs-pill-padding: var(--spacing-100) var(--spacing-250);
+  --breadcrumbs-separator-color: var(--color-border-strong);
+
+  /* DELETED (2026-08-13) — --breadcrumbs-pill-{bg,bg-hover,radius,padding}, a
+     "pill" breadcrumb variant esa-breadcrumbs never had: no markup, no prop, no
+     specimen. Same defect as the --sidenav-user-avatar-* tokens deleted the same
+     day — the part they named is a COMPONENT. esa-pill owns --pill-bg /
+     --pill-radius / --pill-text-color already, so a pill variant would compose
+     esa-pill and these four would be dead on arrival.
+     If the variant is ever built: compose esa-pill and scope --pill-* on the
+     crumb, the way esa-header-nav scopes --avatar-* on its user trigger. */
 }
 
 /* ============================================================
@@ -177,9 +265,9 @@
   /* esa-alert-box */
   --alert-box-bg: var(--color-info-subtle, #eff6ff);
   --alert-box-border-color: var(--color-info-border, #bfdbfe);
-  --alert-box-dismiss-bg-hover: rgba(0, 0, 0, 0.06);
+  --alert-box-dismiss-bg-hover: var(--color-hover-overlay-strong);
   --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-  --alert-box-radius: var(--radius-200, 0.5rem);
+  --alert-box-radius: var(--radius-surface, 0.5rem);
   --alert-box-text-color: var(--color-text-secondary, #525252);
   --alert-box-title-color: var(--color-text-primary, #171717);
 
@@ -199,17 +287,22 @@
 
   /* esa-avatar */
   --avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
-  --avatar-radius: var(--radius-full, 9999px);
+  --avatar-radius: var(--radius-pill, 9999px);
   --avatar-size-lg: 56px;
   --avatar-size-md: 40px;
   --avatar-size-sm: 28px;
   --avatar-size-xs: 20px;
   --avatar-text-color: var(--color-text-inverse, #fff);
+  /* Initials type. One hook rather than four: each size rule repeats it with its
+     own literal default, so an override lands on whichever size is active. Left
+     UNSET here on purpose — declaring a value would pin every size to one number
+     and destroy the scale. Callers set it in their own scope; esa-header-nav
+     does, to hold 12px initials in a 32px face. */
 
   /* esa-back-to-top */
   --back-to-top-bg: var(--color-primary, #43608a);
   --back-to-top-bottom: var(--spacing-500, 1.5rem);
-  --back-to-top-radius: var(--radius-full, 9999px);
+  --back-to-top-radius: var(--radius-pill, 9999px);
   --back-to-top-right: var(--spacing-500, 1.5rem);
   --back-to-top-size: 44px;
   --back-to-top-text: var(--color-text-inverse, #fff);
@@ -219,11 +312,11 @@
 
   /* esa-badge */
   --badge-bg: var(--color-primary, #43608a);
-  --badge-height-lg: 34px;
-  --badge-height-md: 28px;
-  --badge-height-sm: 22px;
-  --badge-height-xs: 18px;
-  --badge-radius: var(--radius-100, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
+  --badge-height-lg: var(--chip-height-lg, 34px);
+  --badge-height-md: var(--chip-height-md, 28px);
+  --badge-height-sm: var(--chip-height-sm, 22px);
+  --badge-height-xs: var(--chip-height-xs, 18px);
+  --badge-radius: var(--radius-control, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
   --badge-text-color: var(--color-text-inverse, #fff);
 
   /* esa-card */
@@ -234,35 +327,35 @@
   --card-header-border-color: var(--color-border-light, #efefef);
   --card-header-color: var(--color-text-primary, #171717);
   --card-padding: var(--spacing-500, 1.5rem);
-  --card-radius: var(--radius-300, 0.5rem);
+  --card-radius: var(--radius-card, 0.5rem);
 
   /* esa-collapsible */
   --collapsible-bg: var(--color-surface, #fff);
   --collapsible-border-color: var(--color-border, #e5e5e5);
   --collapsible-padding-x: var(--spacing-400, 1rem);
-  --collapsible-radius: var(--radius-300, 0.5rem);
+  --collapsible-radius: var(--radius-card, 0.5rem);
   --collapsible-title-color: var(--color-text-primary, #171717);
 
   /* esa-file-list */
   --color-link: var(--color-primary-strong, #3a7c59);
 
   /* esa-entity-search */
-  --color-primary-contrast: #fff;
+  --entity-search-selected-text: var(--color-text-inverse);
 
   /* esa-command-palette */
   --command-palette-bg: var(--color-surface-elevated, #ffffff);
   --command-palette-border-color: var(--color-border, #e5e5e5);
   --command-palette-item-bg-active: var(--color-surface-sunken, #efefef);
   --command-palette-max-height: 440px;
-  --command-palette-radius: var(--radius-400, 0.75rem);
-  --command-palette-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --command-palette-radius: var(--radius-overlay, 0.75rem);
+  --command-palette-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --command-palette-width: 560px;
 
   /* esa-confirm-dialog */
   --confirm-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
   --confirm-dialog-bg: var(--color-surface-elevated, #ffffff);
   --confirm-dialog-border-color: var(--color-border-light, #efefef);
-  --confirm-dialog-radius: var(--radius-400, 0.75rem);
+  --confirm-dialog-radius: var(--radius-overlay, 0.75rem);
   --confirm-dialog-width: 360px;
 
   /* esa-container */
@@ -272,16 +365,16 @@
   --danger-zone-bg: var(--color-danger-subtle, #fef2f2);
   --danger-zone-border-color: var(--color-danger-border, #fecaca);
   --danger-zone-description-color: var(--color-text-secondary, #525252);
-  --danger-zone-heading-color: var(--color-red-11);
+  --danger-zone-heading-color: var(--color-danger-strong);
   --danger-zone-padding: var(--spacing-300, 0.75rem);
-  --danger-zone-radius: var(--radius-200, 0.5rem);
+  --danger-zone-radius: var(--radius-surface, 0.5rem);
 
   /* esa-dialog */
   --dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
   --dialog-bg: var(--color-surface-elevated, #ffffff);
   --dialog-border-color: var(--color-border-light, #efefef);
   --dialog-color: var(--color-text-primary, #171717);
-  --dialog-radius: var(--radius-400, 0.75rem);
+  --dialog-radius: var(--radius-overlay, 0.75rem);
   --dialog-width: 480px;
   --dialog-width-lg: 640px;
   --dialog-width-sm: 360px;
@@ -293,7 +386,7 @@
   --dropdown-menu-item-color: var(--color-text-primary, #171717);
   --dropdown-menu-max-width: 280px;
   --dropdown-menu-min-width: 160px;
-  --dropdown-menu-radius: var(--radius-200, 0.5rem);
+  --dropdown-menu-radius: var(--radius-surface, 0.5rem);
 
   /* esa-empty-state */
   --empty-state-description-color: var(--color-text-secondary, #525252);
@@ -309,9 +402,9 @@
   --entity-search-bg: var(--color-surface-elevated, #ffffff);
   --entity-search-border-color: var(--color-border, #dcdcdc);
   --entity-search-max-height: 70vh;
-  --entity-search-radius: var(--radius-400, 0.75rem);
+  --entity-search-radius: var(--radius-overlay, 0.75rem);
   --entity-search-row-bg-active: var(--color-surface-sunken, #f3f7fc);
-  --entity-search-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --entity-search-shadow: var(--elevation-6, 0 20px 60px rgba(0, 0, 0, 0.2));
   --entity-search-width: 600px;
 
   /* esa-range-slider */
@@ -319,7 +412,7 @@
 
   /* esa-select */
   --form-label-font-size: var(--_field-font-size);
-  --form-label-font-weight: var(--font-weight-medium, 450);
+  --form-label-font-weight: var(--font-weight-medium, 500);
 
   /* esa-header-nav */
   --header-nav-avatar-bg: var(--color-primary, #43608a);
@@ -333,27 +426,20 @@
   --icon-link-font-size-sm: 0.875rem;
   --icon-link-gap: var(--spacing-150, 6px);
 
-  /* esa-file-upload */
-  --icon-size-large: 24px;
-  --icon-size-medium: 20px;
-
-  /* esa-combobox */
-  --icon-size-small: 16px;
-
   /* esa-kbd */
   --kbd-bg: var(--color-surface);
   --kbd-border-color: var(--color-border);
   --kbd-color: var(--color-text-muted);
-  --kbd-radius: 4px;
+  --kbd-radius: var(--radius-control, 4px);
 
   /* esa-link-column */
-  --link-column-heading-font-size: var(--type-size-200, 1rem);
-  --link-column-item-font-size: var(--type-size-150, 0.875rem);
+  --link-column-heading-font-size: var(--font-size-ui-md, 1rem);
+  --link-column-item-font-size: var(--font-size-150, 0.875rem);
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
   /* esa-loading-overlay */
   --loading-overlay-bg: var(--color-surface, #fff);
-  --loading-overlay-bg-transparent: rgba(255, 255, 255, 0.8);
+  --loading-overlay-bg-transparent: var(--color-scrim-light);
   --loading-overlay-message-color: var(--color-text-secondary, #525252);
   --loading-spinner-color: var(--color-primary, #43608a);
   --loading-spinner-track-color: var(--color-border-light, #efefef);
@@ -363,15 +449,15 @@
   --nav-dropdown-panel-border-color: var(--color-border, #e5e5e5);
   --nav-dropdown-panel-min-width: 240px;
   --nav-dropdown-panel-padding: var(--spacing-300, 12px);
-  --nav-dropdown-panel-radius: var(--radius-200, 8px);
-  --nav-dropdown-panel-shadow: var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12));
+  --nav-dropdown-panel-radius: var(--radius-surface, 8px);
+  --nav-dropdown-panel-shadow: var(--elevation-3, 0 8px 24px rgba(0, 0, 0, 0.12));
   --nav-dropdown-panel-text: var(--color-text-primary, #171717);
 
   /* esa-pagination */
   --pagination-bg: var(--color-surface, #ffffff);
   --pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
   --pagination-button-color: var(--color-text-primary, #171717);
-  --pagination-font-size: var(--type-size-200, 14px);
+  --pagination-font-size: var(--font-size-ui-md, 14px);
   --pagination-padding-x: var(--spacing-400, 16px);
   --pagination-padding-y: var(--spacing-200, 8px);
   --pagination-text-color: var(--color-text-secondary, #525252);
@@ -379,12 +465,12 @@
   /* esa-pill */
   --pill-bg: var(--color-surface-sunken, #efefef);
   --pill-border-color: var(--color-border-light, #efefef);
-  --pill-remove-bg-hover: rgba(0, 0, 0, 0.1);
-  --pill-height-lg: 34px;
-  --pill-height-md: 28px;
-  --pill-height-sm: 22px;
-  --pill-height-xs: 18px;
-  --pill-radius: var(--radius-100, 4px);
+  --pill-remove-bg-hover: var(--color-hover-overlay-heavy);
+  --pill-height-lg: var(--chip-height-lg, 34px);
+  --pill-height-md: var(--chip-height-md, 28px);
+  --pill-height-sm: var(--chip-height-sm, 22px);
+  --pill-height-xs: var(--chip-height-xs, 18px);
+  --pill-radius: var(--radius-control, 4px);
   --pill-text-color: var(--color-text-primary, #171717);
 
   /* esa-pillbox */
@@ -397,7 +483,7 @@
   --popover-border-color: var(--color-border, #e5e5e5);
   --popover-color: var(--color-text-primary, #171717);
   --popover-max-width: none;
-  --popover-radius: var(--radius-200, 0.5rem);
+  --popover-radius: var(--radius-surface, 0.5rem);
 
   /* esa-progress-bar */
   --progress-bar-fill-bg: var(--color-primary, #43608a);
@@ -405,7 +491,7 @@
   --progress-bar-height-md: 8px;
   --progress-bar-height-sm: 4px;
   --progress-bar-height-xs: 2px;
-  --progress-bar-radius: var(--radius-full, 9999px);
+  --progress-bar-radius: var(--radius-pill, 9999px);
   --progress-bar-track-bg: var(--color-surface-sunken, #efefef);
 
   /* esa-search-panel */
@@ -418,7 +504,7 @@
   --side-dialog-bg: var(--color-surface, #fff);
   --side-dialog-border-color: var(--color-border, #e5e5e5);
   --side-dialog-inset: 16px;
-  --side-dialog-radius: var(--radius-200, 8px);
+  --side-dialog-radius: var(--radius-surface, 8px);
   --side-dialog-width: 400px;
   --side-dialog-width-lg: 520px;
   --side-dialog-width-sm: 320px;
@@ -427,12 +513,12 @@
   --snackbar-container-max-width: 420px;
 
   /* esa-snackbar-item */
-  --snackbar-item-bg-danger: var(--color-red-10);
-  --snackbar-item-bg-info: var(--color-blue-11);
-  --snackbar-item-bg-success: var(--color-green-11);
-  --snackbar-item-bg-warning: var(--color-orange-11);
+  --snackbar-item-bg-danger: var(--color-danger-strong);
+  --snackbar-item-bg-info: var(--color-info-strong);
+  --snackbar-item-bg-success: var(--color-success-strong);
+  --snackbar-item-bg-warning: var(--color-warning-strong);
   --snackbar-item-color: var(--color-text-inverse, #ffffff);
-  --snackbar-item-radius: var(--radius-200, 0.5rem);
+  --snackbar-item-radius: var(--radius-surface, 0.5rem);
 
   /* esa-switch-toggle */
   --switch-toggle-label-color: var(--color-text-primary, #171717);
@@ -451,8 +537,8 @@
   --tab-layout-indicator-color: var(--color-primary, #43608a);
 
   /* esa-tooltip */
-  --tooltip-bg: var(--color-gray-12);
+  --tooltip-bg: var(--color-surface-inverse);
   --tooltip-color: var(--color-text-inverse, #ffffff);
   --tooltip-max-width: 240px;
-  --tooltip-radius: var(--radius-100, 0.25rem);
+  --tooltip-radius: var(--radius-control, 0.25rem);
 }

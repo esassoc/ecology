@@ -47,7 +47,7 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
   .esa-filter-clear-button {
     --_clear-text: var(--filter-clear-color, var(--color-primary-strong, #3a7c59));
     --_clear-text-hover: var(--filter-clear-color-hover, var(--color-primary-strong, #3a7c59));
-    --_clear-font-size: var(--type-size-150, 0.875rem);
+    --_clear-font-size: var(--font-size-150, 0.875rem);
     --_clear-icon-size: 18px;
 
     display: inline-flex;
@@ -55,12 +55,12 @@ const { label = 'Clear all', showIcon = true, hidden = false } = Astro.props;
     gap: var(--spacing-100, 0.25rem);
     padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
     border: none;
-    border-radius: var(--radius-100, 0.25rem);
+    border-radius: var(--radius-control, 0.25rem);
     background: transparent;
     color: var(--_clear-text);
     font-family: var(--font-sans, inherit);
     font-size: var(--_clear-font-size);
-    font-weight: var(--font-weight-medium, 450);
+    font-weight: var(--font-weight-medium, 500);
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;

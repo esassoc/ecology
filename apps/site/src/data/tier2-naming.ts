@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { allTokens, byTier } from './token-graph';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-const TYPE_ROLES = path.join(ROOT, 'packages', 'tokens', 'src', 'type-roles.css');
+const TYPOGRAPHY_CSS = path.join(ROOT, 'packages', 'tokens', 'src', 'typography.css');
 
 /* ------------------------------------------------------------- the rubric */
 
@@ -53,6 +53,14 @@ for (const [rubric, words] of Object.entries(SURFACE_VOCAB)) {
 
 const STATE_WORDS = new Set(['hover', 'active', 'focus', 'pressed']);
 
+/**
+ * Washes and scrims. They ARE backgrounds, but they name themselves after the
+ * effect rather than the surface, so the surface parser can't see it — and any
+ * trailing `-strong` on one is an intensity, not a content colour.
+ * `hover`/`active` lead these names, so match on the overlay word itself.
+ */
+const isOverlay = (name: string) => /(^|-)(overlay|scrim|backdrop)(-|$)/.test(name);
+
 export type SlotOrder = 'rubric' | 'inverted' | 'surface-only' | 'none';
 
 export interface Tier2Row {
@@ -82,7 +90,12 @@ const parseColor = (name: string): Tier2Row => {
   // where no surface word is present. In `--color-border-strong` the surface is
   // named and `strong` is a genuine variant (a heavier border), so the guard on
   // surfaceIdx is what keeps this from over-counting.
-  if (surfaceIdx === -1) {
+  //
+  // Overlays are the second exception: in `--color-hover-overlay-strong`,
+  // `strong` is an INTENSITY (a heavier wash), not a content colour. `overlay`,
+  // `scrim` and `backdrop` all name a background outright — they just don't use
+  // one of the rubric's three words for it.
+  if (surfaceIdx === -1 && !isOverlay(name)) {
     const rest = parts.join('-');
     if (rest.endsWith('-on-fill')) {
       flags.push('surface encoded as a variant: -on-fill = content on that background');
@@ -166,8 +179,8 @@ export interface CategoryRow {
   how: string;
 }
 
-const layoutCount = otherTokens.filter((t) => /width|height/.test(t.name)).length;
-const elevationCount = otherTokens.filter((t) => t.name.startsWith('--elevation-')).length;
+/** Count tier-2 tokens matching a pattern, so these rows can't go stale. */
+const t2Count = (re: RegExp) => semantic.filter((t) => re.test(t.name)).length;
 
 export const categoryRows: CategoryRow[] = [
   {
@@ -177,13 +190,13 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'typography',
-    count: 0,
-    how: 'No tokens. The role is filled by CSS classes in type-roles.css — see below.',
+    count: t2Count(/^--font-size-ui-/),
+    how: '`--font-size-ui-{xs,sm,md,lg}` — chrome text only, aligned step-for-step with `--control-height-*`. PROSE has no tier-2 tokens: that role is still filled by the CSS classes in typography.css, so Figma can’t consume it and a spoke can’t re-point it. See the typography section below.',
   },
   {
     category: 'spacing',
     count: 0,
-    how: 'No tier-2 layer. Components consume the `--spacing-*` primitives raw.',
+    how: 'No tier-2 layer, deliberately. Spacing is a MEASURE, not an intent — `--spacing-300` already says everything a `--space-inset-md` would, with a layer less indirection. Components read the primitives directly and that is correct.',
   },
   {
     category: 'border',
@@ -192,20 +205,24 @@ export const categoryRows: CategoryRow[] = [
   },
   {
     category: 'width',
-    count: layoutCount,
-    how: 'Exists as layout.json, but leads with a region (`--sidebar-width`), not the category. Note `--header-height` has no home in the rubric — the list has width but no height.',
+    count: t2Count(/width|height/),
+    how: 'Splits in two. `--control-height-*` and `--chip-height-*` are proper roles. The layout.json set (`--sidebar-width`, `--header-height`) still leads with a region rather than the category — and `height` has no home in the rubric, which lists width but not height.',
   },
   {
     category: 'radius',
-    count: 0,
-    how: 'No tier-2 layer. Components read `--radius-100/200` primitives directly — and both themes re-point those primitives, which is the SPEC violation flagged under Health.',
+    count: t2Count(/^--radius-/),
+    how: '`--radius-{control,surface,card,overlay,pill}` — five intentions over the ramp. This is what let both themes stop re-pointing `--radius-200`, a primitive, which used to be the SPEC violation flagged under Health.',
   },
   {
     category: 'box-shadow',
-    count: elevationCount,
-    how: '`--elevation-1…5`. Named as an elevation scale rather than the category, and the variant is a number rather than an intention.',
+    count: t2Count(/^--elevation-/),
+    how: '`--elevation-1…6`. Named as an elevation scale rather than the category, and the variant is a number rather than an intention — but every component now reads it instead of `--shadow-*`.',
   },
-  { category: 'animation', count: 0, how: 'Nothing at tier 2.' },
+  {
+    category: 'animation',
+    count: 0,
+    how: 'Nothing at tier 2. `--transition-{fast,base,slow}` sits at tier 1 and is read directly by 27 components. Those are scale positions, not intents — an intent would be `--motion-hover` — so a semantic layer here is unbuilt design work rather than a mechanical move.',
+  },
 ];
 
 /* ------------------------------------------ the non-colour tier-2 tokens */
@@ -234,11 +251,11 @@ export const variantVocab: VocabRow[] = [
   { rubric: 'brand', current: 'primary, secondary', status: 'renamed', note: 'Same concept, different word. `secondary` is a second brand ramp rather than a separate intention.' },
   { rubric: 'subtle', current: 'subtle', status: 'match', note: 'Exact match, and used consistently: primary-subtle, ai-subtle, info/success/warning/danger-subtle.' },
   { rubric: 'utility-error', current: 'danger', status: 'renamed', note: 'No `utility-` grouping prefix, and error is spelled danger.' },
-  { rubric: 'utility-success', current: 'success', status: 'renamed', note: 'Concept 1:1. Tier 1 already groups these as `--color-status-*` — the same family under a third name.' },
+  { rubric: 'utility-success', current: 'success', status: 'renamed', note: 'Concept 1:1. Tier 1 used to group these as `--color-status-*`, giving the family a third name one tier down; those aliases have been deleted and these roles now point straight at their ramp steps.' },
   { rubric: 'utility-warning', current: 'warning', status: 'renamed', note: 'As above.' },
   { rubric: 'utility-information', current: 'info', status: 'renamed', note: 'Abbreviated.' },
   { rubric: 'disabled (as a variant)', current: 'disabled', status: 'match', note: 'Concept exactly right — disabled is managed as a variant, not a state, which is the de-duplication the rubric recommends. Only the slot order is inverted (`--color-disabled-bg`).' },
-  { rubric: 'sizes lg / md / sm', current: '—', status: 'missing', note: 'The size axis skips tier 2 entirely. It exists at tier 1 (`--icon-size-*`) and tier 3 (`--form-height-sm`, `--form-padding-x-xs`) with nothing in between.' },
+  { rubric: 'sizes lg / md / sm', current: '--control-height-*, --chip-height-*, --font-size-ui-*', status: 'match', note: 'The size axis used to skip tier 2 entirely. It now has three ramps: control height, chip height, and the chrome text size that tracks them. Tier 3 narrows them per family (`--form-height-md` → `--control-height-md`). Padding is still tier 1 by design — spacing is a measure, not an intent.' },
   { rubric: 'sm-mobile', current: '—', status: 'missing', note: 'No responsive variant at any tier.' },
   { rubric: '—', current: 'accent, ai', status: 'extra', note: 'Two extra intentions beyond the rubric list. Both are legitimate; they just need a home in the variant vocabulary.' },
   { rubric: '—', current: 'link, inverse, elevated, sunken, muted, light, strong', status: 'extra', note: 'Ad-hoc variant words with no rubric equivalent. `strong` is the notable one — it is really a surface (content), not a variant.' },
@@ -246,20 +263,20 @@ export const variantVocab: VocabRow[] = [
 
 /* --------------------------------- typography: the vocabulary that exists */
 
-export const typeRoleClasses: string[] = (() => {
-  if (!existsSync(TYPE_ROLES)) return [];
-  const css = readFileSync(TYPE_ROLES, 'utf8');
+export const compositeClasses: string[] = (() => {
+  if (!existsSync(TYPOGRAPHY_CSS)) return [];
+  const css = readFileSync(TYPOGRAPHY_CSS, 'utf8');
   return [...new Set([...css.matchAll(/^\.([a-z0-9-]+)/gm)].map((m) => m[1]))].sort();
 })();
 
-export const typeRoleMapping = [
-  { rubric: 'display', current: '.type-display', status: 'match' as const },
-  { rubric: 'heading', current: '.type-page-title, .type-section-title', status: 'renamed' as const },
-  { rubric: 'title', current: '.type-card-title', status: 'match' as const },
-  { rubric: 'label', current: '.type-label', status: 'match' as const },
-  { rubric: 'body', current: '.type-body, -large, -small', status: 'match' as const },
+export const compositeMapping = [
+  { rubric: 'display', current: '.typography-display', status: 'match' as const },
+  { rubric: 'heading', current: '.typography-heading-lg, .typography-heading-md', status: 'renamed' as const },
+  { rubric: 'title', current: '.typography-title', status: 'match' as const },
+  { rubric: 'label', current: '.typography-label', status: 'match' as const },
+  { rubric: 'body', current: '.typography-body-lg, -md, -sm', status: 'match' as const },
   { rubric: 'accent', current: '—', status: 'missing' as const },
-  { rubric: '—', current: '.type-caption, .type-overline, .type-code', status: 'extra' as const },
+  { rubric: '—', current: '.typography-meta, .typography-eyebrow, .typography-code', status: 'extra' as const },
 ];
 
 /* ------------------------------------------------------------ the verdict */
@@ -333,6 +350,8 @@ export const slots: RubricSlot[] = [
  */
 const inferSurface = (name: string): 'background' | 'content' => {
   const body = name.replace(/^--color-/, '');
+  // Washes and scrims are backgrounds regardless of any `-strong` intensity.
+  if (isOverlay(name)) return 'background';
   if (body.endsWith('-on-fill')) return 'content';
   if (body.endsWith('-strong')) return 'content';
   return 'background';
@@ -340,6 +359,7 @@ const inferSurface = (name: string): 'background' | 'content' => {
 
 const inferReason = (name: string): string => {
   const body = name.replace(/^--color-/, '');
+  if (isOverlay(name)) return 'a wash or scrim — a background named after its effect, not its surface';
   if (body.endsWith('-on-fill')) return 'foreground text sitting on that fill (step 12)';
   if (body.endsWith('-strong')) return 'Radix step 11 — coloured text on a surface';
   if (body.endsWith('-subtle')) return 'Radix step 2 — subtle tinted surface';
@@ -450,7 +470,7 @@ export const nonColorGroups = [
  * Tier 2 TYPOGRAPHY, grouped by intention.
  *
  * There are zero tier-2 typography TOKENS. The layer exists — as the composable
- * utility classes in type-roles.css, which are composites of the tier-1
+ * utility classes in typography.css, which are composites of the tier-1
  * typography primitives in exactly the shape the rubric describes. So this
  * groups what we actually ship, by intention, and decomposes each role into the
  * six tier-1 properties so the composite is visible as a composite.
@@ -488,7 +508,7 @@ export const REQUIRED_TYPE_PROPS = [
 
 export interface RoleProp {
   property: string;
-  /** The token the role reads, e.g. --type-size-800. Null when unset. */
+  /** The token the role reads, e.g. --font-size-800. Null when unset. */
   ref: string | null;
   /** Second token in a `var(a, var(b))` chain — the fallback face. */
   fallbackRef: string | null;
@@ -498,7 +518,7 @@ export interface RoleProp {
   literal: boolean;
 }
 
-export interface TypeRole {
+export interface Composite {
   className: string;
   props: Record<string, RoleProp>;
   /** Required properties this role leaves to inheritance — the real defect. */
@@ -507,12 +527,31 @@ export interface TypeRole {
 
 const nodeByName = new Map(allTokens.map((t) => [t.name, t]));
 
-const parseTypeRoles = (): TypeRole[] => {
-  if (!existsSync(TYPE_ROLES)) return [];
-  const css = readFileSync(TYPE_ROLES, 'utf8');
-  const roles: TypeRole[] = [];
+/**
+ * The stylesheet carries the CURRENT roles and, below a DEPRECATED banner, the
+ * pre-composite names kept as aliases for spokes. Splitting on that banner
+ * matters: parsing the whole file counted 19 roles while only 11 were placeable
+ * into an intention, which reads as 8 unaccounted-for roles rather than as
+ * 8 aliases doing exactly what they are meant to.
+ */
+const splitRoleCss = (): { current: string; deprecated: string } => {
+  if (!existsSync(TYPOGRAPHY_CSS)) return { current: '', deprecated: '' };
+  const css = readFileSync(TYPOGRAPHY_CSS, 'utf8');
+  const marker = css.indexOf('DEPRECATED');
+  return marker === -1
+    ? { current: css, deprecated: '' }
+    : { current: css.slice(0, marker), deprecated: css.slice(marker) };
+};
 
-  for (const block of css.matchAll(/^\.(type-[a-z0-9-]+)\s*\{([^}]*)\}/gm)) {
+const parseTypeRoles = (css: string): Composite[] => {
+  const roles: Composite[] = [];
+
+  // Matches BOTH prefixes on purpose. `.typography-*` is the current composite;
+  // `.type-*` is the deprecated alias block. Note `type-` is NOT a prefix of
+  // `typography-` (typ-E- vs typ-O-), so a pattern written for one silently
+  // matches none of the other — which is exactly what happened when the classes
+  // were renamed and this section quietly reported zero composites.
+  for (const block of css.matchAll(/^\.((?:typography|type)-[a-z0-9-]+)\s*\{([^}]*)\}/gm)) {
     const className = block[1];
     const props: Record<string, RoleProp> = {};
 
@@ -546,77 +585,104 @@ const parseTypeRoles = (): TypeRole[] => {
   return roles;
 };
 
-const allRoles = parseTypeRoles();
+const roleCss = splitRoleCss();
+const allRoles = parseTypeRoles(roleCss.current);
+/** The pre-composite names, kept as aliases so spoke markup keeps rendering. */
+export const deprecatedAliases = parseTypeRoles(roleCss.deprecated).map((r) => r.className);
 const roleByName = new Map(allRoles.map((r) => [r.className, r]));
-const pick = (...names: string[]) => names.map((n) => roleByName.get(n)).filter(Boolean) as TypeRole[];
+const pick = (...names: string[]) => names.map((n) => roleByName.get(n)).filter(Boolean) as Composite[];
 
 export interface TypeIntention {
   label: string;
   /** What this intention is for. */
   definition: string;
-  roles: TypeRole[];
-  /** Where the roles inside this intention are inconsistent with each other. */
+  roles: Composite[];
+  /**
+   * An OBSERVATION about this intention — context worth knowing, not a defect.
+   * Deliberately separate from `inconsistency`: the badge used to fire on any
+   * note at all, so `meta` was labelled inconsistent for a remark comparing it
+   * to `label`. A single-composite group cannot be internally inconsistent.
+   */
   note?: string;
+  /** A real defect: the composites inside this intention disagree with each other. */
+  inconsistency?: string;
 }
 
-export const typeIntentions: TypeIntention[] = [
-  {
-    label: 'Display',
+/**
+ * DERIVED from the composite names, not authored. The grouping used to be the
+ * REFERENCE model's six intentions (Display / Headline / Title / Body / Label /
+ * Meta), which stopped describing our tokens the moment `page-title`,
+ * `section-title` and `card-title` were regularised into one `heading`
+ * intention with three sizes: the page then filed `heading-lg` under "Headline"
+ * and `heading-md/sm` under "Title", splitting one intention across two
+ * headings that exist nowhere in our names. Deriving the intention from the
+ * token means the grouping cannot disagree with the tokens again.
+ */
+const INTENTION_NOTES: Record<string, { definition: string; note?: string; inconsistency?: string }> = {
+  display: {
     definition:
-      'The largest type in the system — hero numbers, landing statements, logotype-adjacent text. One role, one use.',
-    roles: pick('type-display'),
+      'The largest type in the system — hero numbers, landing statements, logotype-adjacent text. One size, one use.',
   },
-  {
-    label: 'Headline',
+  heading: {
     definition:
-      'The top-level heading of a page. Reads the display face, so a spoke that sets --font-display gets distinct headlines for free.',
-    roles: pick('type-page-title'),
-    note: 'Named `page-title` rather than headline — the only role whose name and intention disagree.',
+      'Page and section headings. Both read the display face, both set tight leading and tracking, and ONLY the size differs between them — which is what makes this a genuine size axis rather than two things sharing a prefix.',
   },
-  {
-    label: 'Title',
+  title: {
     definition:
-      'Headings below the page title: section headings and the heading inside a card or panel.',
-    roles: pick('type-section-title', 'type-card-title'),
-    note: '`section-title` reads --font-display; `card-title` does not, so it silently falls back to the body face. Two roles in one intention that disagree about which face they belong to — a spoke setting --font-display will re-face section titles and leave card titles behind.',
+      'The heading inside a card or panel. Its own intention, not `heading-sm`: it reads the BODY face at normal leading and normal tracking, so every one of its five properties differs from `heading-md`. A size variant that also changes the typeface is not a size variant. The reference model draws this line one step higher (headline vs title); ours follows where the values actually break.',
   },
-  {
-    label: 'Body',
-    definition:
-      'Running prose and the default text of the interface, in three sizes.',
-    roles: pick('type-body-large', 'type-body', 'type-body-small'),
-    note: '`body-large` and `body` use line-height-relaxed; `body-small` drops to normal. Deliberate at small sizes, but it means the three are not one role scaled.',
+  body: {
+    definition: 'Running prose and the default text of the interface, in three sizes.',
+    inconsistency:
+      '`body-lg` and `body-md` set line-height-relaxed; `body-sm` drops to normal. Under the rule that split `title` out of `heading` — a size variant may only change size — this is the same defect one step smaller: two properties move, not one. It is left flagged rather than quietly fixed because closing it is a rendering change (body-sm leading 1.6 -> 1.8), and the counter-argument is real: leading pairs with size, so it may belong to the size axis in a way that face and weight never do.',
   },
-  {
-    label: 'Label',
+  label: {
     definition:
       'Form labels, button text, and other UI chrome that names a control rather than reading as prose.',
-    roles: pick('type-label'),
   },
-  {
-    label: 'Meta',
+  meta: {
     definition:
-      'Secondary annotation — help text, captions, timestamps, and eyebrow/overline text above a heading.',
-    roles: pick('type-caption', 'type-overline'),
-    note: '`caption` and `label` are the same size (--type-size-100) and differ only in weight — regular vs medium. The size scale does not separate them; only the weight does.',
+      'Secondary annotation beside the thing it describes — help text, captions, timestamps, counts.',
+    note: '`meta` and `label` are the same size (--font-size-100) and differ only in weight — regular vs medium. An observation about the two intentions, not a defect inside this one: `meta` has a single composite, so there is nothing here to be inconsistent WITH.',
   },
-];
-
-/** Roles that do not express an intention, so they sit outside the six. */
-export const typeOutliers: { roles: TypeRole[]; note: string } = {
-  roles: pick('type-code'),
-  note: 'Not an intention — a face swap. `type-code` re-points font-family to --font-mono and otherwise leaves weight and letter-spacing unset, so it inherits them from whatever it sits inside. It cuts across the six rather than belonging to one.',
+  eyebrow: {
+    definition:
+      'The small caps marker above a heading or as a section marker. Its own intention rather than a variant of meta: it was `meta-caps`, which put a NON-size in the slot that carries lg/md/sm everywhere else.',
+  },
+  code: {
+    definition:
+      'Monospace — code, tokens, tabular figures. Three sizes matching body step for step, so inline code sits at the size of the prose around it: `code-md` inside `body-md`, `code-sm` inside `body-sm`.',
+    note: 'Unlike body, the leading does NOT change at the small end — all three set line-height-normal, so this intention is a pure size axis.',
+  },
 };
+
+/** Intention = the composite name with any trailing t-shirt size removed. */
+const intentionOf = (className: string) =>
+  className.replace(/^typography-/, '').replace(/-(lg|md|sm)$/, '');
+
+export const typeIntentions: TypeIntention[] = (() => {
+  const groups = new Map<string, Composite[]>();
+  for (const r of allRoles) {
+    const key = intentionOf(r.className);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(r);
+  }
+  return [...groups.entries()].map(([key, roles]) => ({
+    label: key,
+    definition: INTENTION_NOTES[key]?.definition ?? 'No authored definition yet for this intention.',
+    roles,
+    note: INTENTION_NOTES[key]?.note,
+  }));
+})();
 
 export const typeCoverage = {
   roles: allRoles.length,
   placed: typeIntentions.reduce((n, i) => n + i.roles.length, 0),
-  outliers: typeOutliers.roles.length,
-  /** Roles leaving a REQUIRED property to inheritance. */
+  /** Composites leaving a REQUIRED property to inheritance. */
   incomplete: allRoles
     .filter((r) => r.missing.length > 0)
     .map((r) => ({ className: r.className, missing: r.missing })),
-  /** Roles that opt into the display face — the surface a spoke re-points. */
+  /** Composites that opt into the display face — the surface a spoke re-points. */
   displayFace: allRoles
     .filter((r) => r.props['font-family']?.ref === '--font-display')
     .map((r) => r.className),
@@ -689,21 +755,21 @@ export const REFERENCE_ROLES: ReferenceRole[] = [
  * fluid ranges, so an exact match doesn't exist to claim.
  */
 const EQUIVALENT: Record<string, string | null> = {
-  'display-default': 'type-display',
+  'display-default': 'typography-display',
   'display-sm': null,
   'headline-lg': null,
-  'headline-default': 'type-page-title',
+  'headline-default': 'typography-heading-lg',
   'headline-sm': null,
-  'title-lg': 'type-section-title',
-  'title-default': 'type-card-title',
+  'title-lg': 'typography-heading-md',
+  'title-default': 'typography-title',
   'title-sm': null,
   'label-lg': null,
-  'label-default': 'type-label',
+  'label-default': 'typography-label',
   'label-sm': null,
-  'body-lg': 'type-body-large',
-  'body-default': 'type-body',
-  'body-sm': 'type-body-small',
-  'meta-default': 'type-overline',
+  'body-lg': 'typography-body-lg',
+  'body-default': 'typography-body-md',
+  'body-sm': 'typography-body-sm',
+  'meta-default': 'typography-eyebrow',
   'meta-sm': null,
 };
 
@@ -785,26 +851,26 @@ export const structuralGaps: StructuralGap[] = [
   {
     dimension: 'Expressed as',
     reference: '22 tokens in JSON',
-    ours: '11 CSS classes',
-    verdict: 'gap',
+    ours: '56 tokens + 11 classes',
+    verdict: 'match',
     detail:
-      'The largest single gap, and the one everything else sits on. Classes cannot be exported to Figma, cannot be overridden by a spoke through the token layer, and do not compile to any other platform. The composite structure is right; the format is not a token. Note this is the real export blocker — not clamp(), whose bounds extract cleanly.',
+      'CLOSED. This was the largest single gap and the one everything else sat on: the composite structure was right but expressed only as CSS classes, which Figma cannot consume, a spoke cannot re-point through the token layer, and no other platform compiles. The 56 tier-2 `--typography-*` tokens now hold the values; the classes are the assembly layer on top, because CSS has no composite custom property. A class contains no size and no weight — only var()s.',
   },
   {
     dimension: 'Naming',
     reference: '<intention>-<size>[-mobile]',
-    ours: 'semantic role names',
-    verdict: 'gap',
+    ours: '<intention>[-<size>]',
+    verdict: 'match',
     detail:
-      'Ours name the place (`page-title`, `card-title`, `caption`) rather than intention + size. `body-large/body/body-small` is the closest we get and still spells the size out. There is no size slot to fill, so `label-lg` and `label-sm` have nowhere to go.',
+      'CLOSED. Names used to describe the PLACE (`page-title`, `card-title`, `caption`); they now name the intention, with a t-shirt size where an intention has more than one. The one deliberate difference: the size slot is omitted rather than defaulted for single-size intentions, so it is `--typography-label-font-size`, not `-label-default-`. The old names survive as deprecated class aliases only.',
   },
   {
     dimension: 'Size axis',
     reference: 'lg / default / sm per intention',
-    ours: 'one size for 4 of 6 intentions',
+    ours: 'three sizes for 2 of 6 intentions',
     verdict: 'gap',
     detail:
-      'Body is the only intention with a full three-step range. Display, Headline, Label and Meta each ship a single size, so a designer needing a smaller headline has no role to reach for.',
+      'Narrowed, not closed. Heading joined Body at a full three-step range when `page-title`/`section-title`/`card-title` were regularised into `heading-lg/md/sm` — so the "no smaller headline to reach for" complaint is answered. Display, Label and Meta still ship a single size each. Whether that is a gap or a correct reading of demand is a design question, not a naming one: nothing in the kit has asked for a `label-sm`.',
   },
   {
     dimension: 'Responsive',
@@ -812,15 +878,15 @@ export const structuralGaps: StructuralGap[] = [
     ours: 'fluid clamp() in the primitive',
     verdict: 'divergence',
     detail:
-      'We ship zero -mobile roles because every --type-size-* is a clamp() that interpolates continuously with the viewport. Their model steps at a breakpoint; ours never steps. Critically, the discrete pair is NOT lost: clamp(min, fluid, max) already encodes the mobile floor and the desktop ceiling as real values — --type-size-800 is 32px…44px, which is exactly a display-default-mobile / display-default pair. Exporting to Figma is a build-time extraction of the two bounds, not a re-authoring. The one thing genuinely absent is the ability to set a mobile value INDEPENDENTLY of the desktop one; ours are tied together by the interpolation.',
+      'We ship zero -mobile roles because every --font-size-* is a clamp() that interpolates continuously with the viewport. Their model steps at a breakpoint; ours never steps. Critically, the discrete pair is NOT lost: clamp(min, fluid, max) already encodes the mobile floor and the desktop ceiling as real values — --font-size-800 is 32px…44px, which is exactly a display-default-mobile / display-default pair. Exporting to Figma is a build-time extraction of the two bounds, not a re-authoring. The one thing genuinely absent is the ability to set a mobile value INDEPENDENTLY of the desktop one; ours are tied together by the interpolation.',
   },
   {
     dimension: 'line-height',
     reference: 'absolute px, one per role',
-    ours: 'unitless ratio, 3 shared values',
+    ours: 'unitless ratio, 4 shared values',
     verdict: 'divergence',
     detail:
-      'Forced by the choice above: a fixed px line-height cannot pair with a fluid font-size. Theirs pins an exact line-height per role, so every role owns its own value; ours composes a ratio that holds at any interpolated size, so three values serve all eleven roles. Theirs gives per-role control, ours gives automatic consistency.',
+      'Forced by the choice above: a fixed px line-height cannot pair with a fluid font-size. Theirs pins an exact line-height per role, so every role owns its own value; ours composes a ratio that holds at any interpolated size, so a handful of values serve every role. Theirs gives per-role control, ours gives automatic consistency. Four rungs (none/tight/normal/relaxed) serve all eleven roles.',
   },
   {
     dimension: 'font-weight',
@@ -828,7 +894,7 @@ export const structuralGaps: StructuralGap[] = [
     ours: 'named by role — regular … bold',
     verdict: 'divergence',
     detail:
-      'Deliberate, and documented in type-roles.css: weights are typeface-bound, so the hub ships DM Sans optical weights (350/450/550/650) behind stable role names. A spoke swapping the face remaps the numbers and every role follows. Value-named weights would break at exactly that point.',
+      'Deliberate, and documented in typography.css: weights are typeface-bound, so the hub ships DM Sans optical weights (350/450/550/650) behind stable role names. A spoke swapping the face remaps the numbers and every role follows. Value-named weights would break at exactly that point.',
   },
   {
     dimension: 'font-family',
@@ -844,7 +910,7 @@ export const structuralGaps: StructuralGap[] = [
     ours: 'no primitive exists',
     verdict: 'gap',
     detail:
-      'There is no --text-transform-* token at any tier, so `.type-overline` writes `uppercase` as a literal — the only raw value in any of our roles. Their model has text-transform.none/uppercase as real primitives, which is what lets all 22 roles declare the property rather than inherit it.',
+      'There is no --text-transform-* token at any tier, so `.typography-eyebrow` writes `uppercase` as a literal — the only raw value in any of our roles. Their model has text-transform.none/uppercase as real primitives, which is what lets all 22 roles declare the property rather than inherit it.',
   },
   {
     dimension: 'Completeness',
@@ -852,7 +918,7 @@ export const structuralGaps: StructuralGap[] = [
     ours: '4 required on 10 of 11',
     verdict: 'match',
     detail:
-      'Closer than it looks. Every role but .type-code pins size, weight, line-height and letter-spacing. font-family and text-transform are left unset by design in ours where the reference declares them explicitly — a stylistic difference, except that it is what makes ours non-exportable as a complete composite.',
+      'Closer than it looks. Every role but .typography-code pins size, weight, line-height and letter-spacing. font-family and text-transform are left unset by design in ours where the reference declares them explicitly — a stylistic difference, except that it is what makes ours non-exportable as a complete composite.',
   },
   {
     dimension: 'Sibling aliasing',

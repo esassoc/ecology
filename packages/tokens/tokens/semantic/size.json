@@ -1,0 +1,16 @@
+{
+  "control-height": {
+    "$description": "The shared interactive-control size scale, aligned to Beacon's UiSize. One ramp so inputs, buttons, selects and icon buttons line up on a row. Tier 3 narrows it per family (--form-height-* for form controls); re-point HERE to resize every control at once.",
+    "xs": { "$value": "28px", "$type": "dimension" },
+    "sm": { "$value": "32px", "$type": "dimension" },
+    "md": { "$value": "40px", "$type": "dimension" },
+    "lg": { "$value": "48px", "$type": "dimension" }
+  },
+  "chip-height": {
+    "$description": "The size scale for non-interactive labels that sit inline with text — badges and pills. Smaller than a control at every step, and deliberately its own ramp: making controls taller should not make badges taller.",
+    "xs": { "$value": "18px", "$type": "dimension" },
+    "sm": { "$value": "22px", "$type": "dimension" },
+    "md": { "$value": "28px", "$type": "dimension" },
+    "lg": { "$value": "34px", "$type": "dimension" }
+  }
+}

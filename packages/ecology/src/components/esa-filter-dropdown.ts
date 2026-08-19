@@ -294,8 +294,8 @@ export class EsaFilterDropdown extends LitElement {
 
       --_filter-height: 40px;
       --_filter-padding-x: var(--spacing-400, 1rem);
-      --_filter-font-size: var(--type-size-200, 0.9375rem);
-      --_filter-radius: var(--radius-200, 0.5rem);
+      --_filter-font-size: var(--font-size-200, 0.9375rem);
+      --_filter-radius: var(--radius-surface, 0.5rem);
       --_filter-bg: var(--color-surface, #fff);
       --_filter-bg-active: var(--color-primary-subtle, #f3f8fb);
       --_filter-text: var(--color-text-primary, #171717);
@@ -308,20 +308,20 @@ export class EsaFilterDropdown extends LitElement {
     :host([size='xs']) {
       --_filter-height: 28px;
       --_filter-padding-x: var(--spacing-200, 0.5rem);
-      --_filter-font-size: var(--type-size-100, 0.75rem);
-      --_filter-radius: var(--radius-100, 0.25rem);
+      --_filter-font-size: var(--font-size-100, 0.75rem);
+      --_filter-radius: var(--radius-control, 0.25rem);
     }
     :host([size='sm']) {
       --_filter-height: 32px;
       --_filter-padding-x: var(--spacing-300, 0.75rem);
-      --_filter-font-size: var(--type-size-150, 0.875rem);
-      --_filter-radius: var(--radius-100, 0.25rem);
+      --_filter-font-size: var(--font-size-150, 0.875rem);
+      --_filter-radius: var(--radius-control, 0.25rem);
     }
     :host([size='lg']) {
       --_filter-height: 48px;
       --_filter-padding-x: var(--spacing-500, 1.5rem);
-      --_filter-font-size: var(--type-size-300, 1.125rem);
-      --_filter-radius: var(--radius-300, 0.5rem);
+      --_filter-font-size: var(--font-size-300, 1.125rem);
+      --_filter-radius: var(--radius-card, 0.5rem);
     }
 
     .esa-filter-dropdown {
@@ -341,8 +341,8 @@ export class EsaFilterDropdown extends LitElement {
       color: var(--_filter-text);
       font-family: var(--font-sans, inherit);
       font-size: var(--_filter-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      line-height: 1;
+      font-weight: var(--font-weight-medium, 500);
+      line-height: var(--line-height-none, 1);
       cursor: pointer;
       white-space: nowrap;
       transition:
@@ -383,12 +383,12 @@ export class EsaFilterDropdown extends LitElement {
       min-width: 1.25rem;
       height: 1.25rem;
       padding-inline: 0.3rem;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--color-primary, #43608a);
       color: var(--color-text-inverse, #fff);
-      font-size: var(--type-size-100, 0.75rem);
+      font-size: var(--font-size-100, 0.75rem);
       font-weight: var(--font-weight-semibold, 550);
-      line-height: 1;
+      line-height: var(--line-height-none, 1);
     }
 
     .esa-filter-dropdown__arrow {
@@ -421,8 +421,8 @@ export class EsaFilterDropdown extends LitElement {
       max-height: 300px;
       background: var(--filter-dropdown-bg, var(--color-surface, #fff));
       border: var(--filter-dropdown-border, 1px solid var(--color-border, #e5e5e5));
-      border-radius: var(--filter-dropdown-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--filter-dropdown-shadow, var(--shadow-200, 0 4px 20px -4px rgba(0, 0, 0, 0.06)));
+      border-radius: var(--filter-dropdown-radius, var(--radius-surface, 0.5rem));
+      box-shadow: var(--filter-dropdown-shadow, var(--elevation-3, 0 4px 20px -4px rgba(0, 0, 0, 0.06)));
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -437,7 +437,7 @@ export class EsaFilterDropdown extends LitElement {
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-control, 0.25rem);
       font-family: var(--font-sans, inherit);
       font-size: var(--_filter-font-size);
       background: var(--color-surface, #fff);
@@ -497,7 +497,7 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
       color: var(--color-text-muted, #737373);
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
       text-align: center;
     }
 
@@ -510,13 +510,13 @@ export class EsaFilterDropdown extends LitElement {
     .esa-filter-dropdown__clear-link {
       background: none;
       border: none;
-      color: var(--color-primary, #43608a);
+      color: var(--color-primary-strong, #2a7e3b);
       font-family: var(--font-sans, inherit);
-      font-size: var(--type-size-150, 0.875rem);
-      font-weight: var(--font-weight-medium, 450);
+      font-size: var(--font-size-150, 0.875rem);
+      font-weight: var(--font-weight-medium, 500);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-control, 0.25rem);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
       background: var(--color-surface-sunken, #f4f4f5);

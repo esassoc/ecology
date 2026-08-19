@@ -122,7 +122,7 @@ export class EsaRangeSlider extends LitElement {
       margin-bottom: var(--spacing-100, 4px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-primary, #171717);
     }
     .row {
@@ -164,7 +164,7 @@ export class EsaRangeSlider extends LitElement {
       border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
       transition:
         box-shadow var(--transition-fast, 150ms ease),
         transform var(--transition-fast, 150ms ease);
@@ -185,7 +185,7 @@ export class EsaRangeSlider extends LitElement {
       border: 2px solid var(--color-primary, #43608a);
       border-radius: 50%;
       background: var(--color-surface, #fff);
-      box-shadow: var(--shadow-50, 0 1px 3px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-1, 0 1px 3px rgba(0, 0, 0, 0.12));
     }
     .input:focus-visible {
       outline: none;
@@ -209,7 +209,7 @@ export class EsaRangeSlider extends LitElement {
       text-align: right;
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--color-text-primary, #171717);
       font-variant-numeric: tabular-nums;
     }

@@ -327,34 +327,48 @@ export const ownerMismatch = rows.filter((r) => r.owner && r.ns && r.ns !== r.ow
 export const tierCollisions = (() => {
   const t1 = byTier('primitive').map((t) => t.name);
   const t2 = byTier('semantic').map((t) => t.name);
-  const iconT1 = t1.filter((n) => n.startsWith('--icon-size-'));
-  const iconT3 = rows.filter((r) => r.name.startsWith('--icon-size-')).map((r) => r.name);
-  const focusT1 = t1.filter((n) => n.startsWith('--focus-ring-'));
-  const focusT3 = rows.filter((r) => r.name.startsWith('--focus-ring-')).map((r) => r.name);
-  return [
+  const at = (list: string[], p: string) => list.filter((n) => n.startsWith(p));
+  const t3at = (p: string) => rows.filter((r) => r.name.startsWith(p)).map((r) => r.name);
+
+  // `live` is DERIVED: a collision only exists while the prefix really does name
+  // tokens at two tiers. Resolved ones are kept rather than deleted — the point
+  // of this table is why the tier identifier matters, and a fixed case argues
+  // that better than a missing row.
+  const raw = [
     {
       prefix: '--icon-size-*',
-      tier1: iconT1,
-      tier3: iconT3,
+      tier1: at(t1, '--icon-size-'),
+      tier3: t3at('--icon-size-'),
       cost:
-        'The same prefix carries a size scale at tier 1 and three more sizes at tier 3, in a different dialect. Nothing in either name says which tier you are editing, and the dialects are the only hint that they are not one scale.',
+        'Carried a size scale at tier 1 and three more sizes at tier 3, in a different dialect (sm/md/lg vs small/medium/large) at identical values. Nothing in either name said which tier you were editing.',
+      fix: 'The three tier-3 duplicates were deleted and their five consumers repointed at the tier-1 ramp.',
     },
     {
       prefix: '--focus-ring-*',
-      tier1: focusT1,
-      tier3: focusT3,
+      tier1: at(t1, '--focus-ring-'),
+      tier3: t3at('--focus-ring-'),
       cost:
-        'One conceptual surface split across two tiers. `--focus-ring-color` is declared in BOTH — tier 3 loads last and wins, so the tier-1 declaration is dead while still reading as authoritative. See Health above.',
+        'One conceptual surface split across two tiers, with `--focus-ring-color` declared in BOTH — tier 3 loaded last and won, so the tier-1 declaration was dead while still reading as authoritative. The tier-1 copy also referenced a tier-2 token, which is backwards.',
+      fix: 'The tier-1 block was removed and `--focus-ring-offset` joined its siblings at tier 3, so the special case now has one home.',
     },
     {
       prefix: '--color-*',
-      tier1: [`${t1.filter((n) => n.startsWith('--color-')).length} tier-1 tokens`],
-      tier3: rows.filter((r) => r.name.startsWith('--color-')).map((r) => r.name),
+      tier1: [`${at(t1, '--color-').length} tier-1 tokens`],
+      tier3: t3at('--color-'),
       cost:
-        `Two tier-3 tokens sit inside the colour namespace that ${t2.filter((n) => n.startsWith('--color-')).length} tier-2 tokens occupy. Read on their own, \`--color-link\` and \`--color-primary-contrast\` are indistinguishable from semantic roles — but they are per-component hooks, and re-pointing one only re-skins the single component that reads it.`,
+        `A tier-3 hook sitting inside the colour namespace that ${at(t2, '--color-').length} tier-2 tokens occupy. Read on its own, \`--color-link\` is indistinguishable from a semantic role — but it is a per-component hook, so re-pointing it only re-skins the one component that reads it.`,
+      fix: null,
     },
   ];
+
+  return raw.map((c) => ({
+    ...c,
+    live: c.tier1.length > 0 && c.tier3.length > 0,
+  }));
 })();
+
+/** Collisions where the prefix still names tokens at two tiers. */
+export const liveCollisions = tierCollisions.filter((c) => c.live).length;
 
 /* --------------------------------------------- slot 3: the namespace roster */
 
@@ -659,7 +673,7 @@ export const slots: RubricSlot[] = [
     n: 2,
     name: 'Tier identifier',
     spec: 'theme / semantic / component',
-    verdict: `0 of ${total}. And at tier 3 this stops being abstract: --icon-size-* and --focus-ring-* each name tokens at two different tiers, and --focus-ring-color is declared at both.`,
+    verdict: `0 of ${total}. This is where the cost showed up: three prefixes named tokens at more than one tier at once, ${liveCollisions} of which ${liveCollisions === 1 ? 'is' : 'are'} still live. The two that were closed had to be closed by deleting or moving tokens, because no name could tell the tiers apart.`,
     status: 'absent',
   },
   {

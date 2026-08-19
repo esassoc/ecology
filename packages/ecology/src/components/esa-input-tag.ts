@@ -402,12 +402,12 @@ export class EsaInputTag extends LitElement {
       --_field-min-height: var(--form-height-md, 40px);
       --_field-radius: var(--form-radius-md, 8px);
       --_field-border-color: var(--form-border-color, #d4d4d4);
-      --_chip-font-size: var(--type-size-150, 12px);
+      --_chip-font-size: var(--font-size-150, 12px);
       /* Chip look — overridable per host (e.g. a neutral squared chip à la Beacon's
          ui-input-tag: gray bg, dark-gray text, small radius). Defaults unchanged. */
       --_chip-bg: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
       --_chip-color: var(--color-primary-strong, #3a7c59);
-      --_chip-radius: var(--radius-full, 9999px);
+      --_chip-radius: var(--radius-pill, 9999px);
     }
     :host([size='xs']) {
       --_field-padding-y: var(--form-padding-y-xs, 2px);
@@ -415,7 +415,7 @@ export class EsaInputTag extends LitElement {
       --_field-font-size: var(--form-font-size-xs, 11px);
       --_field-min-height: var(--form-height-xs, 28px);
       --_field-radius: var(--form-radius-xs, 4px);
-      --_chip-font-size: var(--type-size-100, 11px);
+      --_chip-font-size: var(--font-size-100, 11px);
     }
     :host([size='sm']) {
       --_field-padding-y: var(--form-padding-y-sm, 4px);
@@ -423,7 +423,7 @@ export class EsaInputTag extends LitElement {
       --_field-font-size: var(--form-font-size-sm, 12px);
       --_field-min-height: var(--form-height-sm, 32px);
       --_field-radius: var(--form-radius-sm, 6px);
-      --_chip-font-size: var(--type-size-100, 11px);
+      --_chip-font-size: var(--font-size-100, 11px);
     }
     :host([size='lg']) {
       --_field-padding-y: var(--form-padding-y-lg, 12px);
@@ -431,7 +431,7 @@ export class EsaInputTag extends LitElement {
       --_field-font-size: var(--form-font-size-lg, 16px);
       --_field-min-height: var(--form-height-lg, 48px);
       --_field-radius: var(--form-radius-lg, 10px);
-      --_chip-font-size: var(--type-size-200, 14px);
+      --_chip-font-size: var(--font-size-200, 14px);
     }
 
     .field {
@@ -442,7 +442,7 @@ export class EsaInputTag extends LitElement {
     .field__label {
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       color: var(--form-label-color, #525252);
     }
     .field__required {
@@ -450,7 +450,7 @@ export class EsaInputTag extends LitElement {
       margin-left: 2px;
     }
     .field__hint {
-      font-size: var(--type-size-150, 12px);
+      font-size: var(--font-size-150, 12px);
       color: var(--form-help-color, #737373);
     }
 
@@ -507,7 +507,7 @@ export class EsaInputTag extends LitElement {
       padding: 2px var(--spacing-100, 4px) 2px var(--spacing-200, 8px);
       font-family: var(--font-sans, sans-serif);
       font-size: var(--_chip-font-size);
-      line-height: 1.4;
+      line-height: var(--line-height-tight, 1.3);
       background: var(--_chip-bg);
       color: var(--_chip-color);
       border-radius: var(--_chip-radius);
@@ -584,8 +584,8 @@ export class EsaInputTag extends LitElement {
       transition: transform var(--transition-fast, 150ms ease);
     }
     .arrow svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .arrow--open {
       transform: rotate(180deg);
@@ -603,7 +603,7 @@ export class EsaInputTag extends LitElement {
       background: var(--color-surface, #fff);
       border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
       border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      box-shadow: var(--elevation-3, 0 4px 12px rgba(0, 0, 0, 0.12));
     }
 
     .option {
@@ -635,12 +635,12 @@ export class EsaInputTag extends LitElement {
     }
     .option--add {
       color: var(--color-primary-strong, #3a7c59);
-      font-weight: var(--font-weight-medium, 450);
+      font-weight: var(--font-weight-medium, 500);
       border-top: var(--form-border-width, 1px) solid var(--color-border-light, #efefef);
     }
     .option__icon {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
       flex-shrink: 0;
     }
 
@@ -648,7 +648,7 @@ export class EsaInputTag extends LitElement {
       padding: var(--spacing-300, 12px);
       color: var(--color-text-muted, #737373);
       font-size: var(--_field-font-size);
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
       text-align: center;
     }
   `;
