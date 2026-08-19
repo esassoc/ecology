@@ -262,7 +262,15 @@ function parseLit(src: string): ComponentApi {
   // name → attribute name, in declaration order, skipping internal state.
   const declared: Array<{ prop: string; attr: string; litType: string; propertyOnly: boolean }> = [];
   for (const part of splitTopLevel(block)) {
-    const m = part.trim().match(/^([a-zA-Z0-9_$]+)\s*:\s*\{([\s\S]*)\}$/);
+    // Drop any leading comment before matching. splitTopLevel cuts on commas, so a
+    // documented prop arrives as "/** … */ name: { … }" — and the pattern below is
+    // anchored, so it failed and the prop was skipped entirely. Every form control
+    // documents its props here, which is why `label`, `placeholder` and `help-text`
+    // were reported as documented-but-absent across six components.
+    // The DESCRIPTION is not lost by this: it comes from commentAbove() on the
+    // `declare` line, not from this map.
+    const bare = part.replace(/^\s*(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)\s*/g, '').trim();
+    const m = bare.match(/^([a-zA-Z0-9_$]+)\s*:\s*\{([\s\S]*)\}$/);
     if (!m) continue;
     const opts = m[2];
     if (/\bstate\s*:\s*true\b/.test(opts)) continue;

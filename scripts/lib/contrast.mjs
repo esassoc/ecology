@@ -154,18 +154,27 @@ const SCHEME_SCOPE = /\[data-scheme=['"]?([a-z][a-z0-9-]*)['"]?\]/;
  * audited. Blocks with no [data-scheme] at all are the base and are always read,
  * which is what lets a dark run resolve the roles the dark block does not re-point.
  */
+/**
+ * @returns {{ schemeBlocks: number }} how many [data-scheme] blocks matched the
+ * requested scheme. The caller needs this to tell "graded the dark values" apart
+ * from "found no dark values and graded the light ones under a dark header" —
+ * the two are otherwise indistinguishable in the output.
+ */
 export function parseDeclarations(css, map, { assurance = null, scheme = 'light' } = {}) {
+  let schemeBlocks = 0;
   for (const [selector, body] of parseBlocks(css)) {
     if (ASSURANCE_SCOPE.test(selector)) {
       if (!assurance || !selector.includes(`[data-assurance="${assurance}"]`)) continue;
     }
     const sm = SCHEME_SCOPE.exec(selector);
     if (sm && sm[1] !== scheme) continue;
+    if (sm) schemeBlocks++;
     // last one wins — source order
     for (const m of body.matchAll(/(--[a-zA-Z0-9-_]+)\s*:\s*([^;]+);/g)) {
       map.set(m[1], m[2].trim());
     }
   }
+  return { schemeBlocks };
 }
 
 export function resolve(name, map, depth = 0) {
