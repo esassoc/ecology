@@ -1,0 +1,225 @@
+---
+import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import Section from '@esa/docs/Section.astro';
+import Preview from '@esa/docs/Preview.astro';
+import ApiTable from '../../components/ApiTable.astro';
+
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "The chart's accessible name. Required — without it AG Charts announces a generated name like “chart, 2 series”, which names the shape of the thing rather than what it shows.",
+  data: 'Row objects, passed to AG Charts untouched.',
+  series: 'Series definitions. Marker shapes are layered in automatically so series differ by form as well as hue.',
+  options: 'Escape hatch merged over everything the component computes — use it to reach any raw AG Charts option.',
+  'color-scale': 'Which tier-2 data-viz family to read: categorical (identity), sequential (magnitude), or diverging (polarity).',
+  'described-by': 'ID of prose describing the chart’s takeaway. Resolved in the light DOM and applied by element reflection, because an IDREF cannot cross a shadow boundary.',
+  height: 'Plot height. The chart fills its container’s width.',
+};
+---
+<ComponentDoc name="Chart" category="Data & Editors" slug="esa-chart" type="wc" status="stable"
+  summary={'A thin, accessibility-corrected wrapper over <strong>AG Charts Community</strong>. It resolves every mark colour from tokens in JS (a canvas cannot read CSS), honours <code>prefers-reduced-motion</code> and forced colors on the library’s behalf, and gives the chart a real accessible name instead of the generated “chart, N series”.'}>
+
+  <Section id="preview" title="Preview">
+    <p>
+      A chart ships <strong>with its data as a grid</strong> — see
+      <a href="#table-alternative">Text alternative</a> below. The pairing is not decorative;
+      it is what makes the chart conformant.
+    </p>
+    <Preview code={`<esa-chart label="Rainfall by month"></esa-chart>
+<!-- data and series are set as PROPERTIES, not attributes -->
+<script>
+  chart.data = [{ month: 'Jan', rain: 20 }, /* … */];
+  chart.series = [{ type: 'bar', xKey: 'month', yKey: 'rain', yName: 'Rainfall (mm)' }];
+</script>`}>
+      <esa-chart id="demo-bar" label="Rainfall by month" height="300px"></esa-chart>
+    </Preview>
+  </Section>
+
+  <Section id="multi-series" title="Multiple series">
+    <p>
+      With more than one series a legend appears, and each series takes the next colour from
+      the data-viz categorical family <em>in fixed order</em> — never cycled, never
+      re-assigned when a filter changes the series count. Line and scatter series also take
+      a rotating marker shape, so identity is never carried by hue alone.
+    </p>
+    <Preview code={`chart.series = [
+  { type: 'bar',  xKey: 'month', yKey: 'rain', yName: 'Rainfall (mm)' },
+  { type: 'line', xKey: 'month', yKey: 'temp', yName: 'Temperature (C)' },
+];`}>
+      <esa-chart id="demo-multi" label="Rainfall and temperature by month" height="300px"></esa-chart>
+    </Preview>
+  </Section>
+
+  <Section id="api" title="API">
+    <ApiTable slug="esa-chart" describe={describe} />
+  </Section>
+
+  <Section id="install" title="Installing">
+    <p>
+      <code>ag-charts-community</code> is an <strong>optional peer dependency</strong>, loaded
+      by dynamic import on first render. A spoke that never charts never pays the ~2.8&nbsp;MB,
+      and <code>@esa/ecology</code>&rsquo;s own dependency list stays at <code>lit</code> alone.
+    </p>
+    <pre tabindex="0" role="group" aria-label="Command: install the charting library"><code>npm install ag-charts-community</code></pre>
+    <p class="meta">
+      AG Charts <strong>Community</strong> is MIT and free in production. Integrated charts —
+      where a user selects cells in a grid and charts them — require the AG Grid + AG Charts
+      <em>Enterprise Bundle</em>, which is a separate licence from AG Grid Enterprise alone.
+    </p>
+  </Section>
+
+  <Section id="accessibility" title="Accessibility">
+    <p>
+      AG Charts was scored in a real browser against the five questions worth asking of any
+      charting library. It passes the two that are hardest to retrofit. The rest is what this
+      wrapper exists to fix.
+    </p>
+
+    <div class="api-table">
+      <table>
+        <thead><tr><th>Question</th><th>AG Charts alone</th><th>What <code>esa-chart</code> does</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>SVG or canvas?</td>
+            <td>Canvas — but with a synchronized <strong>proxy DOM</strong> of real elements carrying the semantics, and the canvas itself marked <code>aria-hidden</code>.</td>
+            <td>Nothing needed. This is why AG Charts is usable at all where most canvas libraries are not.</td>
+          </tr>
+          <tr>
+            <td>Default role and name?</td>
+            <td>Passes — <code>role="figure"</code> unprompted — but the generated name is the generic <code>"chart, N series"</code>, and there is no option to change it.</td>
+            <td>Requires <code>label</code> and writes it onto the proxy root. Warns at runtime when absent rather than shipping the generic name silently.</td>
+          </tr>
+          <tr>
+            <td>Text or data-table alternative?</td>
+            <td><strong>None.</strong> No table, no <code>figcaption</code>, no offscreen text. Values are reachable only by traversing the chart.</td>
+            <td>Not solved in the component — solved by <a href="#table-alternative">pairing it with a grid</a>.</td>
+          </tr>
+          <tr>
+            <td>Keyboard access to data points?</td>
+            <td>Passes, on by default. Arrows walk the data, <kbd>Home</kbd>/<kbd>End</kbd> jump to first and last, and focus is not trapped.</td>
+            <td>Nothing needed. This is the strongest of the five answers.</td>
+          </tr>
+          <tr>
+            <td>Respects <code>prefers-reduced-motion</code>?</td>
+            <td><strong>No.</strong> The string appears zero times in the library; every <code>matchMedia</code> call is for HiDPI scaling.</td>
+            <td>Reads the query itself and sets <code>animation.enabled</code>, re-deciding when the preference changes mid-session.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">Three more, found by measuring rather than reading the docs</h3>
+    <ul>
+      <li>
+        <strong>Legend hit targets render 16px tall</strong> — under the 24px raw floor, and
+        <em>reported rather than patched</em>. That is not a violation: SC 2.5.8&rsquo;s spacing
+        exception passes an undersized target whose 24px circle clears its neighbours&rsquo;, and
+        the default legend spacing earns it — axe reports zero target-size violations here.
+        Forcing it would mean 24px legend markers, since <code>marker.size</code> is the only
+        option that moves the box (<code>item.paddingY</code> is not an option at all; AG Charts
+        accepts and ignores it). <strong>The exception is layout-dependent</strong>: a legend
+        packed tight enough loses it, so if <code>npm run a11y</code> ever reports target-size on
+        a chart, the lever is <code>options.legend.item.marker.size</code>.
+      </li>
+      <li>
+        <strong>Forced colors cannot reach a canvas.</strong> It is a bitmap — no token, no
+        <code>@media</code> block and no assurance profile touches it. The only route in is to
+        re-theme from JS with the system keywords, which this component does. It deliberately
+        <em>discards</em> the data-viz palette in that mode: the user chose those colours, and
+        overriding them would itself be SC 1.4.8. Marks stay apart by shape.
+      </li>
+      <li>
+        <strong>Series told apart by colour alone</strong> is SC 1.4.1, Level A. Line, area
+        and scatter series get a rotating marker shape. Bars cannot carry a pattern in
+        Community — for those the answer is direct labels or the paired grid.
+      </li>
+    </ul>
+
+    <h3 class="sub">What is still yours to do</h3>
+    <ul>
+      <li>Give every chart a real <code>label</code>. The component warns, but it cannot invent one.</li>
+      <li>Ship the paired grid. See below.</li>
+      <li>
+        Nothing automated proves a screen reader announces any of this correctly. Structure is
+        provable; announcement is not. That needs NVDA/Firefox and VoiceOver/Safari.
+      </li>
+    </ul>
+  </Section>
+
+  <Section id="table-alternative" title="Text alternative — pair it with a grid">
+    <p>
+      AG Charts ships no data-table view, and the chart alone does not satisfy the
+      text-alternative requirement. The answer is a composition rather than a prop:
+      <code>esa-grid</code> already solves tabular semantics, and a visible
+      &ldquo;view as data&rdquo; gives sighted keyboard users a real affordance instead of an
+      offscreen table only a screen reader can find.
+    </p>
+    <pre tabindex="0" role="group" aria-label="Example: a chart paired with its data grid"><code>{`<esa-chart label="Rainfall by month" .data={rows} .series={series} />
+
+<esa-collapsible summary="View as data">
+  <esa-grid columnDefs={cols} rowData={rows} />
+</esa-collapsible>`}</code></pre>
+    <p class="meta">
+      There is a second reason, and it is not about screen readers. Three slots of the
+      categorical palette sit under 3:1 against a light surface. The data-viz validator calls
+      that acceptable <em>only</em> with relief — visible labels or a table view. The paired
+      grid is that relief. Drop it and the palette stops being legal, not merely unfriendly.
+    </p>
+  </Section>
+
+  <Section id="theming" title="Theming — why a canvas needs a bridge">
+    <p>
+      A grid re-themes for free because it is DOM. A chart does not: measured, overriding the
+      library&rsquo;s own <code>--ag-charts-*</code> custom properties changes
+      <code>getComputedStyle</code> and leaves the canvas painting its original colours. Those
+      ~60 properties style the <strong>DOM chrome</strong> — tooltip, legend, menus, focus ring
+      — and about a third of the theming surface is therefore ordinary CSS. Every
+      <strong>mark</strong>, though, is resolved in JS and handed over as a literal.
+    </p>
+    <p>
+      Which means a canvas does not repaint when the cascade changes. The component watches
+      <code>data-theme</code>, <code>data-scheme</code> and <code>data-assurance</code> on
+      <code>&lt;html&gt;</code> and re-resolves. Without that, switching theme leaves the chart
+      painted in the old brand with no error anywhere.
+    </p>
+    <p class="meta">
+      Series colours come from the tier-2 <code>--color-background-dataviz-*</code> family. Until it
+      lands, the component falls back to a built-in ramp and <strong>warns in the console</strong>
+      — a fallback that works silently is how a token never gets wired.
+    </p>
+  </Section>
+</ComponentDoc>
+
+<style>
+  .api-table table { width: 100%; border-collapse: collapse; }
+</style>
+
+<script>
+  import '@esa/ecology/esa-chart';
+
+  const rows = [
+    { month: 'Jan', rain: 20, temp: 5 },
+    { month: 'Feb', rain: 35, temp: 7 },
+    { month: 'Mar', rain: 28, temp: 11 },
+    { month: 'Apr', rain: 42, temp: 14 },
+    { month: 'May', rain: 15, temp: 19 },
+    { month: 'Jun', rain: 22, temp: 24 },
+  ];
+
+  type Chart = HTMLElement & { data: unknown[]; series: unknown[] };
+
+  const bar = document.getElementById('demo-bar') as Chart | null;
+  if (bar) {
+    bar.data = rows;
+    bar.series = [{ type: 'bar', xKey: 'month', yKey: 'rain', yName: 'Rainfall (mm)' }];
+  }
+
+  const multi = document.getElementById('demo-multi') as Chart | null;
+  if (multi) {
+    multi.data = rows;
+    multi.series = [
+      { type: 'bar', xKey: 'month', yKey: 'rain', yName: 'Rainfall (mm)' },
+      { type: 'line', xKey: 'month', yKey: 'temp', yName: 'Temperature (C)' },
+    ];
+  }
+</script>

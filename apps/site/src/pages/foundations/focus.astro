@@ -3,32 +3,30 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 
-// Tier 3 — the surface a spoke reaches. All five live together in
+// Tier 3 — the surface a spoke reaches. All three live together in
 // component-tokens.css under FOCUS RING.
 const tokens = [
-  { token: '--focus-ring-color', maps: '--color-border-default-focus', role: 'The brand band, inner. Carries identity, not contrast.' },
-  { token: '--focus-ring-halo', maps: '--color-border-default-focus-halo', role: 'The contrast band, outer. This is the one that has to clear 3:1.' },
-  { token: '--focus-ring-width', maps: '--border-width-focus', role: 'Thickness of each band. 2px.' },
-  { token: '--focus-ring-offset', maps: '2px literal', role: 'Sizes the innermost halo band. 0 gives a plain two-band ring.' },
-  { token: '--focus-ring-halo-spread', maps: 'derived', role: 'The box-shadow spread that puts the halo one band beyond the outline. Never hand-write this.' },
+  { token: '--focus-ring-color', maps: '--color-border-default-focus', role: 'The ring. Your brand, at the step that can be seen.' },
+  { token: '--focus-ring-width', maps: '--border-width-focus', role: 'Thickness. 2px.' },
+  { token: '--focus-ring-offset', maps: '2px literal', role: 'The gap between the element and the ring. A separated ring reads as its own mark rather than a thicker border.' },
 ];
 
 const criteria = [
   { sc: '2.4.7 Focus Visible', level: 'AA', asks: 'A visible indicator exists for anything that takes keyboard focus.', us: 'Every focusable element paints the ring. check-a11y blocks removal at write time — including the unconditional `.thing { outline: none }` shape that the guard missed until 2026-08-16.' },
-  { sc: '1.4.11 Non-Text Contrast', level: 'AA', asks: 'The indicator contrasts 3:1 with adjacent colours.', us: 'The halo band is outermost, so it is what sits against the page: 15.9:1 raised, 15.5:1 canvas, 14.3:1 sunken.' },
-  { sc: '2.4.13 Focus Appearance', level: 'AAA', asks: 'Contrasting area at least as large as a 2px perimeter of the element.', us: 'Two 2px bands outside the box — double the minimum. The three inset rings are flush 2px, which matches the perimeter exactly.' },
+  { sc: '1.4.11 Non-Text Contrast', level: 'AA', asks: 'The indicator contrasts 3:1 with adjacent colours.', us: 'The ring is the first step of the brand ramp clearing 3:1 on every surface. The hub default lands on grass step 10: 3.91:1 raised, canvas and floating, 3.07:1 sunken. The ring has a SECOND colour — red, on an invalid field — and it is held to the same bar: red-9 at 3.43:1 worst. check-contrast.mjs blocks on all four surfaces for BOTH colours, in both schemes, per theme.' },
+  { sc: '2.4.13 Focus Appearance', level: 'AAA', asks: 'Contrasting area at least as large as a 2px perimeter of the element.', us: 'One 2px band outside the box, which meets the 2px perimeter. The inset rings are flush 2px, which matches it exactly.' },
   { sc: '2.4.11 / 2.4.12 Focus Not Obscured', level: 'AA / AAA', asks: 'The focused element is not hidden behind other content.', us: 'focus.css sets scroll-margin-block-start from --focus-scroll-margin. Any layout with sticky chrome must set it; the docs shell sets 76px for its 56px bar.' },
 ];
 ---
 <DocsLayout title="Focus — Ecology" activeHref="/foundations/focus">
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>Foundations</span> <span>/</span> <span>Focus</span></nav>
   <h1>Focus</h1>
-  <p class="lede">The focus indicator is the keyboard user's cursor. It is the one visual state you never get to remove — and the only one this system paints in two colours, because one is not enough to guarantee it can be seen.</p>
+  <p class="lede">The focus indicator is the keyboard user's cursor. It is the one visual state you never get to remove — and the one place where a brand colour is not automatically allowed to be itself, because a colour chosen for brand reasons cannot promise to be visible.</p>
 
-  <Section id="ring" title="The ring is two bands">
+  <Section id="ring" title="The ring is your brand, at a step that can be seen">
     <p>
-      Tab through anything on this site. The ring you see is a <strong>brand band</strong> with a
-      near-black <strong>halo</strong> outside it. Both are 2px.
+      Tab through anything on this site. The ring is <strong>one 2px band</strong>, 2px clear of the
+      element, and it is the brand — just not always the brand's <em>fill</em> step.
     </p>
     <div class="stage">
       <button class="demo">Tab to me</button>
@@ -36,22 +34,44 @@ const criteria = [
       <input class="demo demo--input" aria-label="Demo field" placeholder="…and me" />
     </div>
     <p>
-      The split exists because a single brand-coloured ring <em>cannot</em> be relied on to
-      conform. Measured on 2026-08-16, the default ring managed <strong>2.95:1</strong> against the
-      raised surface, 2.88:1 against the canvas and 2.66:1 against the sunken surface — all short
-      of the 3:1 that SC 1.4.11 requires. That is not a bad colour choice to be corrected: whatever
-      a spoke picks for its brand is picked for <em>brand</em> reasons and can land anywhere on the
-      luminance scale. So identity and contrast were split onto separate bands, and only the second
-      one carries the conformance obligation.
+      Here is the problem that shapes everything else on this page. Measured on 2026-08-16, a ring
+      taken straight from the brand fill managed <strong>2.95:1</strong> against the raised surface
+      and <strong>2.66:1</strong> against the sunken one — both short of the 3:1 that SC 1.4.11
+      requires. And that is not a bad colour choice to be corrected: whatever a spoke picks for its
+      brand is picked for <em>brand</em> reasons and can land anywhere on the luminance scale. So
+      <strong>"the ring is the brand" and "the ring always clears 3:1" cannot both be guaranteed by
+      one flat value.</strong>
     </p>
     <p>
-      This is the accessibility literature's <strong>universal focus indicator</strong> — pair a
-      light and a dark outline so one of them always contrasts — with the brand kept as the inner
-      band rather than discarded.
+      The reason the fill step in particular falls short is worth naming, because it looks like it
+      should work: a Radix step 9 is engineered to clear 3:1 as a <strong>solid fill</strong>
+      carrying text. A focus ring needs 3:1 as a <strong>2px hairline</strong> against the same
+      surfaces. Same number, harder job.
+    </p>
+    <p>
+      So the ring <strong>walks the brand's own ramp</strong> — step 9, then 10, 11, 12 — and takes
+      the first step that clears 3:1 on every surface in that scheme. The hub's own green moves one
+      step, from <code>grass-9</code> to <code>grass-10</code>, and lands at 3.07:1 on the sunken
+      surface. Both shipped themes, beacon and qanat, already clear 3:1 at step 9 and are
+      <em>untouched</em>. A brand that works is never moved.
+    </p>
+    <p class="note">
+      Swept across 216 brand seeds in both schemes, every ramp had a usable step — the worst
+      best-available was 9.55:1. Step 12 of a light ramp is dark and step 12 of a dark ramp is
+      light, so the far end of the curve is always usable. There is a neutral fallback underneath
+      for a ramp with no usable step, and in practice it never fires: <strong>the ring is always the
+      brand.</strong>
+    </p>
+    <p>
+      A <strong>second, non-brand contrast band</strong> — the accessibility literature's universal
+      focus indicator, pairing a light and a dark outline so one always contrasts — was tried on
+      2026-08-16 and reverted the same day: it read as a heavy near-black slab around every focused
+      control. Do not re-add a band without agreeing the requirement and the weight first. Its three
+      tokens were never shipped.
     </p>
   </Section>
 
-  <Section id="tokens" title="The five tokens">
+  <Section id="tokens" title="The three tokens">
     <table class="tbl">
       <thead><tr><th>Token</th><th>Maps to</th><th>What it is</th></tr></thead>
       <tbody>
@@ -65,16 +85,113 @@ const criteria = [
       </tbody>
     </table>
     <p>
-      A spoke re-points <code>--color-background-brand</code> and the inner band follows, because
-      <code>--color-border-default-focus</code> chains off the brand semantic rather than the
-      ramp. The halo deliberately does <em>not</em> follow: a spoke must not be able to break the
-      ring's conformance by changing its brand and not noticing.
+      <code>--color-border-default-focus</code> is where the walk's answer lands, and it names a
+      brand <em>ramp step</em> rather than the brand role. It used to chain off
+      <code>--color-background-brand</code>, and giving that up was the price of the guarantee: a
+      <code>var()</code> chain that always resolves cannot express <em>"the brand, unless the brand
+      cannot be seen"</em>. CSS has no function that tests a candidate colour's contrast — Color 5's
+      <code>color-contrast()</code> was cut down to <code>contrast-color()</code>, which only returns
+      black or white against a background — so the condition cannot live in the cascade at all.
+    </p>
+    <p>
+      Three things replace what the chain used to guarantee, so a spoke still cannot end up with the
+      hub's hue: <code>theme-recipe.mjs</code> emits this role for <strong>every</strong> generated
+      theme in both schemes, even when the walk picks step 9 and the value does not change; the spoke
+      template carries the declaration so a hand-authored theme has it in front of it; and
+      <code>check-contrast.mjs</code> grades it at <code>fail</code> against all four surfaces in both
+      schemes. Teeth in the gate, not the cascade.
     </p>
     <p class="note">
-      One surface genuinely inverts this — <code>esa-button variant="chrome"</code> sits on a dark
-      app bar and takes its ring from <code>currentColor</code>. A component on a dark ground
-      re-points <code>--focus-ring-halo</code> to a light value locally. That is what a tier-3 hook
-      is for.
+      <strong>A spoke should not declare <code>--color-border-default-focus</code> by hand.</strong>
+      A theme file loads after <code>tokens.css</code> at equal specificity, so declaring it overrides
+      the walk and hands back the failure it exists to prevent. Let
+      <code>make-theme.mjs</code> pick it.
+    </p>
+    <p class="note">
+      <strong>One ground no brand-derived ring can serve.</strong> A knockout app bar is near-black
+      in the <em>light</em> scheme, so a ring dark enough for near-white surfaces is nearly invisible
+      on it — measured 2026-08-17, qanat 2.82:1 and the spoke template 2.54:1, neither caused nor
+      fixed by the walk. That is what the tier-3 hook is for: a component on dark ground re-points
+      <code>--focus-ring-color</code> locally, as <code>esa-button variant="chrome"</code> already
+      does by taking it from <code>currentColor</code>. The gate carries it as a
+      <code>warn</code> rather than pretending a single token could fix it.
+    </p>
+  </Section>
+
+  <Section id="error" title="On an invalid field the ring turns red">
+    <p>
+      <strong>Ten</strong> components have an error state, and each re-points
+      <strong>one token</strong> on its error wrapper:
+    </p>
+    <pre class="code" tabindex="0" role="region" aria-label="Error ring rule"><code>{`.field--error {
+  --focus-ring-color: var(--form-error-border-color);
+}`}</code></pre>
+    <p>
+      Same band, same width, same offset — only the colour moves. That is the whole rule, and
+      re-pointing the <em>token</em> rather than overriding <code>outline-color</code> is
+      deliberate: <strong>a field is not one focusable thing.</strong>
+      <code>esa-combobox</code> has five things that read the ring colour — an input, a text
+      trigger, a field trigger, the dropdown's own search box, and every chip remove button.
+      <code>esa-checkbox-group</code> has N boxes, <code>esa-radio-group</code> N circles, and
+      <code>esa-form-field</code> does not own its control at all. A property override means one
+      rule per focusable part, and every part you miss keeps ringing brand-green inside a field
+      that is telling the user it is invalid. Custom properties <strong>inherit</strong>, so one
+      declaration reaches all of them — including slotted light-DOM content, and across a shadow
+      boundary, which is the only channel that works in every engine.
+    </p>
+    <table class="tbl">
+      <thead><tr><th>Component</th><th>Error wrapper</th><th>What the ring used to be</th></tr></thead>
+      <tbody>
+        <tr><td><code>esa-text-field</code>, <code>esa-textarea</code>, <code>esa-input-tag</code></td><td><code>.field--error</code></td><td>a red <code>box-shadow</code>, stacked as a second band</td></tr>
+        <tr><td><code>esa-select</code>, <code>esa-combobox</code>, <code>esa-date-picker</code></td><td><code>.field--error</code></td><td>a <code>box-shadow</code> in <strong>red-6</strong> — 1.40:1, near-invisible</td></tr>
+        <tr><td><code>esa-form-field</code></td><td><code>.esa-form-field--error</code></td><td>nothing at all — a brand ring on an invalid field</td></tr>
+        <tr><td><code>esa-checkbox-group</code>, <code>esa-radio-group</code></td><td><code>.items--error</code></td><td>nothing at all</td></tr>
+        <tr><td><code>esa-button-toggle</code></td><td><code>.group--error</code></td><td>nothing at all</td></tr>
+      </tbody>
+    </table>
+    <p class="note">
+      <strong>A dropdown panel inside the field inherits this too.</strong>
+      <code>esa-select</code> and <code>esa-combobox</code> both render their panel inside
+      <code>.container</code>, so the search box in an invalid combobox's dropdown rings red as
+      well. That is consistent — it is all one field — but it is not something you would predict
+      from reading the rule, so it is written down here as a decision rather than left to be
+      discovered.
+    </p>
+    <p class="note">
+      <strong>The property-override version broke, and that is why the token is the mechanism.</strong>
+      This rule was originally a <code>box-shadow</code>, back when the base rule painted the
+      ring with <code>box-shadow</code> too — a true override. On 2026-08-16 the forced-colors
+      pass converted the base rule to <code>outline</code> and left this one behind. The two
+      rules no longer shared a property, so the override became an <em>addition</em>: a focused
+      invalid field painted <strong>three concentric bands in two colours</strong> — red border,
+      red shadow flush to it, a 2px gap, then the brand outline. Nobody designed that.
+      <code>check-a11y</code> could not see it either, because its ring check asks whether a
+      ring is <em>present</em>, and two rings pass that as easily as one. Re-pointing the token
+      cannot fail that way: there is no second property to fall out of step with.
+    </p>
+    <p>
+      Because the ring has two colours, <strong>both</strong> are gated.
+      <code>--form-error-border-color</code> is graded against the same four surfaces at the
+      same 3:1, at <code>fail</code> level — red-9 measures 3.43:1 on the worst surface, and
+      red-11 under the assurance profile measures 4.57:1.
+    </p>
+    <p class="note">
+      <strong>Not <code>--color-border-utility-danger</code>.</strong> Three of the six painted
+      this ring from that role until 2026-08-17, and it is <strong>red-6</strong> — a subtle
+      <em>border</em> step, measuring <strong>1.40:1</strong> on a sunken surface, with a
+      literal fallback of <code>rgba(211, 47, 47, 0.25)</code> at 1.26:1. Three components
+      shipped an error ring that was very nearly invisible, and nothing measured it because
+      the ring had no gated row at all. It is still the right token for
+      <code>esa-error-summary</code>'s 1px panel border, which is what a step 6 is for.
+    </p>
+    <p>
+      Note what the red ring is <em>not</em> doing: carrying the error. WCAG requires the error
+      be identified <strong>in text</strong> (SC 3.3.1) and forbids colour as the only signal
+      (SC 1.4.1), and the components already satisfy both —
+      <code>aria-invalid="true"</code> on the input, the message linked by
+      <code>aria-describedby</code>, and the visible error text. The red ring is a design
+      choice on top of a contract that is already met, which is why it is allowed to be a
+      colour change and nothing more.
     </p>
   </Section>
 
@@ -86,11 +203,18 @@ const criteria = [
     <pre class="code" tabindex="0" role="region" aria-label="Focus rule example"><code>{`.thing:focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
-  box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo);
 }`}</code></pre>
+    <p class="note">
+      This sample carried a fourth line until 2026-08-17 —
+      <code>box-shadow: 0 0 0 var(--focus-ring-halo-spread) var(--focus-ring-halo)</code> — and
+      neither of those tokens was ever declared. A <code>var()</code> with nothing to resolve to and
+      no fallback is invalid at computed-value time, so the declaration was discarded silently, with
+      no console warning. Anyone who copied this shape wrote a dead line. Worth knowing as a failure
+      mode, not just as a correction.
+    </p>
     <ul class="rules">
       <li>
-        <strong><code>outline</code> for the brand band, never <code>box-shadow</code>.</strong>
+        <strong><code>outline</code> for the ring, never <code>box-shadow</code>.</strong>
         Forced-colors modes replace backgrounds, borders and box-shadows with system colours;
         outlines survive. Fourteen components painted their ring with box-shadow alone until
         2026-08-16 — every form control we ship — which meant the entire form layer had no
@@ -115,8 +239,8 @@ const criteria = [
       </li>
       <li>
         <strong>Inset the ring only when the box is clipped.</strong>
-        <code>outline-offset: calc(var(--focus-ring-offset) * -1)</code> plus an
-        <code>inset</code> halo, for a full-bleed row inside an <code>overflow: hidden</code>
+        <code>outline-offset: calc(var(--focus-ring-offset) * -1)</code>, for a full-bleed row
+        inside an <code>overflow: hidden</code>
         panel. A flush 2px inner ring has the same area as a 2px perimeter, so it still meets
         Focus Appearance — but an outward ring is easier to see and should be the default.
       </li>
@@ -139,8 +263,13 @@ const criteria = [
     </table>
     <p class="note">
       <strong>axe does not evaluate focus indicators at all.</strong> <code>npm run a11y</code>
-      stayed green through every failure on this page, including three components that had deleted
-      their ring outright. The test is a keyboard and your eyes.
+      stayed green through every failure on this page, including the <strong>four</strong> components
+      that had deleted their ring outright — <code>esa-entity-search</code>,
+      <code>esa-search-panel</code>, <code>esa-command-palette</code> and <code>esa-combobox</code>,
+      each carrying an unconditional <code>outline: none</code> on a base class, and all four the
+      search input a keyboard user lands on first. It also cannot see a contrast ratio, which is why
+      the 3:1 guarantee above is enforced by <code>check-contrast.mjs</code> and not by axe. The test
+      is a keyboard and your eyes.
     </p>
   </Section>
 
@@ -158,7 +287,7 @@ const criteria = [
         undo, which is what suppresses the browser's own ring only where ours replaces it.
       </li>
       <li>
-        <strong>Shadow DOM</strong> — each Lit component paints its own from the same five tokens
+        <strong>Shadow DOM</strong> — each Lit component paints its own from the same three tokens
         (custom properties inherit through the boundary). The shared
         <code>@esa/tokens/a11y.css</code> is bridged in via <code>a11y.ts</code> and carries the
         forced-colors fallback, so a component listing <code>a11y</code> in

@@ -1,10 +1,16 @@
 {
-  "$comment": "Seeds for the qanat demo theme. brand/#1769aa and the rounder corners are carried over verbatim from the hand-written themes.css block.",
+  "$comment": "Seeds for the qanat demo theme. brand/#1769aa and the rounder corners are carried over verbatim from the hand-written themes.css block. NOTE: make-theme.mjs does not preserve this key — it was dropped by the 2026-08-17 regeneration and restored by hand. Check for it after any regenerate.",
   "slug": "qanat",
   "scope": "qanat",
   "seeds": {
     "brand": "#1769aa",
     "neutral": "cool",
-    "corners": "round"
+    "corners": "round",
+    "accent": "derive",
+    "ai": "derive",
+    "info": "derive",
+    "success": "derive",
+    "warning": "derive",
+    "danger": "derive"
   }
 }

@@ -596,8 +596,8 @@ export class EsaInputTag extends LitElement {
     }
     .container:focus-within,
     .container--open {
-      --_field-border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -619,13 +619,45 @@ export class EsaInputTag extends LitElement {
     .field--error .container:hover:not(.container--disabled) {
       --_field-border-color: var(--form-error-border-color, #e5484d);
     }
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override — the house mechanism. It covers the container AND every chip remove button
+       with one declaration, which an outline-color override on .container would have missed.
+       See esa-text-field for the full account and the contrast numbers. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
+    }
     .field--error .container:focus-within,
     .field--error .container.container--open {
       --_field-border-color: var(--form-error-border-color, #e5484d);
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
+    }
+    /* A disabled field must not wear the error ring.
+       UNREACHABLE BY CONSTRUCTION — the inner input and every chip button take the native
+       disabled attribute (see render), so :focus-within cannot match and this never fires.
+       It is kept as the belt to that braces: the day someone swaps disabled for
+       aria-disabled to keep the field focusable, this is what stops an inert field rendering
+       as invalid.
+       IT HAS NOW BEEN REWRITTEN TWICE FOR THE SAME REASON, which is the lesson: it was
+       box-shadow: none, then outline-color, and it is now a token re-point, because a
+       cancelling rule has to name whatever the rule it cancels names. Re-pointing the token
+       back is also the version that needs no specificity trick — the old outline-color form
+       needed a .field--error in the selector to reach (0,3,0) and beat the error rule.
+       Restoring the NORMAL ring colour rather than removing the outline, because an element
+       that CAN take focus still owes SC 2.4.7 a visible ring even when it is inert.
+       SCOPED TO .field--error, and it must be. This rule cancels the ERROR ring, so
+       outside the error state it has nothing to cancel — and unscoped it did damage:
+       a declaration ON the element beats an INHERITED value at any specificity, so it
+       also overrode a tier-3 --focus-ring-color inherited from an ancestor. That is
+       the documented dark-app-bar escape hatch (component-tokens.css, and the
+       design-principles skill; esa-button variant="chrome" is the worked example), so
+       a disabled tag field on a knockout surface reverted to the brand ring — the one
+       ring that is invisible there, measured 2.82:1 / 2.54:1 in this same change.
+       The .field--error prefix costs no specificity trick: this is still a declaration
+       on the container itself, which is what beats the value inherited from
+       .field--error above. */
+    .field--error .container--disabled {
+      --focus-ring-color: var(--color-border-default-focus, #3e9b4f);
     }
     .container--disabled:focus-within {
-      box-shadow: none;
       --_field-border-color: var(--form-border-color, #cecece);
     }
 
@@ -679,7 +711,7 @@ export class EsaInputTag extends LitElement {
       background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.06));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 1px;
     }
 

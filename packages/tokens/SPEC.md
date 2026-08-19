@@ -166,8 +166,9 @@ Colour is the largest and most-read part of this tier, so it has a fixed shape:
             │           │                                   raised, floating, sunken,
             │           │                                   backdrop, scrim, strong, heavy,
             │           │                                   subtle, muted, secondary (optional)
-            │           └────────────────────────────────── brand, utility, elevation, overlay,
-            │                                               accent, ai, link, disabled (optional)
+            │           └────────────────────────────────── default, elevation, field, brand,
+            │                                               accent, ai, link, utility, disabled,
+            │                                               overlay, dataviz
             └────────────────────────────────────────────── background | content | border
 ```
 
@@ -208,9 +209,29 @@ a danger border is `--color-border-utility-danger`. Not `--color-danger-border`,
 There is no fourth. `overlay` was one until 2026-08-15 and is an **intention**
 now — see above.
 
-**Neutral is the default intention and carries no intention word.**
-`--color-background` is the page; `--color-content-default` is body text. Every
-non-neutral names its intention: `--color-background-brand`.
+**Neutral is an intention like any other, and it is spelled `default`.**
+`--color-background-default` is the page; `--color-content-default` is body text.
+
+This paragraph said the opposite until 2026-08-17 — "neutral carries no intention
+word", illustrated with `--color-background`. That name is DEPRECATED: see
+`bare-property-to-default` in `migrations.json`. Leaving the slot empty made the most
+common role in the system the one that did not follow the grammar, and a bare
+`--color-background` reads as the property with nothing said about it. The intention
+slot is optional in the sense that `--typography-*` ingredients have none; it is not a
+licence to omit one a role actually has.
+
+**The intention slot is never a rung of an axis.** `elevation` is ONE intention whose
+variants are `raised`/`floating`/`sunken`; `utility` is ONE whose variants are the four
+feedback rungs; `dataviz` is ONE whose variants are `categorical`/`sequential`/
+`diverging`. Spending the intention slot on the rung is what stopped anything in the
+system from saying the rungs belonged together — see `surface-to-elevation` and
+`status-to-utility`. `default` and `field` sit outside the elevation family on purpose:
+`default` is the reference plane the other three are measured from, and `field` is
+transparent and takes no step at all.
+
+**`apps/site/src/data/tier2-naming.ts` is the machine-readable copy of this list**, and
+it is what the site's semantic tables and `component-promises.ts` are built from. If
+this prose and that `INTENTIONS` set ever disagree, the set is the one with readers.
 
 **Two rules that exist because they were once broken:**
 

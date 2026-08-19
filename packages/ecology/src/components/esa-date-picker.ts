@@ -342,8 +342,8 @@ export class EsaDatePicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
@@ -370,9 +370,14 @@ export class EsaDatePicker extends LitElement {
     .field--error .input {
       --_field-border-color: var(--form-error-border-color, #e5484d);
     }
-    .field--error .input:focus {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px)
-        var(--color-border-utility-danger, rgba(211, 47, 47, 0.25));
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override — the house mechanism, so every focusable part inside the field follows with one
+       declaration. Two fixes here on 2026-08-17: it was a box-shadow, which stacked a second
+       band once the base ring became an outline; and it read --color-border-utility-danger,
+       which is red-6, a SUBTLE BORDER step measuring 1.40:1 on a sunken surface. See
+       esa-text-field for the full account. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
   `,
   ];

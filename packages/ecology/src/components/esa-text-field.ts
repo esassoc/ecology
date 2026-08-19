@@ -420,8 +420,8 @@ export class EsaTextField extends LitElement {
       --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .control:focus-within {
-      --_field-border-color: var(--form-border-color-focus, #46a758);
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
@@ -487,11 +487,58 @@ export class EsaTextField extends LitElement {
         var(--form-affix-border-color, var(--form-border-color, #cecece));
     }
 
+    /* ON AN INVALID FIELD THE FOCUS RING TURNS RED, and it does so by RE-POINTING THE
+       TOKEN rather than by overriding a property. This is the house mechanism for the
+       error ring — ten components use it (the six field components, esa-form-field,
+       esa-checkbox-group, esa-radio-group, esa-button-toggle) and the reasoning is written
+       out once, here.
+
+       WHY THE TOKEN AND NOT outline-color. A field is not one focusable thing. This one is,
+       but esa-select and esa-combobox have an input, a trigger and N chip remove buttons;
+       esa-checkbox-group has N boxes; esa-radio-group N circles; and esa-form-field does not
+       own its control at all — it wraps a slotted one. Overriding outline-color means one
+       rule per focusable part, and every part you forget keeps ringing brand-green inside a
+       field that is telling the user it is invalid. Re-pointing --focus-ring-color on the
+       error wrapper reaches all of them with one declaration, because custom properties
+       INHERIT — including into slotted light-DOM content and across a shadow boundary, which
+       is the only channel that works in every engine.
+
+       CONSEQUENCE WORTH KNOWING, since it is a decision and not an accident: a dropdown
+       panel rendered inside .field (esa-select and esa-combobox both render theirs inside
+       .container) inherits this too, so the search box inside an invalid combobox's panel
+       rings red as well. That is consistent — it is all one field — but it is a behaviour
+       nobody would predict from reading the rule, so it is recorded rather than discovered.
+
+       IT WAS AN ADDITION FOR ONE DAY AND THAT WAS A BUG, worth recording because the
+       mechanism is easy to recreate. This started life as
+       box-shadow: 0 0 0 var(--focus-ring-width) <red>, back when the base rule ALSO painted
+       the ring with box-shadow — so it was a true override: same property, same geometry,
+       red replaced brand. On 2026-08-16 the forced-colors pass converted the base rule to
+       outline (box-shadow is force-adjusted away, so a box-shadow-only ring vanishes in
+       Windows High Contrast) and did NOT convert this one. The moment the two rules stopped
+       sharing a property the override stopped overriding, and a focused invalid field
+       painted THREE concentric bands in two colours: red border, red box-shadow flush to
+       it, a 2px gap, then the brand outline. Nobody designed that. check-a11y could not
+       catch it either — its ring check asks whether a ring is PRESENT, and two rings pass
+       that as easily as one. Re-pointing the token cannot fail that way: there is no second
+       property to fall out of step with.
+
+       WHY RED IS ALLOWED TO BE THE RING at all, given the ring carries a 3:1 obligation:
+       --form-error-border-color is graded by check-contrast.mjs against all four surfaces at
+       fail level, exactly like the brand ring. It resolves to red-9 (#e5484d, 3.43:1 on the
+       worst surface) and to red-11 under the wcag-aa assurance profile (4.57:1). It is also
+       what --_field-border-color uses below, so the ring and the border are the same red by
+       construction rather than by coincidence.
+
+       NOT --color-border-utility-danger, which is what three of the six field components
+       used until 2026-08-17. That role is red-6, a SUBTLE BORDER step: 1.40:1 on a sunken
+       surface. Their error rings were very nearly invisible, and the literal fallback beside
+       it — rgba(211, 47, 47, 0.25) — measured 1.26:1. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
+    }
     .field--error .control {
       --_field-border-color: var(--form-error-border-color, #e5484d);
-    }
-    .field--error .control:focus-within {
-      box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--form-error-border-color, #e5484d);
     }
 
     /* Type comes from .typography-body-sm — help and error are one size at every

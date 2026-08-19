@@ -320,8 +320,13 @@ export class EsaButtonToggle extends LitElement {
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
     }
+    /* An invalid group reddens the option borders AND the focus ring. The ring is a token
+       re-point, not an outline-color override, so all N options follow with one declaration —
+       the house mechanism for the error ring as of 2026-08-17 (see esa-text-field). Until
+       then this rule moved the border and left the ring brand-coloured. */
     .group--error {
       --_border-color: var(--form-error-border-color, #e5484d);
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
 
     .option {
@@ -359,7 +364,7 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:focus-visible {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
       position: relative;
       z-index: 1;

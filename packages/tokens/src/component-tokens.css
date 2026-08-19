@@ -270,12 +270,30 @@
      gap is genuine micro-geometry, which is the category the width turned out
      not to belong to.
 
-     CONTRAST IS UNRESOLVED (2026-08-16). The brand ring measured 2.95:1 / 2.88:1
-     / 2.66:1 against the raised, canvas and sunken surfaces — all short of the
-     3:1 SC 1.4.11 asks for. A second, non-brand contrast band was tried and
-     reverted the same day: it read as a heavy near-black slab around every
-     focused control. The measurement stands; the remedy is still open. Do not
-     re-add a band without agreeing the requirement and the weight first. */
+     CONTRAST IS RESOLVED (2026-08-17), AND NOT BY ANYTHING IN THIS FILE. The
+     brand ring measured 2.95:1 on the raised and canvas surfaces and 2.66:1 on
+     the sunken one — all short of the 3:1 SC 1.4.11 asks for — because step 9 is
+     engineered to clear 3:1 as a SOLID FILL and a ring needs it as a HAIRLINE.
+     The remedy is a ramp WALK, one tier up: --color-border-default-focus now
+     takes the first step of the brand's own ramp that clears 3:1 on every
+     surface. grass lands on step 10 (3.07:1 sunken, 3.91:1 elsewhere) — still
+     the brand, one step along its own curve. resolveFocusRing in
+     scripts/lib/theme-recipe.mjs runs that walk per theme per scheme; see
+     --color-border-default-focus for why it references a primitive.
+
+     A second, non-brand contrast band was tried on 2026-08-16 and reverted the
+     same day: it read as a heavy near-black slab around every focused control.
+     DO NOT RE-ADD A BAND without agreeing the requirement and the weight first.
+     Its three tokens (--focus-ring-halo, --focus-ring-halo-spread,
+     --color-border-default-focus-halo) were never committed; a document naming
+     them is stale, not ahead.
+
+     ONE GROUND THE WALK CANNOT SERVE, and this is the hook's job rather than the
+     role's: a knockout app bar is near-black IN THE LIGHT SCHEME, so a ring dark
+     enough for near-white surfaces is too dark for it. Measured 2026-08-17: qanat
+     2.82:1 and the spoke template 2.54:1 on dark chrome, neither caused nor fixed
+     by the walk. A component on dark ground re-points --focus-ring-color locally
+     — esa-button variant="chrome" already takes it from currentColor. */
   --focus-ring-color: var(--color-border-default-focus);
   --focus-ring-width: var(--border-width-focus);
   --focus-ring-offset: 2px;

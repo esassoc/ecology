@@ -38,6 +38,28 @@
   --color-background-brand-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
   --color-background-brand-secondary-hover: var(--__SCOPE__-brand-800);
 
+  /* ===== (1a) THE FOCUS RING — the brand step that can actually be SEEN =====
+     DO NOT DELETE THIS LINE, and do not assume the brand fill above will do.
+
+     The ring must clear 3:1 against every surface it lands on (SC 1.4.11). A brand's
+     strongest tint is engineered to carry text as a SOLID FILL, which is a different
+     and easier job than reading as a 2px HAIRLINE on a near-white page. Measured in
+     the hub: its own brand fill managed 2.66:1 on the sunken surface — a Level AA
+     failure that shipped for months precisely because this line did not exist and the
+     ring silently inherited the fill.
+
+     So point this at the FIRST step of your ramp that clears 3:1 on every surface.
+     Often that IS the fill step — both hub spokes land there and are untouched. When
+     it is not, go one step darker (light scheme) or lighter (dark), not to black: the
+     ring should stay recognisably yours.
+
+     `node scripts/make-theme.mjs` picks this for you and is the better route. If you
+     are filling this in by hand, verify BOTH schemes — the answer differs per scheme:
+       node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css
+       node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --scheme dark
+     Those four rows are `fail`-level. They block. */
+  --color-border-default-focus:     var(--__SCOPE__-brand-900);  /* __FILL__ the first brand step clearing 3:1 */
+
   /* ===== (1b) FOREGROUNDS ON THE FILLS ABOVE — the eight everyone forgets =====
      THIS SECTION DID NOT EXIST UNTIL 2026-08-16, and its absence is the single most
      reliable source of contrast failures in a spoke. All eight of these are `fail`-level

@@ -492,7 +492,7 @@ export class EsaEntitySearch extends LitElement {
        Inset because the row runs edge to edge inside an overflow:hidden panel, so
        an outline at positive offset would be clipped on both sides. */
     .esa-entity-search__search:focus-within {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .esa-entity-search__search-icon { color: var(--color-content-default-muted, #838383); flex-shrink: 0; }

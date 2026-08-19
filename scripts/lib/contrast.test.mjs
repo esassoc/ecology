@@ -188,5 +188,87 @@ test('the pair table still covers all eight content-on-* foregrounds', () => {
   ]) {
     assert.ok(covered.has(name), `${name} is no longer in PAIRS`);
   }
-  assert.equal(PAIRS.length, 29);
+  // Bumped 29 → 33 (four focus-ring surfaces) → 37 (four error-ring surfaces) → 63 (26
+  // data-viz mark rows). The bare count is a weak guard — it fires on any addition, which is
+  // noise — but it does catch a row being DELETED, which is the failure that matters. The
+  // per-family assertions below are the ones with teeth.
+  assert.equal(PAIRS.length, 63);
+});
+
+test('the focus ring is graded on every surface, and it blocks', () => {
+  // The ring used to have ONE row: --color-border-focus (a pre-rename alias) against
+  // --color-background-raised, at 'warn'. So the surface it was worst on (sunken, 2.66:1
+  // vs 2.95 on raised) was never measured, and the surface it WAS measured on reported a
+  // Level AA failure as an advisory nobody reads.
+  const rows = PAIRS.filter(([fg]) => fg === '--color-border-default-focus');
+
+  // Every page surface the ring can land on, at `fail`. If a surface role is ever added,
+  // this list is the thing that has to grow with it.
+  const blocking = rows.filter(([, , , level]) => level === 'fail').map(([, bg]) => bg);
+  assert.deepEqual(
+    blocking.sort(),
+    [
+      '--color-background-default',
+      '--color-background-elevation-floating',
+      '--color-background-elevation-raised',
+      '--color-background-elevation-sunken',
+    ],
+    'the ring must block on all four page surfaces',
+  );
+
+  // The knockout bar is the one ground no brand-derived value can serve — near-black in
+  // LIGHT, near-white in DARK — so it is advisory, and deliberately so. Asserted rather
+  // than commented, because silently promoting it to `fail` would make the gate red for
+  // every theme with dark chrome and the remedy is a component-local --focus-ring-color.
+  const knockout = rows.filter(([, bg]) => bg === '--color-background-default-knockout');
+  assert.equal(knockout.length, 1);
+  assert.equal(knockout[0][3], 'warn');
+
+  for (const [, , min] of rows) assert.equal(min, 3, 'SC 1.4.11 is 3:1, not the 4.5 text bar');
+
+  // No focus row may name a pre-rename token. The old row did, so it resolved only
+  // through a compatibility alias and would have stopped covering anything the day those
+  // aliases were dropped.
+  for (const [fg] of rows) assert.equal(fg, '--color-border-default-focus');
+  assert.ok(
+    !PAIRS.some(([fg]) => fg === '--color-border-focus'),
+    'the pre-rename --color-border-focus row must be gone, not duplicated',
+  );
+});
+
+test('the ERROR ring is gated on the same four surfaces as the brand ring', () => {
+  // The ring has two colours, because six form components override outline-color to red on
+  // an invalid field. Both owe SC 1.4.11 the same 3:1, so both get the same four rows.
+  //
+  // These rows are why --color-border-utility-danger can never come back here: it is red-6,
+  // a SUBTLE BORDER step measuring 1.40:1 on a sunken surface, and three of the six painted
+  // their error ring from it until 2026-08-17 with nothing measuring it.
+  const brand = PAIRS.filter(([fg]) => fg === '--color-border-default-focus');
+  const error = PAIRS.filter(([fg]) => fg === '--form-error-border-color');
+
+  const surfaces = (rows) => rows.filter(([, , , l]) => l === 'fail').map(([, bg]) => bg).sort();
+  assert.deepEqual(
+    surfaces(error),
+    [
+      '--color-background-default',
+      '--color-background-elevation-floating',
+      '--color-background-elevation-raised',
+      '--color-background-elevation-sunken',
+    ],
+    'the error ring must block on all four page surfaces',
+  );
+  // Identical coverage to the brand ring — if one grows a surface, so must the other.
+  assert.deepEqual(surfaces(error), surfaces(brand), 'both ring colours must cover the same surfaces');
+  for (const [, , min, level] of error) {
+    assert.equal(min, 3, 'SC 1.4.11 is 3:1');
+    assert.equal(level, 'fail', 'the error ring blocks, exactly like the brand ring');
+  }
+
+  // Named at TIER 3 on purpose: that is the token the components paint, and it is declared
+  // in component-tokens.css, which the gate parses. It chains to
+  // --color-background-utility-danger, so a spoke re-pointing the tier-2 role is still graded.
+  assert.ok(
+    !PAIRS.some(([fg]) => fg === '--color-border-utility-danger'),
+    'red-6 is a border step, not a ring colour — it must not be graded as one',
+  );
 });

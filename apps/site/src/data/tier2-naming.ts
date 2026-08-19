@@ -512,6 +512,17 @@ const INTENTIONS = new Set([
   // subtle hover, `link` no border, `disabled` no fill-hover. Four names
   // moving in lockstep across six roles are variants of one thing.
   'utility',
+  // `dataviz` is ONE intention whose variants are the three SCALES — `categorical`
+  // (identity), `sequential` (magnitude), `diverging` (polarity) — each a numbered
+  // ramp. Exactly the `utility` shape: an axis whose rungs move together, so the
+  // intention slot holds the axis and the variant slot holds the rung.
+  //
+  // It briefly shipped as `--color-dataviz-*`, with NO property slot, which is the
+  // defect `bare-property-to-default` already fixed once for the neutral background.
+  // A series colour paints a fill, so the property is `background` and the name says
+  // so. Added 2026-08-17; without this entry all 22 names classify as UNSLOTTED and
+  // `/debug/tokens` files them under "no intention in slot 2".
+  'dataviz',
   // a state raised to the intention level, deliberately — see SPEC.md
   'disabled',
   // `overlay` is ONE intention whose variants are the translucent washes —
@@ -631,6 +642,7 @@ const FAMILY_ORDER = [
   'default', 'elevation', 'field',
   'brand', 'accent', 'ai', 'link',
   'utility',
+  'dataviz',
   'disabled',
   'overlay',
   UNSLOTTED,

@@ -155,7 +155,14 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 
     {/* `body-md` is the default for whatever the app renders here — a page that
         composes esa-* legos has each of them override it with their own role. */}
-    <main class="esa-app-shell__content typography-body-md"><slot /></main>
+    {/* tabindex="0" because this pane is the app's scroll container
+        (`overflow-y: auto`). A scrollable region that holds no focusable element
+        — a long report, a map legend, a log — cannot be scrolled by keyboard at
+        all unless it is itself focusable: there is nothing to Tab to inside it,
+        so arrow keys never reach it. WCAG 2.1.1, and axe's
+        `scrollable-region-focusable`. It costs one Tab stop before the page
+        content, which is the same stop a skip-link targets. */}
+    <main class="esa-app-shell__content typography-body-md" tabindex="0"><slot /></main>
   </div>
 
   {hasSearch && (
@@ -238,7 +245,16 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
   }
   .esa-app-shell__toggle:hover { background: var(--color-background-elevation-sunken, #f0f0f0); color: var(--color-content-brand, #2a7e3b); }
   .esa-app-shell__toggle.is-collapsed svg { transform: scaleX(-1); }
-  .esa-app-shell__toggle:focus-visible { outline: 2px solid var(--color-background-brand, #46a758); outline-offset: 2px; }
+  /* The house shape. These two rules used to read `2px solid
+     var(--color-background-brand)` — the brand FILL role, not the ring's own token, and
+     with the width hardcoded. That was invisible for as long as the two resolved to the
+     same colour, and stopped being invisible on 2026-08-17: --color-border-default-focus
+     is now the first brand ramp step that clears 3:1, so a ring painted from the fill
+     step is the one ring in the kit still at 2.66:1 on a sunken surface. */
+  .esa-app-shell__toggle:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
 
   /* Compact, CENTERED omnibox trigger. */
   .esa-app-shell__search {
@@ -253,7 +269,10 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     cursor: pointer; transition: border-color 150ms ease;
   }
   .esa-app-shell__search:hover { border-color: var(--color-border-default-strong, #bbbbbb); }
-  .esa-app-shell__search:focus-visible { outline: 2px solid var(--color-background-brand, #46a758); outline-offset: 2px; }
+  .esa-app-shell__search:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
   /* clip/visible, not `overflow: hidden` — the search button carries a microcopy
      composite, whose line-height `none` (1) leaves the line box 1em against DM Sans's
      1.30em glyph box, so hiding the Y axis clips the descenders in a placeholder like

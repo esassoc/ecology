@@ -211,11 +211,11 @@ export class EsaRangeSlider extends LitElement {
       outline: none;
     }
     .input:focus-visible::-webkit-slider-thumb {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .input:focus-visible::-moz-range-thumb {
-      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #46a758);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .input:hover:not(:disabled)::-webkit-slider-thumb {

@@ -58,6 +58,7 @@
   --color-background-default-knockout-hover:  var(--qanat-gray-11);
   --color-content-default-knockout:           var(--qanat-gray-1);
   --color-border-default-knockout:            #43484e;
+  --color-border-default-focus:               var(--qanat-brand-9);
   --color-background-brand:                   var(--qanat-brand-9);
   --color-background-brand-hover:             var(--qanat-brand-10);
   --color-background-brand-active:            var(--qanat-brand-10);
@@ -160,6 +161,7 @@ html[data-scheme="dark"][data-theme="qanat"] {
   --color-background-default-knockout-hover:  var(--qanat-gray-11);
   --color-content-default-knockout:           var(--qanat-gray-1);
   --color-border-default-knockout:            #cdced6;
+  --color-border-default-focus:               var(--qanat-brand-9);
   --color-background-brand:                   var(--qanat-brand-9);
   --color-background-brand-hover:             var(--qanat-brand-10);
   --color-background-brand-active:            var(--qanat-brand-10);

@@ -46,14 +46,34 @@ export class EsaButtonGroup extends LitElement {
     );
   };
 
-  /** Reflect the current value onto slotted children for styling/a11y. */
+  /**
+   * Reflect the current value onto slotted children for styling/a11y.
+   *
+   * Two things this used to get wrong, both measured 2026-08-16:
+   *
+   * 1. It wrote `aria-pressed` on EVERY child in every mode. In
+   *    `selectionMode="none"` — plain visual grouping — that turned each plain
+   *    button into "toggle button, not pressed". A press state is a lie when
+   *    nothing can be pressed, so `none` now REMOVES the attribute.
+   * 2. It wrote it on the slotted child itself, which for `esa-button.astro` is
+   *    the wrapper `<span class="esa-button">`. `aria-pressed` is not allowed on
+   *    a generic span (axe `aria-allowed-attr`), and the thing that actually
+   *    takes the press is the `<button>` inside. Aim at that, and only if it
+   *    really is a button — `aria-pressed` is invalid on a link too.
+   */
   private syncSelected(): void {
     const children = Array.from(this.children) as HTMLElement[];
     for (const child of children) {
       const v = child.getAttribute('data-value') ?? child.textContent?.trim() ?? '';
       const selected = this.selectionMode === 'single' && v === this.value;
       child.toggleAttribute('data-selected', selected);
-      child.setAttribute('aria-pressed', String(selected));
+
+      const target =
+        child.querySelector<HTMLElement>('button, [role="button"]') ??
+        (child.matches('button, [role="button"]') ? child : null);
+      if (!target) continue;
+      if (this.selectionMode === 'single') target.setAttribute('aria-pressed', String(selected));
+      else target.removeAttribute('aria-pressed');
     }
   }
 

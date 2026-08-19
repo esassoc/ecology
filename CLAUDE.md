@@ -155,7 +155,7 @@ The pipeline now has a middle: **`/guide/theme-maker`** (the editor) and
 `scripts/lib/theme-recipe.mjs`, with `theme-<slug>.json` as the durable artifact.
 `create-spoke.mjs --theme <recipe>` writes the real file. **Six seeds** (brand hex,
 neutral temperature, corner language, two font stacks, optional per-intention colours)
-produce ~95 light + ~91 dark declarations that pass 29/29 pairs in **both** schemes —
+produce ~95 light + ~92 dark declarations that pass 33/33 pairs in **both** schemes —
 against a hub whose own defaults fail 7 and whose dark block fails 5.
 
 Things that are easy to get wrong here:
@@ -172,12 +172,26 @@ Things that are easy to get wrong here:
 - **"Do not move the client's hex" is LIGHT-ONLY.** `rampFrom` deliberately does not
   anchor the seed in dark — a light-scheme brand glares on a near-black page — so the
   dark fill is the generator's own pick and is as movable as any utility colour.
-- **`--color-content-link` IS emitted, `--color-border-default-focus` is NOT.** The
-  tier-2 default sends links at the step-9 *fill*, which `color.json` itself calls
-  inherited rather than chosen and flags to re-point; a fill step is engineered for
-  3:1, so link text fails AA for most brands (measured: 3.42:1). The focus ring
-  genuinely wants the fill step and keeps its derivation — that chain is what stopped
-  cb-fish keeping Ecology-green rings on a navy brand.
+- **`--color-content-link` AND `--color-border-default-focus` are both emitted, and the
+  second one flipped on 2026-08-17.** This line used to say the focus ring "genuinely
+  wants the fill step and keeps its derivation". It does not: a step 9 is engineered to
+  clear 3:1 as a SOLID FILL, and a ring needs 3:1 as a 2px HAIRLINE on the same surfaces.
+  Measured, the hub's own ring came to 2.95:1 raised/canvas and **2.66:1 sunken** — a
+  Level AA failure (SC 1.4.11) that shipped for months. Links fail the same way for the
+  same reason (measured 3.42:1).
+  So the ring now **walks the brand's own ramp** — step 9, 10, 11, 12 — and takes the
+  first step clearing 3:1 on every surface in that scheme (`resolveFocusRing`). The hub
+  moves one step to `grass-10`; beacon and qanat already clear it at step 9 and are
+  untouched. Across 216 seeds every ramp had a usable step (worst best-available 9.55:1),
+  so **the ring is always the brand**; the neutral fallback under the walk never fires.
+  What this GAVE UP is the tier-2 derivation, which is what stopped cb-fish keeping
+  Ecology-green rings on a navy brand — a `var()` chain cannot express "the brand, unless
+  it cannot be seen", and CSS has no function that tests a colour's contrast. Three
+  things replace it: this generator emits the role for **every** theme in both schemes
+  even when the walk picks step 9; `packages/spoke-template` carries the declaration; and
+  `check-contrast.mjs` grades it at `fail` on all four surfaces. **A spoke must not
+  hand-declare `--color-border-default-focus`** — a theme file loads later at equal
+  specificity, so it would override the walk.
 - **Emit hex only.** `parseColor` reads `#rgb`/`#rrggbb`/`rgb()`/`white`/`black` and
   nothing else; an `oklch()` or `color-mix()` makes those pairs unauditable, and that
   script's history records the cost — it once checked 0 pairs and exited 0 with "All
@@ -204,6 +218,107 @@ containing a `var()` — 631 of 1,187. A custom property is substituted at
 computed-value time *on the element that declares it*, so `--button-radius-md:
 var(--radius-md)` resolves at `:root` and a container override of `--radius-md` cannot
 reach back into it. A spoke needs none of this; its theme block IS at `:root`.
+
+## Tier 1 is the WHOLE Radix palette, generated (2026-08-17)
+`npm run tokens:primitives` (`scripts/gen-radix-primitives.mjs`) writes
+`tokens/primitive/color.json` from `@radix-ui/colors`: **66 scales, 792 tokens** — all
+25 chromatic hues and all 6 neutral temperatures, light and dark. It grew from 21
+scales / 261 tokens, and the baseline went 1,061 → **1,601 names**.
+
+**Why the whole palette rather than the hues in use.** Tier 1 is the shared VOCABULARY
+a project composes a theme from. A partial palette is not restraint, it is a vocabulary
+with words missing, and the missing word is found by whichever project needs a purple.
+Two of the six neutral temperatures `theme-recipe.mjs` already ACCEPTS had no primitive
+behind them, so this closed a live gap as well as a future one.
+
+**A brand ramp is still never a primitive**, and the model is oversold without this:
+`rampFrom` lands the client's hex exactly on step 9, so no Radix ramp matches an
+arbitrary brand. Themes keep generating their own `--<slug>-brand-*`. Primitives cover
+everything else — neutrals, utility hues, data-viz.
+
+Three things the generator's own guards caught, each of which would have silently
+re-coloured the system:
+
+- **Radix dark objects reuse the LIGHT key names** — `radix.grayDark` holds `gray1`…
+  `gray12`, not `grayDark1`. Prefixing by export name returned null for every dark
+  scale and surfaced as "would DROP 7 scales", not as an error.
+- **Two scales are Radix under another name.** `copper` is `bronze`; **`yellow` is
+  `AMBER`** — hub `yellow-9` is `#ffc53d` (amber-9), where real Radix yellow-9 is
+  `#ffe629`. Regenerating `yellow` would have moved all 12 steps of the scale backing
+  the WARNING intention. Both are in `PRESERVE`, and adding real `amber`/`bronze` means
+  those values now ship under two names — honest, but a `migrations.json` row if the
+  aliases are ever retired.
+- **`grass-dark`, `lime-dark` and `gray-dark` disagree with Radix** (8, 7 and 1 steps)
+  while their descriptions claim to BE the Radix dark scales; `blue-dark`, `red-dark`,
+  `green-dark`, `yellow-dark` match exactly. That reads as transcription drift from an
+  older version, not tuning. They are PINNED anyway: `grass-dark` backs the brand in
+  dark mode, so re-pointing it is a visible re-colouring that deserves its own change
+  and its own before/after, not a side effect of widening the palette. **Unresolved.**
+
+Alpha scales are deliberately NOT generated. Radix ships an alpha twin of every scale;
+adding them would double this file again and nothing asks for them — the hub's three
+(`gray-a`, `black-a`, `white-a`) are hand-authored overlay washes and are preserved.
+
+## Data-viz colour is GENERATED and SEARCHED, not picked (2026-08-17)
+**`dataviz` is an INTENTION under the `background` property**, filed exactly like
+`utility`: an intention that is an axis with named rungs. So the names are
+`--color-background-dataviz-<scale>-<n>`, **22 in both schemes** — categorical 8
+(identity), sequential 7 (magnitude), diverging 7 (polarity, neutral midpoint at slot
+4). A series colour paints a fill, so `background` is the property; the rungs are the
+scales.
+
+They were briefly `--color-dataviz-*`, which **dropped the property slot** — the one
+thing SPEC.md's grammar says is never optional, in the same breath as the example it
+gives: not `--color-danger`, because that one is a background and the name should say
+so. A name without a property is not guessable, and it is the reason `utility` reads
+`--color-background-utility-danger` rather than `--color-utility-danger`.
+
+Derived by `scripts/lib/dataviz.mjs` from the brand seed; the hub's own values are that
+generator's output for `grass-9`, committed. **Edit the derivation, never the values.**
+Status colours are NOT here — tier 2 already ships
+`--color-{background,border,content}-utility-{info,success,warning,danger}`, and the
+data-viz method reserves status hues so a series never impersonates a state.
+
+**The slot ORDER is the accessibility mechanism, and it is searched.** Hue-wheel
+spacing does not predict colour-vision separation: the first hand-picked spacing put
+jade beside magenta at ΔE 2.4 under deuteranopia, against a target of 8. So
+`orderCategorical` walks the wheel as a graph — an edge exists where two hues stay
+apart under protan AND deutan AND full-colour vision, in BOTH schemes — and looks for
+a path of 8. `scripts/lib/cvd.mjs` holds the Machado matrices and OKLab distance,
+in-repo because the palette is generated for brands nobody has picked yet.
+
+Four things that cost a cycle each:
+
+- **One fixed step per hue makes it unsolvable.** 21 of 72 swept brands could not seat
+  8 slots even with the all-pairs floor off. Letting the search choose the STEP as well
+  as the hue fixes it, because **CVD simulation preserves lightness** — two hues that
+  collapse under deuteranopia separate again if one is darker. Lightness is the second
+  axis the gate measures, not a fallback.
+- **A single threshold set cannot serve every brand**, so `LADDER` relaxes in named
+  rungs and records which one a theme reached: across 72 seeds, strict 35 / target 15 /
+  floor 14 / incomplete 8. `floor` is the method's own CVD 6–8 band, legal ONLY with
+  secondary encoding — `esa-chart` rotates marker shapes, so that holds by construction.
+- **Sequential must be INTERPOLATED, not sampled off a Radix ramp.** A Radix light ramp
+  spends steps 1–8 on backgrounds and borders, so sampling 7 ordinal bins produced
+  literal DUPLICATES — two bins the same colour. Endpoints come from the brand ramp and
+  the middle is interpolated in OKLCH; chroma is read off the ramp *at that lightness*,
+  because interpolating chroma between two deliberately low-chroma endpoints yields a
+  ramp of muddy greys that never passes through the brand.
+- **Diverging is deliberately NOT brand-derived.** Deriving an arm from the brand gives
+  a green-brand theme green↔red — the worst pairing for the commonest deficiency. Poles
+  are fixed blue↔red with a neutral grey midpoint.
+
+**Two bars, not one, and the gate encodes both.** 26 pairs in `contrast.mjs`, graded
+against the two surfaces a chart actually renders on (raised and default — charts do
+not open in popovers). Categorical and the magnitude ENDPOINTS at 3:1 `fail`;
+`sequential-1` at **2:1**, the ordinal bar for a bin that means "near zero" and is meant
+to recede; `diverging-4` at `warn`, because a near-neutral midpoint whose job is to
+disappear must not block the gate. Adding these left the hub at its historical 7 light /
+5 dark failures — zero new.
+
+**All-pairs cannot be satisfied and is not meant to be.** Eight slots clear the ADJACENT
+gate (bars, lines, stacks); any-two-together — scatter, bubble, choropleth — measured a
+safe cap of 2–3 series. That is a charting rule to document, not more tokens.
 
 ## Assurance is a THIRD axis, orthogonal to the theme
 `data-assurance="wcag-aa"` (2026-08-16) is a conformance profile, not a theme, and
@@ -289,21 +404,27 @@ prose links and debug `<summary>` rows are not what a spoke installs — and pri
 both counts, a visible flag rather than a silent carve-out.
 
 **Most components no longer have a tier-3 surface of their own, and that is the
-target state, not a gap.** After the 2026-08-16 passes, **33 of 65** components own
-a namespace (`--card-*`, `--dialog-*`, …); the other 32 theme entirely through
-tier 2, which is what a spoke re-points anyway. 55 of 65 still READ a tier-3
+target state, not a gap.** After the 2026-08-16 passes, **33 of 67** components own
+a namespace (`--card-*`, `--dialog-*`, …); the other 34 theme entirely through
+tier 2, which is what a spoke re-points anyway. 55 of 67 still READ a tier-3
 hook, but mostly the two shared surfaces — `--focus-ring-*` and `--form-*`. A
 component's doc page rendering an empty "Wired to this component" table is
 correct output; its hooks moved into "Shared tokens it reads". Do not treat that
 as a component missing its surface and re-add hooks to fill it.
 
-**THE COMPONENT COUNT IS 65, AND IT IS NOT `ls | wc -l`.** That directory holds
-66 FILES; the 66th is `icon-registry.ts`, which is not a component and is named
-in `EXCLUDE` in `catalog.ts` for exactly this reason. "66" stood here from
-2026-08-16 — written in the same commit that added `esa-error-summary.ts` and
-took the file count to 66 — and the file contradicted itself in two places while
-it did: 34 Lit + 31 `.astro` is 65, and 65 (+3 reference wrappers) is the 68 doc
-pages on disk. Nothing was deleted to explain a drop; `git log --diff-filter=D`
+**THE COMPONENT COUNT IS 70, AND IT IS NOT `ls | wc -l`.** That directory holds
+71 FILES; the odd one out is `icon-registry.ts`, which is not a component and is
+named in `EXCLUDE` in `catalog.ts` for exactly this reason. It read 65 (of 66
+files) until 2026-08-17, when `esa-chart.ts` landed, then 66 with `esa-map.ts`
+(which also took the reference-wrapper count from three to two, since it replaced
+its own `type="reference"` page), then 70 later the same day with
+`esa-map-geojson`, `esa-map-marker` and `esa-map-popup`. "66" also stood here from
+2026-08-16 for the WRONG reason — written in the same commit that added
+`esa-error-summary.ts` and took the file count to 66 — and the file contradicted
+itself in two places while it did: 34 Lit + 31 `.astro` was 65, and 65 (+3
+reference wrappers) was the 68 doc pages on disk. So the number is right again
+today by a different route, which is exactly why it is not worth trusting from
+memory. Nothing was deleted to explain a drop; `git log --diff-filter=D`
 over `esa-*` is empty. The authority is `componentCount` in
 `apps/site/src/data/catalog.ts` (`sourceSlugs.size`, regex-matched), which the
 catalog index renders — read it there rather than counting by hand. The "28 of
@@ -311,7 +432,7 @@ catalog index renders — read it there rather than counting by hand. The "28 of
 32/33 replacing them come from the site's own generated `themingSurface`
 (`scope === 'exclusive'`), which is what the doc pages render.
 
-Every one of the 65 (+3 reference wrappers) still has a doc page rendering its
+Every one of the 70 (+2 reference wrappers) still has a doc page rendering its
 generated "Theming surface" table. The
 "61" that stood here through 2026-06-12 was a doc-page count, not a component
 count — five later-promoted components (`esa-container`, `esa-kbd`,
@@ -332,9 +453,11 @@ not `labelPosition`). A key matching no prop in source is a build-time
 `⚠️ API drift` warning; so is a documented event the component never dispatches.
 Never re-add a hand-written `props` array: through 2026-08-14 they were authored,
 and `esa-button` silently shipped a 4th `appearance` (`soft`) plus `href`/
-`target`/`rel` that the page never mentioned. Only the three `type="reference"`
-pages (`esa-grid`, `esa-map`, `esa-rich-text-editor`) keep hand-written tables —
-they wrap external libraries and have no source file here. Authored `methods`
+`target`/`rel` that the page never mentioned. Only the two `type="reference"`
+pages (`esa-grid`, `esa-rich-text-editor`) keep hand-written tables —
+they wrap external libraries and have no source file here. `esa-map` was the
+third until 2026-08-17: it now ships a real MapLibre GL host, so its page
+generates its tables like any other and its hand-written ones are gone. Authored `methods`
 and standalone `events` tables still use `@esa/docs/Api.astro` directly.
 **Stale prose is still possible** — the guard checks names, not meaning.
 Express a prop's default in the `Astro.props` destructuring (`variant = 'primary'`),
@@ -463,6 +586,259 @@ effect and nobody noticed the pages were mislabelled.
   `attachInternals`, `setFormValue`, composed `change` event). WCs work in ANY stack —
   they're the portable interactivity layer.
 
+## Charts — `esa-chart` wraps AG Charts, and a canvas breaks every rule above
+`esa-chart.ts` (2026-08-17) is the kit's first component over a **canvas**, and
+almost every mechanism this file documents stops at that boundary. `ag-charts-community`
+is an **optional peer dependency** loaded by dynamic `import()`, so a spoke that never
+charts pays nothing and `@esa/ecology`'s hard dependency list stays at `lit` alone.
+
+**AG Charts was scored in a real browser, not read about**, against the five-question
+rubric (SVG-or-canvas / role+name / text alternative / keyboard to data / reduced
+motion). It answers: canvas **but with a synchronized proxy DOM**, pass-with-a-generic-name,
+**none**, pass, **never asks**. `npm run a11y:charts`
+(`scripts/check-chart-a11y.mjs`) re-scores it — an upgrade can silently undo any of
+it and **axe stays green throughout**, because all of this is behaviour, not markup.
+
+Traps found by measuring, each of which cost a cycle:
+
+- **Probing via the UMD bundle MISLEADS.** UMD auto-registers modules; the ESM entry
+  ships an empty **module registry** and `create()` throws "No modules have been
+  registered". Charts render fine in a UMD probe and the real build is blank.
+- **`AnimationModule` is ENTERPRISE.** Community cannot animate at all — which is
+  why the reduced-motion probe found nothing to disable. So the component only ever
+  asserts `animation.enabled: false`; asking for animation makes every Community
+  chart log a buy-Enterprise notice. Saying "off" still matters, for the day someone
+  registers the Enterprise module.
+- **CSS custom properties do not reach the canvas.** The wrapper carries ~60
+  `--ag-charts-*` and the library's own CSS consumes 49 — but overriding them with
+  `!important` changes `getComputedStyle` while the canvas keeps painting its old
+  colours. Chrome (tooltip, legend, menus) is CSS-themable; **marks are not**, so
+  every mark colour is resolved in JS and re-resolved on a `MutationObserver` over
+  `data-theme`/`data-scheme`. A canvas does not repaint on a cascade change.
+- **AG Charts ships its own colour parser, and BOTH times that bit it was invisible
+  in Chrome.** `CanvasText` throws `Invalid color string` (so the forced-colors "fix"
+  was strictly worse than none, and axe has no forced-colors rule to catch it). Worse:
+  **on a wide-gamut display Safari resolves `var()` chains to
+  `color(display-p3 …)`** where Chrome and Firefox give `rgb(…)` — same throw, so the
+  chart was an EMPTY BOX for every Safari user while looking perfect in the browser
+  being tested. Hence `normalizeColor`, which every colour crossing the boundary goes
+  through, and the **per-engine render smoke test** at the top of `npm run a11y:charts`.
+  Note reading `fillStyle` back is NOT a conversion — WebKit accepts
+  `color(display-p3 …)` and returns it unchanged, so the first fix was a no-op on the
+  only engine that needed it. You have to **rasterise one pixel** and read it back;
+  a 2d context is `colorSpace: 'srgb'`, which is what forces the gamut conversion.
+- **The generated name `"chart, N series"` is not configurable and IS REWRITTEN on
+  every render.** There is no top-level `ariaLabel` option and `title.text` does not
+  feed it. Setting it once is silently reverted by the next resize or re-theme, so a
+  `MutationObserver` holds it.
+- **`legend.item.paddingY` IS NOT AN OPTION** — accepted and ignored. `item.padding`
+  is inter-item spacing. `item.marker.size` is the only lever on item height, 1:1.
+  We do not pull it: legend items render 16px, and SC 2.5.8's **spacing exception**
+  passes them (axe reports zero target-size violations). Target size is REPORTED, not
+  patched — but note the exception is layout-dependent.
+- **A line series has no `fill`.** Setting the wrong colour option logs
+  `Unknown option series[N].fill, ignoring` and leaves the series off-palette.
+- **AG Charts mounts its OWN live region inside the shadow root.** It is adopted —
+  demoted to a plain element, its text mirrored through `announce()` — because the
+  kit's ceiling is the announcer's two regions and cross-boundary observation is
+  unreliable. `npm run a11y:live` catches this if it ever comes back.
+
+**Shadow DOM is fine, and that was measured** — the library injects its stylesheet
+into the shadow root too, so `esa-chart` needs no `createRenderRoot` escape.
+
+**Series colour comes from the tier-2 `--color-background-dataviz-*` family.** Until it lands
+the component uses a built-in ramp validated through the `dataviz` skill's
+`validate_palette.js` **against this system's own surfaces** (`#fcfcfc` / `#191919`),
+and **warns in the console** — a fallback that works silently is how a token never
+gets wired. In light mode three of its eight slots sit under 3:1, which the validator
+allows only **with relief**: the paired data grid IS that relief, not a nicety.
+
+**A chart ships WITH its data as an `esa-grid`.** AG Charts has no table view, so the
+chart alone does not meet the text-alternative requirement. That is a composition,
+deliberately not a prop.
+
+## Maps — `esa-map` wraps MapLibre GL, the second JS-themed surface
+`esa-map.ts` (2026-08-17) is the kit's first component over **WebGL**, and it has the
+same shape of problem as the canvas above: a bitmap no custom property reaches. The
+shared half of the fix now lives in **`packages/ecology/src/token-bridge.ts`**
+(`readToken`, `normalizeColor`, `readColor`, `systemColor`, `onThemeChange`), extracted
+from `esa-chart`. `esa-chart` was deliberately NOT migrated onto it in the same pass —
+it was untracked and in flight.
+
+**THE ENGINE IS MAPLIBRE, AND LEAFLET WAS REJECTED ON PURPOSE.** The page that stood
+here claimed "a MapLibre GL backend would satisfy the same API" — true only of the
+narrow API it documented (centre, zoom, tile URL, markers), false at the first real
+requirement: `queryRenderedFeatures()` (cycling overlays that intersect one click
+point), `feature-state` hover at scale, and GL-rendered point layers. Many ESA apps run
+Leaflet; **that constrains those apps, not what the hub prototypes in.** Two costs came
+with the choice and are real: theming needs the JS bridge, and **GL features are pixels**
+— structurally invisible to assistive tech. The API is kept engine-neutral (primitives
+and GeoJSON in, plain data out; only this file imports an engine) so a Leaflet or ArcGIS
+backend stays buildable, but nobody has asked, so nobody built one.
+
+Measured, not assumed:
+
+- **MapLibre injects NOTHING.** Zero `document.head` writes, zero
+  `createElement('style')` in the bundle, and v6 dropped the "missing CSS declarations"
+  canary Mapbox GL JS logs. So there is no document-level probe to fail: the 83KB
+  stylesheet is adopted into the shadow root and cannot leak `.maplibregl-*` onto the
+  page. This is the OPPOSITE finding from AG Charts, which injects into the shadow root
+  too — same verdict (no `createRenderRoot` escape), different reason.
+- **BOTH halves of the dependency must be dynamically imported.** The engine for cost,
+  the stylesheet **for correctness**: a static `import ... from 'maplibre-gl/dist/maplibre-gl.css?inline'`
+  fails the BUILD when the optional peer is absent, which destroys the placeholder
+  contract the component exists to make. Verified by hiding `node_modules/maplibre-gl`
+  and rebuilding: 92 pages, zero maplibre chunks emitted, placeholder ships.
+- **`click` IS NOT AN AVAILABLE EVENT NAME.** A composed `CustomEvent` named `click` is
+  indistinguishable from a real one at the listener, and a real `MouseEvent`'s `detail`
+  is the click COUNT — a number. `e.detail.lngLat` would be `undefined` on every genuine
+  click, silently, both arriving on one handler. Hence `mapclick` / `mapload`; `moveend`
+  keeps its bare name because the platform does not use it.
+- **Reduced motion is the LIBRARY's job here** — the inverse of `esa-chart`. MapLibre
+  checks `prefersReducedMotion` itself and skips camera animation unless a move is marked
+  `essential`. The obligation is therefore to **never mark a decorative move essential**,
+  not to add machinery.
+
+**Zero tier-3 tokens, and that is the point.** The bridge reads tier-2 roles directly, so
+no `--map-*` namespace exists — which also sidesteps `component-promises.ts`'s
+`nestedComponents` detector (it fires on `--map-marker-*` under `/* esa-map */` once an
+`esa-map-marker` exists) and the ad-hoc ratchet. A hook is earned by demonstrated
+divergence; no spoke has themed a map.
+
+**THE WORKER URL HAS TO BE POINTED AT EXPLICITLY, and getting it wrong is INVISIBLE ON A
+RASTER MAP.** MapLibre derives its worker location at runtime — `new URL(
+'./maplibre-gl-worker.mjs', import.meta.url)` against its own chunk — so a bundler cannot
+see the string and **never emits the file**. Nothing throws: the map constructs, the style
+loads, the controls appear, and raster tiles paint normally because images load on the MAIN
+thread. What silently does nothing is everything the worker parses, so **every GeoJSON
+layer renders nothing** on a map that looks entirely healthy. Measured 2026-08-17: the
+counties lead example was a blank frame in `dist` with **zero console errors and one failed
+request**, while `npm run dev` was fine — `optimizeDeps.exclude: ['maplibre-gl']` fixes the
+same symptom in dev ONLY. The fix is a third dynamic import,
+`maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url` (`?worker` so the bundler resolves the
+worker's own 482KB shared import, `&url` because MapLibre wants a location, not a
+constructor), handed to `setWorkerUrl`. **A map screenshot is not enough to verify this** —
+a raster basemap looks perfect either way; the check is whether an overlay draws.
+
+**THREE ROUTES TO A BASEMAP, and the middle one is what people mean.** `style-url="blank"`
+draws no Earth at all — right when the data IS the map. **`tile-url`** takes one XYZ
+template and the component generates the style, which needs no style document, no account
+and no key, and is the shape every ArcGIS, WMTS and internal tile cache already publishes.
+`style-url` takes a whole vector style document. The default is MapLibre's demo tiles, and
+it is worth knowing that these are **not a basemap in any useful sense**: Natural Earth
+country outlines, `maxzoom: 6`, so a state-scale map shows nothing.
+
+Three things that bite on `tile-url`:
+
+- **`{s}` is Leaflet's and MapLibre does not substitute it.** The engine handles `{z}`
+  `{x}` `{y}` `{quadkey}` `{bbox-epsg-3857}` `{ratio}` and nothing else, so a
+  Leaflet-shaped URL requests a literal `{s}` host: every tile 404s, and you get an empty
+  frame plus errors that name the URL but not the cause. This is the LIKELY failure here,
+  since every ESA Leaflet app's tile URL is written that way. `checkTileUrl` reports it
+  and deliberately does not rewrite it — picking a subdomain is guessing at someone's
+  infrastructure.
+- **Attribution is the caller's.** A style JSON declares its own; a template carries no
+  metadata at all, and most services require credit by licence. A `tile-url` without
+  `attribution` warns.
+- **A raster basemap does not follow the theme**, and nothing on this side can darken it
+  (`raster-brightness` gives grey fog). So `tile-url-dark` names a second service, swapped
+  with `setTiles` on the existing source — **never `setStyle`**, which discards the style
+  and with it every layer a child added through `whenReady()`.
+
+The generated background layer sits UNDER the tiles in both generated styles. Tiles arrive
+over the network, every service has a `maxzoom` and an edge to its coverage, and
+connections drop; in all four cases something shows through, and the engine's own default
+is opaque white — a flash on load and simply wrong in dark mode.
+
+**A vendor basemap is the vendor's.** For the styles this component GENERATES (`blank` and
+`tile-url`) the background is painted from tokens and re-painted on theme change. For a
+vendor style URL the component restyles **nothing** — it does not know the layer names and
+guessing breaks the basemap. Do not "fix" this.
+
+**Four components, not one.** `esa-map` hosts; `esa-map-geojson`, `esa-map-marker` and
+`esa-map-popup` mount into it through `whenReady()` (see `src/map-engine.ts`, which holds
+the structural engine types and `findMapHost`). Clustering and routes are NOT built.
+
+**PAGE CSS DOES NOT REACH POPUP OR MARKER CONTENT, and the failure is half-silent.** The
+engine MOVES that content into its containers inside `esa-map`'s shadow root, at which
+point it stops being page content and a document stylesheet cannot reach it — measured, a
+`display: grid` rule computed to `display: block` with nothing logged. What keeps working
+makes it worse rather than better: `typography-*` role classes resolve (the host adopts
+that sheet), token `var()` reads inherit across the boundary, and Lit components carry
+their own styles — so content renders *half*-styled rather than obviously broken. **Every
+`.astro` component is in the broken half** — `esa-badge` and `esa-button` arrive with none
+of their styling, because Astro-scoped CSS is page CSS.
+
+The route is a **`<style is:inline>` written directly inside `<esa-map>`**, which
+`adoptSlottedStyles` moves into the shadow root at mount. Two things about it:
+
+- **On the MAP, not on the popup.** A style block inside a popup only lands in the root
+  when that popup first OPENS, so pins styled from one render naked until something is
+  clicked. Found by measuring; the first version of the rich-popup demo did exactly that.
+- **`is:inline` is required.** Astro hoists a normal `<style>` out of the markup into the
+  page bundle, which is precisely the case that does not work. It scopes to the whole map
+  root, chrome included, so prefix selectors.
+
+**A POPUP NESTED IN A MARKER IS WIRED UP AUTOMATICALLY** —
+`<esa-map-marker><esa-map-popup>…</esa-map-popup></esa-map-marker>` inherits the
+coordinate, toggles on pin click, follows a drag, and closes its peers (announced on the
+host, so no popup holds a reference to another). It works only because `esa-map-marker`
+**declines to swallow other `esa-map-*` children** into its pin; without that the popup is
+relocated into the shadow root and `document.getElementById` stops finding it — the same
+trap as below, one level down. Two knock-ons: the whitespace-only check matters (a marker
+whose only child is a nested popup still has two text nodes from indentation, and the old
+`childNodes.length` test silently deleted the default pin), and the coordinate falls back
+to the marker's **attribute** because upgrade order is not guaranteed — a marker whose
+definition has not run yet has no `lngLat` property, and the popup would inherit `[0, 0]`.
+
+**MAPLIBRE POPUPS DO NOT AUTO-PAN.** There is no option for it — Leaflet's `autoPan` has
+no counterpart — so a popup near an edge is clipped by the frame. Invisible on a two-line
+popup, obvious once content is rich: measured, a 260px card on a marker low in the frame
+had its action button cut off with nothing wrong in the DOM. `panIntoView` measures the
+bubble against the canvas after a frame and pans the minimum that clears it — `panBy`, not
+a re-centre, because centring throws away the surroundings, and not `essential`, so
+reduced motion still disables the animation.
+
+**THE ENGINE RELOCATES WHATEVER ELEMENT YOU GIVE IT**, and this cost a cycle twice. A
+marker element and a popup's content are both appended into the host's SHADOW root, so if
+you hand over the custom element itself, `document.getElementById` returns **null**
+afterwards — id lookups do not cross a shadow boundary. Measured: every marker vanished
+from `document.querySelectorAll` while rendering perfectly. A framework consumer holding a
+ref never notices; a spoke wiring a plain Astro page is stuck. So both components hand the
+engine an **inner div**, keep the custom element in the light DOM as the addressable handle,
+and forward clicks. Two knock-ons: popup content is reached through **`popup.body`**, never
+`document.querySelector`; and because those divs live one shadow tree up, **`esa-map` styles
+them** (`.esa-marker`, `.esa-popup-body`, `.maplibregl-popup-*`) — a child's stylesheet
+cannot reach its parent's root.
+
+Three more measured traps:
+
+- **`closeOnClick` on a popup defaults to OFF.** The engine implements it as a map-click
+  listener — the same event a layer's `selectable` handler opens on. Both register
+  asynchronously, so a click can open then immediately close the popup, intermittently.
+- **`generateId: true` on a GeoJSON source, always.** `feature-state` keys off the feature
+  id and the engine only reliably accepts integers; a string id (a county NAME, exactly what
+  hand-made files carry) silently fails to highlight.
+- **Dedupe `queryRenderedFeatures` by feature id.** All three layers draw from one source, so
+  a click near a boundary returns the same polygon twice (fill + outline) and the cycle
+  counter would lie.
+
+**The layer FETCHES its own data** rather than passing the engine a URL, because
+`querySourceFeatures` returns only what is tiled and in view — a mirror built from it would
+silently omit everything off-screen.
+
+Two invariants to hold: layers **emit** (`featureselect` with plain GeoJSON) rather than own
+popups, and nothing may auto-switch between DOM markers and GL layers at a count threshold —
+that is a **capability** split (DOM markers hold arbitrary HTML; GL layers hold circles,
+sprites, text), not a performance knob. Cycling **across** layers is still unbuilt: each
+layer queries only its own ids, and a shared stack belongs on the host.
+
+**Canvas a11y shipped WITH the layer, not as a later pass.** `esa-map-geojson` renders a
+visually-hidden list of real buttons, one per feature, sharing the selection path. A WebGL
+shape is a pixel: no role, no name, no focus, and **axe reports nothing**, because there is
+no markup to be wrong. Contrast and hit-target work can be batched; this could not, because
+it changes what the component renders.
+
 ## Conventions
 - `esa-` prefix; sizes use the shared scale `xs | sm | md | lg` (default `md`); icons add `xl`. (Aligned to Beacon's `UiSize` — see docs/beacon-gap-analysis.md. One scale across button/input/icon so they line up on a row.)
 - SCSS-style private tokens: `--_*` reading public tokens, **always with a literal fallback**.
@@ -470,6 +846,17 @@ effect and nobody noticed the pages were mislabelled.
 - Icons: inline Lucide SVGs (no icon dependency). When a `.ts` (Lit) component **injects** icon markup from a prop/string, use `unsafeSVG` (`lit/directives/unsafe-svg.js`) — **not** `unsafeHTML`. `unsafeHTML` parses in the XHTML namespace, so the `<path>`/`<rect>` children are created as unknown HTML elements and never paint. `unsafeHTML` is only for injecting real HTML (e.g. highlighted text into a `<span>`). Static SVG written literally in a Lit template is fine as-is.
 - No Tailwind. No dependencies beyond `lit`.
 - In `.astro` prose/`<code>`, never write bare `{ ... }` (Astro evaluates it). Use `{'{ ... }'}`.
+- **Prose that shows markup must be passed as a JS EXPRESSION, not an HTML attribute** —
+  `summary={'… <code>&lt;button&gt;</code> …'}`, never `summary="… &lt;button&gt; …"`.
+  Escaping in the attribute does not survive: Astro's attribute parser decodes
+  `&lt;` before the prop is read, and `ComponentDoc`/`PatternDoc` render `summary`
+  with `set:html` — so the entity round-trips back into a REAL element. Found
+  2026-08-16 by `npm run a11y`: `esa-switch-toggle`'s lede shipped a live,
+  nameless `<button role="switch">` and `esa-nav-dropdown`'s shipped a live
+  `<details>`, both looking correctly escaped in source. Inside an expression no
+  decoding happens, so the entity reaches `set:html` intact and renders as text.
+  Real `<a href>` links in the same string still work — they are markup either way.
+  Scan the BUILD, not the source: `grep -rhoE '<code><(button|input|details)' apps/site/dist`.
 
 ## Commands
 ```bash
@@ -480,10 +867,12 @@ npm run build:tokens   # just compile tokens → packages/tokens/dist/
 npm test               # token-name guard + hook regressions (scripts/**/*.test.mjs)
 npm run a11y           # axe-core over every built page (needs `npm run build` first)
 npm run a11y:live      # live-region structure audit (needs `npm run build` first)
-npm run contrast       # 29 AA pairs against the hub defaults — currently FAILS with 7
+npm run a11y:charts    # re-score AG Charts against the 5-question rubric (needs `npm run build`)
+npm run contrast       # 33 pairs against the hub defaults — currently FAILS with 7
 npm run contrast:dark  # the same pairs against the hub's dark block — fails with 5
 npm run theme:make     # recipe (or --brand/--slug) → theme-<slug>.css + .json
 npm run theme:curves   # regenerate scripts/lib/radix-curves.json from @radix-ui/colors
+npm run tokens:primitives  # regenerate tier-1 colour ramps from @radix-ui/colors (dry run; --write)
 ```
 
 **`npm run contrast` exits 1 on the hub's own defaults and always has** — 7 AA
