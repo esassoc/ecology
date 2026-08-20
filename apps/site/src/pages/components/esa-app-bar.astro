@@ -16,26 +16,6 @@ const describe = {
   as: "Semantic host element.",
   ariaLabel: "Accessible name for the host element. REQUIRED when as=\"nav\" — an unnamed navigation landmark cannot be told apart from any other in a screen reader's landmark list, and this component spreads no rest props, so there was previously no way to name one. Omit the word \"navigation\": the role is announced already.",
 };
-const tokens = [
-  {
-    name: "--app-bar-gap",
-    type: "length",
-    default: "--spacing-600 (32px)",
-    description: "Gap between slots and within groups. Override per instance.",
-  },
-  {
-    name: "--app-bar-pad-x",
-    type: "length",
-    default: "--spacing-600 (32px)",
-    description: "Inline padding of the bar row.",
-  },
-  {
-    name: "--app-bar-pad-y",
-    type: "length",
-    default: "--spacing-400 (16px)",
-    description: "Block padding of the bar row.",
-  },
-];
 ---
 
 <ComponentDoc

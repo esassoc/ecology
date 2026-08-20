@@ -52,19 +52,18 @@ const slots = [
 
   <Section id="gutter" title="Gutter">
     <p>
-      The side gutter is <code>--container-gutter</code> (defaults to <code>--spacing-600</code>), not a
-      prop — every container on a page should breathe the same amount, so it is a token a spoke
-      re-points once rather than a value each call site argues about. Override it on a scope when a
-      region genuinely differs:
+      The side gutter is <code>--spacing-600</code> (32px), read directly in the component's own
+      rule — <code>padding-inline: var(--spacing-600, 2rem)</code>. It is deliberately neither a
+      prop nor a per-scope hook: every container on a page should breathe the same amount, so the
+      gutter moves when the spacing scale moves and not otherwise.
     </p>
-    <Preview align="start" code={`<div style="--container-gutter: 0;">
-  <Container>…</Container>   <!-- flush to the edge -->
-</div>`}>
-      <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
-        <div class="ctr-demo"><Container maxWidth="420px"><p style="margin: 0;">default gutter</p></Container></div>
-        <div class="ctr-demo" style="--container-gutter: 0;"><Container maxWidth="420px"><p style="margin: 0;">--container-gutter: 0</p></Container></div>
-      </div>
-    </Preview>
+    <p>
+      This page documented a <code>--container-gutter</code> hook until 2026-08-19, and shipped a
+      live demo setting it to <code>0</code>. That hook was deleted by the
+      <code>container-hooks-removed</code> migration on 2026-08-16, so the demo had been a no-op —
+      rendering identically to the default beside it — for three days. If a region genuinely needs
+      to sit flush to the edge, do not use a container there.
+    </p>
   </Section>
 
   <Section id="api" title="API">

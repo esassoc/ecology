@@ -522,7 +522,10 @@ is neither** — white fails on it, and green-12 on green-9 is only **3.90:1**. 
 and copying either existing pattern would have shipped a failure.
 
 **THE HUB WENT 7 → 8 LIGHT FAILURES, and the new row is a Radix marginality rather than a
-green one.** `--color-content-utility-success` on its own `-subtle` tint measures **4.49:1**.
+green one.** `--color-content-utility-success` on its own `-subtle` tint measures **4.49:1**
+(4.21:1 as re-measured 2026-08-19, against `-muted` after the secondary/muted merge).
+THE TOTAL IS BACK TO 7, not 8 — this row still fails, so something else was fixed without
+the count being updated. Two other places in this file said 7 throughout. Measure, do not cite.
 Radix engineers step 11 for ~4.5:1 on step 2 and several scales land a hair under — measured:
 green 4.49, jade 4.43, **yellow 4.43 — already one of the pre-existing failures** — against
 blue 4.53, lime 4.56, red 4.94. Success now sits beside warning in the same known band. If it
@@ -1106,7 +1109,7 @@ npm run theme:curves   # regenerate scripts/lib/radix-curves.json from @radix-ui
 npm run tokens:primitives  # regenerate tier-1 colour ramps from @radix-ui/colors (dry run; --write)
 ```
 
-**`npm run contrast` exits 1 on the hub's own defaults and always has** — 8 AA
+**`npm run contrast` exits 1 on the hub's own defaults and always has** — 7 AA
 failures, `content-on-brand` at 2.95:1 among them. That is not a regression to chase
 on sight; `npm run a11y:assured` passes because the assurance profile moves those
 fills from Radix step 9 to step 11, which is what the profile is for. A GENERATED

@@ -215,13 +215,6 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
 <style>
   /* Neutral chrome via SEMANTIC tokens (a spoke re-points these to its off-whites). */
   .esa-app-shell {
-    --app-bar-bg: var(--color-background-elevation-sunken, #f0f0f0);
-    --app-bar-text: var(--color-content-default, #202020);
-    --app-bar-pad-y: var(--spacing-200, 8px);
-    --app-bar-pad-x: var(--spacing-400, 16px);
-    --app-bar-gap: var(--spacing-300, 12px);
-    --sidenav-bg: var(--color-background-default, #fcfcfc);
-    --sidenav-border-color: var(--color-border-default, #cecece);
 
     display: flex;
     flex-direction: column;
@@ -231,7 +224,6 @@ const payload = JSON.stringify({ navId, searchId, menuId, nav: navItems, menu: u
     background: var(--color-background-default, #fcfcfc);
   }
   .esa-app-shell--accent {
-    --app-bar-bg: color-mix(in srgb, var(--color-background-brand, #46a758) 5%, var(--color-background-elevation-sunken, #f0f0f0));
   }
 
   .esa-app-shell__bar { flex: none; border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-strong, #bbbbbb); }
