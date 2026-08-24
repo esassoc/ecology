@@ -1,15 +1,18 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 
-const props = [
-  { name: 'text', type: 'string', default: "''", description: 'Tooltip label. The tooltip does not render when empty.' },
-  { name: 'position', type: "'above' | 'below' | 'left' | 'right'", default: "'above'", description: 'Side the tooltip appears on.' },
-  { name: 'delay', type: 'number', default: '200', description: 'Milliseconds to wait before showing on hover/focus.' },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  text: "Tooltip label. The tooltip does not render when empty.",
+  position: "Side the tooltip appears on.",
+  delay: "Milliseconds to wait before showing on hover/focus.",
+  open: "Reflected open state.",
+};
 ---
 <ComponentDoc name="Tooltip" category="Overlays" slug="esa-tooltip" type="wc" status="stable"
   summary="Hover and focus tooltip. Wrap a trigger in the default slot and set <code>text</code>. It shows after <code>delay</code> ms (default 200) and hides on leave or blur.">
@@ -19,7 +22,7 @@ const props = [
   <button>Hover me</button>
 </esa-tooltip>`}>
       <esa-tooltip text="Tooltip above" position="above">
-        <button class="trigger">Hover me</button>
+        <EsaButton variant="secondary">Hover me</EsaButton>
       </esa-tooltip>
     </Preview>
   </Section>
@@ -30,16 +33,16 @@ const props = [
 <esa-tooltip text="Left side" position="left">…</esa-tooltip>
 <esa-tooltip text="Right side" position="right">…</esa-tooltip>`}>
       <esa-tooltip text="Tooltip above" position="above">
-        <button class="trigger">Above</button>
+        <EsaButton variant="secondary">Above</EsaButton>
       </esa-tooltip>
       <esa-tooltip text="Tooltip below" position="below">
-        <button class="trigger">Below</button>
+        <EsaButton variant="secondary">Below</EsaButton>
       </esa-tooltip>
       <esa-tooltip text="Left side" position="left">
-        <button class="trigger">Left</button>
+        <EsaButton variant="secondary">Left</EsaButton>
       </esa-tooltip>
       <esa-tooltip text="Right side" position="right">
-        <button class="trigger">Right</button>
+        <EsaButton variant="secondary">Right</EsaButton>
       </esa-tooltip>
     </Preview>
   </Section>
@@ -50,13 +53,13 @@ const props = [
   <a href="#">Tab to me</a>
 </esa-tooltip>`}>
       <esa-tooltip text="Shows on focus too" position="above">
-        <a href="#" class="trigger">Tab to me</a>
+        <EsaButton variant="secondary" href="#">Tab to me</EsaButton>
       </esa-tooltip>
     </Preview>
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-tooltip" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">
@@ -71,17 +74,3 @@ const props = [
 
 <script>import '@esa/ecology/esa-tooltip';</script>
 
-<style>
-  .trigger {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-strong, #d4d4d4);
-    background: var(--color-surface, #fff);
-    color: var(--color-text-primary, #171717);
-    font-family: inherit;
-    font-size: var(--type-size-200, 0.9375rem);
-    cursor: pointer;
-    text-decoration: none;
-  }
-</style>

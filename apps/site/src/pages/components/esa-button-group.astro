@@ -1,15 +1,16 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import Preview from '../../components/Preview.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 import EsaButton from '@esa/ecology/esa-button.astro';
 
-const props = [
-  { name: 'selection-mode', type: "'none' | 'single'", default: "'none'", description: "'none' is visual grouping only; 'single' acts as a radio-like segmented control with one active child." },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Reflected sizing hint for the group.' },
-  { name: 'value', type: 'string', default: "''", description: "In 'single' mode, the data-value of the currently selected child." },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  "selection-mode": "'none' is visual grouping only; 'single' acts as a radio-like segmented control with one active child.",
+  value: "In 'single' mode, the data-value of the currently selected child.",
+};
 
 const events = [
   { name: 'change', type: "CustomEvent<{ value: string }>", description: "Fired in 'single' mode when the active child changes. Composed and bubbling; detail.value is the selected child's data-value (falling back to its text content)." },
@@ -19,30 +20,78 @@ const events = [
   summary="Groups buttons with connected borders. Use it purely for visual grouping, or as a radio-like segmented control that emits a composed <code>change</code> event.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<esa-button-group>
-  <EsaButton color="primary">Day</EsaButton>
-  <EsaButton color="primary">Week</EsaButton>
-  <EsaButton color="primary">Month</EsaButton>
+    {/* OVERRIDE. The transform refuses this sample, correctly: its children are
+        `<EsaButton>`, an .astro component with no custom element behind it, so
+        there is nothing for Angular to instantiate. But the GROUP is a real
+        element, and it is built to take native buttons — `::slotted(button)` sits
+        beside `::slotted(esa-button)` in its own styles, and its selection logic
+        matches `button, [role="button"]` directly. So the Angular form is the
+        group wrapping plain buttons, which is a fact about the component rather
+        than an invention. */}
+    <Preview
+      angular={`import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@esa/ecology/esa-button-group';
+
+@Component({
+  selector: 'app-button-group-demo',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: \`
+    <esa-button-group>
+      <button type="button">Day</button>
+      <button type="button">Week</button>
+      <button type="button">Month</button>
+    </esa-button-group>
+  \`,
+})
+export class ButtonGroupDemo {}`}
+      code={`<esa-button-group>
+  <EsaButton variant="primary">Day</EsaButton>
+  <EsaButton variant="primary">Week</EsaButton>
+  <EsaButton variant="primary">Month</EsaButton>
 </esa-button-group>`}>
       <esa-button-group>
-        <EsaButton color="primary">Day</EsaButton>
-        <EsaButton color="primary">Week</EsaButton>
-        <EsaButton color="primary">Month</EsaButton>
+        <EsaButton variant="primary">Day</EsaButton>
+        <EsaButton variant="primary">Week</EsaButton>
+        <EsaButton variant="primary">Month</EsaButton>
       </esa-button-group>
     </Preview>
+    <p>The group has no <code>size</code> of its own — set <code>size</code> on each child
+    button, alongside its <code>variant</code>. The group only connects the borders.</p>
   </Section>
 
   <Section id="modes" title="Modes">
     <p><code>selection-mode="none"</code> is the default — buttons are visually connected but each acts independently.</p>
-    <Preview code={`<esa-button-group selection-mode="none">
-  <EsaButton color="primary">Day</EsaButton>
-  <EsaButton color="primary">Week</EsaButton>
-  <EsaButton color="primary">Month</EsaButton>
+    {/* Same override, same reason as the one above — see that comment. Both are
+        here rather than just one so the page does not show an Angular tab on two
+        of its three examples and leave the reader wondering what is different
+        about the third. */}
+    <Preview
+      angular={`import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import '@esa/ecology/esa-button-group';
+
+@Component({
+  selector: 'app-button-group-modes-demo',
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: \`
+    <esa-button-group selection-mode="none">
+      <button type="button">Day</button>
+      <button type="button">Week</button>
+      <button type="button">Month</button>
+    </esa-button-group>
+  \`,
+})
+export class ButtonGroupModesDemo {}`}
+      code={`<esa-button-group selection-mode="none">
+  <EsaButton variant="primary">Day</EsaButton>
+  <EsaButton variant="primary">Week</EsaButton>
+  <EsaButton variant="primary">Month</EsaButton>
 </esa-button-group>`}>
       <esa-button-group selection-mode="none">
-        <EsaButton color="primary">Day</EsaButton>
-        <EsaButton color="primary">Week</EsaButton>
-        <EsaButton color="primary">Month</EsaButton>
+        <EsaButton variant="primary">Day</EsaButton>
+        <EsaButton variant="primary">Week</EsaButton>
+        <EsaButton variant="primary">Month</EsaButton>
       </esa-button-group>
     </Preview>
 
@@ -64,7 +113,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-button-group" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">
@@ -80,20 +129,20 @@ const events = [
 
 <style>
   .seg-demo { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-300, 0.75rem); }
-  .seg-status { font-size: 14px; color: var(--color-text-secondary, #525252); }
+  .seg-status { font-size: 14px; color: var(--color-content-default-secondary, #525252); }
   .seg-btn {
     font: inherit;
-    font-size: var(--type-size-200, 1rem);
+    font-size: var(--font-size-200, 1rem);
     padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-    border: 1px solid var(--color-border, #e5e5e5);
-    background: var(--color-surface, #fff);
-    color: var(--color-text-primary, #171717);
+    border: 1px solid var(--color-border-default, #e5e5e5);
+    background: var(--color-background-elevation-raised, #fff);
+    color: var(--color-content-default, #171717);
     cursor: pointer;
   }
   .seg-btn[data-selected] {
-    background: var(--color-primary, #43608a);
-    color: var(--color-text-inverse, #fff);
-    border-color: var(--color-primary, #43608a);
+    background: var(--color-background-brand, #43608a);
+    color: var(--color-content-default-knockout, #fff);
+    border-color: var(--color-background-brand, #43608a);
   }
 </style>
 

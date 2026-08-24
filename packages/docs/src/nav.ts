@@ -5,7 +5,9 @@
 export interface NavItem {
   label: string;
   href: string; // root-relative, base-less — DocsShell wraps it with withBase()
-  status?: 'stable' | 'reference';
+  status?: 'stable' | 'reference' | 'deprecated';
+  /** Deprecated only — the successor, shown as the link's title so the sidebar answers "then what?". */
+  supersededBy?: string;
 }
 
 export interface NavGroup {

@@ -44,15 +44,53 @@ Ask for anything not supplied in `$ARGUMENTS`:
 - **source app repo path** (OPTIONAL — the real product the spoke mirrors,
   e.g. `~/Dev/Beacon`). Drives brand extraction + catalog mirroring.
 - brand mark text, font `<link>` tags, tagline
+- **the theme seeds** — see below. Ask for these even when a source repo is
+  given; extraction fills them in, it does not replace them.
+
+**The theme seeds.** A complete theme is generated from six answers, so ask for
+the six rather than for fifty declarations:
+
+| Seed | Ask | Default |
+|---|---|---|
+| `brand` | the brand's primary hex — the one someone points at and says "that is our colour" | required |
+| `neutral` | is the grey `warm`, `cool` or `pure`? | `pure` |
+| `corners` | `flat`, `soft` or `round`? | `soft` (= hub) |
+| `fontSans` / `fontMono` | the stacks matching the `<link>` tags above | hub defaults |
+| `accent` / `ai` / `info` / `success` / `warning` / `danger` | only if the brand has its own | `derive` |
+
+Everything else — two twelve-step ramps, the whole neutral chain, both schemes,
+and **all eight `--color-content-on-*` foregrounds** — is derived and
+contrast-checked. Do not ask for them and do not hand-fill them.
+
+If the user would rather choose visually, point them at **`/guide/theme-maker`**
+on the hub site and take the recipe JSON it downloads.
 
 Confirm the resolved values back to the user before touching the filesystem.
 
 ### 2. Scaffold — run the script (deterministic step; do NOT do this by hand)
 
+Write the seeds to a recipe first — it is the artifact the theme regenerates
+from, so it is worth having on disk before the scaffold exists:
+
+```jsonc
+// theme-<slug>.json
+{
+  "slug": "<slug>",
+  "seeds": { "brand": "#1769aa", "neutral": "cool", "corners": "soft" }
+}
+```
+
 ```bash
 node scripts/create-spoke.mjs --name "<Name>" --slug <slug> --dir <dir> \
-  --scope <scope> --mark "<mark>" --tagline "<tagline>" [--fonts '<link ... />']
+  --scope <scope> --mark "<mark>" --tagline "<tagline>" [--fonts '<link ... />'] \
+  --theme theme-<slug>.json
 ```
+
+`--theme` writes the real `theme-<slug>.css` (both schemes) plus the recipe
+beside it, instead of the `__FILL__` stub. **Read the notes it prints** — a
+`note` line means the generator moved a fill to make its foreground readable, and
+a `FAIL` line means it could not, which is a fact about the brand that someone
+needs to hear. Omit `--theme` only when there is genuinely no brand colour yet.
 
 The script copies the template **including dotfiles** (`.claude/settings.json`
 carries the spoke-kit plugin declaration), renames the templated files,

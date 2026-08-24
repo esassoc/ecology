@@ -1,0 +1,18 @@
+{
+  "transition": {
+    "$description": "Tier 2 motion, part one. CSS has TWO motion properties and so does this file: `transition` interpolates between two states, `animation` runs a keyframed sequence. They are named property-first for the same reason colour is — the name tells you which declaration the token belongs in. `--animation-spin` would be a lie as `--transition-spin`; `infinite` cannot go in a `transition`.\n\nThe family is called motion; no token is prefixed `--motion-`, any more than a spacing token is prefixed `--foundations-`. (Do NOT put a file-level `$description` here: Style Dictionary treats the root key as a token node and it collides with the one in semantic/effect.json.)",
+    "fast": { "$value": "{duration.150} {easing.standard}", "$type": "other", "$description": "Direct feedback on a small control — hover, focus, checked. 93 reads across 29 files; effectively the system default in practice. Promoted from tokens/primitive/effect.json, where `fast`/`base`/`slow` were always intent names sitting in the raw-value tier. Value unchanged." },
+    "base": { "$value": "{duration.200} {easing.standard}", "$type": "other", "$description": "A change big enough to want to be watched — a panel resizing, a floating button arriving." },
+    "slow": { "$value": "{duration.300} {easing.standard}", "$type": "other", "$description": "Larger spatial moves. Was 350ms — the ONE value this restructure changed, and deliberately. Value-neutrality is a rule for protecting things that RENDER, and nothing renders this: zero readers in hub components, zero in cb-fish, zero in air-exchange; its only two readers are the /foundations/motion swatch demonstrating it. Preserving 350ms would have meant an off-step in the tier-1 duration scale forever to protect a docs demo. The token stays because the ROLE is real and drawer/sheet work will want it — same reasoning as `background-brand-active`." }
+  },
+
+  "animation": {
+    "$description": "Tier 2 motion, part two — the keyframed half. These carry duration + easing + iteration but NOT the keyframes name, which is component-specific and stays with the component: `animation: esa-dropdown-fade var(--animation-enter);`. All 22 keyframed animations in the system hardcoded their timing before these existed, because the only motion tokens were composite `transition` strings that could not be used in an `animation` shorthand.",
+    "enter":         { "$value": "{duration.150} {easing.enter}",           "$type": "other", "$description": "Small things arriving — dropdown, tooltip, popover, command palette." },
+    "exit":          { "$value": "{duration.150} {easing.exit}",            "$type": "other", "$description": "The counterpart. Accelerating out is what makes a dismissal feel dismissed; reusing `enter` on the way out is the most common motion tell." },
+    "overlay-enter": { "$value": "{duration.250} {easing.enter}",           "$type": "other", "$description": "Large surfaces arriving — sheets, side dialogs, the snackbar, the search panel. Slower because they travel further, not because they matter more." },
+    "overlay-exit":  { "$value": "{duration.200} {easing.exit}",            "$type": "other" },
+    "spin":          { "$value": "{duration.750} {easing.linear} infinite", "$type": "other", "$description": "Continuous rotation — spinners, button loading states. Linear is not a default here, it is required: any easing on a loop reads as a stutter once per revolution." },
+    "indeterminate": { "$value": "{duration.1500} {easing.emphasized} infinite", "$type": "other", "$description": "The progress-bar sweep, which travels and reverses, so it eases both ends." }
+  }
+}

@@ -1,4 +1,20 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { boolish } from '../boolish.js';
+
+/** The label is UI text. The hex field is the one value slot in the kit set in the
+    MONO face — a hex code is tabular, so it reads code-* rather than body-*. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The hex field is microcopy in the mono face — a single-line <input> sized by padding.
+const CODE_TYPE  = { xs: 'microcopy-code-sm', sm: 'microcopy-code-sm', md: 'microcopy-code-md', lg: 'microcopy-code-lg' } as const;
+
+/** A swatch is a bare hex, or a hex with the name of the thing it stands for. */
+export type ColorSwatch = string | { value: string; label?: string };
+
+const swatchValue = (s: ColorSwatch): string => (typeof s === 'string' ? s : s.value);
+const swatchLabel = (s: ColorSwatch): string | undefined =>
+  typeof s === 'string' ? undefined : s.label;
 
 /**
  * esa-color-picker — form-associated Lit Web Component.
@@ -9,7 +25,11 @@ import { LitElement, html, css } from 'lit';
  *   - host size/disabled classes       → reflected attributes + :host() selectors
  *   - native <input type=color> + hex input + swatch grid, same hex validation
  *
- * `swatches` accepts either a string[] property or a JSON-encoded `swatches` attribute.
+ * `swatches` accepts either a property or a JSON-encoded `swatches` attribute, and each
+ * entry is a hex string OR an object carrying a name: {"value": "#12a594", "label": "Teal"}.
+ * A grid of unnamed squares is a poor name for anyone not looking at it — a swatch that
+ * stands for something the system already has ("Teal", "Brand") should say so, and then
+ * the accessible name is the word rather than the hex.
  */
 export class EsaColorPicker extends LitElement {
   static formAssociated = true;
@@ -19,14 +39,17 @@ export class EsaColorPicker extends LitElement {
     size: { type: String, reflect: true },
     swatches: { type: Array },
     disabled: { type: Boolean, reflect: true },
-    showInput: { type: Boolean, attribute: 'show-input' },
+    name: { type: String, reflect: true },
+    showInput: { type: Boolean, attribute: 'show-input', converter: boolish },
     value: { type: String },
   };
 
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
-  declare swatches: string[];
+  declare swatches: ColorSwatch[];
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare showInput: boolean;
   declare value: string;
 
@@ -46,6 +69,13 @@ export class EsaColorPicker extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this.internals.setFormValue(this.value);
+  }
+
+  // A value set from SCRIPT (el.value = '#ff0000') has to reach the form too.
+  // Only commit() used to call setFormValue, so a programmatically set colour
+  // rendered red and submitted the default black.
+  willUpdate(changed: Map<string, unknown>): void {
+    if (changed.has('value')) this.internals.setFormValue(this.value);
   }
 
   private commit(val: string): void {
@@ -79,15 +109,99 @@ export class EsaColorPicker extends LitElement {
     return this.value.toLowerCase() === color.toLowerCase();
   }
 
+  /**
+   * The swatch grid is a RADIOGROUP, not a listbox, and that is the second time this
+   * distinction has been got wrong in this kit.
+   *
+   * It shipped as `role="listbox"` over `<button role="option">`. Two problems, and
+   * only the first is pedantry: an `option` may not be an interactive widget, so the
+   * role was invalid on a button. The one that reached users is that `listbox`
+   * ANNOUNCES a keyboard contract — "listbox, N options", navigate with arrows — and
+   * there were no key handlers at all. Arrows did nothing. Every swatch was instead a
+   * separate tab stop, which is the exact cost the listbox pattern exists to avoid;
+   * with a 30-colour palette that is 30 stops between the hex field and whatever
+   * follows.
+   *
+   * Radio is what this actually is: pick exactly one from a set. `aria-checked` says
+   * "this is your current colour" where `aria-selected` only said "highlighted", and
+   * unlike `option`, `radio` is a legitimate role for a `<button>` — so the swatches
+   * stay buttons and keep native Enter/Space activation rather than needing it
+   * hand-rolled onto a div. Same fix as `esa-entity-search`'s facets, same reasoning.
+   *
+   * Arrowing MOVES THE SELECTION, not just focus. That is native radio behaviour and
+   * the right call for a colour picker, where the preview updates as you go.
+   */
+  private onSwatchKeydown = (event: KeyboardEvent): void => {
+    const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'];
+    if (!keys.includes(event.key) || this.disabled) return;
+    const colors = this.swatches.map(swatchValue);
+    if (colors.length === 0) return;
+    event.preventDefault();
+
+    const current = colors.findIndex((c) => this.isSelectedSwatch(c));
+    // No selection yet: Home/ArrowLeft/ArrowUp should land on the last, not wrap past
+    // it, so treat "nothing chosen" as sitting just before the first.
+    const from = current === -1 ? 0 : current;
+    let next = from;
+    if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = colors.length - 1;
+    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      next = current === -1 ? 0 : (from + 1) % colors.length;
+    } else {
+      next = current === -1 ? colors.length - 1 : (from - 1 + colors.length) % colors.length;
+    }
+
+    this.selectSwatch(colors[next]);
+    void this.updateComplete.then(() => {
+      (this.renderRoot as ShadowRoot)
+        .querySelectorAll<HTMLElement>('.swatch')[next]
+        ?.focus();
+    });
+  };
+
+  /**
+   * Roving tabindex: exactly one swatch is a tab stop.
+   *
+   * The checked one, or the first when nothing is chosen yet — a radiogroup with no
+   * selection must still be reachable, and a group where every member is -1 is
+   * unreachable by keyboard entirely.
+   */
+  private swatchTabIndex(color: string, index: number): string {
+    const anySelected = this.swatches.map(swatchValue).some((c) => this.isSelectedSwatch(c));
+    if (anySelected) return this.isSelectedSwatch(color) ? '0' : '-1';
+    return index === 0 ? '0' : '-1';
+  }
+
   render() {
+    // Both inner controls need their OWN name. The visible span names the group,
+    // and a group name does not name the things inside it — measured 2026-08-16
+    // against Chrome's accessibility tree, the swatch came back role=ColorWell
+    // name="" and the hex field fell through to its placeholder, name="#000000".
+    //
+    // The label text is repeated into each name rather than left to the group.
+    // It is slightly verbose next to the group name, and it is what makes these
+    // pass SC 2.5.3 Label in Name: a speech-control user says what they SEE, and
+    // what they see is "Brand color".
+    const swatchName = this.label ? `${this.label} color swatch` : 'Color swatch';
+    const hexName = this.label ? `${this.label} hex value` : 'Hex value';
     return html`
-      ${this.label ? html`<label class="label">${this.label}</label>` : null}
-      <div class="controls">
+      ${this.label
+        ? html`<span id="label" class="label typography-${LABEL_TYPE[this.size]}"
+            >${this.label}</span
+          >`
+        : null}
+      <div
+        class="controls"
+        role="group"
+        aria-labelledby=${this.label ? 'label' : nothing}
+        aria-label=${this.label ? nothing : 'Color picker'}
+      >
         <div class="input-row">
           <label class="swatch-input">
             <input
               type="color"
               class="native"
+              aria-label=${swatchName}
               .value=${this.value}
               ?disabled=${this.disabled}
               @input=${this.onColorInput}
@@ -97,7 +211,8 @@ export class EsaColorPicker extends LitElement {
           ${this.showInput
             ? html`<input
                 type="text"
-                class="hex-input"
+                class="hex-input typography-${CODE_TYPE[this.size]}"
+                aria-label=${hexName}
                 .value=${this.value}
                 ?disabled=${this.disabled}
                 @change=${this.onHexInput}
@@ -109,67 +224,73 @@ export class EsaColorPicker extends LitElement {
         </div>
 
         ${this.swatches.length > 0
-          ? html`<div class="swatches" role="listbox" aria-label="Color swatches">
-              ${this.swatches.map(
-                (color) => html`<button
+          ? html`<div
+              class="swatches"
+              role="radiogroup"
+              aria-label="Color swatches"
+              @keydown=${this.onSwatchKeydown}
+            >
+              ${this.swatches.map((swatch, i) => {
+                const color = swatchValue(swatch);
+                const name = swatchLabel(swatch);
+                return html`<button
                   type="button"
                   class="swatch ${this.isSelectedSwatch(color) ? 'swatch--selected' : ''}"
                   style="background-color: ${color}"
                   ?disabled=${this.disabled}
-                  aria-label=${'Select color ' + color}
-                  aria-selected=${this.isSelectedSwatch(color)}
-                  role="option"
+                  title=${name ? name + ' ' + color : color}
+                  aria-label=${name ? 'Select color ' + name + ' ' + color : 'Select color ' + color}
+                  aria-checked=${this.isSelectedSwatch(color)}
+                  tabindex=${this.swatchTabIndex(color, i)}
+                  role="radio"
                   @click=${() => this.selectSwatch(color)}
-                ></button>`
-              )}
+                ></button>`;
+              })}
             </div>`
           : null}
       </div>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       display: block;
-      --_preview-size: 40px;
+      --_preview-size: 40px; /* was --control-height-*, now standalone — see note */
       --_swatch-size: 28px;
-      --_font-size: var(--form-font-size-md, 14px);
-      --_height: var(--form-height-md, 40px);
-      --_radius: var(--form-radius-md, 8px);
-      --_padding-x: var(--form-padding-x-md, 12px);
+      --_pad-y: var(--spacing-300, 0.75rem);
+      --_radius: var(--radius-md, 0.5rem);
+      --_padding-x: var(--spacing-300, 0.75rem);
     }
     :host([size='xs']) {
       --_preview-size: 28px;
       --_swatch-size: 20px;
-      --_font-size: var(--form-font-size-xs, 11px);
-      --_height: var(--form-height-xs, 28px);
-      --_radius: var(--form-radius-xs, 4px);
-      --_padding-x: var(--form-padding-x-xs, 8px);
+      --_pad-y: var(--spacing-200, 0.5rem);
+      --_radius: var(--radius-sm, 0.25rem);
+      --_padding-x: var(--spacing-200, 0.5rem);
     }
     :host([size='sm']) {
       --_preview-size: 32px;
       --_swatch-size: 24px;
-      --_font-size: var(--form-font-size-sm, 12px);
-      --_height: var(--form-height-sm, 32px);
-      --_radius: var(--form-radius-sm, 6px);
-      --_padding-x: var(--form-padding-x-sm, 8px);
+      --_pad-y: var(--spacing-250, 0.625rem);
+      --_radius: var(--radius-sm, 0.25rem);
+      --_padding-x: var(--spacing-250, 0.625rem);
     }
     :host([size='lg']) {
       --_preview-size: 48px;
       --_swatch-size: 32px;
-      --_font-size: var(--form-font-size-lg, 16px);
-      --_height: var(--form-height-lg, 48px);
-      --_radius: var(--form-radius-lg, 10px);
-      --_padding-x: var(--form-padding-x-lg, 16px);
+      --_pad-y: var(--spacing-400, 1rem);
+      --_radius: var(--radius-md, 0.5rem);
+      --_padding-x: var(--spacing-400, 1rem);
     }
 
     .label {
       display: block;
       margin-bottom: var(--spacing-100, 4px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-primary, #171717);
+
+      color: var(--color-content-default, #202020);
     }
     .controls {
       display: flex;
@@ -199,29 +320,29 @@ export class EsaColorPicker extends LitElement {
       width: var(--_preview-size);
       height: var(--_preview-size);
       border-radius: var(--_radius);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       cursor: pointer;
       transition:
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .preview:hover {
-      border-color: var(--form-border-color-focus, #43608a);
+      border-color: var(--form-border-color-focus, #3e9b4f);
     }
     .native:focus-visible + .preview {
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .hex-input {
       width: 100px;
-      height: var(--_height);
-      padding: 0 var(--_padding-x);
-      font-family: var(--font-mono, monospace);
-      font-size: var(--_font-size);
-      color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #d4d4d4);
+      /* A bare input with no flex centring — at padding:0 and no height token this
+         would collapse straight to its line box. */
+      padding: var(--_pad-y) var(--_padding-x);
+      color: var(--form-text-color, #202020);
+      background: var(--color-background-field, transparent);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--_radius);
       outline: none;
       box-sizing: border-box;
@@ -230,12 +351,20 @@ export class EsaColorPicker extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .hex-input:focus {
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .hex-input:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
     }
 
@@ -249,7 +378,7 @@ export class EsaColorPicker extends LitElement {
       height: var(--_swatch-size);
       flex-shrink: 0;
       border: 2px solid transparent;
-      border-radius: var(--radius-050, 4px);
+      border-radius: var(--radius-xs, 0.125rem);
       padding: 0;
       cursor: pointer;
       transition:
@@ -261,12 +390,12 @@ export class EsaColorPicker extends LitElement {
       transform: scale(1.1);
     }
     .swatch--selected {
-      border-color: var(--color-primary, #43608a);
-      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
+      border-color: var(--color-background-brand, #46a758);
+      box-shadow: 0 0 0 1px var(--color-background-brand, #46a758);
     }
     .swatch:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .swatch:disabled {
       opacity: 0.6;
@@ -279,7 +408,33 @@ export class EsaColorPicker extends LitElement {
       opacity: 0.6;
       cursor: not-allowed;
     }
-  `;
+
+    /* FORCED COLORS. The one place in this kit where opting OUT is the correct
+       answer: the colour IS the content. Both .preview and .swatch carry an
+       inline 'background-color', so force-adjusting them turns the picker into a
+       row of identical empty squares and nothing can be chosen.
+
+       The opt-out repairs selection as a side effect. The base .swatch is
+       'border: 2px solid transparent', and forced colors makes transparent
+       borders VISIBLE — so without this, every swatch would gain the same 2px
+       border that .swatch--selected uses to mark itself, and selection would be
+       lost twice over. Under the opt-out the transparent border stays
+       transparent and the selected swatch keeps both its border and its ring.
+
+       An outline (not a border) frames each swatch so the opted-out colours still
+       have an edge against the user's Canvas — outline sits outside the box, so
+       it does not disturb the 2px selection border underneath it. */
+    @media (forced-colors: active) {
+      .preview,
+      .swatch {
+        forced-color-adjust: none;
+      }
+      .swatch { outline: 1px solid CanvasText; }
+      .swatch--selected { outline: 2px solid Highlight; }
+      .preview { outline: 1px solid CanvasText; }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-color-picker')) {

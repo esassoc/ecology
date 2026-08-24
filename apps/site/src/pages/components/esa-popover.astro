@@ -1,17 +1,21 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 
-const props = [
-  { name: 'position', type: "'top' | 'bottom' | 'left' | 'right'", default: "'bottom'", description: 'Side the panel opens on, relative to the trigger.' },
-  { name: 'trigger', type: "'click' | 'hover'", default: "'click'", description: 'Click toggles and closes on outside-click + Esc; hover opens after a 200ms delay.' },
-  { name: 'has-arrow', type: 'boolean', default: 'true', description: 'Renders the pointer arrow toward the trigger.' },
-  { name: 'offset', type: 'number', default: '8', description: 'Gap in pixels between trigger and panel.' },
-  { name: 'appearance', type: "'default' | 'inverse'", default: "'default'", description: 'Panel style (aligned to Beacon): default is a light surface; inverse is a dark panel with light text, for documentation/help content. Reflected as an attribute.' },
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected open state.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  position: "Side the panel opens on, relative to the trigger.",
+  trigger: "Click toggles and closes on outside-click + Esc; hover opens after a 200ms delay.",
+  "has-arrow": "Renders the pointer arrow toward the trigger.",
+  offset: "Gap in pixels between trigger and panel.",
+  appearance: "Panel style (aligned to Beacon): default is a light surface; inverse is a dark panel with light text, for documentation/help content. Reflected as an attribute.",
+  open: "Reflected open state.",
+  label: "Accessible name for the panel. When set, the panel is exposed as a dialog; when omitted it carries no role. It used to be an unconditional role=\"dialog\" with no name, which is worse than no role — a screen reader announces \"dialog\" and has nothing to say about it, and the role promises focus management a non-modal popover does not implement.",
+};
 ---
 <ComponentDoc name="Popover" category="Overlays" slug="esa-popover" type="wc" status="stable"
   summary="Anchored floating panel. The trigger goes in the default slot and the panel content in <code>slot=&quot;content&quot;</code>. Click mode closes on outside-click and Esc; hover mode opens after a short delay.">
@@ -22,7 +26,7 @@ const props = [
   <div slot="content">Popover below the trigger.</div>
 </esa-popover>`}>
       <esa-popover position="bottom">
-        <button class="trigger">Open popover</button>
+        <EsaButton variant="secondary">Open popover</EsaButton>
         <div slot="content">Popover below the trigger.</div>
       </esa-popover>
     </Preview>
@@ -34,19 +38,19 @@ const props = [
 <esa-popover position="left">…</esa-popover>
 <esa-popover position="right">…</esa-popover>`}>
       <esa-popover position="top">
-        <button class="trigger">Top</button>
+        <EsaButton variant="secondary">Top</EsaButton>
         <div slot="content">Popover above the trigger.</div>
       </esa-popover>
       <esa-popover position="bottom">
-        <button class="trigger">Bottom</button>
+        <EsaButton variant="secondary">Bottom</EsaButton>
         <div slot="content">Popover below the trigger.</div>
       </esa-popover>
       <esa-popover position="left">
-        <button class="trigger">Left</button>
+        <EsaButton variant="secondary">Left</EsaButton>
         <div slot="content">Left side.</div>
       </esa-popover>
       <esa-popover position="right">
-        <button class="trigger">Right</button>
+        <EsaButton variant="secondary">Right</EsaButton>
         <div slot="content">Right side.</div>
       </esa-popover>
     </Preview>
@@ -57,11 +61,11 @@ const props = [
     <Preview align="center" code={`<esa-popover appearance="default">…</esa-popover>
 <esa-popover appearance="inverse">…</esa-popover>`}>
       <esa-popover position="bottom" appearance="default">
-        <button class="trigger">Default</button>
+        <EsaButton variant="secondary">Default</EsaButton>
         <div slot="content">Light surface panel.</div>
       </esa-popover>
       <esa-popover position="bottom" appearance="inverse">
-        <button class="trigger">Inverse</button>
+        <EsaButton variant="secondary">Inverse</EsaButton>
         <div slot="content">Dark panel, light text — for help content.</div>
       </esa-popover>
     </Preview>
@@ -72,18 +76,18 @@ const props = [
     <Preview align="center" code={`<esa-popover position="bottom" trigger="hover">…</esa-popover>
 <esa-popover position="bottom" has-arrow={false}>…</esa-popover>`}>
       <esa-popover position="bottom" trigger="hover">
-        <button class="trigger">Hover me</button>
+        <EsaButton variant="secondary">Hover me</EsaButton>
         <div slot="content">Opens on hover after 200ms.</div>
       </esa-popover>
       <esa-popover position="bottom" has-arrow={false}>
-        <button class="trigger">No arrow</button>
+        <EsaButton variant="secondary">No arrow</EsaButton>
         <div slot="content">Arrowless popover.</div>
       </esa-popover>
     </Preview>
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-popover" describe={describe} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">
@@ -98,15 +102,3 @@ const props = [
 
 <script>import '@esa/ecology/esa-popover';</script>
 
-<style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-strong, #d4d4d4);
-    background: var(--color-surface, #fff);
-    color: var(--color-text-primary, #171717);
-    font-family: inherit;
-    font-size: var(--type-size-200, 0.9375rem);
-    cursor: pointer;
-  }
-</style>

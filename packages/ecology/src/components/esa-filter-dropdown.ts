@@ -1,6 +1,31 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 // Options render as esa-checkbox rows (the ui-filter pattern) — import to register it.
 import './esa-checkbox';
+
+/**
+ * The three composites this control renders at each step of the size ramp.
+ *
+ * The trigger is UI text (label-*, medium) and gains weight — not size — once a
+ * filter is applied, so selection reads as emphasis without reflowing the bar.
+ * What the user types into the search box and the option labels they read back are
+ * prose (body-*, regular): they are content, not chrome, and the panel matching the
+ * trigger's rung is what keeps the two halves the same control.
+ */
+const TRIGGER_TYPE = { xs: 'microcopy-xs', sm: 'microcopy-sm', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
+const TRIGGER_ACTIVE_TYPE = {
+  xs: 'microcopy-xs-strong',
+  sm: 'microcopy-sm-strong',
+  md: 'microcopy-md-strong',
+  lg: 'microcopy-lg-strong',
+} as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
+const OPTION_TYPE = { xs: 'microcopy-xs-subtle', sm: 'microcopy-sm-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
 
 /**
  * esa-filter-dropdown — INTERACTIVE filter control (Lit Web Component).
@@ -58,15 +83,38 @@ export class EsaFilterDropdown extends LitElement {
   declare _selected: string[];
   declare _highlighted: number;
 
+  /**
+   * The single close path, so focus return cannot be forgotten on one of four.
+   *
+   * Opening focuses the panel's search input, which lives INSIDE the panel — so every
+   * close unmounts the focused node and drops focus to `<body>`, returning a keyboard
+   * user to the top of the document with no idea where they were. That happened on all
+   * four exits (outside click, document Esc, in-panel Esc, and picking an option in
+   * single-select mode) and each one set `_open = false` on its own.
+   *
+   * Guarded on focus actually being inside: an outside CLICK has already moved focus
+   * somewhere the user chose, and yanking it back to the trigger would undo that.
+   */
+  private closePanel(): void {
+    if (!this._open) return;
+    const root = this.renderRoot as ShadowRoot;
+    const focusWasInside = !!root.activeElement;
+    this._open = false;
+    if (!focusWasInside) return;
+    void this.updateComplete.then(() => {
+      root.querySelector<HTMLElement>('.esa-filter-dropdown__trigger')?.focus();
+    });
+  }
+
   private onDocClick = (e: MouseEvent): void => {
     if (this._open && !e.composedPath().includes(this)) {
-      this._open = false;
+      this.closePanel();
     }
   };
 
   private onDocKeydown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && this._open) {
-      this._open = false;
+      this.closePanel();
     }
   };
 
@@ -147,8 +195,8 @@ export class EsaFilterDropdown extends LitElement {
     } else {
       this._selected = [value];
       this._searchText = '';
-      this._open = false;
       this.emitChange([value]);
+      this.closePanel();
     }
   }
 
@@ -180,7 +228,7 @@ export class EsaFilterDropdown extends LitElement {
         if (idx >= 0 && idx <= max) this.selectOption(options[idx]);
         break;
       case 'Escape':
-        this._open = false;
+        this.closePanel();
         break;
     }
   };
@@ -210,12 +258,32 @@ export class EsaFilterDropdown extends LitElement {
     );
   }
 
+  /**
+   * Announce only the transition INTO no-matches. See esa-combobox.announceEmptyResults
+   * for the reasoning: the cue already sets the expectation that the list filters, so
+   * a per-keystroke count is noise — but a query that matches nothing has no other
+   * signal for someone who cannot see the list empty out.
+   */
+  updated(): void {
+    this.announceEmptyResults();
+  }
+
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty = this._open && !!this._searchText.trim() && this.filteredOptions.length === 0;
+    if (isEmpty && !this.wasEmpty) announce('No options match', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
   render() {
     const options = this.filteredOptions;
+    const triggerRole = this.hasSelection
+      ? TRIGGER_ACTIVE_TYPE[this.size]
+      : TRIGGER_TYPE[this.size];
     return html`
       <div class="esa-filter-dropdown">
         <button
-          class="esa-filter-dropdown__trigger ${this.hasSelection ? 'esa-filter-dropdown__trigger--active' : ''}"
+          class="esa-filter-dropdown__trigger typography-${triggerRole} ${this.hasSelection ? 'esa-filter-dropdown__trigger--active' : ''}"
           type="button"
           aria-expanded=${this._open}
           aria-haspopup="listbox"
@@ -223,7 +291,9 @@ export class EsaFilterDropdown extends LitElement {
         >
           <span class="esa-filter-dropdown__label">${this.buttonLabel}</span>
           ${this.multiple && this._selected.length > 0
-            ? html`<span class="esa-filter-dropdown__count">${this._selected.length}</span>`
+            ? html`<span class="esa-filter-dropdown__count typography-microcopy-xs-strong"
+                >${this._selected.length}</span
+              >`
             : null}
           <span
             class="esa-filter-dropdown__arrow ${this._open ? 'esa-filter-dropdown__arrow--open' : ''}"
@@ -231,27 +301,47 @@ export class EsaFilterDropdown extends LitElement {
         </button>
 
         ${this._open
-          ? html`<div class="esa-filter-dropdown__panel" role="listbox">
+          ? html`<div class="esa-filter-dropdown__panel" role="listbox" id="listbox">
               <div class="esa-filter-dropdown__search">
+                <!-- The search input had no accessible name — only a placeholder,
+                     which is not a name and vanishes as soon as you type. The cue is
+                     what makes announcing the option list on every keystroke
+                     unnecessary. aria-activedescendant is what makes arrow-key
+                     navigation audible: focus stays here, so without it the
+                     highlighted option changes silently. Both IDREFs resolve inside
+                     this shadow root, which is the only place they can. -->
                 <input
-                  class="esa-filter-dropdown__search-input"
+                  class="esa-filter-dropdown__search-input typography-${FIELD_TYPE[this.size]}"
                   type="text"
+                  role="combobox"
+                  aria-expanded="true"
+                  aria-controls="listbox"
+                  aria-label=${'Filter ' + this.label}
+                  aria-describedby="cue"
+                  aria-activedescendant=${this._highlighted >= 0
+                    ? `opt-${this._highlighted}`
+                    : nothing}
                   placeholder=${this.placeholder || 'Search...'}
                   .value=${this._searchText}
                   @input=${this.onSearchInput}
                   @keydown=${this.onKeydown}
                   autocomplete="off"
                 />
+                <span class="visually-hidden" id="cue"
+                  >Options filter as you type. Use the up and down arrows to review
+                  them, Enter to toggle one.</span
+                >
               </div>
               <div class="esa-filter-dropdown__options" role="group" aria-label=${this.label}>
                 ${options.length === 0
                   ? html`<div class="esa-filter-dropdown__empty">No options match.</div>`
                   : options.map(
                       (option, i) => html`<div
-                        class="esa-filter-dropdown__option
+                        class="esa-filter-dropdown__option typography-${OPTION_TYPE[this.size]}
                           ${option.disabled ? 'esa-filter-dropdown__option--disabled' : ''}
                           ${this._highlighted === i ? 'esa-filter-dropdown__option--highlighted' : ''}"
                         role="option"
+                        id="opt-${i}"
                         aria-selected=${this.isSelected(option.value)}
                         aria-disabled=${option.disabled ?? false}
                         @click=${() => this.selectOption(option)}
@@ -277,7 +367,7 @@ export class EsaFilterDropdown extends LitElement {
               <div class="esa-filter-dropdown__footer">
                 <button
                   type="button"
-                  class="esa-filter-dropdown__clear-link"
+                  class="esa-filter-dropdown__clear-link typography-microcopy-sm"
                   ?disabled=${!this.hasSelection}
                   @click=${this.clear}
                 >Clear all</button>
@@ -288,40 +378,44 @@ export class EsaFilterDropdown extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       display: inline-block;
 
       --_filter-height: 40px;
       --_filter-padding-x: var(--spacing-400, 1rem);
-      --_filter-font-size: var(--type-size-200, 0.9375rem);
-      --_filter-radius: var(--radius-200, 0.5rem);
-      --_filter-bg: var(--color-surface, #fff);
-      --_filter-bg-active: var(--color-primary-subtle, #f3f8fb);
-      --_filter-text: var(--color-text-primary, #171717);
-      --_filter-text-active: var(--color-primary, #43608a);
-      --_filter-border: var(--color-border, #e5e5e5);
-      --_filter-border-active: var(--color-primary, #43608a);
+      --_filter-radius: var(--radius-md, 0.5rem);
+      --_filter-bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_filter-bg-active: var(--color-background-brand-subtle, #fbfefb);
+      --_filter-text: var(--color-content-default, #202020);
+      --_filter-text-active: var(--color-background-brand, #46a758);
+      --_filter-border: var(--color-border-default, #cecece);
+      --_filter-border-active: var(--color-background-brand, #46a758);
     }
 
-    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values. */
+    /* base :host = md. xs is one step below sm; sm/lg keep the old small/large values.
+       The size steps carry geometry only — the text comes from a composite class
+       named in render() (TRIGGER_TYPE / TRIGGER_ACTIVE_TYPE / OPTION_TYPE), so the
+       trigger and the panel it opens stay on one rung by construction. */
     :host([size='xs']) {
       --_filter-height: 28px;
       --_filter-padding-x: var(--spacing-200, 0.5rem);
-      --_filter-font-size: var(--type-size-100, 0.75rem);
-      --_filter-radius: var(--radius-100, 0.25rem);
+      --_filter-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='sm']) {
       --_filter-height: 32px;
       --_filter-padding-x: var(--spacing-300, 0.75rem);
-      --_filter-font-size: var(--type-size-150, 0.875rem);
-      --_filter-radius: var(--radius-100, 0.25rem);
+      --_filter-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='lg']) {
       --_filter-height: 48px;
       --_filter-padding-x: var(--spacing-500, 1.5rem);
-      --_filter-font-size: var(--type-size-300, 1.125rem);
-      --_filter-radius: var(--radius-300, 0.5rem);
+      --_filter-radius: var(--radius-md, 0.5rem);
     }
 
     .esa-filter-dropdown {
@@ -335,14 +429,10 @@ export class EsaFilterDropdown extends LitElement {
       gap: var(--spacing-100, 0.25rem);
       height: var(--_filter-height);
       padding-inline: var(--_filter-padding-x);
-      border: 1px solid var(--_filter-border);
+      border: var(--border-width-default, 1px) solid var(--_filter-border);
       border-radius: var(--_filter-radius);
       background: var(--_filter-bg);
       color: var(--_filter-text);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--_filter-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      line-height: 1;
       cursor: pointer;
       white-space: nowrap;
       transition:
@@ -356,14 +446,15 @@ export class EsaFilterDropdown extends LitElement {
       border-color: var(--_filter-border-active);
     }
     .esa-filter-dropdown__trigger:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
+    /* Weight comes from TRIGGER_ACTIVE_TYPE (label-*-strong) — same rung as the
+       resting trigger, so applying a filter does not resize the bar. */
     .esa-filter-dropdown__trigger--active {
       background: var(--_filter-bg-active);
       border-color: var(--_filter-border-active);
       color: var(--_filter-text-active);
-      font-weight: var(--font-weight-semibold, 550);
     }
     /* Open (panel showing) but nothing selected yet → just lift the border. */
     .esa-filter-dropdown__trigger[aria-expanded='true']:not(.esa-filter-dropdown__trigger--active) {
@@ -371,7 +462,13 @@ export class EsaFilterDropdown extends LitElement {
     }
 
     .esa-filter-dropdown__label {
-      overflow: hidden;
+      /* clip/visible, not "overflow: hidden" — the trigger sets a microcopy composite,
+         whose line-height "none" (1) leaves the line box 1em against DM Sans's 1.30em
+         glyph box, so hiding the Y axis clips the descenders in a label like
+         "Category" or "Region type". Same fix as esa-file-list's .file__name, where
+         the arithmetic is written out. */
+      overflow-x: clip;
+      overflow-y: visible;
       text-overflow: ellipsis;
       max-width: 200px;
     }
@@ -383,12 +480,9 @@ export class EsaFilterDropdown extends LitElement {
       min-width: 1.25rem;
       height: 1.25rem;
       padding-inline: 0.3rem;
-      border-radius: var(--radius-full, 9999px);
-      background: var(--color-primary, #43608a);
-      color: var(--color-text-inverse, #fff);
-      font-size: var(--type-size-100, 0.75rem);
-      font-weight: var(--font-weight-semibold, 550);
-      line-height: 1;
+      border-radius: var(--radius-pill, 9999px);
+      background: var(--color-background-brand, #46a758);
+      color: var(--color-content-default-knockout, #fcfcfc);
     }
 
     .esa-filter-dropdown__arrow {
@@ -419,10 +513,11 @@ export class EsaFilterDropdown extends LitElement {
       z-index: var(--z-dropdown, 50);
       min-width: var(--filter-dropdown-min-width, 200px);
       max-height: 300px;
-      background: var(--filter-dropdown-bg, var(--color-surface, #fff));
-      border: var(--filter-dropdown-border, 1px solid var(--color-border, #e5e5e5));
-      border-radius: var(--filter-dropdown-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--filter-dropdown-shadow, var(--shadow-200, 0 4px 20px -4px rgba(0, 0, 0, 0.06)));
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--border-width-default, 1px) solid
+        var(--color-border-default, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -430,23 +525,30 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__search {
       padding: var(--spacing-200, 0.5rem);
-      border-bottom: 1px solid var(--color-border, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     .esa-filter-dropdown__search-input {
+      /* A real <input> — it cannot wrap, so leading only sets the box height. */
       width: 100%;
       box-sizing: border-box;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border: 1px solid var(--color-border, #e5e5e5);
-      border-radius: var(--radius-100, 0.25rem);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--_filter-font-size);
-      background: var(--color-surface, #fff);
-      color: var(--color-text-primary, #171717);
+      border: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+      border-radius: var(--radius-sm, 0.25rem);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-default, #202020);
+      /* Suppressed only because the :focus rule below paints the ring. */
       outline: none;
     }
-    .esa-filter-dropdown__search-input:focus {
-      border-color: var(--color-primary, #43608a);
-      box-shadow: 0 0 0 1px var(--color-primary, #43608a);
+    /* This ring was three problems in one rule until 2026-08-16: it was 1px, which
+       is half the area Focus Appearance asks for; it read --color-background-brand
+       directly, so a spoke re-pointing --focus-ring-color left this one field
+       behind; and it fired on mouse. Now the house shape. :focus-visible is safe
+       here even though it is a text input — engines match :focus-visible on text
+       entry whether it was clicked or tabbed to. */
+    .esa-filter-dropdown__search-input:focus-visible {
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .esa-filter-dropdown__options {
@@ -460,16 +562,14 @@ export class EsaFilterDropdown extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 0.5rem);
       padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem);
-      font-size: var(--_filter-font-size);
-      font-family: var(--font-sans, inherit);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .esa-filter-dropdown__option:hover:not(.esa-filter-dropdown__option--disabled),
     .esa-filter-dropdown__option--highlighted:not(.esa-filter-dropdown__option--disabled) {
-      background: var(--color-surface-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__option--disabled {
       opacity: 0.5;
@@ -496,8 +596,8 @@ export class EsaFilterDropdown extends LitElement {
 
     .esa-filter-dropdown__empty {
       padding: var(--spacing-300, 0.75rem);
-      color: var(--color-text-muted, #737373);
-      font-style: italic;
+      color: var(--color-content-default-secondary, #646464);
+      font-style: var(--font-style-italic, italic);
       text-align: center;
     }
 
@@ -505,27 +605,45 @@ export class EsaFilterDropdown extends LitElement {
       display: flex;
       justify-content: flex-end;
       padding: var(--spacing-200, 0.5rem);
-      border-top: 1px solid var(--color-border, #e5e5e5);
+      border-top: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
     }
     .esa-filter-dropdown__clear-link {
       background: none;
       border: none;
-      color: var(--color-primary, #43608a);
-      font-family: var(--font-sans, inherit);
-      font-size: var(--type-size-150, 0.875rem);
-      font-weight: var(--font-weight-medium, 450);
+      color: var(--color-content-brand, #2a7e3b);
       cursor: pointer;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
     }
     .esa-filter-dropdown__clear-link:hover:not(:disabled) {
-      background: var(--color-surface-sunken, #f4f4f5);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .esa-filter-dropdown__clear-link:disabled {
-      color: var(--color-text-muted, #a3a3a3);
+      color: var(--color-content-default-secondary, #646464);
       cursor: not-allowed;
     }
-  `;
+
+    /* FORCED COLORS. This list is the one that mostly survives already: selection
+       is carried by a nested <esa-checkbox> with a real glyph and a real border,
+       not by a row tint. Only the keyboard cursor needs restoring.
+
+       The per-option colour dot is the exception — it is an inline
+       per-option background colour with no label of any kind, so it is content
+       rather than decoration and opts out. Without the opt-out every dot renders
+       identically and the colour dimension of the filter is simply gone. */
+    @media (forced-colors: active) {
+      .esa-filter-dropdown__option--highlighted {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+      .esa-filter-dropdown__option--disabled { color: GrayText; }
+      .esa-filter-dropdown__option-dot {
+        forced-color-adjust: none;
+        outline: 1px solid CanvasText;
+      }
+    }
+  `,
+  ];
 }
 
 const chevronIcon = html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>`;

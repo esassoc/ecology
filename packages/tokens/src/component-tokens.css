@@ -13,412 +13,683 @@
 
 :root {
   /* ===================== BUTTON ===================== */
-  /* Text/icon color painted on a solid `warning` fill. The right choice depends
-     on the themed --color-warning shade: a light amber wants dark text (the hub
-     default), a darker orange wants white. Themeable so a spoke whose warning is
-     dark (e.g. Beacon's #f2770e) can flip it to white without forking the button. */
-  --button-on-warning: var(--color-gray-12);
+  /* Text/icon color painted on a solid `warning` fill. Defaults to the tier-2
+     role so a filled warning button and an esa-badge warning agree by default —
+     they paint on the same --color-background-utility-warning fill and must not diverge.
+     The hook stays because the right choice depends on the themed
+     --color-background-utility-warning shade: a light amber wants dark text (the hub default), a
+     darker orange wants white. A spoke whose warning is dark (e.g. Beacon's
+     #f2770e) flips the button to white here without forking the component;
+     to move BOTH, re-point --color-content-on-utility-warning instead. */
+  --button-on-warning: var(--color-content-on-utility-warning);
+
+  /* Hover/selected scrim for `variant="chrome"` — the variant that takes its color
+     from the surrounding color context (an esa-app-bar) rather than owning one.
+     currentColor-derived on purpose: the same token has to read as a light scrim on
+     a dark bar and a dark scrim on a light one, which no fixed color can do. This
+     is the surface that absorbed --icon-button-bg-hover when esa-icon-button folded
+     into esa-button; see docs/button-consolidation-plan.md. */
+  --button-chrome-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
+
+  /* The button's corner ramp. Mirrors the tier-2 scale — xs/sm take --radius-sm,
+     md/lg take --radius-md — and is value-neutral on the day it lands: every
+     button renders the same radius it did before.
+
+     IT EXISTS SO THE TWO CAN DIVERGE. esa-button and esa-button-group read
+     --form-radius-* until 2026-08-16, which meant a spoke had no way to give
+     buttons a different radius from inputs — pill buttons beside square fields is
+     an ordinary house style and the shared token made it unreachable. The FORMS
+     header below already names this defect for the ramp's other half ("button,
+     icon-button, chip-group and button-toggle, which are not forms; the `form`
+     namespace never bounded its readers because those four had nowhere else to get
+     the control ramp"). This is the somewhere else, for the one of the four that is
+     furthest from being a form.
+
+     NOT a fan-out. Four names, against SPEC.md's 5-9-per-component guidance, and
+     the fan-out CLAUDE.md warns about was 162.
+
+     READ THIS NEXT TO form-radius-to-radius-scale, LANDED THE SAME DAY. That row
+     deleted --form-radius-* for being four names carrying two values — which is
+     also the literal shape of the four declarations below. The two are not the
+     same case: --form-radius-* aliased a tier-2 pair for eleven components that
+     all wanted the SAME corner, while this set exists so ONE component can want a
+     different one. That is the tier-3 contract. But the justification is
+     divergence, so it is only earning its keep once something diverges: if no
+     theme in this repo or any spoke ever re-points a --button-radius-* away from
+     the scale, it has become the thing it replaced and should follow.
+
+     esa-button-group reads --button-radius-md too, and that is composition rather
+     than a second violation: a grouped button whose corners came from anywhere else
+     would stop matching an ungrouped one the moment a spoke re-pointed this. Same
+     shape as esa-loading-overlay reading --loading-spinner-*. */
+  /* esa-button */
+  --button-radius-xs: var(--radius-sm, 0.25rem);
+  --button-radius-sm: var(--radius-sm, 0.25rem);
+  --button-radius-md: var(--radius-md, 0.5rem);
+  --button-radius-lg: var(--radius-md, 0.5rem);
 
   /* ===================== FORMS ===================== */
   /* Shared size scale (xs · sm · md · lg), aligned with Beacon's UiSize.
-     One scale across button/input/icon-button so they line up on a row. */
-  /* size — xs */
-  --form-padding-y-xs: var(--spacing-100);
-  --form-padding-x-xs: var(--spacing-200);
-  --form-font-size-xs: var(--type-size-050);
-  --form-height-xs: 28px;
-  --form-radius-xs: var(--radius-100);
-  /* size — sm */
-  --form-padding-y-sm: var(--spacing-150);
-  --form-padding-x-sm: var(--spacing-250);
-  --form-font-size-sm: var(--type-size-100);
-  --form-height-sm: 32px;
-  --form-radius-sm: var(--radius-100);
-  /* size — md (default) */
-  --form-padding-y-md: var(--spacing-200);
-  --form-padding-x-md: var(--spacing-300);
-  --form-font-size-md: var(--type-size-200);
-  --form-height-md: 40px;
-  --form-radius-md: var(--radius-200);
-  /* size — lg */
-  --form-padding-y-lg: var(--spacing-300);
-  --form-padding-x-lg: var(--spacing-400);
-  --form-font-size-lg: var(--type-size-300);
-  --form-height-lg: 48px;
-  --form-radius-lg: var(--radius-200);
+     One scale across button/input/icon-button so they line up on a row.
+
+     THERE IS NO --form-font-size-* HERE, AND THAT IS DELIBERATE. It existed
+     until 2026-08-14: a size-only ramp with no weight, leading or face behind
+     it — the same defect D1 of docs/typography-adoption-plan.md deleted
+     `--font-size-ui-*` for, one tier down. 17 components read it, among them
+     button, icon-button, chip-group and button-toggle, which are not forms; the
+     `form` namespace never bounded its readers because those four had nowhere
+     else to get the control ramp.
+
+     The fix was not a tier-2 partner ramp. One was added the same day as
+     `--control-font-size-*` and reverted within the hour — see the note on
+     control-height in semantic/size.json. The fix is that components adopt the
+     COMPOSITE whose job matches the text (D2): a label reads label-*, a value
+     reads body-*. One hook could never have narrowed both, which is the other
+     reason it could not survive. `--form-label-font-weight` and the never-
+     declared `--form-label-font-size` went with it; the composite carries size
+     and weight together, so neither had anything left to say.
+
+     Aliases for all six are in migrations.json, so a spoke READING an old name
+     keeps resolving. A spoke that DECLARED one is not rescued by an alias — that
+     asymmetry is in SPEC.md and is why the rows matter.
+
+     HEIGHT IS GONE ENTIRELY — first --form-height-* on 2026-08-14, then
+     --control-height-* behind it the same day. The first was a pure passthrough
+     that added only a narrowing. The second was the real problem: a px height
+     cannot grow with rem text. Raise your browser font size, swap in a taller
+     face, wrap a translation, and the box cannot follow — and esa-text-field
+     paired it with overflow:hidden, so the excess was cut silently (WCAG 1.4.4).
+
+     Nothing replaced it. An input, a button or a select is now as tall as the
+     padding below plus its own text. That is why each step sits one spacing rung
+     higher than it used to: the padding now CARRIES the height, where before the
+     height carried it and the padding was absorbed into the box. It carries it
+     through --spacing-* read directly, though — see below; --form-padding-* was
+     the lever for a matter of hours and is gone too.
+
+     Two consequences worth knowing. Heights are fluid, because the type is —
+     roughly 38px on a phone where a wide monitor gets 41px. And a row still
+     aligns, but structurally rather than by decree: siblings on the same step
+     share a padding value and a type rung, so they resolve to the same height.
+     See typography-migration-log.md Change 9.
+
+     --form-radius-* OUTLIVED THE REST OF THE RAMP BY TWO DAYS AND IS ALSO GONE
+     (2026-08-16, migrations.json: form-radius-to-radius-scale). It was kept back
+     on the 14th because it looked like the one member that was NOT a passthrough:
+     it encoded a mapping — xs/sm to the small corner, md/lg to the default one —
+     that 13 components would otherwise each restate.
+
+     The source did not bear that out. The 13 already restated it, one line per
+     size, just through a --form-* spelling; the substitution is the same line
+     count either way. And the hook was hiding the mapping rather than encoding
+     it: four names carried two values, and of 49 read sites, thirteen carried
+     literal fallbacks describing a 4/6/8/10 ramp the tokens never produced (6px
+     at sm in seven places, 10px at lg in six). Seven components rendered 2px off
+     their own fallback whenever this file was absent and nobody noticed.
+
+     What replaced it is a size axis at TIER 2 — --radius-{xs,sm,md,lg} — where
+     the ramp was always trying to live. See radius-roles-to-scale. A spoke that
+     wants flatter fields re-points --radius-sm/--radius-md.
+
+       --form-padding-{y,x}-* was a flat passthrough and was deleted the same day
+       (migrations.json: form-padding-to-spacing). Reading --spacing-* was never
+       the problem — spacing is one of the two CORE sets (see SPEC.md): universal,
+       shared by every theme, meant to be consumed directly, which is why tier 2
+       has no spacing layer and why a --control-padding-* role should not be
+       invented. The problem was the hook in FRONT of that read. It renamed four
+       numbers sixteen times (x and y were identical at every step after Change 9),
+       nothing anywhere ever re-pointed one, and 31 of 66 components already walked
+       --spacing-* directly for their own padding ramps. The eleven controls now
+       do the same, and the ramp lives here as a table instead of as tokens:
+
+           step   padding (both axes)
+           xs     --spacing-200   0.5rem
+           sm     --spacing-250   0.625rem
+           md     --spacing-300   0.75rem
+           lg     --spacing-400   1rem
+
+       Note what this costs, so nobody rediscovers it as a bug: a spoke has NO
+       one-line density lever any more. Re-declaring --form-padding-y-md does
+       nothing (nothing reads it) and re-pointing --spacing-* moves every gap in
+       the kit. Tightening the controls is a /request-lego. */
   /* colors */
-  --form-bg: var(--color-surface);
-  --form-bg-hover: var(--color-surface);
-  --form-bg-disabled: var(--color-disabled-bg);
-  --form-border-color: var(--color-border);
-  --form-border-color-hover: var(--color-border-strong);
-  --form-border-color-focus: var(--color-border-focus);
-  --focus-ring-color: var(--color-border-focus);
-  --focus-ring-width: 2px;
-  --form-border-color-error: var(--color-danger);
-  --form-text-color: var(--color-text-primary);
-  --form-placeholder-color: var(--color-text-muted);
-  --form-label-color: var(--color-text-secondary);
-  --form-help-color: var(--color-text-muted);
-  --form-error-color: var(--color-danger-strong);
+  /* THE THREE SURFACE HOOKS ARE GONE — PROMOTED TO TIER 2 (2026-08-14).
+     --form-bg, --form-bg-hover and --form-bg-disabled were read by 13, 3 and 7
+     components. A surface thirteen components share is an INTENT, and intents
+     live at tier 2; a tier-3 hook exists so a spoke can re-skin ONE component.
+     They are now --color-background-field, --color-background-default-hover and
+     --color-background-disabled, read directly (migrations.json:
+     form-bg-to-background-field).
+
+     A FIELD HAS NO FILL. --color-background-field is `transparent`: a field is
+     the colour of whatever contains it. Three greys were tried first and all
+     three were wrong. --form-bg pointed at --color-background-elevation-raised, the CARD
+     surface, so a field on a card rendered at contrast 1.00 against it; gray-3
+     and then gray-2 got that to 1.11 and 1.03. THE FILL WAS NEVER DOING THE
+     WORK — the border always was, and it only reaches 1.53 itself. Worse, every
+     fixed grey was right on the canvas and INVERTED on a sunken well, a filled
+     card or the sidenav rail, where the field rendered LIGHTER than its own
+     container. Transparent is the only value correct in all of them, in both
+     colour schemes, with no override anywhere.
+
+     SO EVERY STATE IS A BORDER STATE — rest --form-border-color, hover
+     --form-border-color-hover, focus --form-border-color-focus plus the ring,
+     error --form-error-border-color. DISABLED IS THE ONE EXCEPTION and it is a fill:
+     tier 2 ships a complete disabled triple (--color-background-disabled,
+     --color-border-disabled, --color-content-disabled) and a field reads all three.
+     That break from the container IS the signal — the field stops matching what
+     holds it precisely because it is no longer editable. Do not substitute an
+     `opacity` hack here; two of those three tokens sat unread while the kit did.
+     That is also what finally spread --form-border-color-hover across the family:
+     it had existed for this since the beginning and was wired into exactly ONE
+     component (esa-input-tag), which was the model for the rest.
+
+     IT IS WRITTEN, NOT OMITTED, and that is not fussiness. Dropping the
+     `background` declaration does NOT give transparency on a native element: the
+     UA stylesheet paints <input>/<textarea>/<select> with `field` (about white)
+     and <button> with `ButtonFace` (about #efefef). Six of the fifteen field
+     surfaces here are native, so omitting would render a transparent wrapper
+     beside a white textarea beside a grey combobox trigger — varying by browser,
+     in a colour no theme can reach and no audit can see.
+
+     --form-bg-hover is the clearest case for why the promotion was the right
+     shape rather than a rename. It pointed at --color-background-elevation-raised, the
+     SAME value as --form-bg, so the kit shipped a hover hook that rendered
+     nothing for its whole life.
+
+     One reader did NOT follow, and it is the reason a blind substitution would
+     have been wrong: esa-button-toggle's `.option--selected` read --form-bg to
+     lift the chosen segment out of a --color-background-elevation-sunken track. It is a
+     raised chip, not a field — transparent would have erased the selection
+     outright. It takes --color-background-elevation-raised now, which is what it always
+     meant. */
+  --form-border-color: var(--color-border-default);
+  --form-border-color-hover: var(--color-border-default-strong);
+  --form-border-color-focus: var(--color-border-default-focus);
+  /* `error` is a validation VARIANT, not an interaction state — it does not sit
+     with hover/focus/pressed, and it was the one token in the file with a
+     variant in the trailing state slot. Now variant-first, which also pairs it
+     with --form-error-color below: one error treatment, two properties. */
+  --form-error-border-color: var(--color-background-utility-danger);
+  --form-text-color: var(--color-content-default);
+  --form-placeholder-color: var(--color-content-default-secondary, #646464);
+  --form-label-color: var(--color-content-default-secondary);
+  --form-help-color: var(--color-content-default-secondary, #646464);
+  --form-error-color: var(--color-content-utility-danger);
+  /* The prefix/suffix slab on a text field — a leading `$`, a trailing `.com`.
+     Read by esa-text-field, declared here rather than there because the affix is
+     part of the field's edge, not a component of its own: --form-affix-border-color
+     points at --form-border-color, its sibling two lines down, and that coupling
+     is the whole point. Stated in the token file a spoke opens, a theme that moves
+     the field edge moves the affix edge with it; buried in a fallback chain inside
+     the component, it moves only if you knew to look.
+
+     These read as `var(--form-affix-*, <chain>)` in the component and were declared
+     NOWHERE until 2026-08-16 — the tier the site called `ad-hoc`, which was never a
+     tier. See the note at the head of the HOOKIFY block below. */
+  --form-affix-bg: var(--color-background-elevation-sunken);
+  --form-affix-color: var(--color-content-default-secondary);
+  --form-affix-border-color: var(--form-border-color);
   /* structure */
-  --form-border-width: 1px;
-  --form-line-height: var(--line-height-normal);
+  /* Every form edge, including the checkbox box and the radio circle. There was
+     briefly a --form-indicator-border-width at --border-width-200, added because both
+     components asked for 2px via `var(--form-border-width, 2px)` — but that fallback
+     could never fire (this token has always been declared), so the kit shipped, was
+     reviewed and was signed off at 1px for its whole life. The 2px was an intent
+     living in dead code that nobody ever saw rendered.
+
+     Removed rather than promoted. Keeping it would have meant adding an `emphasis`
+     role at tier 2 to point it at — a role tier 2 deliberately does not have — to
+     justify a change that came from a bug. It also skipped tier 2 entirely by reading
+     --border-width-200 directly, which is the tier violation the audit exists to catch. */
+  --form-border-width: var(--border-width-default);
   --form-label-gap: var(--spacing-100);
   --form-help-gap: var(--spacing-100);
 
-  /* ===================== ICON BUTTON ===================== */
-  --icon-button-bg-hover: color-mix(in srgb, currentColor 14%, transparent);
+  /* ===================== FOCUS RING ===================== */
+  /* Lived in FORMS until now, which was the wrong home by a wide margin: 33
+     components read --focus-ring-width and 31 read --focus-ring-color, among
+     them alert-box, back-to-top, dialog and button — a focus ring is a
+     system-wide accessibility affordance, not a form control's concern. The
+     namespace itself is correct and stays: `focus-ring` is the naming rubric's
+     own worked example of a `special` case in the component slot, which is how
+     tier3-naming.ts already classifies it.
+
+     All three are thin aliases over tier 2, which is the shape --focus-ring-color
+     always had and the other two have now caught up to. `width` held a bare 2px
+     with no role behind it, so a spoke could not reach the ring's weight at all;
+     it now reads --border-width-focus. See that token for why the tier-2 width
+     role was rejected once and why the rejection did not survive contact with
+     this token (short version: the survey it rested on counted BORDERS, and
+     every component paints this ring with outline or box-shadow).
+
+     `offset` stays a literal, and that is not an oversight. There is no 2px
+     anywhere to point at: the spacing scale is a 4px grid starting at
+     --spacing-100 (0.25rem), and minting a 2px primitive to serve exactly one
+     consumer is the move SPEC.md forbids — a role nobody can point at. The ring
+     gap is genuine micro-geometry, which is the category the width turned out
+     not to belong to.
+
+     CONTRAST IS RESOLVED (2026-08-17), AND NOT BY ANYTHING IN THIS FILE. The
+     brand ring measured 2.95:1 on the raised and canvas surfaces and 2.66:1 on
+     the sunken one — all short of the 3:1 SC 1.4.11 asks for — because step 9 is
+     engineered to clear 3:1 as a SOLID FILL and a ring needs it as a HAIRLINE.
+     The remedy is a ramp WALK, one tier up: --color-border-default-focus now
+     takes the first step of the brand's own ramp that clears 3:1 on every
+     surface. grass lands on step 10 (3.07:1 sunken, 3.91:1 elsewhere) — still
+     the brand, one step along its own curve. resolveFocusRing in
+     scripts/lib/theme-recipe.mjs runs that walk per theme per scheme; see
+     --color-border-default-focus for why it references a primitive.
+
+     A second, non-brand contrast band was tried on 2026-08-16 and reverted the
+     same day: it read as a heavy near-black slab around every focused control.
+     DO NOT RE-ADD A BAND without agreeing the requirement and the weight first.
+     Its three tokens (--focus-ring-halo, --focus-ring-halo-spread,
+     --color-border-default-focus-halo) were never committed; a document naming
+     them is stale, not ahead.
+
+     ONE GROUND THE WALK CANNOT SERVE, and this is the hook's job rather than the
+     role's: a knockout app bar is near-black IN THE LIGHT SCHEME, so a ring dark
+     enough for near-white surfaces is too dark for it. Measured 2026-08-17: qanat
+     2.82:1 and the spoke template 2.54:1 on dark chrome, neither caused nor fixed
+     by the walk. A component on dark ground re-points --focus-ring-color locally
+     — esa-button variant="chrome" already takes it from currentColor. */
+  --focus-ring-color: var(--color-border-default-focus);
+  --focus-ring-width: var(--border-width-focus);
+  --focus-ring-offset: 2px;
+
+  /* DELETED (2026-08-16) — --icon-button-bg-hover, stranded by the
+     esa-icon-button fold on 2026-08-14. The scrim did not go anywhere:
+     --button-chrome-bg-hover above holds the identical value and esa-button
+     paints it. Only the old name was left, declared and read by nothing.
+     See migrations.json: icon-button-bg-hover-removed. */
 
   /* ===================== FILTERS ===================== */
-  --filter-container-gap: var(--spacing-200);
-  --filter-container-padding: var(--spacing-200) 0;
-  --filter-dropdown-bg: var(--color-surface);
-  --filter-dropdown-border: 1px solid var(--color-border);
-  --filter-dropdown-radius: var(--radius-200);
-  --filter-dropdown-shadow: var(--shadow-200);
+  /* 0, not the old `spacing-200 0` — the bar has always rendered flush, so the
+     declared value was describing padding no spoke could have been seeing. */
+  --filter-container-padding: 0;
+  /* Was `--filter-dropdown-border: 1px solid …` — a whole shorthand behind a
+     name spelled exactly like the two bare `border` tokens that held a plain
+     colour. A theme could not re-point this one's colour without restating the
+     width and style it had no reason to care about. Now a colour, like every
+     other border hook in the file, with the component composing the shorthand
+     from --border-width-default. Value-neutral: that role is 1px. */
   --filter-dropdown-min-width: 200px;
-  --filter-pill-bg: var(--color-primary-bg);
-  --filter-pill-bg-hover: var(--color-primary-bg-hover);
-  --filter-pill-label-color: var(--color-text-secondary);
-  --filter-pill-text: var(--color-primary-strong);
-  --filter-pill-radius: var(--radius-full);
-  --filter-pill-font-size: var(--type-size-100);
-  --filter-pill-remove-color: var(--color-text-secondary);
-  --filter-pill-remove-color-hover: var(--color-danger-strong);
-  --filter-clear-color: var(--color-text-muted);
-  --filter-clear-color-hover: var(--color-danger-strong);
+  /* The eight --filter-pill-* below duplicate esa-pill's --pill-* surface, and
+     that is ACCEPTED, not an oversight — do not re-open it without new evidence.
+     esa-filter-pills hand-rolls its chip because the chip is not an esa-pill:
+     it renders a two-tone `label: value` where esa-pill takes one string in one
+     colour, and its remove button emits { name, value } for a parent to update
+     filter state where esa-pill removes ITSELF from the DOM (wrong for a
+     controlled list — the source of truth is the filter state, not the markup).
+     Composing would mean adding a default slot and an opt-out of self-removal to
+     esa-pill, which is `stable` and already read by esa-pillbox and
+     esa-file-list, to serve one caller.
+     Revisit only if esa-pill grows those two capabilities for other reasons;
+     then this collapses to scoped --pill-* aliases the way esa-header-nav's
+     avatar did. */
 
-  /* ===================== DATA GRID ===================== */
-  --grid-header-bg: var(--color-gray-2);
-  --grid-header-color: var(--color-text-primary);
-  --grid-header-weight: var(--font-weight-semibold);
-  --grid-header-font-size: var(--type-size-100);
-  --grid-header-border: 1px solid var(--color-border);
-  --grid-row-bg: var(--color-surface);
-  --grid-row-bg-hover: var(--color-gray-3);
-  --grid-row-bg-selected: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --grid-row-stripe-bg: var(--color-gray-2);
-  --grid-row-border: 1px solid var(--color-border-light);
-  --grid-row-font-size: var(--type-size-150);
-  --grid-cell-padding: var(--spacing-200) var(--spacing-300);
-  --grid-pagination-bg: var(--color-surface);
-  --grid-pagination-border: 1px solid var(--color-border);
-  --grid-toolbar-bg: var(--color-surface);
+  /* ===================== DATA GRID (STAGED) =====================
+     No esa-grid component ships yet — this is the theming contract the AG Grid
+     wrapper will read, and it is what /components/esa-grid documents. Declared
+     ahead of the component ON PURPOSE so the contract is reviewable before code
+     depends on it; see SPEC.md "Staged surfaces". Border tokens hold a COLOUR,
+     not a `1px solid …` shorthand, so a theme can re-point the colour without
+     restating width and style. */
+  --grid-bg: var(--color-background-elevation-raised);
+  --grid-border-color: var(--color-border-default);
+  --grid-radius: var(--radius-md, 0.5rem);
+  --grid-shadow: var(--elevation-3);
+  --grid-font-family: var(--typography-font-family-sans);
+  --grid-font-size: var(--typography-label-md-font-size);
+  --grid-header-bg: var(--color-background-default);
+  --grid-header-color: var(--color-content-default);
+  --grid-header-weight: var(--typography-font-weight-semibold);
+  --grid-header-font-size: var(--typography-label-xs-font-size);
+  --grid-header-border-color: var(--color-border-default);
+  --grid-row-bg: var(--color-background-elevation-raised);
+  --grid-row-bg-hover: var(--color-background-elevation-sunken);
+  --grid-row-bg-selected: color-mix(in srgb, var(--color-background-brand) 6%, transparent);
+  --grid-row-stripe-bg: var(--color-background-default);
+  --grid-row-border-color: var(--color-border-default-subtle);
+  --grid-row-font-size: var(--font-size-150);
+  --grid-cell-padding-x: var(--spacing-300);
+  --grid-cell-padding-y: var(--spacing-200);
+  --grid-pagination-bg: var(--color-background-elevation-raised);
+  --grid-pagination-border-color: var(--color-border-default);
+  --grid-toolbar-bg: var(--color-background-elevation-raised);
   --grid-toolbar-gap: var(--spacing-200);
   --grid-toolbar-padding: var(--spacing-200) var(--spacing-300);
-  --grid-radius: var(--radius-200);
 
   /* ===================== NAVIGATION — SIDEBAR ===================== */
-  --sidenav-bg: #f5f5f5;
-  --sidenav-border: #e4e4e7;
-  --sidenav-item-padding-y: var(--spacing-250);
-  --sidenav-item-padding-x: var(--spacing-300);
-  --sidenav-item-gap: var(--spacing-200);
-  --sidenav-icon-gap: var(--spacing-300);
-  --sidenav-icon-size: 20px;
-  --sidenav-icon-size-collapsed: 22px;
-  --sidenav-section-text: var(--color-text-muted);
-  --sidenav-section-spacing: var(--spacing-400);
-  --sidenav-section-margin-top: var(--spacing-500);
-  --sidenav-nested-gap: var(--spacing-150);
-  --sidenav-nested-indent: 36px;
-  --sidenav-link-text: var(--color-text-secondary);
+  /* Were #f5f5f5 / #e4e4e7 — neither is a step on our gray ramp, and #e4e4e7
+     carried a blue tint (B+3 over R) that no Radix gray has. Both are Tailwind
+     values that predate this palette. On the roles now, so a spoke re-pointing
+     its neutrals moves the rail too. */
+  /* Every hook below is READ by esa-sidebar-nav. Defaults were re-pointed to the
+     values the component actually shipped — several were aspirational and had
+     drifted (nested-indent said 36px while the rail rendered 16px; link-bg-hover
+     said `transparent` while the row washed to surface-sunken), so declaring one
+     thing and painting another made the surface unusable: a spoke overriding a
+     "default" it could already see was the only way to get the shipped look back.
+     Hooks for behaviour the component does not do by default are declared at
+     their INERT value (0 / same-as-resting) so they stay zero-regression and
+     opt-in — see --sidenav-item-gap, --sidenav-active-border-width. */
+  /* Rail width, expanded and collapsed. These were semantic tokens named
+     --sidebar-width / --sidebar-width-collapsed until 2026-08-15, on a
+     $description claiming 15 readers; the real count was this one component.
+     They also collided by name — at a different value — with the `.sidebar`
+     layout primitive's own 18rem knob in layouts.css, which now owns that name
+     outright. See migrations.json: sidebar-width-to-sidenav-width. */
+  --sidenav-width: 280px;
+  --sidenav-width-collapsed: 72px;
+  /* Rows are sized by HEIGHT, not vertical padding — this replaces the old
+     --sidenav-item-padding-y, which nothing could ever have read. */
+  --sidenav-item-height: 40px;
+  /* Gap BETWEEN rows. 0 = the shipped stacked rail; raise it for an airier one. */
+  --sidenav-item-gap: 0;
+  /* Gap between a row's icon and its label. */
+  --sidenav-icon-size: 18px;
+  --sidenav-icon-size-collapsed: 18px;
+  /* Extra breathing room above a group heading that follows another section. */
+  --sidenav-section-margin-top: 0;
+  --sidenav-nested-gap: 0;
   --sidenav-link-bg: transparent;
-  --sidenav-link-text-hover: var(--color-text-primary);
-  --sidenav-link-bg-hover: transparent;
-  --sidenav-link-text-active: var(--color-primary-strong);
-  --sidenav-link-bg-active: transparent;
-  --sidenav-link-weight-active: var(--font-weight-medium);
-  --sidenav-active-border-width: 2px;
-  --sidenav-active-border-color: var(--color-primary);
-  --sidenav-user-border: var(--color-border-light);
-  --sidenav-user-text: var(--color-text-secondary);
-  --sidenav-user-text-hover: var(--color-text-primary);
-  --sidenav-user-avatar-bg: var(--color-gray-4);
-  --sidenav-user-avatar-text: var(--color-text-secondary);
-  --sidenav-divider: var(--color-border-light);
+  /* Inherits the resting colour by default — the rail signals hover with the
+     background wash alone. Re-point to also shift the text. */
+  /* Inset marker on the active row. Width 0 = off, which is what ships. */
+  --sidenav-active-border-width: 0;
 
-  /* ===================== NAVIGATION — HEADER / TOPBAR ===================== */
-  --topbar-bg: var(--color-gray-3);
-  --topbar-border: var(--color-gray-6);
-  --topbar-shadow: none;
-  --topbar-icon-color: var(--color-gray-11);
-  --topbar-icon-color-hover: var(--color-primary);
-  --topbar-icon-bg: transparent;
-  --topbar-icon-bg-hover: var(--color-gray-4);
-  --topbar-icon-radius: 6px;
-  --topbar-search-bg: var(--color-gray-1);
-  --topbar-search-bg-hover: var(--color-gray-2);
-  --topbar-search-text: var(--color-gray-10);
-  --topbar-search-radius: 8px;
+  /* DELETED (2026-08-13) — six tokens describing a user/account block at the
+     foot of the rail: --sidenav-user-{border,text,text-hover,avatar-bg,
+     avatar-text} and --sidenav-divider. esa-sidebar-nav never had that block;
+     its published API has one slot, `header`, and it holds the brand lockup.
+     The chrome puts the user menu in the app bar instead (esa-app-shell ->
+     esa-dropdown-menu), which is the documented pattern.
+
+     They are not coming back in this shape. Two of them were a SECOND avatar
+     implementation — esa-avatar already owns --avatar-bg / --avatar-text-color
+     — two were plain text colours with no component-specific behaviour, and
+     two were one divider named twice. A tier-3 token is for a part the
+     component draws ITSELF; when the part is really another component it gets
+     composed, and it themes through its own tokens. The give-away was in the
+     name: --sidenav-user-avatar-bg nests two part words, which means it had
+     stopped naming a part and started naming a component tree.
+
+     If a rail user block is ever built, compose esa-avatar and add ONE divider
+     hook — not this namespace. */
+
+  /* DELETED (2026-08-16) — the twelve --topbar-* hooks, and with them the
+     "chrome exemption" category they were the only member of. See
+     migrations.json: topbar-chrome-exempt-removed.
+
+     They were held exempt from the wire-or-delete rule on the grounds that
+     esa-app-shell COULD read them and we were choosing not to wire it. That
+     bargain is defensible; what was never checked is whether the defaults were
+     TRUE. Seven of the twelve were not — the block claimed the bar sat on
+     surface-sunken and the toggle on text-secondary while esa-app-shell paints
+     elevation-raised and content-tertiary.
+
+     An unwired hook does nothing. A WRONG unwired hook is a published contract
+     that lies: a spoke reading it to learn the chrome learns something false,
+     and a spoke overriding --topbar-bg gets silence. That is the difference
+     that retired the category rather than the block.
+
+     If the chrome ever earns a theming surface, build it from what
+     esa-app-shell.astro actually paints — not from this block. */
 
   /* ===================== NAVIGATION — BREADCRUMBS ===================== */
   --breadcrumbs-bg: transparent;
-  --breadcrumbs-text-color: var(--color-text-secondary);
-  --breadcrumbs-link-color: var(--color-text-secondary);
-  --breadcrumbs-link-hover: var(--color-text-primary);
-  --breadcrumbs-separator-color: var(--color-gray-8);
-  --breadcrumbs-pill-bg: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --breadcrumbs-pill-bg-hover: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  --breadcrumbs-pill-radius: var(--radius-full);
-  --breadcrumbs-pill-padding: var(--spacing-100) var(--spacing-250);
+  /* The trail's non-link text — i.e. the current (last) crumb. Was declared as
+     text-secondary while the component painted text-primary; on the shipped
+     value now. */
+  --breadcrumbs-link-color: var(--color-content-default-secondary);
+  --breadcrumbs-link-hover: var(--color-content-default);
+
+  /* DELETED (2026-08-13) — --breadcrumbs-pill-{bg,bg-hover,radius,padding}, a
+     "pill" breadcrumb variant esa-breadcrumbs never had: no markup, no prop, no
+     specimen. Same defect as the --sidenav-user-avatar-* tokens deleted the same
+     day — the part they named is a COMPONENT. esa-pill owns --pill-bg /
+     --pill-radius / --pill-text-color already, so a pill variant would compose
+     esa-pill and these four would be dead on arrival.
+     If the variant is ever built: compose esa-pill and scope --pill-* on the
+     crumb, the way esa-header-nav scopes --avatar-* on its user trigger. */
 }
 
 /* ============================================================
  * HOOKIFY (2026-06-12) — per-component theming surfaces added per
  * packages/tokens/SPEC.md. Each default = the exact chain the
  * component read before the hook existed (zero-regression rule).
- * Umbrella hooks with divergent per-read fallbacks stay ad-hoc
- * (documented on each component page) and are NOT declared here.
+ *
+ * THIS BLOCK USED TO END "umbrella hooks with divergent per-read
+ * fallbacks stay ad-hoc … and are NOT declared here", AND THAT
+ * INVENTED A FOURTH TIER. There are three. A token a component reads
+ * as `var(--x, <fallback>)` that no token file declares is not a
+ * category — it is a tier-3 token missing its declaration, sitting in
+ * the component-theming slot under a component-scoped name, absent
+ * from the one file a spoke author opens and from token-names.json,
+ * so nothing guards it and nothing records that it exists.
+ *
+ * The exemption came from a collision with the zero-regression rule
+ * above: when one name is read at several sites with DIFFERENT
+ * defaults, no single declaration reproduces them all. That
+ * divergence was the signal, not the obstacle — --confirm-dialog-color
+ * meant --color-content-default in one place and
+ * --color-content-default-secondary in another, one name standing for
+ * two roles, a worse form of the alias pattern the 2026-08-16 pass
+ * deleted 168 of.
+ *
+ * SPEC.md gives two dispositions and no third: promote into this file,
+ * or fold away. On 2026-08-16 the 30 remaining were resolved 3 / 27 —
+ * only --form-affix-* declared (it extends the --form-* category
+ * surface rather than opening a new one; see the FORMS section). The
+ * other 27 lost their outer wrapper and read their tier-2 role
+ * directly. No migrations.json rows: none had ever shipped in
+ * token-names.json, and a grep of all eight sibling spoke repos found
+ * zero references, so no override could be lost.
+ *
+ * The detector stays live at zero — /debug/components § "Under-promise"
+ * and /debug/tokens § "Ad-hoc hooks". Both render empty now; either
+ * one growing a row means someone added an undeclared read.
  * ============================================================ */
 :root {
 
   /* esa-alert-box */
-  --alert-box-bg: var(--color-info-subtle, #eff6ff);
-  --alert-box-border-color: var(--color-info-border, #bfdbfe);
-  --alert-box-dismiss-bg-hover: rgba(0, 0, 0, 0.06);
-  --alert-box-padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-  --alert-box-radius: var(--radius-200, 0.5rem);
-  --alert-box-text-color: var(--color-text-secondary, #525252);
-  --alert-box-title-color: var(--color-text-primary, #171717);
+  --alert-box-text-color: var(--color-content-default-secondary, #525252);
 
   /* esa-app-shell */
   --app-shell-brand-bg-hover: color-mix(in srgb, currentColor 8%, transparent);
+  /* The wordmark is the one text in the kit that is BRAND rather than a type role.
+     It reads the display face, bold and tight tracking — the `display` recipe — but
+     at rung 300, and a `display-xs` composite invented for a single call site would
+     leave a 300 -> 700 -> 800 hole in that ramp. A tier-3 surface is what a
+     per-component, one-reader property is for, and re-skinning the wordmark is
+     exactly what a spoke arrives wanting to do. */
 
   /* esa-app-bar */
-  --app-bar-bg: var(--color-surface, #fff);
-  --app-bar-brand-bg: var(--color-primary, #43608a);
-  --app-bar-brand-strong-bg: var(--color-surface-inverse, #171717);
-  --app-bar-brand-strong-text: var(--color-text-inverse, #fff);
-  --app-bar-brand-text: var(--color-text-inverse, #fff);
-  --app-bar-gap: var(--spacing-600, 32px);
-  --app-bar-pad-x: var(--spacing-600, 32px);
-  --app-bar-pad-y: var(--spacing-400, 16px);
-  --app-bar-text: var(--color-text-primary, #171717);
 
   /* esa-avatar */
   --avatar-bg: hsl(var(--_avatar-hue, 200) 45% 65%);
-  --avatar-radius: var(--radius-full, 9999px);
   --avatar-size-lg: 56px;
   --avatar-size-md: 40px;
   --avatar-size-sm: 28px;
   --avatar-size-xs: 20px;
-  --avatar-text-color: var(--color-text-inverse, #fff);
+  /* Initials type, one per rung — matching --avatar-size-* directly above.
+     This WAS a single --avatar-font-size, declared nowhere, with the reason
+     written here: "declaring a value would pin every size to one number and
+     destroy the scale." True, and the conclusion drawn from it was that the
+     token had to stay undeclared — the fourth tier in miniature, argued for in
+     the file whose job is to declare things.
+
+     The objection only rules out ONE declaration. Four is what the size ramp
+     two lines up already does, and it costs nothing: an override still lands on
+     whichever size is active, and now it lands on a name that exists in this
+     file, is in token-names.json, and cannot be deleted without a migration row.
+     esa-header-nav sets the `sm` rung to hold 12px initials in a 32px face. */
+  --avatar-font-size-lg: var(--typography-title-font-size);
+  --avatar-font-size-md: var(--typography-label-md-strong-font-size);
+  --avatar-font-size-sm: var(--typography-label-xs-strong-font-size);
+  --avatar-font-size-xs: var(--typography-label-2xs-strong-font-size);
 
   /* esa-back-to-top */
-  --back-to-top-bg: var(--color-primary, #43608a);
-  --back-to-top-bottom: var(--spacing-500, 1.5rem);
-  --back-to-top-radius: var(--radius-full, 9999px);
-  --back-to-top-right: var(--spacing-500, 1.5rem);
   --back-to-top-size: 44px;
-  --back-to-top-text: var(--color-text-inverse, #fff);
 
   /* esa-side-dialog */
-  --backdrop-filter: none;
+  /* Opt-in frosted backdrop; `none` is the inert default. RENAMED from
+     --backdrop-filter (2026-08-16, migrations.json: backdrop-filter-namespaced).
+     That spelling shadowed the CSS property of the same name AND was declared at
+     :root, so every element in the kit inherited `none` for a property one
+     component uses — and a spoke writing `backdrop-filter: var(--backdrop-filter)`
+     anywhere got this token instead of a value of its own. */
+  --side-dialog-backdrop-filter: none;
 
   /* esa-badge */
-  --badge-bg: var(--color-primary, #43608a);
-  --badge-height-lg: 34px;
-  --badge-height-md: 28px;
-  --badge-height-sm: 22px;
-  --badge-height-xs: 18px;
-  --badge-radius: var(--radius-100, 4px); /* quiet 4px chip (design-principles) — esa-pill is squared to match via --pill-radius */
-  --badge-text-color: var(--color-text-inverse, #fff);
+  --badge-bg: var(--color-background-brand, #43608a);
+  --badge-text-color: var(--color-content-default-knockout, #fff);
 
   /* esa-card */
-  --card-bg: var(--color-surface, #ffffff);
-  --card-border-color: var(--color-border, #e5e5e5);
-  --card-footer-bg: var(--color-surface-sunken, #efefef);
+  --card-bg: var(--color-background-elevation-raised, #ffffff);
+  --card-border-color: var(--color-border-default, #e5e5e5);
   --card-header-bg: transparent;
-  --card-header-border-color: var(--color-border-light, #efefef);
-  --card-header-color: var(--color-text-primary, #171717);
-  --card-padding: var(--spacing-500, 1.5rem);
-  --card-radius: var(--radius-300, 0.5rem);
 
   /* esa-collapsible */
-  --collapsible-bg: var(--color-surface, #fff);
-  --collapsible-border-color: var(--color-border, #e5e5e5);
-  --collapsible-padding-x: var(--spacing-400, 1rem);
-  --collapsible-radius: var(--radius-300, 0.5rem);
-  --collapsible-title-color: var(--color-text-primary, #171717);
 
-  /* esa-file-list */
-  --color-link: var(--color-primary-strong, #3a7c59);
+  /* DELETED (2026-08-16) — --color-link, which was three defects in one line.
+     See migrations.json: color-link-to-content-brand.
+
+     (1) It was named for a TIER-2 role and declared at tier 3, so read on its own
+     it was indistinguishable from a semantic token — tier3-naming.ts already
+     flagged this. (2) It aliased --color-content-brand and had exactly ONE
+     reader, which is a role-rename, not an override. (3) esa-file-list read it
+     with the fallback --color-background-brand — a BACKGROUND role painting
+     text — so the declared chain and the read site disagreed about which token
+     they meant.
+
+     esa-file-list now reads --color-content-brand directly. A link colour that
+     diverges from the brand content role is a missing tier-2 role, not a
+     file-list hook. */
 
   /* esa-entity-search */
-  --color-primary-contrast: #fff;
 
   /* esa-command-palette */
-  --command-palette-bg: var(--color-surface-elevated, #ffffff);
-  --command-palette-border-color: var(--color-border, #e5e5e5);
-  --command-palette-item-bg-active: var(--color-surface-sunken, #efefef);
   --command-palette-max-height: 440px;
-  --command-palette-radius: var(--radius-400, 0.75rem);
-  --command-palette-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   --command-palette-width: 560px;
 
   /* esa-confirm-dialog */
-  --confirm-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-  --confirm-dialog-bg: var(--color-surface-elevated, #ffffff);
-  --confirm-dialog-border-color: var(--color-border-light, #efefef);
-  --confirm-dialog-radius: var(--radius-400, 0.75rem);
   --confirm-dialog-width: 360px;
 
   /* esa-container */
-  --container-gutter: var(--spacing-600, 2rem);
 
   /* esa-danger-zone */
-  --danger-zone-bg: var(--color-danger-subtle, #fef2f2);
-  --danger-zone-border-color: var(--color-danger-border, #fecaca);
-  --danger-zone-description-color: var(--color-text-secondary, #525252);
-  --danger-zone-heading-color: var(--color-red-11);
-  --danger-zone-padding: var(--spacing-300, 0.75rem);
-  --danger-zone-radius: var(--radius-200, 0.5rem);
 
   /* esa-dialog */
-  --dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-  --dialog-bg: var(--color-surface-elevated, #ffffff);
-  --dialog-border-color: var(--color-border-light, #efefef);
-  --dialog-color: var(--color-text-primary, #171717);
-  --dialog-radius: var(--radius-400, 0.75rem);
   --dialog-width: 480px;
   --dialog-width-lg: 640px;
   --dialog-width-sm: 360px;
   --dialog-width-xs: 280px;
 
   /* esa-dropdown-menu */
-  --dropdown-menu-bg: var(--color-surface-elevated, #ffffff);
-  --dropdown-menu-border-color: var(--color-border, #e5e5e5);
-  --dropdown-menu-item-color: var(--color-text-primary, #171717);
   --dropdown-menu-max-width: 280px;
   --dropdown-menu-min-width: 160px;
-  --dropdown-menu-radius: var(--radius-200, 0.5rem);
 
   /* esa-empty-state */
-  --empty-state-description-color: var(--color-text-secondary, #525252);
-  --empty-state-gap: var(--spacing-200, 0.5rem);
-  --empty-state-icon-color: var(--color-text-muted, #737373);
   --empty-state-icon-size-lg: 64px;
   --empty-state-icon-size-md: 48px;
   --empty-state-icon-size-sm: 32px;
   --empty-state-icon-size-xs: 24px;
-  --empty-state-title-color: var(--color-text-primary, #171717);
 
   /* esa-entity-search */
-  --entity-search-bg: var(--color-surface-elevated, #ffffff);
-  --entity-search-border-color: var(--color-border, #dcdcdc);
-  --entity-search-max-height: 70vh;
-  --entity-search-radius: var(--radius-400, 0.75rem);
-  --entity-search-row-bg-active: var(--color-surface-sunken, #f3f7fc);
-  --entity-search-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  --entity-search-width: 600px;
+  --entity-search-max-height: 78vh;
+  --entity-search-width: 720px;
 
-  /* esa-range-slider */
-  --fill-percent: 0%;
+  /* esa-file-list */
+  /* Row density. The one hook in the 2026-08-16 sweep with a named human behind
+     it: added under a `hub-edit-approved:` note (Andrew, front-end architect) so
+     consumers could loosen file rows without restyling the shadow DOM. That is
+     the "a spoke asked" test passing outright, which is why these two are
+     declared rather than folded — every other undeclared hook in that pass was
+     offered on the strength of a fallback nobody had requested.
 
-  /* esa-select */
-  --form-label-font-size: var(--_field-font-size);
-  --form-label-font-weight: var(--font-weight-medium, 450);
+     -y is a literal: 2px is below --spacing-050 and has no tier-1 home, so
+     demoting it would delete the knob and hardcode the number. */
+  --file-list-row-padding-y: 2px;
+  --file-list-row-padding-x: var(--spacing-300);
+
+  /* DELETED (2026-08-16) — --fill-percent was never a theming token.
+     esa-range-slider SETS it from JS on every render, as an inline style on its
+     own <input>, and reads it back in that input's track gradient: it is runtime
+     state expressed as a custom property, and
+     the one thing a spoke must NOT do is override it. Declaring it at :root
+     published it as part of the theming surface and gave it a default that only
+     ever applied before first paint — which the read sites already covered with
+     their own `0%` fallback. Now --_fill-percent, per the private convention.
+     See migrations.json: fill-percent-removed. */
+
+  /* --form-label-font-size used to be argued about here. It is gone as of
+     2026-08-14 along with the rest of the size-only ramp — a label's size and
+     weight now arrive together as a composite, so the umbrella problem this note
+     described (no single value that could serve every size) stopped existing
+     rather than being solved. See the FORMS header. */
 
   /* esa-header-nav */
-  --header-nav-avatar-bg: var(--color-primary, #43608a);
   --header-nav-avatar-size: 32px;
-  --header-nav-avatar-text: var(--color-text-inverse, #fff);
-  --header-nav-border-color: var(--color-border, #e5e5e5);
-  --header-nav-menu-item-color: var(--color-text-secondary, #525252);
 
-  /* esa-icon-link */
-  --icon-link-font-size-md: 1rem;
-  --icon-link-font-size-sm: 0.875rem;
-  --icon-link-gap: var(--spacing-150, 6px);
+  /* DELETED (2026-08-16) — the three --icon-link-* hooks. esa-icon-link became
+     a shim over esa-button variant="chrome" on 2026-08-14 and paints nothing of
+     its own; these outlived it by two days with zero readers anywhere.
 
-  /* esa-file-upload */
-  --icon-size-large: 24px;
-  --icon-size-medium: 20px;
+     Worth keeping: a `component` migration row carries no `pairs`, so nothing
+     walked this namespace when the fold landed. A component removal and its
+     tier-3 surface are two separate migrations, and only one was written.
+     See migrations.json: icon-link-hooks-removed. */
 
-  /* esa-combobox */
-  --icon-size-small: 16px;
+  /* DEMOTED (2026-08-16) — the four --kbd-* hooks. See migrations.json:
+     kbd-hooks-removed. FIRST OF THE TIER-3 DEMOTION PASS, and the pattern for
+     the rest: one reader, and each hook a pure alias over a tier-2 role it had
+     no reason to diverge from. esa-kbd reads those roles directly now.
 
-  /* esa-kbd */
-  --kbd-bg: var(--color-surface);
-  --kbd-border-color: var(--color-border);
-  --kbd-color: var(--color-text-muted);
-  --kbd-radius: 4px;
+     A keycap's surface, border and text are the kit's ordinary raised surface,
+     default border and muted text. A spoke re-pointing those WANTS the keycap to
+     follow — that is what makes them roles. Four extra names in front of them
+     bought nothing and cost a spoke four more places to remember. */
 
   /* esa-link-column */
-  --link-column-heading-font-size: var(--type-size-200, 1rem);
-  --link-column-item-font-size: var(--type-size-150, 0.875rem);
   --link-column-rule-color: color-mix(in srgb, currentColor 40%, transparent);
 
   /* esa-loading-overlay */
-  --loading-overlay-bg: var(--color-surface, #fff);
-  --loading-overlay-bg-transparent: rgba(255, 255, 255, 0.8);
-  --loading-overlay-message-color: var(--color-text-secondary, #525252);
-  --loading-spinner-color: var(--color-primary, #43608a);
-  --loading-spinner-track-color: var(--color-border-light, #efefef);
+
+  /* The spinner owns these; the overlay reads them because it renders one.
+     Filed under esa-loading-overlay until now, which made the spinner's own
+     page show zero hooks of its own. NOTE: the owner marker below has to be a
+     comment containing ONLY the slug — theming.ts parses these to decide which
+     component a hook belongs to, and any trailing prose stops it matching. */
+  /* esa-loading-spinner */
+  --loading-spinner-color: var(--color-background-brand, #43608a);
+  --loading-spinner-track-color: var(--color-border-default-subtle, #efefef);
 
   /* esa-nav-dropdown */
-  --nav-dropdown-panel-bg: var(--color-surface, #fff);
-  --nav-dropdown-panel-border-color: var(--color-border, #e5e5e5);
   --nav-dropdown-panel-min-width: 240px;
-  --nav-dropdown-panel-padding: var(--spacing-300, 12px);
-  --nav-dropdown-panel-radius: var(--radius-200, 8px);
-  --nav-dropdown-panel-shadow: var(--shadow-200, 0 8px 24px rgba(0, 0, 0, 0.12));
-  --nav-dropdown-panel-text: var(--color-text-primary, #171717);
 
   /* esa-pagination */
-  --pagination-bg: var(--color-surface, #ffffff);
-  --pagination-border-color: var(--color-border, rgba(0, 0, 0, 0.12));
-  --pagination-button-color: var(--color-text-primary, #171717);
-  --pagination-font-size: var(--type-size-200, 14px);
-  --pagination-padding-x: var(--spacing-400, 16px);
-  --pagination-padding-y: var(--spacing-200, 8px);
-  --pagination-text-color: var(--color-text-secondary, #525252);
 
   /* esa-pill */
-  --pill-bg: var(--color-surface-sunken, #efefef);
-  --pill-border-color: var(--color-border-light, #efefef);
-  --pill-remove-bg-hover: rgba(0, 0, 0, 0.1);
-  --pill-height-lg: 34px;
-  --pill-height-md: 28px;
-  --pill-height-sm: 22px;
-  --pill-height-xs: 18px;
-  --pill-radius: var(--radius-100, 4px);
-  --pill-text-color: var(--color-text-primary, #171717);
 
   /* esa-pillbox */
-  --pillbox-gap-large: var(--spacing-300, 12px);
-  --pillbox-gap-medium: var(--spacing-200, 8px);
-  --pillbox-gap-small: var(--spacing-100, 4px);
 
   /* esa-popover */
-  --popover-bg: var(--color-surface, #ffffff);
-  --popover-border-color: var(--color-border, #e5e5e5);
-  --popover-color: var(--color-text-primary, #171717);
   --popover-max-width: none;
-  --popover-radius: var(--radius-200, 0.5rem);
 
   /* esa-progress-bar */
-  --progress-bar-fill-bg: var(--color-primary, #43608a);
   --progress-bar-height-lg: 12px;
   --progress-bar-height-md: 8px;
   --progress-bar-height-sm: 4px;
   --progress-bar-height-xs: 2px;
-  --progress-bar-radius: var(--radius-full, 9999px);
-  --progress-bar-track-bg: var(--color-surface-sunken, #efefef);
 
   /* esa-search-panel */
-  --search-panel-bg: var(--color-surface-elevated, #ffffff);
-  --search-panel-result-bg-hover: var(--color-surface-sunken, #efefef);
   --search-panel-width: 400px;
 
   /* esa-side-dialog */
-  --side-dialog-backdrop-bg: var(--color-backdrop, rgba(0, 0, 0, 0.5));
-  --side-dialog-bg: var(--color-surface, #fff);
-  --side-dialog-border-color: var(--color-border, #e5e5e5);
   --side-dialog-inset: 16px;
-  --side-dialog-radius: var(--radius-200, 8px);
   --side-dialog-width: 400px;
   --side-dialog-width-lg: 520px;
   --side-dialog-width-sm: 320px;
@@ -426,33 +697,30 @@
   /* esa-snackbar-container */
   --snackbar-container-max-width: 420px;
 
-  /* esa-snackbar-item */
-  --snackbar-item-bg-danger: var(--color-red-10);
-  --snackbar-item-bg-info: var(--color-blue-11);
-  --snackbar-item-bg-success: var(--color-green-11);
-  --snackbar-item-bg-warning: var(--color-orange-11);
-  --snackbar-item-color: var(--color-text-inverse, #ffffff);
-  --snackbar-item-radius: var(--radius-200, 0.5rem);
+  /* esa-snackbar-item — the ONE component whose tier-3 surface exposes its
+     colour-variant axis (six others read tier-2 intentions directly and cannot
+     be diverged from the rest of the kit; see SPEC.md, tier-3 colour naming).
+     Variant sits BEFORE the property, matching --app-bar-brand-bg; these four
+     were the only tokens in the file with it the other way round. */
+
+  /* esa-stat — the whole surface is TYPE, which is unusual for a tier-3 block
+     and is the point: a metric's authority comes from the size/weight/face of
+     its value, so a spoke that cannot turn those cannot re-skin the stat at
+     all. Sizes stay pointed at tier-2 font-size roles (NOT at a type role
+     class) because the value deliberately sits at a large-but-tasteful step,
+     below the display/900 roles. */
+  --stat-accent-color: var(--color-content-brand, #3a7c59);
+  --stat-value-color: var(--color-content-default, #171717);
+  --stat-value-size: var(--font-size-700, 2.25rem);
 
   /* esa-switch-toggle */
-  --switch-toggle-label-color: var(--color-text-primary, #171717);
-  --switch-toggle-thumb-bg: var(--color-surface, #fff);
-  --switch-toggle-track-bg: var(--color-border-strong, #d4d4d4);
-  --switch-toggle-track-bg-checked: var(--color-primary, #43608a);
 
   /* esa-tab-layout */
-  --tab-layout-border-color: var(--color-border, #e5e5e5);
-  --tab-layout-color: var(--color-text-secondary, #525252);
-  --tab-layout-color-active: var(--color-primary, #43608a);
   --tab-layout-height-lg: 52px;
   --tab-layout-height-md: 44px;
   --tab-layout-height-sm: 36px;
   --tab-layout-height-xs: 30px;
-  --tab-layout-indicator-color: var(--color-primary, #43608a);
 
   /* esa-tooltip */
-  --tooltip-bg: var(--color-gray-12);
-  --tooltip-color: var(--color-text-inverse, #ffffff);
   --tooltip-max-width: 240px;
-  --tooltip-radius: var(--radius-100, 0.25rem);
 }

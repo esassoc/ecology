@@ -1,15 +1,19 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 
-const props = [
-  { name: 'heading', type: 'string', description: 'Title shown in the header.' },
-  { name: 'position', type: "'left' | 'right'", default: "'right'", description: 'Edge the drawer slides in from.' },
-  { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Panel width — 320 / 400 / 520px.' },
-  { name: 'show-close-button', type: 'boolean', default: 'true', description: 'Render the header close (✕) button.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  heading: "Title shown in the header.",
+  position: "Edge the drawer slides in from.",
+  size: "Panel width — 320 / 400 / 520px.",
+  "show-close-button": "Render the header close (✕) button.",
+};
 const methods = [
   { name: 'show()', type: 'method', description: 'Open the drawer.' },
   { name: 'close()', type: 'method', description: 'Close it (restores focus, emits `close`).' },
@@ -27,11 +31,11 @@ const events = [
   <p>Drawer body content…</p>
   <button slot="footer">Apply</button>
 </esa-side-dialog>`}>
-      <button class="trigger" id="open-sd">Open drawer</button>
+      <EsaButton variant="secondary" id="open-sd">Open drawer</EsaButton>
       <esa-side-dialog id="sd" heading="Filters" position="right">
         <p>Drawer body content goes here. It scrolls if it overflows, with the header and footer pinned.</p>
         <p>Use it for filters, detail panes, and create/edit forms that don't warrant a full page.</p>
-        <button class="trigger" slot="footer">Apply</button>
+        <EsaButton variant="secondary" slot="footer">Apply</EsaButton>
       </esa-side-dialog>
     </Preview>
   </Section>
@@ -39,12 +43,12 @@ const events = [
   <Section id="positions" title="Positions &amp; sizes">
     <p>Slides from <code>left</code> or <code>right</code>; width via <code>size</code> (<code>sm</code> 320 · <code>md</code> 400 · <code>lg</code> 520).</p>
     <Preview code={`<esa-side-dialog position="left" size="sm" heading="Left, sm">…</esa-side-dialog>`}>
-      <button class="trigger" id="open-left">Open left · sm</button>
+      <EsaButton variant="secondary" id="open-left">Open left · sm</EsaButton>
     </Preview>
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-side-dialog" describe={describe} />
     <h3 class="api-sub">Methods</h3>
     <Api props={methods} />
     <Api events={events} />
@@ -60,15 +64,6 @@ const events = [
 
 </ComponentDoc>
 
-<style>
-  .trigger {
-    font: inherit; font-size: var(--type-size-200, 1rem);
-    padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
-    border: 1px solid var(--color-border, #e5e5e5); border-radius: var(--radius-200, 8px);
-    background: var(--color-surface, #fff); color: var(--color-text-primary, #171717); cursor: pointer;
-  }
-  .trigger:hover { background: var(--color-surface-sunken, #efefef); }
-</style>
 
 <script>
   import '@esa/ecology/esa-side-dialog';

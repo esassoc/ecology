@@ -2,18 +2,28 @@
   "name": "@esa/tokens",
   "version": "0.1.0",
   "type": "module",
-  "description": "Ecology design tokens — DTCG source compiled to CSS / JS (and later SCSS, Tailwind, Figma).",
+  "description": "Ecology design tokens \u2014 DTCG source compiled to CSS / JS (and later SCSS, Tailwind, Figma).",
   "exports": {
     "./tokens.css": "./dist/tokens.css",
     "./tokens.js": "./dist/tokens.js",
-    "./type-roles.css": "./src/type-roles.css",
+    "./typography-styles.js": "./dist/typography-styles.js",
+    "./a11y-styles.js": "./dist/a11y-styles.js",
+    "./typography.css": "./src/typography.css",
+    "./type-roles.css": "./src/typography.css",
     "./layouts.css": "./src/layouts.css",
-    "./component-tokens.css": "./src/component-tokens.css"
+    "./a11y.css": "./src/a11y.css",
+    "./focus.css": "./src/focus.css",
+    "./component-tokens.css": "./src/component-tokens.css",
+    "./assurance.css": "./src/assurance.css",
+    "./migrations.json": "./migrations.json",
+    "./size-floors.json": "./size-floors.json"
   },
   "files": [
     "dist",
     "src",
-    "tokens"
+    "tokens",
+    "migrations.json",
+    "size-floors.json"
   ],
   "scripts": {
     "build": "node build.js"

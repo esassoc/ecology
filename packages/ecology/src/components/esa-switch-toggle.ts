@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-switch-toggle — GOLDEN INTERACTIVE PATTERN (Lit Web Component).
@@ -14,7 +15,9 @@ import { LitElement, html, css } from 'lit';
  *   - toggle() / onKeydown()           → same logic, same Space/Enter handling
  *
  * Decorator-free on purpose: avoids per-consumer tsconfig decorator flags.
- * Tokens reach inside shadow DOM because CSS custom properties inherit through it.
+ * Tokens reach inside shadow DOM because CSS custom properties inherit through it —
+ * except class definitions, which is why the typography composites are adopted into
+ * `static styles` and the label names a role instead of listing size and leading.
  */
 export class EsaSwitchToggle extends LitElement {
   static formAssociated = true;
@@ -23,6 +26,7 @@ export class EsaSwitchToggle extends LitElement {
     label: { type: String },
     size: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     labelPosition: { type: String, attribute: 'label-position', reflect: true },
     checked: { type: Boolean, reflect: true },
   };
@@ -30,6 +34,8 @@ export class EsaSwitchToggle extends LitElement {
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare labelPosition: 'before' | 'after';
   declare checked: boolean;
 
@@ -75,7 +81,7 @@ export class EsaSwitchToggle extends LitElement {
 
   render() {
     const labelEl = this.label
-      ? html`<span class="label" part="label">${this.label}</span>`
+      ? html`<span class="label typography-body-md" part="label">${this.label}</span>`
       : null;
     return html`
       <button
@@ -94,14 +100,18 @@ export class EsaSwitchToggle extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
       --_track-w: 40px;
       --_track-h: 22px;
       --_thumb: 18px;
-      --_bg-off: var(--switch-toggle-track-bg, var(--color-border-strong, #d4d4d4));
-      --_bg-on: var(--switch-toggle-track-bg-checked, var(--color-primary, #43608a));
-      --_thumb-color: var(--switch-toggle-thumb-bg, var(--color-surface, #fff));
+      --_bg-off: var(--color-border-default-strong, #bbbbbb);
+      --_bg-on: var(--color-background-brand, #46a758);
+      --_thumb-color: var(--color-background-elevation-raised, #fcfcfc);
       display: inline-block;
     }
     :host([size='xs']) { --_track-w: 28px; --_track-h: 16px; --_thumb: 12px; }
@@ -117,7 +127,7 @@ export class EsaSwitchToggle extends LitElement {
       border: 0;
       background: none;
       font: inherit;
-      color: var(--switch-toggle-label-color, var(--color-text-primary, #171717));
+      color: var(--color-content-default, #202020);
       cursor: pointer;
     }
     .root:disabled { cursor: not-allowed; }
@@ -127,7 +137,7 @@ export class EsaSwitchToggle extends LitElement {
       flex: none;
       width: var(--_track-w);
       height: var(--_track-h);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--_bg-off);
       transition: background var(--transition-fast, 150ms ease);
     }
@@ -140,23 +150,61 @@ export class EsaSwitchToggle extends LitElement {
       width: var(--_thumb);
       height: var(--_thumb);
       transform: translateY(-50%);
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: var(--_thumb-color);
-      box-shadow: var(--shadow-50, 0 1px 4px rgba(0, 0, 0, 0.2));
+      box-shadow: var(--elevation-1, 0 1px 4px rgba(0, 0, 0, 0.2));
       transition: left var(--transition-fast, 150ms ease);
     }
     :host([checked]) .thumb { left: calc(var(--_track-w) - var(--_thumb) - 2px); }
 
     .root:focus-visible .track {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
-    .label {
-      font-size: var(--type-size-200, 0.9375rem);
-      line-height: var(--line-height-normal, 1.6);
+    /* Type comes from .typography-body-md on the element, leading included — the
+       role leads at normal, which is what a one-word label beside a 22px track
+       wants. This carried a line-height override back when body-md was relaxed
+       (1.8) and the row outgrew the track; the role moved, so the override went. */
+
+    /* FORCED COLORS. The worst case in the kit: on/off is --_bg-on vs --_bg-off
+       (both force-adjusted to the same Canvas) and the thumb's ONLY separation
+       from the track is its background plus --elevation-1, which is deleted. The
+       control becomes an empty pill with an invisible thumb, and the position
+       channel is unreadable because the thing being positioned cannot be seen.
+       There is no "On"/"Off" text to fall back on — 'label' is the field name and
+       is identical in both states.
+
+       Two channels are restored: the thumb FILL (Canvas when off, Highlight when
+       on) and its POSITION, which already worked.
+
+       The 'left' re-declaration is not optional. ':host([checked]) .thumb' above
+       computes '--_track-w - --_thumb - 2px', which assumes --_track-w is the
+       track's padding-box width. Adding a border under box-sizing: border-box
+       shrinks that box by 2px while the calc still uses the full value, so the
+       checked thumb would overshoot the right edge at every one of the four
+       sizes. -4px absorbs it. */
+    @media (forced-colors: active) {
+      .track {
+        box-sizing: border-box;
+        border: 1px solid CanvasText;
+        background: Canvas;
+      }
+      :host([checked]) .track { background: Canvas; }
+      .thumb {
+        box-sizing: border-box;
+        border: 1px solid CanvasText;
+        background: Canvas;
+      }
+      :host([checked]) .thumb {
+        left: calc(var(--_track-w) - var(--_thumb) - 4px);
+        background: Highlight;
+      }
+      :host([disabled]) .track,
+      :host([disabled]) .thumb { border-color: GrayText; }
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-switch-toggle')) {

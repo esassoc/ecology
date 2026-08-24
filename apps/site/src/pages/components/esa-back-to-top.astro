@@ -1,29 +1,31 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 
-const attrs = [
-  { name: 'threshold', type: 'number', default: '300', description: 'Scroll distance (px) before the button fades in.' },
-  { name: 'smooth-scroll', type: 'boolean', default: 'true', description: 'Smooth vs instant scroll-to-top. (Property: smoothScroll.)' },
-  { name: 'scrollTarget', type: 'HTMLElement | null', default: 'null', description: 'JS-only property — element to track instead of window.' },
-  { name: 'visible', type: 'boolean (reflected)', default: 'false', description: 'Reflected attribute set when scrolled past the threshold; drives the fade/translate.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  threshold: "Scroll distance (px) before the button fades in.",
+  "smooth-scroll": "Smooth vs instant scroll-to-top. (Property: smoothScroll.)",
+  scrollTarget: "JS-only property — element to track instead of window.",
+  visible: "Reflected attribute set when scrolled past the threshold; drives the fade/translate.",
+};
 ---
 <ComponentDoc name="Back to Top" category="Display" slug="esa-back-to-top" type="wc" status="stable"
   summary="Floating button that appears once the page is scrolled past a threshold and smooth-scrolls back to the top on click.">
 
   <Section id="preview" title="Try it">
     <p>The element is mounted on this page. Scroll down past ~300px and a button appears pinned to the bottom-right corner — click it to smooth-scroll back up.</p>
-    <p style="font-family: var(--font-mono, monospace); font-size: 13px; color: var(--color-text-muted, #737373); background: var(--color-surface-sunken, #f5f5f5); padding: 10px 12px; border-radius: 7px;">&lt;esa-back-to-top&gt;&lt;/esa-back-to-top&gt;</p>
-    <div style="height: 1400px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--spacing-600, 2rem); color: var(--color-text-muted, #737373);">
+    <p style="font-family: var(--typography-font-family-mono, monospace); font-size: 13px; color: var(--color-content-default-secondary, #646464); background: var(--color-background-elevation-sunken, #f5f5f5); padding: 10px 12px; border-radius: 7px;">&lt;esa-back-to-top&gt;&lt;/esa-back-to-top&gt;</p>
+    <div style="height: 1400px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--spacing-600, 2rem); color: var(--color-content-default-secondary, #646464);">
       <span>Keep scrolling… the back-to-top button is pinned bottom-right.</span>
     </div>
   </Section>
 
   <Section id="api" title="API">
     <p>Attributes and properties:</p>
-    <Api props={attrs} />
+    <ApiTable slug="esa-back-to-top" describe={describe} />
     <p style="margin-top: 1rem;">No custom events — clicking the button scrolls the target (or <code>window</code>) to the top directly.</p>
   </Section>
 

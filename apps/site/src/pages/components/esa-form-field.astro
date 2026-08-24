@@ -1,54 +1,69 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
+import { withBase } from '@esa/docs/base';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 import FormField from '@esa/ecology/esa-form-field.astro';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Label rendered above the control slot.' },
-  { name: 'helpText', type: 'string', default: "''", description: 'Helper text shown below the control.' },
-  { name: 'errorText', type: 'string', default: "''", description: 'Error message; replaces help text when present.' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Renders an asterisk on the label.' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Dims the field and blocks pointer events.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Scales the label font size.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Label rendered above the control slot.",
+  helpText: "Helper text shown below the control.",
+  errorText: "Error message; replaces help text when present.",
+  required: "Renders an asterisk on the label.",
+  disabled: "Dims the field and blocks pointer events.",
+  size: "Scales the label font size.",
+};
 ---
 <ComponentDoc name="Form Field" category="Forms" slug="esa-form-field" type=".astro" status="stable"
   summary="A presentational layout wrapper — label row, control slot, and hint/error text. Pure <code>.astro</code> with no runtime JS; drop any control into the slot. Error text replaces help text when present.">
 
   <Section id="preview" title="Preview">
     <Preview code={`<FormField label="Email" helpText="We will never share your email.">
-  <input type="email" placeholder="you@example.com" />
+  <input type="email" aria-label="Email" placeholder="you@example.com" />
 </FormField>`}>
       <FormField label="Email" helpText="We will never share your email.">
-        <input type="email" class="demo-input" placeholder="you@example.com" />
+        <input type="email" aria-label="Email" class="demo-input" placeholder="you@example.com" />
       </FormField>
     </Preview>
   </Section>
 
   <Section id="states" title="States">
     <p>Mark a field <code>required</code>, surface an <code>errorText</code> in place of help text, or <code>disabled</code> the whole field.</p>
+    <p class="caveat">
+      <strong>The control is yours to style — this wrapper only owns the label, help and error
+      text.</strong> The plain <code>&lt;input&gt;</code> below is demo markup: its border comes
+      from a class in this page's own stylesheet, not from the design system. What the wrapper
+      <em>does</em> give a slotted control is the <strong>focus ring</strong> — an
+      <code>errorText</code> re-points <code>--focus-ring-color</code> to the error red, and
+      because custom properties inherit, that reaches a native control and an
+      <code>esa-*</code> component in a shadow root alike. Tab into Permit ID to see it.
+      For a real form, reach for <a href={withBase('/components/esa-text-field')}>Text Field</a>
+      instead: it owns its label, help text, error text and border states, so you are not
+      hand-rolling three of the four.
+    </p>
     <Preview code={`<FormField label="Project name" required>
-  <input type="text" />
+  <input type="text" aria-label="Project name" />
 </FormField>
 
 <FormField label="Permit ID" errorText="Permit ID is required." required>
-  <input type="text" aria-invalid="true" />
+  <input type="text" aria-label="Permit ID" aria-invalid="true" />
 </FormField>
 
 <FormField label="Locked field" helpText="This field cannot be edited." disabled>
-  <input type="text" disabled value="Read only" />
+  <input type="text" aria-label="Locked field" disabled value="Read only" />
 </FormField>`}>
       <div class="col">
         <FormField label="Project name" required={true}>
-          <input type="text" class="demo-input" />
+          <input type="text" aria-label="Project name" class="demo-input" />
         </FormField>
         <FormField label="Permit ID" errorText="Permit ID is required." required={true}>
-          <input type="text" aria-invalid="true" class="demo-input demo-input--error" />
+          <input type="text" aria-label="Permit ID" aria-invalid="true" class="demo-input demo-input--error" />
         </FormField>
         <FormField label="Locked field" helpText="This field cannot be edited." disabled={true}>
-          <input type="text" disabled value="Read only" class="demo-input demo-input--disabled" />
+          <input type="text" aria-label="Locked field" disabled value="Read only" class="demo-input demo-input--disabled" />
         </FormField>
       </div>
     </Preview>
@@ -62,50 +77,62 @@ const props = [
 <FormField label="Large label" size="lg"> … </FormField>`}>
       <div class="col">
         <FormField label="Extra small label" size="xs">
-          <input type="text" class="demo-input demo-input--xs" />
+          <input type="text" aria-label="Extra small" class="demo-input demo-input--xs" />
         </FormField>
         <FormField label="Small label" size="sm">
-          <input type="text" class="demo-input demo-input--sm" />
+          <input type="text" aria-label="Small" class="demo-input demo-input--sm" />
         </FormField>
         <FormField label="Medium label" size="md">
-          <input type="text" class="demo-input" />
+          <input type="text" aria-label="Project name" class="demo-input" />
         </FormField>
         <FormField label="Large label" size="lg">
-          <input type="text" class="demo-input demo-input--lg" />
+          <input type="text" aria-label="Large" class="demo-input demo-input--lg" />
         </FormField>
       </div>
     </Preview>
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-form-field" describe={describe} />
     <p>The control goes in the default slot — the wrapper makes no assumptions about it.</p>
   </Section>
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>The wrapper is presentational only; associate the label and control yourself (e.g. a <code>for</code>/<code>id</code> pair) since the slot content is opaque to it.</li>
-      <li>The required asterisk carries an <code>aria-label="required"</code>.</li>
+      <li>The wrapper is presentational only. Its <code>&lt;label&gt;</code> has no <code>for</code> and does not wrap the slot, so <strong>it names nothing on its own</strong> — associate it yourself with a <code>for</code>/<code>id</code> pair.</li>
+      <li><strong>That is only possible for a native control.</strong> The <code>esa-*</code> Lit controls render into shadow DOM, and a light-DOM <code>for</code> can never reach an input inside a shadow root. Around one of those, treat this label as a visual caption and set the control's own <code>label</code> attribute instead — that one <em>is</em> associated.</li>
+      <li><code>helpText</code> and <code>errorText</code> render without an <code>id</code>, so they cannot be referenced by <code>aria-describedby</code> either, and <code>errorText</code> is not in a live region. Prefer the control's own <code>help-text</code> / <code>error-text</code> where it has them.</li>
+      <li>The required asterisk is <code>aria-hidden</code>, because it is decoration: it used to carry <code>aria-label="required"</code>, which does nothing at all — <code>aria-label</code> is ignored on a bare <code>&lt;span&gt;</code> (<code>role=generic</code>). The requirement itself must be set on the control, as <code>aria-required</code> or the native <code>required</code> attribute. Every <code>esa-*</code> form control now does both when given <code>required</code>.</li>
       <li>Set <code>aria-invalid="true"</code> on the slotted control whenever <code>errorText</code> is shown.</li>
-      <li><code>disabled</code> dims the field and blocks pointer events; also disable the underlying control for keyboard users.</li>
+      <li><code>disabled</code> is <code>opacity</code> + <code>pointer-events: none</code> — it blocks the mouse only. The slotted control stays keyboard-focusable, operable, and still submits, so you must also disable it natively.</li>
+      <li>The wrapper adds no grouping semantics. Around a set of radios or checkboxes it renders a bare <code>&lt;div&gt;</code>; the group needs its own name (see the forms contract in the <code>accessibility</code> skill).</li>
     </ul>
   </Section>
 
 </ComponentDoc>
 
 <style>
+  .caveat {
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border-inline-start: var(--border-width-200, 2px) solid var(--color-border-utility-info, #8ec8f6);
+    background: var(--color-background-utility-info-subtle, #f0f7ff);
+    border-radius: var(--radius-sm, 0.25rem);
+    max-width: 72ch;
+  }
+</style>
+<style>
   .col { display: flex; flex-direction: column; gap: var(--spacing-500, 1.5rem); width: 100%; max-width: 360px; }
   .demo-input {
     width: 100%;
     height: 40px;
     padding: 0 0.75rem;
-    border: 1px solid var(--color-border, #e5e5e5);
+    border: 1px solid var(--color-border-default, #e5e5e5);
     border-radius: var(--radius-200, 0.5rem);
     font: inherit;
     box-sizing: border-box;
   }
-  .demo-input--error { border-color: var(--color-danger, #ef4444); }
-  .demo-input--disabled { background: var(--form-bg-disabled, #efefef); }
+  .demo-input--error { border-color: var(--color-background-utility-danger, #ef4444); }
+  .demo-input--disabled { background: var(--color-background-disabled, #f9f9f9); }
   .demo-input--xs { height: 28px; padding: 0 0.5rem; border-radius: var(--radius-100, 0.25rem); }
   .demo-input--sm { height: 32px; padding: 0 0.5rem; border-radius: var(--radius-100, 0.25rem); }
   .demo-input--lg { height: 48px; padding: 0 1rem; border-radius: var(--radius-300, 0.75rem); }

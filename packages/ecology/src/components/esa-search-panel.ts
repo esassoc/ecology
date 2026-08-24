@@ -1,4 +1,7 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
 
 /**
  * esa-search-panel — interactive Lit Web Component.
@@ -102,6 +105,7 @@ export class EsaSearchPanel extends LitElement {
     results: { type: Array },
     loading: { type: Boolean, reflect: true },
     position: { type: String, reflect: true },
+    name: { type: String, reflect: true },
     hasSearched: { type: Boolean, state: true },
   };
 
@@ -110,6 +114,8 @@ export class EsaSearchPanel extends LitElement {
   declare results: EsaSearchResult[];
   declare loading: boolean;
   declare position: 'right' | 'left';
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare hasSearched: boolean;
 
   private internals: ElementInternals;
@@ -143,16 +149,51 @@ export class EsaSearchPanel extends LitElement {
     return Array.from(groupMap.entries()).map(([category, items]) => ({ category, items }));
   }
 
+  /**
+   * Announce only the transition INTO no-results. See esa-combobox.announceEmptyResults
+   * for the reasoning — the cue sets the expectation, so a per-keystroke count would be
+   * noise, but a dry query has no other signal for someone who cannot see the list.
+   *
+   * Gated on `hasSearched` so the panel does not announce "no results" the moment it
+   * opens, before anyone has typed anything.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty =
+      this.open && this.hasSearched && !this.loading && (this.results?.length ?? 0) === 0;
+    if (isEmpty && !this.wasEmpty) announce('No results found', { assertive: true });
+    this.wasEmpty = isEmpty;
+  }
+
+  private get dialogEl(): HTMLDialogElement | null {
+    return (this.renderRoot as ShadowRoot).querySelector('dialog');
+  }
+
+  private onNativeClose = (): void => {
+    this.close();
+  };
+
   updated(changed: Map<string, unknown>): void {
+    this.announceEmptyResults();
     // Auto-focus the input + reset search state when the panel opens.
+    //
+    // The `if (this.open)` here had NO else branch, which is the whole of why this
+    // panel stranded focus on <body> on every exit — Escape, backdrop and the X
+    // button alike. The restore is now the platform's, via the native close()
+    // below, and it tracks the real trigger node rather than a saved
+    // document.activeElement (which retargets to the host across a shadow root).
     if (changed.has('open')) {
+      const el = this.dialogEl;
       if (this.open) {
         this.hasSearched = false;
+        if (el && !el.open) el.showModal();
         // Wait a tick so the input is rendered before focusing.
         requestAnimationFrame(() => {
           const input = this.renderRoot.querySelector<HTMLInputElement>('.input');
           input?.focus();
         });
+      } else {
+        el?.close();
       }
     }
   }
@@ -181,40 +222,48 @@ export class EsaSearchPanel extends LitElement {
     );
   };
 
-  private onKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.close();
-    }
-  };
-
   render() {
-    if (!this.open) return html``;
-
+    // ROLE. This was `<aside role="search">` — a LANDMARK — while rendering as a
+    // modal sheet over a full-viewport scrim at z-index 400. A landmark is part of
+    // the page's permanent structure; a thing that traps you and dims everything
+    // behind it is a dialog. It is a native <dialog> now, which also means Escape
+    // and the focus trap are the platform's rather than a keydown handler that
+    // only fired while focus happened to be inside.
+    //
+    // The `search` role moves onto the inner <form>, where it is true: that IS a
+    // search region, and nesting one inside a dialog is fine.
     return html`
-      <div class="backdrop" @click=${this.close}></div>
-      <aside
+      <dialog
         class="panel panel--${this.position}"
-        role="search"
-        @keydown=${this.onKeydown}
+        closedby="any"
+        aria-label=${this.placeholder || 'Search'}
+        @close=${this.onNativeClose}
       >
         <div class="header">
-          <div class="search-box">
+          <div class="search-box" role="search">
             ${searchIcon(20)}
+            <!-- The input had no accessible name — only a placeholder, which is not
+                 a name and disappears once you type. The cue is what makes announcing
+                 the result list on every keystroke unnecessary. -->
             <input
-              class="input"
+              class="input typography-microcopy-md-subtle"
               type="text"
+              aria-label=${this.placeholder || 'Search'}
+              aria-describedby="cue"
               placeholder=${this.placeholder}
               autocomplete="off"
               @input=${this.onSearch}
             />
+            <span class="visually-hidden" id="cue"
+              >Results appear below as you type. Escape closes the panel.</span
+            >
           </div>
           <button class="close" @click=${this.close} aria-label="Close search">
             ${xIcon(20)}
           </button>
         </div>
         <div class="body">${this.renderBody()}</div>
-      </aside>
+      </dialog>
     `;
   }
 
@@ -225,15 +274,17 @@ export class EsaSearchPanel extends LitElement {
     if ((this.results?.length ?? 0) > 0) {
       return this.groupedResults.map(
         (group) => html`
-          ${group.category ? html`<div class="category">${group.category}</div>` : null}
+          ${group.category
+            ? html`<div class="category typography-eyebrow-md">${group.category}</div>`
+            : null}
           ${group.items.map(
             (item) => html`
-              <button class="result" @click=${() => this.selectResult(item)}>
+              <button class="result typography-body-sm" @click=${() => this.selectResult(item)}>
                 ${item.icon ? dotIcon(16) : null}
                 <div class="result-content">
-                  <span class="result-title">${item.title}</span>
+                  <span class="result-title typography-label-sm">${item.title}</span>
                   ${item.subtitle
-                    ? html`<span class="result-subtitle">${item.subtitle}</span>`
+                    ? html`<span class="result-subtitle typography-body-xs">${item.subtitle}</span>`
                     : null}
                 </div>
               </button>
@@ -253,40 +304,49 @@ export class EsaSearchPanel extends LitElement {
     return null;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       display: contents;
     }
 
-    .backdrop {
-      position: fixed;
-      inset: 0;
-      background: var(--color-backdrop, rgba(0, 0, 0, 0.3));
-      z-index: var(--z-modal-backdrop, 9998);
+    /* ::backdrop replaces the scrim div; the top layer replaces the z-index pair.
+       Literal fallback is the real value where ::backdrop does not inherit custom
+       properties — see esa-dialog. Note this scrim is 0.3 alpha, not the 0.5 the
+       other overlays use; that difference predates the migration and is kept. */
+    dialog.panel::backdrop {
+      background: var(--color-background-overlay-backdrop, rgba(0, 0, 0, 0.3));
     }
 
-    .panel {
+    /* Edge-docked sheet: explicit insets and a zeroed margin rather than the UA's
+       centering 'margin: auto', and its border/padding/max-* clamps cleared. */
+    dialog.panel {
       position: fixed;
       top: 0;
       bottom: 0;
+      margin: 0;
+      border: none;
+      padding: 0;
       width: var(--search-panel-width, 400px);
       max-width: 90vw;
-      background: var(--search-panel-bg, var(--color-surface-elevated, #ffffff));
-      box-shadow: var(--search-panel-shadow, var(--shadow-400, -4px 0 24px rgba(0, 0, 0, 0.1)));
-      z-index: var(--z-modal, 9999);
-      display: flex;
-      flex-direction: column;
+      max-height: none;
+      background: var(--color-background-elevation-floating, #fcfcfc);
+      color: var(--color-content-default, #202020);
+      box-shadow: var(--elevation-5, -4px 0 24px rgba(0, 0, 0, 0.1));
     }
+    dialog.panel[open] { display: flex; flex-direction: column; }
 
-    .panel--right {
+    dialog.panel--right {
       right: 0;
-      animation: esa-search-slide-in-right 200ms ease-out;
+      animation: esa-search-slide-in-right var(--animation-overlay-enter, 250ms ease-out);
     }
 
-    .panel--left {
+    dialog.panel--left {
       left: 0;
-      box-shadow: var(--search-panel-shadow, var(--shadow-400, 4px 0 24px rgba(0, 0, 0, 0.1)));
-      animation: esa-search-slide-in-left 200ms ease-out;
+      box-shadow: var(--elevation-5, 4px 0 24px rgba(0, 0, 0, 0.1));
+      animation: esa-search-slide-in-left var(--animation-overlay-enter, 250ms ease-out);
     }
 
     @keyframes esa-search-slide-in-right {
@@ -304,7 +364,7 @@ export class EsaSearchPanel extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px) var(--spacing-400, 16px);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
 
     .search-box {
@@ -312,21 +372,32 @@ export class EsaSearchPanel extends LitElement {
       display: flex;
       align-items: center;
       gap: var(--spacing-200, 8px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
+    }
+
+    /* The ring goes on the search BOX, not the input — the input is chromeless, so
+       a ring on it would float around bare text. :focus-within rather than
+       :focus-visible because this is text entry, where a ring on click is native
+       behaviour and wanted. Inset so it cannot collide with the close button that
+       shares the header row. */
+    .search-box:focus-within {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
+      border-radius: var(--radius-sm, 0.25rem);
     }
 
     .input {
       flex: 1;
       border: none;
+      /* Suppressed only because .search-box paints the ring — never bare. */
       outline: none;
       font-family: inherit;
-      font-size: 1rem;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-default, #202020);
       background: transparent;
     }
 
     .input::placeholder {
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .close {
@@ -336,14 +407,14 @@ export class EsaSearchPanel extends LitElement {
       width: 32px;
       height: 32px;
       border: none;
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
-      color: var(--color-text-secondary, #525252);
+      color: var(--color-content-default-secondary, #646464);
       cursor: pointer;
     }
 
     .close:hover {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
 
     .body {
@@ -354,11 +425,7 @@ export class EsaSearchPanel extends LitElement {
 
     .category {
       padding: var(--spacing-300, 12px) var(--spacing-200, 8px) var(--spacing-100, 4px);
-      font-size: 0.6875rem;
-      font-weight: var(--font-weight-semibold, 600);
-      text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-wide, 0.05em);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .result {
@@ -368,17 +435,16 @@ export class EsaSearchPanel extends LitElement {
       width: 100%;
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
       border: none;
-      border-radius: var(--radius-200, 8px);
+      border-radius: var(--radius-md, 0.5rem);
       background: transparent;
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-default, #202020);
       font-family: inherit;
-      font-size: 0.875rem;
       cursor: pointer;
       text-align: left;
     }
 
     .result:hover {
-      background: var(--search-panel-result-bg-hover, var(--color-surface-sunken, #efefef));
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
 
     .result-content {
@@ -386,13 +452,8 @@ export class EsaSearchPanel extends LitElement {
       flex-direction: column;
     }
 
-    .result-title {
-      font-weight: var(--font-weight-medium, 500);
-    }
-
     .result-subtitle {
-      font-size: 0.75rem;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
     }
 
     .empty {
@@ -401,16 +462,25 @@ export class EsaSearchPanel extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-700, 48px) var(--spacing-400, 16px);
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
       text-align: center;
     }
 
     .loading {
       padding: var(--spacing-500, 24px);
       text-align: center;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
     }
-  `;
+
+    /* FORCED COLORS. The panel is flush to the viewport edge with no radius, so
+       only the INBOARD edge carries meaning — but that is the edge the shadow was
+       drawing, and box-shadow is forced to 'none'. A full border is simpler than
+       a side-specific one and costs nothing: the outboard edges are off-screen. */
+    @media (forced-colors: active) {
+      dialog.panel { border: 1px solid CanvasText; }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-search-panel')) {

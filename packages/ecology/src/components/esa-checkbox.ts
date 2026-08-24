@@ -1,4 +1,11 @@
-import { LitElement, html, css, svg } from 'lit';
+import { LitElement, html, css, svg, nothing } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+
+/** A choice label is the option's own text, not the group's heading — prose
+    weight, so it reads body-* rather than label-*. See the FORMS header in
+    component-tokens.css for the step→rung mapping. */
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 // Inlined Lucide icons (lucide.dev) to avoid an icon dependency.
 const checkIcon = svg`<polyline points="20 6 9 17 4 12"></polyline>`;
@@ -22,6 +29,7 @@ export class EsaCheckbox extends LitElement {
     label: { type: String },
     size: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     indeterminate: { type: Boolean, reflect: true },
     checked: { type: Boolean, reflect: true },
   };
@@ -29,6 +37,8 @@ export class EsaCheckbox extends LitElement {
   declare label: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare indeterminate: boolean;
   declare checked: boolean;
 
@@ -71,11 +81,24 @@ export class EsaCheckbox extends LitElement {
   };
 
   render() {
+    // A checkbox with no visible label is named from the HOST — <esa-checkbox
+    // aria-label="Select row">, the table-row usage. That attribute names the host,
+    // and the host is not the control: the role="checkbox" span inside is, and it
+    // was left nameless. Forward it. (Caught by axe's aria-toggle-field-name after
+    // the labelled cases were fixed — the one specimen on the page with no `label`.)
+    const hostLabel = this.getAttribute('aria-label');
     return html`
       <label class="wrapper" @keydown=${this.onKeydown} @click=${this.toggle}>
+        <!-- aria-labelledby, NOT the wrapping label. A label associates only with a
+             LABELABLE element — a form control — and an ARIA role does not make a
+             span into one. Measured 2026-08-16 against Chrome's accessibility tree:
+             this control's name was the empty string, with no name source at all.
+             The wrapping label still earns its keep for the click target. -->
         <span
           class="box"
           role="checkbox"
+          aria-labelledby=${this.label ? 'label' : nothing}
+          aria-label=${!this.label && hostLabel ? hostLabel : nothing}
           aria-checked=${this.indeterminate ? 'mixed' : String(this.checked)}
           aria-disabled=${String(this.disabled)}
           tabindex=${this.disabled ? -1 : 0}
@@ -88,35 +111,37 @@ export class EsaCheckbox extends LitElement {
                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${checkIcon}</svg>`
               : null}
         </span>
-        ${this.label ? html`<span class="label">${this.label}</span>` : null}
+        ${this.label
+          ? html`<span id="label" class="label typography-${VALUE_TYPE[this.size]}">${this.label}</span>`
+          : null}
       </label>
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       --_checkbox-size: 20px;
-      --_checkbox-radius: var(--form-radius-md, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-md, 0.9375rem);
+      --_checkbox-radius: var(--radius-md, 0.5rem);
       --_checkbox-icon-size: 16px;
       display: inline-block;
     }
+    /* Box geometry only — the label's type is a composite named in render(). */
     :host([size='xs']) {
       --_checkbox-size: 14px;
-      --_checkbox-radius: var(--form-radius-xs, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-xs, 0.8125rem);
+      --_checkbox-radius: var(--radius-sm, 0.25rem);
       --_checkbox-icon-size: 10px;
     }
     :host([size='sm']) {
       --_checkbox-size: 16px;
-      --_checkbox-radius: var(--form-radius-sm, 0.25rem);
-      --_checkbox-font-size: var(--form-font-size-sm, 0.875rem);
+      --_checkbox-radius: var(--radius-sm, 0.25rem);
       --_checkbox-icon-size: 12px;
     }
     :host([size='lg']) {
       --_checkbox-size: 24px;
-      --_checkbox-radius: var(--form-radius-lg, 0.5rem);
-      --_checkbox-font-size: var(--form-font-size-lg, 1.125rem);
+      --_checkbox-radius: var(--radius-md, 0.5rem);
       --_checkbox-icon-size: 20px;
     }
     :host([disabled]) .wrapper {
@@ -139,19 +164,22 @@ export class EsaCheckbox extends LitElement {
       width: var(--_checkbox-size);
       height: var(--_checkbox-size);
       flex-shrink: 0;
-      border: var(--form-border-width, 2px) solid var(--form-border-color, #d4d4d4);
+      /* The size token is authoritative: without this, re-pointing the indicator
+         border width would resize the control instead of thickening its edge. */
+      box-sizing: border-box;
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
       border-radius: var(--_checkbox-radius);
-      background: var(--form-bg, #fff);
-      color: var(--color-text-inverse, #fff);
+      background: var(--color-background-field, transparent);
+      color: var(--color-content-default-knockout, #fcfcfc);
       transition:
         background var(--transition-fast, 150ms ease),
         border-color var(--transition-fast, 150ms ease),
         box-shadow var(--transition-fast, 150ms ease);
     }
     .box:focus-visible {
-      outline: none;
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .icon {
@@ -161,17 +189,61 @@ export class EsaCheckbox extends LitElement {
 
     :host([checked]) .box,
     :host([indeterminate]) .box {
-      background: var(--color-primary, #43608a);
-      border-color: var(--color-primary, #43608a);
+      background: var(--color-background-brand, #46a758);
+      border-color: var(--color-background-brand, #46a758);
     }
 
-    .label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_checkbox-font-size);
-      color: var(--color-text-primary, #171717);
-      line-height: 1.4;
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
+    /* Scoped to the UNCHECKED box on purpose: a checked box is a brand fill, and
+       painting grey over it would erase the check. The wrapper's opacity above is
+       what dims the checked case. */
+    :host([disabled]:not([checked]):not([indeterminate])) .box {
+      background: var(--color-background-disabled, #f0f0f0);
+      border-color: var(--color-border-disabled, #d9d9d9);
     }
-  `;
+
+    /* Type comes from .typography-body-* on the element — including its leading.
+       This used to pin line-height to tight (1.3) while every other label in the
+       kit led at 1.6; that was a local special case, not a decision, and choice
+       labels now read like the rest. */
+    .label {
+      color: var(--color-content-default, #202020);
+    }
+
+    /* FORCED COLORS. The box is a span carrying role=checkbox, not an input, so it
+       gets none of the system styling a native checkbox does — no ButtonFace, and
+       no GrayText when disabled. aria-disabled is invisible to this mode; it
+       reads elements, never roles.
+
+       Checked survives on its own: the tick is a currentColor SVG, and a SHAPE
+       is not something force-adjustment can take away. What it can take away is
+       the brand fill behind it, which would leave a tick the same colour as the
+       box it sits in — hence the explicit Highlight/HighlightText pair.
+
+       Disabled is stated in GrayText because the custom grey above collapses onto
+       ordinary text colour. The opacity on the group wrapper does survive (opacity
+       is not force-adjusted), so this is belt and braces, not the only signal. */
+    @media (forced-colors: active) {
+      .box {
+        background: Canvas;
+        border-color: CanvasText;
+      }
+      :host([checked]) .box,
+      :host([indeterminate]) .box {
+        background: Highlight;
+        border-color: Highlight;
+        color: HighlightText;
+      }
+      :host([disabled]) .box { border-color: GrayText; }
+      :host([disabled]) .label { color: GrayText; }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-checkbox')) {

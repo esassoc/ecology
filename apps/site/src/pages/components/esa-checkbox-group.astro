@@ -1,8 +1,8 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import Preview from '../../components/Preview.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 
 const options = JSON.stringify([
   { label: 'Air quality', value: 'air' },
@@ -11,14 +11,16 @@ const options = JSON.stringify([
   { label: 'Noise (unavailable)', value: 'noise', disabled: true },
 ]);
 
-const props = [
-  { name: 'options', type: 'EsaOption[] | string', default: '[]', description: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute." },
-  { name: 'value', type: 'string[]', default: '[]', description: 'Selected option values.' },
-  { name: 'label', type: 'string', default: "''", description: 'Group label rendered above the options.' },
-  { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: 'Stacking direction of the options.' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Box and label size.' },
-  { name: 'name', type: 'string', default: "''", description: 'Field name each selected value is submitted under.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  options: "Array of {'{ label, value, disabled? }'}, or a JSON string of the same when set as an attribute.",
+  value: "Selected option values.",
+  label: "Group label rendered above the options.",
+  orientation: "Stacking direction of the options.",
+  size: "Box and label size.",
+  name: "Field name each selected value is submitted under.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string[] }>', description: 'Fired when any option is toggled. Composed and bubbling; detail.value is the current selection array.' },
@@ -73,13 +75,14 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-checkbox-group" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">
     <ul class="a11y">
-      <li>The options container has <code>role="group"</code> labeled by the group label.</li>
+      <li>The options container has <code>role="group"</code>, named by <code>aria-label</code> from the <code>label</code> attribute — so <strong>leaving <code>label</code> unset leaves the group unnamed</strong>. Note that <code>role="group"</code> has weak support on iOS VoiceOver and Android TalkBack; a native <code>&lt;fieldset&gt;</code>/<code>&lt;legend&gt;</code> is the more reliable grouping.</li>
       <li>Each box has <code>role="checkbox"</code> with <code>aria-checked</code> and toggles on Space or Enter.</li>
+      <li><strong>Known gaps.</strong> The option text sits in a sibling <code>&lt;span&gt;</code>, and a wrapping <code>&lt;label&gt;</code> cannot name a <code>&lt;span role="checkbox"&gt;</code> — options currently announce without their text. The click target is the box alone, not the row, so the visible text is not clickable and the target is 14–20px at <code>xs</code>–<code>md</code>, under the 24×24 minimum. <code>esa-checkbox</code> binds the whole row and does not have this.</li>
       <li>Disabled options carry <code>aria-disabled</code> and a <code>-1</code> tabindex.</li>
       <li>The <code>change</code> event is composed and bubbles, so it can be caught on the host or an ancestor.</li>
     </ul>
@@ -95,11 +98,11 @@ const events = [
     padding: var(--spacing-200, 0.5rem) var(--spacing-400, 1rem);
     border: 0;
     border-radius: var(--radius-200, 0.5rem);
-    background: var(--color-primary, #43608a);
-    color: var(--color-text-inverse, #fff);
+    background: var(--color-background-brand, #43608a);
+    color: var(--color-content-default-knockout, #fff);
     cursor: pointer;
   }
-  .demo-out { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--color-text-secondary, #525252); }
+  .demo-out { font-family: var(--typography-font-family-mono, monospace); font-size: 14px; color: var(--color-content-default-secondary, #525252); }
 </style>
 
 <script>

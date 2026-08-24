@@ -1,0 +1,23 @@
+{
+  "duration": {
+    "0":    { "$value": "0ms",    "$type": "duration", "$description": "The reduced-motion target. Not a speed — a destination. build.js appends a `@media (prefers-reduced-motion: reduce)` block that re-points the tier-2 transition and enter/exit tokens here, so honouring the preference costs one override instead of 73 hand-edited declarations. Loading loops (`--animation-spin`, `--animation-indeterminate`) are deliberately exempt." },
+    "75":   { "$value": "75ms",   "$type": "duration", "$description": "Barely perceptible. Colour-only flips on small controls." },
+    "100":  { "$value": "100ms",  "$type": "duration" },
+    "150":  { "$value": "150ms",  "$type": "duration", "$description": "The workhorse — 103 of the hardcoded durations in components were this value." },
+    "200":  { "$value": "200ms",  "$type": "duration" },
+    "250":  { "$value": "250ms",  "$type": "duration" },
+    "300":  { "$value": "300ms",  "$type": "duration" },
+    "500":  { "$value": "500ms",  "$type": "duration" },
+    "750":  { "$value": "750ms",  "$type": "duration", "$description": "Spinner revolution." },
+    "1000": { "$value": "1000ms", "$type": "duration" },
+    "1500": { "$value": "1500ms", "$type": "duration", "$description": "Indeterminate progress sweep." }
+  },
+
+  "easing": {
+    "linear":     { "$value": "linear",      "$type": "cubicBezier", "$description": "Constant rate. Correct ONLY for continuous loops — spinners, indeterminate bars — where any acceleration reads as a stutter. Never for a state change." },
+    "standard":   { "$value": "ease",        "$type": "cubicBezier", "$description": "The default curve, for a change that both starts and ends on screen — hover, colour, size. This is CSS's `ease`, which is what every transition in the system already used; it is kept verbatim so introducing this scale changes no rendered timing. Upgrading it to a designed cubic-bezier is a separate decision about how the system FEELS, batched with the contrast pass rather than smuggled into a restructure." },
+    "enter":      { "$value": "ease-out",    "$type": "cubicBezier", "$description": "Decelerate. Things arriving on screen move fast then settle — menus, tooltips, toasts. Already the most-used curve in the system's keyframes (8 uses) with no token to point at, which is why they were all hardcoded." },
+    "exit":       { "$value": "ease-in",     "$type": "cubicBezier", "$description": "Accelerate. Things leaving start slow and speed up out of frame. Pairs with `enter`; using `enter` on the way out is the most common motion tell." },
+    "emphasized": { "$value": "ease-in-out", "$type": "cubicBezier", "$description": "Ease both ends. For a move that travels a real distance and stays on screen — drawers, sheets, indeterminate sweeps." }
+  }
+}

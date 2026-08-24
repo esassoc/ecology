@@ -1,43 +1,70 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import Preview from '../../components/Preview.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
+import { withBase } from '@esa/docs/base';
 
-const props = [
-  { name: 'label', type: 'string', default: "''", description: 'Field label above the control.' },
-  { name: 'options', type: '{ label, value, disabled? }[]', default: '[]', description: 'Selectable options. Set as a property (not an attribute).' },
-  { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", default: "'md'", description: 'Control size (reflected attribute).' },
-  { name: 'placeholder', type: 'string', default: "'Select...'", description: 'Placeholder shown when nothing is selected.' },
-  { name: 'help-text', type: 'string', default: "''", description: 'Helper text below the control.' },
-  { name: 'error-text', type: 'string', default: "''", description: 'Error message; sets the error state when present.' },
-  { name: 'required', type: 'boolean', default: 'false', description: 'Marks the field required (renders a * after the label).' },
-  { name: 'disabled', type: 'boolean', default: 'false', description: 'Disables interaction (reflected attribute).' },
-  { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selections.' },
-  { name: 'searchable', type: 'boolean', default: 'true', description: 'Type-to-filter the option list. When false the input is read-only.' },
-  { name: 'chip-mode', type: 'boolean', default: 'false', description: 'In multi-select, render selected values as removable chips.' },
-  { name: 'value', type: 'string | string[]', description: 'Property accessor. Single = string; multiple = string array.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  label: "Field label above the control.",
+  options: "Selectable options. Set as a property (not an attribute).",
+  size: "Control size (reflected attribute). No xs — see Sizes.",
+  placeholder: "Placeholder shown when nothing is selected.",
+  "help-text": "Helper text below the control.",
+  "error-text": "Error message; sets the error state when present.",
+  required: "Marks the field required (renders a * after the label).",
+  disabled: "Disables interaction (reflected attribute).",
+  multiple: "Allow multiple selections.",
+  searchable: "DEPRECATED — a type-to-filter field is an autocomplete, which is <a href='/components/esa-combobox'>esa-combobox</a>. Still honoured; warns at runtime. Typeahead replaces the common use.",
+  name: "Form field name — the key this control submits under.",
+  "chip-mode": "In multi-select, render selected values as removable chips.",
+  value: "Property accessor. Single = string; multiple = string array.",
+};
 
 const events = [
   { name: 'change', type: 'CustomEvent<{ value: string | string[] }>', description: 'Fired on selection change. Composed and bubbles. Form value is the string (single) or comma-joined values (multiple).' },
 ];
 ---
 <ComponentDoc name="Select" category="Forms" slug="esa-select" type="wc" status="stable"
-  summary="Form-associated searchable select with single/multi-select, chips, and full keyboard navigation. A Lit Web Component migrated from the Angular <code>esa-select</code>.">
+  summary="A list of options to pick from, opened by a <strong>button</strong>. No text entry — long lists are reachable by typeahead. Form-associated, with single/multi-select, chips and full keyboard navigation.">
 
   <Section id="preview" title="Preview">
-    <Preview code={`<esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>`}>
-      <esa-select label="Fruit" placeholder="Choose a fruit" help-text="Type to filter"></esa-select>
+    <Preview code={`<esa-select label="Fruit" placeholder="Choose a fruit"></esa-select>`}>
+      <esa-select label="Fruit" placeholder="Choose a fruit"></esa-select>
     </Preview>
   </Section>
 
+  <Section id="which" title="Select or Combobox?">
+    <p><strong>If the user picks from what you gave them, it is a Select. If they type
+    into it, it is a <a href={withBase('/components/esa-combobox')}>Combobox</a>.</strong></p>
+    <ul class="a11y">
+      <li><strong>Select</strong> — a button opens a list. Reach a distant option by
+      <em>typeahead</em>: type <code>c</code>, <code>a</code> and it jumps to the first
+      “Ca…” option, the way a native <code>&lt;select&gt;</code> does. The list is never
+      filtered.</li>
+      <li><strong>Combobox</strong> — an input with suggestions. It filters as you type
+      and can fetch remotely (debounced <code>search</code> event, <code>loading</code>,
+      <code>results-count</code>).</li>
+    </ul>
+    <p>Until 2026-08-15 both components had this backwards: <code>searchable</code>
+    defaulted to <em>on</em> here, so every select rendered an editable autocomplete,
+    while Combobox defaulted to a button trigger. Both defaults are now correct and the
+    old props are deprecated shims that still work and warn.</p>
+  </Section>
+
   <Section id="sizes" title="Sizes">
-    <Preview code={`<esa-select label="Extra small" size="xs"></esa-select>
-<esa-select label="Small" size="sm"></esa-select>
+    <p>
+      Three sizes, not four. Select has no <code>xs</code>: at 28px the trigger and its chevron fall
+      below a comfortable tap target, and because the option list it opens is sized independently,
+      shrinking the trigger buys nothing downstream. <code>sm</code> is the floor — reach for it in
+      dense table rows and filter bars. Controls without a popup, like
+      <a href={withBase('/components/esa-text-field')}>Text Field</a>, still offer <code>xs</code>.
+    </p>
+    <Preview code={`<esa-select label="Small" size="sm"></esa-select>
 <esa-select label="Medium" size="md"></esa-select>
 <esa-select label="Large" size="lg"></esa-select>`}>
-      <esa-select label="Extra small" size="xs"></esa-select>
       <esa-select label="Small" size="sm"></esa-select>
       <esa-select label="Medium" size="md"></esa-select>
       <esa-select label="Large" size="lg"></esa-select>
@@ -58,7 +85,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} events={events} />
+    <ApiTable slug="esa-select" describe={describe} events={events} />
   </Section>
 
   <Section id="accessibility" title="Accessibility">

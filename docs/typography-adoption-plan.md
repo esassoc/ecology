@@ -1,0 +1,144 @@
+# Plan — components adopt typographic composites
+
+**Status:** D1–D4 taken 2026-08-13/14. **P1 and P2 DONE 2026-08-14** — all 16
+type-carrying components on the control ramp now name composites. P0's inventory
+script (`scripts/type-inventory.mjs`) is what verified it. Remaining: P4 (the audit
+rule) and P5 (`esa-form-field` for the Lit half). Running record in
+`typography-migration-log.md`.
+
+## The goal
+
+Every piece of text the component kit renders resolves to a named typographic
+**composite** — `body-sm`, `label`, `meta` — instead of being assembled at the call site
+from a size, a weight and a line-height.
+
+"Chrome" stops being a category the whole library falls into. It means this site's
+own furniture, nothing more.
+
+## The rule
+
+**A component names the composite once.** It says "this text is a label" — it does not
+list a family, a size, a weight, a line-height and a letter-spacing.
+
+```
+  ✗   font-family: var(--typography-label-font-family);
+      font-size:   var(--typography-label-font-size);
+      font-weight: var(--typography-label-font-weight);
+      …
+
+  ✓   class="typography-label"
+```
+
+Referencing the five property tokens is the same assembling-at-the-call-site
+problem in a better disguise: it still lets a component take four of the five and
+invent the fifth, which is how the vocabulary stops meaning anything.
+
+**No new tier-2 composites for kit-specific jobs.** A button's or an input's typographic
+needs are a tier-3 hook pointing at an existing composite, not a new composite. Tier 2 stays
+the vocabulary of the design, not a mirror of the component list.
+
+## Decisions
+
+| | |
+|---|---|
+| **D1** | `--font-size-ui-*` is **killed — DONE 2026-08-14.** It is a size-only scale running parallel to the composites, and it is the shortcut that let components pick a size without adopting a composite. Its 9 tier-3 hook consumers now point at the composite whose job matches: form control text at `label-*`, the large step at `body-lg`. Value-neutral — the ramp was a pure passthrough. Needed one new composite, `label-2xs` at `--font-size-050`, because the control ramp descends below where the prose family goes. |
+| **D2** | Components reference the **composite as a unit** — `typography-label` — never its five property tokens. |
+| **D3** | Kit-specific typographic needs are **tier-3 hooks**, not new tier-2 composites. |
+| **D4** | **No `esa-label`.** The kit already has this component: `esa-form-field` (label row + control slot + hint/error, size variants driving the label size). The gap is adoption, not absence — 12 of the 14 label-rendering components are Lit and cannot compose an `.astro` wrapper around their shadow internals, so they each reimplemented it. Building `esa-label` would make a 15th. Logged in the ledger. |
+
+**The mechanism D2 needs.** CSS has no composite custom property, so a composite is a
+class. A global class does not cross a shadow boundary, and 33 components are Lit.
+The fix is plumbing, not design: export the `.typography-*` definitions as a shared
+Lit `CSSResult`, which each Lit component adds to `static styles`. Astro components
+use the class as-is. Same class name on both sides, one definition, no duplication.
+
+**Adopting a composite is all-or-nothing, and that is the point.** The sizes line up
+exactly; the other four properties do not always. A badge at `--font-size-100` +
+`semibold` becomes `label`, which is `medium` — visibly lighter. So migration is a
+design reconciliation, not a codemod. Where a composite turns out to be wrong for real
+use, the fix is to change the composite once, not to exempt the call site.
+
+## What is true today
+
+The composites exist and are complete: every value a `var()`, every composite setting
+all five properties. **28 live classes** ship into shadow roots via
+`packages/tokens/dist/typography-styles.js`.
+
+The ramp is migrated. `type-inventory.mjs` counted **164 type-declaring rules before,
+104 after** — 60 rules stopped assembling type at the call site, and **zero** of the 16
+ramp components still declares `font-size`, `font-weight` or `font-family` anywhere.
+Nothing outside the ramp changed.
+
+Four composites were added to close gaps the control ramp exposed, all following D1's
+`label-2xs` precedent (the control ramp runs wider than the prose family, at BOTH ends):
+
+| composite | rung | why |
+|---|---|---|
+| `label-lg` | 300 | the lg step borrowed `body-lg`, whose `relaxed` leading it then overrode |
+| `body-xs` / `body-2xs` | 100 / 050 | the value slot had no prose partner below `body-sm` |
+| `label-2xs-strong` / `label-lg-strong` | 050 / 300 | button-toggle sets semibold at EVERY size |
+| `code-xs` / `code-2xs` | 100 / 050 | colour-picker's hex field is mono and cannot take `body-*` |
+
+The remaining tier-1 typography reads are outside the ramp (the docs site's own chrome
+and the non-control components) — that is what P4's audit rule is for.
+
+Every size in use maps to a composite at an identical value:
+
+```
+--font-size-150 (30 reads) → body-sm      --font-size-050  (2) → eyebrow
+--font-size-100 (27)       → label, meta  --font-size-400  (3) → title
+--font-size-200 (24)       → body-md      --font-size-600+ (3) → heading-lg, display
+--font-size-300  (9)       → body-lg
+```
+
+## Phases
+
+**P0 · Inventory — no edits.** For every typography declaration in the kit: component,
+the five properties as they render today, the nearest composite, and the per-property
+delta. Also resolves the open questions below. Output is a table we read together.
+
+**P1 · Ship the mechanism.** The shared `CSSResult`, plus one Lit component and one
+Astro component migrated end-to-end as the golden pattern. Reviewed before anything
+else moves.
+
+**P2 · Migrate, in batches grouped by composite** rather than by component, so each batch
+is one typographic decision reviewed once. Every batch reports its deltas — "these 4
+call sites get 50 weight units lighter" — rather than claiming neutrality.
+
+**P3 · Kill `--font-size-ui-*`** — ✅ DONE 2026-08-14, ahead of the rest. It did not need
+the tier-3 decision after all: the hooks stay, they just point at a composite's size
+token instead of a parallel ramp. `migrations.json` row `font-size-ui-to-composites`.
+
+**P4 · Close the door.** Delete `_inject-styles.ts` (0 importers, hardcoded literals,
+dead). Add an audit rule that fails when a component reads a tier-1 typography token
+directly. Without this the drift returns — the 100 reads accumulated precisely
+because nothing ever objected.
+
+**P5 · Let the Lit half consume `esa-form-field`** (D4) — the same shadow-boundary problem
+as the composites, so worth solving once for both rather than twice.
+
+## Open questions for P0
+
+- **Which components need a tier-3 hook they do not have?** 75 declarations already go
+  through one; the rest read raw. Some of those want a hook, some should read the
+  composite directly. P0 says which.
+- **What do the four `--form-font-size-*` hooks point at once the ui ramp is gone?**
+  Their sizes map to `eyebrow / label / body-md / body-lg`. `eyebrow` is a strange
+  source for an xs form control — it is an uppercase composite — even though pointing at
+  its *size* token drags none of that along. Worth deciding whether `xs` should exist.
+- **Do `label` and `meta` stay distinct?** Both are `--font-size-100`; they differ only
+  in weight (medium vs regular). That is a real distinction, but P0 should confirm the
+  kit actually uses both.
+
+## Out of scope
+
+The docs site's own chrome. It is legitimately chrome and keeps what it uses.
+
+## Risks
+
+- **P3 is where things move.** Sizes are safe; weights and line-heights are not.
+- **Volume.** ~260 declarations. Grouping by composite keeps the number of *decisions* near
+  the number of composites rather than the number of call sites.
+- **P2 touches spokes.** `--font-size-ui-*` has no spoke readers today, but the removal
+  still needs a `migrations.json` row so a spoke that adopts it before we delete it
+  gets an alias instead of a dropped declaration.

@@ -20,52 +20,122 @@ html[data-scheme='dark'] {
 
   /* Surfaces — gray-dark-1 is the app background (#111111), gray-dark-2 the base
      surface (#191919). Elevated sits one step lighter; sunken one step darker. */
-  --color-background:            var(--color-gray-dark-1);
-  --color-surface:               var(--color-gray-dark-2);
-  --color-surface-elevated:      var(--color-gray-dark-3);
-  --color-surface-sunken:        #0d0d0f;
-  --color-surface-inverse:       var(--color-gray-dark-12);
-  --color-surface-inverse-hover: var(--color-gray-dark-11);
+  --color-background-default:            var(--color-gray-dark-1);
+  --color-background-elevation-raised:               var(--color-gray-dark-2);
+  --color-background-elevation-floating:      var(--color-gray-dark-3);
+  --color-background-elevation-sunken:        #0d0d0f;
+  --color-background-default-knockout:       var(--color-gray-dark-12);
+  --color-background-default-knockout-hover: var(--color-gray-dark-11);
+
+  /* EVERY -knockout ROLE IS THE MIRROR IMAGE, wherever it appears below. In the
+     light theme knockout reaches for the DARK ramp; in this block it reaches for
+     the LIGHT one. The token a component reads never changes — a knocked-out
+     tooltip is light-on-dark in the light scheme and dark-on-light here, without
+     the component knowing which scheme it is in.
+
+     That is why the variant is `knockout` and not `-dark`: a name saying `dark`
+     would be holding a light value in this block and lying. */
 
   /* Text — dark-12 is near-white (#ededef) for primary; dark-11 (#b4b4b4) for
      secondary/tertiary; dark-10 (#7b7b7b) for muted. Inverse = dark-2 (dark text
      on a rare light surface inside dark mode). */
-  --color-text-primary:   var(--color-gray-dark-12);
-  --color-text-secondary: var(--color-gray-dark-11);
-  --color-text-tertiary:  var(--color-gray-dark-11);
-  --color-text-muted:     var(--color-gray-dark-10);
-  --color-text-inverse:   var(--color-gray-dark-2);
+  --color-content-default:   var(--color-gray-dark-12);
+  --color-content-default-secondary: var(--color-gray-dark-11);
+  --color-content-default-knockout:            var(--color-gray-dark-2);
 
   /* Borders — dark-6 (#3a3a3a) default; dark-5 light; dark-7 strong. */
-  --color-border:        var(--color-gray-dark-6);
-  --color-border-light:  var(--color-gray-dark-5);
-  --color-border-strong: var(--color-gray-dark-7);
-  --color-border-focus:  var(--color-grass-9);
+  --color-border-default:        var(--color-gray-dark-6);
+  --color-border-default-subtle:  var(--color-gray-dark-5);
+  --color-border-default-strong: var(--color-gray-dark-7);
+  --color-border-default-knockout:        var(--color-gray-7);
+  /* No --color-border-default-focus here on purpose, and the reason changed on
+     2026-08-17 without changing the conclusion.
+
+     It used to be pinned to var(--color-grass-9), which was both redundant (dark
+     does not re-point --color-background-brand, so it was already grass-9) and
+     harmful: it re-broke the chain this scheme inherits, so a themed spoke in dark
+     mode got an Ecology-green focus ring instead of its own brand.
+
+     The ring no longer chains off the brand — it is the first step of the brand
+     ramp that clears 3:1, walked per theme per scheme by resolveFocusRing in
+     scripts/lib/theme-recipe.mjs. A generated theme emits its own value in
+     html[data-scheme="dark"][data-theme="x"], which is (0,2,1) and outranks this
+     block, so declaring anything here would still only reach the hub's own site —
+     and would still be the wrong layer to put a per-theme decision in. The hub's
+     dark ring is grass step 10 inherited from :root, measuring 4.54:1 against the
+     lightest dark surface. */
 
   /* Primary (grass) — grass-9 is the solid fill; subtle/border use dark ramp
      steps 2 and 6 so they're visible on near-black surfaces. */
-  --color-primary-subtle: var(--color-grass-dark-2);
-  --color-primary-border: var(--color-grass-dark-6);
+  --color-background-brand-subtle: var(--color-grass-dark-1);
+  --color-border-brand: var(--color-grass-dark-6);
 
-  /* Status subtles & borders — light ramp steps 1-6 are near-white; replace
-     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged. */
-  --color-info-subtle:    var(--color-blue-dark-2);
-  --color-info-border:    var(--color-blue-dark-6);
-  --color-success-subtle: var(--color-lime-dark-2);
-  --color-success-border: var(--color-lime-dark-6);
-  --color-warning-subtle: var(--color-yellow-dark-2);
-  --color-warning-border: var(--color-yellow-dark-6);
-  --color-danger-subtle:  var(--color-red-dark-2);
-  --color-danger-border:  var(--color-red-dark-6);
+  /* Utility subtles & borders — light ramp steps 1-6 are near-white; replace
+     with the matching dark ramp steps 2 and 6. Fill tokens (step 9) unchanged.
+     `utility` is ONE intention with four variants as of 2026-08-15 — the
+     lockstep visible in this block, four names taking the identical step at
+     every role, is the evidence that made it one. */
+  --color-background-utility-info-subtle:    var(--color-blue-dark-1);
+  --color-background-utility-info-muted:  var(--color-blue-dark-3);
+  --color-border-utility-info:    var(--color-blue-dark-6);
+  --color-background-utility-success-subtle: var(--color-green-dark-1);
+  --color-background-utility-success-muted:  var(--color-green-dark-3);
+  --color-border-utility-success: var(--color-green-dark-6);
+  --color-background-utility-warning-subtle: var(--color-yellow-dark-1);
+  --color-background-utility-warning-muted:  var(--color-yellow-dark-3);
+  --color-border-utility-warning: var(--color-yellow-dark-6);
+  --color-background-utility-danger-subtle:  var(--color-red-dark-1);
+  --color-background-utility-danger-muted:  var(--color-red-dark-3);
+  --color-border-utility-danger:  var(--color-red-dark-6);
 
-  /* Status strong — light step-11 values are dark and unreadable on dark surfaces.
+  /* Utility coloured text — light step-11 values are dark and unreadable on dark surfaces.
      Dark step-11 is a lighter, accessible tone on dark bg. */
-  --color-info-strong:    var(--color-blue-dark-11);
-  --color-success-strong: var(--color-lime-dark-11);
-  --color-warning-strong: var(--color-yellow-dark-11);
-  --color-danger-strong:  var(--color-red-dark-11);
+  --color-content-utility-info:    var(--color-blue-dark-11);
+  --color-content-utility-success: var(--color-green-dark-11);
+  --color-content-utility-warning: var(--color-yellow-dark-11);
+  --color-content-utility-danger:  var(--color-red-dark-11);
+
+  /* Brand strong — same reasoning. These were missing while the four status
+     tokens above were mapped, which was harmless only while nothing used them
+     as foreground on dark. Components now read -strong for colored text
+     (step 11 is the "colored text on surfaces" step), so the gap would show as
+     dark green on a dark surface.
+     --color-content-ai is NOT here: no copper dark ramp is shipped. */
+  --color-content-brand:   var(--color-grass-dark-11);
+
+  /* Data-viz scales. GENERATED by scripts/lib/dataviz.mjs from the brand seed —
+     edit the derivation, never these values.
+
+     These are re-derived for dark rather than reused from light, and the search
+     satisfies BOTH schemes at once: one slot order has to work in each, because a
+     series must not change identity when the scheme toggles. The dark steps are
+     genuinely different colours, not the light ones lightened — a light-scheme
+     series colour glares on a near-black surface, the same reason `rampFrom`
+     refuses to anchor the brand seed in dark. */
+  --color-background-dataviz-categorical-1: var(--color-grass-dark-9);
+  --color-background-dataviz-categorical-2: var(--color-indigo-dark-9);
+  --color-background-dataviz-categorical-3: var(--color-orange-dark-8);
+  --color-background-dataviz-categorical-4: var(--color-blue-dark-9);
+  --color-background-dataviz-categorical-5: var(--color-crimson-dark-8);
+  --color-background-dataviz-categorical-6: var(--color-cyan-dark-9);
+  --color-background-dataviz-categorical-7: var(--color-violet-dark-8);
+  --color-background-dataviz-categorical-8: var(--color-teal-dark-9);
+  --color-background-dataviz-sequential-1: #305331;
+  --color-background-dataviz-sequential-2: #3e6e40;
+  --color-background-dataviz-sequential-3: #478a4b;
+  --color-background-dataviz-sequential-4: #50a856;
+  --color-background-dataviz-sequential-5: #6dc371;
+  --color-background-dataviz-sequential-6: #94db96;
+  --color-background-dataviz-sequential-7: var(--color-grass-dark-12);
+  --color-background-dataviz-diverging-1: var(--color-blue-dark-11);
+  --color-background-dataviz-diverging-2: var(--color-blue-dark-9);
+  --color-background-dataviz-diverging-3: var(--color-blue-dark-7);
+  --color-background-dataviz-diverging-4: var(--color-gray-dark-4);
+  --color-background-dataviz-diverging-5: var(--color-red-dark-7);
+  --color-background-dataviz-diverging-6: var(--color-red-dark-9);
+  --color-background-dataviz-diverging-7: var(--color-red-dark-11);
 }
 
 html[data-scheme='dark'] .nav-link[aria-current='page'] {
-  color: var(--color-primary);
+  color: var(--color-background-brand);
 }

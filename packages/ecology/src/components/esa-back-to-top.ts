@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-back-to-top — interactive (Lit Web Component).
@@ -19,7 +20,7 @@ import { LitElement, html, css } from 'lit';
 export class EsaBackToTop extends LitElement {
   static properties = {
     threshold: { type: Number },
-    smoothScroll: { type: Boolean, attribute: 'smooth-scroll' },
+    smoothScroll: { type: Boolean, attribute: 'smooth-scroll', converter: boolish },
     scrollTarget: { attribute: false },
     visible: { type: Boolean, reflect: true },
   };
@@ -107,12 +108,12 @@ export class EsaBackToTop extends LitElement {
   static styles = css`
     :host {
       --_btt-size: var(--back-to-top-size, 44px);
-      --_btt-bg: var(--back-to-top-bg, var(--color-primary, #43608a));
-      --_btt-text: var(--back-to-top-text, var(--color-text-inverse, #fff));
-      --_btt-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      --_btt-radius: var(--back-to-top-radius, var(--radius-full, 9999px));
-      --_btt-bottom: var(--back-to-top-bottom, var(--spacing-500, 1.5rem));
-      --_btt-right: var(--back-to-top-right, var(--spacing-500, 1.5rem));
+      --_btt-bg: var(--color-background-brand, #46a758);
+      --_btt-text: var(--color-content-default-knockout, #fcfcfc);
+      --_btt-shadow: var(--elevation-3, 0 4px 20px -4px rgba(0, 0, 0, 0.06));
+      --_btt-radius: var(--radius-pill, 9999px);
+      --_btt-bottom: var(--spacing-500, 1.5rem);
+      --_btt-right: var(--spacing-500, 1.5rem);
 
       position: fixed;
       bottom: var(--_btt-bottom);
@@ -149,17 +150,30 @@ export class EsaBackToTop extends LitElement {
     }
 
     .button:hover {
-      background: var(--color-primary-hover, #39506f);
-      box-shadow: var(--shadow-400, 0 8px 32px -8px rgba(0, 0, 0, 0.08));
+      background: var(--color-background-brand-hover, #3e9b4f);
+      /* Hover is one rung up from the resting rung, never a rung of its own. */
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
     }
 
     .button:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
 
     .button:active {
       transform: scale(0.95);
+    }
+
+    /* FORCED COLORS. The button declares 'border: none' and leans entirely on
+       --_btt-bg + --_btt-shadow, both of which are gone here — it would float as
+       a bare icon with no target edge. box-sizing is set alongside the border on
+       purpose: --_btt-size is a hard 44px, the WCAG 2.5.5 target floor, and a
+       content-box border would quietly move it to 46px. */
+    @media (forced-colors: active) {
+      .button {
+        box-sizing: border-box;
+        border: 1px solid ButtonText;
+      }
     }
   `;
 }

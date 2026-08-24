@@ -1,4 +1,6 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+import { boolish } from '../boolish.js';
 
 export type EsaSnackbarVariant = 'info' | 'success' | 'warning' | 'danger';
 
@@ -19,7 +21,7 @@ export class EsaSnackbarItem extends LitElement {
     message: { type: String },
     variant: { type: String, reflect: true },
     action: { type: String },
-    dismissable: { type: Boolean },
+    dismissable: { type: Boolean, converter: boolish },
     icon: { type: String },
   };
 
@@ -66,15 +68,15 @@ export class EsaSnackbarItem extends LitElement {
 
   render() {
     return html`
-      <div class="esa-snackbar esa-snackbar--${this.variant}">
+      <div class="esa-snackbar typography-body-md esa-snackbar--${this.variant}">
         <span class="esa-snackbar__icon">${this.renderIcon()}</span>
         <span class="esa-snackbar__message">${this.message}</span>
         ${this.action
-          ? html`<button class="esa-snackbar__action" @click=${this.onAction}>${this.action}</button>`
+          ? html`<button class="esa-snackbar__action typography-microcopy-sm-strong" @click=${this.onAction}>${this.action}</button>`
           : null}
         ${this.dismissable
           ? html`
-              <button class="esa-snackbar__close" @click=${this.dismiss} aria-label="Dismiss">
+              <button class="esa-snackbar__close" @click=${this.dismiss} aria-label="Dismiss notification">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             `
@@ -83,7 +85,9 @@ export class EsaSnackbarItem extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: block; }
 
     .esa-snackbar {
@@ -91,23 +95,21 @@ export class EsaSnackbarItem extends LitElement {
       align-items: center;
       gap: var(--spacing-300, 0.75rem);
       padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
-      border-radius: var(--snackbar-item-radius, var(--radius-200, 0.5rem));
-      box-shadow: var(--shadow-300, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      background: var(--color-gray-12);
-      color: var(--snackbar-item-color, var(--color-text-inverse, #ffffff));
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--type-size-200, 0.9375rem);
-      animation: esa-snackbar-enter 200ms ease-out;
+      border-radius: var(--radius-md, 0.5rem);
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
+      background: var(--color-background-default-knockout);
+      color: var(--color-content-default-knockout, #fcfcfc);
+      animation: esa-snackbar-enter var(--animation-overlay-enter, 250ms ease-out);
     }
     @keyframes esa-snackbar-enter {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
 
-    .esa-snackbar--success { background: var(--snackbar-item-bg-success, var(--color-green-11)); }
-    .esa-snackbar--warning { background: var(--snackbar-item-bg-warning, var(--color-orange-11)); }
-    .esa-snackbar--danger { background: var(--snackbar-item-bg-danger, var(--color-red-10)); }
-    .esa-snackbar--info { background: var(--snackbar-item-bg-info, var(--color-blue-11)); }
+    .esa-snackbar--success { background: var(--color-content-utility-success); }
+    .esa-snackbar--warning { background: var(--color-content-utility-warning); }
+    .esa-snackbar--danger { background: var(--color-content-utility-danger); }
+    .esa-snackbar--info { background: var(--color-content-utility-info); }
 
     .esa-snackbar__icon {
       flex-shrink: 0;
@@ -116,15 +118,28 @@ export class EsaSnackbarItem extends LitElement {
     .esa-snackbar__message { flex: 1; }
 
     .esa-snackbar__action {
+      /* One word ("Undo"). microcopy has no leading, so wrapping would collide. */
+      white-space: nowrap;
       flex-shrink: 0;
+      /* Same target-size reasoning as the close button below: a short word like
+         "Undo" produces a box only as tall as its own line, which lands under the
+         24px minimum. The min-height sets the floor without padding the label. */
+      min-height: 32px;
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
       border: none;
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
+      /* THE WHITE ALPHA IS CORRECT HERE AND SHOULD NOT BECOME A TOKEN.
+         This button sits on FIVE different grounds — the knocked-out default
+         plus the success, warning, danger and info fills below — and an alpha
+         is the only value that lifts off all of them. A solid knocked-out grey
+         would be right on one and wrong on four (a grey chip on a green bar).
+         Checked when --color-background-elevation-raised-knockout was proposed;
+         that token was dropped partly because this, its most obvious reader,
+         did not want it. */
       background: rgba(255, 255, 255, 0.2);
       color: inherit;
+      /* UA reset, not a type role — a native button does not inherit the face. */
       font-family: inherit;
-      font-size: var(--type-size-150, 0.875rem);
-      font-weight: var(--font-weight-semibold, 550);
       cursor: pointer;
     }
     .esa-snackbar__action:hover { background: rgba(255, 255, 255, 0.3); }
@@ -134,10 +149,15 @@ export class EsaSnackbarItem extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
+      /* 32px, not the 24px this was. 24 is the exact floor of SC 2.5.8 Target Size
+         (Minimum, AA) — passing a criterion with zero margin is not the same as
+         being usable, and this is the control someone reaches for in a hurry, on a
+         box that may be about to disappear. The glyph stays 16px; only the hit area
+         grows, so the toast does not get taller. */
+      width: 32px;
+      height: 32px;
       border: none;
-      border-radius: var(--radius-100, 0.25rem);
+      border-radius: var(--radius-sm, 0.25rem);
       background: transparent;
       color: inherit;
       cursor: pointer;
@@ -147,7 +167,35 @@ export class EsaSnackbarItem extends LitElement {
       opacity: 1;
       background: rgba(255, 255, 255, 0.1);
     }
-  `;
+
+    /* Both buttons were keyboard-invisible: :hover only, no focus style at all
+       (SC 2.4.7 Focus Visible, AA). The ring is white rather than
+       --focus-ring-color because these sit on FIVE different fills — the
+       knocked-out default plus success/warning/danger/info — and the brand-blue
+       ring disappears against at least one of them. Same reasoning as the alpha
+       backgrounds above, and the same reason this is not a token. */
+    .esa-snackbar__action:focus-visible,
+    .esa-snackbar__close:focus-visible {
+      outline: var(--focus-ring-width, 2px) solid #ffffff;
+      outline-offset: var(--focus-ring-offset, 2px);
+      opacity: 1;
+    }
+
+    /* FORCED COLORS. Two repairs. The toast itself is a knockout background plus
+       --elevation-4, so it needs a real edge. And the hardcoded #ffffff focus
+       ring above is force-adjusted to whatever the theme picks — which may be
+       the same colour as the toast's own background — so the ring is re-stated
+       in system colours rather than left to chance.
+       The four variants (success/warning/danger/info) differ only by background
+       and all collapse to Canvas; the per-variant ICON is what still separates
+       them, which is exactly why renderIcon() ships four distinct glyphs. */
+    @media (forced-colors: active) {
+      .esa-snackbar { border: 1px solid CanvasText; }
+      .esa-snackbar__action:focus-visible,
+      .esa-snackbar__close:focus-visible { outline-color: CanvasText; }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-snackbar-item')) {

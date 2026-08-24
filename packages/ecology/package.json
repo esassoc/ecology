@@ -1,9 +1,14 @@
 {
   "name": "@esa/ecology",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Ecology components — presentational primitives as .astro, interactive primitives as framework-agnostic Lit Web Components. Consumed by spoke repos.",
+  "description": "Ecology components \u2014 presentational primitives as .astro, interactive primitives as framework-agnostic Lit Web Components. Consumed by spoke repos.",
   "exports": {
+    "./package.json": "./package.json",
+    "./typography": "./src/typography.ts",
+    "./a11y": "./src/a11y.ts",
+    "./announcer": "./src/announcer.ts",
+    "./overlay": "./src/overlay.ts",
     "./*.astro": "./src/components/*.astro",
     "./*": "./src/components/*.ts"
   },
@@ -14,6 +19,13 @@
     "lit": "^3.2.0"
   },
   "peerDependencies": {
+    "@esa/tokens": "^0.1.0",
+    "ag-charts-community": "^14.0.0",
     "astro": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ag-charts-community": {
+      "optional": true
+    }
   }
 }

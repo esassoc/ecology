@@ -2,14 +2,16 @@
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
 import Preview from '@esa/docs/Preview.astro';
-import Api from '@esa/docs/Api.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 import EsaLinkColumn from '@esa/ecology/esa-link-column.astro';
 
-const props = [
-  { name: 'heading', type: 'string', description: 'Column heading.' },
-  { name: 'href', type: 'string', description: 'Optional link on the heading itself.' },
-  { name: 'links', type: '{ label: string; href?: string }[]', description: 'The list of links.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  heading: "Column heading.",
+  href: "Optional link on the heading itself.",
+  links: "The list of links.",
+};
 const mitigation = [
   { label: 'Projects' }, { label: 'Contracts' }, { label: 'Portfolios' },
   { label: 'Work elements' }, { label: 'Estuary program' }, { label: 'Tributary habitat' },
@@ -31,10 +33,10 @@ const reporting = [
   </Section>
 
   <Section id="oncontext" title="On a brand surface (currentColor)">
-    <Preview align="start" code={`<div style="background:var(--color-primary);color:#fff">
+    <Preview align="start" code={`<div style="background:var(--color-background-brand);color:#fff">
   <EsaLinkColumn heading="Mitigation work" links={[…]} />
 </div>`}>
-      <div style="display:flex;gap:64px;background:var(--color-primary,#43608a);color:#fff;padding:32px;border-radius:8px">
+      <div style="display:flex;gap:64px;background:var(--color-background-brand,#43608a);color:#fff;padding:32px;border-radius:8px">
         <EsaLinkColumn heading="Mitigation work" links={mitigation} />
         <EsaLinkColumn heading="Reporting" links={reporting} />
       </div>
@@ -42,6 +44,6 @@ const reporting = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-link-column" describe={describe} />
   </Section>
 </ComponentDoc>

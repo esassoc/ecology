@@ -1,4 +1,15 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+
+/** Group label and segment text are both UI text (medium). The SELECTED segment
+    steps up to semibold, which is what the -strong weight axis is for — it is not
+    a size change, so the rung stays the same. */
+const LABEL_TYPE  = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The OPTIONS are microcopy — nowrap text in a padding-sized box. The group label
+// above them is not: it flows, so it keeps LABEL_TYPE. Selected steps to -strong.
+const OPTION_TYPE = { xs: 'microcopy-2xs', sm: 'microcopy-xs', md: 'microcopy-md', lg: 'microcopy-lg' } as const;
+const OPTION_SELECTED_TYPE = { xs: 'microcopy-2xs-strong', sm: 'microcopy-xs-strong', md: 'microcopy-md-strong', lg: 'microcopy-lg-strong' } as const;
 // unsafeSVG (not unsafeHTML): parses the markup in the SVG namespace so injected
 // <path>/<rect> children render. unsafeHTML would create them as XHTML elements.
 import { unsafeSVG } from 'lit/directives/unsafe-svg.js';
@@ -50,17 +61,27 @@ export class EsaButtonToggle extends LitElement {
 
   static properties = {
     label: { type: String },
+    helpText: { type: String, attribute: 'help-text' },
+    errorText: { type: String, attribute: 'error-text' },
     options: { type: Array },
     value: { type: String },
     size: { type: String, reflect: true },
+    name: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
     required: { type: Boolean },
   };
 
   declare label: string;
+  /** Helper text below the group. */
+  declare helpText: string;
+  /** Validation message below the group; replaces `helpText` and reddens the track. */
+  declare errorText: string;
+  /** DEPRECATED — renamed to `helpText`. Still honoured; warns at runtime. */
   declare options: EsaToggleOption[];
   declare value: string;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare disabled: boolean;
   declare required: boolean;
 
@@ -69,12 +90,18 @@ export class EsaButtonToggle extends LitElement {
   constructor() {
     super();
     this.label = '';
+    this.helpText = '';
+    this.errorText = '';
     this.options = [];
     this.value = '';
     this.size = 'md';
     this.disabled = false;
     this.required = false;
     this.internals = this.attachInternals();
+  }
+
+  private get resolvedHelpText(): string {
+    return this.helpText;
   }
 
   connectedCallback(): void {
@@ -86,6 +113,29 @@ export class EsaButtonToggle extends LitElement {
     if (changed.has('value') || changed.has('options')) {
       this.syncFormValue();
     }
+  }
+
+  updated(): void {
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. Anchored to the first
+   * segment so the browser can focus it and place its bubble.
+   */
+  private syncValidity(): void {
+    if (!this.required || this.value) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.option') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Select ${this.label}.` : 'Select an option.',
+      anchor,
+    );
   }
 
   private get selectedIndex(): number {
@@ -157,17 +207,24 @@ export class EsaButtonToggle extends LitElement {
 
   render() {
     const hasLabel = !!this.label;
+    const hasError = !!this.errorText;
+    const help = this.resolvedHelpText;
+    // Error replaces help — same precedence as esa-select / esa-text-field, so
+    // only one of the two ever occupies the slot below the control.
+    const describedBy = hasError ? 'error' : help ? 'help' : null;
     return html`
       ${hasLabel
-        ? html`<span class="label" id="label">
+        ? html`<span class="label typography-${LABEL_TYPE[this.size]}" id="label">
             ${this.label}${this.required ? html`<span class="required" aria-hidden="true">*</span>` : null}
           </span>`
         : null}
       <div
-        class="group"
+        class="group ${hasError ? 'group--error' : ''}"
         role="radiogroup"
         aria-labelledby=${hasLabel ? 'label' : null}
         aria-required=${this.required ? 'true' : null}
+        aria-invalid=${hasError ? 'true' : null}
+        aria-describedby=${describedBy}
         @keydown=${this.onKeydown}
       >
         ${this.options.map((opt, i) => {
@@ -175,7 +232,7 @@ export class EsaButtonToggle extends LitElement {
           return html`<button
             type="button"
             role="radio"
-            class="option ${selected ? 'option--selected' : ''}"
+            class="option ${selected ? 'option--selected' : ''} typography-${selected ? OPTION_SELECTED_TYPE[this.size] : OPTION_TYPE[this.size]}"
             aria-checked=${selected}
             aria-label=${opt.ariaLabel ?? (opt.label ? null : opt.value)}
             tabindex=${i === this.focusIndex ? 0 : -1}
@@ -200,52 +257,53 @@ export class EsaButtonToggle extends LitElement {
           </button>`;
         })}
       </div>
+      ${hasError
+        ? html`<span class="error typography-body-sm" id="error">${this.errorText}</span>`
+        : help
+          ? html`<span class="help typography-body-sm" id="help">${help}</span>`
+          : null}
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-100, 4px);
-      --_height: var(--form-height-md, 40px);
-      --_padding-x: var(--form-padding-x-md, 12px);
-      --_font-size: var(--form-font-size-md, 14px);
-      --_radius: var(--form-radius-md, 8px);
+      --_pad-y: var(--spacing-300, 0.75rem);
+      --_padding-x: var(--spacing-300, 0.75rem);
+      --_radius: var(--radius-md, 0.5rem);
       --_border-width: var(--form-border-width, 1px);
-      --_border-color: var(--form-border-color, #d4d4d4);
+      --_border-color: var(--form-border-color, #cecece);
       --_icon-size: 18px;
     }
     :host([size='xs']) {
-      --_height: var(--form-height-xs, 28px);
-      --_padding-x: var(--form-padding-x-xs, 8px);
-      --_font-size: var(--form-font-size-xs, 11px);
-      --_radius: var(--form-radius-xs, 4px);
+      --_pad-y: var(--spacing-200, 0.5rem);
+      --_padding-x: var(--spacing-200, 0.5rem);
+      --_radius: var(--radius-sm, 0.25rem);
       --_icon-size: 14px;
     }
     :host([size='sm']) {
-      --_height: var(--form-height-sm, 32px);
-      --_padding-x: var(--form-padding-x-sm, 8px);
-      --_font-size: var(--form-font-size-sm, 12px);
-      --_radius: var(--form-radius-sm, 6px);
+      --_pad-y: var(--spacing-250, 0.625rem);
+      --_padding-x: var(--spacing-250, 0.625rem);
+      --_radius: var(--radius-sm, 0.25rem);
       --_icon-size: 16px;
     }
     :host([size='lg']) {
-      --_height: var(--form-height-lg, 48px);
-      --_padding-x: var(--form-padding-x-lg, 16px);
-      --_font-size: var(--form-font-size-lg, 16px);
-      --_radius: var(--form-radius-lg, 10px);
+      --_pad-y: var(--spacing-400, 1rem);
+      --_padding-x: var(--spacing-400, 1rem);
+      --_radius: var(--radius-md, 0.5rem);
       --_icon-size: 20px;
     }
 
     .label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .required {
-      color: var(--color-danger, #ef4444);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
 
@@ -258,9 +316,17 @@ export class EsaButtonToggle extends LitElement {
       max-width: 100%;
       gap: 2px;
       padding: 2px;
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
       border: var(--_border-width) solid var(--_border-color);
       border-radius: var(--_radius);
+    }
+    /* An invalid group reddens the option borders AND the focus ring. The ring is a token
+       re-point, not an outline-color override, so all N options follow with one declaration —
+       the house mechanism for the error ring as of 2026-08-17 (see esa-text-field). Until
+       then this rule moved the border and left the ring brand-coloured. */
+    .group--error {
+      --_border-color: var(--form-error-border-color, #e5484d);
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
 
     .option {
@@ -269,12 +335,11 @@ export class EsaButtonToggle extends LitElement {
       align-items: center;
       justify-content: center;
       gap: var(--spacing-150, 6px);
-      height: calc(var(--_height) - 4px);
-      padding: 0 var(--_padding-x);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--color-text-secondary, #525252);
+      /* Was calc(height - 4px) to compensate for the track's 2px padding. With no
+         height token the segment is its own text plus padding, and the track wraps
+         it — the compensation has nothing left to compensate for. */
+      padding: var(--_pad-y) var(--_padding-x);
+      color: var(--color-content-default-secondary, #646464);
       background: transparent;
       border: 0;
       border-radius: calc(var(--_radius) - 2px);
@@ -294,34 +359,65 @@ export class EsaButtonToggle extends LitElement {
     }
 
     .option:hover:not(:disabled):not(.option--selected) {
-      color: var(--color-text-primary, #171717);
-      background: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
+      color: var(--color-content-default, #202020);
+      background: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
     }
 
     .option:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
       position: relative;
       z-index: 1;
     }
 
     .option--selected {
-      background: var(--form-bg, #fff);
-      color: var(--color-primary, #43608a);
-      font-weight: var(--font-weight-semibold, 550);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-brand, #2a7e3b);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
 
     .option:disabled {
       cursor: not-allowed;
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       background: transparent;
     }
     .option--selected:disabled {
-      background: var(--form-bg, #fff);
-      color: var(--color-disabled-text, #a3a3a3);
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      color: var(--color-content-disabled, #8d8d8d);
     }
-  `;
+
+    .help {
+      color: var(--form-help-color, #838383);
+    }
+    .error {
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
+    }
+
+    /* FORCED COLORS. The .group track keeps its real border, so the frame
+       survives; what disappears is the SELECTED segment, whose whole treatment is
+       a background, a colour and a 1px shadow.
+
+       Highlight/HighlightText rather than a border, deliberately. '.option' is
+       intrinsically sized inside a fit-content flex row, so a border on
+       --selected alone would make that one segment 2px larger and shove its
+       siblings sideways on every selection change; reserving the border on the
+       base .option instead would outline all of them. A fill changes no boxes.
+
+       The type role already swaps to OPTION_SELECTED_TYPE (a weight change, which
+       survives force-adjustment), so this is the second channel, not the only. */
+    @media (forced-colors: active) {
+      .option--selected {
+        background: Highlight;
+        color: HighlightText;
+      }
+      .option:disabled { color: GrayText; }
+      .option--selected:disabled {
+        background: GrayText;
+        color: Canvas;
+      }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-button-toggle')) {

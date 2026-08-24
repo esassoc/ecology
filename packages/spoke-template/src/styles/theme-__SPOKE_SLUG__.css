@@ -19,7 +19,7 @@
  *     tokens above; hub components never read --__SCOPE__-* directly.
  *
  * WORKED EXAMPLE: see ../ecology/../beacon-design/src/styles/theme-beacon.css for
- * a fully-filled version of this same skeleton (true-teal + warm-gray ramps).
+ * a fully-filled version of this same skeleton (true-teal + warm-neutral ramps).
  *
  * Every section below is a FILL-IN. Replace each `/* __FILL__ *​/` marker and the
  * placeholder values with this spoke's real values; delete any section the spoke
@@ -31,57 +31,159 @@
      The hub ships a generic teal. Point the brand semantics at THIS spoke's own
      primitive ramp (the --__SCOPE__-* raw ramp in section 7). If you skip this,
      primary stays hub teal. */
-  --color-primary:         var(--__SCOPE__-brand-900);  /* __FILL__ the brand's strongest tint */
-  --color-primary-hover:   /* __FILL__ */ #00474f;
-  --color-primary-active:  /* __FILL__ */ #003940;
-  --color-primary-subtle:  var(--__SCOPE__-brand-50);   /* light wash behind selected/hover */
-  --color-primary-border:  var(--__SCOPE__-brand-200);  /* hairline on brand surfaces */
-  --color-secondary:       var(--__SCOPE__-brand-500);  /* __FILL__ the brand's mid tint */
-  --color-secondary-hover: var(--__SCOPE__-brand-800);
+  --color-background-brand:         var(--__SCOPE__-brand-9);   /* __FILL__ the brand's solid fill step */
+  --color-background-brand-hover:   /* __FILL__ */ #003940;
+  --color-background-brand-subtle:  var(--__SCOPE__-brand-1);   /* light wash behind selected/hover */
+  --color-border-brand:  var(--__SCOPE__-brand-6);   /* hairline on brand surfaces */
+  --color-background-brand-muted:           var(--__SCOPE__-brand-3);   /* __FILL__ the brand's UI-element background step */
+  --color-background-brand-muted-hover:     var(--__SCOPE__-brand-4);
 
-  /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke grays =====
-     Map the whole neutral chain onto this spoke's gray ramp (section 7). This is
+  /* ===== (1a) THE FOCUS RING — the brand step that can actually be SEEN =====
+     DO NOT DELETE THIS LINE, and do not assume the brand fill above will do.
+
+     The ring must clear 3:1 against every surface it lands on (SC 1.4.11). A brand's
+     strongest tint is engineered to carry text as a SOLID FILL, which is a different
+     and easier job than reading as a 2px HAIRLINE on a near-white page. Measured in
+     the hub: its own brand fill managed 2.66:1 on the sunken surface — a Level AA
+     failure that shipped for months precisely because this line did not exist and the
+     ring silently inherited the fill.
+
+     So point this at the FIRST step of your ramp that clears 3:1 on every surface.
+     Often that IS the fill step — both hub spokes land there and are untouched. When
+     it is not, go one step darker (light scheme) or lighter (dark), not to black: the
+     ring should stay recognisably yours.
+
+     `node scripts/make-theme.mjs` picks this for you and is the better route. If you
+     are filling this in by hand, verify BOTH schemes — the answer differs per scheme:
+       node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css
+       node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --scheme dark
+     Those four rows are `fail`-level. They block. */
+  --color-border-default-focus:     var(--__SCOPE__-brand-9);  /* __FILL__ the first brand step clearing 3:1 */
+
+  /* ===== (1a) THE FOCUS RING — the brand step that can actually be SEEN =====
+     DO NOT DELETE THIS LINE, and do not assume the brand fill above will do.
+
+     The ring must clear 3:1 against every surface it lands on (SC 1.4.11). A brand's
+     strongest tint is engineered to carry text as a SOLID FILL, which is a different
+     and easier job than reading as a 2px HAIRLINE on a near-white page. Measured in
+     the hub: its own brand fill managed 2.66:1 on the sunken surface — a Level AA
+     failure that shipped for months precisely because this line did not exist and the
+     ring silently inherited the fill.
+
+     So point this at the FIRST step of your ramp that clears 3:1 on every surface.
+     Often that IS the fill step — both hub spokes land there and are untouched. When
+     it is not, go one step darker (light scheme) or lighter (dark), not to black: the
+     ring should stay recognisably yours.
+
+     `node scripts/make-theme.mjs` picks this for you and is the better route. If you
+     are filling this in by hand, verify BOTH schemes — the answer differs per scheme:
+       node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css
+       node ../ecology/scripts/check-contrast.mjs src/styles/theme-__SPOKE_SLUG__.css --scheme dark
+     Those four rows are `fail`-level. They block. */
+  --color-border-default-focus:     var(--__SCOPE__-brand-900);  /* __FILL__ the first brand step clearing 3:1 */
+
+  /* ===== (1b) FOREGROUNDS ON THE FILLS ABOVE — the eight everyone forgets =====
+     THIS SECTION DID NOT EXIST UNTIL 2026-08-16, and its absence is the single most
+     reliable source of contrast failures in a spoke. All eight of these are `fail`-level
+     rows in check-contrast.mjs, and the template offered no slots for them — so every
+     hand-filled theme re-pointed a fill and left the hub's foreground behind, chosen
+     against the hub's grass ramp. That is exactly why `beacon` fails
+     content-on-brand-muted at 3.64:1.
+
+     There is no rule of thumb here, only a measurement: white on a step-9 fill works for
+     most hues and fails for the bright ones (yellow, amber, lime, mint, sky), where the
+     answer is step 12 of the same ramp. Pick one, then RUN THE AUDIT — do not eyeball it.
+
+     If this feels like eight decisions you should not have to make, that is the right
+     instinct: /guide/theme-maker (or make-theme.mjs) picks all eight against the fills
+     it generates, and proves them. */
+  --color-content-on-brand:           /* __FILL__ */ #ffffff;
+  --color-content-on-brand-muted: /* __FILL__ */ #1c2024;
+  --color-content-on-accent:          /* __FILL__ */ #ffffff;
+  --color-content-on-ai:              /* __FILL__ */ #ffffff;
+  --color-content-on-utility-info:    /* __FILL__ */ #ffffff;
+  --color-content-on-utility-success: /* __FILL__ */ #ffffff;
+  --color-content-on-utility-warning: /* __FILL__ dark text if your amber is light */ #ffffff;
+  --color-content-on-utility-danger:  /* __FILL__ */ #ffffff;
+
+  /* ===== (2) NEUTRAL CHAIN — re-point text/border/surface onto the spoke neutrals =====
+     Map the whole neutral chain onto this spoke's neutral ramp (section 7). This is
      what warms or cools the entire UI vs the hub default. */
-  --color-text-primary:   var(--__SCOPE__-gray-900);
-  --color-text-secondary: var(--__SCOPE__-gray-700);
-  --color-text-tertiary:  var(--__SCOPE__-gray-600);
-  --color-text-muted:     var(--__SCOPE__-gray-500);
-  --color-border:         var(--__SCOPE__-gray-200);
-  --color-border-light:   var(--__SCOPE__-gray-100);
-  --color-border-strong:  var(--__SCOPE__-gray-300);
-  --color-background:     var(--__SCOPE__-gray-50);
-  --color-surface-sunken: var(--__SCOPE__-gray-100);
+  --color-content-default:   var(--__SCOPE__-neutral-12);
+  --color-content-default-secondary:  var(--__SCOPE__-neutral-11);
+  --color-border-default:         var(--__SCOPE__-neutral-7);
+  --color-border-default-subtle:   var(--__SCOPE__-neutral-6);
+  --color-border-default-strong:  var(--__SCOPE__-neutral-8);
+  --color-background-default:     var(--__SCOPE__-neutral-1);
+  --color-background-elevation-sunken: var(--__SCOPE__-neutral-3);
+  /* The surface of an editable field. THE HUB DEFAULT IS `transparent` — a field
+     is the colour of whatever contains it, so it is correct on a card, in a
+     dialog, on a sunken well and on a tinted panel without anyone choosing a
+     value. Every field state is carried by the BORDER, not a fill.
+
+     Uncomment ONLY for a filled/Material house style. Three fixed greys were
+     tried in the hub before transparent and each was right on the canvas and
+     INVERTED on a sunken surface, where the field rendered lighter than its own
+     container. If you set this, check your fields on every surface they land on,
+     not just the page. */
+  /* --color-background-field: var(--__SCOPE__-neutral-3); */
 
   /* ===== (3) FONTS — point the type tokens at the faces loaded in __FONT_LINKS__ =====
      The <link> tags live in BaseLayout/DocsLayout. Set the families here so
      components pick them up. Leave a token out to keep the hub default. */
-  --font-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
-  --font-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
+  --typography-font-family-sans: /* __FILL__ */ 'DM Sans', system-ui, sans-serif;
+  --typography-font-family-mono: /* __FILL__ */ 'Roboto Mono', ui-monospace, monospace;
   /* Optional decorative/display voice — components reach for these explicitly. */
-  --font-display:    /* __FILL__ (or remove to inherit --font-sans) */ var(--font-sans);
+  --typography-font-family-display:    /* __FILL__ (or remove to inherit --typography-font-family-sans) */ var(--typography-font-family-sans);
   --font-decorative: /* __FILL__ (optional serif) */ 'Besley', serif;
 
   /* ===== (4) FEEDBACK + AI — match this spoke's success/warning/info/ai =====
      Re-point onto hub primitives where the spoke's ramp matches, or to a literal
-     where it's standalone. */
-  --color-success:  var(--color-green-700);  /* __FILL__ */
-  --color-warning:  var(--color-orange-500); /* __FILL__ */
-  --color-info:     /* __FILL__ */ #228be6;
-  --color-ai:       var(--color-blue-500);   /* __FILL__ */
-  --color-ai-hover: var(--color-blue-700);   /* __FILL__ */
+     where it's standalone.
 
-  /* ===== (5) FORM SIZING + RADIUS — match this spoke's control heights =====
-     The hub defaults to xs 28 / sm 32 / md 40 / lg 48 and md/lg radius 8px.
-     Re-point if this spoke runs more compact / flatter. */
-  --form-height-xs: /* __FILL__ */ 24px;
-  --form-height-sm: /* __FILL__ */ 28px;
-  --form-height-md: /* __FILL__ */ 36px;
-  --form-height-lg: /* __FILL__ */ 44px;
+     RENAMED 2026-08-15: these were `--color-background-{success,warning,info}`
+     before `utility` became their intention. If your spoke was scaffolded from
+     an older template it still DECLARES the old names, and a declaration gets
+     no alias rescue — the hub can only redirect a `var()` read. Those three
+     lines are inert until you run /update-tokens, and inert here means your
+     brand's success green silently reverts to Ecology's. */
+  --color-background-utility-success:  var(--color-green-9);   /* __FILL__ */
+  --color-background-utility-warning:  var(--color-orange-9);  /* __FILL__ */
+  --color-background-utility-info:     /* __FILL__ */ #228be6;
+  --color-background-ai:       var(--color-blue-9);    /* __FILL__ */
+  --color-background-ai-hover: var(--color-blue-10);   /* __FILL__ */
 
-  --form-radius-xs: /* __FILL__ */ var(--radius-100);
-  --form-radius-sm: /* __FILL__ */ var(--radius-100);
-  --form-radius-md: /* __FILL__ */ var(--radius-100);
-  --form-radius-lg: /* __FILL__ */ var(--radius-100);
+  /* ===== (5) SHAPE — match this spoke's corner language =====
+     THERE IS NO DENSITY LEVER HERE ANY MORE, and this section used to promise one.
+     Read this before you go looking for it.
+
+     `--form-padding-{y,x}-*` lived here until 2026-08-14. It was a flat passthrough
+     to --spacing-200/250/300/400, identical on both axes, and no spoke ever
+     re-pointed it — while 31 of 66 components already walked --spacing-* directly
+     for their own padding. The eleven inputs and buttons now do the same, so:
+
+       - Re-declaring --form-padding-y-md here does NOTHING. Nothing reads it.
+       - Re-pointing --spacing-* itself moves every gap, grid, stack and inset in
+         the kit. It is a CORE set (see SPEC.md) — universal, never themed. Don't.
+
+     If this spoke genuinely needs tighter inputs, that is a `/request-lego` against
+     the hub. A hook is earned by a spoke asking for it, not by a slot existing.
+
+     `--control-height-*` was deleted the same day for a different reason: a px
+     height could not grow with rem text, so it clipped when a user raised their
+     browser font size or a translation wrapped. If you are porting an older spoke,
+     do NOT translate those values anywhere — there is no successor token.
+
+     Never re-point --radius-100/200/… either: those are primitives and moving one
+     moves everything downstream. Move the ROLE. */
+  --radius-xs:   /* __FILL__ swatches, inline markers */                var(--radius-050);
+  --radius-sm:   /* __FILL__ inputs/buttons at xs+sm, badges, kbd */     var(--radius-100);
+  --radius-md:   /* __FILL__ the default corner — the one to move first */ var(--radius-200);
+  --radius-lg:   /* __FILL__ dialogs, command palette */                 var(--radius-400);
+
+  /* Tier 3 is for a component that must diverge from the roles above — e.g.
+     inputs flatter than everything else. Delete if this spoke doesn't need it. */
+  /* --button-radius-md: var(--radius-pill); *//* buttons only, not fields */
 
   /* ===== (6) --button-on-warning — text color on a filled warning button =====
      Set to #fff if this spoke's warning fill is dark enough for white text;
@@ -93,29 +195,57 @@
      read these directly. Define the brand ramp + the neutral ramp; add others as
      the spoke needs. Replace EVERY value below with this spoke's real palette. */
 
-  /* Neutral / gray ramp — this spoke's authoritative neutrals. */
-  --__SCOPE__-gray-0:    /* __FILL__ */ #ffffff;
-  --__SCOPE__-gray-50:   /* __FILL__ */ #fafafa;
-  --__SCOPE__-gray-100:  /* __FILL__ */ #efefef;
-  --__SCOPE__-gray-200:  /* __FILL__ */ #dcdcdc;
-  --__SCOPE__-gray-300:  /* __FILL__ */ #bdbdbd;
-  --__SCOPE__-gray-400:  /* __FILL__ */ #989898;
-  --__SCOPE__-gray-500:  /* __FILL__ */ #7c7c7c;
-  --__SCOPE__-gray-600:  /* __FILL__ */ #656565;
-  --__SCOPE__-gray-700:  /* __FILL__ */ #525252;
-  --__SCOPE__-gray-800:  /* __FILL__ */ #464646;
-  --__SCOPE__-gray-900:  /* __FILL__ */ #3d3d3d;
-  --__SCOPE__-gray-950:  /* __FILL__ */ #292929;
-  --__SCOPE__-gray-1000: /* __FILL__ */ #000000;
+  /* Neutral ramp — this spoke's authoritative neutrals.
 
-  /* Brand ramp — this spoke's signature color (feeds --color-primary*/secondary*). */
-  --__SCOPE__-brand-50:  /* __FILL__ */ #effefb;
-  --__SCOPE__-brand-100: /* __FILL__ */ #eef5f4;
-  --__SCOPE__-brand-200: /* __FILL__ */ #b9d6d2;
-  --__SCOPE__-brand-500: /* __FILL__ */ #00918b;
-  --__SCOPE__-brand-600: /* __FILL__ */ #0e807b;
-  --__SCOPE__-brand-800: /* __FILL__ */ #0a6562;
-  --__SCOPE__-brand-900: /* __FILL__ */ #43608a;
+     STEPS ARE 1-12, MATCHING RADIX AND THE HUB'S PRIMITIVES. This was a
+     50/100/.../1000 web-palette ramp until 2026-08-18, which meant the hand-fill
+     path and `make-theme.mjs` disagreed on the step vocabulary as well as the
+     name: a spoke read its own -500 next to the hub's -9 and had two words for
+     one idea. brand-extraction.md already warned those rungs "resolve to nothing"
+     against hub primitives.
+
+     IT IS `neutral`, NOT `gray`. Six neutral temperatures ship at tier 1 and only
+     one of them is actually gray — see /guide/theme-maker. The name says the role
+     so it stays true when the spoke picks slate or sand.
+
+     The placeholders below are Radix gray, so a spoke that fills nothing still
+     gets a coherent ramp rather than an invented one. The step meanings:
+     1 canvas · 2 subtle bg · 3 UI element bg · 4 hovered · 5 active ·
+     6 subtle border · 7 border · 8 strong border · 9 solid fill ·
+     10 hovered fill · 11 secondary text · 12 body text. */
+  --__SCOPE__-neutral-1:  /* __FILL__ */ #fcfcfc;
+  --__SCOPE__-neutral-2:  /* __FILL__ */ #f9f9f9;
+  --__SCOPE__-neutral-3:  /* __FILL__ */ #f0f0f0;
+  --__SCOPE__-neutral-4:  /* __FILL__ */ #e8e8e8;
+  --__SCOPE__-neutral-5:  /* __FILL__ */ #e0e0e0;
+  --__SCOPE__-neutral-6:  /* __FILL__ */ #d9d9d9;
+  --__SCOPE__-neutral-7:  /* __FILL__ */ #cecece;
+  --__SCOPE__-neutral-8:  /* __FILL__ */ #bbbbbb;
+  --__SCOPE__-neutral-9:  /* __FILL__ */ #8d8d8d;
+  --__SCOPE__-neutral-10: /* __FILL__ */ #838383;
+  --__SCOPE__-neutral-11: /* __FILL__ */ #646464;
+  --__SCOPE__-neutral-12: /* __FILL__ */ #202020;
+
+  /* Brand ramp — this spoke's signature color. Feeds the brand semantics in section 1.
+     (The comment on this line used to contain a literal end-comment sequence, which
+     closed it early and silently killed the declaration below.) */
+     STEPS ARE 1-12, for the same reason the neutral ramp above is: this ramp had
+     SEVEN rungs on the web-palette scale (50/100/200/500/600/800/900), so half the
+     steps the semantics wanted did not exist and the other half were named
+     something the hub has no word for. Your brand hex goes on step 9 — that is the
+     solid-fill step, the one a client points at and calls "our blue". */
+  --__SCOPE__-brand-1:  /* __FILL__ */ #fcfdfe;
+  --__SCOPE__-brand-2:  /* __FILL__ */ #f5f8fa;
+  --__SCOPE__-brand-3:  /* __FILL__ */ #e8edf1;
+  --__SCOPE__-brand-4:  /* __FILL__ */ #dae3ea;
+  --__SCOPE__-brand-5:  /* __FILL__ */ #c8d4df;
+  --__SCOPE__-brand-6:  /* __FILL__ */ #b1c0cf;
+  --__SCOPE__-brand-7:  /* __FILL__ */ #95a8bb;
+  --__SCOPE__-brand-8:  /* __FILL__ */ #6d869f;
+  --__SCOPE__-brand-9:  /* __FILL__ */ #43608a;
+  --__SCOPE__-brand-10: /* __FILL__ */ #415c84;
+  --__SCOPE__-brand-11: /* __FILL__ */ #3c5376;
+  --__SCOPE__-brand-12: /* __FILL__ */ #2a3448;
 
   /* Add any further spoke-only tokens below (status palettes, progress pairs,
      citation surfaces, etc.) — see theme-beacon.css for examples. */

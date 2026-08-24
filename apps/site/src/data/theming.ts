@@ -3,7 +3,7 @@
 // from these). Rendered as the "Theming surface" section on every component
 // page, so "what can my spoke re-point?" is answered by the source itself
 // and can never drift.
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,12 +20,44 @@ export interface LineageLink {
 export interface ThemingHook {
   token: string;
   /**
-   * component/semantic/primitive = declared in the token files.
-   * ad-hoc = a hook the component offers via its inline fallback only —
-   * legitimate and settable, just not centrally declared.
+   * component/semantic/primitive = declared in the token files — plus the
+   * SPOKE_DECLARED names below, which are component tokens the hub deliberately
+   * leaves for the project to declare.
+   * ad-hoc = read with an inline fallback but declared nowhere. Settable, and
+   * NOT a fourth tier — it is a tier-3 token missing its declaration, and wants
+   * either a line in component-tokens.css or a fold onto the role it aliases.
+   * Held at zero since 2026-08-16; a row here is a regression, not an inventory.
    * undefined = referenced with NO fallback and declared nowhere — a bug.
    */
   tier: 'component' | 'semantic' | 'primitive' | 'ad-hoc' | 'undefined';
+  /**
+   * BLAST RADIUS — the question `tier` can't answer: if I re-point this, what
+   * else moves? Tier says which file declares a token; scope says how many
+   * components read it. They are NOT the same axis, and conflating them
+   * misleads: nearly every tier-3 token `esa-text-field` reads is a `--form-*`
+   * shared by a dozen other inputs and buttons, so a "component tier" badge
+   * there reads as "your private hook" when it is nothing of the kind.
+   *
+   * The surface hooks left that family on 2026-08-14 — `--form-bg` became the
+   * tier-2 `--color-background-field` — so those rows now correctly show
+   * `system` instead. The badge was never wrong about them; the tier was.
+   *
+   * exclusive = this is the only component that reads it — turn it freely.
+   * shared    = a tier-3 token a FAMILY of components reads (see `alsoReadBy`).
+   * system    = tier-2/tier-1; re-pointing it moves the whole system.
+   */
+  scope: 'exclusive' | 'shared' | 'system';
+  /** Other components reading this token — populated only when scope=shared. */
+  alsoReadBy: string[];
+  /** Group surface a shared token belongs to, e.g. `--form-border-color` → `forms`. */
+  family: string | null;
+  /**
+   * The component that OWNS a shared token, when another one declared it —
+   * `esa-loading-overlay` reading `--loading-spinner-color`. Distinct from
+   * `family`: this is one component borrowing another's hook, which is worth
+   * seeing, where a family surface is shared by design.
+   */
+  ownedBy: string | null;
   fallback: string | null;
   /**
    * The token's real resolution chain, walked from its DEFINITION (not its
@@ -42,19 +74,106 @@ const componentCss = readFileSync(path.join(ROOT, 'packages', 'tokens', 'src', '
 const defined = (css: string) => new Set([...css.matchAll(/(--[a-zA-Z0-9-]+)\s*:/g)].map((m) => m[1]));
 const componentTier = defined(componentCss);
 const baseTier = defined(tokensCss);
-// Primitives follow the ramp naming (e.g. --color-teal-9, --spacing-400, --radius-200).
-const isPrimitive = (t: string) =>
-  /^--(color-(gray|teal|blue|green|red|yellow|orange|copper|gold|status)-|spacing-\d|radius-|font-size-|font-weight-|shadow-|z-)/.test(t);
+
+// Which tier declared a token is decided by WHICH DIRECTORY its JSON lives in —
+// never by a name pattern. A regex on the name cannot do this job: nothing in
+// `--radius-200` (primitive) vs `--radius-md` (semantic) marks the tier,
+// so the old pattern read every `--radius-*` as a primitive and mislabelled the
+// semantic shape roles as untouchable on every component doc page. Reading the
+// source directories is the same source of truth the token graph uses.
+const flattenDtcg = (obj: unknown, trail: string[] = [], out = new Set<string>()) => {
+  if (!obj || typeof obj !== 'object') return out;
+  const node = obj as Record<string, unknown>;
+  if ('$value' in node) {
+    out.add(`--${trail.join('-')}`);
+    return out;
+  }
+  for (const [key, child] of Object.entries(node)) {
+    if (key.startsWith('$')) continue;
+    flattenDtcg(child, [...trail, key], out);
+  }
+  return out;
+};
+
+const readTier = (dir: string): Set<string> => {
+  const out = new Set<string>();
+  const full = path.join(ROOT, 'packages', 'tokens', 'tokens', dir);
+  if (!existsSync(full)) return out;
+  for (const file of readdirSync(full)) {
+    if (!file.endsWith('.json')) continue;
+    for (const name of flattenDtcg(JSON.parse(readFileSync(path.join(full, file), 'utf8')))) {
+      out.add(name);
+    }
+  }
+  return out;
+};
+
+const primitiveSrc = readTier('primitive');
+const isPrimitive = (t: string) => primitiveSrc.has(t);
+
+// --- Declared ownership ----------------------------------------------------
+// WHICH COMPONENT IS A TIER-3 TOKEN FOR? Not inferable from the component's
+// source — a source scan only sees what a component READS, and reading
+// `--color-content-default` is tier-2 working correctly, not a leak. Ownership
+// is AUTHORED, in component-tokens.css: the HOOKIFY block groups declarations
+// under `/* esa-badge */` comments, and the older top block groups them under
+// `/* ===== FORMS ===== */` family headers. We read those markers rather than
+// pattern-matching names, for the same reason the tier split reads directories.
+export interface TokenOwner {
+  /** `esa-badge`, or a family label like `forms`. */
+  label: string;
+  kind: 'component' | 'family';
+}
+const OWNER_COMMENT = /^\s*\/\*\s*(esa-[a-z0-9-]+)\s*\*\/\s*$/;
+const SECTION_HEADER = /^\s*\/\*\s*=+\s*(.+?)\s*=+/;
+const DECLARATION = /^\s*(--[a-zA-Z0-9-]+)\s*:/;
+
+const owners = new Map<string, TokenOwner>();
+{
+  let owner: TokenOwner | null = null;
+  for (const line of componentCss.split('\n')) {
+    const byComponent = line.match(OWNER_COMMENT);
+    if (byComponent) { owner = { label: byComponent[1], kind: 'component' }; continue; }
+    const bySection = line.match(SECTION_HEADER);
+    if (bySection) {
+      // "NAVIGATION — SIDEBAR", "DATA GRID (STAGED)" → a readable family label.
+      const label = bySection[1].replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
+      owner = { label, kind: 'family' };
+      continue;
+    }
+    const decl = line.match(DECLARATION);
+    if (decl && owner && !owners.has(decl[1])) owners.set(decl[1], owner);
+  }
+}
+
+// --- Component tokens the SPOKE declares -----------------------------------
+// A tier-3 name the hub deliberately does NOT declare, because the values are
+// the project's vocabulary rather than ours. `esa-pill`'s `data-category` ramp
+// is the only case today: the mechanism is the hub's, the twelve steps are the
+// spoke's.
+//
+// It is a component token by every test SPEC.md applies — a component-scoped
+// name occupying the component-theming slot, read with the default pill's own
+// chain as its fallback. The one thing it must never have is a hub
+// DECLARATION: a declared value wins over the inline fallback, so every
+// categorised pill in every project would render the hub's colour and the
+// "unknown category falls back to an ordinary pill" behaviour would be gone.
+//
+// So it is not `ad-hoc`. That tier means an undeclared read nobody decided on —
+// held at zero as a ratchet (see component-promises.ts `adHoc`), wanting either
+// a declaration or a fold. Naming the ramp here IS the decision, and it keeps
+// the ratchet live for every name that hasn't had one.
+const SPOKE_DECLARED = /^--category-(?:[1-9]|1[0-2])$/;
 
 const tier = (t: string, fallback: string | null): ThemingHook['tier'] =>
-  componentTier.has(t) ? 'component'
+  componentTier.has(t) || SPOKE_DECLARED.test(t) ? 'component'
   : baseTier.has(t) ? (isPrimitive(t) ? 'primitive' : 'semantic')
   : fallback ? 'ad-hoc' : 'undefined';
 
 // --- Lineage resolution ----------------------------------------------------
 // Map every declared token → its right-hand value, across the component partial
-// (--dialog-bg: var(--color-surface-elevated, #fff)) and the compiled base
-// (--color-surface-elevated: var(--color-gray-0); --color-gray-0: #ffffff).
+// (--dialog-bg: var(--color-background-elevation-floating, #fff)) and the compiled base
+// (--color-background-elevation-floating: var(--color-gray-1); --color-gray-1: #fcfcfc).
 // With outputReferences on, the base CSS preserves the var() chain, so we can
 // walk it to the raw value.
 const parseDefs = (css: string): Map<string, string> => {
@@ -94,7 +213,24 @@ const lineageOf = (start: string | null): LineageLink[] => {
   return chain;
 };
 
+/**
+ * The lineage of any declared token, for callers outside this module.
+ *
+ * Exported so the component doc page can resolve a COMPOSITE's property tokens
+ * with the same walker the token table uses. A composite is a class, so none of
+ * its tokens appear in `themingSurface` — the page would otherwise have needed a
+ * second resolver, and two walkers over the same `defs` map is how the two
+ * columns start disagreeing about what a token computes to.
+ */
+export const lineageFor = (token: string): LineageLink[] =>
+  defs.has(token) ? lineageOf(defs.get(token)!) : [];
+
 export const themingSurface: Record<string, ThemingHook[]> = {};
+
+// PASS 1 — scan every component for the tokens it reads. Kept separate from
+// hook construction because `scope` needs the FULL reverse index (who else
+// reads this token?), which isn't known until every file has been scanned.
+const readsBySlug = new Map<string, Map<string, string | null>>();
 
 for (const file of readdirSync(COMPONENTS)) {
   if (!/\.(astro|ts)$/.test(file)) continue;
@@ -121,18 +257,62 @@ for (const file of readdirSync(COMPONENTS)) {
   }
   if (!hooks.size) continue;
   // esa-foo.astro + esa-foo.ts both contribute to one slug — merge.
-  for (const prior of themingSurface[slug] ?? []) {
-    if (!hooks.has(prior.token)) hooks.set(prior.token, prior.fallback);
+  const prior = readsBySlug.get(slug);
+  if (prior) for (const [token, fallback] of prior) {
+    if (!hooks.has(token)) hooks.set(token, fallback);
   }
+  readsBySlug.set(slug, hooks);
+}
+
+// PASS 2 — reverse index: token → the components that read it. Only `esa-*`
+// slugs count as readers; internal helpers (`_inject-styles`, `icon-registry`)
+// aren't components a spoke themes, so they must not inflate a blast radius.
+const readersOf = new Map<string, Set<string>>();
+for (const [slug, hooks] of readsBySlug) {
+  if (!slug.startsWith('esa-')) continue;
+  for (const token of hooks.keys()) {
+    let set = readersOf.get(token);
+    if (!set) readersOf.set(token, (set = new Set()));
+    set.add(slug);
+  }
+}
+
+// PASS 3 — build each component's surface, now that scope is knowable.
+for (const [slug, hooks] of readsBySlug) {
   themingSurface[slug] = [...hooks.entries()]
-    .map(([token, fallback]) => ({
-      token,
-      tier: tier(token, fallback),
-      fallback,
-      // Resolve from the token's own definition; ad-hoc tokens (defined nowhere)
-      // fall back to walking their inline fallback literal.
-      lineage: defs.has(token) ? lineageOf(defs.get(token)!) : lineageOf(fallback),
-    }))
+    .map(([token, fallback]) => {
+      const t = tier(token, fallback);
+      const owner = owners.get(token) ?? null;
+      const readers = [...(readersOf.get(token) ?? [])].filter((s) => s !== slug).sort();
+      // A tier-2/tier-1 token is system-wide by definition. For tier-3 and
+      // ad-hoc hooks the test is empirical, NOT the declaration: "wired to this
+      // component" has to mean nothing else reads it, or the promise is false.
+      // Declaration alone would lie in both directions — `--sidenav-*` is filed
+      // under a `/* ===== NAVIGATION — SIDEBAR ===== */` family header yet only
+      // esa-sidebar-nav reads it (exclusive in practice), while a token filed
+      // under one component but read by a sibling is shared no matter whose
+      // comment group it sits in. The declared owner survives as the family
+      // LABEL on shared rows — provenance, not the classifier.
+      const scope: ThemingHook['scope'] =
+        t === 'semantic' || t === 'primitive' ? 'system'
+        : readers.length === 0 ? 'exclusive'
+        : 'shared';
+      return {
+        token,
+        tier: t,
+        scope,
+        alsoReadBy: scope === 'shared' ? readers : [],
+        family: scope === 'shared' && owner?.kind === 'family' ? owner.label : null,
+        ownedBy:
+          scope === 'shared' && owner?.kind === 'component' && owner.label !== slug
+            ? owner.label
+            : null,
+        fallback,
+        // Resolve from the token's own definition; ad-hoc tokens (defined nowhere)
+        // fall back to walking their inline fallback literal.
+        lineage: defs.has(token) ? lineageOf(defs.get(token)!) : lineageOf(fallback),
+      };
+    })
     .sort((a, b) => {
       const order = { component: 0, 'ad-hoc': 1, semantic: 2, primitive: 3, undefined: 4 };
       return order[a.tier] - order[b.tier] || a.token.localeCompare(b.token);

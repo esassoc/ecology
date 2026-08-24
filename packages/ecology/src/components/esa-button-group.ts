@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 /**
  * esa-button-group — groups slotted <esa-button> elements with connected borders.
@@ -8,22 +9,28 @@ import { LitElement, html, css } from 'lit';
  *
  * Children are presentational esa-button.astro (plain <button>) projected via a
  * slot; in 'single' mode this element manages aria-pressed/selected on them.
+ *
+ * NO `size` PROP — deliberately. Size belongs on the child buttons, next to
+ * their `variant`, because esa-button.astro bakes its size class at build time:
+ * a group-level size could only be honoured by re-implementing the whole scale
+ * in `::slotted()` rules with `!important`, duplicating esa-button's own sizing
+ * in a second place that would drift. This element previously DECLARED `size`
+ * and never read it — reflected to the DOM, documented, and inert. If a group
+ * really needs to size as a unit, propagate to the children rather than
+ * restyling them from out here.
  */
 export class EsaButtonGroup extends LitElement {
   static properties = {
     selectionMode: { type: String, attribute: 'selection-mode' },
-    size: { type: String, reflect: true },
     value: { type: String },
   };
 
   declare selectionMode: 'none' | 'single';
-  declare size: 'xs' | 'sm' | 'md' | 'lg';
   declare value: string;
 
   constructor() {
     super();
     this.selectionMode = 'none';
-    this.size = 'md';
     this.value = '';
   }
 
@@ -39,14 +46,34 @@ export class EsaButtonGroup extends LitElement {
     );
   };
 
-  /** Reflect the current value onto slotted children for styling/a11y. */
+  /**
+   * Reflect the current value onto slotted children for styling/a11y.
+   *
+   * Two things this used to get wrong, both measured 2026-08-16:
+   *
+   * 1. It wrote `aria-pressed` on EVERY child in every mode. In
+   *    `selectionMode="none"` — plain visual grouping — that turned each plain
+   *    button into "toggle button, not pressed". A press state is a lie when
+   *    nothing can be pressed, so `none` now REMOVES the attribute.
+   * 2. It wrote it on the slotted child itself, which for `esa-button.astro` is
+   *    the wrapper `<span class="esa-button">`. `aria-pressed` is not allowed on
+   *    a generic span (axe `aria-allowed-attr`), and the thing that actually
+   *    takes the press is the `<button>` inside. Aim at that, and only if it
+   *    really is a button — `aria-pressed` is invalid on a link too.
+   */
   private syncSelected(): void {
     const children = Array.from(this.children) as HTMLElement[];
     for (const child of children) {
       const v = child.getAttribute('data-value') ?? child.textContent?.trim() ?? '';
       const selected = this.selectionMode === 'single' && v === this.value;
       child.toggleAttribute('data-selected', selected);
-      child.setAttribute('aria-pressed', String(selected));
+
+      const target =
+        child.querySelector<HTMLElement>('button, [role="button"]') ??
+        (child.matches('button, [role="button"]') ? child : null);
+      if (!target) continue;
+      if (this.selectionMode === 'single') target.setAttribute('aria-pressed', String(selected));
+      else target.removeAttribute('aria-pressed');
     }
   }
 
@@ -64,18 +91,25 @@ export class EsaButtonGroup extends LitElement {
   }
 
   render() {
-    return html`<slot @slotchange=${() => this.syncSelected()}></slot>`;
+    // The slot's only wrapper: display:contents, so it names a type role for
+    // slotted content without adding a box. Inheritance follows the flattened
+    // tree, so buttons projected in read label-md unless they set their own.
+    return html`<div class="esa-button-group__slot typography-label-md">
+      <slot @slotchange=${() => this.syncSelected()}></slot>
+    </div>`;
   }
 
-  static styles = css`
+  static styles = [typography, css`
     :host {
-      --_group-radius: var(--form-radius-md, var(--radius-200, 8px));
-      --_group-border: var(--color-border, #e5e5e5);
+      --_group-radius: var(--button-radius-md, var(--radius-md, 0.5rem));
+      --_group-border: var(--color-border-default, #cecece);
       display: inline-flex;
       align-items: stretch;
       border-radius: var(--_group-radius);
       overflow: hidden;
     }
+    /* No box of its own — the buttons stay direct flex items of the host. */
+    .esa-button-group__slot { display: contents; }
     /* Connected borders: square the internal corners, divider between buttons. */
     ::slotted(esa-button),
     ::slotted(button) {
@@ -94,7 +128,7 @@ export class EsaButtonGroup extends LitElement {
     ::slotted(button:only-child) {
       border-radius: var(--_group-radius) !important;
     }
-  `;
+  `];
 }
 
 if (!customElements.get('esa-button-group')) {

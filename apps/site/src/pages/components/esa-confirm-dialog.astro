@@ -1,19 +1,23 @@
 ---
 import ComponentDoc from '../../layouts/ComponentDoc.astro';
 import Section from '@esa/docs/Section.astro';
-import Preview from '@esa/docs/Preview.astro';
+import EsaButton from '@esa/ecology/esa-button.astro';
+import Preview from '../../components/Preview.astro';
 import Api from '@esa/docs/Api.astro';
+import ApiTable from '@esa/docs/ApiTable.astro';
 import PropsTable from '@esa/docs/PropsTable.astro';
 
-const props = [
-  { name: 'open', type: 'boolean', default: 'false', description: 'Reflected attribute that drives visibility. Open imperatively via show().' },
-  { name: 'heading', type: 'string', default: "''", description: 'Title of the confirmation.' },
-  { name: 'message', type: 'string', default: "''", description: 'Supporting body text.' },
-  { name: 'variant', type: "'default' | 'warning' | 'danger'", default: "'default'", description: 'Icon and confirm-button color theme.' },
-  { name: 'confirm-label', type: 'string', default: "'Confirm'", description: 'Label of the confirm button.' },
-  { name: 'cancel-label', type: 'string', default: "'Cancel'", description: 'Label of the cancel button.' },
-  { name: 'show-icon', type: 'boolean', default: 'true', description: 'Renders the variant icon above the heading.' },
-];
+// Prose only — names, types and defaults are generated from the component
+// source by src/data/component-api.ts, so this table cannot drift.
+const describe = {
+  open: "Reflected attribute that drives visibility. Open imperatively via show().",
+  heading: "Title of the confirmation.",
+  message: "Supporting body text.",
+  variant: "Icon and confirm-button color theme.",
+  "confirm-label": "Label of the confirm button.",
+  "cancel-label": "Label of the cancel button.",
+  "show-icon": "Renders the variant icon above the heading.",
+};
 
 const methods = [
   { name: 'show()', type: 'method', description: 'Opens the dialog and focuses the confirm button.' },
@@ -39,7 +43,7 @@ const events = [
   message="Your changes will be applied immediately."
   confirm-label="Save"
 ></esa-confirm-dialog>`}>
-      <button class="trigger" data-target="cd-default">Save changes</button>
+      <EsaButton variant="secondary" data-target="cd-default">Save changes</EsaButton>
       <esa-confirm-dialog
         id="cd-default"
         heading="Save changes?"
@@ -55,8 +59,8 @@ const events = [
   message="You have unsaved changes that will be lost." confirm-label="Discard"></esa-confirm-dialog>
 <esa-confirm-dialog variant="danger" heading="Delete project?"
   message="This action cannot be undone." confirm-label="Delete"></esa-confirm-dialog>`}>
-      <button class="trigger" data-target="cd-warning">Warning</button>
-      <button class="trigger" data-target="cd-danger">Danger</button>
+      <EsaButton variant="secondary" data-target="cd-warning">Warning</EsaButton>
+      <EsaButton variant="secondary" data-target="cd-danger">Danger</EsaButton>
       <p id="result" class="result"></p>
 
       <esa-confirm-dialog
@@ -77,7 +81,7 @@ const events = [
   </Section>
 
   <Section id="api" title="API">
-    <Api props={props} />
+    <ApiTable slug="esa-confirm-dialog" describe={describe} />
     <h3>Methods</h3>
     <PropsTable rows={methods} />
     <Api events={events} />
@@ -96,7 +100,7 @@ const events = [
 <script>
   import '@esa/ecology/esa-confirm-dialog';
   const result = document.getElementById('result')!;
-  document.querySelectorAll('.trigger').forEach((btn) =>
+  document.querySelectorAll('[data-target]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const el = document.getElementById((btn as HTMLElement).dataset.target!) as any;
       el?.show();
@@ -111,15 +115,5 @@ const events = [
 </script>
 
 <style>
-  .trigger {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-200, 0.5rem);
-    border: 1px solid var(--color-border-strong, #d4d4d4);
-    background: var(--color-surface, #fff);
-    color: var(--color-text-primary, #171717);
-    font-family: inherit;
-    font-size: var(--type-size-200, 0.9375rem);
-    cursor: pointer;
-  }
-  .result { color: var(--color-text-muted, #737373); min-height: 1.5em; width: 100%; }
+  .result { color: var(--color-content-default-secondary, #646464); min-height: 1.5em; width: 100%; }
 </style>

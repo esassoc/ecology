@@ -135,7 +135,7 @@ ${bodyOut}
   let tokenMd = `# Token contract — ${name}\n\n`;
   tokenMd += `The ${tokens.contract.length} design tokens this page actually uses, resolved to their `;
   tokenMd += `final values for the \`${capture.themeAttr || 'default'}\` theme. Component CSS still `;
-  tokenMd += `references them by name (\`var(--color-primary)\`), so the names carry the intent; the `;
+  tokenMd += `references them by name (\`var(--color-background-brand)\`), so the names carry the intent; the `;
   tokenMd += `values below are what they currently resolve to.\n\n`;
   for (const tier of TIER_ORDER) {
     const rows = byTier(tier);

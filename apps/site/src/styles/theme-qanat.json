@@ -1,0 +1,15 @@
+{
+  "slug": "qanat",
+  "scope": "qanat",
+  "seeds": {
+    "brand": "#1769aa",
+    "neutral": "cool",
+    "corners": "round",
+    "accent": "derive",
+    "ai": "derive",
+    "info": "derive",
+    "success": "derive",
+    "warning": "derive",
+    "danger": "derive"
+  }
+}

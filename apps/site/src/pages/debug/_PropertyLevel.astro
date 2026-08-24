@@ -1,0 +1,61 @@
+---
+/**
+ * The PROPERTY level of the tier-2 tree, for every category except colour.
+ *
+ * Colour has its own renderer (`propertyGroups`) because a colour role needs a
+ * third level — property, then variant family — and carries the declared/inferred
+ * worklist per token. Everything else stops at the property, so it shares this.
+ *
+ * A category with ONE property renders flat, with the property named in a line
+ * above the table rather than as a collapsed node holding everything. A single
+ * child that must be opened to reach the only content is a click that answers no
+ * question — but the property still has to be STATED, because "this category has
+ * exactly one property" is the finding for most of them.
+ *
+ * Underscore-prefixed so Astro never routes it. No <style> — the debug page owns
+ * all styling, namespaced under .tokens-debug, since its styles are is:inline
+ * and therefore unscoped.
+ */
+import TokenGroupTable from './_TokenGroup.astro';
+import type { CategoryProperty } from '../../data/tier2-naming';
+
+interface Props {
+  props: CategoryProperty[];
+}
+const { props: properties } = Astro.props;
+const single = properties.length === 1 ? properties[0] : null;
+---
+
+{properties.length === 0 ? (
+  <p class="cat-note dim">No tokens.</p>
+) : single ? (
+  <>
+    <p class="cat-note">
+      One property: <code class="vocab">{single.label}</code>{' '}
+      {single.declared ? (
+        <>&mdash; spelled in the name, {single.reason}.</>
+      ) : (
+        <><span class="inf">not in the name</span> &mdash; {single.reason}.</>
+      )}
+    </p>
+    <TokenGroupTable group={{ label: single.label, tokens: single.tokens }} bare />
+  </>
+) : (
+  properties.map((p) => (
+    <details class="tok-category prop" data-group open>
+      <summary>
+        <span class="cat-label">{p.label}</span>
+        <span class="summary-right">
+          {!p.declared && <span class="inf-flag">not in the name</span>}
+          <span class="group-count">{p.tokens.length}</span>
+        </span>
+      </summary>
+      <p class="cat-note">
+        {p.declared ? 'Spelled in the name' : 'Read off the family, not the name'} &mdash; {p.reason}.
+      </p>
+      <div class="cat-body">
+        <TokenGroupTable group={{ label: p.label, tokens: p.tokens }} bare />
+      </div>
+    </details>
+  ))
+)}

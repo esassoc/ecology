@@ -1,6 +1,6 @@
 ---
 name: design-principles
-description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), verbal restraint (no text ABOUT the page — editorial captions, provenance strings, table-restating chips; corpus in the global design-restraint skill), neutral house chrome (value-layered off-white surfaces, never a brand fill), type-roles-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
+description: The canonical aesthetic and interaction rules for ESA Ecology prototypes — load before styling, reviewing, or building ANY UI in a hub or spoke repo, and during /design-qa and /ship reviews. Covers banned visual patterns (colored left-border status indicators, ornamental micro-labels, sub-16px body text), verbal restraint (no text ABOUT the page — editorial captions, provenance strings, table-restating chips; corpus in the global design-restraint skill), neutral house chrome (value-layered off-white surfaces, never a brand fill), typography-composites-not-raw-sizes, quiet 4px badges vs full pills, brand-identity research, token-first styling discipline, and mock-data rules. Single source of truth: other skills reference these rules, never restate them.
 ---
 
 # Design Principles (canonical)
@@ -77,6 +77,60 @@ A styling change in a spoke is a **token re-point until proven otherwise**:
    to note, not an error to revert. Inventing a custom property that exists
    nowhere is still always a bug.
 
+## The focus ring
+
+Focus is the one visual state you never get to remove, and this skill owns how it
+LOOKS (the `accessibility` skill owns whether it is present at all — check-a11y
+blocks removal at write time). Full reference: `/foundations/focus` on the hub site.
+
+- **It is one band, and it is YOUR BRAND at the step that can be seen.** The ring is
+  `--focus-ring-color`, which chains off `--color-border-default-focus`. That token is
+  the first step of your brand ramp clearing 3:1 against every surface — usually your
+  brand fill itself, one step darker (light) or lighter (dark) when the fill cannot
+  carry a hairline. Your hue is preserved either way. `make-theme.mjs` picks it; if you
+  filled your theme in by hand, `check-contrast.mjs` grades it.
+- **Do NOT declare `--color-border-default-focus` in your theme file.** This is the one
+  role a theme should leave alone. Your theme loads after `tokens.css` at equal
+  specificity, so declaring it overrides the choice and hands you back the failure it
+  exists to prevent. Measured in the hub before this landed, a ring taken straight from
+  the brand fill managed 2.95:1 on the raised and canvas surfaces and 2.66:1 on the
+  sunken one — all short of the 3:1 SC 1.4.11 asks for, because a fill step is engineered
+  to carry text as a SOLID FILL, which is an easier job than reading as a 2px HAIRLINE.
+- **The ring has a SECOND colour: red, on an invalid field.** All ten components with an error
+  state re-point ONE TOKEN on their error wrapper — `--focus-ring-color:
+  var(--form-error-border-color)` — and that is the pattern to copy in a `bcn-`/`<spoke>-`
+  component too. Do **not** override `outline-color` per focusable part: a field is not one
+  focusable thing (a combobox has five things that read the ring colour, a checkbox group has
+  N), and every part you miss keeps ringing brand-green inside a field that is telling the user
+  it is invalid. Custom properties inherit, so one declaration reaches all of them — including
+  a slotted native control and an `esa-*` component in a shadow root. Both ring colours are
+  gated to 3:1; if you re-point `--color-background-utility-danger`, run `check-contrast.mjs`,
+  because the error ring chains off it.
+  (Two failure modes the hub shipped and this mechanism prevents: a `box-shadow` error rule
+  left behind when the base ring became an `outline`, so a focused invalid field wore three
+  bands in two colours; and three components painting the ring from
+  `--color-border-utility-danger`, which is red-**6** — a subtle *border* step at 1.40:1, so
+  the ring was nearly invisible. Never reach for a step-6 role as a ring colour.)
+- **A ring that is wrong on ONE surface is a tier-3 fix, not a theme fix.** The real case
+  is a dark app bar: a near-black chrome surface in the LIGHT scheme is the one ground no
+  brand-derived ring can serve, since a colour dark enough for a white page is invisible
+  on it. Re-point `--focus-ring-color` on that component, locally —
+  `esa-button variant="chrome"` already takes it from `currentColor`.
+- **`outline` for the ring, never `box-shadow` alone.** Forced-colors modes replace
+  box-shadows with system colours and keep outlines. A ring painted with box-shadow
+  alone disappears in Windows High Contrast Mode — that was fourteen hub components,
+  every form control, until it was caught. (An earlier version of this section described
+  a second near-black "halo" band and named `--focus-ring-halo`. That was tried on
+  2026-08-16, reverted the same day for reading as a heavy slab, and its tokens were
+  never shipped. If you re-pointed it, the declaration did nothing.)
+- **`:focus-visible`, not `:focus`.** Two sanctioned exceptions: `:focus-within` on a
+  text-entry wrapper (a ring on click is native there), and bare `:focus` where focus
+  arrives programmatically after a user action, as `esa-error-summary` does.
+- **Do not restyle the ring per component.** The three tokens — `--focus-ring-color`,
+  `--focus-ring-width`, `--focus-ring-offset` — are the whole surface. A component that
+  needs a different ring is nearly always a component that should be asking for a token —
+  run **/request-lego**. The dark-ground exception above is the one standing case.
+
 ## Mock data
 
 - **Invented, never derived.** Mock content is realistic but fictional — never
@@ -97,10 +151,16 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
 
 - **Chips and badges are compact and quiet**: 4px border-radius, light-gray or
   no background, mid-gray border and text, vertically centered in cells —
-  never bulky rounded pills. This 4px radius is now the **`esa-badge` default**
-  (`--badge-radius` → `--radius-100` in `component-tokens.css`) — use the lego
-  as-is, don't restyle it. **`esa-pill` stays full** (`--radius-full`); it's a
-  pill on purpose. Badge ≠ pill: reach for the one that matches the shape you want.
+  never bulky rounded pills. This 4px radius is the **`esa-badge` default** — it
+  reads the tier-2 role `--radius-sm` directly, so a spoke that wants flatter or
+  rounder chips re-points that role. Use the lego as-is; don't restyle it.
+
+  **`esa-pill` is squared to match** and also reads `--radius-sm` — the claim
+  that it "stays full" was true only before the two were aligned. What still
+  separates them is not the corner: a badge is a status marker, a pill is a
+  removable token with its own dismiss affordance. Reach for the one whose
+  BEHAVIOUR you want, not its shape. (`--badge-radius` and `--pill-radius` were
+  demoted on 2026-08-16; there is no per-component corner hook for either.)
 - **Sibling controls match exactly.** Every control sharing a row, bar, or
   group matches its siblings in rendered height, font size, and variant.
   Verify *rendered output* — different components can resolve different tokens
@@ -121,10 +181,17 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   invite expressiveness.**
 - **House chrome is neutral; brand never floods it.** App chrome (top bar /
   sidenav / main) uses **neutral off-white surfaces layered by VALUE** —
-  canvas < bar < rail, separated by a hair of lightness, not by hue. Define
-  them as named near-off-white tokens (`--app-bar-bg`, `--sidenav-bg`,
-  `--app-surface-bg`) that may carry a **barely-perceptible brand tint (~2–5%)**
-  — never a saturated brand fill. A magenta/teal topbar is anathema. The
+  canvas < bar < rail, separated by a hair of lightness, not by hue. Re-point
+  the **tier-2 elevation roles** — `--color-background-default` (canvas),
+  `--color-background-elevation-raised` (bar) and
+  `--color-background-elevation-sunken` (rail) — which may carry a
+  **barely-perceptible brand tint (~2–5%)**, never a saturated brand fill. A
+  magenta/teal topbar is anathema.
+
+  Do NOT reach for per-component chrome hooks: `--app-bar-bg` and `--sidenav-bg`
+  were demoted on 2026-08-16 and no longer exist. That is deliberate — the three
+  chrome surfaces have to move TOGETHER to stay a value ramp, and three separate
+  hooks were three chances to move two of them and flatten it. The
   **`esa-app-bar` default tone is `surface`, never `brand`** for chrome.
   - *Beacon reference (pure-neutral):* top `#efefef`, sidenav/main `#fafafa`.
   - *A brand-tinted example (a green whisper):* canvas `#fbfdfb`, bar `#f2f6f3`,
@@ -135,12 +202,12 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   text. Each brand theme designates its families, including a document/serif
   voice for legal or quoted content (Beacon's is Besley) — use the theme's
   designated faces; don't hardcode a system-wide default.
-- **Type roles, not raw sizes.** Style text with the role classes in
-  `@esa/tokens/type-roles.css` (`.type-page-title`, `.type-section-title`,
-  `.type-card-title`, `.type-body`, `.type-label`, `.type-caption`, …) — they
-  bundle size + weight + line-height + family per role. **Raw `--type-size-*`
+- **Typography composites, not raw sizes.** Style text with the composite classes in
+  `@esa/tokens/typography.css` (`.typography-heading-lg`, `.typography-heading-md`,
+  `.typography-title`, `.typography-body-md`, `.typography-label`, `.typography-meta`, …) — they
+  bundle size + weight + line-height + family per role. **Raw `--font-size-*`
   in page CSS is a smell** (it scatters ad-hoc 200/250/300 sizes and drifts
-  from the scale). Don't default body text oversized — `.type-body` is the
+  from the scale). Don't default body text oversized — `.typography-body-md` is the
   baseline.
 - **Compress the content, stabilize the frame.** Data-dense surfaces compress
   *moderately* (the 14px dense floor above — don't overshoot into cramped);

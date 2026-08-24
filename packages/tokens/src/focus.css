@@ -1,0 +1,67 @@
+/*
+ * Ecology — the page-level focus indicator.
+ *
+ * WHY THIS FILE EXISTS
+ *
+ * Until 2026-08-16 the only correct, whole-page focus rule in this repo lived in
+ * packages/docs/src/DocsShell.astro — a file spokes never receive. So every
+ * light-DOM component we ship (esa-breadcrumbs, esa-link-column, and any bare
+ * <a>/<button> a spoke writes) had a properly tokenised ring in the hub's own
+ * docs site and the browser default everywhere else. Nothing in @esa/tokens or
+ * packages/spoke-template mentioned focus at all.
+ *
+ * The browser default is not a failure of WCAG — SC 1.4.11 explicitly exempts an
+ * indicator "determined by the user agent and not modified by the author" — but
+ * it is a failure of the design system. The default is a different colour in
+ * every engine, it is user-customisable so we cannot know what it is, and it
+ * clashes with dark or saturated surfaces. A spoke should not have to rediscover
+ * this.
+ *
+ * SCOPE: light DOM only. A stylesheet cannot cross a shadow boundary, so this
+ * does nothing for the Lit components — each of those paints its own ring from
+ * the same three tokens, and the forced-colors fallback they share lives in
+ * a11y.css, which IS bridged into their shadow roots.
+ */
+
+/* The ring. Three tokens, all re-pointable by a spoke's theme file:
+     --focus-ring-color   -> --color-border-default-focus (tier 2)
+     --focus-ring-width   -> --border-width-focus         (tier 2)
+     --focus-ring-offset  -> a deliberate 2px literal; the spacing scale is a 4px
+                             grid and minting a 2px primitive for one consumer is
+                             what SPEC.md forbids.
+
+   The offset is not decoration. A ring separated from the element reads as its
+   own mark rather than as a thicker border, which is the shape the guidance
+   singles out as easiest to see.
+
+   :where() keeps specificity at zero, so a component's own focus rule always
+   wins without needing !important. */
+:where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, currentColor);
+  outline-offset: var(--focus-ring-offset, 2px);
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+/* Suppress the UA ring ONLY where the rule above replaces it. Never a bare
+   `outline: none` — that is how a focus state gets removed and not restored, and
+   it is what check-a11y blocks.
+ *
+ * This is also the backwards-compatible form: a browser that does not understand
+ * :focus-visible ignores this whole block (an unknown pseudo-class inside :not()
+ * invalidates the selector), so it keeps its default ring rather than losing it. */
+:where(a, button, summary, input, select, textarea, [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Focus Not Obscured (SC 2.4.11 AA / 2.4.12 AAA): when Tab scrolls an element
+   into view, the browser parks it at the very top of the viewport — underneath a
+   sticky header, if there is one. scroll-margin reserves the space.
+ *
+ * --focus-scroll-margin defaults to 0 so this is inert until a page opts in. A
+ * layout with sticky chrome sets it once, to at least the chrome's height:
+ *
+ *   :root { --focus-scroll-margin: 76px; }
+ */
+:where(a, button, summary, input, select, textarea, [tabindex]) {
+  scroll-margin-block-start: var(--focus-scroll-margin, 0px);
+}

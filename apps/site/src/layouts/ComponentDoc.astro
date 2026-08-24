@@ -2,18 +2,22 @@
 import DocsLayout from './DocsLayout.astro';
 import Section from '@esa/docs/Section.astro';
 import { withBase } from '@esa/docs/base';
-import { themingSurface } from '../data/theming';
+import { themingSurface, lineageFor } from '../data/theming';
+import { typeRolesBySlug, propertyTokensOf } from '../data/composite-classes';
+import ThemingTable from './_ThemingTable.astro';
 
 interface Props {
   name: string;          // display name, e.g. "Button"
   category: string;      // e.g. "Core"
   slug: string;          // component basename, e.g. "esa-button"
   type: '.astro' | 'wc' | 'reference';
-  status?: 'stable' | 'reference';
+  status?: 'stable' | 'reference' | 'deprecated';
   summary: string;
   wraps?: string;        // reference only, e.g. "AG Grid"
+  /** Deprecated only — what to use instead. Drives the banner; without it the page just says "don't". */
+  supersededBy?: string;
 }
-const { name, category, slug, type, status = 'stable', summary, wraps } = Astro.props;
+const { name, category, slug, type, status = 'stable', summary, wraps, supersededBy } = Astro.props;
 
 const activeHref = `/components/${slug}`;
 const pascal = slug.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
@@ -21,14 +25,42 @@ const importLine =
   type === '.astro' ? `import ${pascal} from '@esa/ecology/${slug}.astro';`
   : type === 'wc' ? `import '@esa/ecology/${slug}';`
   : null;
-const statusLabel = type === 'reference' ? 'Reference' : 'Stable';
-const statusClass = type === 'reference' ? 'pill--reference' : 'pill--stable';
+// The pill reads `status`, NOT `type`. It used to read `type`, which meant the
+// two deprecated pages wore a green "Stable" pill directly above a summary
+// opening with "⚠ DEPRECATED" — the badge a reader scans contradicting the prose
+// they don't. `type === 'reference'` still implies the reference status, since
+// no reference page passes one.
+const resolved = type === 'reference' && status === 'stable' ? 'reference' : status;
+const statusLabel = resolved === 'reference' ? 'Reference' : resolved === 'deprecated' ? 'Deprecated' : 'Stable';
+const statusClass = `pill--${resolved}`;
 
 // Build-time-extracted public theming surface (src/data/theming.ts) — every
 // token this component's CSS reads. Rendered on every component page so
 // "what can my spoke re-point?" can never drift from the source.
+// Split by BLAST RADIUS, not just tier — the two questions a spoke author
+// actually asks are "what is mine to turn?" and "what will I move if I turn
+// it?". Ownership is read from the `/* esa-foo */` groups in
+// component-tokens.css, so this split is authored, not guessed.
 const hooks = themingSurface[slug] ?? [];
-const isColor = (v: string) => /^#[0-9a-fA-F]{3,8}$|^(rgb|rgba|hsl|hsla|oklch|color)\(/.test(v.trim());
+const ownHooks = hooks.filter((h) => h.scope === 'exclusive');
+const sharedHooks = hooks.filter((h) => h.scope !== 'exclusive');
+
+// TYPE ROLES — the half of the surface a var() scan cannot see. A composite is a
+// CLASS (CSS has no composite custom property), so a component that names one
+// reads no typography token at all and the table above goes quiet about text.
+// That is a documentation hole the composite migration OPENED: esa-dialog's title
+// used to read --font-size-400 and --typography-font-weight-semibold and the table
+// listed both. Re-pointing a role moves every component naming it, which is the
+// same blast-radius question the rest of this section is organised around.
+const typeRoles = typeRolesBySlug.get(slug);
+const rolesWithReach = (typeRoles?.roles ?? []).map((cls) => ({
+  cls,
+  tokens: propertyTokensOf(cls).map((t) => ({ name: t, lineage: lineageFor(t) })),
+  alsoUsedBy: [...typeRolesBySlug.entries()]
+    .filter(([s, r]) => s !== slug && r.roles.includes(cls))
+    .map(([s]) => s)
+    .sort(),
+}));
 ---
 <DocsLayout title={`${name} — Ecology`} activeHref={activeHref}>
   <nav class="crumbs"><a href={withBase('/')}>Ecology</a> <span>/</span> <span>{category}</span> <span>/</span> <span>{name}</span></nav>
@@ -39,71 +71,164 @@ const isColor = (v: string) => /^#[0-9a-fA-F]{3,8}$|^(rgb|rgba|hsl|hsla|oklch|co
     {type !== 'reference' && <span class="pill">{type}</span>}
     {wraps && <span class="pill">wraps {wraps}</span>}
     {importLine && <code class="imp">{importLine}</code>}
+    {/* Only on `wc` pages, because only those have an Angular tab to explain. The
+        caveat that the package is not yet installable from a stock Angular build
+        is stated ONCE, there — repeating it under 101 snippets would be noise. */}
+    {type === 'wc' && <a class="ng-link" href={withBase('/guide/angular')}>Angular usage</a>}
   </div>
+
+  {resolved === 'deprecated' && (
+    <aside class="dep" role="note" aria-labelledby="dep-h">
+      <h2 id="dep-h" class="dep__h">Deprecated{supersededBy && <> — use <code>{supersededBy}</code></>}</h2>
+      <p class="dep__p">
+        This component still ships and still works: it is a shim that forwards to its
+        replacement and warns at build time, so nothing breaks the day you upgrade. The page
+        below documents what it did, for reading a call site you are migrating — don't reach
+        for it in new work. Rewrite a spoke's call sites with
+        {' '}<code>/update-tokens</code>, which drives the rewrite from the
+        {' '}<code>kind: "component"</code> row in <code>packages/tokens/migrations.json</code>.
+      </p>
+    </aside>
+  )}
+
   <slot />
 
-  {hooks.length > 0 && (
+  {(hooks.length > 0 || rolesWithReach.length > 0) && (
     <Section id="theming-surface" title="Theming surface">
       <p class="ts-note">
-        Every public token this component reads, extracted from its source at build time.
-        The <strong>Resolves&nbsp;to</strong> column walks each token's real lineage —
+        Every public token this component reads, extracted from its source at build time,
+        split by <strong>blast radius</strong>: the hooks that belong to this component,
+        then the shared and system tokens it consumes alongside everything else. The
+        <strong>Resolves&nbsp;to</strong> column walks each token's real lineage —
         component&nbsp;→&nbsp;semantic&nbsp;→&nbsp;primitive&nbsp;→&nbsp;raw value — so you
         can see exactly where re-pointing it lands. A spoke re-skins by overriding these in
         its <code>theme-&lt;slug&gt;.css</code>; component internals are never edited. No
         hook for what you need? File it with <code>/request-lego</code>.
       </p>
-      <table class="ts-table">
-        <thead><tr><th>Token</th><th>Tier</th><th>Resolves to</th></tr></thead>
-        <tbody>
-          {hooks.map((h) => {
-            const terminal = h.lineage[h.lineage.length - 1]; // last link = the raw value it lands on
-            const path = h.lineage.slice(0, -1);              // the tokens it passes through to get there
-            return (
-              <tr>
-                <td><code>{h.token}</code></td>
-                <td><span class={`ts-tier ts-tier--${h.tier}`}>{h.tier}</span></td>
-                <td class="ts-chain">
-                  {h.lineage.length === 0 ? (
-                    <span class="ts-none">—</span>
-                  ) : (
-                    <Fragment>
-                      <span class="ts-resolved">
-                        {isColor(terminal.ref) && <span class="ts-swatch" style={`background:${terminal.ref}`} />}
-                        <code>{terminal.ref}</code>
-                      </span>
-                      {path.length > 0 && (
-                        <span class="ts-via">via {path.map((p, i) => (
-                          <Fragment>{i > 0 && <span class="ts-arrow"> → </span>}<code>{p.ref}</code></Fragment>
-                        ))}</span>
-                      )}
-                    </Fragment>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {rolesWithReach.length > 0 && (
+        <Fragment>
+          <h3 class="ts-h">Type roles it names</h3>
+          <p class="ts-sub">
+            This component does not set a size, weight, face or tracking of its own —
+            it names a <strong>composite</strong>, and the composite carries all five.
+            A composite is a class rather than a token, so none of it appears in the
+            tables below; re-theme text by re-pointing the token family, not by editing
+            the component.
+            {typeRoles && !typeRoles.delivered && (
+              <strong class="ts-warn">
+                {' '}⚠ This component applies a composite but never imports its
+                definitions, so the class matches no rule where it renders.
+              </strong>
+            )}
+          </p>
+          <table class="ts-table">
+            <thead>
+              <tr><th>Role</th><th>Re-point</th><th>Reach</th></tr>
+            </thead>
+            <tbody>
+              {rolesWithReach.map((r) => (
+                <tr>
+                  <td><code>.{r.cls}</code></td>
+                  <td>
+                    <ul class="ts-tokens">
+                      {r.tokens.map((t) => {
+                        const terminal = t.lineage[t.lineage.length - 1];
+                        const via = t.lineage.slice(0, -1).map((l) => l.ref);
+                        return (
+                          <li>
+                            <code>{t.name}</code>
+                            <span class="ts-val">{terminal ? terminal.ref : '—'}</span>
+                            {via.length > 0 && <span class="ts-via">via {via.join(' → ')}</span>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </td>
+                  <td>
+                    {r.alsoUsedBy.length === 0 ? (
+                      <span class="ts-only">only here</span>
+                    ) : (
+                      <details>
+                        <summary>+{r.alsoUsedBy.length} more component{r.alsoUsedBy.length === 1 ? '' : 's'}</summary>
+                        <span class="ts-readers">{r.alsoUsedBy.join(', ')}</span>
+                      </details>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Fragment>
+      )}
+
+      <h3 class="ts-h">Wired to this component</h3>
+      {ownHooks.length > 0 ? (
+        <Fragment>
+          <p class="ts-sub">
+            No other component reads these — re-point them and <code>{slug}</code> is the
+            only thing that moves.
+          </p>
+          <ThemingTable hooks={ownHooks} mode="own" />
+        </Fragment>
+      ) : (
+        <p class="ts-sub ts-empty">
+          None. This component has no hooks of its own — it themes entirely through the
+          shared tokens below, so every override here also moves its siblings.
+        </p>
+      )}
+
+      <h3 class="ts-h">Shared tokens it reads</h3>
+      <p class="ts-sub">
+        Owned by a family or by the semantic layer. Still overridable — but scope the
+        override (<code>{'esa-foo { --form-border-color: … }'}</code>) unless you mean to move
+        everything that reads it. <strong>Reach</strong> says what else that is.
+      </p>
+      <ThemingTable hooks={sharedHooks} mode="shared" />
     </Section>
   )}
 </DocsLayout>
 
 <style>
-  .ts-note { color: var(--color-text-secondary, #444); }
-  .ts-table { width: 100%; border-collapse: collapse; }
-  .ts-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border, #e5e5e5); }
-  .ts-table td { padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border, #e5e5e5); }
-  .ts-tier { font-size: 0.8125rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--color-border, #e5e5e5); }
-  .ts-tier--component { background: var(--color-primary-subtle, #eef6f6); border-color: var(--color-primary-border, #cfe5e5); }
-  .ts-tier--ad-hoc { background: var(--color-primary-subtle, #eef6f6); }
-  .ts-tier--semantic { background: var(--color-surface-sunken, #f5f5f5); }
-  .ts-tier--undefined { background: var(--color-danger-subtle, #fdecec); border-color: var(--color-danger-border, #f5c2c2); }
-  .ts-none { color: var(--color-text-muted, #888); }
+  /* Sits beside .imp in the meta row and deliberately looks quieter than it —
+     the import line is what you need on this page; this is a pointer off it. */
+  .ng-link {
+    font-size: 12.5px;
+    color: var(--color-content-default-secondary, #646464);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-default, #dcdcdc);
+  }
+  .ng-link:hover { color: var(--color-content-default, #171717); }
 
-  /* Lineage: the resolved value leads; the cascade path is a quiet breadcrumb beneath. */
-  .ts-resolved { display: inline-flex; align-items: center; gap: var(--spacing-150, 0.375rem); }
-  .ts-swatch { width: 0.95em; height: 0.95em; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.15); flex: none; }
-  .ts-via { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-text-muted, #999); }
-  .ts-via code { font-size: inherit; background: none; padding: 0; color: inherit; }
-  .ts-via .ts-arrow { color: var(--color-border-strong, #ccc); }
+  /* Deprecation banner. The status pill is defined in DocsShell's global block
+     alongside pill--stable, so only the page-level banner is scoped here. */
+  .dep {
+    border: 1px solid var(--color-border-utility-warning, #e6c88a);
+    background: var(--color-background-utility-warning-subtle, #fdf6ec);
+    border-radius: var(--radius-md, 8px);
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    margin-block: var(--spacing-500, 1.25rem);
+  }
+  .dep__h { margin: 0 0 var(--spacing-100, 0.25rem); font-size: 1rem; color: var(--color-content-utility-warning, #8a5a00); }
+  .dep__p { margin: 0; color: var(--color-content-default-secondary, #444); max-width: 72ch; }
+  /* Forced colors flattens the tint to Canvas, leaving the border — which is
+     already the thing separating this block from the page — to carry it. */
+
+  /* Token-table styling lives in _ThemingTable.astro (Astro styles are per-component),
+     so the type-roles table below repeats the three rules it needs rather than
+     reaching across a scope boundary that does not exist. */
+  .ts-table { width: 100%; border-collapse: collapse; }
+  .ts-table th { text-align: left; padding: var(--spacing-200, 0.5rem) var(--spacing-300, 0.75rem); border-bottom: 2px solid var(--color-border-default, #e5e5e5); }
+  .ts-table td { padding: var(--spacing-150, 0.375rem) var(--spacing-300, 0.75rem); border-bottom: 1px solid var(--color-border-default, #e5e5e5); vertical-align: top; }
+  .ts-only { color: var(--color-content-default-secondary, #646464); }
+  .ts-tokens { margin: 0; padding: 0; list-style: none; }
+  .ts-tokens code { font-size: 0.8125rem; }
+  .ts-tokens li { margin-block-end: var(--spacing-150, 0.375rem); }
+  .ts-val { display: block; font-size: 0.8125rem; color: var(--color-content-default, #171717); }
+  .ts-via { display: block; font-size: 0.75rem; color: var(--color-content-default-secondary, #646464); }
+  .ts-readers { display: block; margin-top: 3px; font-size: 0.8125rem; color: var(--color-content-default-secondary, #646464); }
+  .ts-warn { color: var(--color-content-utility-danger, #ce2c31); }
+  .ts-note { color: var(--color-content-default-secondary, #444); }
+  .ts-h { margin: var(--spacing-600, 2rem) 0 var(--spacing-100, 0.25rem); }
+  .ts-sub { margin: 0 0 var(--spacing-300, 0.75rem); color: var(--color-content-default-secondary, #444); }
+  .ts-empty { color: var(--color-content-default-secondary, #646464); }
 </style>

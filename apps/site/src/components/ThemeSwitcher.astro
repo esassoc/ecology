@@ -1,27 +1,84 @@
 ---
+// Two INDEPENDENT axes, and keeping them independent is the point of the component.
+// `data-theme` is the brand (a spoke's re-skin); `data-a11y-assurance` is the accessibility
+// profile. They compose — a project is entitled to be on-brand AND assured — so this
+// renders two toggles rather than one list of combinations. See
+// packages/tokens/src/assurance.css.
+//
+// (`data-scheme`, light/dark, is a third axis and lives in DocsShell.)
 ---
-<esa-button-toggle id="theme-switcher" size="sm" aria-label="Preview theme"></esa-button-toggle>
+<span class="switcher">
+  <esa-button-toggle id="theme-switcher" size="sm" aria-label="Preview theme"></esa-button-toggle>
+  <esa-button-toggle id="assurance-switcher" size="sm" aria-label="Accessibility profile"></esa-button-toggle>
+</span>
+
+<style>
+  .switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-300, 0.75rem);
+    flex-wrap: wrap;
+  }
+</style>
 
 <script>
   import '@esa/ecology/esa-button-toggle';
 
-  const KEY = 'esa-theme';
   const root = document.documentElement;
-  const el = document.querySelector('#theme-switcher') as any;
-  if (!el) throw new Error('ThemeSwitcher: #theme-switcher not found');
 
-  const themes = ['default', 'beacon', 'qanat'];
-  const saved = localStorage.getItem(KEY) || 'default';
-  root.setAttribute('data-theme', saved);
+  /**
+   * One helper for both axes. They differ only in attribute, storage key and options,
+   * and writing it twice is how the second one drifts.
+   *
+   * `null` as a value means REMOVE the attribute rather than set it to a string —
+   * "default" and "off" are not declared scopes anywhere, they are the absence of a
+   * scope. Setting data-a11y-assurance="off" would match no block and work by accident;
+   * removing it is the same result for the right reason, and it keeps the DOM honest
+   * for anyone inspecting which profile is live.
+   */
+  function wire(id: string, attr: string, key: string, options: { label: string; value: string | null }[]) {
+    const el = document.querySelector(`#${id}`) as any;
+    if (!el) throw new Error(`ThemeSwitcher: #${id} not found`);
 
-  el.addEventListener('change', (e: CustomEvent) => {
-    const t = e.detail.value;
-    root.setAttribute('data-theme', t);
-    localStorage.setItem(KEY, t);
-  });
+    // Compare through the same null→'' mapping used for storage, so a stored ''
+    // matches the null option instead of silently falling through to the default.
+    // (Same outcome here because null IS the default, but a reordered list would
+    // have made that an invisible bug.)
+    const stored = localStorage.getItem(key);
+    const match = options.find((o) => (o.value ?? '') === (stored ?? '\0'));
+    const initial = match ? match.value : options[0].value;
+    const apply = (v: string | null) => {
+      if (v) root.setAttribute(attr, v);
+      else root.removeAttribute(attr);
+    };
+    apply(initial);
 
-  customElements.whenDefined('esa-button-toggle').then(() => {
-    el.options = themes.map((t) => ({ label: t, value: t }));
-    el.value = saved;
-  });
+    el.addEventListener('change', (e: CustomEvent) => {
+      // esa-button-toggle round-trips values as strings, so the null option comes
+      // back as the empty string. Map it back rather than letting '' reach setAttribute.
+      const v = e.detail.value === '' ? null : e.detail.value;
+      apply(v);
+      localStorage.setItem(key, v ?? '');
+    });
+
+    customElements.whenDefined('esa-button-toggle').then(() => {
+      el.options = options.map((o) => ({ label: o.label, value: o.value ?? '' }));
+      el.value = initial ?? '';
+    });
+  }
+
+  wire('theme-switcher', 'data-theme', 'esa-theme', [
+    { label: 'default', value: null },
+    { label: 'beacon', value: 'beacon' },
+    { label: 'qanat', value: 'qanat' },
+  ]);
+
+  // The profile is deliberately labelled by what it IS rather than "on/off": someone
+  // reading the toolbar should be able to tell WHICH standard is being previewed,
+  // because a second profile (AAA) is the obvious next one and "on" would then be
+  // ambiguous.
+  wire('assurance-switcher', 'data-a11y-assurance', 'esa-assurance', [
+    { label: 'standard', value: null },
+    { label: 'WCAG AA', value: 'wcag-aa' },
+  ]);
 </script>

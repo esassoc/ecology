@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
 
 type TooltipPosition = 'above' | 'below' | 'left' | 'right';
 
@@ -42,10 +43,41 @@ export class EsaTooltip extends LitElement {
     this.open = false;
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener('keydown', this.onGlobalKeydown);
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    document.removeEventListener('keydown', this.onGlobalKeydown);
     if (this.showTimeout) clearTimeout(this.showTimeout);
   }
+
+  /**
+   * Esc dismisses the tooltip — SC 1.4.13 Content on Hover or Focus, Level AA.
+   *
+   * The criterion asks for three things and this component only ever had two.
+   * HOVERABLE holds by construction: the bubble is a child of the anchor, so moving the
+   * pointer onto it never fires the anchor's `mouseleave`. PERSISTENT holds too — there
+   * is no auto-hide timer, only the show delay. DISMISSIBLE was missing outright, and
+   * for a tooltip that matters more than it looks: it can obscure the very content the
+   * user is trying to read, and until now the only way to get rid of it was to move the
+   * pointer, which a keyboard or magnifier user may not be doing.
+   *
+   * ON `document`, NOT ON THE ANCHOR, and that is the whole reason this is not a
+   * template binding. The mouse path opens a tooltip whose anchor never receives focus,
+   * so a keydown listener on the anchor hears nothing — the user presses Esc and the
+   * event goes to whatever they were actually focused on. `esa-filter-dropdown` reaches
+   * for `document` for the same reason.
+   *
+   * It does NOT preventDefault: Esc here is a dismissal, not a consumption, and a
+   * tooltip inside an open dialog must not swallow the key that closes the dialog.
+   */
+  private onGlobalKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !this.open) return;
+    this.onLeave();
+  };
 
   private onEnter = (): void => {
     if (this.open || !this.text) return;
@@ -65,7 +97,7 @@ export class EsaTooltip extends LitElement {
   render() {
     return html`
       <span
-        class="esa-tooltip-anchor"
+        class="esa-tooltip-anchor typography-label-md"
         @mouseenter=${this.onEnter}
         @mouseleave=${this.onLeave}
         @focusin=${this.onEnter}
@@ -74,7 +106,7 @@ export class EsaTooltip extends LitElement {
         <slot></slot>
         ${this.open && this.text
           ? html`
-              <span class="esa-tooltip esa-tooltip--${this.position}" role="tooltip">
+              <span class="esa-tooltip typography-microcopy-sm-subtle esa-tooltip--${this.position}" role="tooltip">
                 <span class="esa-tooltip__text">${this.text}</span>
                 <span class="esa-tooltip__arrow"></span>
               </span>
@@ -84,7 +116,9 @@ export class EsaTooltip extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    css`
     :host { display: inline-block; }
 
     .esa-tooltip-anchor {
@@ -95,18 +129,20 @@ export class EsaTooltip extends LitElement {
     .esa-tooltip {
       position: absolute;
       z-index: var(--z-tooltip, 600);
-      background: var(--tooltip-bg, var(--color-gray-12));
-      color: var(--tooltip-color, var(--color-text-inverse, #ffffff));
+      background: var(--color-background-default-knockout);
+      color: var(--color-content-default-knockout, #fcfcfc);
       padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
-      border-radius: var(--tooltip-radius, var(--radius-100, 0.25rem));
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--type-size-150, 0.875rem);
-      line-height: var(--line-height-tight, 1.3);
+      border-radius: var(--radius-sm, 0.25rem);
+      /* Leading comes from microcopy-sm-subtle. This carried a tight override
+         justified as "a tooltip may wrap to two or three lines" — but the rule
+         below sets white-space: nowrap, so it never wraps and never did. The
+         override was correcting for a case this component cannot produce.
+         --tooltip-max-width is in the same position: nowrap makes it inert. */
       max-width: var(--tooltip-max-width, 240px);
       pointer-events: none;
       white-space: nowrap;
-      box-shadow: var(--shadow-100, 0 2px 12px rgba(0, 0, 0, 0.04));
-      animation: esa-tooltip-fade 120ms ease-out;
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
+      animation: esa-tooltip-fade var(--animation-enter, 150ms ease-out);
     }
     @keyframes esa-tooltip-fade {
       from { opacity: 0; }
@@ -138,7 +174,7 @@ export class EsaTooltip extends LitElement {
       position: absolute;
       width: 8px;
       height: 8px;
-      background: var(--tooltip-bg, var(--color-gray-12));
+      background: var(--color-background-default-knockout);
       transform: rotate(45deg);
     }
     .esa-tooltip--above .esa-tooltip__arrow {
@@ -161,7 +197,18 @@ export class EsaTooltip extends LitElement {
       top: 50%;
       margin-top: -4px;
     }
-  `;
+
+    /* FORCED COLORS. This file ships no 'border:' at all — the tooltip is a dark
+       knockout background and a shadow, and the mode flattens the first and
+       deletes the second. The ARROW is hidden rather than bordered: it is a
+       rotated 8px square, so a border round it renders as a diamond floating
+       outside the bubble, and the bubble's own edge already does the job. */
+    @media (forced-colors: active) {
+      .esa-tooltip { border: 1px solid CanvasText; }
+      .esa-tooltip__arrow { display: none; }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-tooltip')) {

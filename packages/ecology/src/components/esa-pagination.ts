@@ -1,4 +1,7 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+import { announce } from '../announcer.js';
+import { boolish } from '../boolish.js';
 
 /**
  * esa-pagination — Lit Web Component.
@@ -31,8 +34,8 @@ export class EsaPagination extends LitElement {
     pageSize: { type: Number, attribute: 'page-size' },
     currentPage: { type: Number, attribute: 'current-page' },
     pageSizeOptions: { type: Array, attribute: 'page-size-options' },
-    showPageSizeSelector: { type: Boolean, attribute: 'show-page-size-selector' },
-    showFirstLastButtons: { type: Boolean, attribute: 'show-first-last-buttons' },
+    showPageSizeSelector: { type: Boolean, attribute: 'show-page-size-selector', converter: boolish },
+    showFirstLastButtons: { type: Boolean, attribute: 'show-first-last-buttons', converter: boolish },
     disabled: { type: Boolean, reflect: true },
   };
 
@@ -80,6 +83,31 @@ export class EsaPagination extends LitElement {
     this.dispatchEvent(
       new CustomEvent('pagechange', { detail: { page }, bubbles: true, composed: true })
     );
+
+    // A page change replaces the content the user came here to read, and nothing else
+    // reports it: the range label updates silently, and the results themselves live in
+    // some other element this component cannot see.
+    //
+    // The MORE robust answer is for the host to move focus to the results heading —
+    // that is a change of context, so assistive tech surfaces it without any live
+    // region, and it puts a keyboard user at the top of the new content instead of
+    // leaving them in the pager. This announcement is the fallback for hosts that do
+    // not, because saying nothing at all is the worse failure.
+    announce(`Page ${page + 1} of ${this.totalPages}. Showing ${this.rangeLabel}.`);
+
+    // Keep focus off a control that is about to disable itself. Pressing Next onto the
+    // last page disables Next under the user's finger, and a disabled button drops
+    // focus to <body> — a keyboard user is silently returned to the top of the
+    // document. Hand focus to the opposite direction button, which is by definition
+    // still enabled at a boundary.
+    void this.updateComplete.then(() => {
+      const active = this.renderRoot.activeElement as HTMLElement | null;
+      if (!active || !(active as HTMLButtonElement).disabled) return;
+      const fallback = this.renderRoot.querySelector<HTMLButtonElement>(
+        'button:not([disabled])',
+      );
+      fallback?.focus();
+    });
   }
 
   private goToFirst = (): void => {
@@ -116,12 +144,12 @@ export class EsaPagination extends LitElement {
 
   render() {
     return html`
-      <div class="container ${this.disabled ? 'container--disabled' : ''}" role="navigation" aria-label="Pagination">
+      <div class="container typography-microcopy-md-subtle ${this.disabled ? 'container--disabled' : ''}" role="navigation" aria-label="Pagination">
         ${this.showPageSizeSelector && this.pageSizeOptions.length > 0
           ? html`<div class="page-size">
-              <label class="page-size-label" for="esa-page-size">Items per page:</label>
+              <label class="page-size-label typography-microcopy-md-subtle" for="esa-page-size">Items per page:</label>
               <select
-                class="page-size-select"
+                class="page-size-select typography-microcopy-md-subtle"
                 id="esa-page-size"
                 .value=${String(this.pageSize)}
                 ?disabled=${this.disabled}
@@ -134,7 +162,7 @@ export class EsaPagination extends LitElement {
             </div>`
           : null}
 
-        <span class="range">${this.rangeLabel}</span>
+        <span class="range typography-microcopy-md-subtle">${this.rangeLabel}</span>
 
         <div class="buttons">
           ${this.showFirstLastButtons
@@ -158,22 +186,35 @@ export class EsaPagination extends LitElement {
     `;
   }
 
-  static styles = css`
+  /* `typography` FIRST so this component's own rules win on equal specificity — it
+     carries the .typography-* composite classes across the shadow boundary. */
+  static styles = [
+    typography,
+    css`
     :host {
-      --_pagination-bg: var(--pagination-bg, var(--color-surface, #ffffff));
-      --_pagination-border-color: var(--pagination-border-color, var(--color-border, rgba(0, 0, 0, 0.12)));
-      --_pagination-text-color: var(--pagination-text-color, var(--color-text-secondary, #525252));
-      --_pagination-font-size: var(--pagination-font-size, var(--type-size-200, 14px));
-      --_pagination-button-color: var(--pagination-button-color, var(--color-text-primary, #171717));
-      --_pagination-button-disabled-color: var(--color-disabled-text, #bdbdbd);
-      --_pagination-button-hover-bg: var(--color-hover-overlay, rgba(0, 0, 0, 0.04));
-      --_pagination-padding-x: var(--pagination-padding-x, var(--spacing-400, 16px));
-      --_pagination-padding-y: var(--pagination-padding-y, var(--spacing-200, 8px));
+      --_pagination-bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_pagination-border-color: var(--color-border-default, rgba(0, 0, 0, 0.12));
+      --_pagination-text-color: var(--color-content-default-secondary, #646464);
+      --_pagination-button-color: var(--color-content-default, #202020);
+      --_pagination-button-disabled-color: var(--color-content-disabled, #8d8d8d);
+      --_pagination-button-hover-bg: var(--color-background-overlay-hover, rgba(0, 0, 0, 0.04));
+      --_pagination-padding-x: var(--spacing-400, 16px);
+      --_pagination-padding-y: var(--spacing-200, 8px);
 
       display: block;
     }
 
+    .container,
+    .page-size-label,
+    .page-size-select,
+    .range {
+      font-size: var(--typography-label-md-font-size, var(--typography-body-md-font-size));
+    }
+
     .container {
+      /* The bar is one row. Its children already declare this; saying it here is what
+         makes the no-leading role safe rather than incidentally safe. */
+      white-space: nowrap;
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -181,9 +222,7 @@ export class EsaPagination extends LitElement {
       min-height: 40px;
       padding: var(--_pagination-padding-y) var(--_pagination-padding-x);
       background: var(--_pagination-bg);
-      border-top: 1px solid var(--_pagination-border-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--_pagination-font-size);
+      border-top: var(--border-width-default, 1px) solid var(--_pagination-border-color);
       color: var(--_pagination-text-color);
     }
     .container--disabled { opacity: 0.6; pointer-events: none; }
@@ -192,21 +231,18 @@ export class EsaPagination extends LitElement {
     .page-size-label {
       white-space: nowrap;
       color: var(--_pagination-text-color);
-      font-size: var(--_pagination-font-size);
     }
     .page-size-select {
       padding: var(--spacing-100, 4px) var(--spacing-200, 8px);
-      border: 1px solid var(--_pagination-border-color);
-      border-radius: var(--radius-100, 4px);
+      border: var(--border-width-default, 1px) solid var(--_pagination-border-color);
+      border-radius: var(--radius-sm, 0.25rem);
       background: var(--_pagination-bg);
       color: var(--_pagination-text-color);
-      font-family: var(--font-sans, 'DM Sans', sans-serif);
-      font-size: var(--_pagination-font-size);
       cursor: pointer;
       appearance: auto;
     }
     .page-size-select:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .page-size-select:disabled { cursor: default; opacity: 0.5; }
@@ -214,7 +250,6 @@ export class EsaPagination extends LitElement {
     .range {
       white-space: nowrap;
       color: var(--_pagination-text-color);
-      font-size: var(--_pagination-font-size);
     }
 
     .buttons { display: flex; align-items: center; gap: var(--spacing-100, 4px); }
@@ -228,7 +263,7 @@ export class EsaPagination extends LitElement {
       padding: 0;
       margin: 0;
       border: none;
-      border-radius: var(--radius-full, 9999px);
+      border-radius: var(--radius-pill, 9999px);
       background: transparent;
       color: var(--_pagination-button-color);
       cursor: pointer;
@@ -237,11 +272,12 @@ export class EsaPagination extends LitElement {
     .ic { display: flex; }
     .button:hover:not(:disabled) { background: var(--_pagination-button-hover-bg); }
     .button:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: var(--focus-ring-offset, 2px);
     }
     .button:disabled { color: var(--_pagination-button-disabled-color); cursor: default; }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-pagination')) {

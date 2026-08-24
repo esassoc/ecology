@@ -8,15 +8,67 @@
 // The default slot states the condition the user must act on — never a place to
 // describe the page or caption an embed (e.g. not "This report is rendered by
 // Microsoft Power BI inside the CBFish shell…", a provenance string wearing an alert).
+//
+// A11Y — why this is NOT `role="alert"` by default, despite the name.
+//
+// An alert box is the canonical inject-at-runtime component (that is why the dismiss
+// listener below is delegated), so the obvious move is to make it a live region. It is
+// the wrong move for the general case:
+//
+//   - It takes a SLOT. Live regions announce raw text with no structure, so a slotted
+//     link, button or list is read as a run-on sentence with no roles. We cannot see
+//     what a spoke put in there.
+//   - `dismissable` puts a button inside it — a control the user is told about but
+//     given no route to, since a live region does not take focus and cannot be
+//     navigated to. That is the toast trap, and the guidance is unambiguous: a message
+//     with a control in it is a dialog, not a status message.
+//   - Most alert boxes are present at page load, where a live region announces nothing
+//     anyway (there is no change) or, worse, fires on load as noise.
+//
+// So `live` is OPT-IN, off by default, and refuses to combine with `dismissable`.
 interface Props {
   variant?: 'info' | 'success' | 'warning' | 'danger';
   /** The condition the user must act on, in 1-3 words — not a greeting. "Saved", "Check this", "Error". */
   title?: string;
   dismissable?: boolean;
+  /**
+   * Announce this box when it is injected into an already-loaded page.
+   *
+   * Off by default. Turn it on ONLY when all three hold: the box appears in response
+   * to something the user did, it is NOT dismissable, and its slot holds plain text
+   * with no links or buttons. `danger` announces assertively (`role="alert"`);
+   * everything else waits for a pause (`role="status"`).
+   *
+   * A box that is in the initial HTML should leave this off — there is no change for
+   * a live region to report, and on some screen readers it reads out on load instead.
+   */
+  live?: boolean;
 }
-const { variant = 'info', title, dismissable = false } = Astro.props;
+const { variant = 'info', title, dismissable = false, live = false } = Astro.props;
 
-const cls = ['esa-alert-box', `esa-alert-box--${variant}`].join(' ');
+if (live && dismissable) {
+  console.warn(
+    '[esa-alert-box] `live` and `dismissable` together: the dismiss button is announced ' +
+      'as bare text with no role and no way to reach it. Drop `live`, or drop `dismissable` ' +
+      'and let the box persist. Rendering without the live region.',
+  );
+}
+// danger interrupts; the rest wait for a pause. `alert` and `status` carry their own
+// implicit aria-live, so declaring the attribute as well would be the contradiction
+// that esa-field-error used to ship.
+const liveRole = live && !dismissable ? (variant === 'danger' ? 'alert' : 'status') : undefined;
+
+// TYPE: the box names roles rather than assembling them — `body-sm` on the root so
+// message text inherits it, `label-sm-strong` on the title. The import is the Astro
+// half of the composite mechanism; Lit siblings get it via `static styles = [typography, …]`.
+import '@esa/tokens/typography.css';
+// The selector only, not the focus helpers — this looks OUTWARD for the next focusable
+// in the document after the box is removed, which is the opposite job from finding what
+// is focusable inside an overlay. Sharing the string is the point; sharing the function
+// would be wrong.
+import { FOCUSABLE_SELECTOR } from '../overlay.js';
+
+const cls = ['esa-alert-box', `esa-alert-box--${variant}`, 'typography-body-sm'].join(' ');
 
 // Inlined Lucide icon paths per variant (avoids an icon dependency).
 const ICON_PATHS: Record<string, string> = {
@@ -31,7 +83,7 @@ const ICON_PATHS: Record<string, string> = {
 };
 const iconPath = ICON_PATHS[variant];
 ---
-<div class={cls}>
+<div class={cls} role={liveRole} data-esa-live={liveRole ? "opt-in" : undefined}>
   <div class="esa-alert-box__icon">
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -49,7 +101,7 @@ const iconPath = ICON_PATHS[variant];
   </div>
 
   <div class="esa-alert-box__body">
-    {title && <strong class="esa-alert-box__title">{title}</strong>}
+    {title && <strong class="esa-alert-box__title typography-label-sm-strong">{title}</strong>}
     <div class="esa-alert-box__message">
       <slot />
     </div>
@@ -76,55 +128,104 @@ const iconPath = ICON_PATHS[variant];
   )}
 </div>
 
-{dismissable && (
-  <script>
-    document.querySelectorAll('[data-esa-alert-dismiss]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const box = (btn as HTMLElement).closest('.esa-alert-box') as HTMLElement | null;
-        if (box) {
-          box.style.display = 'none';
-          box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
-        }
-      });
-    });
-  </script>
-)}
+{/* NOT wrapped in `dismissable` any more. With per-button wiring the condition was
+    honest — no dismiss buttons on this page, nothing to wire. With a DELEGATED
+    listener it reintroduces the bug it is meant to fix at one remove: the whole
+    point is to catch alerts inserted at runtime, and a page whose server-rendered
+    alerts are all non-dismissable would ship no listener at all, so a dismissable
+    one injected later would still be dead. The listener is a few lines and inert
+    until something matches. */}
+<script>
+  // DELEGATED, not per-button. This was
+  // `document.querySelectorAll('[data-esa-alert-dismiss]').forEach(btn => …)`,
+  // which runs once at load and therefore only wires alerts present in the
+  // initial HTML. An alert box is the canonical inject-at-runtime component —
+  // the dismiss button on anything rendered afterwards did nothing, silently.
+  document.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest?.('[data-esa-alert-dismiss]');
+    if (!btn) return;
+    const box = btn.closest('.esa-alert-box') as HTMLElement | null;
+    if (!box) return;
+
+    // Where focus goes next. `display: none` on the box removes the button the user
+    // just pressed, and focus falls to <body> — a keyboard user is silently returned
+    // to the top of the document with no idea where they were. Nothing in the DOM
+    // says "this used to be here", so the only sane destination is the nearest thing
+    // still on screen: the next focusable element after the box, or the previous one
+    // if the box was last.
+    const focusables = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        FOCUSABLE_SELECTOR,
+      ),
+    ).filter((el) => !box.contains(el) && el.offsetParent !== null);
+
+    const after = focusables.find(
+      (el) => box.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    const next = after ?? focusables[focusables.length - 1];
+
+    box.style.display = 'none';
+    box.dispatchEvent(new CustomEvent('dismissed', { bubbles: true }));
+    next?.focus();
+  });
+</script>
 
 <style>
   .esa-alert-box {
-    --_alert-bg: var(--alert-box-bg, var(--color-info-subtle, #eff6ff));
-    --_alert-border: var(--alert-box-border-color, var(--color-info-border, #bfdbfe));
-    --_alert-icon-color: var(--color-info-strong, #0d74ce);
-    --_alert-title-color: var(--alert-box-title-color, var(--color-text-primary, #171717));
-    --_alert-text-color: var(--alert-box-text-color, var(--color-text-secondary, #525252));
+    /* THE THREE VARIANT-DEPENDENT VALUES HAVE NO TIER-3 HOOK, AND CANNOT HAVE ONE.
+       --alert-box-bg, --alert-box-border-color and --alert-box-title-color were DECLARED
+       in component-tokens.css, so they always won the var() chain — and the variant blocks
+       below set --_alert-* directly, so they were bypassed for success, warning and danger.
+       The hooks therefore re-skinned the `info` alert and silently did nothing to the other
+       three. A single-valued hook in front of a per-variant role cannot work: the
+       declaration can only name one colour, and this needs four. Removed 2026-08-18
+       (alert-box-variant-hooks-removed) — a spoke re-points --color-*-utility-* instead,
+       which moves all four variants together and is what it wanted anyway.
+
+       --alert-box-text-color KEEPS its hook, and the difference is the whole point: the
+       body copy is neutral in every variant, so one value genuinely serves it. */
+    --_alert-bg: var(--color-background-utility-info-subtle, #fbfdff);
+    --_alert-border: var(--color-border-utility-info, #acd8fc);
+    --_alert-accent: var(--color-content-utility-info, #0d74ce);
+
+    /* THE TITLE CARRIES THE STATUS COLOUR; THE BODY DOES NOT, and the split is the whole
+       decision. Every other place the kit paints text with --color-content-utility-* is a
+       SHORT string — a field error, a pill label, esa-error-summary's list items — because
+       a coloured sentence is harder to read than a neutral one, and an alert body is the
+       longest text any of these components carries. esa-danger-zone, which is the same
+       shape (tinted panel, coloured border, heading + description), already split it this
+       way; the alert box used to split it the other way and the two disagreed.
+       Measured on the tint: 4.54-5.11:1 in light and 8.72-9.87:1 in dark, all four
+       variants, so the title clears AA as body-sized text even at the tightest variant. */
+    --_alert-icon-color: var(--_alert-accent);
+    --_alert-title-color: var(--_alert-accent);
+    --_alert-text-color: var(--alert-box-text-color, var(--color-content-default-secondary, #646464));
 
     display: flex;
     align-items: flex-start;
     gap: var(--spacing-300, 0.75rem);
-    padding: var(--alert-box-padding, var(--spacing-300, 0.75rem) var(--spacing-400, 1rem));
-    border: 1px solid var(--_alert-border);
-    border-radius: var(--alert-box-radius, var(--radius-200, 0.5rem));
+    padding: var(--spacing-300, 0.75rem) var(--spacing-400, 1rem);
+    border: var(--border-width-default, 1px) solid var(--_alert-border);
+    border-radius: var(--radius-md, 0.5rem);
     background: var(--_alert-bg);
-    font-size: var(--type-size-150, 0.875rem);
-    line-height: 1.5;
   }
 
   .esa-alert-box--success {
-    --_alert-bg: var(--color-success-subtle, #f0fdf4);
-    --_alert-border: var(--color-success-border, #bbf7d0);
-    --_alert-icon-color: var(--color-success-strong, #3a6d3f);
+    --_alert-bg: var(--color-background-utility-success-subtle, #fbfefc);
+    --_alert-border: var(--color-border-utility-success, #adddc0);
+    --_alert-accent: var(--color-content-utility-success, #218358);
   }
 
   .esa-alert-box--warning {
-    --_alert-bg: var(--color-warning-subtle, #fffbeb);
-    --_alert-border: var(--color-warning-border, #fde68a);
-    --_alert-icon-color: var(--color-warning-strong, #915930);
+    --_alert-bg: var(--color-background-utility-warning-subtle, #fefdfb);
+    --_alert-border: var(--color-border-utility-warning, #f3d673);
+    --_alert-accent: var(--color-content-utility-warning, #ab6400);
   }
 
   .esa-alert-box--danger {
-    --_alert-bg: var(--color-danger-subtle, #fef2f2);
-    --_alert-border: var(--color-danger-border, #fecaca);
-    --_alert-icon-color: var(--color-danger-strong, #ce2c31);
+    --_alert-bg: var(--color-background-utility-danger-subtle, #fffcfc);
+    --_alert-border: var(--color-border-utility-danger, #fdbdbe);
+    --_alert-accent: var(--color-content-utility-danger, #ce2c31);
   }
 
   .esa-alert-box__icon {
@@ -140,7 +241,6 @@ const iconPath = ICON_PATHS[variant];
 
   .esa-alert-box__title {
     display: block;
-    font-weight: 600;
     color: var(--_alert-title-color);
     margin-bottom: var(--spacing-050, 0.125rem);
   }
@@ -158,21 +258,21 @@ const iconPath = ICON_PATHS[variant];
     height: 24px;
     padding: 0;
     border: none;
-    border-radius: var(--radius-100, 0.25rem);
+    border-radius: var(--radius-sm, 0.25rem);
     background: transparent;
-    color: var(--color-text-muted, #737373);
+    color: var(--color-content-default-secondary, #646464);
     cursor: pointer;
     transition: color var(--transition-fast, 150ms ease),
                 background var(--transition-fast, 150ms ease);
   }
 
   .esa-alert-box__dismiss:hover {
-    color: var(--color-text-primary, #171717);
-    background: var(--alert-box-dismiss-bg-hover, rgba(0, 0, 0, 0.06));
+    color: var(--color-content-default, #202020);
+    background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.06));
   }
 
   .esa-alert-box__dismiss:focus-visible {
-    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
     outline-offset: var(--focus-ring-offset, 2px);
   }
 </style>

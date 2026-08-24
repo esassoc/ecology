@@ -1,4 +1,42 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry — see esa-text-field.ts for why
+// a Lit component inlines the glyph rather than reaching for <EsaIcon>.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
+
+/** Label / trigger text is UI text (label-*, medium); typed values, options and
+    chips are prose (body-*, regular). See the FORMS header in component-tokens.css.
+
+    NO `xs` KEY, unlike the other form controls. It was here, and it was the whole
+    bug: the map answered for a size the stylesheet had no block for, so `size="xs"`
+    got xs text in md padding instead of failing. Sizes are clamped to the supported
+    set in willUpdate now, so these maps are never asked for a key they lack — and if
+    one is ever added back here it must come with a `:host([size='…'])` block. */
+const LABEL_TYPE = { sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
+const VALUE_TYPE = { sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaOption {
   label: string;
@@ -8,6 +46,22 @@ interface EsaOption {
 
 /**
  * esa-select — form-associated Lit Web Component.
+ *
+ * SELECT vs COMBOBOX — the distinction, so nobody has to re-derive it:
+ *
+ *   esa-select    displays a list of options to pick from, opened by a BUTTON.
+ *                 No text entry. Long lists are reachable by TYPEAHEAD (type
+ *                 "c","a" → jump to the first "Ca…"), the way a native <select>
+ *                 works.
+ *   esa-combobox  an autocomplete INPUT with a list of suggestions. You type, it
+ *                 filters, and it can fetch remotely (debounced `search` event,
+ *                 `loading`, `resultsCount`).
+ *
+ * If the user types into it, it is a combobox. If they pick from what you gave
+ * them, it is a select. Until 2026-08-15 both components had this backwards at
+ * their defaults — `searchable` defaulted TRUE here, and esa-combobox defaulted to
+ * a button trigger — so each was rendering the other's control. See
+ * docs/system-improvement-ledger.md.
  *
  * Faithful translation of the Angular esa-select:
  *   - signal inputs                    → Lit reactive properties
@@ -20,6 +74,15 @@ interface EsaOption {
  * Keyboard: ArrowDown/ArrowUp navigate, Enter selects, Escape closes, Tab closes.
  * Dropdown is positioned with plain absolute CSS (no CDK). Outside-click closes it.
  */
+/**
+ * ONCE PER PAGE. The `searchable` deprecation notice lives inside
+ * renderSearchableInput(), so it reaches only call sites that set the prop explicitly
+ * — whose rendering did NOT change. `searchable` defaulted to TRUE until 2026-08-15,
+ * so the sites that lost their search field are exactly the ones that never wrote it,
+ * and they had no notice at all. Same inversion as esa-combobox.warnDefaultModeFlip.
+ */
+let warnedSearchableFlip = false;
+
 export class EsaSelect extends LitElement {
   static formAssociated = true;
 
@@ -39,9 +102,12 @@ export class EsaSelect extends LitElement {
      * reassurance addressed to the user, nor a restatement of the field's state.
      */
     helpText: { type: String, attribute: 'help-text' },
+    cue: { type: String },
     errorText: { type: String, attribute: 'error-text' },
     required: { type: Boolean },
+    liveError: { type: Boolean, attribute: 'live-error' },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     multiple: { type: Boolean },
     searchable: { type: Boolean },
     chipMode: { type: Boolean, attribute: 'chip-mode' },
@@ -53,13 +119,42 @@ export class EsaSelect extends LitElement {
 
   declare label: string;
   declare options: EsaOption[];
-  declare size: 'xs' | 'sm' | 'md' | 'lg';
+  // No `xs`. A select is a click target with a popup — at 28px the trigger and
+  // its chevron are below a comfortable tap size, and the option list it opens
+  // is unaffected by the trigger's size anyway, so the compaction buys nothing
+  // downstream. `sm` (32px) is the floor. See esa-text-field for a control where
+  // xs is still legitimate: it has no popup and no hit target beyond the field.
+  declare size: 'sm' | 'md' | 'lg';
   declare placeholder: string;
   declare helpText: string;
+  /**
+   * Override the visually-hidden instructional cue read to screen reader users.
+   *
+   * The default explains how to review options and that typing jumps to a match —
+   * which is what makes announcing the list unnecessary as it changes. Do not blank
+   * it, or the option list becomes silent with nothing to set expectations.
+   */
+  declare cue: string;
   declare errorText: string;
   declare required: boolean;
+  /**
+   * Announce the error the moment it appears rather than only when the field is focused.
+   * OFF by default — see the long note on `esa-text-field.liveError`: the house pattern is
+   * validate-on-submit with `<esa-error-summary>`, under which a live region per field
+   * fires an assertive announcement for EVERY invalid field at once, racing the summary
+   * the user was just sent to. Turn it on for fields validated INLINE, on blur.
+   */
+  declare liveError: boolean;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare multiple: boolean;
+  /**
+   * DEPRECATED (2026-08-15) — a select opens a list from a BUTTON; a type-to-filter
+   * field is an autocomplete, i.e. `esa-combobox`. Still honoured, warns once.
+   * Defaulted to TRUE until this date, which is why every existing call site was
+   * silently rendering an autocomplete. Typeahead replaces the common use.
+   */
   declare searchable: boolean;
   declare chipMode: boolean;
   private declare _search: string;
@@ -82,11 +177,13 @@ export class EsaSelect extends LitElement {
     this.size = 'md';
     this.placeholder = 'Select...';
     this.helpText = '';
+    this.cue = '';
     this.errorText = '';
     this.required = false;
+    this.liveError = false;
     this.disabled = false;
     this.multiple = false;
-    this.searchable = true;
+    this.searchable = false;
     this.chipMode = false;
     this._search = '';
     this._selected = [];
@@ -95,15 +192,72 @@ export class EsaSelect extends LitElement {
     this.internals = this.attachInternals();
   }
 
+  /** The sizes this component actually implements. `xs` is excluded by decision — see `declare size`. */
+  private static readonly SIZES = ['sm', 'md', 'lg'];
+  private warnedSize = false;
+  private warnedSearchable = false;
+
+  /**
+   * Clamp an out-of-range `size` to the floor BEFORE render.
+   *
+   * The type says `'sm' | 'md' | 'lg'`, but the attribute path is untyped — plain
+   * markup, a spoke's template, any non-TS consumer can write `size="xs"`. That
+   * used to produce a hybrid rather than an error: `LABEL_TYPE`/`VALUE_TYPE` had
+   * `xs` entries so the TEXT shrank, while the stylesheet had no
+   * `:host([size='xs'])` block so the PADDING stayed at the `:host` default (md).
+   * The result was 42px — taller than this component's own `sm` at 41.2px, i.e. the
+   * ramp inverted at the bottom end. The fixed-height ramp hid it; removing heights
+   * on 2026-08-14 made the box content-driven and it surfaced.
+   *
+   * Clamping here rather than adding an xs block is deliberate: `sm` is the floor
+   * for the reason given on `declare size`, and this makes the floor real instead of
+   * merely documented. `size` reflects, so assigning it fixes the attribute selector
+   * and the typography lookup in one move.
+   */
+  willUpdate(): void {
+    if (!EsaSelect.SIZES.includes(this.size)) {
+      const bad = this.size;
+      this.size = 'sm';
+      if (!this.warnedSize) {
+        this.warnedSize = true;
+        console.warn(
+          `⚠️  esa-select: size="${bad}" is not supported — clamped to "sm". A select is a ` +
+            `click target with a popup; below sm the trigger and chevron fall under a comfortable ` +
+            `tap size, and the option list does not shrink with it. Use esa-text-field if you need xs.`,
+        );
+      }
+    }
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
+    this.warnSearchableFlip();
     document.addEventListener('click', this.onDocClick);
     this.syncFormValue();
+  }
+
+  /**
+   * Keyed on the ATTRIBUTE, not the property: an omitted attribute is the signal, and
+   * writing `searchable` (or dropping to typeahead deliberately) is how an author
+   * confirms the new behaviour and silences this.
+   */
+  private warnSearchableFlip(): void {
+    if (warnedSearchableFlip) return;
+    if (this.hasAttribute('searchable')) return;
+    warnedSearchableFlip = true;
+    console.warn(
+      `⚠️  esa-select: \`searchable\` now defaults to false (was true before ` +
+        `2026-08-15), so this instance renders a button trigger instead of a text ` +
+        `field. The list is still reachable by TYPEAHEAD, so most call sites need no ` +
+        `change. If you wanted filtering as you type, that is <esa-combobox>. ` +
+        `(migrations.json: select-searchable-to-combobox)`,
+    );
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener('click', this.onDocClick);
+    clearTimeout(this._typeaheadTimer);
   }
 
   // --- Public value accessor (mirrors writeValue) ---
@@ -144,6 +298,29 @@ export class EsaSelect extends LitElement {
 
   private syncFormValue(): void {
     this.internals.setFormValue(this.multiple ? this._selected.join(',') : (this._selected[0] ?? null));
+  }
+
+  updated(): void {
+    this.syncValidity();
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. Anchored to the
+   * field so the browser can focus it and place its bubble.
+   */
+  private syncValidity(): void {
+    if (!this.required || this._selected.length > 0) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor = this.renderRoot?.querySelector<HTMLElement>('.input') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Select ${this.label}.` : 'Select an option.',
+      anchor,
+    );
   }
 
   private emit(): void {
@@ -209,7 +386,7 @@ export class EsaSelect extends LitElement {
     const selected = this.selectedOptions;
     if (selected.length === 0) return null;
     if (selected.length > 1) {
-      return html`<span class="chip chip--count">
+      return html`<span class="chip chip--count typography-body-sm">
         <span class="chip__label">${selected.length} Options</span>
         <button
           type="button"
@@ -222,7 +399,7 @@ export class EsaSelect extends LitElement {
       </span>`;
     }
     const opt = selected[0];
-    return html`<span class="chip">
+    return html`<span class="chip typography-body-sm">
       <span class="chip__label">${opt.label}</span>
       <button
         type="button"
@@ -278,17 +455,213 @@ export class EsaSelect extends LitElement {
       case 'Tab':
         this._open = false;
         break;
+      case ' ':
+        // SPACE HAS TO BE HANDLED EXPLICITLY, and it was not until 2026-08-19.
+        // It used to fall through to onTypeahead(), which calls preventDefault()
+        // for any single printable character — and cancelling keydown's default on
+        // a <button> suppresses the activation click. So Space neither opened the
+        // listbox nor chose an option; it appended " " to the typeahead buffer,
+        // matched nothing, and did nothing visible. Harmless while this trigger was
+        // an <input readonly>, live the moment it became a real button.
+        //
+        // A buffer in flight keeps Space as TYPING, so a multi-word label
+        // ("New York") stays reachable by typeahead. Only an idle Space activates,
+        // which is the select-only combobox behaviour the trigger's docblock cites.
+        //
+        // The deprecated `searchable` path shares this handler and renders a real
+        // text <input>, where Space is a character and nothing else — the same
+        // carve-out onTypeahead() already makes, for the same reason.
+        if (this.searchable) break;
+        if (this._typeahead) {
+          this.onTypeahead(event);
+          break;
+        }
+        event.preventDefault();
+        if (!this._open) {
+          this.openDropdown();
+        } else if (this._active >= 0) {
+          const opt = opts[this._active];
+          if (opt && !opt.disabled) this.selectOption(opt);
+        }
+        break;
+      default:
+        this.onTypeahead(event);
+        break;
     }
   };
+
+  /**
+   * Native-style typeahead: type "c","a" and jump to the first "Ca…" option.
+   *
+   * This is how a real <select> lets you reach an option in a long list, and it is
+   * why dropping `searchable` does not make this control worse — it replaces a text
+   * FIELD (which is what made this a combobox) with a keyboard behaviour that needs
+   * no field at all. It does NOT filter: the list is unchanged, only the active
+   * option moves. Filtering as you type is esa-combobox's job.
+   *
+   * The 500ms reset is the platform convention — long enough to type a couple of
+   * characters, short enough that a pause starts a fresh search rather than
+   * appending to a stale buffer.
+   */
+  private _typeahead = '';
+  private _typeaheadTimer?: ReturnType<typeof setTimeout>;
+
+  private onTypeahead(event: KeyboardEvent): void {
+    // Single printable characters only — modifier combos are shortcuts, not typing.
+    if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return;
+    // The deprecated `searchable` path owns the keyboard: it has a real text input,
+    // and stealing its keystrokes here would break filtering.
+    if (this.searchable) return;
+    event.preventDefault();
+
+    this._typeahead += event.key.toLowerCase();
+    clearTimeout(this._typeaheadTimer);
+    this._typeaheadTimer = setTimeout(() => { this._typeahead = ''; }, 500);
+
+    const i = this.options.findIndex(
+      (o) => !o.disabled && o.label.toLowerCase().startsWith(this._typeahead),
+    );
+    if (i < 0) return;
+    if (!this._open) this.openDropdown();
+    this._active = i;
+  }
+
+
+  /**
+   * The trigger. A select is "a list of options, opened by a BUTTON" — that is the
+   * whole distinction from esa-combobox, which is an autocomplete input with
+   * suggestions. Until 2026-08-15 this rendered an <input> with
+   * `?readonly=${!this.searchable}` and `searchable` defaulted to TRUE, so the
+   * default select was an editable autocomplete: esa-combobox's job, under this
+   * component's name. Nothing in the hub or in cb-fish-design ever set the prop —
+   * every call site was taking that default.
+   *
+   * `role="combobox"` stays and is correct: WAI-ARIA's SELECT-ONLY COMBOBOX pattern
+   * puts it on a non-editable element. `aria-autocomplete="list"` is gone, because
+   * there is no autocomplete here any more.
+   */
+  /**
+   * The description id list, shared by both trigger shapes. Error FIRST, then help —
+   * BOTH, never one instead of the other: a format hint is most needed at exactly the
+   * moment the format was got wrong, and the old ternary deleted it right then.
+   */
+  private get describedBy(): string {
+    // The cue goes LAST: an error is about right now, help is about this field, the
+    // cue is about how the widget works. Descriptions are read in order, so the most
+    // situational thing must not sit behind a sentence about arrow keys.
+    return [this.errorText ? 'error' : '', this.helpText ? 'help' : '', 'cue']
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  /** See esa-combobox.cueText — same reasoning, different keyboard model. */
+  private get cueText(): string {
+    if (this.cue) return this.cue;
+    return 'Use the up and down arrows to review options, or type to jump to one. Enter to choose.';
+  }
+
+  private renderTrigger() {
+    const shown = this.multiple
+      ? this.selectedOptions.map((o) => o.label).join(', ')
+      : this.displayValue;
+    const isPlaceholder = !shown;
+    return html`<button
+      type="button"
+      class="input input--trigger typography-${FIELD_TYPE[this.size]} ${isPlaceholder ? 'input--placeholder' : ''}"
+      role="combobox"
+      aria-expanded=${this._open}
+      aria-haspopup="listbox"
+      aria-labelledby=${this.label ? 'label' : nothing}
+      aria-required=${this.required ? 'true' : nothing}
+      aria-invalid=${this.errorText ? 'true' : nothing}
+      aria-describedby=${this.describedBy || nothing}
+      aria-controls=${this._open ? 'listbox' : nothing}
+      aria-activedescendant=${this._open && this._active >= 0 ? `opt-${this._active}` : nothing}
+      ?disabled=${this.disabled}
+      @keydown=${this.onKeydown}
+    >
+      ${this.multiple && this.chipMode && this.selectedOptions.length
+        ? ''
+        : shown || this.placeholder}
+    </button>`;
+  }
+
+  /**
+   * DEPRECATED path — `searchable`. Kept verbatim so a spoke upgrading the hub sees
+   * no visual change; cb-fish-design has 38 call sites all relying on the old
+   * default. Warns once, then behaves exactly as before. Removed once spokes have
+   * migrated (migrations.json: select-searchable-to-combobox).
+   */
+  private renderSearchableInput() {
+    if (!this.warnedSearchable) {
+      this.warnedSearchable = true;
+      console.warn(
+        `⚠️  esa-select: \`searchable\` is deprecated — a select is a list opened by a ` +
+          `BUTTON. A type-to-filter field is an autocomplete, which is \`esa-combobox\`. ` +
+          `Either drop \`searchable\` (the list is still reachable by typeahead) or switch ` +
+          `to <esa-combobox>. (migrations.json: select-searchable-to-combobox)`,
+      );
+    }
+    return html`<input
+      class="input typography-${FIELD_TYPE[this.size]}"
+      role="combobox"
+      aria-expanded=${this._open}
+      aria-haspopup="listbox"
+      aria-autocomplete="list"
+      aria-labelledby=${this.label ? 'label' : nothing}
+      aria-required=${this.required ? 'true' : nothing}
+      aria-invalid=${this.errorText ? 'true' : nothing}
+      aria-describedby=${this.describedBy || nothing}
+      aria-controls=${this._open ? 'listbox' : nothing}
+      aria-activedescendant=${this._open && this._active >= 0 ? `opt-${this._active}` : nothing}
+      placeholder=${this.multiple && this.chipMode && this.selectedOptions.length
+        ? ''
+        : this.placeholder}
+      .value=${this.inputValue}
+      ?disabled=${this.disabled}
+      @input=${this.onSearchInput}
+      @keydown=${this.onKeydown}
+    />`;
+  }
+
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
 
   render() {
     const hasError = !!this.errorText;
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label">
-              ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
-            </label>`
+          ? // A <span>, not a <label>. The thing being named is a <button role="combobox">
+            // in this shadow root — <label> names LABELABLE elements (input/textarea/select)
+            // and confers nothing on a button, so the old markup was an orphaned <label>
+            // and this control had no accessible name but its own VALUE. Named by
+            // REFERENCE via aria-labelledby, not by copying the string into aria-label:
+            // a copy silently unnames the control the moment `label` is empty.
+            html`<span class="field__label typography-${LABEL_TYPE[this.size]}" id="label">
+              ${this.label}${this.required
+                ? html`<span class="field__required" aria-hidden="true">*</span>`
+                : null}
+            </span>`
           : null}
 
         <div class="container">
@@ -299,43 +672,30 @@ export class EsaSelect extends LitElement {
             @click=${() => this.toggleDropdown()}
           >
             ${this.multiple && this.chipMode ? this.renderTags() : null}
-            <input
-              class="input"
-              role="combobox"
-              aria-expanded=${this._open}
-              aria-haspopup="listbox"
-              aria-autocomplete="list"
-              placeholder=${this.multiple && this.chipMode && this.selectedOptions.length
-                ? ''
-                : this.placeholder}
-              .value=${this.inputValue}
-              ?disabled=${this.disabled}
-              ?readonly=${!this.searchable}
-              @input=${this.onSearchInput}
-              @keydown=${this.onKeydown}
-            />
+            ${this.searchable ? this.renderSearchableInput() : this.renderTrigger()}
             <span class="arrow ${this._open ? 'arrow--open' : ''}">${this.chevronIcon()}</span>
           </div>
 
           ${this._open
-            ? html`<div class="dropdown" role="listbox">
+            ? html`<div class="dropdown" role="listbox" id="listbox">
                 ${this.filteredOptions.length === 0
-                  ? html`<div class="option option--empty">No results found</div>`
+                  ? html`<div class="option option--empty typography-${VALUE_TYPE[this.size]}">No results found</div>`
                   : this.filteredOptions.map((option, i) => {
                       const selected = this.isSelected(option.value);
                       return html`<div
-                        class="option ${i === this._active ? 'option--active' : ''} ${selected
+                        class="option typography-${VALUE_TYPE[this.size]} ${i === this._active ? 'option--active' : ''} ${selected
                           ? 'option--selected'
                           : ''} ${option.disabled ? 'option--disabled' : ''}"
                         role="option"
+                        id="opt-${i}"
                         aria-selected=${selected}
                         aria-disabled=${option.disabled ?? false}
                         @click=${() => this.selectOption(option)}
                         @mouseenter=${() => (this._active = i)}
                       >
-                        ${this.multiple
-                          ? html`<span class="check ${selected ? 'check--selected' : ''}">${this.checkIcon()}</span>`
-                          : null}
+                        <span class="check ${selected ? 'check--selected' : ''}"
+                          >${this.checkIcon()}</span
+                        >
                         <span class="option__label">${option.label}</span>
                       </div>`;
                     })}
@@ -343,11 +703,29 @@ export class EsaSelect extends LitElement {
             : null}
         </div>
 
-        ${hasError
-          ? html`<span class="field__error">${this.errorText}</span>`
-          : this.helpText
-            ? html`<span class="field__help">${this.helpText}</span>`
-            : null}
+        <!-- Both nodes always present: a live region created at the same moment as its
+             text is routinely not announced, so it has to already be there. .is-shown
+             rather than :empty — Lit's template whitespace defeats :empty in engines
+             following Selectors L3. -->
+        <span
+          class="field__error typography-body-sm ${hasError ? '' : 'visually-hidden'}"
+          id="error"
+          role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+        >${hasError
+            ? html`${alertIcon}<span class="visually-hidden">Error: </span
+                ><span>${this.errorText}</span>`
+            : nothing}</span
+        >
+        <span
+          class="field__help typography-body-sm ${this.helpText ? '' : 'visually-hidden'}"
+          id="help"
+          >${this.helpText || nothing}</span
+        >
+        <!-- Always hidden, always present: the instructional cue that means the option
+             list does not need to announce itself as it filters. See cueText. -->
+        <span class="visually-hidden" id="cue">${this.cueText}</span
+        >
       </div>
     `;
   }
@@ -365,36 +743,29 @@ export class EsaSelect extends LitElement {
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>`;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
-      --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-height: var(--form-height-md, 40px);
-      --_field-radius: var(--form-radius-md, 8px);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-padding-y: var(--spacing-300, 0.75rem);
+      --_field-padding-x: var(--spacing-300, 0.75rem);
+      --_field-radius: var(--radius-md, 0.5rem);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
-    :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
-      --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-height: var(--form-height-xs, 28px);
-      --_field-radius: var(--form-radius-xs, 4px);
-    }
+    /* No :host([size='xs']) — see the note on "declare size". "sm" is the floor by
+       decision, and an out-of-range size is clamped to it before it reaches here.
+       (No backticks in this comment: one would close the css tagged template.) */
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
-      --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-height: var(--form-height-sm, 32px);
-      --_field-radius: var(--form-radius-sm, 6px);
+      --_field-padding-y: var(--spacing-250, 0.625rem);
+      --_field-padding-x: var(--spacing-250, 0.625rem);
+      --_field-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
-      --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-height: var(--form-height-lg, 48px);
-      --_field-radius: var(--form-radius-lg, 10px);
+      --_field-padding-y: var(--spacing-400, 1rem);
+      --_field-padding-x: var(--spacing-400, 1rem);
+      --_field-radius: var(--radius-md, 0.5rem);
     }
 
     .field {
@@ -403,23 +774,39 @@ export class EsaSelect extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--form-label-font-size, var(--_field-font-size));
-      font-weight: var(--form-label-font-weight, var(--font-weight-medium, 450));
-      color: var(--form-label-color, #171717);
+      /* Was the last reader of --form-label-font-size and one of two readers of
+         --form-label-font-weight. Both are retired with the rest of the size-only
+         ramp; the composite carries size and weight together. */
+      color: var(--form-label-color, #646464);
     }
     .field__required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
+    /* Three signals, not one: colour, the icon, and a visually-hidden "Error:" prefix.
+       Colour alone is SC 1.4.1 (Use of Color, Level A) — and colour alone is exactly
+       what separated this from .field__help, which is otherwise an identical span in
+       an identical slot. */
     .field__error {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
+    .field__error .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
+    }
+    /* Both message nodes are ALWAYS rendered — a live region created at the same moment
+       as its text is routinely not announced, so it has to already exist. When there is
+       nothing to say they carry .visually-hidden, which takes them out of flow: .field
+       is a flex column with a gap, so an in-flow empty node would spend 4px of dead
+       space per message. Deliberately NOT display:none, which would drop them from the
+       accessibility tree and defeat the arrangement entirely. */
 
     .container {
       position: relative;
@@ -439,10 +826,9 @@ export class EsaSelect extends LitElement {
     .input-wrapper--tags {
       flex-wrap: nowrap;
       gap: var(--spacing-100, 4px);
-      min-height: var(--_field-height);
       padding: var(--_field-padding-y) calc(var(--_field-padding-x) + 24px)
         var(--_field-padding-y) var(--_field-padding-x);
-      background: var(--form-bg, #fff);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       box-sizing: border-box;
@@ -451,8 +837,9 @@ export class EsaSelect extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input-wrapper--tags:focus-within {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 2px var(--focus-ring-color, rgba(0, 88, 98, 0.25));
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .input-wrapper--tags .input {
       /* Compact tag filter: at most ONE token renders (a single chip, or an
@@ -471,17 +858,30 @@ export class EsaSelect extends LitElement {
       box-shadow: none;
     }
     .field--error .input-wrapper--tags {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
     .input {
       width: 100%;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
       padding-inline-end: calc(var(--_field-padding-x) + 24px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      /* The box is content + padding since heights were removed (2026-08-14), so
+         LEADING IS NOW LOAD-BEARING — it is the term that decides how tall a field
+         is. On a single-line control leading has no typographic job: there is one
+         line, and the space above and below it is invisible. Letting the body-*
+         composite's relaxed leading through added 12px here at md and made this
+         field 7px taller than esa-text-field on the same step, breaking the row
+         alignment component-tokens.css promises.
+         CHOSEN, NOT RESTATED, and not compensated for with a smaller padding rung.
+         The tight leading comes from FIELD_TYPE picking a microcopy-*-subtle rung,
+         whose composite declares the line-height for us — there is deliberately no
+         line-height declaration in this rule, because one here would outrank the
+         composite rather than agree with it. A static padding offset was the other option and
+         is wrong: leading scales with the fluid type (27px at 1600, 22px at 375) and
+         is re-pointable by a theme, so an offset would cancel it at exactly one
+         viewport. esa-textarea stays on a body-* composite on purpose — it is
+         genuinely multi-line, so its leading has a typographic job. */
+      color: var(--form-text-color, #202020);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -492,16 +892,58 @@ export class EsaSelect extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
+    }
+
+    /* The default trigger is a BUTTON, not an input — a select opens a list, it does
+       not accept typing. A button brings UA styles an input does not: centred text,
+       its own font, and a min-width. Restate them so the two trigger paths (button,
+       and the deprecated searchable input) are visually identical. */
+    .input--trigger {
+      display: block;
+      text-align: start;
+      font: inherit;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    /* ::placeholder cannot apply to a button — there is no placeholder attribute,
+       only fallback text — so the muted colour is a class instead. */
+    .input--placeholder {
+      color: var(--form-placeholder-color, #838383);
+    }
+    /* Hover moves the BORDER, not the fill — the field is transparent in every
+       state so that it is the colour of whatever contains it.
+       --form-border-color-hover already existed for exactly this and was wired
+       into one component; it is the family treatment now. */
+    .input:hover:not(:disabled) {
+      --_field-border-color: var(--form-border-color-hover, #bbbbbb);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .input:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
+    }
+    /* Tag mode moves the box chrome onto the wrapper, so the disabled fill has to
+       follow it there — the .input above is borderless in that mode. */
+    .input-wrapper--tags:has(.input:disabled) {
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
     }
 
     .arrow {
@@ -510,13 +952,13 @@ export class EsaSelect extends LitElement {
       top: 50%;
       transform: translateY(-50%);
       display: inline-flex;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
     }
     .arrow svg {
-      width: var(--icon-size-medium, 20px);
-      height: var(--icon-size-medium, 20px);
+      width: var(--icon-size-md, 20px);
+      height: var(--icon-size-md, 20px);
     }
     .arrow--open {
       transform: translateY(-50%) rotate(180deg);
@@ -531,10 +973,10 @@ export class EsaSelect extends LitElement {
       margin-top: var(--spacing-100, 4px);
       max-height: 256px;
       overflow-y: auto;
-      background: var(--color-surface, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
-      border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overscroll-behavior: contain;
     }
 
@@ -543,23 +985,21 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
     }
     .option:hover,
     .option--active {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .option--selected {
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #2a7e3b);
     }
     .option--disabled {
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -567,9 +1007,9 @@ export class EsaSelect extends LitElement {
       background: transparent;
     }
     .option--empty {
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
       cursor: default;
-      font-style: italic;
+      font-style: var(--font-style-italic, italic);
     }
     .option--empty:hover {
       background: transparent;
@@ -586,7 +1026,7 @@ export class EsaSelect extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -607,12 +1047,9 @@ export class EsaSelect extends LitElement {
       align-items: center;
       gap: var(--spacing-050, 2px);
       padding: 0 var(--spacing-100, 4px) 0 var(--spacing-200, 8px);
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #3a7c59);
-      border-radius: var(--radius-full, 9999px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
-      line-height: 1.2;
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #2a7e3b);
+      border-radius: var(--radius-pill, 9999px);
       user-select: none;
     }
     .chip__label {
@@ -627,7 +1064,7 @@ export class EsaSelect extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -637,20 +1074,59 @@ export class EsaSelect extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
+      background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 1px;
     }
 
     .field--error .input {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
-    .field--error .input:focus {
-      box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override. THIS COMPONENT IS WHY the mechanism is the token: there are three focusable
+       parts here — the tags wrapper, the input, and every chip remove button — and an
+       outline-color override would have to name each one. Re-pointing --focus-ring-color on
+       the error wrapper covers all three, and the dropdown panel too (it renders inside
+       .container, so it inherits; see esa-text-field on why that is recorded as a decision).
+       Two fixes here on 2026-08-17: it was a box-shadow, which stacked a second band once the
+       base ring became an outline; and it read --color-border-utility-danger, which is red-6,
+       a SUBTLE BORDER step measuring 1.40:1 on a sunken surface. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
-  `;
+
+    /* FORCED COLORS. Three of this listbox's states are backgrounds and nothing
+       else — :hover, --active (the keyboard cursor) and --selected — so all three
+       collapse onto Canvas together and the list reads as inert.
+
+       They are given DIFFERENT channels rather than different colours, because
+       the two states can coexist on one row: --selected takes the Highlight fill,
+       --active takes an inset outline. An inset outline is used so the cursor
+       does not enlarge the row or clip against the panel edge.
+
+       This also repairs a normal-mode bug. '.option--selected' is declared after
+       '.option--active' at equal specificity, so today the keyboard cursor simply
+       vanishes when it lands on the selected row. Here they compose. */
+    @media (forced-colors: active) {
+      .option--active {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+      .option--selected {
+        background: Highlight;
+        color: HighlightText;
+      }
+      /* The tick declares its own brand colour, which would survive as a
+         force-adjusted value and could land on top of the Highlight fill. It
+         must follow the row instead. Its opacity 0/1 toggle needs no help —
+         opacity is not force-adjusted. */
+      .check { color: inherit; }
+      .option--disabled { color: GrayText; }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-select')) {

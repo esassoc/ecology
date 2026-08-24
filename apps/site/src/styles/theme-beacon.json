@@ -1,0 +1,15 @@
+{
+  "slug": "beacon",
+  "scope": "beacon",
+  "seeds": {
+    "brand": "#1f7a6d",
+    "neutral": "cool",
+    "corners": "flat",
+    "accent": "derive",
+    "ai": "derive",
+    "info": "derive",
+    "success": "derive",
+    "warning": "derive",
+    "danger": "derive"
+  }
+}

@@ -45,4 +45,11 @@ export const spokes: Spoke[] = [
     repo: 'https://github.com/esassoc/ps-info-design',
     site: 'https://esassoc.github.io/ps-info-design/',
   },
+  {
+    name: 'ProjectFirma 2.0',
+    slug: 'firma2',
+    purpose: 'Conservation project-tracking platform — design-system spoke for the 2.0 rebuild',
+    repo: 'https://github.com/esassoc/firma2-design',
+    site: 'https://esassoc.github.io/firma2-design/',
+  },
 ];

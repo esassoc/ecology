@@ -1,4 +1,11 @@
 import { LitElement, html, css } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+
+/** Chip text is UI text at the SEMIBOLD tier. It rendered `font-weight: 600` as a
+    raw literal — 600 is not a token weight in this system (semibold is 550), so
+    adopting the composite is a small deliberate weight change, logged in the ledger. */
+const STRONG_TYPE = { xs: 'microcopy-2xs-strong', sm: 'microcopy-xs-strong', md: 'microcopy-md-strong', lg: 'microcopy-lg-strong' } as const;
 
 /** Active-state palette for a chip. Maps to Ecology semantic tokens inside the primitive. */
 export type EsaChipTone = 'neutral' | 'neutral-strong' | 'brand' | 'amber';
@@ -44,7 +51,7 @@ export class EsaChipGroup extends LitElement {
     values: { type: Array },
     multiple: { type: Boolean, reflect: true },
     size: { type: String, reflect: true },
-    name: { type: String },
+    name: { type: String, reflect: true },
     label: { type: String },
   };
 
@@ -54,7 +61,8 @@ export class EsaChipGroup extends LitElement {
   declare values: string[];
   declare multiple: boolean;
   declare size: 'xs' | 'sm' | 'md' | 'lg';
-  declare name: string;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare label: string;
 
   private internals: ElementInternals;
@@ -66,7 +74,6 @@ export class EsaChipGroup extends LitElement {
     this.values = [];
     this.multiple = false;
     this.size = 'md';
-    this.name = '';
     this.label = '';
     this.internals = this.attachInternals();
   }
@@ -86,6 +93,12 @@ export class EsaChipGroup extends LitElement {
       } catch {
         this.values = [];
       }
+    }
+    // A value set from SCRIPT (el.value = 'x') has to reach the form too. Only
+    // the click handler used to call syncFormValue, so a programmatically
+    // selected chip rendered as active and submitted as empty.
+    if (changed.has('value') || changed.has('values') || changed.has('multiple')) {
+      this.syncFormValue();
     }
   }
 
@@ -198,7 +211,7 @@ export class EsaChipGroup extends LitElement {
             <button
               type="button"
               role=${this.multiple ? 'checkbox' : 'radio'}
-              class="chip chip--${option.tone ?? 'neutral'} ${active ? 'chip--active' : ''}"
+              class="chip chip--${option.tone ?? 'neutral'} ${active ? 'chip--active' : ''} typography-${STRONG_TYPE[this.size]}"
               part="chip"
               tabindex=${tabbable ? 0 : -1}
               aria-checked=${active}
@@ -212,27 +225,42 @@ export class EsaChipGroup extends LitElement {
     `;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       --_gap: var(--spacing-150, 0.375rem);
       --_pad-y: var(--spacing-150, 0.375rem);
-      --_pad-x: var(--form-padding-x-md, 0.75rem);
-      --_font: var(--form-font-size-md, 0.9375rem);
-      --_radius: var(--radius-100, 0.25rem);
+      --_pad-x: var(--spacing-300, 0.75rem);
+      /* --radius-chip — shared with esa-badge and esa-pill; becomes the capsule under
+         a 'round' corner language, tracks --radius-sm otherwise. */
+      --_radius: var(--radius-chip, var(--radius-sm, 0.25rem));
 
       /* Resting (unselected) chrome. */
-      --_bg: var(--color-surface, #fff);
-      --_border: var(--color-border, #e5e5e5);
-      --_color: var(--color-text-secondary, #525252);
-      --_bg-hover: var(--color-surface-sunken, #f5f5f5);
-      --_border-hover: var(--color-border-strong, #d4d4d4);
-      --_color-hover: var(--color-text-primary, #171717);
+      --_bg: var(--color-background-elevation-raised, #fcfcfc);
+      --_border: var(--color-border-default, #cecece);
+      --_color: var(--color-content-default-secondary, #646464);
+      --_bg-hover: var(--color-background-elevation-sunken, #f0f0f0);
+      --_border-hover: var(--color-border-default-strong, #bbbbbb);
+      --_color-hover: var(--color-content-default, #202020);
 
       display: inline-flex;
     }
-    :host([size='xs']) { --_pad-x: var(--form-padding-x-xs, 0.5rem); --_font: var(--form-font-size-xs, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
-    :host([size='sm']) { --_pad-x: var(--form-padding-x-sm, 0.625rem); --_font: var(--form-font-size-sm, 0.75rem); --_pad-y: var(--spacing-100, 0.25rem); }
-    :host([size='lg']) { --_pad-x: var(--form-padding-x-lg, 1rem); --_font: var(--form-font-size-lg, 1rem); --_pad-y: var(--spacing-200, 0.5rem); }
+    /* --_pad-x walks --spacing-200/250/300/400 — the CONTROL ramp, shared with the
+       inputs and buttons, because a chip is interactive and lines up beside them.
+       esa-badge and esa-pill look identical in shape but walk 100/150/200/300: they
+       are static marks, not controls. Same code, different ramp; don't sync them.
+       --_pad-y is its OWN ramp (--spacing-100/100/150/200), NOT a copy of --_pad-x.
+       That is the one place this component must not follow the control ramp: --_pad-x
+       walks 200/250/300/400 because a chip sits beside an input, but 12-16px of
+       VERTICAL padding makes it as tall as a button (measured: md rendered 50px).
+       A chip is wider than it is tall. There is no height token any more:
+       --chip-group-height-* and the shared --chip-height-* ramp behind it went on
+       2026-08-15. This box also carries a 1px border per side. */
+    :host([size='xs']) { --_pad-y: var(--spacing-100, 0.25rem); --_pad-x: var(--spacing-200, 0.5rem); }
+    :host([size='sm']) { --_pad-y: var(--spacing-100, 0.25rem); --_pad-x: var(--spacing-250, 0.625rem); }
+    :host([size='lg']) { --_pad-y: var(--spacing-200, 0.5rem); --_pad-x: var(--spacing-400, 1rem); }
 
     .root {
       display: inline-flex;
@@ -245,15 +273,13 @@ export class EsaChipGroup extends LitElement {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-100, 0.25rem);
-      padding: var(--_pad-y) var(--_pad-x);
+      box-sizing: border-box;
+      padding-block: var(--_pad-y);
+      padding-inline: var(--_pad-x);
       border-radius: var(--_radius, 0.25rem);
-      border: 1px solid var(--_border);
+      border: var(--border-width-default, 1px) solid var(--_border);
       background: var(--_bg);
       color: var(--_color);
-      font: inherit;
-      font-size: var(--_font);
-      font-weight: 600;
-      line-height: 1;
       white-space: nowrap;
       cursor: pointer;
       transition:
@@ -269,36 +295,35 @@ export class EsaChipGroup extends LitElement {
     }
 
     .chip:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
-
-    .chip__label { line-height: 1; }
 
     /* Active palettes mirror Ecology semantic tokens. */
     .chip--active.chip--neutral {
-      background: var(--color-surface-sunken, #efefef);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-tertiary, #404040);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
+      border-color: var(--color-border-default-strong, #bbbbbb);
+      color: var(--color-content-default-secondary, #646464);
     }
     .chip--active.chip--neutral-strong {
-      background: var(--color-border, #e5e5e5);
-      border-color: var(--color-border-strong, #d4d4d4);
-      color: var(--color-text-primary, #171717);
+      background: var(--color-border-default, #cecece);
+      border-color: var(--color-border-default-strong, #bbbbbb);
+      color: var(--color-content-default, #202020);
     }
     /* Reads the SEMANTIC primary chain so spoke themes re-skin it — hub
        default is brand blue, a forest-green theme goes forest. */
     .chip--active.chip--brand {
-      background: var(--color-primary-subtle, #f3f8fb);
-      border-color: var(--color-primary-border, #cfe2ee);
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-background-brand-subtle, #fbfefb);
+      border-color: var(--color-border-brand, #b2ddb5);
+      color: var(--color-content-brand, #2a7e3b);
     }
     .chip--active.chip--amber {
-      background: var(--color-warning-subtle, #fffbeb);
-      border-color: var(--color-warning-border, #fde68a);
-      color: var(--color-warning-strong, #915930);
+      background: var(--color-background-utility-warning-subtle, #fefdfb);
+      border-color: var(--color-border-utility-warning, #f3d673);
+      color: var(--color-content-utility-warning, #ab6400);
     }
-  `;
+  `,
+  ];
 }
 
 if (!customElements.get('esa-chip-group')) {

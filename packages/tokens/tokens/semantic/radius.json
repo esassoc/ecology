@@ -1,0 +1,34 @@
+{
+  "radius": {
+    "xs": {
+      "$value": "{radius.050}",
+      "$type": "dimension",
+      "$description": "The tightest corner — swatches, colour chips, inline markers. 2px."
+    },
+    "sm": {
+      "$value": "{radius.100}",
+      "$type": "dimension",
+      "$description": "4px. Inputs, buttons and selects at xs/sm; badges, tooltips, kbd, menu items."
+    },
+    "chip": {
+      "$value": "{radius.100}",
+      "$type": "dimension",
+      "$description": "The resting corner of a small labelled mark — pills, badges, chips. 4px, the same value as `radius-sm` today.\n\nIT IS NOT AN ALIAS OVER `radius-sm`, WHICH IS THE ONLY REASON IT EXISTS. `--radius-control`, `--radius-card`, `--radius-surface` and `--radius-overlay` were all deprecated by `radius-roles-to-scale` for being exactly that — one name in front of one scale step, carrying no decision of its own. This one DIVERGES: under the `round` corner language it takes `--radius-pill` and the chip family becomes capsules, which no step on the xs/sm/md/lg ramp can say. Under `flat` and `soft` it tracks `radius-sm` exactly, so those themes are byte-identical to before it existed.\n\nWHY IT IS A ROLE AND NOT A COMPONENT HOOK: three components read it (`esa-pill`, `esa-badge`, `esa-chip-group`) and they are meant to agree — esa-pill's own note says its 4px corner exists to match esa-badge. A per-component hook would let them drift apart silently, which is the failure the 2026-08-16 tier-3 demotion pass removed 168 instances of.\n\nIt does NOT cover `esa-pill shape=\"round\"`, which is an explicit per-instance opt-in and stays on `--radius-pill` under every corner language."
+    },
+    "md": {
+      "$value": "{radius.200}",
+      "$type": "dimension",
+      "$description": "8px, the default corner and the most-used step — inputs, buttons and selects at md/lg; dropdowns, popovers, panels, cards, alerts, snackbars. Re-point this to make a theme flatter or rounder overall."
+    },
+    "lg": {
+      "$value": "{radius.400}",
+      "$type": "dimension",
+      "$description": "12px. Things that float above the page — dialogs, confirm dialogs, the command palette, entity search."
+    },
+    "pill": {
+      "$value": "{radius.full}",
+      "$type": "dimension",
+      "$description": "Fully rounded — avatars, progress bars, filter pills, breadcrumb pills, the back-to-top button. NOT a step on the scale: it is a shape, and it stays a named role so a squared-off brand can re-point it to --radius-sm without touching the ramp."
+    }
+  }
+}

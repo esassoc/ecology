@@ -8,10 +8,17 @@ because of two facts about how the enforcement travels.
 
 1. **The legos' built-in a11y doesn't come along in a hand-port.** When you
    *use* `esa-dialog`, you inherit its focus trap, its Esc handling, its
-   `role="dialog"` + `aria-modal`, its focus-return-on-close — all tested. When
-   you **re-implement** that dialog as a `<div>` in another framework because
-   "we can't use the web component here," you inherit *none* of it. The visual
-   copy looks identical and is a fraction as accessible.
+   `role="dialog"` + `aria-modal`, and its focus-return-on-close. When you
+   **re-implement** that dialog as a `<div>` in another framework because "we
+   can't use the web component here," you inherit *none* of it. The visual copy
+   looks identical and is a fraction as accessible.
+
+   Two corrections to how that used to be stated. It said "all tested" — there
+   is **no component test harness in this repo**; `npm test` is static-source
+   ratchets, and a browser check for overlay focus behaviour only arrived in
+   2026-08. And it generalised from `esa-dialog` to the kit: audited 2026-08-18,
+   that full choreography held in three of seventeen overlays. **Inherit the
+   named component's behaviour, not the category's.**
 
 2. **The hooks only fire where spoke-kit is installed.** `check-a11y` is a
    PreToolUse gate that ships *with the plugin*. A non-Astro clone that never
@@ -44,6 +51,10 @@ screen and every re-implemented component:
       where the role implies them — tabs, radios, menus, sliders).
 - [ ] Every overlay (dialog, drawer, menu) is escapable: Esc closes it, focus
       returns to the trigger, and Tab does not leak to the page behind it.
+- [ ] Every **modal** overlay makes the page behind it `inert` — not merely
+      covered by a backdrop. A backdrop stops the mouse; it does nothing for the
+      keyboard, a screen reader's virtual cursor, or find-in-page. `aria-modal`
+      without `inert` announces a modality that is not enforced.
 - [ ] No keyboard trap — you can always Tab/Esc your way back out.
 
 ### Focus visibility
@@ -68,6 +79,12 @@ screen and every re-implemented component:
       colors, which takes you off the Radix scale (see SKILL.md §5). Text 4.5:1,
       large text 3:1, non-text/UI 3:1.
 - [ ] State is never conveyed by color alone.
+- [ ] Forced colors mode survives the port (see `forced-colors.md`): focus rings
+      use `outline`, not `box-shadow` alone; floating panels carry a border;
+      links keep an underline (`text-decoration-color: transparent`, never
+      `text-decoration: none`); icons inherit `currentColor`. A port that swaps
+      a native `<button>` for a `<div role="button">` loses its system colors
+      silently — forced colors reads elements, not roles.
 
 ### Verify
 - [ ] Keyboard-only walkthrough of every screen.

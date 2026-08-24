@@ -1,4 +1,70 @@
 import { defineConfig } from 'astro/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/**
+ * The build-time data modules (token-graph, theming, tier2/tier3-naming,
+ * component-promises) read the token files and component sources with
+ * `readFileSync` at module scope. Vite sees no IMPORT edge to those files, so
+ * editing a token or a component leaves the cached module in place and the dev
+ * server keeps serving the PREVIOUS analysis — silently, with no reload and no
+ * warning. That is worse than a stale page: the debug views exist to be trusted,
+ * and a wrong health count reads exactly like a right one.
+ *
+ * This watches the real inputs and invalidates the readers when they change.
+ */
+function watchTokenSources() {
+  const WATCH = [
+    path.join(ROOT, 'packages', 'tokens', 'dist'),
+    path.join(ROOT, 'packages', 'tokens', 'src'),
+    path.join(ROOT, 'packages', 'tokens', 'tokens'),
+    // Must stay in step with SCAN_ROOTS in token-graph.ts — a root that is
+    // scanned but not watched serves stale analysis, which is the failure this
+    // plugin exists to prevent.
+    path.join(ROOT, 'packages', 'ecology', 'src'),
+    path.join(ROOT, 'packages', 'docs', 'src'),
+    path.join(ROOT, 'packages', 'spoke-template', 'src'),
+  ];
+  const READERS = [
+    'token-graph.ts',
+    'theming.ts',
+    'tier2-naming.ts',
+    'tier3-naming.ts',
+    'component-promises.ts',
+    // These two were MISSING until 2026-08-17, and the symptom was subtler than a
+    // stale debug page: `component-api.ts` backs every API table on the site, so
+    // editing a component's props left the dev server serving the previous parse —
+    // a table that looks authoritative and describes the file as it was an hour
+    // ago. `angular-snippet.ts` derives from that same parse.
+    'component-api.ts',
+    'angular-snippet.ts',
+  ].map((f) => path.join(ROOT, 'apps', 'site', 'src', 'data', f));
+
+  return {
+    name: 'ecology:watch-token-sources',
+    apply: 'serve',
+    configureServer(server) {
+      server.watcher.add(WATCH);
+      server.watcher.on('all', (_event, file) => {
+        if (!WATCH.some((dir) => file.startsWith(dir))) return;
+        let hit = false;
+        for (const reader of READERS) {
+          const mod = server.moduleGraph.getModuleById(reader);
+          if (mod) {
+            server.moduleGraph.invalidateModule(mod);
+            hit = true;
+          }
+        }
+        // Only reload when a debug reader was actually loaded this session —
+        // otherwise every component edit would trigger a full-page reload and
+        // stomp HMR for ordinary work.
+        if (hit) server.ws.send({ type: 'full-reload' });
+      });
+    },
+  };
+}
 
 // The site ships zero client JS except the small inline theme-switcher script —
 // everything else is static HTML/CSS, which is the point: the rendered output is
@@ -14,4 +80,32 @@ const base = process.env.NODE_ENV === 'production' ? '/ecology/' : '/';
 export default defineConfig({
   site: 'https://esassoc.github.io',
   base,
+  /*
+   * /patterns/app-shell was a pattern page that predated esa-app-shell and hand-rolled
+   * the same chrome from esa-app-bar + a script-wired esa-sidebar-nav. Once the shell
+   * shipped as one component the page's premise was gone — PatternDoc documents shapes
+   * the kit does NOT ship as a component — so it was retired and this keeps the URL alive.
+   *
+   * The KEY is base-less (Astro applies `base` when it places the generated file), but
+   * the DESTINATION is not — Astro copies it into the meta-refresh verbatim, so a bare
+   * '/components/…' 404s on the GitHub Pages subpath. Measured: it emitted
+   * `content="0;url=/components/esa-app-shell"` under base '/ecology/'. Hence the interpolation.
+   */
+  redirects: { '/patterns/app-shell': `${base}components/esa-app-shell` },
+  vite: {
+    plugins: [watchTokenSources()],
+    resolve: {
+      /*
+       * The theme maker runs the SAME derivation in the browser that make-theme.mjs
+       * runs in node — one module, so a live preview cannot disagree with the file it
+       * writes. Those modules live in scripts/lib/ (outside this app), hence the alias;
+       * they are plain ESM with no `node:` imports precisely so they can be bundled.
+       *
+       * Do NOT point this at scripts/ generally. Everything under scripts/ except
+       * lib/{color,ramp,theme-recipe,contrast}.mjs reads the filesystem at module scope
+       * and cannot be bundled at all.
+       */
+      alias: { '@theme': path.join(ROOT, 'scripts', 'lib') },
+    },
+  },
 });

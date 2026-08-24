@@ -1,4 +1,36 @@
 import { LitElement, html, css, nothing } from 'lit';
+import { typography } from '../typography.js';
+import { a11y } from '../a11y.js';
+import { announce } from '../announcer.js';
+
+// Lucide `circle-alert`, copied from ./icon-registry — see esa-text-field.ts for why
+// a Lit component inlines the glyph rather than reaching for <EsaIcon>.
+const alertIcon = html`<svg
+  class="error__icon"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line
+    x1="12"
+    x2="12.01"
+    y1="16"
+    y2="16"
+  />
+</svg>`;
+
+/** Label / trigger text is UI text (label-*, medium); typed values, options and
+    chips are prose (body-*, regular). See the FORMS header in component-tokens.css. */
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+// The typed value is microcopy: it sits IN the field box, whose height comes from
+// padding, so it carries no leading. `-subtle` is the regular weight — a value must
+// not outweigh the label naming it.
+const FIELD_TYPE = { xs: 'microcopy-2xs-subtle', sm: 'microcopy-xs-subtle', md: 'microcopy-md-subtle', lg: 'microcopy-lg-subtle' } as const;
+const VALUE_TYPE = { xs: 'body-2xs', sm: 'body-xs', md: 'body-md', lg: 'body-lg' } as const;
 
 interface EsaComboboxOption {
   value: string;
@@ -11,12 +43,24 @@ type EsaComboboxTriggerStyle = 'field' | 'text';
 /**
  * esa-combobox — form-associated Lit Web Component.
  *
+ * COMBOBOX vs SELECT — the distinction, so nobody has to re-derive it:
+ *
+ *   esa-combobox  an autocomplete INPUT with a list of suggestions. You type, it
+ *                 filters, and it can fetch remotely (debounced `search` event,
+ *                 `loading`, `resultsCount`).
+ *   esa-select    displays a list of options to pick from, opened by a BUTTON. No
+ *                 text entry; long lists are reachable by typeahead.
+ *
+ * If the user types into it, it is a combobox. If they pick from what you gave
+ * them, it is a select. Until 2026-08-15 both had this backwards at their defaults.
+ * See docs/system-improvement-ledger.md.
+ *
  * Faithful translation of the Angular esa-combobox:
  *   - signal inputs                    → Lit reactive properties
  *   - ControlValueAccessor (NG_VALUE)  → form-associated element + ElementInternals
  *   - host size class                  → reflected `size` attribute + :host() selectors
- *   - two modes: 'autocomplete' (input trigger) / 'select' (button trigger w/ in-panel search)
- *   - two trigger styles: 'field' (bordered) / 'text' (link-like)
+ *   - `mode` / `triggerStyle` are DEPRECATED (see below) — the select-mode button
+ *     trigger they produce is esa-select's control, not this one's
  *   - multi-select chips, search filter + match highlight, loading spinner, results count
  *   - debounced `search` event, `change` event on selection — same key logic
  *
@@ -28,6 +72,14 @@ type EsaComboboxTriggerStyle = 'field' | 'text';
  *
  * Keyboard: ArrowDown/Up navigate, Enter selects, Escape & Tab close.
  */
+/**
+ * ONCE PER PAGE, not once per instance. Unlike the `mode="select"` notice — which
+ * reaches only the authors who opted in explicitly — this one fires for every call
+ * site that omitted the attribute, which was the majority. Per-instance would turn a
+ * deprecation notice into console spam on any page with a few comboboxes.
+ */
+let warnedDefaultModeFlip = false;
+
 export class EsaCombobox extends LitElement {
   static formAssociated = true;
 
@@ -45,13 +97,16 @@ export class EsaCombobox extends LitElement {
      */
     placeholder: { type: String },
     disabled: { type: Boolean, reflect: true },
+    name: { type: String, reflect: true },
     required: { type: Boolean },
+    liveError: { type: Boolean, attribute: 'live-error' },
     /**
      * A constraint on what this field will accept — its format, source, or
      * limit. "As it appears on the permit." "Letters, numbers, hyphens." Never
      * reassurance addressed to the user, nor a restatement of the field's state.
      */
     helpText: { type: String, attribute: 'help-text' },
+    cue: { type: String },
     errorText: { type: String, attribute: 'error-text' },
     loading: { type: Boolean },
     debounceMs: { type: Number, attribute: 'debounce-ms' },
@@ -62,7 +117,18 @@ export class EsaCombobox extends LitElement {
     _active: { state: true },
   };
 
+  /**
+   * DEPRECATED (2026-08-15) — `mode="select"` renders a BUTTON trigger, which is
+   * esa-select's job. A combobox is an autocomplete input with suggestions. Still
+   * honoured, warns once. This DEFAULTED to 'select' until now, so the default
+   * combobox was a select — and this component's own doc page demoed `mode="select"`
+   * 12 times against `autocomplete` twice.
+   */
   declare mode: EsaComboboxMode;
+  /**
+   * DEPRECATED (2026-08-15) — read at exactly one site, inside `renderSelect()`, so
+   * it only ever styled the button trigger. It dies with `mode="select"`.
+   */
   declare triggerStyle: EsaComboboxTriggerStyle;
   declare options: EsaComboboxOption[];
   declare multiple: boolean;
@@ -70,8 +136,27 @@ export class EsaCombobox extends LitElement {
   declare label: string;
   declare placeholder: string;
   declare disabled: boolean;
+  /** Form field name — the key this control submits under. */
+  declare name: string | undefined;
   declare required: boolean;
+  /**
+   * Announce the error the moment it appears rather than only when the field is focused.
+   * OFF by default — see the long note on `esa-text-field.liveError`: the house pattern is
+   * validate-on-submit with `<esa-error-summary>`, under which a live region per field
+   * fires an assertive announcement for EVERY invalid field at once, racing the summary
+   * the user was just sent to. Turn it on for fields validated INLINE, on blur.
+   */
+  declare liveError: boolean;
   declare helpText: string;
+  /**
+   * Override the visually-hidden instructional cue read to screen reader users.
+   *
+   * The default explains that results filter as you type and how to review them —
+   * which is what makes announcing every keystroke unnecessary. Replace it if this
+   * combobox behaves differently (server-side search with a delay, say); do not
+   * blank it, or the results list becomes silent with nothing to set expectations.
+   */
+  declare cue: string;
   declare errorText: string;
   declare loading: boolean;
   declare debounceMs: number;
@@ -82,6 +167,7 @@ export class EsaCombobox extends LitElement {
   private declare _active: number;
   private _suppressNextOpen = false;
 
+  private warnedMode = false;
   private internals: ElementInternals;
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
   private lastEmittedSearch = '';
@@ -92,7 +178,7 @@ export class EsaCombobox extends LitElement {
 
   constructor() {
     super();
-    this.mode = 'select';
+    this.mode = 'autocomplete';
     this.triggerStyle = 'field';
     this.options = [];
     this.multiple = false;
@@ -101,7 +187,9 @@ export class EsaCombobox extends LitElement {
     this.placeholder = 'Select...';
     this.disabled = false;
     this.required = false;
+    this.liveError = false;
     this.helpText = '';
+    this.cue = '';
     this.errorText = '';
     this.loading = false;
     this.debounceMs = 300;
@@ -117,6 +205,43 @@ export class EsaCombobox extends LitElement {
     super.connectedCallback();
     document.addEventListener('click', this.onDocClick);
     this.syncFormValue();
+    this.warnDefaultModeFlip();
+  }
+
+  /**
+   * THE WARNING THAT MATTERS FIRES ON THE PATH THAT DID NOT CHANGE, so this is the
+   * other half. `mode` defaulted to 'select' until 2026-08-15; the call sites hurt by
+   * that flip are the ones that never wrote the attribute at all, and they render
+   * renderAutocomplete(), which holds no warning. renderSelect()'s notice reaches only
+   * authors who already opted in explicitly — i.e. the ones whose rendering is
+   * unchanged.
+   *
+   * It cannot be a migrations.json rewrite either: `combobox-mode-select-to-select` is
+   * a deprecatedProps row with no `pairs`, so the codemod has nothing to write and no
+   * way to tell an omitted attribute from a deliberate one.
+   *
+   * Keyed on the ATTRIBUTE, not the property: an omitted attribute is the signal, and
+   * writing `mode="autocomplete"` is both the confirmation and the way to silence this.
+   *
+   * IT MUST RUN BEFORE THE FIRST UPDATE, because `mode` REFLECTS. Lit writes the
+   * resolved value back onto the element, so a few milliseconds later every instance
+   * carries `mode="autocomplete"` whether or not anyone typed it, and the check reads
+   * as "nobody is affected". connectedCallback is before first update on the initial
+   * upgrade, which is the moment this needs to be right. (A re-connection later is
+   * after reflection and would not warn — harmless only because the flag above is
+   * module-scoped and this has already fired once by then.)
+   */
+  private warnDefaultModeFlip(): void {
+    if (warnedDefaultModeFlip) return;
+    if (this.hasAttribute('mode')) return;
+    warnedDefaultModeFlip = true;
+    console.warn(
+      `⚠️  esa-combobox: \`mode\` now defaults to "autocomplete" (was "select" before ` +
+        `2026-08-15), so this instance renders a free-text input rather than a button ` +
+        `trigger. If that is what you want, write \`mode="autocomplete"\` to silence ` +
+        `this. If you wanted the button trigger over a fixed list, that is <esa-select>. ` +
+        `(migrations.json: combobox-mode-select-to-select)`,
+    );
   }
 
   disconnectedCallback(): void {
@@ -180,6 +305,77 @@ export class EsaCombobox extends LitElement {
     this.internals.setFormValue(this.multiple ? this._selected.join(',') : (this._selected[0] ?? null));
   }
 
+  updated(): void {
+    this.syncValidity();
+    this.announceEmptyResults();
+  }
+
+  /**
+   * Announce the moment a query stops matching anything — and ONLY that moment.
+   *
+   * The instructional cue (see `cueText`) already tells the user results filter as
+   * they type, so announcing every keystroke's result count would be noise on top of
+   * information they already have. Running commentary while someone is typing is the
+   * classic way this pattern is got wrong.
+   *
+   * The exception is the dry query. A sighted user sees the list empty out
+   * immediately and corrects course; with no announcement, a screen reader user keeps
+   * typing into nothing and only finds out when they navigate down to an empty list.
+   * That is the one case worth interrupting for, which is why it is assertive.
+   *
+   * Guarded on the TRANSITION, not the state — otherwise every subsequent keystroke
+   * in an already-empty query re-announces.
+   */
+  private wasEmpty = false;
+  private announceEmptyResults(): void {
+    const isEmpty =
+      this._open && !this.loading && !!this._search && this.filteredOptions.length === 0;
+    if (isEmpty && !this.wasEmpty) {
+      announce('No results found', { assertive: true });
+    }
+    this.wasEmpty = isEmpty;
+  }
+
+  /**
+   * The instructional cue, wired to the control via `aria-describedby`.
+   *
+   * This is the part that removes the NEED for a live region on the results. Telling
+   * someone once, up front, that the list filters as they type sets the expectation
+   * for every keystroke after it — so they know to go and read the list when they are
+   * done, and nothing has to interrupt them meanwhile. A persistent description beats
+   * a transient announcement: it can be re-read, it cannot be missed, and it does not
+   * compete with anything else for the announcement queue.
+   *
+   * Visually hidden because sighted users get the same information from watching the
+   * list change.
+   */
+  private get cueText(): string {
+    if (this.cue) return this.cue;
+    return this.mode === 'autocomplete'
+      ? 'Results filter as you type. Use the up and down arrows to review them, Enter to choose.'
+      : 'Use the up and down arrows to review options, Enter to choose.';
+  }
+
+  /**
+   * Constraint validation. `required` has to actually BLOCK submission, not just
+   * draw an asterisk and set aria-required — a required field the form happily
+   * submits empty is a promise the component does not keep. The anchor differs
+   * by `triggerStyle`, so fall back to the host when neither node is in the tree.
+   */
+  private syncValidity(): void {
+    if (!this.required || this._selected.length > 0) {
+      this.internals.setValidity({});
+      return;
+    }
+    const anchor =
+      this.renderRoot?.querySelector<HTMLElement>('.input, .trigger--field, .trigger') ?? undefined;
+    this.internals.setValidity(
+      { valueMissing: true },
+      this.label ? `Select ${this.label}.` : 'Select an option.',
+      anchor,
+    );
+  }
+
   private emitValue(): void {
     this.syncFormValue();
     this.dispatchEvent(
@@ -219,8 +415,20 @@ export class EsaCombobox extends LitElement {
 
   private closeDropdown(): void {
     if (!this._open) return;
+    const root = this.renderRoot as unknown as ShadowRoot;
+    // MODE="SELECT" ONLY. In autocomplete mode the input IS the trigger and stays
+    // mounted, so focus never moves. In select mode the search input renders INSIDE
+    // the dropdown (`.search-input`), and closing unmounts it — dropping focus to
+    // <body> and returning a keyboard user to the top of the document. Guarded on
+    // focus actually being inside, so an outside click that moved focus somewhere the
+    // user chose is not yanked back.
+    const returnFocus = this.mode !== 'autocomplete' && !!root.activeElement;
     this._open = false;
     this._search = '';
+    if (!returnFocus) return;
+    void this.updateComplete.then(() => {
+      root.querySelector<HTMLElement>('.trigger')?.focus();
+    });
   }
 
   // --- Selection ---
@@ -334,14 +542,43 @@ export class EsaCombobox extends LitElement {
     )}`;
   }
 
+  /**
+   * Forward focus to the inner control.
+   *
+   * A form-associated custom element is NOT focusable by default: it has no tabindex and
+   * is not a natively focusable tag, so `host.focus()` is a silent no-op, and the real
+   * control sits in a shadow root that no outside reference can reach. That is exactly
+   * what `<esa-error-summary>` needs — its links resolve a field by id and call `.focus()`
+   * on the HOST, because IDREFs cannot cross a shadow boundary in any engine.
+   *
+   * Without this override the summary scrolls to the field and leaves focus where it was,
+   * which is the failure the summary exists to prevent.
+   *
+   * `delegatesFocus: true` on the shadow root would also do it, but it changes click and
+   * `:focus` behaviour across the whole component; an explicit forward is the smaller and
+   * more predictable change.
+   */
+  focus(options?: FocusOptions): void {
+    const inner = this.renderRoot?.querySelector<HTMLElement>('.input, .trigger');
+    if (inner) inner.focus(options);
+    else super.focus(options);
+  }
+
   render() {
     const hasError = !!this.errorText;
     return html`
       <div class="field ${hasError ? 'field--error' : ''}">
         ${this.label
-          ? html`<label class="field__label">
-              ${this.label}${this.required ? html`<span class="field__required">*</span>` : null}
-            </label>`
+          ? // A <span>, not a <label>. <label> names LABELABLE elements only; the thing
+            // being named here is an <input role="combobox"> that the label never had a
+            // `for` on, so this was an orphaned <label> and the control's only accessible
+            // name was its own value. Named by REFERENCE below via aria-labelledby — a
+            // copied aria-label silently unnames the control when `label` goes empty.
+            html`<span class="field__label typography-${LABEL_TYPE[this.size]}" id="label">
+              ${this.label}${this.required
+                ? html`<span class="field__required" aria-hidden="true">*</span>`
+                : null}
+            </span>`
           : null}
 
         <div class="container">
@@ -349,25 +586,67 @@ export class EsaCombobox extends LitElement {
           ${this._open ? this.renderDropdown() : null}
         </div>
 
-        ${hasError
-          ? html`<span class="field__error">${this.errorText}</span>`
-          : this.helpText
-            ? html`<span class="field__help">${this.helpText}</span>`
-            : null}
+        <!-- Both message nodes always present so the live region pre-exists its content;
+             .visually-hidden when empty keeps them out of .field's flex gap. -->
+        <span
+          class="field__error typography-body-sm ${hasError ? '' : 'visually-hidden'}"
+          id="error"
+          role=${this.liveError ? 'alert' : nothing}
+          data-esa-live=${this.liveError ? 'opt-in' : nothing}
+        >${hasError
+            ? html`${alertIcon}<span class="visually-hidden">Error: </span
+                ><span>${this.errorText}</span>`
+            : nothing}</span
+        >
+        <span
+          class="field__help typography-body-sm ${this.helpText ? '' : 'visually-hidden'}"
+          id="help"
+          >${this.helpText || nothing}</span
+        >
+        <!-- Always hidden, always present: the instructional cue that means the
+             results list does not need to announce itself. See the cueText prop. -->
+        <span class="visually-hidden" id="cue">${this.cueText}</span>
       </div>
     `;
   }
 
+  /**
+   * Error FIRST, then help, then the cue. See esa-text-field for the error/help order.
+   *
+   * The cue goes LAST because it is the least situational of the three: an error is
+   * about right now, help is about this field, the cue is about how the widget works.
+   * A screen reader reads descriptions in order, so the most specific thing should not
+   * be sitting behind a sentence about arrow keys.
+   */
+  private get describedBy(): string {
+    return [this.errorText ? 'error' : '', this.helpText ? 'help' : '', 'cue']
+      .filter(Boolean)
+      .join(' ');
+  }
+
   private renderAutocomplete() {
+    // aria-activedescendant is what makes arrow-key navigation audible. Focus stays
+    // on the input (it has to — the user is still typing), so without it the active
+    // option changes visually and a screen reader says nothing at all. It was absent
+    // from every listbox in this kit until 2026-08-16.
+    //
+    // Both IDREFs resolve inside this shadow root, which is the only place they can:
+    // aria-activedescendant, like every IDREF, does not cross a shadow boundary.
     return html`
       ${this.multiple ? this.renderChips() : null}
       <div class="input-wrapper">
         <input
-          class="input"
+          class="input typography-${FIELD_TYPE[this.size]}"
           role="combobox"
           aria-expanded=${this._open}
           aria-haspopup="listbox"
           aria-autocomplete="list"
+          aria-labelledby=${this.label ? 'label' : nothing}
+          aria-required=${this.required ? 'true' : nothing}
+          aria-invalid=${this.errorText ? 'true' : nothing}
+          aria-describedby=${this.describedBy || nothing}
+          aria-controls=${this._open ? 'listbox' : nothing}
+          aria-activedescendant=${this._open && this._active >= 0 ? `opt-${this._active}` : nothing}
           placeholder=${this.currentPlaceholder}
           .value=${this.inputValue}
           ?disabled=${this.disabled}
@@ -381,13 +660,33 @@ export class EsaCombobox extends LitElement {
     `;
   }
 
+  /**
+   * DEPRECATED path — `mode="select"`. A button trigger over a fixed option list is
+   * esa-select, not a combobox. Kept verbatim so spokes see no visual change on
+   * upgrade (cb-fish-design has 4 call sites on this path), warns once, and is
+   * removed after they migrate (migrations.json: combobox-mode-select-to-select).
+   */
   private renderSelect() {
+    if (!this.warnedMode) {
+      this.warnedMode = true;
+      console.warn(
+        `⚠️  esa-combobox: \`mode="select"\` is deprecated — a button trigger over a ` +
+          `fixed list is <esa-select>. A combobox is an autocomplete input with ` +
+          `suggestions. Switch to <esa-select>, or drop \`mode\` to get the ` +
+          `autocomplete input this component is for. ` +
+          `(migrations.json: combobox-mode-select-to-select)`,
+      );
+    }
     const isField = this.triggerStyle === 'field';
     return html`
       ${this.multiple && isField ? this.renderChips() : null}
       <button
         type="button"
-        class="trigger ${isField ? 'trigger--field' : 'trigger--text'}"
+        class="trigger typography-${isField ? FIELD_TYPE[this.size] : LABEL_TYPE[this.size]} ${isField ? 'trigger--field' : 'trigger--text'}"
+        aria-labelledby=${this.label ? 'label' : nothing}
+        aria-required=${this.required ? 'true' : nothing}
+        aria-invalid=${this.errorText ? 'true' : nothing}
+        aria-describedby=${this.describedBy || nothing}
         ?disabled=${this.disabled}
         @click=${() => this.toggleDropdown()}
         @keydown=${this.onKeydown}
@@ -402,7 +701,7 @@ export class EsaCombobox extends LitElement {
     if (this.selectedOptions.length === 0) return nothing;
     return html`<div class="chips">
       ${this.selectedOptions.map(
-        (opt) => html`<span class="chip">
+        (opt) => html`<span class="chip typography-body-sm">
           <span class="chip__label">${opt.label}</span>
           <button
             type="button"
@@ -419,12 +718,12 @@ export class EsaCombobox extends LitElement {
 
   private renderDropdown() {
     const opts = this.filteredOptions;
-    return html`<div class="dropdown" role="listbox" @keydown=${this.onKeydown}>
+    return html`<div class="dropdown" role="listbox" id="listbox" @keydown=${this.onKeydown}>
       ${this.mode === 'select'
         ? html`<div class="search">
             ${this.searchIcon()}
             <input
-              class="search-input"
+              class="search-input typography-${VALUE_TYPE[this.size]}"
               placeholder="Search..."
               .value=${this._search}
               @input=${this.onSearchInput}
@@ -435,34 +734,36 @@ export class EsaCombobox extends LitElement {
         : null}
 
       ${this.resultsCount !== null
-        ? html`<div class="results-count">Displaying ${opts.length} of ${this.resultsCount} results</div>`
+        ? html`<div class="results-count typography-body-sm">Displaying ${opts.length} of ${this.resultsCount} results</div>`
         : null}
 
       <div class="viewport">
         ${opts.map((option, i) => {
           const selected = this.isSelected(option.value);
           return html`<div
-            class="option ${i === this._active ? 'option--active' : ''} ${selected
+            class="option typography-${VALUE_TYPE[this.size]} ${i === this._active ? 'option--active' : ''} ${selected
               ? 'option--selected'
               : ''} ${option.disabled ? 'option--disabled' : ''}"
             role="option"
+            id="opt-${i}"
             aria-selected=${selected}
+            aria-disabled=${option.disabled ? 'true' : nothing}
             @click=${() => this.selectOption(option)}
             @mouseenter=${() => (this._active = i)}
           >
-            ${this.multiple
-              ? html`<span class="check ${selected ? 'check--selected' : ''}">${this.checkIcon()}</span>`
-              : null}
+            <span class="check ${selected ? 'check--selected' : ''}"
+              >${this.checkIcon()}</span
+            >
             <span class="option__label">${this.highlight(option.label)}</span>
           </div>`;
         })}
       </div>
 
       ${opts.length === 0 && !this.loading
-        ? html`<div class="empty">${this._search ? 'No results found' : 'No options available'}</div>`
+        ? html`<div class="empty typography-${VALUE_TYPE[this.size]}">${this._search ? 'No results found' : 'No options available'}</div>`
         : null}
       ${this.loading && opts.length === 0
-        ? html`<div class="loading"><span class="spinner">${this.spinnerIcon()}</span> Searching...</div>`
+        ? html`<div class="loading typography-${VALUE_TYPE[this.size]}"><span class="spinner">${this.spinnerIcon()}</span> Searching...</div>`
         : null}
     </div>`;
   }
@@ -489,36 +790,31 @@ export class EsaCombobox extends LitElement {
       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>`;
   }
 
-  static styles = css`
+  static styles = [
+    typography,
+    a11y,
+    css`
     :host {
       display: block;
-      --_field-padding-y: var(--form-padding-y-md, 8px);
-      --_field-padding-x: var(--form-padding-x-md, 12px);
-      --_field-font-size: var(--form-font-size-md, 14px);
-      --_field-height: var(--form-height-md, 40px);
-      --_field-radius: var(--form-radius-md, 8px);
-      --_field-border-color: var(--form-border-color, #d4d4d4);
+      --_field-padding-y: var(--spacing-300, 0.75rem);
+      --_field-padding-x: var(--spacing-300, 0.75rem);
+      --_field-radius: var(--radius-md, 0.5rem);
+      --_field-border-color: var(--form-border-color, #cecece);
     }
     :host([size='xs']) {
-      --_field-padding-y: var(--form-padding-y-xs, 2px);
-      --_field-padding-x: var(--form-padding-x-xs, 8px);
-      --_field-font-size: var(--form-font-size-xs, 11px);
-      --_field-height: var(--form-height-xs, 28px);
-      --_field-radius: var(--form-radius-xs, 4px);
+      --_field-padding-y: var(--spacing-200, 0.5rem);
+      --_field-padding-x: var(--spacing-200, 0.5rem);
+      --_field-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='sm']) {
-      --_field-padding-y: var(--form-padding-y-sm, 4px);
-      --_field-padding-x: var(--form-padding-x-sm, 8px);
-      --_field-font-size: var(--form-font-size-sm, 12px);
-      --_field-height: var(--form-height-sm, 32px);
-      --_field-radius: var(--form-radius-sm, 6px);
+      --_field-padding-y: var(--spacing-250, 0.625rem);
+      --_field-padding-x: var(--spacing-250, 0.625rem);
+      --_field-radius: var(--radius-sm, 0.25rem);
     }
     :host([size='lg']) {
-      --_field-padding-y: var(--form-padding-y-lg, 12px);
-      --_field-padding-x: var(--form-padding-x-lg, 16px);
-      --_field-font-size: var(--form-font-size-lg, 16px);
-      --_field-height: var(--form-height-lg, 48px);
-      --_field-radius: var(--form-radius-lg, 10px);
+      --_field-padding-y: var(--spacing-400, 1rem);
+      --_field-padding-x: var(--spacing-400, 1rem);
+      --_field-radius: var(--radius-md, 0.5rem);
     }
 
     .field {
@@ -527,23 +823,34 @@ export class EsaCombobox extends LitElement {
       gap: var(--spacing-100, 4px);
     }
     .field__label {
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
-      color: var(--form-label-color, #171717);
+      color: var(--form-label-color, #646464);
     }
     .field__required {
-      color: var(--color-danger-strong, #ce2c31);
+      color: var(--color-content-utility-danger, #ce2c31);
       margin-left: 2px;
     }
     .field__help {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-help-color, #737373);
+      color: var(--form-help-color, #838383);
     }
+    /* Three signals, not one: colour, icon, and a visually-hidden "Error:" prefix.
+       Colour alone is SC 1.4.1 (Use of Color, Level A), and colour alone is all that
+       separated this from .field__help — same tag, same slot, same type role. */
     .field__error {
-      font-size: var(--type-size-150, 12px);
-      color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-100, 4px);
+      color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     }
+    .field__error .error__icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
+    }
+    /* Both message nodes ALWAYS render — a live region created at the same moment as
+       its text is routinely not announced, so it has to already exist. When empty they
+       carry .visually-hidden, which takes them out of flow: .field is a flex column
+       with a gap, so an in-flow empty node would spend 4px of dead space each.
+       Deliberately NOT display:none, which drops them from the accessibility tree. */
 
     .container {
       position: relative;
@@ -559,13 +866,13 @@ export class EsaCombobox extends LitElement {
     }
     .input {
       width: 100%;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
       padding-inline-end: calc(var(--_field-padding-x) + 24px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      /* Leading is load-bearing on a content-sized box — see the long note in
+         esa-select's .input. Single line, so the composite's relaxed leading only
+         adds height. */
+      color: var(--form-text-color, #202020);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       outline: none;
@@ -575,26 +882,34 @@ export class EsaCombobox extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
     .input:focus {
-      --_field-border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+      --_field-border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
+    /* DISABLED IS A TOKEN TREATMENT, not an opacity hack. Tier 2 already ships the
+       whole triple — --color-background-disabled, --color-border-disabled,
+       --color-content-disabled — and this is the state they exist for; two of the
+       three had zero readers because the kit reached for opacity instead.
+       The fill is also the one moment a field is deliberately NOT the colour of its
+       container: the break from the surface IS the signal that it is inert. */
     .input:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
     }
 
     .spinner {
       display: inline-flex;
-      color: var(--color-text-muted, #737373);
-      animation: esa-cb-spin 1s linear infinite;
+      color: var(--color-content-default-secondary, #646464);
+      animation: esa-cb-spin var(--animation-spin, 750ms linear infinite);
     }
     .spinner svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .spinner--inline {
       position: absolute;
@@ -612,7 +927,7 @@ export class EsaCombobox extends LitElement {
       }
     }
     .spinner--inline {
-      animation: esa-cb-spin-inline 1s linear infinite;
+      animation: esa-cb-spin-inline var(--animation-spin, 750ms linear infinite);
     }
     @keyframes esa-cb-spin-inline {
       from {
@@ -630,19 +945,16 @@ export class EsaCombobox extends LitElement {
       padding: 0;
       border: none;
       background: none;
-      color: var(--color-primary-strong, #3a7c59);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      font-weight: var(--font-weight-medium, 450);
+      color: var(--color-content-brand, #2a7e3b);
       cursor: pointer;
       max-width: 100%;
     }
     .trigger--text:hover {
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       text-decoration: underline;
     }
     .trigger--text:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 2px;
       border-radius: var(--_field-radius);
     }
@@ -661,12 +973,12 @@ export class EsaCombobox extends LitElement {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: var(--_field-height);
       padding: var(--_field-padding-y) var(--_field-padding-x);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      color: var(--form-text-color, #171717);
-      background: var(--form-bg, #fff);
+      /* Leading is load-bearing on a content-sized box — see the long note in
+         esa-select's .input. Single line, so the composite's relaxed leading only
+         adds height. */
+      color: var(--form-text-color, #202020);
+      background: var(--color-background-field, transparent);
       border: var(--form-border-width, 1px) solid var(--_field-border-color);
       border-radius: var(--_field-radius);
       cursor: pointer;
@@ -677,13 +989,14 @@ export class EsaCombobox extends LitElement {
         box-shadow var(--transition-fast, 150ms ease);
     }
     .trigger--field:focus-visible {
-      border-color: var(--form-border-color-focus, #43608a);
-      box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
-      outline: none;
+      border-color: var(--form-border-color-focus, #3e9b4f);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: var(--focus-ring-offset, 2px);
     }
     .trigger--field:disabled {
-      background: var(--form-bg-disabled, #efefef);
-      opacity: 0.6;
+      background: var(--color-background-disabled, #f0f0f0);
+      --_field-border-color: var(--color-border-disabled, #d9d9d9);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
     }
     .trigger--field .trigger__label {
@@ -695,14 +1008,14 @@ export class EsaCombobox extends LitElement {
 
     .arrow {
       display: inline-flex;
-      color: var(--color-text-muted, #737373);
+      color: var(--color-content-default-secondary, #646464);
       pointer-events: none;
       transition: transform var(--transition-fast, 150ms ease);
       flex-shrink: 0;
     }
     .arrow svg {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
     }
     .arrow--open {
       transform: rotate(180deg);
@@ -715,10 +1028,10 @@ export class EsaCombobox extends LitElement {
       right: 0;
       z-index: var(--z-dropdown, 50);
       margin-top: var(--spacing-100, 4px);
-      background: var(--color-surface, #fff);
-      border: var(--form-border-width, 1px) solid var(--form-border-color, #e5e5e5);
-      border-radius: var(--form-radius-md, 8px);
-      box-shadow: var(--shadow-200, 0 4px 12px rgba(0, 0, 0, 0.12));
+      background: var(--color-background-elevation-raised, #fcfcfc);
+      border: var(--form-border-width, 1px) solid var(--form-border-color, #cecece);
+      border-radius: var(--radius-md, 0.5rem);
+      box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
       overflow: hidden;
     }
 
@@ -727,32 +1040,39 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      border-bottom: 1px solid var(--color-border, #e5e5e5);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default, #cecece);
+    }
+    /* The ring goes on the ROW. .search-input is chromeless by design, so a ring on
+       it would float around bare text; the row is the visible affordance. Inset
+       because the row runs edge to edge inside an overflow:hidden dropdown. This is
+       the same repair as esa-entity-search, esa-search-panel and esa-command-palette
+       — the whole shape is "chromeless input in a bordered row". */
+    .search:focus-within {
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
+      outline-offset: calc(var(--focus-ring-offset, 2px) * -1);
     }
     .search__icon {
-      width: var(--icon-size-small, 16px);
-      height: var(--icon-size-small, 16px);
-      color: var(--color-text-muted, #737373);
+      width: var(--icon-size-sm, 16px);
+      height: var(--icon-size-sm, 16px);
+      color: var(--color-content-default-secondary, #646464);
       flex-shrink: 0;
     }
     .search-input {
       flex: 1;
       border: none;
       background: none;
+      /* Suppressed only because .search paints the ring — never bare. */
       outline: none;
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      color: var(--form-text-color, #171717);
+      color: var(--form-text-color, #202020);
     }
     .search-input::placeholder {
-      color: var(--form-placeholder-color, #737373);
+      color: var(--form-placeholder-color, #838383);
     }
 
     .results-count {
       padding: var(--spacing-100, 4px) var(--spacing-300, 12px);
-      font-size: var(--type-size-100, 11px);
-      color: var(--color-text-muted, #737373);
-      border-bottom: 1px solid var(--color-border-light, #efefef);
+      color: var(--color-content-default-secondary, #646464);
+      border-bottom: var(--border-width-default, 1px) solid var(--color-border-default-subtle, #d9d9d9);
     }
 
     .viewport {
@@ -766,9 +1086,7 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-100, 4px);
       padding: var(--spacing-200, 8px) var(--spacing-300, 12px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--_field-font-size);
-      color: var(--color-text-primary, #171717);
+      color: var(--color-content-default, #202020);
       cursor: pointer;
       user-select: none;
       transition: background var(--transition-fast, 150ms ease);
@@ -776,14 +1094,14 @@ export class EsaCombobox extends LitElement {
     }
     .option:hover,
     .option--active {
-      background: var(--color-surface-sunken, #efefef);
+      background: var(--color-background-elevation-sunken, #f0f0f0);
     }
     .option--selected {
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #3a7c59);
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #2a7e3b);
     }
     .option--disabled {
-      color: var(--color-disabled-text, #a3a3a3);
+      color: var(--color-content-disabled, #8d8d8d);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -794,7 +1112,7 @@ export class EsaCombobox extends LitElement {
       flex: 1;
     }
     .hl {
-      background: var(--color-warning-subtle, #fffbeb);
+      background: var(--color-background-utility-warning-subtle, #fefdfb);
       color: inherit;
       border-radius: 2px;
       padding: 0 1px;
@@ -808,7 +1126,7 @@ export class EsaCombobox extends LitElement {
       height: 18px;
       flex-shrink: 0;
       opacity: 0;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       transition: opacity var(--transition-fast, 150ms ease);
     }
     .check svg {
@@ -829,12 +1147,9 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-050, 2px);
       padding: var(--spacing-050, 2px) var(--spacing-100, 4px) var(--spacing-050, 2px) var(--spacing-200, 8px);
-      background: var(--color-active-overlay, rgba(0, 88, 98, 0.08));
-      color: var(--color-primary-strong, #3a7c59);
-      border-radius: var(--radius-full, 9999px);
-      font-family: var(--font-sans, sans-serif);
-      font-size: var(--type-size-150, 12px);
-      line-height: 1.4;
+      background: var(--color-background-overlay-active, rgba(0, 88, 98, 0.08));
+      color: var(--color-content-brand, #2a7e3b);
+      border-radius: var(--radius-pill, 9999px);
       user-select: none;
     }
     .chip__label {
@@ -849,7 +1164,7 @@ export class EsaCombobox extends LitElement {
       padding: 0;
       border: none;
       background: transparent;
-      color: var(--color-primary-strong, #3a7c59);
+      color: var(--color-content-brand, #2a7e3b);
       border-radius: 50%;
       cursor: pointer;
       transition: background var(--transition-fast, 150ms ease);
@@ -859,10 +1174,10 @@ export class EsaCombobox extends LitElement {
       height: 14px;
     }
     .chip__remove:hover {
-      background: var(--color-hover-overlay-strong, rgba(0, 0, 0, 0.05));
+      background: var(--color-background-overlay-strong-hover, rgba(0, 0, 0, 0.05));
     }
     .chip__remove:focus-visible {
-      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, #3e9b4f);
       outline-offset: 1px;
     }
 
@@ -872,20 +1187,56 @@ export class EsaCombobox extends LitElement {
       align-items: center;
       gap: var(--spacing-200, 8px);
       padding: var(--spacing-300, 12px);
-      color: var(--color-text-muted, #737373);
-      font-size: var(--_field-font-size);
-      font-style: italic;
+      color: var(--color-content-default-secondary, #646464);
+      font-style: var(--font-style-italic, italic);
     }
 
     .field--error .input,
     .field--error .trigger--field {
-      --_field-border-color: var(--form-border-color-error, #ef4444);
+      --_field-border-color: var(--form-error-border-color, #e5484d);
     }
-    .field--error .input:focus,
-    .field--error .trigger--field:focus-visible {
-      box-shadow: 0 0 0 2px var(--color-danger-border, rgba(211, 47, 47, 0.25));
+    /* The invalid field's ring is the SAME ring in red, via the token rather than a property
+       override. THIS COMPONENT IS THE STRONGEST CASE for the token: five things in here read
+       --focus-ring-color — the autocomplete input, the text trigger, the field trigger, the
+       dropdown's own search box, and every chip remove button. Naming each in an
+       outline-color override is five rules to keep in step, and any one missed keeps ringing
+       brand-green inside a field that is telling the user it is invalid. One declaration on
+       the error wrapper reaches all five, because custom properties inherit. The dropdown
+       panel is included by the same inheritance — see esa-text-field, where that consequence
+       is recorded as a decision rather than left to be discovered.
+       Two fixes here on 2026-08-17: it was a box-shadow, which stacked a second band once the
+       base rings became outlines; and it read --color-border-utility-danger, which is red-6,
+       a SUBTLE BORDER step measuring 1.40:1 on a sunken surface. */
+    .field--error {
+      --focus-ring-color: var(--form-error-border-color, #e5484d);
     }
-  `;
+
+    /* FORCED COLORS. Same treatment as esa-select, whose option CSS this file
+       duplicates verbatim — see the longer note there. --selected takes the fill,
+       --active takes an inset outline, so a row that is both still shows both.
+
+       .hl (the search-match highlight) is a background too, and it is the one
+       place here where the tint is the only channel. It gets Highlight so the
+       matched run stays visible; the surrounding row keeps Canvas. */
+    @media (forced-colors: active) {
+      .option--active {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+      .option--selected {
+        background: Highlight;
+        color: HighlightText;
+      }
+      /* The tick must follow the row rather than keep its own brand colour. */
+      .check { color: inherit; }
+      .option--disabled { color: GrayText; }
+      .hl {
+        background: Highlight;
+        color: HighlightText;
+      }
+    }
+  `,
+  ];
 }
 
 if (!customElements.get('esa-combobox')) {

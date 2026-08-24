@@ -8,10 +8,16 @@
  * overlaid with a theme's [data-theme] block — and checks the semantic pairs
  * that actually sit on each other in the components.
  *
+ * The pair table and the graph reader live in scripts/lib/contrast.mjs, so the
+ * theme maker page grades a live preview with the same definitions this gate uses.
+ * This file is argv, files, and printing.
+ *
  * Usage:
  *   node ../ecology/scripts/check-contrast.mjs                 # auto-finds src/styles/theme-*.css in a spoke
  *   node ../ecology/scripts/check-contrast.mjs path/to/theme.css [...]
  *   node scripts/check-contrast.mjs --hub                      # hub defaults only
+ *   node scripts/check-contrast.mjs theme.css --scheme dark    # audit the dark block
+ *   node scripts/check-contrast.mjs --hub --assurance wcag-aa  # compose an assurance profile
  *
  * Exit 1 if any TEXT pair fails AA (4.5:1). UI pairs (3:1) and informational
  * pairs report as warnings only. Unresolvable values (alpha, gradients,
@@ -22,88 +28,52 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { PAIRS, auditPairs, parseDeclarations } from './lib/contrast.mjs';
+
 const HUB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// [foreground, background, minRatio, level] — level: 'fail' blocks, 'warn' reports.
-const PAIRS = [
-  ['--color-text-primary', '--color-surface', 4.5, 'fail'],
-  ['--color-text-primary', '--color-background', 4.5, 'fail'],
-  ['--color-text-primary', '--color-surface-sunken', 4.5, 'fail'],
-  ['--color-text-secondary', '--color-surface', 4.5, 'fail'],
-  ['--color-text-tertiary', '--color-surface', 4.5, 'fail'],
-  ['--color-text-muted', '--color-surface', 4.5, 'warn'], // genuine meta text — review, don't block
-  ['--color-text-link', '--color-surface', 4.5, 'fail'],
-  ['--color-text-inverse', '--color-surface-inverse', 4.5, 'fail'],
-  ['--color-text-inverse', '--color-primary', 4.5, 'fail'],
-  ['--color-text-inverse', '--color-secondary', 4.5, 'warn'],
-  ['--color-text-inverse', '--color-success', 4.5, 'warn'],
-  ['--color-text-inverse', '--color-warning', 4.5, 'warn'], // ambers almost always fail; surface it loudly
-  ['--color-text-inverse', '--color-danger', 4.5, 'warn'],
-  ['--color-text-inverse', '--color-info', 4.5, 'warn'],
-  ['--color-text-primary', '--color-primary-subtle', 4.5, 'fail'],
-  ['--color-text-primary', '--color-success-subtle', 4.5, 'warn'],
-  ['--color-text-primary', '--color-warning-subtle', 4.5, 'warn'],
-  ['--color-text-primary', '--color-danger-subtle', 4.5, 'warn'],
-  ['--color-text-primary', '--color-info-subtle', 4.5, 'warn'],
-  ['--color-disabled-text', '--color-disabled-bg', 4.5, 'warn'], // disabled is exempt from AA; informational
-  ['--color-border-focus', '--color-surface', 3.0, 'warn'],
-  ['--color-primary', '--color-surface', 3.0, 'warn'], // as a UI/graphic color
-];
-
-// --- token graph -------------------------------------------------------------
-function parseDeclarations(css, map) {
-  // capture every `--name: value;` (last one wins — source order)
-  for (const m of css.matchAll(/(--[a-zA-Z0-9-_]+)\s*:\s*([^;]+);/g)) {
-    map.set(m[1], m[2].trim());
-  }
-}
-
-function resolve(name, map, depth = 0) {
-  if (depth > 12) return null;
-  const raw = map.get(name);
-  if (!raw) return null;
-  const varRef = raw.match(/^var\((--[a-zA-Z0-9-_]+)\s*(?:,\s*(.+))?\)$/s);
-  if (varRef) {
-    return resolve(varRef[1], map, depth + 1) ?? (varRef[2] ? parseColor(varRef[2].trim()) : null);
-  }
-  return parseColor(raw);
-}
-
-function parseColor(v) {
-  v = v.trim();
-  let m = v.match(/^#([0-9a-f]{3})$/i);
-  if (m) return [...m[1]].map((c) => parseInt(c + c, 16));
-  m = v.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
-  if (m) {
-    if (m[2] && parseInt(m[2], 16) < 255) return 'alpha';
-    return [m[1].slice(0, 2), m[1].slice(2, 4), m[1].slice(4, 6)].map((h) => parseInt(h, 16));
-  }
-  m = v.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)$/i);
-  if (m) {
-    if (m[4] !== undefined && Number(m[4]) < 1) return 'alpha';
-    return [Number(m[1]), Number(m[2]), Number(m[3])];
-  }
-  if (v === 'white') return [255, 255, 255];
-  if (v === 'black') return [0, 0, 0];
-  if (/var\(/.test(v)) return null; // nested var inside a function — too clever, flag
-  return 'unparseable';
-}
-
-const lum = ([r, g, b]) => {
-  const f = (c) => {
-    c /= 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-};
-const ratio = (a, b) => {
-  const [l1, l2] = [lum(a), lum(b)].sort((x, y) => y - x);
-  return (l1 + 0.05) / (l2 + 0.05);
+// --- argv --------------------------------------------------------------------
+//
+// HAND-ROLLED, AND IT USED TO DROP THE FIRST PATH. The old filter read
+// `i !== assuranceIdx + 1` to skip the profile name — but with no --assurance flag
+// assuranceIdx is -1, so the condition became `i !== 0` and ate argv[0]. The single
+// most-documented invocation, `check-contrast.mjs path/to/theme.css`, therefore
+// discarded its argument and fell through to spoke auto-discovery, which in the hub
+// finds nothing and exits 1 with "no theme file given". Passing the same path twice
+// worked. This loop consumes flag values explicitly instead.
+const argv = process.argv.slice(2);
+const die = (msg) => {
+  console.error(msg);
+  process.exit(1);
 };
 
-// --- run ---------------------------------------------------------------------
-const argPaths = process.argv.slice(2).filter((a) => a !== '--hub');
-const hubOnly = process.argv.includes('--hub');
+let hubOnly = false;
+let assurance = null;
+let scheme = 'light';
+const argPaths = [];
+
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (a === '--hub') {
+    hubOnly = true;
+  } else if (a === '--assurance') {
+    // --assurance <profile> composes the accessibility assurance block OVER the theme,
+    // which is the order the browser resolves them in and therefore the only order worth
+    // auditing. Note what that order means for a spoke: `[data-theme]` and
+    // `[data-a11y-assurance]` have identical specificity and the theme's stylesheet loads
+    // later, so A THEME STILL WINS. The profile cannot rescue a brand colour it does not
+    // know about — this run is what tells a spoke its brand needs a darker step.
+    assurance = argv[++i];
+    if (!assurance || assurance.startsWith('--')) die('--assurance needs a profile name, e.g. --assurance wcag-aa');
+  } else if (a === '--scheme') {
+    scheme = argv[++i];
+    if (!scheme || scheme.startsWith('--')) die('--scheme needs a value, e.g. --scheme dark');
+  } else if (a.startsWith('--')) {
+    die(`unknown flag: ${a}`);
+  } else {
+    argPaths.push(a);
+  }
+}
 
 let themeFiles = argPaths;
 if (!themeFiles.length && !hubOnly) {
@@ -114,45 +84,83 @@ if (!themeFiles.length && !hubOnly) {
         .map((f) => path.join(stylesDir, f))
     : [];
   if (!themeFiles.length) {
-    console.error('no theme file given and none found at src/styles/theme-*.css — pass a path, or --hub for hub defaults');
-    process.exit(1);
+    die('no theme file given and none found at src/styles/theme-*.css — pass a path, or --hub for hub defaults');
   }
 }
 
+const tokensCss = readFileSync(path.join(HUB, 'packages/tokens/dist/tokens.css'), 'utf8');
+
+// Assert the profile EXISTS before reporting on it. A typo'd name would otherwise
+// match no block, compose nothing, and print a clean run under a header claiming the
+// profile was applied — the most expensive possible way to be wrong here.
+if (assurance && !tokensCss.includes(`[data-a11y-assurance="${assurance}"]`)) {
+  const found = [...tokensCss.matchAll(/\[data-a11y-assurance="([^"]+)"\]/g)].map((m) => m[1]);
+  die(
+    `✗ no [data-a11y-assurance="${assurance}"] block in dist/tokens.css` +
+      (found.length ? ` — profiles that exist: ${[...new Set(found)].join(', ')}` : ''),
+  );
+}
+
 const base = new Map();
-parseDeclarations(readFileSync(path.join(HUB, 'packages/tokens/dist/tokens.css'), 'utf8'), base);
-parseDeclarations(readFileSync(path.join(HUB, 'packages/tokens/src/component-tokens.css'), 'utf8'), base);
+const opts = { assurance, scheme };
+let schemeBlocksSeen = 0;
+schemeBlocksSeen += parseDeclarations(tokensCss, base, opts).schemeBlocks;
+schemeBlocksSeen += parseDeclarations(
+  readFileSync(path.join(HUB, 'packages/tokens/src/component-tokens.css'), 'utf8'),
+  base,
+  opts,
+).schemeBlocks;
+if (assurance) console.log(`assurance profile: ${assurance} (composed UNDER the theme, as the browser resolves it)`);
+// Say which scheme is being graded whenever it is not the default, for the same reason
+// the assurance line exists: an audit that stops describing what it claims to report on
+// is this script's recorded failure mode.
+if (scheme !== 'light') console.log(`scheme: ${scheme} ([data-scheme] blocks for other schemes are skipped)`);
 
 const targets = hubOnly ? [['hub defaults', null]] : themeFiles.map((f) => [path.basename(f), f]);
 let failures = 0;
+let unresolved = false;
 
 for (const [label, file] of targets) {
   const map = new Map(base);
   if (file) {
-    if (!existsSync(file)) { console.error(`not found: ${file}`); process.exit(1); }
-    parseDeclarations(readFileSync(file, 'utf8'), map);
+    if (!existsSync(file)) die(`not found: ${file}`);
+    schemeBlocksSeen += parseDeclarations(readFileSync(file, 'utf8'), map, opts).schemeBlocks;
   }
+  // Refuse to report on a scheme that was never found. Without this the run
+  // composes the base (light) declarations, grades those, and prints them under a
+  // header naming the scheme you asked for — `--hub --scheme dark` produced output
+  // byte-identical to the light run, because dist/tokens.css has no [data-scheme]
+  // block at all (the hub's dark values live in the site's docs-dark.css). The
+  // sibling --assurance flag is validated for exactly this reason.
+  if (scheme !== 'light' && schemeBlocksSeen === 0) {
+    die(
+      `--scheme ${scheme} matched no [data-scheme="${scheme}"] block in ${label}.\n` +
+        `  Grading would report the base (light) values under a ${scheme} header.\n` +
+        `  Point this at a file that declares a ${scheme} block, e.g.\n` +
+        `    node scripts/check-contrast.mjs apps/site/src/styles/docs-dark.css --scheme ${scheme}`,
+    );
+  }
+
   console.log(`\n=== ${label} ===`);
-  const manual = [];
-  for (const [fg, bg, min, level] of PAIRS) {
-    const f = resolve(fg, map);
-    const b = resolve(bg, map);
-    if (!f || !b || f === 'alpha' || b === 'alpha' || f === 'unparseable' || b === 'unparseable') {
-      manual.push(`${fg} on ${bg} (${!f || !b ? 'undefined token' : f === 'alpha' || b === 'alpha' ? 'alpha value' : 'unparseable value'})`);
-      continue;
-    }
-    const r = ratio(f, b);
-    const ok = r >= min;
-    const mark = ok ? '  ok ' : level === 'fail' ? 'FAIL ' : 'warn ';
-    if (!ok && level === 'fail') failures++;
-    if (!ok || process.env.VERBOSE) {
-      console.log(`${mark} ${fg} on ${bg}: ${r.toFixed(2)}:1 (needs ${min}:1)`);
+  const { rows, manual, checked, failures: failed, underResolved } = auditPairs(map);
+  failures += failed;
+  for (const r of rows) {
+    const mark = r.ok ? '  ok ' : r.level === 'fail' ? 'FAIL ' : 'warn ';
+    if (!r.ok || process.env.VERBOSE) {
+      console.log(`${mark} ${r.fg} on ${r.bg}: ${r.ratio.toFixed(2)}:1 (needs ${r.min}:1)`);
     }
   }
-  const checked = PAIRS.length - manual.length;
   console.log(`checked ${checked}/${PAIRS.length} pairs${manual.length ? ` — manual review needed: ${manual.length}` : ''}`);
-  for (const m of manual) console.log(`  manual: ${m}`);
+  for (const m of manual) console.log(`  manual: ${m.text}`);
+  if (underResolved) {
+    console.error(
+      `\n✗ only ${checked}/${PAIRS.length} pairs resolved — this audit is not reporting on your theme.\n` +
+        '  Usually a renamed token, or values this parser cannot read. Fix before trusting the result.',
+    );
+    unresolved = true;
+  }
 }
 
-console.log(failures ? `\n${failures} AA text-contrast failure(s).` : '\nAll text pairs pass AA.');
-process.exit(failures ? 1 : 0);
+if (failures) console.log(`\n${failures} AA text-contrast failure(s).`);
+else if (!unresolved) console.log('\nAll text pairs pass AA.');
+process.exit(failures || unresolved ? 1 : 0);

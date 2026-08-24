@@ -1,8 +1,27 @@
 ---
 // esa-form-field — PRESENTATIONAL layout wrapper (.astro).
 // Faithful translation of the Angular esa-form-field: label row + control slot +
-// hint/error text. Error text replaces help text when present. Size variants drive
-// the label font-size. Angular @if → conditional render; host classes → class list.
+// hint/error text. Error text replaces help text when present.
+// Angular @if → conditional render; host classes → class list.
+//
+// TYPE: the component names a composite and does not assemble one. This import is
+// the Astro half of the mechanism its Lit siblings get from `static styles =
+// [typography, …]` — Astro bundles it into every page that uses this component, so
+// a spoke gets the class definitions without a global import it has to remember.
+//
+// The SLOT container names `body-md` — the value role its help/error siblings already
+// sit beside, since the field slotted in is read rather than labelled. It reaches
+// slotted content by inheritance, so it is a default: an esa-text-field carries its own
+// composite and wins, and a bare native field keeps the UA font reset until the host
+// opts in with `font: inherit`. The label keeps its own LABEL_TYPE rung, untouched.
+import '@esa/tokens/typography.css';
+
+// The label composite for each step of the control ramp. Note the letters do not
+// line up — size="sm" takes the -xs rung — because the control ramp lands on
+// 050·100·200·300 while the type families walk 050·100·150·200·300. See
+// the FORMS header in component-tokens.css for the full table.
+const LABEL_TYPE = { xs: 'label-2xs', sm: 'label-xs', md: 'label-md', lg: 'label-lg' } as const;
+
 interface Props {
   /** The name of the value being collected. */
   label?: string;
@@ -41,47 +60,47 @@ const cls = [
 ---
 <div class={cls}>
   {label && (
-    <label class="esa-form-field__label">
+    <label class={`esa-form-field__label typography-${LABEL_TYPE[size]}`}>
       {label}
-      {required && <span class="esa-form-field__required" aria-label="required">*</span>}
+      {/* aria-hidden, NOT aria-label="required". ARIA prohibits naming `generic`, so the
+          old attribute was inert in some engines and a duplicate accessible name in
+          others — it looked like an accessibility feature in a diff and did nothing at
+          runtime. This whole label is DECORATIVE anyway (see the header): the slotted
+          control carries the real `required` + `aria-required`. */}
+      {required && <span class="esa-form-field__required" aria-hidden="true">*</span>}
     </label>
   )}
 
-  <div class="esa-form-field__input">
+  <div class="esa-form-field__input typography-body-md">
     <slot />
   </div>
 
   {hasError ? (
-    <p class="esa-form-field__error">{errorText}</p>
+    <p class="esa-form-field__error typography-body-sm">{errorText}</p>
   ) : helpText ? (
-    <p class="esa-form-field__help">{helpText}</p>
+    <p class="esa-form-field__help typography-body-sm">{helpText}</p>
   ) : null}
 </div>
 
 <style>
   .esa-form-field {
-    --_label-color: var(--form-label-color, #171717);
-    --_help-color: var(--form-help-color, #737373);
-    --_error-color: var(--form-error-color, var(--color-danger-strong, #ce2c31));
+    --_label-color: var(--form-label-color, #646464);
+    --_help-color: var(--form-help-color, #838383);
+    --_error-color: var(--form-error-color, var(--color-content-utility-danger, #ce2c31));
     --_label-gap: var(--form-label-gap, 4px);
     --_help-gap: var(--form-help-gap, 4px);
-    --_font-weight: var(--font-weight-medium, 450);
-    --_help-font-size: var(--type-size-100, 0.75rem);
-    --_required-color: var(--color-danger-strong, #ce2c31);
-    --_label-font-size: var(--form-font-size-md, 0.9375rem);
+    --_required-color: var(--color-content-utility-danger, #ce2c31);
 
     display: flex;
     flex-direction: column;
   }
 
-  .esa-form-field--xs { --_label-font-size: var(--form-font-size-xs, 0.8125rem); }
-  .esa-form-field--sm { --_label-font-size: var(--form-font-size-sm, 0.875rem); }
-  .esa-form-field--lg { --_label-font-size: var(--form-font-size-lg, 1.125rem); }
+  /* No size-keyed type here. The size variants used to exist only to swap the
+     label's font-size; that is now a composite class chosen in the frontmatter,
+     so the modifier classes carry nothing and are gone. */
 
   .esa-form-field__label {
     color: var(--_label-color);
-    font-weight: var(--_font-weight);
-    font-size: var(--_label-font-size);
     margin-block-end: var(--_label-gap);
   }
 
@@ -99,11 +118,35 @@ const cls = [
   .esa-form-field__error {
     margin: 0;
     margin-block-start: var(--_help-gap);
-    font-size: var(--_help-font-size);
   }
 
   .esa-form-field__help { color: var(--_help-color); }
   .esa-form-field__error { color: var(--_error-color); }
+
+  /* THE FOCUS RING GOES RED FOR WHATEVER IS SLOTTED IN HERE, and re-pointing the token is
+     the only way this component can do it.
+
+     This wrapper does not own its control — it owns a label, a help line, an error line, and
+     a <slot>. Until 2026-08-17 `--error` coloured the error TEXT and nothing else, so the
+     documented usage on this component's own doc page — a native <input> inside a FormField
+     carrying errorText — rendered an invalid field with a BRAND-COLOURED focus ring. The red
+     border in that demo comes from a class in the doc page's own <style> block, not from here.
+
+     A custom property is the one mechanism that reaches slotted content:
+       - Astro scopes this component's selectors to elements in ITS OWN template, and slotted
+         content carries the PARENT's scope, so no descendant selector here can style it;
+       - the slotted thing might be a native <input> (rung by @esa/tokens/focus.css, which
+         reads exactly this token), or an esa-* web component whose ring lives inside a shadow
+         root that no stylesheet can cross.
+     Inherited custom properties solve both at once, and they are the ONLY channel that
+     crosses a shadow boundary in every engine.
+
+     Graded: --form-error-border-color is a `fail`-level row in check-contrast.mjs on all four
+     surfaces — red-9 at 3.43:1 worst, red-11 at 4.57:1 under the assurance profile. See
+     esa-text-field for the full account of the error ring. */
+  .esa-form-field--error {
+    --focus-ring-color: var(--form-error-border-color, #e5484d);
+  }
 
   .esa-form-field--disabled {
     opacity: 0.5;
