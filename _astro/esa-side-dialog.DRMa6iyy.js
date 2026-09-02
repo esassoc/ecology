@@ -39,12 +39,22 @@ import{i as n,A as a,b as i,a as r}from"./lit-element.D8DSg5zn.js";import{t as l
        top / bottom / anchored side, rounded corners. --_inset is overridable.
        'position: fixed' with explicit insets overrides the UA's centering margin;
        the UA's border/padding and its 'max-width/max-height: calc(100% - 6px - 2em)'
-       have to be cleared or they clamp this panel inside a second, smaller box. */
+       have to be cleared or they clamp this panel inside a second, smaller box.
+       Two more UA dialog declarations have to be beaten explicitly, because
+       'margin: 0' removes the auto-margins that used to absorb them: 'inset: 0'
+       (its left: 0 out-ranks the position rule's right and glues the panel to
+       the wrong edge) and 'height: fit-content' (it wins the over-constrained
+       top+bottom pair and collapses the panel to its content).
+       hub-edit-approved: Andy, 2026-08-25, biochar-atlas session — reported the
+       panel opening left-glued at content height; the defect is this lego's,
+       not the spoke's. */
     dialog.panel {
       --_inset: var(--side-dialog-inset, 16px);
       position: fixed;
       top: var(--_inset);
       bottom: var(--_inset);
+      inset-inline: auto;
+      height: auto;
       margin: 0;
       border: none;
       padding: 0;
