@@ -116,7 +116,30 @@ const targets = args.length
   ? args.map((a) => path.resolve(ROOT, a)).filter((f) => existsSync(f) && EXTS.test(f))
   : scanRoots().flatMap((d) => walk(d));
 
+/*
+ * Two tiers, and the split is a policy Andy set on 2026-08-16: "I don't want to
+ * deal with old work, just new work." These three entries — em dash, middot,
+ * packed metadata — matched several hundred strings across the three repos the
+ * day they landed, none of which is a defect anyone intends to fix. They report
+ * here as warnings, while the Stop hook keeps blocking them at write time, so
+ * the constructions stop spreading without a cleanup pass being owed. Every
+ * other entry still gates.
+ */
+const WARN_ONLY = new Set([
+  'corpus:em-dash-in-surface-string',
+  'corpus:middot-separator',
+  'corpus:packed-metadata',
+]);
+
+/*
+ * The check itself now names the defect when the packed-metadata entry claims a
+ * prose sentence hinged on an em dash — that used to be relabelled here, on a
+ * cruder test that also caught genuine rows joined by em dashes. One heuristic,
+ * one home: `f.reason` carries whatever correction applies, and this script only
+ * appends the tier's own sentence.
+ */
 const errors = [];
+const warnings = [];
 for (const file of targets) {
   let source;
   try {
@@ -126,13 +149,17 @@ for (const file of targets) {
   }
   const strings = extractStrings(source, file);
   for (const f of corpusGrep.run({ strings, config })) {
-    errors.push({
-      level: 'error',
+    const warn = WARN_ONLY.has(f.rule);
+    const message = warn
+      ? `${f.reason} Existing strings are left alone; anything written now is blocked at write time.`
+      : `${f.reason} This string is ABOUT the page — remove it, or replace it with data that earns a place in the structure.`;
+    (warn ? warnings : errors).push({
+      level: warn ? 'warning' : 'error',
       rule: f.rule,
       file: path.relative(ROOT, f.file),
       line: f.line,
       excerpt: f.excerpt,
-      message: `${f.reason} This string is ABOUT the page — remove it, or replace it with data that earns a place in the structure.`,
+      message,
     });
   }
 }
@@ -145,9 +172,9 @@ console.log(
       filesScanned: targets.length,
       corpus: resolvedCorpus,
       errorCount: errors.length,
-      warningCount: 0,
+      warningCount: warnings.length,
       errors,
-      warnings: [],
+      warnings,
       note: 'Corpus patterns only. The classes a regex cannot express — editorial captions, taglines, synthesis — are a judgment call; apply the rubric at ~/.claude/hooks/design-gate/rubric.md to the strings this did not flag.',
     },
     null,

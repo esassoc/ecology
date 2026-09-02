@@ -24,8 +24,9 @@ export interface EsaSearchEntity {
   /** The record's name. e.g. "Riverbank restoration — Phase 2", "Rita Alvarez". */
   title: string;
   /**
-   * The record's distinguishing attribute — status, type, role, or file size.
-   * e.g. "Active · 2026", "Hydrologist", "PDF · 2.1 MB".
+   * The record's distinguishing attribute: status, type, role, or file size.
+   * ONE of them. e.g. "Active", "Hydrologist", "2.1 MB" — not "PDF · 2.1 MB",
+   * which glues two facts onto a line that cannot say how they relate.
    */
   subtitle?: string;
   /** id of the EsaSearchScope this entity belongs to. */

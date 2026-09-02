@@ -79,6 +79,55 @@ export function proposedContent(toolInput) {
 }
 
 /**
+ * The text a change ADDS: a Write's whole content, or, for an Edit, the lines
+ * of new_string that were not already in old_string.
+ *
+ * A content gate has to judge the change, not the context around it. An Edit
+ * quotes existing lines as its anchor, and scanning the whole payload convicts
+ * the author of what those lines already said: three lines of spacing CSS were
+ * blocked because the anchor happened to include a `font-family:` rule that had
+ * been in the file for weeks. The author's real options then are to re-anchor
+ * around the gate or drop the change — and dropping it is what happened.
+ *
+ * Line-level and multiset: a line removed once cancels one occurrence, so
+ * adding a SECOND copy of a rule still reads as added. Trimmed, so reindenting
+ * a line is not an addition.
+ */
+export function addedContent(toolInput = {}) {
+  const parts = [];
+  if (typeof toolInput.content === 'string') parts.push(toolInput.content);
+
+  const pairs = [];
+  if (typeof toolInput.new_string === 'string') {
+    pairs.push([toolInput.old_string ?? '', toolInput.new_string]);
+  }
+  for (const e of toolInput.edits ?? []) {
+    if (typeof e.new_string === 'string') pairs.push([e.old_string ?? '', e.new_string]);
+  }
+
+  for (const [before, after] of pairs) {
+    const removed = new Map();
+    for (const line of before.split('\n')) {
+      const key = line.trim();
+      if (!key) continue;
+      removed.set(key, (removed.get(key) ?? 0) + 1);
+    }
+    const added = [];
+    for (const line of after.split('\n')) {
+      const key = line.trim();
+      const left = removed.get(key) ?? 0;
+      if (key && left > 0) {
+        removed.set(key, left - 1);
+        continue;
+      }
+      added.push(line);
+    }
+    parts.push(added.join('\n'));
+  }
+  return parts.join('\n');
+}
+
+/**
  * Opening-tag counts in a fragment, keyed by element name. Closing tags are
  * ignored: they mirror the openings, and an Edit fragment is routinely
  * unbalanced (`<div class="a">` on its own is a normal old_string).

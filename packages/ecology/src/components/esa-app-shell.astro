@@ -50,10 +50,14 @@ export interface AppShellSearchEntry {
   /** The record's name. e.g. "Riverbank restoration — Phase 2", "Rita Alvarez". */
   title: string;
   /**
-   * The record's distinguishing attribute — status, type, role, or file size.
-   * e.g. "Active · 2026", "Hydrologist", "PDF · 2.1 MB". This is a search-index
-   * data field (it feeds esa-entity-search's own `subtitle`, see the adapter
-   * below), not a page subtitle — never page chrome.
+   * The record's distinguishing attribute: status, type, role, or file size.
+   * ONE of them. e.g. "Active", "Hydrologist", "2.1 MB" — not "Active · 2026",
+   * which glues two facts onto a line that cannot say how they relate.
+   *
+   * This is a search-index data field (it feeds esa-entity-search's own
+   * `subtitle`, see the adapter below), not a page subtitle, and it is not what
+   * esa-card deprecated on 2026-08-16 — a result row labels its value by
+   * position, under the title it belongs to.
    */
   subtitle?: string;
   /** The record's search scope/type, used to group and filter results. e.g. "Documents", "Places", "People". */
