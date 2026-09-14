@@ -116,7 +116,7 @@ export class EsaTooltip extends LitElement {
         ${this.open && this.text
           ? html`
               <span
-                class="esa-tooltip typography-microcopy-sm-subtle esa-tooltip--${this.position} esa-tooltip--align-${this.align}"
+                class="esa-tooltip typography-microcopy-xs-subtle esa-tooltip--${this.position} esa-tooltip--align-${this.align}"
                 role="tooltip"
               >
                 <span class="esa-tooltip__text">${this.text}</span>
@@ -143,7 +143,7 @@ export class EsaTooltip extends LitElement {
       z-index: var(--z-tooltip, 600);
       background: var(--color-background-default-knockout);
       color: var(--color-content-default-knockout, #fcfcfc);
-      padding: var(--spacing-100, 0.25rem) var(--spacing-200, 0.5rem);
+      padding: var(--spacing-150, 0.375rem) var(--spacing-250, 0.625rem);
       border-radius: var(--radius-sm, 0.25rem);
       /* Leading comes from microcopy-sm-subtle. This carried a tight override
          justified as "a tooltip may wrap to two or three lines" — but the rule
