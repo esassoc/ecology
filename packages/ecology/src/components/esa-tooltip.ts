@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { typography } from '../typography.js';
 
 type TooltipPosition = 'above' | 'below' | 'left' | 'right';
+type TooltipAlign = 'center' | 'start' | 'end';
 
 /**
  * esa-tooltip — hover/focus tooltip [wc].
@@ -14,11 +15,17 @@ type TooltipPosition = 'above' | 'below' | 'left' | 'right';
  * Inputs preserved: text, position (above|below|left|right), delay (ms, default
  * 200). Shows on mouseenter/focusin, hides on mouseleave/focusout, matching the
  * Angular directive's host bindings.
+ *
+ * Added here: `align` (center|start|end) for above/below placements. There is no
+ * collision handling, so the last icon button in a row that ends at the viewport
+ * edge would push a centred bubble off-screen; `align="end"` hangs the bubble
+ * from the trigger's right edge instead (`start` from its left).
  */
 export class EsaTooltip extends LitElement {
   static properties = {
     text: { type: String },
     position: { type: String, reflect: true },
+    align: { type: String, reflect: true },
     delay: { type: Number },
     open: { type: Boolean, reflect: true },
   };
@@ -30,6 +37,7 @@ export class EsaTooltip extends LitElement {
    */
   declare text: string;
   declare position: TooltipPosition;
+  declare align: TooltipAlign;
   declare delay: number;
   declare open: boolean;
 
@@ -39,6 +47,7 @@ export class EsaTooltip extends LitElement {
     super();
     this.text = '';
     this.position = 'above';
+    this.align = 'center';
     this.delay = 200;
     this.open = false;
   }
@@ -106,7 +115,10 @@ export class EsaTooltip extends LitElement {
         <slot></slot>
         ${this.open && this.text
           ? html`
-              <span class="esa-tooltip typography-microcopy-sm-subtle esa-tooltip--${this.position}" role="tooltip">
+              <span
+                class="esa-tooltip typography-microcopy-sm-subtle esa-tooltip--${this.position} esa-tooltip--align-${this.align}"
+                role="tooltip"
+              >
                 <span class="esa-tooltip__text">${this.text}</span>
                 <span class="esa-tooltip__arrow"></span>
               </span>
@@ -142,33 +154,66 @@ export class EsaTooltip extends LitElement {
       pointer-events: none;
       white-space: nowrap;
       box-shadow: var(--elevation-4, 0 6px 24px -6px rgba(0, 0, 0, 0.07));
-      animation: esa-tooltip-fade var(--animation-enter, 150ms ease-out);
+      /* Enters by fading AND sliding 4px in from the side it sits on — the two
+         transforms per position are the rest pose (--_to) and the pose one beat
+         before it (--_from); the keyframe reads them so one animation serves all
+         four placements. Reduced motion keeps the fade and drops the slide. */
+      transform: var(--_to);
+      animation: esa-tooltip-in var(--animation-enter, 150ms ease-out) both;
+    }
+    @keyframes esa-tooltip-in {
+      from { opacity: 0; transform: var(--_from); }
+      to { opacity: 1; transform: var(--_to); }
     }
     @keyframes esa-tooltip-fade {
       from { opacity: 0; }
       to { opacity: 1; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .esa-tooltip { animation-name: esa-tooltip-fade; }
+    }
 
     .esa-tooltip--above {
       bottom: calc(100% + 8px);
       left: 50%;
-      transform: translateX(-50%);
+      --_from: translate(-50%, 4px);
+      --_to: translate(-50%, 0);
     }
     .esa-tooltip--below {
       top: calc(100% + 8px);
       left: 50%;
-      transform: translateX(-50%);
+      --_from: translate(-50%, -4px);
+      --_to: translate(-50%, 0);
     }
     .esa-tooltip--left {
       right: calc(100% + 8px);
       top: 50%;
-      transform: translateY(-50%);
+      --_from: translate(4px, -50%);
+      --_to: translate(0, -50%);
     }
     .esa-tooltip--right {
       left: calc(100% + 8px);
       top: 50%;
-      transform: translateY(-50%);
+      --_from: translate(-4px, -50%);
+      --_to: translate(0, -50%);
     }
+
+    /* start/end only mean something above or below; left/right keep the vertical centre. */
+    .esa-tooltip--above.esa-tooltip--align-start,
+    .esa-tooltip--below.esa-tooltip--align-start {
+      left: 0;
+      --_from: translate(0, var(--_dy));
+      --_to: translate(0, 0);
+    }
+    .esa-tooltip--above.esa-tooltip--align-end,
+    .esa-tooltip--below.esa-tooltip--align-end {
+      left: auto;
+      right: 0;
+      --_from: translate(0, var(--_dy));
+      --_to: translate(0, 0);
+    }
+    .esa-tooltip--above { --_dy: 4px; }
+    .esa-tooltip--below { --_dy: -4px; }
 
     .esa-tooltip__arrow {
       position: absolute;
@@ -207,7 +252,11 @@ export class EsaTooltip extends LitElement {
       .esa-tooltip { border: 1px solid CanvasText; }
       .esa-tooltip__arrow { display: none; }
     }
-  `,
+  
+    /* After the per-position arrow rules on purpose: same specificity, so source order decides. */
+    .esa-tooltip--align-start .esa-tooltip__arrow { left: 12px; margin-left: -4px; }
+    .esa-tooltip--align-end .esa-tooltip__arrow { left: auto; right: 8px; margin-left: 0; }
+`,
   ];
 }
 
