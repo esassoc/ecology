@@ -257,7 +257,8 @@ import{b as r,i as c,A as o,a as h}from"./lit-element.D8DSg5zn.js";import{t as p
          The tight leading comes from FIELD_TYPE picking a microcopy-*-subtle rung,
          whose composite declares the line-height for us — there is deliberately no
          line-height declaration in this rule, because one here would outrank the
-         composite rather than agree with it. A static padding offset was the other option and
+         composite rather than agree with it. (.input--trigger below does restate
+         it as normal, for the button-versus-input reason given there.) A static padding offset was the other option and
          is wrong: leading scales with the fluid type (27px at 1600, 22px at 375) and
          is re-pointable by a theme, so an offset would cancel it at exactly one
          viewport. esa-textarea stays on a body-* composite on purpose — it is
@@ -284,7 +285,21 @@ import{b as r,i as c,A as o,a as h}from"./lit-element.D8DSg5zn.js";import{t as p
     .input--trigger {
       display: block;
       text-align: start;
-      font: inherit;
+      /* Only the family is restated. The composite class on this same element
+         already sets size, weight and tracking; the font shorthand that used to
+         sit here came later in the sheet and reset all of them to the host's,
+         which made the trigger a step larger than esa-text-field at the same size
+         and broke the filter-row alignment the two are meant to share. */
+      font-family: inherit;
+      /* Leading is the one composite term a BUTTON and an INPUT read differently.
+         The composite's line-height 1 is honoured by this button, but a native
+         single-line input never lays its text out shorter than the font's normal
+         line box (Chrome, WebKit), so esa-text-field's box is font-normal plus
+         padding whatever the composite says. Measured 2026-09-14: 3.5px shorter
+         at sm, 4.5px at md, 5.5px at lg. normal here puts the trigger on the
+         same floor the input is already on — same font, same normal, same box —
+         at every size and in every browser, with no px offset to drift. */
+      line-height: normal;
       min-width: 0;
       white-space: nowrap;
       overflow: hidden;
