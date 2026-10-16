@@ -1,3 +1,7 @@
+---
+description: "File a GitHub issue on the ecology hub asking for a missing or insufficient lego (component, pattern, or theming token hook), after checking the catalog that it really is missing. Use when a spoke needs something no esa-* lego provides, instead of editing the hub or hand-rolling it. Confirm the summary with the person before filing."
+argument-hint: "[what is missing, in one line]"
+---
 File a request on the ecology hub for a missing or insufficient lego (component,
 pattern, or theming token hook). This is the right move whenever something you
 need doesn't exist — spokes never edit the hub directly.
