@@ -62,12 +62,15 @@ git diff -U0 HEAD -- '*.astro' '*.css' | grep '^+' \
   | grep -inE 'border-left\s*:\s*[0-9]+px\s+solid'
 ```
 
-### 6. Sub-16px body text (banned unless genuine meta)
+### 6. Sub-16px reading prose (data UI exempt)
 ```bash
 git diff -U0 HEAD -- '*.astro' '*.css' | grep '^+' \
   | grep -inE 'font-size\s*:\s*(11|12|13|14|15)px'
 ```
-14/15px allowed only for genuine meta (timestamps, keycaps, counts). 11/12/13px on body text = fix. Watch for ornamental labels: uppercase + <14px + `letter-spacing` + light-gray together = banned label styling.
+A match is a candidate, not a finding. Check what the rule styles:
+- **Reading prose** (paragraphs, body copy, descriptions): sub-16px = fix.
+- **Data UI** (grids, tables, menus, feeds, sidebars, data rows): below 16px is right; density beats the 16px floor. Darken as you shrink, never fainter.
+- **Anywhere**: below 13px = fix (genuine meta such as timestamps, keycaps and counts bottoms out at 13px). Watch for ornamental labels: uppercase + <14px + `letter-spacing` + light-gray together = banned label styling.
 
 ### 7. JS-built DOM scope check
 ```bash
@@ -165,9 +168,11 @@ grep -nE '(backdrop|scrim|overlay)[^{]*\{' -r src/   # then verify position:fixe
 # Internal vocabulary leaking into user-facing copy (ticket keys, tenant names)
 grep -rnE '\b[A-Z]{2,10}-[0-9]{2,5}\b' src/pages/ --include='*.astro' | grep -v 'ticket:'
 ```
-Severity note (adopted T2): a **deliberate font-size hard-code** — where the author
-checked that no token applies — is a *Consider/warning*, not Must-fix. Undefined
-custom properties remain Must-fix always.
+Severity note (revised 2026-10-16, replacing the T2 warning): **every style traces
+to a token**, so a **deliberate font-size hard-code** is *Must-fix* even when the
+author checked that no token applies. If a token exists, swap it in. If none
+applies, that is a missing token: file it with **/request-lego** rather than
+keeping the hard-code. Undefined custom properties remain Must-fix always.
 
 **Contrast** (when the diff touches `theme-<brand>.css` or color tokens):
 `node ../ecology/scripts/check-contrast.mjs` — resolves the token graph

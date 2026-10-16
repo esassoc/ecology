@@ -24,8 +24,8 @@ This command is a thin wrapper over two skills — load BOTH and follow them:
    review the diff; if the user names a page (in `$ARGUMENTS`), review that
    page's files; otherwise review files changed since the last ship (`git log`).
 2. **`design-principles`** — check the banned patterns (left-border status
-   indicators, ornamental micro-labels, sub-16px body text), token-first
-   discipline, and mock-data rules against the same scope.
+   indicators, ornamental micro-labels, sub-16px reading prose; data UI such
+   as grids, menus and tables may go below 16px), token-first discipline, and mock-data rules against the same scope.
 3. **Grounded gate (run the hub scripts — these are deterministic, run them
    FIRST so the human-judgment passes above are anchored to real findings):**
    1. **Adherence** — `node ../ecology/scripts/check-adherence.mjs` (no args

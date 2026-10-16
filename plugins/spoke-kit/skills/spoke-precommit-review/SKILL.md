@@ -14,7 +14,7 @@ A repo is an ecology spoke when `package.json` depends on `@esa/ecology` + `@esa
 ## Review Flow
 
 1. **Scope to the diff.** `git status` + `git diff` (unstaged) + `git diff --cached` (staged). Review only what is changing. Note new/deleted files.
-2. **Run the automated greps** (see `checklist.md` → "Automated Greps"). These find: undefined custom properties, bare `var(--radius)`, hardcoded hex/px that maps to a token, font weights not in the loaded `<link>`, `border-left` status colors, sub-16px font sizes.
+2. **Run the automated greps** (see `checklist.md` → "Automated Greps"). These find: undefined custom properties, bare `var(--radius)`, hardcoded hex/px that maps to a token, font weights not in the loaded `<link>`, `border-left` status colors, sub-16px font sizes on reading prose (data UI is exempt).
 3. **Categorize every finding** into one of three buckets (below).
 4. **Apply** all Must-fix and clear Should-fix edits directly. **List** Consider items for the user — do not auto-apply judgment calls.
 5. **Re-run the gates** after editing: `npx astro build`, then `npx tsc --noEmit` on changed `.ts` modules. Report green (or the remaining errors).
@@ -23,7 +23,7 @@ A repo is an ecology spoke when `package.json` depends on `@esa/ecology` + `@esa
 
 | Bucket | Auto-apply? | What lands here |
 |--------|-------------|-----------------|
-| **Must-fix** | Yes | Undefined/broken token (`var(--radius)` — ecology ships `--radius-050/100/200/...`, not `--radius`), `tsc` errors, `astro build` failure, font-weight used but not loaded |
+| **Must-fix** | Yes | Undefined/broken token (`var(--radius)` — ecology ships `--radius-050/100/200/...`, not `--radius`), `tsc` errors, `astro build` failure, font-weight used but not loaded, a deliberate font-size hard-code (swap in the token; if none exists, report it and route to `/request-lego` rather than auto-applying) |
 | **Should-fix** | Yes (when mapping is unambiguous) | Hardcoded value with an exact existing token; a chrome value appearing 2+ times that should be promoted to `theme-<brand>.css`; copy-pasted render logic that belongs in a shared `.ts` |
 | **Consider** | No — list only | Whether a one-off rgba stays inline; whether a near-match value should snap to a token or get a new spoke token; component-split judgment calls; intentional vs accidental asset dupes |
 
@@ -33,7 +33,7 @@ A repo is an ecology spoke when `package.json` depends on `@esa/ecology` + `@esa
 2. **Type contract** — when a component overrides `--typography-font-family-sans`/`--typography-font-family-display`, every `font-weight` it uses must be in the Google Fonts `<link>` request in `BaseLayout.astro`. (Real bug: `font-weight: 500` used, link requested only `400;600` → silent faux-bold.)
 3. **Legos / decomposition** — Primitive → Wrapper → Container tiers; small + composable. Shared logic extracted to `.ts` (e.g. `omni-render.ts` feeds both the command palette and `/search`), not duplicated. Reuse hub `esa-*` bricks; build new `cbf-*` only when no hub equivalent. Flag monoliths and copy-pasted render logic.
 4. **CSS conventions** — each `.astro` carries a scoped `<style>`. JS-built (runtime) DOM can't get Astro's scope hash, so its CSS must be `<style is:global>` with every selector prefixed by one root class (e.g. `.cbf-search-surface ...`). No Tailwind. Divergence between two surfaces sharing one renderer belongs in a CSS scope boundary, not forked markup.
-5. **Design principles** — load the **`design-principles`** skill (the canonical home of these rules — banned visual patterns, 16px body minimum, token-first styling, mock-data rules) and check the diff against it. Its banned patterns are Must-fix. Plus: TypeScript types-first.
+5. **Design principles** — load the **`design-principles`** skill (the canonical home of these rules — banned visual patterns, 16px reading-prose default (data UI may go denser), token-first styling, mock-data rules) and check the diff against it. Its banned patterns are Must-fix. Plus: TypeScript types-first.
 6. **Asset hygiene** — assets referenced from `.astro`/built pages live in `public/` with absolute paths. Flag duplicated assets; note whether a dupe is intentional (specimen source-of-truth in `specimens/assets/` vs shipped `public/` copy) or accidental.
 
 ## Quality Gates (must report)
