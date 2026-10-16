@@ -289,6 +289,68 @@ writeFileSync(
   expect('(s) reindenting an existing declaration passes', r.code, 0, r.stderr);
 }
 
+console.log('\ncheck-plugin-version — SessionStart drift warning\n');
+
+// A fake running plugin root and a fake CLAUDE_CONFIG_DIR holding the
+// marketplace checkout, so no case depends on what is installed on this machine.
+const pluginRoot = path.join(root, '.fake-plugin');
+const configDir = path.join(root, '.fake-config');
+const marketJson = path.join(configDir, 'plugins', 'marketplaces', 'ecology', 'plugins', 'spoke-kit', '.claude-plugin', 'plugin.json');
+const setVersion = (file, version) => {
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, JSON.stringify({ name: 'spoke-kit', version }));
+};
+setVersion(path.join(pluginRoot, '.claude-plugin', 'plugin.json'), '1.22.1');
+
+function runSession(cwd) {
+  const res = spawnSync('node', [path.join(HOOKS, 'check-plugin-version.mjs')], {
+    input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd }),
+    env: { ...process.env, CLAUDE_PLUGIN_ROOT: pluginRoot, CLAUDE_CONFIG_DIR: configDir },
+    encoding: 'utf8',
+  });
+  return { code: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '' };
+}
+
+// (t) marketplace missing — silent.
+{
+  const r = runSession(root);
+  expect('(t) no marketplace checkout is silent', r.code === 0 && r.stdout === '' ? 0 : 1, 0, r.stdout + r.stderr);
+}
+
+// (u) running older than the marketplace — one warning naming both versions.
+setVersion(marketJson, '1.23.0');
+{
+  const r = runSession(root);
+  let msg = '';
+  try {
+    msg = JSON.parse(r.stdout).systemMessage ?? '';
+  } catch {}
+  const ok = r.code === 0 && msg.includes('1.22.1') && msg.includes('1.23.0') && msg.includes('claude plugin update spoke-kit@ecology');
+  expect('(u) older running version warns', ok ? 0 : 1, 0, r.stdout + r.stderr);
+}
+
+// (v) same version — silent. Numeric, not string, comparison: 1.10.0 > 1.9.0.
+setVersion(marketJson, '1.22.1');
+{
+  const r = runSession(root);
+  expect('(v) matching versions are silent', r.stdout === '' ? 0 : 1, 0, r.stdout);
+}
+setVersion(path.join(pluginRoot, '.claude-plugin', 'plugin.json'), '1.10.0');
+setVersion(marketJson, '1.9.0');
+{
+  const r = runSession(root);
+  expect('(w) newer running version is silent (numeric compare)', r.stdout === '' ? 0 : 1, 0, r.stdout);
+}
+
+// (x) outside a spoke — inert even when drifted.
+setVersion(marketJson, '9.0.0');
+{
+  const outside = mkdtempSync(path.join(process.env.SPOKE_KIT_TEST_TMP || tmpdir(), 'not-a-spoke-'));
+  const r = runSession(outside);
+  rmSync(outside, { recursive: true, force: true });
+  expect('(x) non-spoke directory is inert', r.stdout === '' ? 0 : 1, 0, r.stdout);
+}
+
 rmSync(root, { recursive: true, force: true });
 console.log(`\n${failures ? `${failures} case(s) failed` : 'all cases passed'}`);
 process.exit(failures ? 1 : 0);

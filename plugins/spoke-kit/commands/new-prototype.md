@@ -1,3 +1,7 @@
+---
+description: "Build a new prototype screen or flow in an @esa/ecology spoke, composed from esa-* legos: interview (or read a brief), write the page manifest, build the section components, then verify. Use when someone asks to build, mock up or prototype a new screen, page or flow in a spoke repo."
+argument-hint: "[brief path or one-line description of the screen]"
+---
 Build a new prototype screen (or flow) in this Ecology spoke, composed from the
 `esa-*` legos. This command is written for EVERYONE — including teammates who
 don't code. Speak plain language throughout: no jargon, no file paths in
@@ -17,10 +21,34 @@ its dependencies. If not, STOP and say: "Run /new-prototype inside a spoke repo
 - If the hub pulled token changes, run `npm --prefix ../ecology run build:tokens`.
 - If pulls fail (offline, conflicts), say so plainly and continue with what's local.
 
+## 0.5 Brief intake (only when `$ARGUMENTS` names a brief file)
+
+If `$ARGUMENTS` contains a path to a markdown file (for example
+`docs/private/briefs/<slug>/brief.md`), it is a **brief** — read the whole file
+before step 1. If the path does not exist, say so plainly and ask for the right
+one; do not fall back to guessing.
+
+- **Source files.** If the brief lists source files (screenshots, exports,
+  sketches, data, other docs), check each one exists — relative paths resolve
+  against the brief's own folder first, then the repo root. If ANY are missing,
+  STOP: name the missing ones and ask whether to continue without them or wait.
+  Read the ones that exist; they are part of the brief.
+- **Interview.** Every step 1 question the brief already answers is skipped.
+  Ask only what it leaves open, still as one round.
+- **Open questions.** If the brief has an Open questions section, those are
+  undecided ON PURPOSE. Do not invent answers to them and do not ask them again
+  as interview questions. Build around them: pick the choice that is cheapest
+  to change later, keep it visibly swappable (a prop, a placeholder section,
+  one component rather than spread through the page), and list each one
+  when you show it in step 4, with what the prototype currently assumes.
+- **Playback.** The step 1 summary is still required — play back what you took
+  from the brief, plus any answers you just collected, and confirm before
+  building.
+
 ## 1. Interview — understand the screen before building
 
-Ask (skip anything `$ARGUMENTS` already answers; one round of questions, not an
-interrogation):
+Ask (skip anything `$ARGUMENTS` or the brief already answers; one round of
+questions, not an interrogation):
 
 1. **Who looks at this?** (client name/role, internal team, public demo)
 2. **What's the scenario?** What is the person on this screen trying to do —
