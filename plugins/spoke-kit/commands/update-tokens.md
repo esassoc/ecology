@@ -1,3 +1,6 @@
+---
+description: "Move an @esa/ecology spoke off deprecated @esa/tokens names after a hub rename: clean-tree check, dry run, apply only on the person's go, build, commit. Use when the hub has renamed tokens, doctor warns about deprecated names, or someone asks to update or migrate a spoke's tokens."
+---
 Move this spoke off deprecated `@esa/tokens` names after the hub has renamed
 something. Plain-language output: the person running this may not code.
 
