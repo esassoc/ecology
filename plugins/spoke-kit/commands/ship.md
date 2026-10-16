@@ -1,3 +1,7 @@
+---
+description: "Publish a spoke's prototypes to its public GitHub Pages site, in its mandatory order: sync, hub gate, save, build, deploy. Use ONLY when the person explicitly asks to publish, ship or deploy the spoke; never as a side effect of other work."
+argument-hint: "[optional note for the save commit]"
+---
 Publish this spoke's prototypes to its public GitHub Pages site. Written for
 non-coders: narrate each step in one plain line, and never skip the sync steps
 — **two people deploying without syncing deletes each other's work** (the

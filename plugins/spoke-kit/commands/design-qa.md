@@ -1,3 +1,7 @@
+---
+description: "Design-quality pass on a spoke's current work: the pre-commit review greps and build gates, the design-principles banned patterns, the grounded hub scripts, and an advisory decomposition review, reported in plain language. Use when asked for design QA, a design-quality pass, a design review, or \"does this look right\" in a spoke repo."
+argument-hint: "[page or component to review; default is the working diff]"
+---
 Run a design-quality pass on this spoke's current work — on demand, any time
 (not just before a commit). Plain-language output: the person running this may
 not code.
