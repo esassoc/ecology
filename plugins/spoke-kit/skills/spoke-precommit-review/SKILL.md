@@ -23,7 +23,7 @@ A repo is an ecology spoke when `package.json` depends on `@esa/ecology` + `@esa
 
 | Bucket | Auto-apply? | What lands here |
 |--------|-------------|-----------------|
-| **Must-fix** | Yes | Undefined/broken token (`var(--radius)` — ecology ships `--radius-050/100/200/...`, not `--radius`), `tsc` errors, `astro build` failure, font-weight used but not loaded |
+| **Must-fix** | Yes | Undefined/broken token (`var(--radius)` — ecology ships `--radius-050/100/200/...`, not `--radius`), `tsc` errors, `astro build` failure, font-weight used but not loaded, a deliberate font-size hard-code (swap in the token; if none exists, report it and route to `/request-lego` rather than auto-applying) |
 | **Should-fix** | Yes (when mapping is unambiguous) | Hardcoded value with an exact existing token; a chrome value appearing 2+ times that should be promoted to `theme-<brand>.css`; copy-pasted render logic that belongs in a shared `.ts` |
 | **Consider** | No — list only | Whether a one-off rgba stays inline; whether a near-match value should snap to a token or get a new spoke token; component-split judgment calls; intentional vs accidental asset dupes |
 

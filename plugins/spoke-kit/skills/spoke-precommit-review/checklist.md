@@ -168,9 +168,11 @@ grep -nE '(backdrop|scrim|overlay)[^{]*\{' -r src/   # then verify position:fixe
 # Internal vocabulary leaking into user-facing copy (ticket keys, tenant names)
 grep -rnE '\b[A-Z]{2,10}-[0-9]{2,5}\b' src/pages/ --include='*.astro' | grep -v 'ticket:'
 ```
-Severity note (adopted T2): a **deliberate font-size hard-code** — where the author
-checked that no token applies — is a *Consider/warning*, not Must-fix. Undefined
-custom properties remain Must-fix always.
+Severity note (revised 2026-10-16, replacing the T2 warning): **every style traces
+to a token**, so a **deliberate font-size hard-code** is *Must-fix* even when the
+author checked that no token applies. If a token exists, swap it in. If none
+applies, that is a missing token: file it with **/request-lego** rather than
+keeping the hard-code. Undefined custom properties remain Must-fix always.
 
 **Contrast** (when the diff touches `theme-<brand>.css` or color tokens):
 `node ../ecology/scripts/check-contrast.mjs` — resolves the token graph
