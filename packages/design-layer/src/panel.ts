@@ -23,7 +23,7 @@ import {
   type LengthControl, type Mode, type PanelHost, type ResolvedConfig, type ServerState,
   type EditScope, type PageState, type PromoteEntry, type PromotePlan, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
 } from './controls';
-import { contrast, firstFamily, oklchL, toHex } from './color';
+import { contrast, firstFamily, formatColor, formatOf, oklchL, toHex, toRgba } from './color';
 import { effectiveBackground, selectorFor, snippet, source } from './describe';
 import {
   RECIPE, SURFACE_IDS, SURFACE_LABELS, SURFACE_SHORT,
@@ -38,7 +38,7 @@ import { createStage } from './stage';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
-  type PaletteOption, type Prefix,
+  SIZE_RUNGS, type PaletteOption, type PickIntent, type Prefix,
 } from './ui';
 
 /** The panel's width: a setting, dragged on its inner edge. Figma's own panel is 240; 320 gives the fields and the top row's undo and redo room. */
@@ -143,6 +143,7 @@ const PANEL_CSS = `
   .sp__r--dim { color: var(--ink-2); }
   .sp__sub { padding: 4px 8px 0; font-weight: 550; }
   .sp__note { padding: 4px 8px; color: var(--ink-2); }
+  .sp__cands { padding: 0 8px 4px; color: var(--ink-3); font-size: 11px; overflow-wrap: anywhere; }
   .sp__err { padding: 4px 8px; color: var(--danger); overflow-wrap: anywhere; }
   .sp__f { padding: 8px 16px 16px; border-top: 1px solid var(--line); }
   .clist { grid-column: 1 / -1; display: grid; margin: 0; padding: 0; list-style: none; }
@@ -287,6 +288,40 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     }
     return o[s];
   }
+  /** The promote key of an edit at the current target: scope|selector|mode|var. */
+  function keyAt(s: Mode | 'shared', cssVar: string) {
+    const t = target();
+    return t.kind === 'root' ? `token||${s}|${cssVar}` : `${t.kind}|${t.selector ?? ''}|${s}|${cssVar}`;
+  }
+  /** The selection's size rung, when its component has one (size="sm", or a --sm modifier class). */
+  function sizeOfSelection(): string | null {
+    const el = selection?.component?.root ?? selection?.el;
+    if (!el) return null;
+    const a = el.getAttribute('size');
+    if (a && SIZE_RUNGS.includes(a)) return a;
+    return [...el.classList].map((c) => c.match(/--(2xs|xs|sm|md|lg|xl)$/)?.[1]).find(Boolean) ?? null;
+  }
+  /**
+   * Records what a pick meant, or forgets it when the value is typed. A
+   * concept is exact here when it has one token, or when the field's own value
+   * picked the size rung and the edit cannot span other sizes: an instance, a
+   * variant, or a variable whose name carries its rung. Otherwise every rung is
+   * a candidate and Save to Source asks for a coding pass.
+   */
+  function remember(s: Mode | 'shared', cssVar: string, intent?: PickIntent) {
+    const key = keyAt(s, cssVar);
+    const rest = (tweaks.intents ?? []).filter((i) => i.key !== key);
+    if (intent) {
+      const t = target();
+      const narrow = t.kind === 'instance' || t.kind === 'variant' || /-(2xs|xs|sm|md|lg|xl|2xl)(-|$)/.test(cssVar);
+      const exact = intent.variants.length === 1 || (intent.matched && narrow);
+      rest.push({ key, concept: intent.concept, chosen: intent.chosen, value: intent.value, candidates: exact ? [intent.chosen] : intent.variants,
+        context: { mode: s, size: intent.size ?? sizeOfSelection(), scope: t.kind === 'root' ? 'token' : t.kind, selection: selection ? (t.kind === 'root' ? null : t.selector ?? selection.instance) : null } });
+    }
+    if (rest.length) tweaks.intents = rest; else delete tweaks.intents;
+  }
+  /** Where a field's picker resolves concepts: its variable and the selection's size. */
+  const pickAt = (cssVar: string) => ({ cssVar, size: sizeOfSelection });
   /** Drops scoped overrides that hold nothing. */
   function prune() {
     if (!tweaks.overrides) return;
@@ -509,9 +544,15 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     else fontLink.remove();
   }
   /** Writes one variable at the current scope (null drops the override). */
-  function set(s: Mode | 'shared', cssVar: string, value: string | null) {
+  function set(s: Mode | 'shared', cssVar: string, value: string | null, intent?: PickIntent) {
+    // A colour keeps the format its source writes it in: the field speaks hex, an rgb() token stays rgb().
+    if (value && /^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(value)) {
+      const f = formatOf(declared(cssVar, s === 'dark' ? 'dark' : 'light'));
+      if (f !== 'hex') value = formatColor(toRgba(value), f);
+    }
     const map = layer(s, value !== null);
     if (value === null) delete map[cssVar]; else map[cssVar] = value;
+    remember(s, cssVar, value === null ? undefined : intent);
     prune();
     applyLive();
     sync();
@@ -668,14 +709,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     // Unedited, the field shows the token itself as its chip.
     const shownAs = (raw: string | undefined, literal: number | string) => (raw === undefined ? `var(${u.name})` : boundToken(raw) ? raw : literal);
     if (u.kind === 'color') {
-      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside }, onChange: (v) => set(mode, u.name, v) });
+      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside, at: pickAt(u.name) }, onChange: (v, i) => set(mode, u.name, v, i) });
       f.el.classList.add('span2');
       f.el.title = title;
       const x = rowX(label, () => set(mode, u.name, null));
       return { nodes: [f.el, x], sync: () => {
         const raw = layer(mode)[u.name];
-        const hex = toHex(measureAt('color', raw ?? `var(${u.name})`));
-        f.set(String(shownAs(raw, hex)), { resolved: hex });
+        const css = measureAt('color', raw ?? `var(${u.name})`);
+        f.set(String(shownAs(raw, toHex(css))), { resolved: css });
         dimOn(x, u.name in layer(mode));
       } };
     }
@@ -683,8 +724,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const weight = u.kind === 'weight';
       const f = numberField({
         root, label: `${label}: ${u.name}`, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
-        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside },
-        onChange: (v) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`),
+        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside, at: pickAt(u.name) },
+        onChange: (v, i) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
       });
       f.el.classList.add('span2');
       f.el.title = title;
@@ -837,7 +878,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // Colors: one fill row each, the contrast table behind its button.
   const colorRows = COLORS.map((c) => {
-    const f = colorField({ root, label: c.label, suffix: c.label, tokens: { prefer: /^--color-(content|background|border)-/, beside }, onChange: (v) => set(mode, c.cssVar, v) });
+    const f = colorField({ root, label: c.label, suffix: c.label, tokens: { beside, at: pickAt(c.cssVar) }, onChange: (v, i) => set(mode, c.cssVar, v, i) });
     f.el.classList.add('span2');
     return { c, f, x: rowX(c.label, () => set(mode, c.cssVar, null)) };
   });
@@ -872,12 +913,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sel1.el.classList.add('span2');
     return { f, sel: sel1, x: rowX(`${f.label} font`, () => set('shared', f.cssVar, null)) };
   });
-  const setSize = (s: SizeControl, v: number | string) => {
-    if (typeof v === 'string') { set('shared', s.cssVar, v); return; }
+  const setSize = (s: SizeControl, v: number | string, i?: PickIntent) => {
+    if (typeof v === 'string') { set('shared', s.cssVar, v, i); return; }
     set('shared', s.cssVar, atRoot() && v === baseSize(s.id) ? null : `${v}px`);
   };
-  const setWeight = (s: SizeControl, v: number | string) => {
-    if (typeof v === 'string') { if (!isBanned(v)) set('shared', s.weightVar, v); else sync(); return; }
+  const setWeight = (s: SizeControl, v: number | string, i?: PickIntent) => {
+    if (typeof v === 'string') { if (!isBanned(v)) set('shared', s.weightVar, v, i); else sync(); return; }
     const fit = fitWeight(axisOf(fontOption(s.font)), v);
     const w = fit === BANNED_WEIGHT ? 400 : fit;
     set('shared', s.weightVar, atRoot() && w === baseWeight(s.id) ? null : String(w));
@@ -885,14 +926,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const sizeRows = SIZES.map((s) => {
     const size = numberField({
       root, label: `${s.label} size`, prefix: 'size', suffix: s.label, min: s.min, max: s.max, step: 0.5,
-      tokens: { kind: 'length', prefer: /font-size|typography/, beside },
-      onChange: (v) => setSize(s, v),
+      tokens: { kind: 'length', beside, at: pickAt(s.cssVar) },
+      onChange: (v, i) => setSize(s, v, i),
       onReference: () => { const r = refSize(s.id); if (r) setSize(s, r.size); },
     });
     const weight = numberField({
       root, label: `${s.label} weight`, prefix: { text: 'W' }, min: 100, max: 900, step: 1, refuse: [BANNED_WEIGHT],
-      tokens: { kind: 'weight', beside },
-      onChange: (v) => setWeight(s, v),
+      tokens: { kind: 'weight', beside, at: pickAt(s.weightVar) },
+      onChange: (v, i) => setWeight(s, v, i),
       onReference: () => { const r = refSize(s.id); if (r) setWeight(s, r.weight); },
     });
     return { s, size, weight, x: rowX(s.label, () => { const m = layer('shared'); delete m[s.cssVar]; delete m[s.weightVar]; prune(); applyLive(); sync(); }) };
@@ -905,15 +946,15 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // Layout: icon and component lengths. Closed to its head unless opened, like
   // Figma's empty sections; the plus opens it.
-  const setLength = (c: LengthControl, v: number | string) => {
-    if (typeof v === 'string') { set('shared', c.cssVar, v); return; }
+  const setLength = (c: LengthControl, v: number | string, i?: PickIntent) => {
+    if (typeof v === 'string') { set('shared', c.cssVar, v, i); return; }
     set('shared', c.cssVar, atRoot() && v === baseComp(c.id) ? null : `${v}px`);
   };
   const lengthRows = COMPONENTS.map((c) => {
     const f = numberField({
       root, label: c.label, prefix: leadFor(c), suffix: c.label, min: c.min, max: c.max, step: c.step,
-      tokens: { kind: 'length', prefer: /radius|spacing|size/, beside },
-      onChange: (v) => setLength(c, v),
+      tokens: { kind: 'length', beside, at: pickAt(c.cssVar) },
+      onChange: (v, i) => setLength(c, v, i),
       onReference: () => { const r = refLength(c.id); if (r !== null) setLength(c, r); },
     });
     f.el.classList.add('span2');
@@ -1125,6 +1166,16 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     return Object.fromEntries(Object.entries(dep).filter(([k]) => keep.has(k)));
   }
   function promoteEntries(): PromoteEntry[] {
+    const out = promoteRaw();
+    // A pick whose concept is ambiguous here goes as a todo, never as a guessed token.
+    const intents = new Map((tweaks.intents ?? []).map((i) => [i.key, i]));
+    for (const e of out) {
+      const i = intents.get(`${e.scope}|${e.selector ?? ''}|${e.mode}|${e.cssVar}`);
+      if (i && i.candidates.length > 1 && e.value === `var(${i.chosen})`) e.todo = { concept: i.concept, chosen: i.chosen, candidates: i.candidates };
+    }
+    return out;
+  }
+  function promoteRaw(): PromoteEntry[] {
     const out: PromoteEntry[] = [];
     for (const m of ['light', 'dark'] as const) {
       for (const [cssVar, value] of Object.entries(modeVars(tweaks, m, CFG.roles))) {
@@ -1186,6 +1237,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       }
     }
     if (plan.regenerate.length) rows.push(...plan.regenerate.map((r) => h('div', { class: 'sp__note' }, r)));
+    if (plan.todo.length) {
+      rows.push(h('div', { class: 'sp__file' }, 'Needs a Coding Pass'));
+      for (const t of plan.todo) {
+        const where = t.file ? `A todo line in ${t.file}` : 'Listed here only; no theme file holds todos';
+        rows.push(row(t.cssVar, t.concept.replace(/ · [\w-]+$/, ''), [`${t.cssVar} · ${t.name}`, `Wants ${t.concept}`, `Could be: ${t.candidates.join(', ')}`, where].join('\n')));
+        rows.push(h('div', { class: 'sp__cands' }, t.candidates.map((c) => c.replace(/^--/, '')).join(' · ')));
+      }
+    }
     if (plan.skipped.length) {
       rows.push(h('div', { class: 'sp__file' }, 'Not Saved'));
       for (const x of plan.skipped) rows.push(row(x.cssVar, x.reason, `${x.cssVar} · ${x.name}\n${x.reason}`, true));
@@ -1193,7 +1252,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (plan.instances) rows.push(h('div', { class: 'sp__note' }, `${plan.instances} instance ${plan.instances === 1 ? 'edit stays' : 'edits stay'} as overrides.`));
     body.replaceChildren(...rows);
     ok.textContent = 'Save';
-    ok.disabled = !plan.keys.length;
+    ok.disabled = !plan.keys.length && !plan.todo.some((t) => t.file);
   }
   function finishPromote(plan: PromotePlan) {
     const done = new Set(plan.keys);
@@ -1557,6 +1616,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (!open || commenting) return;
     const t = e.composedPath()[0];
     if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return;
+    // An open popover takes Esc first: it closes, the selection stays.
+    if (e.key === 'Escape' && ui.querySelector('.pop')) return;
     if (e.key === 'Escape' && (selection || selecting)) {
       escapeAt = performance.now();
       e.preventDefault();

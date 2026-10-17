@@ -102,3 +102,79 @@ export const boundToken = (v: string | undefined | null) => v?.match(/^var\((--[
 
 /** A token's name without the leading dashes, the way the chip and picker show it. */
 export const shortName = (name: string) => name.replace(/^--/, '');
+
+// ── concepts ────────────────────────────────────────────────────────────────
+// The picker lists concepts, not tokens: "Label Strong" stands for the five
+// --typography-label-<size>-strong-font-size tokens, and a semantic colour is
+// already one name for both schemes. Primitives and component aliases sit
+// behind Show All, because picking one is rarely what a designer means.
+
+export interface Concept {
+  /** "typography-label-strong:font-size", or the token's own name. */
+  id: string;
+  group: string;
+  label: string;
+  kind: TokenKind;
+  /** One per size rung; a concept with no size axis has one, size null. */
+  variants: { size: string | null; token: Token }[];
+  /** On the main list, or only under Show All. */
+  primary: boolean;
+}
+
+export const SIZES = ['2xs', 'xs', 'sm', 'md', 'lg', 'xl', '2xl'];
+const TYPE = /^--typography-([a-z]+(?:-code)?)(?:-(2xs|xs|sm|md|lg|xl|2xl))?(?:-(strong|subtle))?-(font-size|line-height|letter-spacing|font-weight|font-family|text-transform)$/;
+/** Families with no tier-2 layer, whose scale is the vocabulary itself. */
+const VOCAB = /^--(spacing-\d+|font-weight-(light|regular|medium|semibold|bold)|font-(sans|mono|display)|border-width-(default|emphasis|focus))$/;
+const ORDER = ['color / background', 'color / content', 'color / border', 'typography', 'spacing', 'radius', 'elevation', 'font', 'border'];
+const rank = (g: string) => { const i = ORDER.findIndex((o) => g === o || g.startsWith(`${o} `)); return i < 0 ? ORDER.length : i; };
+const title = (s: string) => s.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+
+/** The property a typography concept is for, read off a field's variable. */
+export const typeProp = (cssVar: string | undefined) => cssVar?.match(/(font-size|line-height|letter-spacing|font-weight|font-family|text-transform)$/)?.[1] ?? null;
+
+/** Every concept a field of this kind can take; typography only for its property. */
+export function conceptsFor(kind: TokenKind, prop: string | null): Concept[] {
+  const byId = new Map<string, Concept>();
+  for (const t of readTokens()) {
+    if (t.kind !== kind) continue;
+    const m = t.name.match(TYPE);
+    if (m) {
+      const [, role, size, weight, p] = m;
+      if (p !== prop) continue;
+      const id = `typography-${role}${weight ? `-${weight}` : ''}:${p}`;
+      let c = byId.get(id);
+      if (!c) byId.set(id, c = { id, group: 'typography', label: title(`${role}${weight ? `-${weight}` : ''}`), kind, variants: [], primary: true });
+      c.variants.push({ size: size ?? null, token: t });
+      continue;
+    }
+    const primary = (t.tier === 2 && !t.name.startsWith('--typography-')) || VOCAB.test(t.name);
+    const group = t.name.startsWith('--spacing-') ? 'spacing' : t.group;
+    byId.set(t.name, { id: t.name, group, label: t.label, kind, variants: [{ size: null, token: t }], primary });
+  }
+  for (const c of byId.values()) c.variants.sort((a, b) => SIZES.indexOf(a.size ?? '') - SIZES.indexOf(b.size ?? ''));
+  return [...byId.values()].sort((a, b) => rank(a.group) - rank(b.group) || a.group.localeCompare(b.group)
+    || (a.variants.length > 1 || b.variants.length > 1 ? a.label.localeCompare(b.label) : a.variants[0].token.name.localeCompare(b.variants[0].token.name, undefined, { numeric: true })));
+}
+
+const same = (a: string, b: string) => {
+  const n = (x: string) => x.trim().toLowerCase();
+  if (n(a) === n(b)) return true;
+  const pa = Number.parseFloat(a);
+  const pb = Number.parseFloat(b);
+  return /px$/.test(a) && /px$/.test(b) && Math.abs(pa - pb) < 0.05;
+};
+
+/**
+ * The variant a concept means here: the one whose value the field already
+ * shows (the control's size rung), then the selection's own size, then md.
+ * `matched` says the value picked it, which is what makes a mapping exact.
+ */
+export function resolveConcept(c: Concept, at: { current?: string | null; size?: string | null }) {
+  const hits = at.current ? c.variants.filter((v) => same(v.token.display, at.current!)) : [];
+  const v = (hits.length === 1 && hits[0])
+    || hits.find((x) => x.size === at.size)
+    || c.variants.find((x) => x.size === at.size)
+    || c.variants.find((x) => x.size === 'md')
+    || c.variants[0];
+  return { token: v.token, size: v.size, matched: hits.length === 1 };
+}

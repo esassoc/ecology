@@ -29,6 +29,7 @@ import { execFileSync } from 'node:child_process';
 
 const START = '/* design-layer:start';
 const END = '/* design-layer:end */';
+const TODO = '/* design-layer:todo ';
 const HEADER = `${START} — written by the design layer's Save to Source. Edit freely: a later save merges into these rules and rewrites only this block. */`;
 const DARK = /\[data-scheme=["']?dark["']?\]/;
 const LIGHT_ONLY = /:not\(\[data-scheme=["']?dark["']?\]\)|\[data-scheme=["']?light["']?\]/;
@@ -217,20 +218,29 @@ function blockRules(css) {
   const s = css.indexOf(START);
   const e = css.indexOf(END);
   const map = new Map();
-  if (s < 0 || e < s) return { map, s: -1, e: -1 };
+  const todos = new Map();
+  if (s < 0 || e < s) return { map, todos, s: -1, e: -1 };
   const inner = css.slice(css.indexOf('*/', s) + 2, e);
+  for (const m of inner.matchAll(/\/\* design-layer:todo (.+?) \*\//g)) todos.set(todoKey(m[1]), m[1]);
   for (const r of parseRules(inner)) {
     if (r.nested) continue;
     const vars = new Map();
     for (const m of flatBody(inner, r, []).matchAll(/(--[\w-]+)\s*:\s*([^;]+);?/g)) vars.set(m[1], m[2].trim());
     map.set(r.sel, vars);
   }
-  return { map, s, e: e + END.length };
+  return { map, todos, s, e: e + END.length };
 }
 
-function writeBlock(css, map) {
+/** A todo line's identity, its selector and property: a later save replaces it. */
+const todoKey = (line) => line.split(': wants ')[0];
+/** One line a developer acts on: where, which property, the concept the
+    designer picked and the tokens it could mean. No braces, so no parser sees a rule. */
+const todoLine = (sel, t) => `${sel} ${t.cssVar}: wants ${t.concept} (picked ${t.chosen}); candidates ${t.candidates.join(' | ')}`;
+
+function writeBlock(css, map, todos = new Map()) {
   const { s, e } = blockRules(css);
-  const body = [...map].filter(([, v]) => v.size).map(([sel, v]) => `${sel} {\n${[...v].map(([k, x]) => `  ${k}: ${x};`).join('\n')}\n}`).join('\n');
+  const rules = [...map].filter(([, v]) => v.size).map(([sel, v]) => `${sel} {\n${[...v].map(([k, x]) => `  ${k}: ${x};`).join('\n')}\n}`);
+  const body = [...[...todos.values()].map((l) => `${TODO}${l} */`), ...rules].join('\n');
   const block = `${HEADER}\n${body}\n${END}`;
   if (s >= 0) return css.slice(0, s) + block + css.slice(e);
   return `${css.replace(/\s*$/, '')}\n\n${block}\n`;
@@ -240,6 +250,29 @@ const rootSel = (slug, mode) =>
   mode === 'dark' ? `html[data-scheme="dark"][data-theme="${slug}"]`
     : mode === 'light' ? `html:not([data-scheme="dark"])[data-theme="${slug}"]`
       : `[data-theme="${slug}"]`;
+
+// --- colour format -------------------------------------------------------------
+
+/** A hex edit written the way the declaration it replaces is written: rgb() stays rgb(), hsl() stays hsl(). */
+export function inFormat(value, was) {
+  const m = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(value);
+  if (!m || !was) return value;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16));
+  const a = m[2] ? Math.round((parseInt(m[2], 16) / 255) * 100) / 100 : 1;
+  if (/^\s*rgba?\(/i.test(was)) return a < 1 ? `rgb(${r} ${g} ${b} / ${a})` : `rgb(${r}, ${g}, ${b})`;
+  if (/^\s*hsla?\(/i.test(was)) {
+    const [R, G, B] = [r / 255, g / 255, b / 255];
+    const max = Math.max(R, G, B);
+    const min = Math.min(R, G, B);
+    const l = (max + min) / 2;
+    const d = max - min;
+    const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    const hh = d === 0 ? 0 : max === R ? ((G - B) / d) % 6 : max === G ? (B - R) / d + 2 : (R - G) / d + 4;
+    const [H, S, L] = [Math.round((hh * 60 + 360) % 360), Math.round(sat * 100), Math.round(l * 100)];
+    return a < 1 ? `hsl(${H} ${S}% ${L}% / ${a})` : `hsl(${H}, ${S}%, ${L}%)`;
+  }
+  return value;
+}
 
 // --- the plan -----------------------------------------------------------------
 
@@ -260,7 +293,7 @@ export function planPromotion(root, cfg, req) {
   /** Edits per file: in-place ranges, inserts, the managed block, json changes. */
   const edits = new Map();
   const at = (f) => {
-    if (!edits.has(f)) edits.set(f, { ranges: [], inserts: [], block: null, json: [] });
+    if (!edits.has(f)) edits.set(f, { ranges: [], inserts: [], block: null, todos: null, json: [] });
     return edits.get(f);
   };
   /** @type {Map<string, import('./types').PromoteFile>} */
@@ -271,6 +304,7 @@ export function planPromotion(root, cfg, req) {
   };
   const skipped = [];
   const keys = [];
+  const todo = [];
   const darkEdited = new Set(req.entries.filter((e) => e.mode === 'dark').map((e) => `${e.scope}|${e.selector ?? ''}|${e.cssVar}`));
   const restated = new Set();
 
@@ -290,10 +324,27 @@ export function planPromotion(root, cfg, req) {
     }
   }
 
+  function blockOf(f) {
+    const { map, todos } = blockRules(read(f));
+    return { block: map, todos };
+  }
+
+  /** An edit whose concept maps to more than one token here: a todo line, never a guessed token. */
+  function needsPass(e, name) {
+    const sel = e.scope === 'token' ? (ctx.slug ? rootSel(ctx.slug, e.mode) : ':root') : `${ctx.slug ? `${rootSel(ctx.slug, e.mode)} ` : ''}${e.selector}`;
+    const f = ctx.kind === 'spoke' && ctx.blockFile && !/data-dl-/.test(e.selector ?? '') ? ctx.blockFile : null;
+    todo.push({ name, cssVar: e.cssVar, mode: e.mode, concept: e.todo.concept, chosen: e.todo.chosen, candidates: e.todo.candidates, file: f ? rel(f) : null });
+    if (!f) return;
+    const ed = at(f);
+    if (!ed.block) Object.assign(ed, blockOf(f));
+    const line = todoLine(sel, { cssVar: e.cssVar, ...e.todo });
+    ed.todos.set(todoKey(line), line);
+  }
+
   function putBlock(sel, cssVar, value, c) {
     const f = ctx.blockFile;
     const ed = at(f);
-    if (!ed.block) ed.block = blockRules(read(f)).map;
+    if (!ed.block) Object.assign(ed, blockOf(f));
     if (!ed.block.has(sel)) ed.block.set(sel, new Map());
     const from = ed.block.get(sel).get(cssVar) ?? null;
     ed.block.get(sel).set(cssVar, value);
@@ -301,6 +352,7 @@ export function planPromotion(root, cfg, req) {
   }
 
   function inPlace(e, hit, name) {
+    e = { ...e, value: inFormat(e.value, hit.value) };
     at(hit.file).ranges.push({ start: hit.start, end: hit.end, text: e.value });
     change(hit.file, 'Edit', { name, cssVar: e.cssVar, mode: e.mode, from: hit.value, to: e.value });
     if (e.mode === 'light' && !LIGHT_ONLY.test(hit.rule.sel)) restateDark(e);
@@ -310,6 +362,7 @@ export function planPromotion(root, cfg, req) {
     const name = e.scope === 'token' ? 'Root' : e.name;
     const skip = (reason) => { if (!e.expanded) skipped.push({ name, cssVar: e.cssVar, mode: e.mode, reason }); };
     const tok = index.get(e.cssVar);
+    if (e.todo) { if (!e.expanded) needsPass(e, name); continue; }
 
     if (tok?.tier === 1 && e.scope === 'token') { skip('Primitives never move; re-point the role that reads it.'); continue; }
 
@@ -384,6 +437,7 @@ export function planPromotion(root, cfg, req) {
     context: ctx.kind,
     files: [...out.values()],
     skipped,
+    todo,
     instances: req.instances,
     regenerate: regenerate.map((r) => (r === 'theme' ? `${rel(ctx.recipe).replace(/\.json$/, '.css')} regenerates from the recipe` : 'The token build runs (packages/tokens)')),
     keys,
@@ -406,7 +460,7 @@ export function planPromotion(root, cfg, req) {
         const ops = [...ed.ranges.map((r) => ({ ...r, kind: 0 })), ...ed.inserts.map((r) => ({ start: r.at, end: r.at, text: r.text, kind: 1 }))]
           .sort((a, b) => b.start - a.start);
         for (const o of ops) text = text.slice(0, o.start) + o.text + text.slice(o.end);
-        if (ed.block) text = writeBlock(text, ed.block);
+        if (ed.block) text = writeBlock(text, ed.block, ed.todos ?? undefined);
       }
       writeFileSync(f, text);
     }

@@ -74,6 +74,46 @@ overrides.
 Primitives are refused at token scope. A component selector that only exists
 in dev (`[data-dl-component]`) is refused. A spoke's save never writes outside
 the spoke. `sourceFiles` in the config overrides any of the files it finds.
+A hex edit replacing an `rgb()` or `hsl()` declaration is written in that format.
+
+### Picks are stored as intent
+
+The variable picker lists concepts, one row per meaning: **Label Strong**
+stands for its five `--typography-label-<size>-strong-*` tokens and shows the
+value of the one that fits here (the rung whose value the field already holds,
+then the selection's `size`, then `md`). Semantic colours, spacing, radius and
+elevation are on the main list. Primitives and component aliases are under
+**Show All Variables** at the foot (remembered).
+
+A pick records what it meant, in `tweaks.json` beside the value:
+
+```ts
+interface Intent {
+  key: string;          // the edit: scope|selector|mode|var
+  concept: string;      // "Typography / Label Strong · font-size"
+  chosen: string;       // the token the value is bound to
+  value: string;        // what it resolved to when picked
+  candidates: string[]; // every token it could mean here
+  context: { mode: 'light' | 'dark' | 'shared'; size: string | null; scope: 'component' | 'token' | 'instance' | 'variant'; selection: string | null };
+}
+```
+
+One candidate (a concept with no size axis, or a rung the field's own value
+picked on an edit that cannot span sizes) and Save to Source writes the token.
+More than one and it writes no token: the edit is listed under **Needs a Coding
+Pass** and a line goes into the design-layer block, replaced on a later save:
+
+```css
+/* design-layer:todo [data-theme="x"] .esa-button --button-font-size: wants Typography / Label · font-size (picked --typography-label-md-font-size); candidates --typography-label-sm-font-size | --typography-label-md-font-size */
+```
+
+The edit stays live until a developer maps it. Typing a value forgets the intent.
+
+### Colour fields
+
+Six hex digits, uppercase, no `#`, with opacity in its own percent field. The
+swatch opens the colour picker; its format menu (Hex, RGB, HSL) is remembered.
+A stored value keeps the format its source token is written in.
 
 ## Config
 

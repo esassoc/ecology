@@ -8,7 +8,8 @@
 // needed, a right-aligned suffix inside the field, as Figma writes "Fill".
 import { h, icon, type ICONS } from './dom';
 import { menu, openPopover, closePopover, type MenuItem } from './popover';
-import { boundToken, shortName, tierOf, tokensFor, type Token, type TokenKind } from './tokens';
+import { rgbToHsv, hsvToRgb, rgbToHsl, rgbaToHex, toRgba, type ColorFormat, type Rgba } from '../color';
+import { boundToken, conceptsFor, resolveConcept, shortName, tierOf, typeProp, type Token, type TokenKind } from './tokens';
 
 type IconName = keyof typeof ICONS;
 type Root = ShadowRoot | HTMLElement;
@@ -78,26 +79,60 @@ export function dropdown(o: { label: string; onOpen: (anchor: HTMLButtonElement)
 const glyph = (t: Token) => (t.kind === 'color'
   ? h('span', { class: 'mi__sw', style: `background:${t.value}` })
   : h('span', { class: 'mi__glyph' }, t.kind === 'weight' ? 'W' : t.kind === 'font' ? 'Aa' : '#'));
+const SHOW_ALL_KEY = 'design-layer:show-all';
 
-/** The page's tokens of one kind, searchable; Enter or a click binds one. */
-export function openTokenPicker(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; kind: TokenKind; prefer?: RegExp; current: string | null; pick: (name: string) => void }) {
-  const all = tokensFor(o.kind, o.prefer);
+/** What a pick meant: the concept, the variant it resolved to here, and its siblings. */
+export interface PickIntent { concept: string; chosen: string; value: string; size: string | null; variants: string[]; matched: boolean }
+
+/** Where the picker is opened from, so a concept can resolve its size variant. */
+export interface PickContext { cssVar?: string; current?: () => string | null; size?: () => string | null }
+
+/**
+ * The variables a field can take, one row per concept: "Label Strong" stands
+ * for its five sizes and shows the value of the one that fits here. Primitives
+ * and component aliases sit behind Show All at the foot. Enter or a click binds.
+ */
+export function openTokenPicker(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; kind: TokenKind; current: string | null; at?: PickContext; pick: (name: string, intent: PickIntent) => void }) {
+  const prop = typeProp(o.at?.cssVar);
+  const all = conceptsFor(o.kind, prop);
+  const where = { current: o.at?.current?.() ?? null, size: o.at?.size?.() ?? null };
+  let showAll = (() => { try { return localStorage.getItem(SHOW_ALL_KEY) === '1'; } catch { return false; } })();
+  if (o.current && !all.some((c) => c.primary && c.variants.some((v) => v.token.name === o.current))) showAll = true;
   const input = h('input', { type: 'text', placeholder: 'Search variables', spellcheck: 'false', 'aria-label': 'Search variables' });
   const body = h('div', {});
-  const wrap = h('div', {}, h('div', { class: 'tp__search' }, icon('search'), input), body);
+  const toggle = checkbox({ label: 'Show All Variables', onChange: (on) => {
+    showAll = on;
+    toggle.set(on);
+    try { localStorage.setItem(SHOW_ALL_KEY, on ? '1' : '0'); } catch { /* storage off */ }
+    render();
+  } });
+  toggle.set(showAll);
+  const wrap = h('div', {}, h('div', { class: 'tp__search' }, icon('search'), input), body, h('div', { class: 'tp__foot' }, toggle.el));
   let list: ReturnType<typeof menu<string>> | null = null;
+  const resolved = new Map(all.map((c) => [c.id, resolveConcept(c, where)]));
   const render = () => {
     const q = input.value.trim().toLowerCase().replace(/^--/, '');
-    const hits = all.filter((t) => !q || t.name.includes(q)).slice(0, 200);
+    const hits = all.filter((c) => (showAll || c.primary)
+      && (!q || c.label.toLowerCase().includes(q) || c.group.includes(q) || c.variants.some((v) => v.token.name.includes(q)))).slice(0, 240);
     body.replaceChildren();
     if (!hits.length) { body.append(h('div', { class: 'tp__empty' }, 'No variables match')); list = null; return; }
-    const items: MenuItem<string>[] = hits.map((t) => ({
-      value: t.name, label: t.label, lead: glyph(t), header: t.group,
-      meta: t.kind === 'color' ? t.display.replace(/^#/, '').toUpperCase() : t.display.length > 12 ? `${t.display.slice(0, 11)}…` : t.display,
-    }));
-    list = menu(items, o.current, (name) => { o.pick(name); pop.close(); });
+    const items: MenuItem<string>[] = hits.map((c) => {
+      const r = resolved.get(c.id)!;
+      const d = r.token.display;
+      const value = c.kind === 'color' ? d.replace(/^#/, '').toUpperCase() : d.length > 12 ? `${d.slice(0, 11)}…` : d;
+      return { value: c.id, label: c.label, lead: glyph(r.token), header: c.primary ? c.group : `${c.group} · ${c.variants[0].token.tier === 1 ? 'primitive' : 'component'}`,
+        meta: c.variants.length > 1 && r.size ? `${value} · ${r.size.toUpperCase()}` : value };
+    });
+    const sel = all.find((c) => c.variants.some((v) => v.token.name === o.current))?.id ?? null;
+    list = menu(items, sel, (id) => {
+      const c = all.find((x) => x.id === id)!;
+      const r = resolved.get(id)!;
+      const label = c.variants.length > 1 ? `${title(c.group)} / ${c.label}${prop ? ` · ${prop}` : ''}` : r.token.name;
+      o.pick(r.token.name, { concept: label, chosen: r.token.name, value: r.token.display, size: r.size, variants: c.variants.map((v) => v.token.name), matched: r.matched });
+      pop.close();
+    });
     body.append(list.el);
-    list.setActive(Math.max(0, hits.findIndex((t) => t.name === o.current)));
+    list.setActive(Math.max(0, hits.findIndex((c) => c.id === sel)));
   };
   input.addEventListener('input', render);
   input.addEventListener('keydown', (e) => {
@@ -109,6 +144,7 @@ export function openTokenPicker(o: { root: Root; anchor: HTMLElement; beside?: H
   input.focus();
   return pop;
 }
+const title = (g: string) => g.split(' / ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' / ');
 
 /** A bound field's chip: the variable's name; click to change it. */
 /** A long token name cut from the middle, keeping the distinctive tail (Figma's chip). */
@@ -139,9 +175,9 @@ export interface NumberFieldOptions {
   max: number;
   step: number;
   /** Variables the field can bind to; omit for none. */
-  tokens?: { kind: TokenKind; prefer?: RegExp; beside?: () => HTMLElement };
-  /** A value, or var(--token) when bound. */
-  onChange: (value: number | string) => void;
+  tokens?: { kind: TokenKind; beside?: () => HTMLElement; at?: PickContext };
+  /** A value, or var(--token) when bound; a pick carries what it meant. */
+  onChange: (value: number | string, intent?: PickIntent) => void;
   /** Use the reference value (shown as a dot when the value departs). */
   onReference?: () => void;
   /** Values the field skips over (350). */
@@ -194,7 +230,8 @@ export function numberField(o: NumberFieldOptions) {
     pre.addEventListener('pointerup', up);
   });
 
-  const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens?.beside?.(), kind: o.tokens!.kind, prefer: o.tokens!.prefer, current: bound, pick: (n) => o.onChange(`var(${n})`) });
+  const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens?.beside?.(), kind: o.tokens!.kind, current: bound,
+    at: { current: () => `${value}px`, ...o.tokens!.at }, pick: (n, i) => o.onChange(`var(${n})`, i) });
   const tok = o.tokens ? hoverButton('token', `Apply variable to ${o.label}`, pick) : null;
   ref.addEventListener('click', () => o.onReference?.());
 
@@ -232,60 +269,208 @@ export interface ColorFieldOptions {
   /** The row's name inside the field's right end. */
   suffix?: string;
   /** Variables it can bind to; the default is every colour variable. */
-  tokens?: { prefer?: RegExp; beside?: () => HTMLElement } | false;
-  onChange: (value: string) => void;
+  tokens?: { beside?: () => HTMLElement; at?: PickContext } | false;
+  /** Where the colour picker opens beside (the panel). */
+  beside?: () => HTMLElement;
+  /** #rrggbb, #rrggbbaa below full opacity, or var(--token); a pick carries what it meant. */
+  onChange: (value: string, intent?: PickIntent) => void;
 }
 
-/** Figma's fill row: the swatch in the prefix slot, the hex, a name. Bound to a
-    variable, it turns into Figma's bordered chip: swatch and variable name. */
+const FORMAT_KEY = 'design-layer:color-format';
+const FORMATS: MenuItem<ColorFormat>[] = [{ value: 'hex', label: 'Hex' }, { value: 'rgb', label: 'RGB' }, { value: 'hsl', label: 'HSL' }];
+const savedFormat = (): ColorFormat => { try { const f = localStorage.getItem(FORMAT_KEY); return f === 'rgb' || f === 'hsl' ? f : 'hex'; } catch { return 'hex'; } };
+const pct = (a: number) => String(Math.round(a * 100));
+
+/** Figma's fill row: the swatch, six hex digits, the opacity in its own percent
+    field, a name. Bound to a variable it is the variable's chip. Other formats
+    live in the colour picker behind the swatch. */
 export function colorField(o: ColorFieldOptions) {
   const el = h('div', { class: 'f f--color' });
-  const native = h('input', { type: 'color', class: 'f__native', tabindex: '-1', 'aria-hidden': 'true' });
-  const sw = h('button', { type: 'button', class: 'sw', 'aria-label': `${o.label}: pick a colour` });
+  const sw = h('button', { type: 'button', class: 'sw', 'aria-label': `${o.label}: open the colour picker`, 'aria-expanded': 'false' });
   const pre = h('span', { class: 'f__pre' }, sw);
   const input = h('input', { class: 'f__input', maxlength: '7', spellcheck: 'false', 'aria-label': `${o.label} hex` });
+  const alpha = h('input', { class: 'f__input f__alpha', inputmode: 'numeric', maxlength: '3', spellcheck: 'false', 'aria-label': `${o.label} opacity` });
+  const alphaWrap = h('span', { class: 'f__op' }, alpha, h('span', { class: 'f__pct', 'aria-hidden': 'true' }, '%'));
   const name = h('button', { type: 'button', class: 'f__name' });
   const suf = o.suffix ? h('span', { class: 'f__suf' }, o.suffix) : null;
-  let hex = '#000000';
+  let c: Rgba = { r: 0, g: 0, b: 0, a: 1 };
   let bound: string | null = null;
+  const emit = (n: Rgba) => { c = n; o.onChange(rgbaToHex(n)); };
 
-  sw.addEventListener('click', () => { native.value = hex; native.click(); });
-  native.addEventListener('input', () => o.onChange(native.value));
-  const commit = () => {
-    const v = input.value.trim().replace(/^#?/, '#').toLowerCase();
-    if (/^#[0-9a-f]{6}$/.test(v)) o.onChange(v);
-    else if (/^#[0-9a-f]{3}$/.test(v)) o.onChange(`#${[...v.slice(1)].map((c) => c + c).join('')}`);
-    else input.value = hex.slice(1).toUpperCase();
+  const commitHex = () => {
+    const v = input.value.trim().replace(/^#/, '').toLowerCase();
+    const six = /^[0-9a-f]{6}$/.test(v) ? v : /^[0-9a-f]{3}$/.test(v) ? [...v].map((x) => x + x).join('') : null;
+    if (!six) { input.value = rgbaToHex({ ...c, a: 1 }).slice(1).toUpperCase(); return; }
+    emit({ r: parseInt(six.slice(0, 2), 16), g: parseInt(six.slice(2, 4), 16), b: parseInt(six.slice(4, 6), 16), a: c.a });
   };
-  input.addEventListener('change', commit);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-  input.addEventListener('focus', () => input.select());
-  const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens ? o.tokens.beside?.() : undefined, kind: 'color', prefer: o.tokens ? o.tokens.prefer : undefined, current: bound, pick: (n) => o.onChange(`var(${n})`) });
+  const commitAlpha = () => {
+    const n = Number.parseFloat(alpha.value);
+    if (!Number.isFinite(n)) { alpha.value = pct(c.a); return; }
+    emit({ ...c, a: Math.min(100, Math.max(0, Math.round(n))) / 100 });
+  };
+  for (const [i, commit] of [[input, commitHex], [alpha, commitAlpha]] as const) {
+    i.addEventListener('change', commit);
+    i.addEventListener('keydown', (e) => { if (e.key === 'Enter') i.blur(); });
+    i.addEventListener('focus', () => i.select());
+  }
+  alpha.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+    emit({ ...c, a: Math.min(1, Math.max(0, Math.round((c.a + (e.key === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 0.1 : 0.01)) * 100) / 100)) });
+  });
+  sw.addEventListener('click', () => {
+    if (bound) { pick(); return; }
+    sw.setAttribute('aria-expanded', 'true');
+    openColorPicker({ root: o.root, anchor: el, beside: o.beside?.() ?? (o.tokens ? o.tokens.beside?.() : undefined), value: c, onChange: emit, onClose: () => sw.setAttribute('aria-expanded', 'false') });
+  });
+  const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens ? o.tokens.beside?.() : undefined, kind: 'color', current: bound,
+    at: { current: () => rgbaToHex({ ...c, a: 1 }), ...(o.tokens ? o.tokens.at : {}) }, pick: (n, i) => o.onChange(`var(${n})`, i) });
   name.addEventListener('click', pick);
   const tok = o.tokens === false ? null : hoverButton('token', `Apply variable to ${o.label}`, pick);
 
   const render = () => {
-    el.replaceChildren(native, pre);
+    el.replaceChildren(pre);
     el.classList.toggle('f--outline', !!bound);
     if (bound) {
       name.textContent = shortName(bound);
       name.title = bound;
-      el.append(name, hoverButton('detach', `Detach ${shortName(bound)}`, () => o.onChange(hex)));
-    } else { el.append(input); if (suf) el.append(suf); if (tok) el.append(tok); }
+      el.append(name, hoverButton('detach', `Detach ${shortName(bound)}`, () => o.onChange(rgbaToHex(c))));
+    } else { el.append(input, alphaWrap); if (suf) el.append(suf); if (tok) el.append(tok); }
   };
   render();
 
   return {
     el,
-    /** Shows a colour (hex, or var(--token) when bound, with its resolved hex). */
+    /** Shows a colour: a value, or var(--token) when bound, with what it resolves to (any CSS colour). */
     set(v: string, opts: { resolved?: string } = {}) {
       const b = boundToken(v);
-      hex = (opts.resolved ?? v).toLowerCase();
+      c = toRgba(opts.resolved ?? v);
       if (b !== bound) { bound = b; render(); }
-      sw.style.background = hex;
-      if ((input.getRootNode() as ShadowRoot).activeElement !== input) input.value = hex.replace(/^#/, '').toUpperCase();
+      sw.style.setProperty('--sw', `rgb(${c.r} ${c.g} ${c.b} / ${c.a})`);
+      const active = (input.getRootNode() as ShadowRoot).activeElement;
+      if (active !== input) input.value = rgbaToHex({ ...c, a: 1 }).slice(1).toUpperCase();
+      if (active !== alpha) alpha.value = pct(c.a);
     },
   };
+}
+
+// ── colour picker ──────────────────────────────────────────────────────────
+/** Figma's colour picker: a saturation and brightness square, hue and opacity
+    strips, and the value in a format chosen from its dropdown (remembered). */
+export function openColorPicker(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; value: Rgba; onChange: (c: Rgba) => void; onClose?: () => void }) {
+  let { h: hue, s: sat, v: val } = rgbToHsv(o.value);
+  let a = o.value.a;
+  let format = savedFormat();
+  const sv = h('div', { class: 'cp__sv', role: 'slider', tabindex: '0', 'aria-label': 'Saturation and brightness' }, h('span', { class: 'cp__knob' }));
+  const hueEl = h('div', { class: 'cp__strip cp__hue', role: 'slider', tabindex: '0', 'aria-label': 'Hue', 'aria-valuemin': '0', 'aria-valuemax': '360' }, h('span', { class: 'cp__knob' }));
+  const alphaEl = h('div', { class: 'cp__strip cp__alpha', role: 'slider', tabindex: '0', 'aria-label': 'Opacity', 'aria-valuemin': '0', 'aria-valuemax': '100' }, h('span', { class: 'cp__fill' }), h('span', { class: 'cp__knob' }));
+  // The format menu opens inside the picker: a second popover would close this one.
+  let fmtMenu: HTMLElement | null = null;
+  const closeFmt = () => { fmtMenu?.remove(); fmtMenu = null; fmt.el.setAttribute('aria-expanded', 'false'); };
+  const fmt = dropdown({ label: 'Colour format', onOpen: (anchor) => {
+    if (fmtMenu) { closeFmt(); return; }
+    const m = menu(FORMATS, format, (f) => {
+      format = f;
+      try { localStorage.setItem(FORMAT_KEY, f); } catch { /* storage off */ }
+      closeFmt();
+      renderInputs();
+      anchor.focus();
+    });
+    fmtMenu = h('div', { class: 'cp__menu' }, m.el);
+    m.el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); closeFmt(); anchor.focus(); } });
+    row.append(fmtMenu);
+    anchor.setAttribute('aria-expanded', 'true');
+    m.focus();
+  } });
+  const inputs = h('div', { class: 'cp__in' });
+  const opIn = h('input', { class: 'f__input f__alpha', inputmode: 'numeric', maxlength: '3', 'aria-label': 'Opacity' });
+  const row = h('div', { class: 'cp__row' }, fmt.el, h('div', { class: 'f cp__val' }, inputs, h('span', { class: 'f__op' }, opIn, h('span', { class: 'f__pct', 'aria-hidden': 'true' }, '%'))));
+  const wrap = h('div', { class: 'cp' }, sv, hueEl, alphaEl, row);
+
+  const rgba = (): Rgba => ({ ...hsvToRgb(hue, sat, val), a });
+  const paint = () => {
+    const c = rgba();
+    sv.style.setProperty('--hue', `hsl(${hue} 100% 50%)`);
+    (sv.firstChild as HTMLElement).style.cssText = `left:${sat * 100}%;top:${(1 - val) * 100}%;background:rgb(${c.r} ${c.g} ${c.b})`;
+    (hueEl.firstChild as HTMLElement).style.left = `${(hue / 360) * 100}%`;
+    alphaEl.style.setProperty('--solid', `rgb(${c.r} ${c.g} ${c.b})`);
+    (alphaEl.lastChild as HTMLElement).style.left = `${a * 100}%`;
+    hueEl.setAttribute('aria-valuenow', String(Math.round(hue)));
+    alphaEl.setAttribute('aria-valuenow', pct(a));
+    sv.setAttribute('aria-valuetext', `Saturation ${Math.round(sat * 100)}%, brightness ${Math.round(val * 100)}%`);
+    const active = (wrap.getRootNode() as ShadowRoot).activeElement;
+    if (!inputs.contains(active)) fillInputs(c);
+    if (active !== opIn) opIn.value = pct(a);
+  };
+  const change = () => { paint(); o.onChange(rgba()); };
+
+  // The value in the chosen format: one hex field, or three channel fields.
+  let fields: HTMLInputElement[] = [];
+  function fillInputs(c: Rgba) {
+    const vals = format === 'hex' ? [rgbaToHex({ ...c, a: 1 }).slice(1).toUpperCase()]
+      : format === 'rgb' ? [c.r, c.g, c.b].map(String) : Object.values(rgbToHsl(c)).map(String);
+    fields.forEach((f, i) => { f.value = vals[i]; });
+  }
+  function renderInputs() {
+    fmt.set(FORMATS.find((f) => f.value === format)!.label);
+    const names = format === 'hex' ? ['Hex'] : format === 'rgb' ? ['Red', 'Green', 'Blue'] : ['Hue', 'Saturation', 'Lightness'];
+    fields = names.map((n) => h('input', { class: 'f__input', spellcheck: 'false', 'aria-label': n, ...(format === 'hex' ? { maxlength: '7' } : { inputmode: 'numeric', maxlength: '3' }) }) as HTMLInputElement);
+    inputs.replaceChildren(...fields);
+    inputs.dataset.n = String(fields.length);
+    for (const f of fields) {
+      f.addEventListener('change', commit);
+      f.addEventListener('keydown', (e) => { if (e.key === 'Enter') f.blur(); });
+      f.addEventListener('focus', () => f.select());
+    }
+    fillInputs(rgba());
+  }
+  function commit() {
+    const n = fields.map((f) => f.value.trim().replace(/^#/, ''));
+    let c: Rgba | null = null;
+    if (format === 'hex') { const v = /^[0-9a-f]{3}$/i.test(n[0]) ? [...n[0]].map((x) => x + x).join('') : n[0]; if (/^[0-9a-f]{6}$/i.test(v)) c = toRgba(`#${v}`); }
+    else {
+      const [x, y, z] = n.map(Number);
+      if ([x, y, z].every(Number.isFinite)) c = toRgba(format === 'rgb' ? `rgb(${x} ${y} ${z})` : `hsl(${x} ${y}% ${z}%)`);
+    }
+    if (!c) { fillInputs(rgba()); return; }
+    ({ h: hue, s: sat, v: val } = rgbToHsv(c));
+    change();
+  }
+  opIn.addEventListener('change', () => { const v = Number.parseFloat(opIn.value); if (Number.isFinite(v)) { a = Math.min(100, Math.max(0, Math.round(v))) / 100; change(); } else opIn.value = pct(a); });
+  opIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') opIn.blur(); });
+
+  // Drag on the square and the strips; arrows nudge them (Shift for ten).
+  const drag = (target: HTMLElement, at: (x: number, y: number) => void) => target.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    target.focus();
+    target.setPointerCapture(e.pointerId);
+    const r = target.getBoundingClientRect();
+    const move = (m: PointerEvent) => at(Math.min(1, Math.max(0, (m.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (m.clientY - r.top) / r.height)));
+    move(e);
+    const up = () => { target.removeEventListener('pointermove', move); target.removeEventListener('pointerup', up); };
+    target.addEventListener('pointermove', move);
+    target.addEventListener('pointerup', up);
+  });
+  drag(sv, (x, y) => { sat = x; val = 1 - y; change(); });
+  drag(hueEl, (x) => { hue = x * 360; change(); });
+  drag(alphaEl, (x) => { a = Math.round(x * 100) / 100; change(); });
+  const nudge = (target: HTMLElement, step: (dx: number, dy: number) => void) => target.addEventListener('keydown', (e) => {
+    const k = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (!k) return;
+    e.preventDefault();
+    const m = e.shiftKey ? 10 : 1;
+    step(k[0] * m, k[1] * m);
+    change();
+  });
+  nudge(sv, (dx, dy) => { sat = Math.min(1, Math.max(0, sat + dx / 100)); val = Math.min(1, Math.max(0, val - dy / 100)); });
+  nudge(hueEl, (dx) => { hue = (hue + dx + 360) % 360; });
+  nudge(alphaEl, (dx) => { a = Math.min(1, Math.max(0, Math.round((a + dx / 100) * 100) / 100)); });
+
+  renderInputs();
+  paint();
+  const pop = openPopover({ root: o.root, anchor: o.anchor, content: wrap, className: 'cpop', beside: o.beside, onClose: o.onClose });
+  sv.focus();
+  return pop;
 }
 
 // ── select: Figma's bordered dropdown ──────────────────────────────────────

@@ -176,10 +176,33 @@ export const UI_CSS = `
   .chip__glyph svg { width: 18px; height: 18px; }
 
   /* colour: a 14 swatch in the prefix slot */
-  .sw { display: block; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
-  .f--color .f__input { flex-basis: 52px; min-width: 52px; text-transform: uppercase; }
+  .sw { display: block; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(var(--sw, #000), var(--sw, #000)), repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 6px 6px; }
+  .f--color > .f__input { flex: 1 0 52px; min-width: 52px; text-transform: uppercase; }
+  /* opacity: its own short field after a 1px divider, Figma's "100 %" */
+  .f__op { display: flex; align-items: center; flex: none; height: 100%; padding: 0 6px 0 7px; border-left: 1px solid var(--bg); }
+  .f__op .f__alpha { flex: none; width: 24px; min-width: 0; text-align: right; }
+  .f__pct { color: var(--ink-2); }
+  .f:focus-within .f__op { border-left-color: var(--line); }
+
+  /* ── colour picker: 240 wide, a square, two strips, the value row ── */
+  .cpop { width: 240px; max-width: 240px; padding: 0; background: var(--bg); }
+  .cp { display: grid; gap: 12px; padding: 0 0 12px; }
+  .cp__sv { position: relative; height: 200px; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), var(--hue, red); cursor: crosshair; touch-action: none; }
+  .cp__strip { position: relative; height: 12px; margin: 0 16px; border-radius: 6px; touch-action: none; }
+  .cp__hue { background: linear-gradient(to right, #f00, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00); }
+  .cp__alpha { background: repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0 / 8px 8px; }
+  .cp__fill { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(to right, transparent, var(--solid, #000)); }
+  .cp__knob { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(0, 0, 0, 0.25); pointer-events: none; }
+  .cp__sv .cp__knob { margin-top: -7px; }
+  .cp__sv:focus-visible, .cp__strip:focus-visible { box-shadow: inset 0 0 0 1px var(--focus); }
+  .cp__menu { position: absolute; left: 8px; bottom: 40px; z-index: 1; width: 120px; padding: 8px; border-radius: 13px; background: var(--menu-bg); box-shadow: var(--shadow); }
+  .cp__row { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px; align-items: center; padding: 0 12px 0 10px; }
+  .cp__val { padding-left: 7px; }
+  .cp__in { display: grid; flex: 1; min-width: 0; height: 100%; gap: 4px; }
+  .cp__in[data-n="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cp__in .f__input { min-width: 0; text-transform: uppercase; }
   .f__name { flex: 1; min-width: 0; height: 22px; padding: 0 4px 0 0; border: 0; background: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .f__native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
   /* select: Figma's bordered dropdown */
   .f--select { width: 100%; padding: 0 0 0 8px; gap: 4px; background: var(--bg); border-color: var(--line); text-align: left; }
@@ -238,6 +261,8 @@ export const UI_CSS = `
   .tp__search input::placeholder { color: var(--menu-ink-3); }
   .tp .menu { margin-top: 4px; padding: 8px; max-height: 320px; border-top: 1px solid var(--menu-line); }
   .tp__empty { padding: 16px; color: var(--menu-ink-3); }
+  .tp__foot { display: flex; align-items: center; height: 36px; padding: 0 8px; border-top: 1px solid var(--menu-line); }
+  .tp__foot .cb { color: var(--menu-ink-2, var(--menu-ink)); }
 
   /* palette picker: whole themes, by group */
   .pp { width: 280px; max-width: 280px; }

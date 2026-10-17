@@ -89,3 +89,29 @@ test('the hub: token scope plans the DTCG json, primitives and untiered componen
   assert.ok(plan.files.some((f) => f.path.endsWith('component-tokens.css')));
   assert.deepEqual(plan.skipped.map((s) => s.cssVar).sort(), ['--color-background-elevation-raised', '--color-gray-3']);
 });
+
+test('an ambiguous concept is a todo line in the block, replaced on a later save, never a guessed token', () => {
+  const root = spoke(THEME);
+  try {
+    const btn = { scope: 'component', selector: '.esa-button', name: 'esa-button', mode: 'shared', cssVar: '--button-font-size' };
+    const todo = { concept: 'Typography / Label · font-size', chosen: '--typography-label-md-font-size', candidates: ['--typography-label-sm-font-size', '--typography-label-md-font-size'] };
+    const { plan, apply } = planPromotion(root, {}, { instances: 0, entries: [{ ...btn, value: 'var(--typography-label-md-font-size)', todo }] });
+    assert.equal(plan.keys.length, 0, 'the edit stays live until a developer maps it');
+    assert.equal(plan.todo.length, 1);
+    assert.equal(plan.todo[0].file, 'src/styles/theme-acme.css');
+    apply();
+    planPromotion(root, {}, { instances: 0, entries: [{ ...btn, value: 'var(--typography-label-lg-font-size)', todo: { ...todo, chosen: '--typography-label-lg-font-size' } }] }).apply();
+    const css = readFileSync(join(root, 'src/styles/theme-acme.css'), 'utf8');
+    assert.equal(css.split('design-layer:todo').length, 2, 'one line per property, replaced');
+    assert.match(css, /\/\* design-layer:todo \[data-theme="acme"\] \.esa-button --button-font-size: wants Typography \/ Label · font-size \(picked --typography-label-lg-font-size\); candidates --typography-label-sm-font-size \| --typography-label-md-font-size \*\//);
+    assert.ok(!/--button-font-size: var/.test(css), 'no token written');
+  } finally { rmSync(root, { recursive: true }); }
+});
+
+test('a hex edit keeps the format the source writes', async () => {
+  const { inFormat } = await import('../../packages/design-layer/src/promote.mjs');
+  assert.equal(inFormat('#ff0000', 'rgb(0, 0, 0)'), 'rgb(255, 0, 0)');
+  assert.equal(inFormat('#ff000080', 'rgba(0,0,0,.5)'), 'rgb(255 0 0 / 0.5)');
+  assert.equal(inFormat('#ff0000', 'hsl(0 0% 0%)'), 'hsl(0, 100%, 50%)');
+  assert.equal(inFormat('#ff0000', 'var(--x)'), '#ff0000');
+});

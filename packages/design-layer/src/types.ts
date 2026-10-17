@@ -103,6 +103,28 @@ export interface Tweaks {
   states?: PageState[];
   /** Written on Save, never read back: every value that differs from the reference's. */
   departures?: Departure[];
+  /** What a variable pick meant, per edit: the concept, not just the token it resolved to. */
+  intents?: Intent[];
+}
+
+/**
+ * A pick from the variable picker, stored as intent. The picker lists concepts
+ * (Body, Label Strong, Background Brand), each collapsing its size variants;
+ * `chosen` is the variant it resolved to in this context and `candidates`
+ * every token the concept could mean here. One candidate: Save to Source writes
+ * it. More: the edit is listed under Needs a Coding Pass.
+ */
+export interface Intent {
+  /** The edit it explains, as scope|selector|mode|var (the promote key). */
+  key: string;
+  /** The concept's name as the picker shows it: "Typography / Label Strong · font-size". */
+  concept: string;
+  /** The token the value is bound to. */
+  chosen: string;
+  /** What it resolved to when picked. */
+  value: string;
+  candidates: string[];
+  context: { mode: Mode | 'shared'; size: string | null; scope: EditScope | 'variant'; selection: string | null };
 }
 
 /** Where an edit lands: every instance of a component, one element on one
@@ -183,7 +205,12 @@ export interface PromoteEntry {
   darkBase?: string | null;
   /** Re-declared through the lineage, not edited by hand. */
   expanded?: boolean;
+  /** The picked concept maps to more than one token here: listed and written as a todo, never as a guessed token. */
+  todo?: { concept: string; chosen: string; candidates: string[] };
 }
+
+/** One "needs a coding pass" item: what the designer meant, and the tokens it could be. */
+export interface PromoteTodo { name: string; cssVar: string; mode: PromoteEntry['mode']; concept: string; chosen: string; candidates: string[]; file: string | null }
 
 export interface PromoteChange { name: string; cssVar: string; mode: PromoteEntry['mode']; from: string | null; to: string; note?: string }
 export interface PromoteFile { path: string; label: string; changes: PromoteChange[] }
@@ -193,6 +220,8 @@ export interface PromotePlan {
   context: 'hub' | 'spoke';
   files: PromoteFile[];
   skipped: { name: string; cssVar: string; mode: PromoteEntry['mode']; reason: string }[];
+  /** Picks whose concept is ambiguous here; written as design-layer:todo lines in the block. */
+  todo: PromoteTodo[];
   instances: number;
   /** What runs after the write. */
   regenerate: string[];
