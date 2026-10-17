@@ -56,6 +56,10 @@ export const ICONS = {
   reference: '<circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/>',
   sun: '<circle cx="12" cy="12" r="2.5"/><path d="M12 6.5v1.5M12 16v1.5M6.5 12H8M16 12h1.5M8.1 8.1l1 1M14.9 14.9l1 1M8.1 15.9l1-1M14.9 9.1l1-1"/>',
   moon: '<path d="M16.5 13.5A5 5 0 0 1 10.5 7.5a5 5 0 1 0 6 6Z"/>',
+  /** Isolate the selection: Figma's frame corners. */
+  isolate: '<path d="M7.5 10V7.5H10M14 7.5h2.5V10M16.5 14v2.5H14M10 16.5H7.5V14"/><rect x="10.5" y="10.5" width="3" height="3" rx=".5"/>',
+  /** Compare variants side by side. */
+  compare: '<rect x="6.5" y="8.5" width="4.5" height="7" rx="1"/><rect x="13" y="8.5" width="4.5" height="7" rx="1"/>',
   // ── field prefixes ──
   /** Font size. */
   size: '<path d="M8.5 8.5h7M12 8.5v8"/>',

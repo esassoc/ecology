@@ -12,7 +12,7 @@ import type { Mode } from './surfaces';
 import type { VarMap } from './types';
 
 const ROOTISH = /(^|[\s,(])(:root|html)(\b|[[:.)])|\[data-theme/;
-const OWN = new Set(['design-layer-live', 'design-layer-tweaks']);
+const OWN = new Set(['design-layer-live', 'design-layer-tweaks', 'design-layer-stage-css']);
 const cache: Partial<Record<Mode, Map<string, string>>> = {};
 
 /** Forget the declarations (a stylesheet changed). */

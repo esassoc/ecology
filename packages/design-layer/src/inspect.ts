@@ -12,7 +12,7 @@ export interface TokenUse {
 }
 
 const REF = /var\(\s*(--[\w-]+)/g;
-const OWN = new Set(['design-layer-live', 'design-layer-tweaks']);
+const OWN = new Set(['design-layer-live', 'design-layer-tweaks', 'design-layer-stage-css']);
 
 function matchedRules(el: Element): CSSStyleRule[] {
   const out: CSSStyleRule[] = [];

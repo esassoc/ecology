@@ -3,7 +3,7 @@
 // the spoke's config (defaults.mjs), not from here.
 import type { Mode } from './surfaces';
 import { choiceVars } from './palettes';
-import type { FontOption, ResolvedConfig, Tweaks, VarMap } from './types';
+import type { FontOption, ResolvedConfig, ScopeMaps, Tweaks, VarMap } from './types';
 
 export * from './types';
 
@@ -69,14 +69,27 @@ export type Expand = (vars: VarMap, mode: Mode) => VarMap;
 
 const pageAttr = (page: string) => `[data-dl-page="${page.replace(/["\\]/g, '\\$&')}"]`;
 
+/** A selector's blocks for one scope's maps: shared, then light, then dark. */
+export function scopedBlocks(root: string, at: (sel: string) => string, maps: ScopeMaps, expand?: Expand): string {
+  const vars = (v: VarMap, m: Mode) => (expand ? { ...expand(v, m), ...v } : v);
+  return [
+    block(at(root), vars(maps.shared, 'light')),
+    block(at(`${root}:not([data-scheme="dark"])`), vars(maps.light, 'light')),
+    block(at(`${root}[data-scheme="dark"]`), vars(maps.dark, 'dark')),
+  ].join('');
+}
+
+function block(sel: string, vars: VarMap) {
+  const keys = Object.keys(vars);
+  return keys.length ? `${sel} {\n${keys.map((k) => `  ${k}: ${vars[k]};`).join('\n')}\n}\n` : '';
+}
+
+export const rootSelector = (boost: boolean) => (boost ? 'html:root:root[data-theme]' : 'html:root[data-theme]');
+
 /** The stylesheet for a set of tweaks. `boost` raises specificity one step so the
     live preview outranks the saved file. */
 export function buildCss(t: Tweaks, roles: ResolvedConfig['roles'], boost = false, expand?: Expand): string {
-  const root = boost ? 'html:root:root[data-theme]' : 'html:root[data-theme]';
-  const block = (sel: string, vars: VarMap) => {
-    const keys = Object.keys(vars);
-    return keys.length ? `${sel} {\n${keys.map((k) => `  ${k}: ${vars[k]};`).join('\n')}\n}\n` : '';
-  };
+  const root = rootSelector(boost);
   const specs = Object.values(t.shared)
     .map((css) => FONT_OPTIONS.find((f) => f.css === css)?.google)
     .filter((g): g is string => !!g);
@@ -88,14 +101,8 @@ export function buildCss(t: Tweaks, roles: ResolvedConfig['roles'], boost = fals
     block(`${root}:not([data-scheme="dark"])`, modeVars(t, 'light', roles)),
     block(`${root}[data-scheme="dark"]`, modeVars(t, 'dark', roles)),
     ...(t.overrides ?? []).map((o) => {
-      const at = (sel: string) => `${sel}${o.page ? pageAttr(o.page) : ''} ${o.selector}`;
-      const vars = (v: VarMap, m: Mode) => (expand ? { ...expand(v, m), ...v } : v);
-      return [
-        `/* ${o.scope}: ${o.name} */\n`,
-        block(at(root), vars(o.shared, 'light')),
-        block(at(`${root}:not([data-scheme="dark"])`), vars(o.light, 'light')),
-        block(at(`${root}[data-scheme="dark"]`), vars(o.dark, 'dark')),
-      ].join('');
+      const blocks = scopedBlocks(root, (sel) => `${sel}${o.page ? pageAttr(o.page) : ''} ${o.selector}`, o, expand);
+      return blocks ? `/* ${o.scope}: ${o.name.replace(/\*\//g, '')} */\n${blocks}` : '';
     }),
   ].join('');
 }

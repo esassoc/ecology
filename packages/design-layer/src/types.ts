@@ -80,6 +80,10 @@ export interface Tweaks {
   palette?: Partial<Record<Mode, PaletteChoice>>;
   /** Overrides scoped to one component (every instance) or one element on one page. */
   overrides?: ScopedOverride[];
+  /** Variants tried side by side in isolation: their own overrides, never in tweaks.css. */
+  variants?: Variant[];
+  /** Named snapshots of everything above, applied whole. */
+  states?: PageState[];
   /** Written on Save, never read back: every value that differs from the reference's. */
   departures?: Departure[];
 }
@@ -89,7 +93,7 @@ export interface Tweaks {
 export type EditScope = 'component' | 'token' | 'instance';
 
 /** Token values re-declared under one selector, so they hold only inside it. */
-export interface ScopedOverride {
+export interface ScopedOverride extends ScopeMaps {
   scope: 'component' | 'instance';
   /** `.esa-card`, `esa-select`, or (instance) a selector unique on its page. */
   selector: string;
@@ -97,9 +101,25 @@ export interface ScopedOverride {
   name: string;
   /** Instance scope: the page's path; the rule holds only there. */
   page?: string;
-  light: VarMap;
-  dark: VarMap;
-  shared: VarMap;
+}
+
+/** Maps of token values, the shape every scope stores. */
+export interface ScopeMaps { light: VarMap; dark: VarMap; shared: VarMap }
+
+/** A copy of a component tried in isolation, with overrides of its own. */
+export interface Variant extends ScopeMaps {
+  id: string;
+  name: string;
+  /** What it is a variant of: the component's (or the element's) selector. */
+  of: string;
+}
+
+/** A named page state: the tweaks at the moment it was saved, and the mode. */
+export interface PageState {
+  name: string;
+  savedAt: string;
+  mode: Mode;
+  tweaks: Omit<Tweaks, 'states' | 'departures' | 'variants'>;
 }
 
 export interface Departure { id: string; label: string; cssVar: string; value: number; reference: number }

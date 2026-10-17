@@ -18,10 +18,10 @@
 // esa-* legos read: they would restyle themselves mid-tune. So the panel's own kit
 // (./ui), on the tool's own palette and face.
 import {
-  BANNED_WEIGHT, FONT_OPTIONS, buildCss, googleHref, migrateShared, modeVars,
+  BANNED_WEIGHT, FONT_OPTIONS, buildCss, googleHref, migrateShared, modeVars, rootSelector, scopedBlocks,
   type ColorControl, type Departure, type FeedbackRecord, type FontControl, type FontOption,
   type LengthControl, type Mode, type PanelHost, type ResolvedConfig, type ServerState,
-  type EditScope, type ScopedOverride, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
+  type EditScope, type PageState, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
 } from './controls';
 import { contrast, firstFamily, oklchL, toHex } from './color';
 import { effectiveBackground, selectorFor, snippet, source } from './describe';
@@ -34,6 +34,7 @@ import { GROUPS, PALETTES, paletteById, paletteRamp } from './palettes';
 import { ancestors, candidate, firstChildComponent, select, type Selection } from './select';
 import { computedOn, tokensOn, type TokenUse } from './inspect';
 import { dependents, invalidateGraph } from './graph';
+import { createStage } from './stage';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
@@ -80,6 +81,8 @@ const normalize = (t: Partial<Tweaks> | undefined): Tweaks => ({
   light: { ...(t?.light ?? {}) }, dark: { ...(t?.dark ?? {}) }, shared: migrateShared(t?.shared ?? {}, CFG),
   ...(t?.palette && Object.keys(t.palette).length ? { palette: structuredClone(t.palette) } : {}),
   ...(t?.overrides?.length ? { overrides: structuredClone(t.overrides) } : {}),
+  ...(t?.variants?.length ? { variants: structuredClone(t.variants) } : {}),
+  ...(t?.states?.length ? { states: structuredClone(t.states) } : {}),
 });
 const cloneRamp = (r: Ramp): Ramp => structuredClone(r);
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -144,6 +147,14 @@ const PANEL_CSS = `
   .f--ro, .f--ro:hover { border-color: transparent; }
   .f--ro .f__name { padding: 0; cursor: default; }
   .f--ro .sw { pointer-events: none; }
+  .vrow { display: flex; align-items: center; gap: 8px; min-width: 0; height: 24px; padding: 0 7px 0 8px; border: 1px solid transparent; border-radius: 5px;
+    background: var(--field); color: var(--ink); text-align: left; }
+  .vrow:hover { border-color: var(--line); }
+  .vrow[aria-pressed="true"] { background: var(--selected); color: var(--selected-ink); }
+  .vrow__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vrow__meta { flex: none; color: var(--ink-2); }
+  .vrow[aria-pressed="true"] .vrow__meta { color: inherit; opacity: .7; }
+  .ib:disabled { color: var(--ink-3); background: none; }
   .row-x { visibility: hidden; }
   .row-x[data-on] { visibility: visible; }
 `;
@@ -195,6 +206,10 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let scope: EditScope = 'component';
   /** Set while reading or writing the reference, which is page-wide whatever the scope. */
   let forceRoot = false;
+  // Isolation: the selection alone on a canvas, its variants beside it.
+  let isolating = false;
+  let activeVariant: string | null = null;
+  let compare = true;
   const base: Partial<Record<Mode, Base>> = {};
 
   // ── tokens ──────────────────────────────────────────────────────────
@@ -210,11 +225,15 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     return out;
   }
   // ── where an edit lands ─────────────────────────────────────────────
-  type Scoped = { kind: 'component' | 'instance'; selector: string; name: string; el: Element; page?: string };
+  type Scoped = { kind: 'component' | 'instance' | 'variant'; selector: string; name: string; el: Element; page?: string; id?: string };
   type Target = { kind: 'root' } | Scoped;
   /** The current scope made concrete: the root (Token, or nothing selected),
       every instance of the selection's component, or the one element. */
   function target(): Target {
+    if (!forceRoot && selection && isolating && activeVariant) {
+      const v = variantById(activeVariant);
+      if (v) return { kind: 'variant', id: v.id, selector: `[data-dl-variant="${v.id}"]`, name: v.name, el: stage.copyOf(v.id) ?? selection.el };
+    }
     if (forceRoot || !selection || scope === 'token') return { kind: 'root' };
     const c = selection.component;
     if (scope === 'component' && c) return { kind: 'component', selector: c.selector, name: c.name, el: c.root };
@@ -226,10 +245,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   function layer(s: Mode | 'shared', create = false): VarMap {
     const t = target();
     if (t.kind === 'root') return tweaks[s];
+    if (t.kind === 'variant') return variantById(t.id!)![s];
     let o = tweaks.overrides?.find((x) => isRule(x, t));
     if (!o) {
       if (!create) return {};
-      o = { scope: t.kind, selector: t.selector, name: t.name, ...(t.page ? { page: t.page } : {}), light: {}, dark: {}, shared: {} };
+      o = { scope: t.kind as ScopedOverride['scope'], selector: t.selector, name: t.name, ...(t.page ? { page: t.page } : {}), light: {}, dark: {}, shared: {} };
       (tweaks.overrides ??= []).push(o);
     }
     return o[s];
@@ -254,6 +274,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     return out;
   }
   const atRoot = () => target().kind === 'root';
+  const variantById = (id: string) => tweaks.variants?.find((v) => v.id === id);
+  /** What a variant is of: the selection's component, else the element. */
+  const variantOf = () => (selection ? (selection.component?.selector ?? selection.instance) : '');
+  const variantsHere = (): Variant[] => (tweaks.variants ?? []).filter((v) => v.of === variantOf());
+  const stage = createStage((id) => { activeVariant = id === 'original' ? null : id; stage.setActive(id); sync(); });
 
   // The theme's own values, read with every override switched off.
   function readBase(m: Mode): Base {
@@ -442,7 +467,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   function applyLive() {
     const dock = open ? width : 0;
-    live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + (dock ? `html:root body { margin-right: ${dock}px; }\n` : '');
+    const root = rootSelector(true);
+    const variantCss = (tweaks.variants ?? []).map((v) => scopedBlocks(root, (sel) => `${sel} [data-dl-variant="${v.id}"]`, v, dependents)).join('');
+    live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + variantCss + (dock ? `html:root body { margin-right: ${dock}px; }\n` : '');
     const specs = [...new Set(Object.values(tweaks.shared).map((css) => FONT_OPTIONS.find((o) => o.css === css)?.google).filter((g): g is string => !!g))];
     const href = googleHref(specs);
     if (href) { if (fontLink.getAttribute('href') !== href) fontLink.href = href; if (!fontLink.isConnected) document.head.append(fontLink); }
@@ -467,7 +494,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // Top: Tune / Comments, the page's mode, Save (Figma's tabs, zoom, Share).
   const tabBar = tabs({ label: 'Panel', options: [{ value: 'tune', label: 'Tune' }, { value: 'comments', label: 'Comments' }], onChange: (t) => setTab(t) });
-  const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); sync(); };
+  const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); invalidateGraph(); renderStage(); sync(); };
   const modeDd = dropdown({
     label: 'Page mode',
     onOpen: (a) => openMenu<Mode>({ root, anchor: a, alignEnd: true, selected: mode, pick: setMode, items: [{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }),
@@ -510,11 +537,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // With a selection the header is its breadcrumb (Figma's layer path) instead of the palette.
   const crumbs = h('nav', { class: 'crumbs', 'aria-label': 'Selection', hidden: true });
   const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
-  const sel = h('div', { class: 'sel' }, paletteDd.el, crumbs, h('span', { class: 'grow' }), refBtn, clearBtn, menuBtn);
+  const isolateBtn = iconButton('isolate', 'Isolate Selection', () => setIsolating(!isolating), false);
+  const sel = h('div', { class: 'sel' }, paletteDd.el, crumbs, h('span', { class: 'grow' }), refBtn, isolateBtn, clearBtn, menuBtn);
   function syncHeader() {
     paletteDd.el.hidden = !!selection;
     crumbs.hidden = !selection;
     clearBtn.hidden = !selection;
+    isolateBtn.hidden = !selection;
+    isolateBtn.setAttribute('aria-pressed', String(isolating));
     if (refBtn) refBtn.hidden = !!selection;
     if (!selection) return;
     const up = ancestors(selection.el);
@@ -631,7 +661,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   function syncSelection() {
     const has = !!selection;
-    scopeSec.el.hidden = !has;
+    scopeSec.el.hidden = !has || !!activeVariant;
     tokensSec.el.hidden = !has;
     propsSec.el.hidden = !has;
     surfacesSec.el.hidden = !atRoot();
@@ -808,7 +838,125 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     layoutToggle.title = t;
   }
 
-  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, scopeSec.el, tokensSec.el, propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
+  // Variants: copies beside the original in isolation, each with its own
+  // overrides; the active one takes the edits. Apply folds it into the scope.
+  const vrow = (name: string, meta: string, pressed: boolean, onClick: () => void) => {
+    const b = h('button', { type: 'button', class: 'vrow span2', 'aria-pressed': String(pressed) }, h('span', { class: 'vrow__name' }, name), h('span', { class: 'vrow__meta' }, meta));
+    b.addEventListener('click', onClick);
+    return b;
+  };
+  const count = (m: { light: VarMap; dark: VarMap; shared: VarMap }) => Object.keys(m.light).length + Object.keys(m.dark).length + Object.keys(m.shared).length;
+  const applyBtn = iconButton('check', 'Apply Variant to the Component', () => applyVariant());
+  const compareBtn = iconButton('compare', 'Compare Side by Side', () => { compare = !compare; renderStage(); sync(); }, true);
+  const addVariantBtn = iconButton('plus', 'Add Variant', () => addVariant());
+  const variantsSec = section({ id: 'variants', title: 'Variants', actions: [applyBtn, compareBtn, addVariantBtn], body: [] });
+  const variantsBody = variantsSec.el.querySelector('.sec__b')!;
+  function syncVariants() {
+    variantsSec.el.hidden = !isolating;
+    if (!isolating || !selection) return;
+    const vs = variantsHere();
+    applyBtn.disabled = !activeVariant;
+    applyBtn.classList.toggle('ib--dim', !activeVariant);
+    compareBtn.setAttribute('aria-pressed', String(compare));
+    const pick = (id: string | null) => () => { activeVariant = id; renderStage(); sync(); };
+    variantsBody.replaceChildren(
+      vrow(selection.name, 'Original', !activeVariant, pick(null)), h('span', {}),
+      ...vs.flatMap((v) => {
+        const n = count(v);
+        const x = iconButton('minus', `Remove ${v.name}`, () => removeVariant(v.id));
+        return [vrow(v.name, n ? `${n} ${n === 1 ? 'change' : 'changes'}` : '', activeVariant === v.id, pick(v.id)), x];
+      }),
+    );
+  }
+  function addVariant() {
+    if (!selection) return;
+    const letter = String.fromCharCode(66 + variantsHere().length);
+    const v: Variant = { id: `v${Date.now().toString(36)}`, name: `Variant ${letter}`, of: variantOf(), light: {}, dark: {}, shared: {} };
+    (tweaks.variants ??= []).push(v);
+    activeVariant = v.id;
+    renderStage();
+    applyLive();
+    sync();
+  }
+  function removeVariant(id: string) {
+    tweaks.variants = (tweaks.variants ?? []).filter((v) => v.id !== id);
+    if (!tweaks.variants.length) delete tweaks.variants;
+    if (activeVariant === id) activeVariant = null;
+    renderStage();
+    applyLive();
+    sync();
+  }
+  /** Folds the active variant into the scope (Component, else Instance), then drops it. */
+  function applyVariant() {
+    const v = activeVariant ? variantById(activeVariant) : null;
+    if (!v) return;
+    activeVariant = null;
+    if (scope === 'token') scope = 'component';
+    for (const k of ['light', 'dark', 'shared'] as const) Object.assign(layer(k, true), v[k]);
+    removeVariant(v.id);
+  }
+  function renderStage() {
+    if (!isolating || !selection) { stage.close(); return; }
+    const all = [{ id: 'original', label: selection.name }, ...variantsHere().map((v) => ({ id: v.id, label: v.name }))];
+    const active = activeVariant ?? 'original';
+    stage.render(selection.el, compare ? all : all.filter((i) => i.id === active), { active, right: width, dark: mode === 'dark' });
+  }
+  function setIsolating(state: boolean) {
+    isolating = state && !!selection;
+    if (!isolating) activeVariant = null;
+    closePopover();
+    renderStage();
+    sync();
+  }
+
+  // States: named snapshots of every tweak, applied whole (Figma's pages, for a design's states).
+  const stateSnapshot = (): PageState['tweaks'] => {
+    const { states: _s, variants: _v, departures: _d, ...rest } = tweaks;
+    return structuredClone(rest);
+  };
+  const addStateBtn = iconButton('plus', 'Save Page State', () => openSaveState());
+  const statesSec = section({ id: 'states', title: 'States', actions: [addStateBtn], body: [] });
+  const statesBody = statesSec.el.querySelector('.sec__b')!;
+  function syncStates() {
+    statesSec.el.hidden = !!selection;
+    const list = tweaks.states ?? [];
+    statesSec.setEmpty(!list.length);
+    const now = stateSnapshot();
+    statesBody.replaceChildren(...list.flatMap((st, i) => {
+      const on = st.mode === mode && same(st.tweaks, now);
+      const x = iconButton('minus', `Remove ${st.name}`, () => { tweaks.states = list.filter((_, j) => j !== i); if (!tweaks.states.length) delete tweaks.states; sync(); });
+      return [vrow(st.name, st.mode === 'dark' ? 'Dark' : 'Light', on, () => applyState(st)), x];
+    }));
+  }
+  function applyState(st: PageState) {
+    const keep = { states: tweaks.states, variants: tweaks.variants };
+    tweaks = normalize({ ...structuredClone(st.tweaks), ...keep });
+    if (st.mode !== mode) { mode = st.mode; html.setAttribute('data-scheme', mode); invalidateTokens(); invalidateGraph(); }
+    applyLive();
+    sync();
+  }
+  function openSaveState() {
+    const input = h('input', { class: 'f__input', spellcheck: 'false', 'aria-label': 'State name', placeholder: 'State name' });
+    const field = h('div', { class: 'f span2', style: 'padding-left: 8px' }, input);
+    const ok = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Save');
+    const cancel = h('button', { type: 'button', class: 'btn' }, 'Cancel');
+    const commit = () => {
+      const name = input.value.trim();
+      if (!name) return;
+      const list = (tweaks.states ?? []).filter((x) => x.name !== name);
+      tweaks.states = [...list, { name, savedAt: new Date().toISOString(), mode, tweaks: stateSnapshot() }];
+      closePopover();
+      sync();
+    };
+    input.addEventListener('input', () => { ok.disabled = !input.value.trim(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') commit(); });
+    ok.addEventListener('click', commit);
+    cancel.addEventListener('click', () => closePopover());
+    openPanelPopover({ root, anchor: addStateBtn, beside: panel, title: 'Save Page State', body: [field, h('span', {}), h('span', {}), h('div', { class: 'actions span3' }, ok, cancel)] });
+    input.focus();
+  }
+
+  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, statesSec.el, variantsSec.el, scopeSec.el, tokensSec.el, propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
   const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
@@ -835,7 +983,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   ui.append(dock, hoverBox, pickedBox, selBox, pins);
 
   // Width: drag the left edge; the page's margin follows; the setting persists.
-  const applyWidth = () => { ui.style.setProperty('--w', `${width}px`); };
+  const applyWidth = () => { ui.style.setProperty('--w', `${width}px`); if (stage.open) stage.el.style.right = `${width}px`; };
   resize.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     resize.setPointerCapture(e.pointerId);
@@ -866,6 +1014,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       renderTokens();
     }
     syncSelection();
+    syncVariants();
+    syncStates();
     tabBar.set(tab);
     modeDd.set(mode === 'dark' ? 'Dark' : 'Light');
     syncSurfaces();
@@ -975,13 +1125,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   function placeOverlays() {
     placeBox(hoverBox, (commenting || selecting) && hovered !== picked && hovered !== selection?.el ? hovered : null);
     placeBox(pickedBox, picked);
-    placeBox(selBox, tab === 'tune' ? selection?.el ?? null : null);
+    placeBox(selBox, tab === 'tune' && !isolating ? selection?.el ?? null : null);
     if (selection && !selBox.hidden) {
       const r = selection.el.getBoundingClientRect();
       selName.textContent = selection.name;
       selSize.textContent = `${Math.round(r.width)} × ${Math.round(r.height)}`;
     }
-    if (!open) { pins.replaceChildren(); return; }
+    if (!open || isolating) { pins.replaceChildren(); return; }
     const edge = innerWidth - width - 20;
     pins.replaceChildren(...openHere().flatMap((r, n) => {
       let el: Element | null = null;
@@ -1014,8 +1164,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   function setSelection(s: Selection | null) {
     selection = s;
     hovered = null;
+    activeVariant = null;
+    if (!s) isolating = false;
     closePopover();
     renderTokens();
+    renderStage();
     sync();
   }
   function setTab(t: 'tune' | 'comments') {
@@ -1024,6 +1177,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     tunePane.hidden = t !== 'tune';
     commentsPane.hidden = t !== 'comments';
     if (t !== 'comments') setCommenting(false);
+    if (t !== 'tune' && isolating) setIsolating(false);
   }
   function setCommenting(state: boolean) {
     commenting = state;
@@ -1078,7 +1232,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // ── comment mode on the page ────────────────────────────────────────
   const onPage = (e: Event) => {
     const t = e.target;
-    return t instanceof Element && !t.closest('astro-dev-toolbar') && t !== html && t !== document.body;
+    return t instanceof Element && !t.closest('astro-dev-toolbar, design-layer-stage') && t !== html && t !== document.body;
   };
   // The select tool picks the nearest component; Cmd or Alt picks the element itself (Figma's deep select).
   const deep = (e: MouseEvent) => e.metaKey || e.altKey;
@@ -1116,7 +1270,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       escapeAt = performance.now();
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (selection) setSelection(null); else setSelecting(false);
+      if (isolating) setIsolating(false); else if (selection) setSelection(null); else setSelecting(false);
     } else if (e.key === 'Enter' && selection) {
       const next = e.shiftKey ? ancestors(selection.el).pop()?.root : firstChildComponent(selection.el)?.root;
       if (!next) return;
