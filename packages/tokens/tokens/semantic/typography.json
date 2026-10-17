@@ -23,10 +23,10 @@
     },
 
     "font-weight": {
-      "$description": "Weight intentions, slot order property > variant. The numbers are typeface-bound — 350/500/550/650 are DM Sans's optical weights, not universal values — so a spoke swapping the body face re-points these to that face's matching weights. That is exactly why the named steps live at tier 2 and the raw numbers are the primitives at tier 1.\n\nMOVED under `typography` on 2026-08-15, and this group is WHY the move happened. It used to be a top-level `font-weight` group — the SAME group name tier-1 `primitive/typography.json` uses for 100…900. Style Dictionary merges groups across files, so `--font-weight-medium` and `--font-weight-500` came out as siblings in one namespace with nothing marking the tier. A spoke must re-point `medium` and must never touch `500`; the names could not tell it which was which. The references below still read `{font-weight.300}` etc. because that group is now unambiguously the tier-1 one.",
+      "$description": "Weight intentions, slot order property > variant. The numbers are typeface-bound — 400/500/550/650 are the hub's DM Sans weights (regular moved from 350 to 400 on 2026-10-16), not universal values — so a spoke swapping the body face re-points these to that face's matching weights. That is exactly why the named steps live at tier 2 and the raw numbers are the primitives at tier 1.\n\nMOVED under `typography` on 2026-08-15, and this group is WHY the move happened. It used to be a top-level `font-weight` group — the SAME group name tier-1 `primitive/typography.json` uses for 100…900. Style Dictionary merges groups across files, so `--font-weight-medium` and `--font-weight-500` came out as siblings in one namespace with nothing marking the tier. A spoke must re-point `medium` and must never touch `500`; the names could not tell it which was which. The references below still read `{font-weight.300}` etc. because that group is now unambiguously the tier-1 one.",
 
       "light": { "$value": "{font-weight.300}", "$type": "fontWeight" },
-      "regular": { "$value": "{font-weight.350}", "$type": "fontWeight" },
+      "regular": { "$value": "{font-weight.400}", "$type": "fontWeight", "$description": "400, not 350. Andy banned 350 on 2026-10-16 (\"350 should be outlawed. 400\")." },
       "medium": { "$value": "{font-weight.500}", "$type": "fontWeight" },
       "semibold": { "$value": "{font-weight.550}", "$type": "fontWeight" },
       "bold": { "$value": "{font-weight.650}", "$type": "fontWeight" }

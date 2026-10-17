@@ -214,6 +214,11 @@ adopted rule-by-rule. Full evidence: hub `docs/private/design-direction-mining.m
   text. Each brand theme designates its families, including a document/serif
   voice for legal or quoted content (Beacon's is Besley) — use the theme's
   designated faces; don't hardcode a system-wide default.
+- **Weight 350 is banned; regular is 400.** Andy, 2026-10-16: "350 should be
+  outlawed. 400". `--typography-font-weight-regular` resolves to 400 in the hub;
+  never set a weight of 350 anywhere (CSS, composites, `font-variation-settings`,
+  a spoke override or a tuning tool), and a spoke that re-points regular for
+  another family must not land it below 400.
 - **Typography composites, not raw sizes.** Style text with the composite classes in
   `@esa/tokens/typography.css` (`.typography-heading-lg`, `.typography-heading-md`,
   `.typography-title`, `.typography-body-md`, `.typography-label`, `.typography-meta`, …) — they
