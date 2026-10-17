@@ -28,10 +28,31 @@ export function iconButton(name: IconName, label: string, onClick: (e: MouseEven
 /** A 40px head (title, icon actions) over rows on the panel grid. An empty
     section is its head alone with the title in secondary ink, Figma's Fill or
     Stroke with nothing set; its plus (an action the caller supplies) fills it. */
+const COLLAPSED_KEY = 'design-layer:collapsed';
+const collapsedSet = (): Set<string> => { try { return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? '[]')); } catch { return new Set(); } };
+
+/** A panel section: a 40px head (title, then its actions) over a body. Clicking
+    the head (anywhere but an action) collapses the body, as Figma's do; the
+    state persists per section. */
 export function section(o: { id: string; title: string; actions?: Node[]; body: Node[]; empty?: boolean }) {
-  const el = h('section', { class: 'sec', 'data-sec': o.id, ...(o.empty ? { 'data-empty': true } : {}) },
-    h('div', { class: 'sec__h' }, h('h2', { class: 'sec__title' }, o.title), ...(o.actions ?? [])),
-    h('div', { class: 'sec__b g' }, ...o.body));
+  const collapsed = collapsedSet().has(o.id);
+  const toggle = h('button', { type: 'button', class: 'sec__toggle', 'aria-expanded': String(!collapsed) }, o.title);
+  const head = h('div', { class: 'sec__h' }, h('h2', { class: 'sec__title' }, toggle), ...(o.actions ?? []));
+  const el = h('section', { class: 'sec', 'data-sec': o.id, ...(o.empty ? { 'data-empty': true } : {}), ...(collapsed ? { 'data-collapsed': true } : {}) },
+    head, h('div', { class: 'sec__b g' }, ...o.body));
+  const flip = () => {
+    const now = !el.hasAttribute('data-collapsed');
+    el.toggleAttribute('data-collapsed', now);
+    toggle.setAttribute('aria-expanded', String(!now));
+    const set = collapsedSet();
+    if (now) set.add(o.id); else set.delete(o.id);
+    try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...set])); } catch { /* storage off */ }
+  };
+  head.addEventListener('click', (e) => {
+    const t = e.target as Element;
+    if (t !== toggle && t.closest('button, input, [role="button"]')) return;
+    flip();
+  });
   return { el, setEmpty(empty: boolean) { el.toggleAttribute('data-empty', empty); } };
 }
 

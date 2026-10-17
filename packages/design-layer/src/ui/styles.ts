@@ -115,6 +115,10 @@ export const UI_CSS = `
   .sec[data-empty] .sec__title { color: var(--ink-2); }
   .sec__b { padding: 4px 8px 16px 16px; }
   .sec[data-empty] .sec__b { display: none; }
+  .sec[data-collapsed] .sec__b { display: none; }
+  .sec[data-collapsed] .sec__title { color: var(--ink-2); }
+  .sec__toggle { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+  .sec__toggle:focus-visible { box-shadow: none; text-decoration: underline; text-decoration-color: var(--focus); text-underline-offset: 3px; }
 
   /* ── icon button: 24, ink at rest ── */
   .ib { position: relative; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--ink); flex: none; }
@@ -125,7 +129,7 @@ export const UI_CSS = `
   .ib[data-warn]::after { content: ''; position: absolute; top: 4px; right: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--danger); }
 
   /* ── tabs: Figma's Design / Prototype pill ── */
-  .tabs { display: flex; gap: 0; }
+  .tabs { display: flex; gap: 0; min-width: 0; overflow: hidden; }
   .tabs button { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; background: none; color: var(--ink-2); font-weight: 550; white-space: nowrap; }
   .tabs button:hover { color: var(--ink); }
   .tabs button[aria-selected="true"] { background: var(--field); color: var(--ink); }
@@ -207,6 +211,8 @@ export const UI_CSS = `
   .mi { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 8px 0 4px; border: 0; border-radius: 5px; background: none; color: var(--menu-ink); text-align: left; white-space: nowrap; }
   .mi svg { width: 16px; height: 16px; }
   .mi[data-active] { background: var(--menu-active); color: #ffffff; }
+  .mi:disabled { color: var(--menu-ink-3); }
+  .mi:disabled[data-active] { background: none; color: var(--menu-ink-3); }
   .mi__meta { color: var(--menu-ink-2); font-variant-numeric: tabular-nums; }
   .mi[data-active] .mi__meta { color: #ffffff; }
   .mi__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

@@ -82,6 +82,8 @@ export interface MenuItem<T> {
   /** A node in the leading column (a swatch); a check shows there for the selected item otherwise. */
   lead?: Node;
   header?: string;
+  /** Shown dim and skipped. */
+  disabled?: boolean;
 }
 
 /** A keyboard-driven list. Returns the list element and a focus function. */
@@ -105,13 +107,13 @@ export function menu<T>(items: MenuItem<T>[], selected: T | null, pick: (v: T) =
       lastHeader = it.header;
     }
     const isSel = it.value === selected;
-    const row = h('button', { type: 'button', class: 'mi', role: 'option', 'aria-selected': String(isSel) },
+    const row = h('button', { type: 'button', class: 'mi', role: 'option', 'aria-selected': String(isSel), ...(it.disabled ? { disabled: true, 'aria-disabled': 'true' } : {}) },
       it.lead ?? (isSel ? icon('check') : h('span')),
       h('span', { class: 'mi__label' }, it.label),
       it.meta ? h('span', { class: 'mi__meta' }, it.meta) : h('span'));
     const i = rows.length;
     row.addEventListener('pointermove', () => { if (active !== i) setActive(i); });
-    row.addEventListener('click', () => pick(it.value));
+    row.addEventListener('click', () => { if (!it.disabled) pick(it.value); });
     rows.push(row);
     list.append(row);
   }

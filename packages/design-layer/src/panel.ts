@@ -41,8 +41,8 @@ import {
   type PaletteOption, type Prefix,
 } from './ui';
 
-/** The panel's width: a setting, dragged on its left edge. Figma's own panel is 240; 280 gives the fields room. */
-const WIDTH = { default: 280, min: 240, max: 480 };
+/** The panel's width: a setting, dragged on its inner edge. Figma's own panel is 240; 320 gives the fields and the top row's undo and redo room. */
+const WIDTH = { default: 320, min: 260, max: 480 };
 const WIDTH_KEY = 'design-layer:width';
 const SIDE_KEY = 'design-layer:side';
 /** The overlay's distance from the viewport's edges: Figma's floating-panel gap, spacing-300. */
@@ -212,6 +212,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let open = false;
   let width = Math.min(WIDTH.max, Math.max(WIDTH.min, Number(store.get(WIDTH_KEY)) || WIDTH.default));
   let side: Side = store.get(SIDE_KEY) === 'left' ? 'left' : 'right';
+  /** Set once the undo history exists; until then a change has nothing to record into. */
+  let onEdit = () => {};
   let closing = false;
   let layoutOpen = store.get(LAYOUT_KEY) === '1';
   let tab: 'tune' | 'comments' = 'tune';
@@ -492,6 +494,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const root = rootSelector(true);
     const variantCss = (tweaks.variants ?? []).map((v) => scopedBlocks(root, (sel) => `${sel} [data-dl-variant="${v.id}"]`, v, dependents)).join('');
     live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + variantCss;
+    onEdit();
     const specs = [...new Set(Object.values(tweaks.shared).map((css) => FONT_OPTIONS.find((o) => o.css === css)?.google).filter((g): g is string => !!g))];
     const href = googleHref(specs);
     if (href) { if (fontLink.getAttribute('href') !== href) fontLink.href = href; if (!fontLink.isConnected) document.head.append(fontLink); }
@@ -524,7 +527,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const save = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Saved');
   save.addEventListener('click', () => host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) }));
   const pickBtn = iconButton('cursor', 'Select (Click an Element)', () => setSelecting(!selecting), false);
-  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), pickBtn, modeDd.el, save);
+  const undoBtn = iconButton('undo', 'Undo (⌘Z)', () => undo());
+  const redoBtn = iconButton('redo', 'Redo (⇧⌘Z)', () => redo());
+  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), undoBtn, redoBtn, pickBtn, modeDd.el, save);
 
   // Selection header: the palette as the title, the reference, the menu.
   const paletteOptions = (): PaletteOption[] => PALETTES.map((p) => {
@@ -540,18 +545,20 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'reset-palette' | 'reset-all' | 'side' | 'close';
+  type MenuAction = 'promote' | 'revert' | 'reset-palette' | 'reset-all' | 'side' | 'close';
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
       { value: 'promote', label: 'Save to Source…' },
-      { value: 'reset-palette', label: 'Reset Palette', header: ' ' },
-      { value: 'reset-all', label: 'Reset All' },
+      { value: 'revert', label: 'Revert to Last Save', header: ' ', disabled: same(tweaks, saved) },
+      { value: 'reset-palette', label: 'Reset Palette' },
+      { value: 'reset-all', label: 'Reset All to Source' },
       { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right', header: ' ' },
       { value: 'close', label: 'Close Panel', meta: '⌃⌥D' },
     ],
     pick: (v) => {
       if (v === 'promote') openPromote();
+      else if (v === 'revert') { tweaks = normalize(saved); applyLive(); sync(); }
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
       else if (v === 'side') setSide(side === 'right' ? 'left' : 'right');
@@ -980,6 +987,57 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     input.focus();
   }
 
+  // Undo and redo: one step per committed change, Figma's way. A checkpoint
+  // follows each change once it settles (a microtask after the live CSS is
+  // rebuilt), and waits while a pointer is down, so a scrub or a drag is one
+  // step from press to release; text fields already commit on Enter or blur.
+  // The stack is per page session: it survives closing the panel and clears on
+  // Save to Source.
+  const past: Tweaks[] = [];
+  const future: Tweaks[] = [];
+  let anchorT: Tweaks = structuredClone(tweaks);
+  let pressing = false;
+  let queued = false;
+  const syncHistory = () => { undoBtn.disabled = !past.length; redoBtn.disabled = !future.length; };
+  function checkpoint() {
+    queued = false;
+    if (pressing || same(tweaks, anchorT)) return;
+    past.push(anchorT);
+    if (past.length > 200) past.shift();
+    future.length = 0;
+    anchorT = structuredClone(tweaks);
+    syncHistory();
+  }
+  const queueCheckpoint = () => { if (!queued) { queued = true; queueMicrotask(checkpoint); } };
+  onEdit = queueCheckpoint;
+  /** A state that is not an edit (the server's copy arriving): the new baseline, no step. */
+  const rebase = () => { anchorT = structuredClone(tweaks); syncHistory(); };
+  function restore(t: Tweaks) {
+    tweaks = normalize(structuredClone(t));
+    anchorT = structuredClone(tweaks);
+    closePopover();
+    applyLive();
+    sync();
+    syncHistory();
+  }
+  function undo() { checkpoint(); const t = past.pop(); if (!t) return; future.push(structuredClone(tweaks)); restore(t); }
+  function redo() { const t = future.pop(); if (!t) return; past.push(structuredClone(tweaks)); restore(t); }
+  const clearHistory = () => { past.length = 0; future.length = 0; rebase(); };
+  syncHistory();
+  // A press in the panel holds the checkpoint until release: one scrub, one step.
+  ui.addEventListener('pointerdown', () => { pressing = true; }, true);
+  addEventListener('pointerup', () => { if (pressing) { pressing = false; queueCheckpoint(); } }, true);
+  addEventListener('pointercancel', () => { pressing = false; }, true);
+  /** ⌘Z / ⇧⌘Z (Ctrl on other systems), except mid-edit in a text field, which keeps its own. */
+  function historyKey(e: KeyboardEvent) {
+    if (!open || !(e.metaKey || e.ctrlKey) || e.altKey || e.code !== 'KeyZ') return false;
+    const t = e.composedPath()[0];
+    if (t instanceof HTMLTextAreaElement || (t instanceof HTMLInputElement && !['checkbox', 'radio', 'range', 'button'].includes(t.type)) || (t instanceof HTMLElement && t.isContentEditable)) return false;
+    e.preventDefault();
+    if (e.shiftKey) redo(); else undo();
+    return true;
+  }
+
   // Save to Source: every component- and token-scope edit, written into the
   // files that declare it (promote.mjs decides where, and says so before it
   // writes). Instance edits stay as overrides. What it wrote leaves the tweaks.
@@ -1091,6 +1149,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     prune();
     closePopover();
     host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) });
+    clearHistory();
     invalidateGraph();
     applyLive();
     sync();
@@ -1363,6 +1422,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     ui.addEventListener(type, (e) => {
       const k = e as KeyboardEvent;
       if (type === 'keydown' && isToggleKey(k)) { k.preventDefault(); host.setOpen(!open); }
+      if (type === 'keydown') historyKey(k);
       if (type === 'keydown' && k.key === 'Escape' && picked) { picked = null; syncComments(); }
       else if (type === 'keydown' && k.key === 'Escape' && selection && !ui.querySelector('.pop') && !(k.composedPath()[0] instanceof HTMLInputElement)) setSelection(null);
       e.stopPropagation();
@@ -1428,6 +1488,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   document.addEventListener('keydown', (e) => { if (isToggleKey(e)) { e.preventDefault(); host.setOpen(!open); } });
   // On the page: Esc clears the selection (then leaves the select tool),
   // Shift+Enter selects the parent component, Enter the first one inside.
+  document.addEventListener('keydown', (e) => { if (historyKey(e)) e.stopImmediatePropagation(); }, true);
   document.addEventListener('keydown', (e) => {
     if (!open || commenting) return;
     const t = e.composedPath()[0];
@@ -1458,7 +1519,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const incoming = normalize(s.tweaks);
     const wasClean = same(tweaks, saved);
     saved = incoming;
-    if (wasClean) tweaks = normalize(incoming);
+    if (wasClean) { tweaks = normalize(incoming); anchorT = structuredClone(tweaks); }
     feedback = s.feedback ?? [];
     if (s.promote) renderPromote(s.promote);
     const link = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
