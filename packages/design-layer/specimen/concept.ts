@@ -2,7 +2,12 @@
 // A mock page on the hub's real tokens and face, and the panel driving it:
 // select something, pull its levers, send the changes to Claude.
 //
-// ?state=page | card | text | review   ?hover=padding|gap   ?theme=light
+// Each kind of value gets its own way to adjust, test, evaluate and accept
+// (levers-by-use-case.md): a colour is judged by contrast in both schemes, a
+// space by what it sits beside, a size by where it lands on the page's
+// hierarchy.
+//
+// ?state=page | card | text | size | color | icon | brand | review | before   ?theme=light
 import { UI_CSS, h, section, segmented, iconButton } from '../src/ui';
 import { rampLever, swatchLever, pairLever, LEVER_CSS, type Rung } from '../src/ui/levers';
 
@@ -26,59 +31,85 @@ const CORNERS: Rung[] = [{ value: 'flat', name: 'Flat' }, { value: 'soft', name:
 const DENSITY: Rung[] = [{ value: '0.75', name: 'Compact' }, { value: '1', name: 'Default' }, { value: '1.25', name: 'Comfortable' }];
 const SCALE: Rung[] = [{ value: '0.9', name: 'Smaller' }, { value: '1', name: 'Default' }, { value: '1.12', name: 'Larger' }];
 
+const root = document.documentElement;
+const canvas = h('div', { class: 'canvas' });
+
 // What a rung renders as, measured on a probe so a clamp() reads at this viewport.
 const probe = document.createElement('div');
 probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none';
-const px = (r: Rung, prop: 'width' | 'font-size' = 'width') => {
-  if (!probe.isConnected) document.querySelector('.canvas')!.append(probe);
-  probe.style.setProperty(prop, r.value);
-  const v = Number.parseFloat(getComputedStyle(probe).getPropertyValue(prop));
-  return `${Math.round(v * 10) / 10}`;
+const measure = (value: string, prop: string) => {
+  if (!probe.isConnected) canvas.append(probe);
+  probe.style.setProperty(prop, value);
+  return getComputedStyle(probe).getPropertyValue(prop);
 };
-const showPx = (r: Rung) => `${px(r)} px`;
-const showFont = (r: Rung) => `${px(r, 'font-size')} px`;
+const num = (r: Rung, prop = 'width') => Math.round(Number.parseFloat(measure(r.value, prop)) * 10) / 10;
+const showPx = (r: Rung) => `${num(r)} px`;
+const showFont = (r: Rung) => `${num(r, 'font-size')} px`;
 const showName = (r: Rung) => r.name ?? r.value;
-const showNamePx = (r: Rung) => (r.value === '0px' ? 'None' : r.value.includes('pill') ? 'Pill' : `${r.name} · ${px(r)} px`);
+const showNamePx = (r: Rung) => (r.value === '0px' ? 'None' : r.value.includes('pill') ? 'Pill' : `${r.name} · ${num(r)} px`);
+const nearest = (ladder: number[], v: number) => ladder.reduce((b, x, i) => (Math.abs(x - v) < Math.abs(ladder[b] - v) ? i : b), 0);
+const pxOf = (v: string) => Number.parseFloat(v) || 0;
+
+// ── colour: contrast, measured in both schemes ─────────────────────────────
+const rgba = (c: string) => { const m = (c.match(/[\d.]+/g) ?? ['0', '0', '0']).map(Number); return { r: m[0], g: m[1], b: m[2], a: m[3] ?? 1 }; };
+const lum = (c: string) => { const { r, g, b } = rgba(c); const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+const ratio = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const resolve = (value: string) => measure(value, 'color');
+const fmt = (n: number) => `${n.toFixed(1)}:1`;
+function inSchemes<T>(fn: () => T): { light: T; dark: T } {
+  const was = root.dataset.scheme;
+  root.dataset.scheme = 'light'; const light = fn();
+  root.dataset.scheme = 'dark'; const dark = fn();
+  root.dataset.scheme = was;
+  return { light, dark };
+}
+function opaqueBg(start: Element | null): string {
+  for (let e = start; e; e = e.parentElement) { const c = getComputedStyle(e).backgroundColor; if (rgba(c).a > 0.5) return c; }
+  return resolve('var(--color-background-default)');
+}
+const textFloor = (el: Element) => { const s = getComputedStyle(el); const size = pxOf(s.fontSize); return size >= 24 || (size >= 18.66 && Number(s.fontWeight) >= 700) ? 3 : 4.5; };
 
 // ── the elements and their levers ──────────────────────────────────────────
+type Role = 'type-size' | 'leading' | 'weight' | 'text-color' | 'icon-color' | 'fill' | 'padding' | 'corners' | 'border-width' | 'border-color' | 'gap-inside' | 'gap-between' | 'icon-size' | 'columns';
+type Overlay = 'padding' | 'gap' | 'lines';
 type LeverDef =
-  | { id: string; label: string; kind: 'ramp'; rungs: Rung[]; show: (r: Rung) => string; def: string; overlay?: 'padding' | 'gap' }
-  | { id: string; label: string; kind: 'swatch'; rungs: Rung[]; def: string; hue?: string }
-  | { id: string; label: string; kind: 'pair'; rungs: Rung[]; show: (r: Rung) => string; def: [string, string]; overlay?: 'padding' };
+  | { id: string; label: string; role: Role; kind: 'ramp'; rungs: Rung[]; show: (r: Rung) => string; def: string; overlay?: Overlay }
+  | { id: string; label: string; role: Role; kind: 'swatch'; rungs: Rung[]; def: string }
+  | { id: string; label: string; role: Role; kind: 'pair'; rungs: Rung[]; show: (r: Rung) => string; def: [string, string]; overlay?: Overlay };
 interface Group { title: string; levers: LeverDef[] }
-interface Kind { name: string; plural: string; groups: Group[] }
+interface Kind { name: string; plural: string; groups: Group[]; canvas?: Overlay[] }
 
 const textGroup = (size: string, weight: string, lead: string, color: string): Group => ({ title: 'Text', levers: [
-  { id: 'size', label: 'Size', kind: 'ramp', rungs: SIZE, show: showFont, def: size },
-  { id: 'weight', label: 'Weight', kind: 'ramp', rungs: WEIGHT, show: showName, def: weight },
-  { id: 'lh', label: 'Line Height', kind: 'ramp', rungs: LEADING, show: showName, def: lead },
-  { id: 'color', label: 'Color', kind: 'swatch', rungs: TEXT, def: color },
+  { id: 'size', label: 'Size', role: 'type-size', kind: 'ramp', rungs: SIZE, show: showFont, def: size },
+  { id: 'weight', label: 'Weight', role: 'weight', kind: 'ramp', rungs: WEIGHT, show: showName, def: weight },
+  { id: 'lh', label: 'Line Height', role: 'leading', kind: 'ramp', rungs: LEADING, show: showName, def: lead, overlay: 'lines' },
+  { id: 'color', label: 'Color', role: 'text-color', kind: 'swatch', rungs: TEXT, def: color },
 ] });
 const KINDS: Record<string, Kind> = {
-  card: { name: 'Stat Card', plural: 'Stat Cards', groups: [
+  card: { name: 'Stat Card', plural: 'Stat Cards', canvas: ['padding', 'gap'], groups: [
     { title: 'Box', levers: [
-      { id: 'fill', label: 'Fill', kind: 'swatch', rungs: FILL, def: '--color-background-default' },
-      { id: 'pad', label: 'Padding', kind: 'pair', rungs: SPACE, show: showPx, def: ['--spacing-400', '--spacing-400'], overlay: 'padding' },
-      { id: 'radius', label: 'Corners', kind: 'ramp', rungs: RADIUS, show: showNamePx, def: '--radius-md' },
+      { id: 'fill', label: 'Fill', role: 'fill', kind: 'swatch', rungs: FILL, def: '--color-background-default' },
+      { id: 'pad', label: 'Padding', role: 'padding', kind: 'pair', rungs: SPACE, show: showPx, def: ['--spacing-400', '--spacing-400'], overlay: 'padding' },
+      { id: 'radius', label: 'Corners', role: 'corners', kind: 'ramp', rungs: RADIUS, show: showNamePx, def: '--radius-md' },
     ] },
     { title: 'Border', levers: [
-      { id: 'bw', label: 'Width', kind: 'ramp', rungs: WIDTH, show: (r) => (r.value === '0px' ? 'None' : showPx(r)), def: '--border-width-100' },
-      { id: 'bc', label: 'Color', kind: 'swatch', rungs: LINE, def: '--color-border-default-subtle' },
+      { id: 'bw', label: 'Width', role: 'border-width', kind: 'ramp', rungs: WIDTH, show: (r) => (r.value === '0px' ? 'None' : showPx(r)), def: '--border-width-100' },
+      { id: 'bc', label: 'Color', role: 'border-color', kind: 'swatch', rungs: LINE, def: '--color-border-default-subtle' },
     ] },
-    { title: 'Layout', levers: [{ id: 'gap', label: 'Gap', kind: 'ramp', rungs: SPACE, show: showPx, def: '--spacing-200', overlay: 'gap' }] },
+    { title: 'Layout', levers: [{ id: 'gap', label: 'Gap', role: 'gap-inside', kind: 'ramp', rungs: SPACE, show: showPx, def: '--spacing-200', overlay: 'gap' }] },
   ] },
-  value: { name: 'Stat Value', plural: 'Stat Values', groups: [textGroup('--font-size-700', '--font-weight-600', '--line-height-tight', '--color-content-default')] },
-  label: { name: 'Stat Label', plural: 'Stat Labels', groups: [textGroup('--font-size-250', '--font-weight-500', '--line-height-tight', '--color-content-default-secondary')] },
-  caption: { name: 'Caption', plural: 'Captions', groups: [textGroup('--font-size-200', '--font-weight-400', '--line-height-normal', '--color-content-default-secondary')] },
-  title: { name: 'Page Title', plural: 'Page Titles', groups: [textGroup('--font-size-600', '--font-weight-600', '--line-height-tight', '--color-content-default')] },
+  value: { name: 'Stat Value', plural: 'Stat Values', canvas: ['lines'], groups: [textGroup('--font-size-700', '--font-weight-600', '--line-height-tight', '--color-content-default')] },
+  label: { name: 'Stat Label', plural: 'Stat Labels', canvas: ['lines'], groups: [textGroup('--font-size-250', '--font-weight-500', '--line-height-tight', '--color-content-default-secondary')] },
+  caption: { name: 'Caption', plural: 'Captions', canvas: ['lines'], groups: [textGroup('--font-size-200', '--font-weight-400', '--line-height-normal', '--color-content-default-secondary')] },
+  title: { name: 'Page Title', plural: 'Page Titles', canvas: ['lines'], groups: [textGroup('--font-size-600', '--font-weight-600', '--line-height-tight', '--color-content-default')] },
   icon: { name: 'Icon', plural: 'Icons', groups: [{ title: 'Icon', levers: [
-    { id: 'size', label: 'Size', kind: 'ramp', rungs: ICON, show: (r) => `${r.name} · ${px(r)} px`, def: '--icon-size-md' },
-    { id: 'color', label: 'Color', kind: 'swatch', rungs: TEXT, def: '--color-content-brand' },
-    { id: 'fill', label: 'Badge Fill', kind: 'swatch', rungs: FILL, def: '--color-background-brand-muted' },
+    { id: 'size', label: 'Size', role: 'icon-size', kind: 'ramp', rungs: ICON, show: (r) => `${r.name} · ${num(r)} px`, def: '--icon-size-md' },
+    { id: 'color', label: 'Color', role: 'icon-color', kind: 'swatch', rungs: TEXT, def: '--color-content-brand' },
+    { id: 'fill', label: 'Badge Fill', role: 'fill', kind: 'swatch', rungs: FILL, def: '--color-background-brand-muted' },
   ] }] },
-  cards: { name: 'Stat Row', plural: 'Stat Rows', groups: [{ title: 'Layout', levers: [
-    { id: 'gap', label: 'Gap', kind: 'ramp', rungs: SPACE, show: showPx, def: '--spacing-400', overlay: 'gap' },
-    { id: 'cols', label: 'Columns', kind: 'ramp', rungs: COLS, show: showName, def: '3' },
+  cards: { name: 'Stat Row', plural: 'Stat Rows', canvas: ['gap'], groups: [{ title: 'Layout', levers: [
+    { id: 'gap', label: 'Gap', role: 'gap-between', kind: 'ramp', rungs: SPACE, show: showPx, def: '--spacing-400', overlay: 'gap' },
+    { id: 'cols', label: 'Columns', role: 'columns', kind: 'ramp', rungs: COLS, show: showName, def: '3' },
   ] }] },
 };
 
@@ -145,37 +176,173 @@ const PAGE_CSS = `
   .mk--sel { outline: 1.5px solid #0c8ce9; }
   .mk--sib { outline: 1px dashed #0c8ce9; }
   .mk__tag { position: absolute; left: -1.5px; bottom: 100%; margin-bottom: 4px; padding: 0 6px; border-radius: 3px; background: #0c8ce9; color: #fff; font: 550 11px/18px 'Design Layer UI', Inter, sans-serif; white-space: nowrap; }
-  .mk--pad { box-sizing: border-box; border-style: solid; border-color: rgba(140, 196, 110, 0.5); }
-  .mk--gap { background: repeating-linear-gradient(45deg, rgba(186, 110, 230, 0.55) 0 1px, rgba(186, 110, 230, 0.16) 1px 6px); }
+  .mk--pad { background: rgba(140, 196, 110, 0.42); display: grid; place-items: center; }
+  .mk--gap { background: repeating-linear-gradient(45deg, rgba(186, 110, 230, 0.6) 0 1px, rgba(186, 110, 230, 0.18) 1px 6px); display: grid; place-items: center; }
+  .mk--line { background: rgba(12, 140, 233, 0.1); border-bottom: 1px solid rgba(12, 140, 233, 0.5); display: grid; place-items: center end; }
+  .mk--line .mk__px { margin-right: -32px; }
+  .mk--drag { pointer-events: auto; }
+  .mk--drag[data-axis="x"] { cursor: ew-resize; }
+  .mk--drag[data-axis="y"] { cursor: ns-resize; }
+  .mk--drag:hover { filter: saturate(1.6) brightness(0.95); }
+  .mk__px { padding: 0 4px; border-radius: 3px; background: rgba(0, 0, 0, 0.72); color: #fff; font: 550 10px/15px 'Design Layer UI', Inter, sans-serif; white-space: nowrap; }
+  .canvas[data-before]::before { content: 'Before'; position: sticky; top: 12px; float: left; margin: 12px 0 0 12px; z-index: 6; padding: 0 8px; border-radius: 4px; background: #1e1e1e; color: #fff; font: 550 11px/22px 'Design Layer UI', Inter, sans-serif; }
 `;
 
 // ── state ──────────────────────────────────────────────────────────────────
 type Scope = 'all' | 'one';
-interface Change { key: string; who: string; what: string; from: string; to: string; fromTok?: string; toTok?: string; scope: string; undo: () => void }
+interface Change { key: string; who: string; what: string; from: string; to: string; fromTok?: string; toTok?: string; scope: string; undo: () => void; redo: () => void; check?: string }
 const changes = new Map<string, Change>();
-const history: { key: string; prev: Change | undefined; apply: (on: boolean) => void }[] = [];
-const future: typeof history = [];
+interface Step { key: string; prev: Change | undefined; next: Change | undefined; apply: (on: boolean) => void }
+const history: Step[] = [];
+const future: Step[] = [];
 let selected: HTMLElement | null = null;
 let scope: Scope = 'all';
 let view: 'edit' | 'review' = 'edit';
 let tool: 'select' | 'comment' = 'select';
 let sent = false;
+let leverOver: Overlay | undefined;
+let canvasOver = false;
+let dragging = false;
+let before = false;
 const pageSeeds: Record<string, string> = { brand: 'grass', neutral: 'gray', corners: 'soft', density: '1', scale: '1' };
 const comments = [{ who: 'Page Title', text: 'Header feels crowded against the cards' }];
+const evals: (() => void)[] = [];
 
-const root = document.documentElement;
 const varName = (k: string, id: string) => `--m-${k}-${id}`;
 const targetFor = (el: HTMLElement) => (scope === 'all' ? root : el);
 const readVar = (el: HTMLElement, k: string, id: string) => (el.style.getPropertyValue(varName(k, id)) || root.style.getPropertyValue(varName(k, id))).trim();
+const valueOf = (el: HTMLElement, k: string, id: string, d: string) => readVar(el, k, id) || (d.startsWith('--') ? `var(${d})` : d);
+const rungAt = (rungs: Rung[], v: string) => Math.max(0, rungs.findIndex((r) => r.value === v || r.token === v));
+const peersOf = (k: string) => [...document.querySelectorAll<HTMLElement>(`[data-k="${k}"]`)];
+const cs = (el: Element) => getComputedStyle(el);
+const firstOf = (k: string) => document.querySelector<HTMLElement>(`[data-k="${k}"]`)!;
 
-function record(c: Omit<Change, 'undo'>, apply: (on: boolean) => void) {
+function record(c: Omit<Change, 'undo' | 'redo'>, apply: (on: boolean) => void) {
   const prev = changes.get(c.key);
-  const merged: Change = { ...c, from: prev?.from ?? c.from, fromTok: prev ? prev.fromTok : c.fromTok, undo: () => apply(false) };
-  if (merged.from === merged.to) changes.delete(c.key); else changes.set(c.key, merged);
-  history.push({ key: c.key, prev, apply });
+  const next: Change = { ...c, from: prev?.from ?? c.from, fromTok: prev ? prev.fromTok : c.fromTok, undo: prev ? prev.undo : () => apply(false), redo: () => apply(true) };
+  if (next.from === next.to) changes.delete(c.key); else changes.set(c.key, next);
+  history.push({ key: c.key, prev, next: changes.get(c.key), apply });
   future.length = 0;
   sent = false;
-  paintFooter();
+}
+
+/** Writes a rung to one or more of an element's variables, at the current scope, and records it. */
+function commit(el: HTMLElement, k: string, id: string, what: string, from: Rung, to: Rung, show: (r: Rung) => string, vars: string[] = [id]) {
+  const tgt = targetFor(el);
+  const prev = vars.map((v) => tgt.style.getPropertyValue(varName(k, v)));
+  for (const v of vars) tgt.style.setProperty(varName(k, v), to.value);
+  const who = scope === 'all' ? KINDS[k].plural : `This ${KINDS[k].name}`;
+  const key = `${k}|${scope}|${id}`;
+  record({ key, who, what, from: show(from), to: show(to), fromTok: from.token, toTok: to.token, scope: scope === 'all' ? `All ${peersOf(k).length}` : 'Just this one' },
+    (on) => vars.forEach((v, i) => { if (on) tgt.style.setProperty(varName(k, v), to.value); else if (prev[i]) tgt.style.setProperty(varName(k, v), prev[i]); else tgt.style.removeProperty(varName(k, v)); }));
+  return key;
+}
+
+// ── evaluation: one line under a lever, measured off the page ──────────────
+interface Verdict { text: string | null; warn?: boolean }
+
+function contentsOf(el: HTMLElement) {
+  return [...(el.dataset.k === 'icon' ? [el] : el.querySelectorAll<HTMLElement>('[data-k]'))].map((c) => {
+    const icon = c.dataset.k === 'icon';
+    return { floor: icon ? 3 : textFloor(c), color: () => cs(icon ? c.querySelector('svg')! : c).color };
+  });
+}
+/** A content's contrast scaled so 4.5 always means "just passes", whatever its own floor. */
+const worstOn = (parts: ReturnType<typeof contentsOf>, bg: string) => Math.min(...parts.map((p) => (ratio(p.color(), bg) / p.floor) * 4.5));
+
+function evaluate(d: LeverDef, k: string, el: HTMLElement): Verdict {
+  switch (d.role) {
+    case 'text-color': case 'icon-color': {
+      const floor = d.role === 'icon-color' ? 3 : textFloor(el);
+      const target = d.role === 'icon-color' ? el.querySelector('svg')! : el;
+      const r = inSchemes(() => ratio(cs(target).color, opaqueBg(el)));
+      const fail = Math.min(r.light, r.dark) < floor;
+      return { text: `${fmt(r.light)} light · ${fmt(r.dark)} dark${fail ? ` · under ${floor}:1` : ''}`, warn: fail };
+    }
+    case 'fill': {
+      const parts = contentsOf(el);
+      const worst = inSchemes(() => worstOn(parts, cs(el).backgroundColor));
+      const edge = inSchemes(() => ratio(cs(el).backgroundColor, opaqueBg(el.parentElement)));
+      const w = Math.min(worst.light, worst.dark);
+      const e = Math.min(edge.light, edge.dark);
+      if (w < 4.5) return { text: `Contents fall to ${fmt(w)} on this fill`, warn: true };
+      if (k === 'card' && e < 1.2 && pxOf(cs(el).borderTopWidth) === 0) return { text: `No border, and the fill matches the page (${fmt(e)})`, warn: true };
+      return { text: `Contents ${fmt(w)} at worst · edge ${fmt(e)}` };
+    }
+    case 'border-color': {
+      const r = inSchemes(() => ratio(cs(el).borderTopColor, opaqueBg(el.parentElement)));
+      return { text: `Against the page ${fmt(r.light)} light · ${fmt(r.dark)} dark` };
+    }
+    case 'border-width': {
+      if (pxOf(cs(el).borderTopWidth) > 0) return { text: null };
+      const e = Math.min(...Object.values(inSchemes(() => ratio(cs(el).backgroundColor, opaqueBg(el.parentElement)))));
+      return e < 1.2 ? { text: `No edge: the fill matches the page (${fmt(e)})`, warn: true } : { text: null };
+    }
+    case 'type-size': {
+      const own = pxOf(cs(el).fontSize);
+      const tokenName = valueOf(el, k, d.id, d.kind === 'pair' ? d.def[0] : d.def).match(/--[\w-]+/)?.[0];
+      const rem = [...(tokenName ? cs(root).getPropertyValue(tokenName) : '').matchAll(/([\d.]+)rem/g)].map((m) => Number(m[1]) * 16);
+      const range = rem.length >= 2 ? `phone ${Math.round(rem[0])} px, wide ${Math.round(rem[rem.length - 1])} px` : '';
+      const others = Object.keys(KINDS).filter((o) => o !== k && KINDS[o].canvas?.includes('lines')).map((o) => ({ o, s: pxOf(cs(firstOf(o)).fontSize) }));
+      const same = others.find((x) => Math.abs(x.s - own) < 0.5);
+      if (same) return { text: `Same size as the ${KINDS[same.o].name}`, warn: true };
+      const rank = others.filter((x) => x.s > own).length + 1;
+      const place = rank === 1 ? 'Largest text' : `${['', '', '2nd', '3rd', '4th', '5th'][rank] ?? `${rank}th`} largest`;
+      return { text: range ? `${place} · ${range}` : place };
+    }
+    case 'leading': {
+      const lh = pxOf(cs(el).lineHeight) || pxOf(cs(el).fontSize) * 1.2;
+      return { text: `${Math.round(lh)} px lines on ${Math.round(pxOf(cs(el).fontSize))} px text` };
+    }
+    case 'padding': {
+      const pad = Math.min(pxOf(cs(el).paddingLeft), pxOf(cs(el).paddingTop));
+      const inside = pxOf(cs(el).rowGap);
+      const between = pxOf(cs(el.parentElement!).columnGap);
+      if (pad < inside) return { text: `Tighter than the ${inside} px gap inside`, warn: true };
+      return { text: `Gap inside ${inside} px · between cards ${between} px` };
+    }
+    case 'gap-inside': case 'gap-between': {
+      const c = d.role === 'gap-inside' ? el : firstOf('card');
+      const inside = pxOf(cs(c).rowGap);
+      const between = pxOf(cs(c.parentElement!).columnGap);
+      if (inside >= between) return { text: `Inside ${inside} px, between ${between} px: the cards stop reading as groups`, warn: true };
+      return { text: `Inside a card ${inside} px · between cards ${between} px` };
+    }
+    case 'corners': {
+      const badge = el.querySelector('.ico');
+      const outer = pxOf(cs(el).borderTopLeftRadius);
+      const inner = badge ? pxOf(cs(badge).borderTopLeftRadius) : 0;
+      if (badge && inner > outer) return { text: `The icon badge inside (${inner} px) is rounder than the card`, warn: true };
+      return { text: badge ? `Icon badge inside ${inner} px` : null };
+    }
+    case 'icon-size': {
+      const label = el.closest('.card')?.querySelector('.label');
+      return { text: label ? `Pairs with the ${Math.round(pxOf(cs(label).fontSize))} px label` : null };
+    }
+    case 'columns': return { text: `Cards ${Math.round(firstOf('card').getBoundingClientRect().width)} px wide` };
+    default: return { text: null };
+  }
+}
+/** Which swatches a check would fail on, before they are picked. */
+function failsFor(d: LeverDef, el: HTMLElement): ((r: Rung) => boolean) | null {
+  if (d.role === 'text-color' || d.role === 'icon-color') {
+    const floor = d.role === 'icon-color' ? 3 : textFloor(el);
+    return (r) => Math.min(...Object.values(inSchemes(() => ratio(resolve(r.value), opaqueBg(el))))) < floor;
+  }
+  if (d.role === 'fill') {
+    const parts = contentsOf(el);
+    return (r) => Math.min(...Object.values(inSchemes(() => worstOn(parts, resolve(r.value))))) < 4.5;
+  }
+  return null;
+}
+/** The rung the system would pick here, where one follows from what is around it. */
+function suggestFor(d: LeverDef, el: HTMLElement): number | null {
+  if (d.role === 'leading') return pxOf(cs(el).fontSize) >= 24 ? 1 : 2;
+  if (d.role === 'icon-size') {
+    const label = el.closest('.card')?.querySelector('.label');
+    return label ? nearest(ICON.map((r) => num(r)), pxOf(cs(label).fontSize) * 1.25) : null;
+  }
+  return null;
 }
 
 // ── panel ──────────────────────────────────────────────────────────────────
@@ -190,8 +357,8 @@ const foot = h('div', { class: 'cx-foot' });
 
 const tools = segmented({ label: 'Tool', icons: true, options: [{ value: 'select', icon: 'cursor', label: 'Select (V)' }, { value: 'comment', icon: 'comment', label: 'Comment (C)' }], onChange: (v) => { tool = v; tools.set(v); } });
 tools.set('select');
-const undoBtn = iconButton('undo', 'Undo (⌘Z)', () => step(history, future, false));
-const redoBtn = iconButton('redo', 'Redo (⇧⌘Z)', () => step(future, history, true));
+const undoBtn = iconButton('undo', 'Undo (⌘Z)', () => step(false));
+const redoBtn = iconButton('redo', 'Redo (⇧⌘Z)', () => step(true));
 const schemeBtn = iconButton('moon', 'Dark Page', () => {
   const dark = root.dataset.scheme !== 'dark';
   root.dataset.scheme = dark ? 'dark' : 'light';
@@ -203,12 +370,13 @@ ui.append(h('aside', { class: 'p cx', 'aria-label': 'Design Layer' },
   h('div', { class: 'p-top' }, tools.el, h('span', { class: 'grow' }), undoBtn, redoBtn, schemeBtn, iconButton('kebab', 'More', () => {})),
   body, foot));
 
-function step(from: typeof history, to: typeof history, redo: boolean) {
-  const e = from.pop();
+function step(redo: boolean) {
+  const e = (redo ? future : history).pop();
   if (!e) return;
   e.apply(redo);
-  to.push(e);
-  paintFooter();
+  const c = redo ? e.next : e.prev;
+  if (c) changes.set(e.key, c); else changes.delete(e.key);
+  (redo ? history : future).push(e);
   render();
 }
 
@@ -216,66 +384,79 @@ function head(title: string, sub?: Node) {
   return h('div', { class: 'cx-head' }, h('div', { class: 'cx-title' }, title), sub ?? null);
 }
 
+interface Lever { note: (t: string | null, tone?: 'warn') => void }
 function leverFor(def: LeverDef, k: string, el: HTMLElement) {
-  const who = scope === 'all' ? KINDS[k].plural : `This ${KINDS[k].name}`;
-  const at = (rungs: Rung[], v: string) => Math.max(0, rungs.findIndex((r) => r.value === v || r.token === v || r.value === `var(${v})`));
-  const valueOf = (id: string, d: string) => readVar(el, k, id) || (d.startsWith('--') ? `var(${d})` : d);
-  const setVar = (id: string, v: string) => targetFor(el).style.setProperty(varName(k, id), v);
   const overlay = 'overlay' in def ? def.overlay : undefined;
-  const onHover = overlay ? (on: boolean) => paintMarks(on ? overlay : undefined) : undefined;
-  const commit = (id: string, what: string, rungs: Rung[], from: Rung, to: Rung, show: (r: Rung) => string, vars: string[] = [id]) => {
-    const tgt = targetFor(el);
-    const prev = vars.map((v) => tgt.style.getPropertyValue(varName(k, v)));
-    for (const v of vars) setVar(v, to.value);
-    paintMarks(overlay);
-    record({ key: `${k}|${scope}|${id}`, who, what, from: show(from), to: show(to), fromTok: from.token, toTok: to.token, scope: scope === 'all' ? `All ${document.querySelectorAll(`[data-k="${k}"]`).length}` : 'Just this one' },
-      (on) => vars.forEach((v, i) => { if (on) tgt.style.setProperty(varName(k, v), to.value); else if (prev[i]) tgt.style.setProperty(varName(k, v), prev[i]); else tgt.style.removeProperty(varName(k, v)); }));
-  };
-  const origin = (id: string, d: string, rungs: Rung[]) => {
+  const onHover = overlay ? (on: boolean) => { leverOver = on ? overlay : undefined; paintMarks(); } : undefined;
+  const originOf = (id: string, rungs: Rung[], cur: number) => {
     const c = changes.get(`${k}|${scope}|${id}`);
-    return c ? rungs.findIndex((r) => r.token === c.fromTok || (!r.token && showName(r) === c.from)) : at(rungs, d.startsWith('--') ? d : d);
+    if (!c) return cur;
+    const i = rungs.findIndex((r) => (c.fromTok ? r.token === c.fromTok : showName(r) === c.from || r.value === c.from));
+    return i < 0 ? cur : i;
   };
+  let lever: Lever;
+  const after = (key?: string) => {
+    const v = evaluate(def, k, el);
+    lever.note(v.text, v.warn ? 'warn' : undefined);
+    const c = key ? changes.get(key) : undefined;
+    if (c) c.check = v.warn ? v.text ?? undefined : undefined;
+  };
+  let node: HTMLElement;
   if (def.kind === 'ramp') {
-    let cur = at(def.rungs, valueOf(def.id, def.def));
-    const lv = rampLever({ label: def.label, rungs: def.rungs, show: def.show, onHover, onChange: (i) => { commit(def.id, def.label, def.rungs, def.rungs[cur], def.rungs[i], def.show); cur = i; } });
-    const o = origin(def.id, def.def, def.rungs);
-    lv.set(cur, o < 0 ? cur : o);
-    return lv.el;
-  }
-  if (def.kind === 'swatch') {
-    const curV = valueOf(def.id, def.def);
-    const cur = def.rungs[at(def.rungs, curV)];
-    const hue = /brand/.test(cur.value) ? pageSeeds.brand : pageSeeds.neutral;
-    const more = hueRamp(hue);
+    let cur = rungAt(def.rungs, valueOf(el, k, def.id, def.def));
+    const lv = rampLever({ label: def.label, rungs: def.rungs, show: def.show, onHover, onChange: (i) => {
+      const key = commit(el, k, def.id, def.label, def.rungs[cur], def.rungs[i], def.show); cur = i; after(key); changed();
+    } });
+    lv.set(cur, originOf(def.id, def.rungs, cur));
+    lv.suggest(suggestFor(def, el));
+    lever = lv; node = lv.el;
+  } else if (def.kind === 'swatch') {
+    const curV = valueOf(el, k, def.id, def.def);
+    const base = def.rungs[rungAt(def.rungs, curV)];
+    const more = hueRamp(/brand/.test(base.value) ? pageSeeds.brand : pageSeeds.neutral);
     const all = [...def.rungs, ...more];
-    const found = all.find((r) => r.value === curV) ?? cur;
-    let now = found;
+    let now = all.find((r) => r.value === curV) ?? base;
     const show = (r: Rung) => r.name ?? '';
-    const lv = swatchLever({ label: def.label, rungs: def.rungs, more, onChange: (r) => { commit(def.id, def.label, all, now, r, show); now = r; } });
+    const lv = swatchLever({ label: def.label, rungs: def.rungs, more, onChange: (r) => {
+      const key = commit(el, k, def.id, def.label, now, r, show); now = r; after(key); changed();
+    } });
     const c = changes.get(`${k}|${scope}|${def.id}`);
-    lv.set(found, c ? all.find((r) => r.token === c.fromTok) ?? found : found);
-    return lv.el;
+    lv.set(now, c ? all.find((r) => r.token === c.fromTok) ?? now : now);
+    const fails = failsFor(def, el);
+    if (fails) lv.marks(fails);
+    lever = lv; node = lv.el;
+  } else {
+    let cx = rungAt(def.rungs, valueOf(el, k, `${def.id}-x`, def.def[0]));
+    let cy = rungAt(def.rungs, valueOf(el, k, `${def.id}-y`, def.def[1]));
+    const lv = pairLever({ label: def.label, labels: ['X', 'Y'], rungs: def.rungs, show: def.show, onHover, onChange: (x, y) => {
+      let key: string | undefined;
+      if (x === y && cx === cy) key = commit(el, k, def.id, def.label, def.rungs[cx], def.rungs[x], def.show, [`${def.id}-x`, `${def.id}-y`]);
+      else {
+        if (x !== cx) key = commit(el, k, `${def.id}-x`, `${def.label} X`, def.rungs[cx], def.rungs[x], def.show);
+        if (y !== cy) key = commit(el, k, `${def.id}-y`, `${def.label} Y`, def.rungs[cy], def.rungs[y], def.show);
+      }
+      cx = x; cy = y; after(key); changed();
+    } });
+    const linked = changes.get(`${k}|${scope}|${def.id}`);
+    const lo = linked ? def.rungs.findIndex((r) => r.token === linked.fromTok) : -1;
+    lv.set(cx, cy, [lo >= 0 ? lo : originOf(`${def.id}-x`, def.rungs, cx), lo >= 0 ? lo : originOf(`${def.id}-y`, def.rungs, cy)]);
+    lever = lv; node = lv.el;
   }
-  const x0 = at(def.rungs, valueOf(`${def.id}-x`, def.def[0]));
-  const y0 = at(def.rungs, valueOf(`${def.id}-y`, def.def[1]));
-  let cx = x0; let cy = y0;
-  const lv = pairLever({ label: def.label, labels: ['X', 'Y'], rungs: def.rungs, show: def.show, onHover, onChange: (x, y) => {
-    if (x === y && cx === cy && x !== cx) commit(def.id, def.label, def.rungs, def.rungs[cx], def.rungs[x], def.show, [`${def.id}-x`, `${def.id}-y`]);
-    else if (x !== cx) commit(`${def.id}-x`, `${def.label} X`, def.rungs, def.rungs[cx], def.rungs[x], def.show);
-    if (!(x === y && cx === cy) && y !== cy) commit(`${def.id}-y`, `${def.label} Y`, def.rungs, def.rungs[cy], def.rungs[y], def.show);
-    cx = x; cy = y;
-  } });
-  const linkedC = changes.get(`${k}|${scope}|${def.id}`);
-  const lo = linkedC ? def.rungs.findIndex((r) => r.token === linkedC.fromTok) : -1;
-  const ox = lo >= 0 ? lo : origin(`${def.id}-x`, def.def[0], def.rungs); const oy = lo >= 0 ? lo : origin(`${def.id}-y`, def.def[1], def.rungs);
-  lv.set(x0, y0, [ox < 0 ? x0 : ox, oy < 0 ? y0 : oy]);
-  return lv.el;
+  evals.push(() => after());
+  return node;
+}
+
+/** After any change: every lever re-measures (a fill change moves the border's verdict), the marks repaint. */
+function changed() {
+  for (const e of evals) e();
+  paintFooter();
+  paintMarks();
 }
 
 function renderSelection(el: HTMLElement) {
   const k = el.dataset.k!;
   const kind = KINDS[k];
-  const n = document.querySelectorAll(`[data-k="${k}"]`).length;
+  const n = peersOf(k).length;
   const sc = segmented<Scope>({ label: 'Applies to', options: [{ value: 'all', label: n > 1 ? `All ${n}` : 'All' }, { value: 'one', label: 'This One' }], onChange: (v) => { scope = v; render(); } });
   sc.set(scope);
   sc.el.classList.add('cx-scope');
@@ -283,6 +464,7 @@ function renderSelection(el: HTMLElement) {
     head(kind.name, sc.el),
     ...kind.groups.map((g) => section({ id: `cx-${k}-${g.title}`, title: g.title, body: g.levers.map((d) => leverFor(d, k, el)) }).el),
   );
+  for (const e of evals) e();
 }
 
 function renderPage() {
@@ -294,27 +476,36 @@ function renderPage() {
       const from = rungs[cur]; const to = rungs[i]; const prev = pageSeeds[id];
       pageSeeds[id] = to.value; apply(to.value); cur = i;
       record({ key: `page|${id}`, who: 'Page', what: label, from: show(from), to: show(to), scope: 'Theme' }, (on) => { pageSeeds[id] = on ? to.value : prev; apply(pageSeeds[id]); });
+      changed();
     } });
     lv.set(cur, o);
     return lv.el;
   };
-  const hueSeed = (id: string, label: string, hues: string[], step: number, apply: (v: string) => void) => {
-    const rungs: Rung[] = hues.map((n) => ({ value: `var(--color-${n}-${step})`, name: n[0].toUpperCase() + n.slice(1), token: `--color-${n}-${step}` }));
-    const byName = (n: string) => rungs[hues.indexOf(n)];
-    let cur = byName(pageSeeds[id]);
+  const hueSeed = (id: string, label: string, hues: string[], stepN: number, apply: (v: string) => void, check: (hue: string) => Verdict) => {
+    const rungs: Rung[] = hues.map((n) => ({ value: `var(--color-${n}-${stepN})`, name: n[0].toUpperCase() + n.slice(1), token: `--color-${n}-${stepN}` }));
+    let cur = rungs[hues.indexOf(pageSeeds[id])];
     const c = changes.get(`page|${id}`);
+    const note = () => { const v = check(pageSeeds[id]); lv.note(v.text, v.warn ? 'warn' : undefined); const ch = changes.get(`page|${id}`); if (ch) ch.check = v.warn ? v.text ?? undefined : undefined; };
     const lv = swatchLever({ label, rungs, onChange: (r) => {
       const prev = pageSeeds[id]; const name = hues[rungs.indexOf(r)];
       pageSeeds[id] = name; apply(name);
       record({ key: `page|${id}`, who: 'Page', what: label, from: cur.name!, to: r.name!, scope: 'Theme' }, (on) => { pageSeeds[id] = on ? name : prev; apply(pageSeeds[id]); });
-      cur = r;
+      cur = r; note(); changed();
     } });
     lv.set(cur, c ? rungs.find((r) => r.name === c.from) ?? cur : cur);
+    lv.marks((r) => !!check(hues[rungs.indexOf(r)]).warn);
+    note();
     return lv.el;
   };
+  // A brand works if its button text reads on its fill: that is what a primary button asks of it.
+  const brandCheck = (hue: string): Verdict => {
+    const w = Math.min(...Object.values(inSchemes(() => ratio(resolve('var(--color-content-on-brand)'), resolve(`var(--color-${hue}-9)`)))));
+    return w < 4.5 ? { text: `Button text ${fmt(w)} on this brand · under 4.5:1`, warn: true } : { text: `Button text ${fmt(w)}` };
+  };
+  const neutralCheck = (n: string): Verdict => ({ text: `Body text ${fmt(ratio(resolve(`var(--color-${n}-12)`), resolve(`var(--color-${n}-1)`)))}` });
   body.replaceChildren(
     head('Page'),
-    section({ id: 'cx-color', title: 'Color', body: [hueSeed('brand', 'Brand', BRANDS, 9, applyBrand), hueSeed('neutral', 'Neutral', NEUTRALS, 11, applyNeutral)] }).el,
+    section({ id: 'cx-color', title: 'Color', body: [hueSeed('brand', 'Brand', BRANDS, 9, applyBrand, brandCheck), hueSeed('neutral', 'Neutral', NEUTRALS, 11, applyNeutral, neutralCheck)] }).el,
     section({ id: 'cx-shape', title: 'Shape', body: [seed('corners', 'Corners', CORNERS, showName, applyCorners)] }).el,
     section({ id: 'cx-rhythm', title: 'Rhythm', body: [seed('density', 'Density', DENSITY, showName, (v) => root.style.setProperty('--m-density', v)), seed('scale', 'Type Scale', SCALE, showName, (v) => root.style.setProperty('--m-scale', v))] }).el,
   );
@@ -330,9 +521,8 @@ function applyBrand(hue: string) {
 }
 function applyNeutral(n: string) {
   const s = root.style;
-  const dark = root.dataset.scheme === 'dark' ? `${n}-dark` : n;
   const map: Record<string, number> = { '--color-content-default': 12, '--color-content-default-secondary': 11, '--color-content-disabled': 9, '--color-border-default': 7, '--color-border-default-subtle': 6, '--color-border-default-strong': 8, '--color-background-default': 1, '--color-background-elevation-sunken': 3 };
-  for (const [v, step] of Object.entries(map)) s.setProperty(v, `var(--color-${dark}-${step})`);
+  for (const [v, stepN] of Object.entries(map)) s.setProperty(v, `var(--color-${n}-${stepN})`);
 }
 function applyCorners(c: string) {
   const m: Record<string, [string, string, string]> = { flat: ['--radius-050', '--radius-050', '--radius-100'], soft: ['--radius-100', '--radius-200', '--radius-400'], round: ['--radius-200', '--radius-400', '--radius-500'] };
@@ -342,40 +532,50 @@ function applyCorners(c: string) {
   root.style.setProperty('--radius-lg', `var(${lg})`);
 }
 
-// The review: every change as one row, and the handoff.
+// The review: every change as one row, flagged where its check failed, and the handoff.
 function renderReview() {
-  const rows = [...changes.values()];
   const byWho = new Map<string, Change[]>();
-  for (const c of rows) byWho.set(c.who, [...(byWho.get(c.who) ?? []), c]);
+  for (const c of changes.values()) byWho.set(c.who, [...(byWho.get(c.who) ?? []), c]);
   const back = iconButton('chevron', 'Back to Editing', () => { view = 'edit'; render(); });
   back.classList.add('cx-back');
   const list = h('div', { class: 'cx-list' });
-  for (const [who, cs] of byWho) {
+  for (const [who, group] of byWho) {
     list.append(h('div', { class: 'cx-grp' }, who));
-    for (const c of cs) {
-      const revert = iconButton('reset', `Revert ${c.what}`, () => {
-        c.undo(); changes.delete(c.key); paintFooter(); render();
-      });
+    for (const c of group) {
+      const revert = iconButton('reset', `Revert ${c.what}`, () => { c.undo(); changes.delete(c.key); render(); });
       list.append(h('div', { class: 'cx-row', title: [c.fromTok, c.toTok].filter(Boolean).join(' → ') },
         h('span', { class: 'cx-row__what' }, c.what),
         h('span', { class: 'cx-row__v' }, h('span', { class: 'cx-row__from' }, c.from), ' → ', c.to),
-        revert));
+        revert,
+        ...(c.check ? [h('span', { class: 'cx-row__check' }, c.check)] : [])));
     }
   }
   if (comments.length) {
     list.append(h('div', { class: 'cx-grp' }, 'Comments'));
     for (const c of comments) list.append(h('div', { class: 'cx-row cx-row--c' }, h('span', { class: 'cx-row__what' }, c.who), h('span', { class: 'cx-row__note' }, c.text)));
   }
-  const md = h('pre', { class: 'cx-md' }, changesMd());
-  const prev = h('details', { class: 'cx-prev' }, h('summary', {}, 'design/changes.md'), md);
+  const prev = h('details', { class: 'cx-prev' }, h('summary', {}, 'design/changes.md'), h('pre', { class: 'cx-md' }, changesMd()));
   body.replaceChildren(h('div', { class: 'cx-head cx-head--back' }, back, h('div', { class: 'cx-title' }, 'Changes')), list, prev);
 }
 
 function changesMd() {
   const lines = ['# Design changes', '', '/dashboard · Radial', ''];
-  for (const c of changes.values()) lines.push(`- ${c.who} · ${c.what}: ${c.from} → ${c.to}${c.toTok ? ` (${c.fromTok ?? '?'} → ${c.toTok})` : ''} · ${c.scope}`);
+  for (const c of changes.values()) {
+    lines.push(`- ${c.who} · ${c.what}: ${c.from} → ${c.to}${c.toTok ? ` (${c.fromTok ?? '?'} → ${c.toTok})` : ''} · ${c.scope}`);
+    if (c.check) lines.push(`  - check: ${c.check}`);
+  }
   for (const c of comments) lines.push(`- Comment on ${c.who}: "${c.text}"`);
   return lines.join('\n');
+}
+
+/** Hold to see the page as it was: every change off, then back on in order. */
+function compare(on: boolean) {
+  if (before === on) return;
+  before = on;
+  const list = [...changes.values()];
+  if (on) list.reverse().forEach((c) => c.undo()); else list.forEach((c) => c.redo());
+  canvas.toggleAttribute('data-before', on);
+  paintMarks();
 }
 
 function paintFooter() {
@@ -392,10 +592,14 @@ function paintFooter() {
   }
   const count = h('button', { type: 'button', class: 'btn cx-count', disabled: !n }, n ? `${n} ${n === 1 ? 'Change' : 'Changes'}` : 'No Changes');
   count.addEventListener('click', () => { view = 'review'; render(); });
-  foot.replaceChildren(count, h('span', { class: 'grow' }), send);
+  const hold = h('button', { type: 'button', class: 'btn cx-before', disabled: !changes.size, title: 'Hold to see the page before your changes (B)' }, 'Before');
+  hold.addEventListener('pointerdown', () => compare(true));
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) hold.addEventListener(ev, () => compare(false));
+  foot.replaceChildren(count, hold, h('span', { class: 'grow' }), send);
 }
 
 function render() {
+  evals.length = 0;
   if (view === 'review') renderReview();
   else if (selected) renderSelection(selected);
   else renderPage();
@@ -404,56 +608,111 @@ function render() {
 }
 
 // ── marks on the canvas ────────────────────────────────────────────────────
-const canvas = h('div', { class: 'canvas' });
 canvas.innerHTML = PAGE;
 document.body.append(canvas, host);
 let hoverEl: HTMLElement | null = null;
-const box = (el: Element, cls: string) => {
-  const r = el.getBoundingClientRect(); const c = canvas.getBoundingClientRect();
+type Box = { left: number; top: number; width: number; height: number };
+const at = (r: Box, cls: string) => {
+  const c = canvas.getBoundingClientRect();
   const m = h('div', { class: `mk ${cls}` });
-  Object.assign(m.style, { left: `${r.left - c.left + canvas.scrollLeft}px`, top: `${r.top - c.top + canvas.scrollTop}px`, width: `${r.width}px`, height: `${r.height}px` });
+  Object.assign(m.style, { left: `${r.left - c.left + canvas.scrollLeft}px`, top: `${r.top - c.top + canvas.scrollTop}px`, width: `${Math.max(0, r.width)}px`, height: `${Math.max(0, r.height)}px` });
   return m;
 };
-function paintMarks(overlay?: 'padding' | 'gap') {
+const tagPx = (m: HTMLElement, v: number) => { if (v >= 6) m.append(h('span', { class: 'mk__px' }, String(Math.round(v)))); return m; };
+
+/** Drag a band on the page and the space snaps along its ramp; the lever follows on release. */
+function draggable(m: HTMLElement, el: HTMLElement, k: string, id: 'pad-x' | 'pad-y' | 'gap', axis: 'x' | 'y', dir: 1 | -1, start: number) {
+  m.classList.add('mk--drag');
+  m.dataset.axis = axis;
+  m.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dragging = true;
+    const ladder = SPACE.map((r) => num(r));
+    let cur = nearest(ladder, start);
+    const x0 = e.clientX; const y0 = e.clientY;
+    const linked = id !== 'gap' && pxOf(cs(el).paddingTop) === pxOf(cs(el).paddingLeft) && !e.altKey;
+    const move = (ev: PointerEvent) => {
+      const i = nearest(ladder, start + (axis === 'x' ? ev.clientX - x0 : ev.clientY - y0) * dir);
+      if (i === cur) return;
+      if (linked) commit(el, k, 'pad', 'Padding', SPACE[cur], SPACE[i], showPx, ['pad-x', 'pad-y']);
+      else commit(el, k, id, id === 'pad-x' ? 'Padding X' : id === 'pad-y' ? 'Padding Y' : 'Gap', SPACE[cur], SPACE[i], showPx);
+      cur = i;
+      paintMarks();
+      paintFooter();
+    };
+    const up = () => { dragging = false; window.removeEventListener('pointermove', move); render(); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up, { once: true });
+  });
+}
+
+function overlaysNow(): Overlay[] {
+  if (!selected || before) return [];
+  if (leverOver) return [leverOver];
+  if (canvasOver || dragging) return KINDS[selected.dataset.k!].canvas ?? [];
+  return [];
+}
+
+function paintMarks() {
   canvas.querySelectorAll('.mk').forEach((m) => m.remove());
-  if (hoverEl && hoverEl !== selected) canvas.append(box(hoverEl, 'mk--hover'));
+  if (hoverEl && hoverEl !== selected && !dragging) canvas.append(at(hoverEl.getBoundingClientRect(), 'mk--hover'));
   if (!selected) return;
   const k = selected.dataset.k!;
-  const peers = scope === 'all' ? [...document.querySelectorAll<HTMLElement>(`[data-k="${k}"]`)] : [selected];
-  for (const p of peers) if (p !== selected) canvas.append(box(p, 'mk--sib'));
-  const sel = box(selected, 'mk--sel');
+  const peers = scope === 'all' ? peersOf(k) : [selected];
+  for (const p of peers) if (p !== selected) canvas.append(at(p.getBoundingClientRect(), 'mk--sib'));
+  const sel = at(selected.getBoundingClientRect(), 'mk--sel');
   sel.append(h('span', { class: 'mk__tag' }, KINDS[k].name));
   canvas.append(sel);
-  if (!overlay) return;
-  for (const p of peers) {
-    const cs = getComputedStyle(p);
-    if (overlay === 'padding') {
-      const m = box(p, 'mk--pad');
-      m.style.borderWidth = `${cs.paddingTop} ${cs.paddingRight} ${cs.paddingBottom} ${cs.paddingLeft}`;
-      const bw = Number.parseFloat(cs.borderTopWidth);
-      m.style.left = `${Number.parseFloat(m.style.left) + bw}px`; m.style.top = `${Number.parseFloat(m.style.top) + bw}px`;
-      m.style.width = `${Number.parseFloat(m.style.width) - bw * 2}px`; m.style.height = `${Number.parseFloat(m.style.height) - bw * 2}px`;
-      canvas.append(m);
-    } else {
+  for (const o of overlaysNow()) for (const p of peers) {
+    const r = p.getBoundingClientRect();
+    const s = cs(p);
+    const own = p === selected;
+    if (o === 'padding') {
+      const b = pxOf(s.borderTopWidth);
+      const [t, ri, bo, l] = [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map(pxOf);
+      const inner = r.height - 2 * b - t - bo;
+      const bands: [Box, 'pad-x' | 'pad-y', 'x' | 'y', 1 | -1, number][] = [
+        [{ left: r.left + b, top: r.top + b, width: r.width - 2 * b, height: t }, 'pad-y', 'y', 1, t],
+        [{ left: r.left + b, top: r.bottom - b - bo, width: r.width - 2 * b, height: bo }, 'pad-y', 'y', -1, bo],
+        [{ left: r.left + b, top: r.top + b + t, width: l, height: inner }, 'pad-x', 'x', 1, l],
+        [{ left: r.right - b - ri, top: r.top + b + t, width: ri, height: inner }, 'pad-x', 'x', -1, ri],
+      ];
+      bands.forEach(([box, id, axis, dir, v], i) => {
+        const m = at(box, 'mk--pad');
+        if (own) { if (i === 0 || i === 2) tagPx(m, v); draggable(m, p, k, id, axis, dir, v); }
+        canvas.append(m);
+      });
+    } else if (o === 'gap') {
       const kids = [...p.children].map((c) => c.getBoundingClientRect());
-      const c = canvas.getBoundingClientRect();
-      const grid = getComputedStyle(p).gridTemplateColumns.split(' ').length > 1;
       for (let i = 1; i < kids.length; i++) {
-        const a = kids[i - 1]; const b = kids[i];
-        const g = h('div', { class: 'mk mk--gap' });
-        if (grid && Math.abs(a.top - b.top) < 2) Object.assign(g.style, { left: `${a.right - c.left}px`, top: `${a.top - c.top + canvas.scrollTop}px`, width: `${b.left - a.right}px`, height: `${a.height}px` });
-        else Object.assign(g.style, { left: `${p.getBoundingClientRect().left - c.left + Number.parseFloat(cs.paddingLeft) + Number.parseFloat(cs.borderLeftWidth)}px`, top: `${a.bottom - c.top + canvas.scrollTop}px`, width: `${p.clientWidth - Number.parseFloat(cs.paddingLeft) - Number.parseFloat(cs.paddingRight)}px`, height: `${b.top - a.bottom}px` });
-        canvas.append(g);
+        const a = kids[i - 1]; const bb = kids[i];
+        const row = Math.abs(a.top - bb.top) < 2;
+        const box: Box = row
+          ? { left: a.right, top: a.top, width: bb.left - a.right, height: a.height }
+          : { left: r.left + pxOf(s.borderLeftWidth) + pxOf(s.paddingLeft), top: a.bottom, width: p.clientWidth - pxOf(s.paddingLeft) - pxOf(s.paddingRight), height: bb.top - a.bottom };
+        const m = at(box, 'mk--gap');
+        const v = row ? box.width : box.height;
+        if (own) { tagPx(m, v); draggable(m, p, k, 'gap', row ? 'x' : 'y', 1, v); }
+        canvas.append(m);
       }
+    } else if (o === 'lines' && own) {
+      const lh = pxOf(s.lineHeight) || pxOf(s.fontSize) * 1.2;
+      const n = Math.max(1, Math.round(r.height / lh));
+      for (let i = 0; i < n; i++) canvas.append(tagPx(at({ left: r.left, top: r.top + i * lh, width: r.width, height: lh }, 'mk--line'), i === 0 ? lh : 0));
     }
   }
 }
 canvas.addEventListener('pointermove', (e) => {
-  const t = (e.target as HTMLElement).closest<HTMLElement>('[data-k]');
-  if (t !== hoverEl) { hoverEl = t; paintMarks(); }
+  if (dragging) return;
+  const tgt = e.target as HTMLElement;
+  if (tgt.classList.contains('mk')) return;
+  const t = tgt.closest<HTMLElement>('[data-k]');
+  const over = !!selected && selected.contains(tgt);
+  if (t !== hoverEl || over !== canvasOver) { hoverEl = t; canvasOver = over; paintMarks(); }
 });
-canvas.addEventListener('pointerleave', () => { hoverEl = null; paintMarks(); });
+canvas.addEventListener('pointerleave', () => { if (dragging) return; hoverEl = null; canvasOver = false; paintMarks(); });
 canvas.addEventListener('click', (e) => {
+  if ((e.target as HTMLElement).classList.contains('mk')) return;
   const t = (e.target as HTMLElement).closest<HTMLElement>('[data-k]');
   if (tool === 'comment' && t) return;
   selected = t;
@@ -462,8 +721,10 @@ canvas.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && selected) { selected = null; render(); }
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) step(future, history, true); else step(history, future, false); }
+  if (e.key.toLowerCase() === 'b' && !e.metaKey && !e.repeat && changes.size) compare(true);
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); step(e.shiftKey); }
 });
+document.addEventListener('keyup', (e) => { if (e.key.toLowerCase() === 'b') compare(false); });
 
 function PANEL_CSS() {
   return `
@@ -479,16 +740,17 @@ function PANEL_CSS() {
   .cx-back svg { rotate: 90deg; }
   .cx-foot { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); flex: none; }
   .cx-foot .grow { flex: 1; }
+  .cx-before { user-select: none; touch-action: none; }
   .cx-chip { margin-left: auto; padding: 0 8px; border-radius: 4px; background: var(--chip); color: var(--ink-2); line-height: 20px; }
   .cx-list { padding: 4px 0 12px; }
   .cx-grp { padding: 12px 16px 4px; color: var(--ink-2); font-weight: 550; }
-  .cx-row { display: grid; grid-template-columns: 1fr auto 24px; align-items: center; gap: 8px; min-height: 32px; padding: 0 8px 0 16px; }
+  .cx-row { display: grid; grid-template-columns: 1fr auto 24px; align-items: center; column-gap: 8px; min-height: 32px; padding: 0 8px 0 16px; }
   .cx-row:hover { background: var(--hover); }
   .cx-row__v { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .cx-row__from { color: var(--ink-2); }
-  .cx-row--c { grid-template-columns: auto 1fr; padding-block: 6px; align-items: start; }
+  .cx-row__check { grid-column: 1 / -1; margin: -6px 0 6px; color: var(--danger); }
+  .cx-row--c { grid-template-columns: auto 1fr; padding-block: 6px; padding-right: 16px; align-items: start; }
   .cx-row__note { min-width: 0; color: var(--ink-2); }
-  .cx-row--c { padding-right: 16px; }
   .cx-prev { margin: 0 16px 16px; border: 1px solid var(--line); border-radius: 6px; }
   .cx-prev summary { padding: 8px 10px; color: var(--ink-2); cursor: pointer; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
   .cx-md { margin: 0; padding: 0 10px 10px; white-space: pre-wrap; color: var(--ink); font: 10.5px/16px ui-monospace, 'SF Mono', Menlo, monospace; }
@@ -503,29 +765,28 @@ pageStyle.textContent = PAGE_CSS;
 document.head.append(pageStyle);
 render();
 requestAnimationFrame(() => {
-  const fire = (sel: string) => { const t = canvas.querySelector<HTMLElement>(sel)!; selected = t; render(); };
-  if (st === 'card' || st === 'review') {
+  const fire = (sel: string) => { selected = canvas.querySelector<HTMLElement>(sel)!; render(); };
+  const press = (label: string, key: string, times = 1) => {
+    const track = [...body.querySelectorAll<HTMLElement>('.lv__track')].find((t) => t.getAttribute('aria-label') === label);
+    for (let i = 0; i < times; i++) track?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+  };
+  const swatch = (name: string) => [...body.querySelectorAll<HTMLElement>('.lv__c')].find((c) => c.getAttribute('aria-label') === name)?.click();
+  if (st === 'card' || st === 'review' || st === 'before') {
     fire('.card');
-    const s = body;
-    const press = (label: string, key: string, times = 1) => {
-      const track = [...s.querySelectorAll<HTMLElement>('.lv__track')].find((t) => t.getAttribute('aria-label') === label);
-      for (let i = 0; i < times; i++) track?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
-    };
-    press('Padding', 'ArrowRight', 1);
-    press('Corners', 'ArrowRight', 1);
-    if (st === 'review') {
+    press('Padding', 'ArrowRight');
+    press('Corners', 'ArrowRight');
+    if (st === 'card') { canvasOver = true; paintMarks(); }
+    else {
+      press('Gap', 'ArrowRight', 3);
       fire('.value');
-      press('Size', 'ArrowLeft', 1);
+      press('Size', 'ArrowLeft');
       selected = null; render();
-      const b = [...body.querySelectorAll<HTMLElement>('.lv__c')].find((c) => c.getAttribute('aria-label') === 'Teal');
-      b?.click();
-      view = 'review'; render();
-    } else if (q.get('hover')) {
-      paintMarks(q.get('hover') as 'padding');
-      const lv = [...body.querySelectorAll<HTMLElement>('.lv')].find((l) => l.querySelector('.lv__l')?.textContent === 'Padding');
-      lv?.setAttribute('data-hot', '');
+      swatch('Teal');
+      if (st === 'review') { view = 'review'; render(); } else compare(true);
     }
-  } else if (st === 'text') {
-    fire('.value');
-  }
+  } else if (st === 'text') { fire('.value'); canvasOver = true; paintMarks(); }
+  else if (st === 'size') { fire('.value'); press('Size', 'ArrowLeft', 2); }
+  else if (st === 'color') { fire('.caption'); swatch('Disabled'); }
+  else if (st === 'icon') { fire('.ico'); press('Size', 'ArrowLeft', 2); }
+  else if (st === 'brand') { swatch('Amber'); }
 });

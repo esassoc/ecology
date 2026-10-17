@@ -48,9 +48,13 @@ export function rampLever(o: { label: string; rungs: Rung[]; show: (r: Rung) => 
   const was = h('span', { class: 'lv__was', 'aria-hidden': 'true' });
   const thumb = h('span', { class: 'lv__thumb', 'aria-hidden': 'true' });
   track.append(...notches, was, thumb);
-  const el = h('div', { class: 'lv' }, hd.el, track);
+  const sug = h('button', { type: 'button', class: 'lv__sug', tabindex: '-1' }, 'Suggested');
+  const sugRow = h('div', { class: 'lv__sugrow', hidden: true }, sug);
+  const note = h('div', { class: 'lv__note', hidden: true });
+  const el = h('div', { class: 'lv' }, hd.el, track, sugRow, note);
   let at = 0;
   let origin = 0;
+  let suggested: number | null = null;
   const paint = () => {
     thumb.style.left = pos(at);
     was.style.left = pos(origin);
@@ -59,7 +63,9 @@ export function rampLever(o: { label: string; rungs: Rung[]; show: (r: Rung) => 
     hd.value.textContent = at === origin ? now : `${o.show(o.rungs[origin])} → ${now}`;
     hd.reset.hidden = at === origin;
     el.toggleAttribute('data-moved', at !== origin);
-    notches.forEach((n, i) => n.toggleAttribute('data-past', i < at));
+    notches.forEach((n, i) => { n.toggleAttribute('data-past', i < at); n.toggleAttribute('data-sug', i === suggested); });
+    sugRow.hidden = suggested === null || suggested === at;
+    if (suggested !== null) sug.style.left = pos(suggested);
     track.setAttribute('aria-valuenow', String(at));
     track.setAttribute('aria-valuetext', now);
     track.title = o.rungs[at].token ?? '';
@@ -89,10 +95,15 @@ export function rampLever(o: { label: string; rungs: Rung[]; show: (r: Rung) => 
     go(e.key === 'Home' ? 0 : e.key === 'End' ? o.rungs.length - 1 : e.shiftKey ? (d < 0 ? 0 : o.rungs.length - 1) : at + d);
   });
   hd.reset.addEventListener('click', () => go(origin));
+  sug.addEventListener('click', () => { if (suggested !== null) go(suggested); });
   hover(el, o.onHover);
   return {
     el,
     head: hd.el,
+    /** A rung the system would pick here (the effort slider's Recommended). */
+    suggest(i: number | null) { suggested = i; paint(); },
+    /** One line of evaluation under the lever: a measurement, or a warning. */
+    note(text: string | null, tone?: 'warn') { note.hidden = !text; note.textContent = text ?? ''; note.toggleAttribute('data-warn', tone === 'warn'); },
     /** Shows a rung; `from` sets the rung it started on (the tick). */
     set(i: number, from = i) { at = i; origin = from; paint(); },
     get: () => at,
@@ -109,7 +120,8 @@ export function swatchLever(o: { label: string; rungs: Rung[]; more?: Rung[]; on
   const row = h('div', { class: 'lv__sw', role: 'radiogroup', 'aria-label': o.label });
   const ramp = h('div', { class: 'lv__ramp', role: 'radiogroup', 'aria-label': `${o.label}, whole ramp`, hidden: true });
   const moreBtn = o.more ? h('button', { type: 'button', class: 'lv__more', 'aria-label': `Whole ${o.label} ramp`, 'aria-expanded': 'false', title: 'Whole ramp' }, icon('chevron')) : null;
-  const el = h('div', { class: 'lv lv--sw' }, hd.el, h('div', { class: 'lv__swrow' }, row, moreBtn), ramp);
+  const note = h('div', { class: 'lv__note', hidden: true });
+  const el = h('div', { class: 'lv lv--sw' }, hd.el, h('div', { class: 'lv__swrow' }, row, moreBtn), ramp, note);
   let cur: Rung = o.rungs[0];
   let origin: Rung = o.rungs[0];
   const swatch = (r: Rung, cls: string) => {
@@ -160,6 +172,12 @@ export function swatchLever(o: { label: string; rungs: Rung[]; more?: Rung[]; on
   return {
     el,
     set(r: Rung, from: Rung = r) { cur = r; origin = from; paint(); },
+    note(text: string | null, tone?: 'warn') { note.hidden = !text; note.textContent = text ?? ''; note.toggleAttribute('data-warn', tone === 'warn'); },
+    /** Marks the swatches a check fails on, before they are picked. */
+    marks(fails: (r: Rung) => boolean) {
+      o.rungs.forEach((r, i) => cells[i].toggleAttribute('data-fail', fails(r)));
+      (o.more ?? []).forEach((r, i) => steps[i].toggleAttribute('data-fail', fails(r)));
+    },
   };
 }
 
@@ -196,6 +214,7 @@ export function pairLever(o: { label: string; labels: [string, string]; rungs: R
   show();
   return {
     el,
+    note(text: string | null, tone?: 'warn') { both.note(text, tone); one.note(text, tone); },
     set(nx: number, ny: number, f: [number, number] = [nx, ny]) {
       x = nx; y = ny; from = f;
       linked = x === y && f[0] === f[1];
@@ -241,6 +260,13 @@ export const LEVER_CSS = `
   .lv__s { height: 16px; border-radius: 3px; }
   .sec__b > .lv, .sec__b > .lv-pair { grid-column: 1 / -1; }
   .sec__b:has(> .lv, > .lv-pair) { padding-right: 16px; row-gap: 4px; }
+  .lv__note { color: var(--ink-2); }
+  .lv__note[data-warn] { color: var(--danger); }
+  .lv__n[data-sug] { width: 7px; height: 7px; background: none; box-shadow: inset 0 0 0 1px var(--ink-2); }
+  .lv__sugrow { position: relative; height: 14px; margin-top: -2px; }
+  .lv__sug { position: absolute; top: 0; translate: -50% 0; padding: 0 2px; border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 10px; line-height: 14px; white-space: nowrap; }
+  .lv__sug:hover { color: var(--ink); }
+  .lv__c[data-fail]::before, .lv__s[data-fail]::before { content: ''; position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 1.5px var(--bg); }
   .lv-pair { display: grid; }
   .lv-pair > [hidden] { display: none; }
 `;
