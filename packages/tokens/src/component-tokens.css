@@ -565,13 +565,21 @@
 
      Three, not one: the bands sit at three different values today (16 / 24 / 12),
      and a single hook could not hold all three without moving two of them. The
-     inline axis stays on the `padding` prop. So does the body's block axis for
-     any non-default `padding`: the prop is a per-instance choice and beats this
-     theme-wide default, so `--card-body-padding-y` governs default-padding cards
-     only. Header and footer read their hooks under every `padding`, as they
-     always held fixed values. */
+     inline axis stays on the `padding` prop.
+
+     Header and footer hold one value under every `padding` (16 / 12), so they
+     are declared with it. The body's default is PER SIZE — its block padding
+     follows the `padding` prop: none 0, compact 12px, default 24px, spacious
+     48px — and no single value reproduces four, so `--card-body-padding-y` is
+     declared `initial`: guaranteed-invalid, i.e. unset. The component's
+     `var(--card-body-padding-y, <that size's value>)` then falls back per size,
+     and a theme that sets the hook wins under EVERY size, compact included.
+     Declaring a length here instead would beat every size's fallback and move
+     compact / spacious / none cards. It is a real declaration rather than an
+     omission so the name stays in this file, in token-names.json, and off the
+     ad-hoc list. */
   --card-header-padding-y: var(--spacing-400);
-  --card-body-padding-y: var(--spacing-500);
+  --card-body-padding-y: initial;
   --card-footer-padding-y: var(--spacing-300);
 
   /* esa-collapsible */

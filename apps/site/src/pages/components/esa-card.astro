@@ -15,7 +15,7 @@ const describe = {
   icon: "Lucide icon name shown left of the title.",
   variant: "Surface treatment: bordered, shadowed, or sunken.",
   headerVariant: "Header band tint.",
-  padding: "Inline padding of every band, and block padding of the body. Header and footer block padding come from their own tokens.",
+  padding: "Inline padding of every band, and the body's default block padding. A theme's --card-body-padding-y overrides the latter under every size.",
 };
 
 const slots = [
@@ -91,7 +91,7 @@ const slots = [
   </Section>
 
   <Section id="padding" title="Padding">
-    <p>The <code>padding</code> prop sets the inline padding of every band. Block padding is a token per band: <code>--card-header-padding-y</code> (16px), <code>--card-body-padding-y</code> (24px) and <code>--card-footer-padding-y</code> (12px). Set them in a theme to change a card's vertical rhythm without restyling its parts. A non-default <code>padding</code> also sets the body's block padding, and wins over <code>--card-body-padding-y</code>.</p>
+    <p>The <code>padding</code> prop sets the inline padding of every band. Block padding is a token per band: <code>--card-header-padding-y</code> (16px), <code>--card-body-padding-y</code> and <code>--card-footer-padding-y</code> (12px). The body's default follows <code>padding</code>: 0, 12px, 24px or 48px. Set any of the three in a theme to change a card's vertical rhythm without restyling its parts; a set value wins under every <code>padding</code>.</p>
     <Preview align="start" code={`<Card padding="compact" title="Compact">…</Card>
 <Card padding="default" title="Default">…</Card>
 <Card padding="spacious" title="Spacious">…</Card>`}>

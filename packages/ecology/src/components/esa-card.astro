@@ -144,7 +144,11 @@ const cls = [
     /* hub-edit-approved: Andrew (front-end architect) approved in-session — block
        padding per band, so a spoke can change a card's vertical rhythm without
        restyling .esa-card__header / __body / __footer. Defaults reproduce today's
-       16 / 24 / 12. */
+       16 / 24 / 12.
+       The body's default is PER SIZE: --card-body-padding-y is declared `initial`
+       (unset), so with nothing set it falls back to --_card-padding, which each
+       size class below re-points on this same element (0 / 12 / 24 / 48). Once a
+       theme sets it, it wins under every size. */
     --_card-header-padding-y: var(--card-header-padding-y, var(--spacing-400, 1rem));
     --_card-body-padding-y: var(--card-body-padding-y, var(--_card-padding));
     --_card-footer-padding-y: var(--card-footer-padding-y, var(--spacing-300, 0.75rem));
@@ -186,12 +190,6 @@ const cls = [
     --_card-header-bg: var(--color-background-elevation-sunken, #f0f0f0);
   }
 
-  /* A non-default `padding` is a per-instance choice, so it drives the body's
-     block axis as well as the inline one and outranks the theme-wide
-     --card-body-padding-y. */
-  .esa-card--padding-none,
-  .esa-card--padding-compact,
-  .esa-card--padding-spacious { --_card-body-padding-y: var(--_card-padding); }
   .esa-card--padding-none { --_card-padding: 0; }
   .esa-card--padding-compact { --_card-padding: var(--spacing-300, 0.75rem); }
   .esa-card--padding-spacious { --_card-padding: var(--spacing-700, 3rem); }
