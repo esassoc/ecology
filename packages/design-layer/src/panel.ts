@@ -40,7 +40,7 @@ import { buildLevers, GROUP_ORDER, type Band, type LeverChange, type LeverHost, 
 import { hueOf, hues, neutrals, themeRamps } from './ramps';
 import { CORNERS, DENSITY, NEUTRAL_SEED, TYPE_SCALE } from './recipe-seeds.mjs';
 import { contrastLine, worst } from './checks';
-import { applyDirection, directionsFor, type Direction } from './options';
+import { applyDirection, bestThree, directionsFor, type Direction } from './options';
 import { rampLever, swatchLever, LEVER_CSS, type Rung } from './ui/levers';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
@@ -1247,7 +1247,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const moved: number[] = [];
     for (const d of dirs) { preview(base); moved.push(applyDirection(d, steerRows())); fails.push(Math.max(0, checksNow() - before0)); }
     preview(base);
-    opts = { dirs, base, active: null, fails, moved };
+    const keep = bestThree(dirs, moved);
+    if (!keep.length) { previewing = false; return; }
+    opts = { dirs: keep.map((i) => dirs[i]), base, active: null, fails: keep.map((i) => fails[i]), moved: keep.map((i) => moved[i]) };
     sync();
     showOption(moved.findIndex((m) => m > 0));
   }

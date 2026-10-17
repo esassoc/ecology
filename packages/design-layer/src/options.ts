@@ -32,14 +32,24 @@ const PAGE: Direction[] = [
   { name: 'Bold', why: 'Larger type, round corners and heavier borders: louder and friendlier.', moves: [{ id: 'type-scale', pick: 'Larger' }, { id: 'corners', pick: 'Round' }, { id: 'borders', d: 1 }] },
 ];
 
-/** The directions a set of levers can take: text first, then icon, then box, three at most. */
+/** Every direction a set of levers could take, in the order offered: text first, then icon, then box. */
 export function directionsFor(rows: Steerable[], page: boolean): Direction[] {
   const ids = new Set(rows.map((r) => r.id));
   const applies = (d: Direction) => d.moves.some((m) => ids.has(m.id));
   const pool = page ? PAGE : ids.has('font-size') || ids.has('color') ? [...TEXT, ...BOX] : ids.has('icon-size') || ids.has('icon-color') ? [...ICON, ...BOX] : [...BOX, ...TEXT];
   const out: Direction[] = [];
-  for (const d of pool) if (applies(d) && !out.some((o) => o.name === d.name) && out.length < 3) out.push(d);
+  for (const d of pool) if (applies(d) && !out.some((o) => o.name === d.name)) out.push(d);
   return out;
+}
+
+/**
+ * The three to show: the directions that changed the most, measured by
+ * trying each. A direction that moved one lever loses to one that moved
+ * three; a tie keeps the offered order, so the same selection always gets
+ * the same three.
+ */
+export function bestThree(dirs: Direction[], moved: number[]): number[] {
+  return dirs.map((_, i) => i).filter((i) => moved[i] > 0).sort((a, b) => moved[b] - moved[a] || a - b).slice(0, 3).sort((a, b) => a - b);
 }
 
 /** Makes a direction's moves through the levers; how many actually moved. */

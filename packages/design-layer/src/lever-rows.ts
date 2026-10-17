@@ -169,10 +169,12 @@ export function buildLevers(host: LeverHost): LeverRow[] {
         commit(best);
       },
       px: () => o.read(),
+      // A step that renders the same (two roles on one value) is skipped: an option must look different.
       move(d) {
         const c = current();
-        const i = Math.max(0, Math.min(rungs.length - 1, c + d));
-        if (i === c) return false;
+        let i = Math.max(0, Math.min(rungs.length - 1, c + d));
+        while (i !== c && Math.abs(pxs[i] - pxs[c]) < 0.5 && i > 0 && i < rungs.length - 1) i += Math.sign(d);
+        if (i === c || Math.abs(pxs[i] - pxs[c]) < 0.5) return false;
         commit(i);
         return true;
       },
