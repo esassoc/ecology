@@ -1,0 +1,20 @@
+{
+  "name": "@esa/design-layer",
+  "version": "0.1.0",
+  "description": "Dev-only design layer for Ecology spokes: a panel in the dev toolbar that tunes a spoke's tokens live (palettes, surfaces, type, lengths) and records click-to-comment feedback, saved to an override layer, never to the token files.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./defaults": "./src/defaults.mjs",
+    "./store": "./src/store.mjs",
+    "./astro": "./astro/integration.mjs",
+    "./astro/toolbar-app.ts": "./astro/toolbar-app.ts"
+  },
+  "peerDependencies": {
+    "astro": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "astro": { "optional": true }
+  }
+}

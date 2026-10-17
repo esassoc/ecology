@@ -32,8 +32,9 @@ must live as a sibling of `ecology`.
 | `@esa/ecology` | dependency | The `esa-*` components. |
 | `@esa/docs` | dependency | `DocsShell` + token-driven foundation components (`ColorFoundation`, etc.). |
 | `@esa/handoff` | devDependency | Dev-mode handoff export. |
+| `@esa/design-layer` | devDependency | Dev-only design layer: the token tuning panel and click-to-comment in the dev toolbar, wired in `astro.config.mjs` as `designLayer()`. Not one of the four, and not a runtime dependency. |
 
-`package.json.tmpl` already encodes all four. The job is just to NOT lose any of
+`package.json.tmpl` already encodes all four, plus `@esa/design-layer`. The job is just to NOT lose any of
 them — verify after substitution.
 
 ## Placeholder legend
