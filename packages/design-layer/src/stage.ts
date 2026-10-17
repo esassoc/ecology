@@ -76,10 +76,11 @@ export function createStage(onPick: (id: string) => void) {
     el,
     get open() { return !el.hidden; },
     /** Shows `items` (the original as id "original", then variants), `active` outlined. */
-    render(src: Element, items: StageItem[], o: { active: string; right: number; dark: boolean }) {
+    render(src: Element, items: StageItem[], o: { active: string; left: number; right: number; dark: boolean }) {
       if (!style.isConnected) document.head.append(style);
       if (!el.isConnected) document.body.append(el);
       el.hidden = false;
+      el.style.left = `${o.left}px`;
       el.style.right = `${o.right}px`;
       el.toggleAttribute('data-dark', o.dark);
       const ctx = context(src);

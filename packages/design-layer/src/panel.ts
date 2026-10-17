@@ -44,10 +44,14 @@ import {
 /** The panel's width: a setting, dragged on its left edge. Figma's own panel is 240; 280 gives the fields room. */
 const WIDTH = { default: 280, min: 240, max: 480 };
 const WIDTH_KEY = 'design-layer:width';
-const THEME_KEY = 'design-layer:theme';
+const SIDE_KEY = 'design-layer:side';
+/** The overlay's distance from the viewport's edges: Figma's floating-panel gap, spacing-300. */
+const INSET = 12;
+/** Open, close and the side swap: one ease-out curve. */
+const MOTION = 220;
 const LAYOUT_KEY = 'design-layer:layout-open';
 const PROPS_KEY = 'design-layer:properties-open';
-type PanelTheme = 'light' | 'dark' | 'system';
+type Side = 'left' | 'right';
 const store = {
   get(key: string) { try { return localStorage.getItem(key); } catch { return null; } },
   set(key: string, v: string) { try { localStorage.setItem(key, v); } catch { /* storage blocked */ } },
@@ -114,7 +118,13 @@ let escapeAt = 0;
 // What the panel needs beyond the kit: docking, the
 // comments pane, and the page overlays (pins, the hover and picked boxes).
 const PANEL_CSS = `
-  .dock { position: fixed; top: 0; right: 0; bottom: 0; z-index: 2147483000; }
+  .dock { position: fixed; top: ${INSET}px; bottom: ${INSET}px; right: ${INSET}px; z-index: 2147483000;
+    transition: transform ${MOTION}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${MOTION}ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .dock[data-side="left"] { right: auto; left: ${INSET}px; }
+  .dock[data-state="closed"] { opacity: 0; transform: translateX(24px) scale(0.985); pointer-events: none; }
+  .dock[data-side="left"][data-state="closed"] { transform: translateX(-24px) scale(0.985); }
+  .dock[data-side="left"] .p-resize { left: auto; right: 0; }
+  @media (prefers-reduced-motion: reduce) { .dock { transition: none; } }
   .pane { display: grid; gap: 8px; padding: 8px 8px 16px 16px; }
   .picked { display: grid; gap: 0; padding: 4px 8px; border-radius: 5px; background: var(--field); }
   .picked__text { overflow-wrap: anywhere; }
@@ -201,7 +211,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   let open = false;
   let width = Math.min(WIDTH.max, Math.max(WIDTH.min, Number(store.get(WIDTH_KEY)) || WIDTH.default));
-  let panelTheme: PanelTheme = (['light', 'dark', 'system'] as const).find((t) => t === store.get(THEME_KEY)) ?? 'system';
+  let side: Side = store.get(SIDE_KEY) === 'left' ? 'left' : 'right';
+  let closing = false;
   let layoutOpen = store.get(LAYOUT_KEY) === '1';
   let tab: 'tune' | 'comments' = 'tune';
   let mode: Mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light';
@@ -478,10 +489,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const surfaceControlValue = (r: Ramp, id: SurfaceId) => (id === 'canvas' ? r.l : r.off[id]);
 
   function applyLive() {
-    const dock = open ? width : 0;
     const root = rootSelector(true);
     const variantCss = (tweaks.variants ?? []).map((v) => scopedBlocks(root, (sel) => `${sel} [data-dl-variant="${v.id}"]`, v, dependents)).join('');
-    live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + variantCss + (dock ? `html:root body { margin-right: ${dock}px; }\n` : '');
+    live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + variantCss;
     const specs = [...new Set(Object.values(tweaks.shared).map((css) => FONT_OPTIONS.find((o) => o.css === css)?.google).filter((g): g is string => !!g))];
     const href = googleHref(specs);
     if (href) { if (fontLink.getAttribute('href') !== href) fontLink.href = href; if (!fontLink.isConnected) document.head.append(fontLink); }
@@ -530,22 +540,22 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'reset-palette' | 'reset-all' | PanelTheme | 'close';
+  type MenuAction = 'promote' | 'reset-palette' | 'reset-all' | 'side' | 'close';
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
-    root, anchor: menuBtn, alignEnd: true, selected: panelTheme,
+    root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
       { value: 'promote', label: 'Save to Source…' },
       { value: 'reset-palette', label: 'Reset Palette', header: ' ' },
       { value: 'reset-all', label: 'Reset All' },
-      ...(['light', 'dark', 'system'] as const).map((t): MenuItem<MenuAction> => ({ value: t, label: t === 'system' ? 'Match System' : t === 'light' ? 'Light' : 'Dark', header: 'Panel Theme' })),
-      { value: 'close', label: 'Close Panel', meta: '⌃⌥D', header: ' ' },
+      { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right', header: ' ' },
+      { value: 'close', label: 'Close Panel', meta: '⌃⌥D' },
     ],
     pick: (v) => {
       if (v === 'promote') openPromote();
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
+      else if (v === 'side') setSide(side === 'right' ? 'left' : 'right');
       else if (v === 'close') host.setOpen(false);
-      else { panelTheme = v; store.set(THEME_KEY, v); applyTheme(); }
     },
   }));
   // With a selection the header is its breadcrumb (Figma's layer path) instead of the palette.
@@ -913,7 +923,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (!isolating || !selection) { stage.close(); return; }
     const all = [{ id: 'original', label: selection.name }, ...variantsHere().map((v) => ({ id: v.id, label: v.name }))];
     const active = activeVariant ?? 'original';
-    stage.render(selection.el, compare ? all : all.filter((i) => i.id === active), { active, right: width, dark: mode === 'dark' });
+    stage.render(selection.el, compare ? all : all.filter((i) => i.id === active), { active, ...stageInset(), dark: mode === 'dark' });
   }
   function setIsolating(state: boolean) {
     isolating = state && !!selection;
@@ -1112,26 +1122,47 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const pins = h('div', {});
   ui.append(dock, hoverBox, pickedBox, selBox, pins);
 
-  // Width: drag the left edge; the page's margin follows; the setting persists.
-  const applyWidth = () => { ui.style.setProperty('--w', `${width}px`); if (stage.open) stage.el.style.right = `${width}px`; };
+  // Width: drag the inner edge; the setting persists. The overlay sits over the
+  // page, which keeps its full width; only the isolation stage makes room.
+  const stageInset = () => (side === 'right' ? { left: 0, right: width + 2 + INSET * 2 } : { left: width + 2 + INSET * 2, right: 0 });
+  const applyWidth = () => {
+    ui.style.setProperty('--w', `${width}px`);
+    if (stage.open) { const i = stageInset(); stage.el.style.left = `${i.left}px`; stage.el.style.right = `${i.right}px`; }
+  };
   resize.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     resize.setPointerCapture(e.pointerId);
     const x0 = e.clientX;
     const w0 = width;
     closePopover();
-    const move = (m: PointerEvent) => { width = Math.min(WIDTH.max, Math.max(WIDTH.min, Math.round(w0 + x0 - m.clientX))); applyWidth(); applyLive(); placeOverlays(); };
+    const move = (m: PointerEvent) => { width = Math.min(WIDTH.max, Math.max(WIDTH.min, Math.round(w0 + (side === 'right' ? x0 - m.clientX : m.clientX - x0)))); applyWidth(); placeOverlays(); };
     const up = () => { resize.removeEventListener('pointermove', move); resize.removeEventListener('pointerup', up); store.set(WIDTH_KEY, String(width)); };
     resize.addEventListener('pointermove', move);
     resize.addEventListener('pointerup', up);
   });
-  resize.addEventListener('dblclick', () => { width = WIDTH.default; store.set(WIDTH_KEY, String(width)); applyWidth(); applyLive(); placeOverlays(); });
-  // The panel's own theme: light, dark, or the system's (Figma's appearance setting).
-  const systemDark = matchMedia('(prefers-color-scheme: dark)');
-  const applyTheme = () => { ui.dataset.theme = panelTheme === 'system' ? (systemDark.matches ? 'dark' : 'light') : panelTheme; };
-  systemDark.addEventListener('change', applyTheme);
+  resize.addEventListener('dblclick', () => { width = WIDTH.default; store.set(WIDTH_KEY, String(width)); applyWidth(); placeOverlays(); });
+  // The panel is always dark (Figma's dark chrome), whatever the page's mode.
+  ui.dataset.theme = 'dark';
+  dock.dataset.side = side;
+  dock.dataset.state = 'closed';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const later = (fn: () => void) => (reduced.matches ? fn() : setTimeout(fn, MOTION));
+  /** Slides out, swaps sides, slides back in. */
+  function setSide(next: Side) {
+    if (next === side) return;
+    closePopover();
+    dock.dataset.state = 'closed';
+    later(() => {
+      side = next;
+      store.set(SIDE_KEY, side);
+      dock.dataset.side = side;
+      applyWidth();
+      placeOverlays();
+      void dock.offsetWidth;
+      dock.dataset.state = 'open';
+    });
+  }
   applyWidth();
-  applyTheme();
   syncLayout();
 
   // ── render ──────────────────────────────────────────────────────────
@@ -1262,19 +1293,24 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       selSize.textContent = `${Math.round(r.width)} × ${Math.round(r.height)}`;
     }
     if (!open || isolating) { pins.replaceChildren(); return; }
-    const edge = innerWidth - width - 20;
+    const lo = side === 'left' ? width + INSET * 2 + 2 : 2;
+    const hi = side === 'right' ? innerWidth - width - INSET * 2 - 20 : innerWidth - 20;
     pins.replaceChildren(...openHere().flatMap((r, n) => {
       let el: Element | null = null;
       try { el = document.querySelector(r.selector); } catch { /* stale selector */ }
       const rect = el?.getBoundingClientRect();
       if (!rect || !rect.width || !rect.height) return [];
-      return [h('span', { class: 'pin', style: `left:${Math.min(rect.right - 9, edge)}px;top:${Math.max(rect.top - 9, 2)}px` }, String(n + 1))];
+      return [h('span', { class: 'pin', style: `left:${Math.max(lo, Math.min(rect.right - 9, hi))}px;top:${Math.max(rect.top - 9, 2)}px` }, String(n + 1))];
     }));
   }
 
   function setOpen(state: boolean) {
     open = state;
+    closing = false;
     pill.hidden = open;
+    // In: start off-screen on its side, then ease to rest on the next frame.
+    dock.dataset.state = 'closed';
+    if (open) requestAnimationFrame(() => requestAnimationFrame(() => { dock.dataset.state = 'open'; }));
     if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); }
     else { setCommenting(false); setSelecting(false); setSelection(null); closePopover(); }
     invalidateGraph();
@@ -1449,5 +1485,17 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   host.onToggled((state) => setOpen(state));
   setTab('tune');
   host.send('load', {});
-  return { allowClose: () => performance.now() - escapeAt > 150 };
+  // Out: the toolbar hides its canvas the moment it closes, so the first close
+  // request plays the animation and the second, after it, is let through.
+  return {
+    allowClose: () => {
+      if (performance.now() - escapeAt <= 150) return false;
+      if (closing || reduced.matches || !open) return true;
+      closing = true;
+      closePopover();
+      dock.dataset.state = 'closed';
+      setTimeout(() => host.setOpen(false), MOTION);
+      return false;
+    },
+  };
 }

@@ -82,7 +82,10 @@ export const UI_CSS = `
   .ui button, .ui input, .ui textarea { font: inherit; letter-spacing: inherit; color: inherit; margin: 0; }
   .ui button { cursor: default; }
   .ui :focus { outline: none; }
-  .ui :focus-visible { outline: 1px solid var(--focus); outline-offset: -1px; }
+  /* Figma's focus: a 1px accent border drawn inside the control, radius unchanged, no outer ring. */
+  .ui :focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--focus); }
+  .ui input:focus, .ui textarea:focus { outline: none; }
+  .ui textarea:focus-visible { box-shadow: none; }
   .ui svg { display: block; width: 24px; height: 24px; flex: none; }
 
   /* ── the grid every row sits on ── */
@@ -93,9 +96,10 @@ export const UI_CSS = `
   .g > .c3 { grid-column: 3; }
 
   /* ── panel frame ── */
-  .p { position: relative; display: flex; flex-direction: column; width: var(--w); height: 100%; background: var(--bg); border-left: 1px solid var(--line); }
-  .p-resize { position: absolute; top: 0; bottom: 0; left: -3px; width: 6px; cursor: ew-resize; z-index: 1; }
-  .p-top { display: flex; align-items: center; gap: 4px; height: 40px; padding: 8px; border-bottom: 1px solid var(--line); flex: none; }
+  .p { position: relative; display: flex; flex-direction: column; width: calc(var(--w) + 2px); height: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 13px; overflow: hidden;
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18), 0 32px 64px -16px rgba(0, 0, 0, 0.16); }
+  .p-resize { position: absolute; top: 0; bottom: 0; left: 0; width: 6px; cursor: ew-resize; z-index: 1; }
+  .p-top { display: flex; align-items: center; gap: 2px; height: 40px; padding: 8px; border-bottom: 1px solid var(--line); flex: none; }
   .p-top .grow { flex: 1; }
   .p-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
 
@@ -150,7 +154,7 @@ export const UI_CSS = `
   .f__pre[data-scrub] { cursor: ew-resize; }
   .f__input { flex: 1 0 32px; min-width: 32px; width: 100%; height: 100%; padding: 0; border: 0; background: none; color: inherit; font-variant-numeric: tabular-nums; text-overflow: ellipsis; }
   /* a11y-checked: the input's keyboard focus ring is the field's own 1px focus-blue border (.f:focus-within above), Figma's ring; an inner outline as well would double it */
-  .f__input:focus-visible { outline: none; }
+  .f__input:focus-visible { outline: none; box-shadow: none; }
   .f[data-inherited] .f__input { color: var(--ink-2); }
   .f__suf { flex: 0 1 auto; min-width: 0; padding: 0 7px 0 4px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* the reference: a 4px dot where the value departs from it; click to use it */
@@ -218,10 +222,12 @@ export const UI_CSS = `
 
   /* token picker: a dark menu with search */
   .tp { width: 280px; max-width: 280px; padding: 0; }
-  .tp__search { display: flex; align-items: center; height: 40px; padding: 0 8px; border-bottom: 1px solid var(--menu-line); color: var(--menu-ink-3); }
+  .tp__search { display: flex; align-items: center; height: 32px; margin: 4px 4px 0; padding: 0 4px; border: 1px solid transparent; border-radius: 5px; color: var(--menu-ink-3); }
+  .tp__search:focus-within { border-color: var(--menu-active); }
   .tp__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--menu-ink); }
+  .ui .tp__search input:focus-visible { box-shadow: none; }
   .tp__search input::placeholder { color: var(--menu-ink-3); }
-  .tp .menu { padding: 8px; max-height: 320px; }
+  .tp .menu { margin-top: 4px; padding: 8px; max-height: 320px; border-top: 1px solid var(--menu-line); }
   .tp__empty { padding: 16px; color: var(--menu-ink-3); }
 
   /* palette picker: whole themes, by group */

@@ -14,7 +14,7 @@ export interface PopoverOptions {
   className?: string;
   /** Align to the anchor's right edge instead of its left. */
   alignEnd?: boolean;
-  /** Open beside this element (the panel) on its left, top-aligned with the anchor: where Figma opens its pickers. */
+  /** Open beside this element (the panel), on its inner side, top-aligned with the anchor: where Figma opens its pickers. */
   beside?: HTMLElement;
   onClose?: () => void;
 }
@@ -35,7 +35,9 @@ export function openPopover(o: PopoverOptions): { el: HTMLElement; close: () => 
     if (o.beside) {
       const b = o.beside.getBoundingClientRect();
       const top = Math.max(8, Math.min(a.top, innerHeight - r.height - 8));
-      Object.assign(el.style, { top: `${top}px`, left: `${Math.max(8, b.left - 8 - r.width)}px` });
+      // The side away from the screen edge the panel sits on.
+      const left = b.left + b.width / 2 > innerWidth / 2 ? Math.max(8, b.left - 8 - r.width) : Math.min(innerWidth - r.width - 8, b.right + 8);
+      Object.assign(el.style, { top: `${top}px`, left: `${left}px` });
       return;
     }
     const below = a.bottom + 4 + r.height <= innerHeight - 8;
