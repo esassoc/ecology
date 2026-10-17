@@ -1,219 +1,235 @@
-// The design layer's control kit: one stylesheet for every control, dark and
-// dense at Figma's sidebar size (240px wide, 11px type, 24px fields, 32px
-// section heads, 8px sides, two-up rows, full-bleed hairlines). Surfaces and
-// ink are the hub's Radix gray-dark primitives, read through the page's tier-1
-// token with the same value as fallback. The accent is a tool blue, not the
-// hub's brand, so the panel never reads as part of the page it tunes; red-dark
-// marks a failing check.
+// The design layer's control kit, matched to Figma UI3's right panel. Every
+// number comes from the measured reference (esa drafts/ecology/design-layer/
+// figma-reference/SPEC.md): Andy's 2x screenshots measured pixel by pixel, and
+// Figma's own design-system variables read from figma.com in both themes.
 //
-// The face is Inter, Figma's own, shipped in assets/ and registered under its
-// own family name ("Design Layer UI", see fonts.ts), so it never touches the
-// page and tuning the spoke's fonts never restyles the tool.
+// The grid has no label column: 16 · field · 8 · field · 8 · icon 24 · 8.
+// At 240 the fields are 88; dragged wider, the two field columns share the
+// growth. Words live in a section title, a field's prefix slot, or a field's
+// right-aligned suffix (Figma's "Fill" / "Hug").
 //
-// The size and the accent are single tokens (--ui-fs, --ui-w, --ui-accent*).
-
+// The face is Inter, registered under a private family name (fonts.ts) so it
+// never reaches the page. 450 is body, 550 strong: Inter's variable axis.
 export const UI_CSS = `
   :host { all: initial; }
   *, *::before, *::after { box-sizing: border-box; }
   [hidden] { display: none !important; }
 
-  .ui {
-    --ui-bg: var(--color-gray-dark-3, #222222);
-    --ui-field: var(--color-gray-dark-5, #313131);
-    --ui-field-hover: var(--color-gray-dark-6, #3a3a3a);
-    --ui-raised: var(--color-gray-dark-4, #2a2a2a);
-    --ui-menu: var(--color-gray-dark-2, #191919);
-    --ui-line: var(--color-gray-dark-6, #3a3a3a);
-    --ui-line-strong: var(--color-gray-dark-7, #484848);
-    --ui-ink: var(--color-gray-dark-12, #eeeeee);
-    --ui-ink-2: var(--color-gray-dark-11, #b4b4b4);
-    --ui-ink-3: var(--color-gray-dark-9, #6e6e6e);
-    --ui-accent: #0d99ff;
-    --ui-accent-hover: #0b8ae6;
-    --ui-accent-ink: #7cc4fa;
-    --ui-on-accent: #ffffff;
-    --ui-select: rgba(13, 153, 255, 0.16);
-    --ui-fail: var(--color-red-dark-11, #ff9592);
-    --ui-chip: var(--color-gray-dark-6, #3a3a3a);
-    --ui-w: 240px;
-    --ui-fs: 11px;
-    --ui-lh: 16px;
-    --ui-fs-value: 12px;
-    --ui-h: 24px;
-    --ui-head: 32px;
-    --ui-r: 5px;
-    --ui-pad: 8px;
-    --ui-label: 64px;
-    font: 400 var(--ui-fs)/var(--ui-lh) 'Design Layer UI', Inter, system-ui, -apple-system, sans-serif;
-    font-feature-settings: 'cv11', 'calt';
-    letter-spacing: 0.005em;
-    color: var(--ui-ink);
-    -webkit-font-smoothing: antialiased;
+  /* ── Figma's semantic tokens, light and dark (figma-tokens.json) ── */
+  .ui, .ui[data-theme="light"] {
+    --bg: #ffffff;
+    --field: #f5f5f5;
+    --hover: #f5f5f5;
+    --pressed: #e6e6e6;
+    --line: #e6e6e6;
+    --line-strong: #2c2c2c;
+    --check-line: #c4c4c4;
+    --ink: rgba(0, 0, 0, 0.9);
+    --ink-2: rgba(0, 0, 0, 0.5);
+    --ink-3: rgba(0, 0, 0, 0.3);
+    --brand: #0d99ff;
+    --brand-hover: #007be5;
+    --on-brand: #ffffff;
+    --selected: #e5f4ff;
+    --selected-ink: #007be5;
+    --focus: #0d99ff;
+    --chip: #e6e6e6;
+    --danger: #dc3412;
+    --shadow: 0px 2px 5px 0px #00000026, 0px 10px 16px 0px #0000001f, 0px 0px .5px 0px #0000001f;
+    color-scheme: light;
+  }
+  .ui[data-theme="dark"] {
+    --bg: #2c2c2c;
+    --field: #383838;
+    --hover: #383838;
+    --pressed: #444444;
+    --line: #444444;
+    --line-strong: rgba(255, 255, 255, 0.9);
+    --check-line: #757575;
+    --ink: #ffffff;
+    --ink-2: rgba(255, 255, 255, 0.7);
+    --ink-3: rgba(255, 255, 255, 0.4);
+    --brand: #0c8ce9;
+    --brand-hover: #0a6dc2;
+    --selected: #394360;
+    --selected-ink: #7cc4f8;
+    --focus: #0c8ce9;
+    --chip: #444444;
+    --danger: #fca397;
+    --shadow: 0px 2px 5px 0px #00000059, 0px 10px 16px 0px #00000047, 0px 0px .5px 0px #ffffff40;
     color-scheme: dark;
   }
-  .ui button, .ui input, .ui select, .ui textarea { font: inherit; color: inherit; margin: 0; }
+  .ui {
+    /* The panel's width: a setting, dragged on the left edge (240 to 480). */
+    --w: 280px;
+    font: 450 11px/16px 'Design Layer UI', Inter, system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.055px;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .ui button, .ui input, .ui textarea { font: inherit; letter-spacing: inherit; color: inherit; margin: 0; }
   .ui button { cursor: default; }
   .ui :focus { outline: none; }
-  .ui :focus-visible { outline: 1px solid var(--ui-accent); outline-offset: -1px; }
-  .ui svg { display: block; width: 16px; height: 16px; flex: none; }
+  .ui :focus-visible { outline: 1px solid var(--focus); outline-offset: -1px; }
+  .ui svg { display: block; width: 24px; height: 24px; flex: none; }
 
-  /* ── section: a 32px head (title, actions), body rows, a full-bleed hairline ── */
-  .sec { border-bottom: 1px solid var(--ui-line); padding: 0 0 8px; }
-  .sec__h { display: flex; align-items: center; height: var(--ui-head); padding: 0 4px 0 var(--ui-pad); gap: 2px; }
-  .sec__title { flex: 1; font-weight: 600; display: flex; align-items: center; gap: 4px; min-width: 0; height: 24px; padding: 0; border: 0; background: none; text-align: left; }
-  .sec__title::after { content: ''; width: 5px; height: 5px; margin-left: 2px; border: solid var(--ui-ink-3); border-width: 0 1px 1px 0; transform: rotate(45deg) translate(-1px, -1px); opacity: 0; transition: opacity 80ms; }
-  .sec__h:hover .sec__title::after { opacity: 1; }
-  .sec[data-closed] .sec__title::after { transform: rotate(-45deg); }
-  .sec[data-closed] { padding-bottom: 0; }
-  .sec[data-closed] .sec__b { display: none; }
-  .sec__actions { display: flex; align-items: center; gap: 2px; }
-  .sec__b { display: grid; gap: 6px; padding: 0 var(--ui-pad); }
+  /* ── the grid every row sits on ── */
+  .g { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px; column-gap: 8px; row-gap: 8px; align-items: center; }
+  .g > .span2 { grid-column: 1 / 3; }
+  .g > .span3 { grid-column: 1 / -1; }
+  .g > .c2 { grid-column: 2; }
+  .g > .c3 { grid-column: 3; }
 
-  /* ── rows ── */
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .row1 { display: grid; grid-template-columns: 1fr; }
-  .rowl { display: grid; grid-template-columns: var(--ui-label) 1fr; align-items: center; gap: 8px; }
-  .rowl > .lbl { color: var(--ui-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rowl--2 { grid-template-columns: 40px 1fr 1fr; }
-  .rowl--srf { grid-template-columns: 48px 1fr 52px; }
-  .rowl--act { grid-template-columns: var(--ui-label) 1fr 24px; }
-  .lbl[data-set] { color: var(--ui-ink); }
-  .sub { color: var(--ui-ink-2); padding-top: 4px; }
+  /* ── panel frame ── */
+  .p { position: relative; display: flex; flex-direction: column; width: var(--w); height: 100%; background: var(--bg); border-left: 1px solid var(--line); }
+  .p-resize { position: absolute; top: 0; bottom: 0; left: -3px; width: 6px; cursor: ew-resize; z-index: 1; }
+  .p-top { display: flex; align-items: center; gap: 4px; height: 40px; padding: 8px; border-bottom: 1px solid var(--line); flex: none; }
+  .p-top .grow { flex: 1; }
+  .p-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
 
-  /* ── icon button: 24px ghost ── */
-  .ib { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--ui-r); background: none; color: var(--ui-ink-2); }
-  .ib:hover { background: var(--ui-field); color: var(--ui-ink); }
-  .ib[aria-pressed="true"] { background: var(--ui-field-hover); color: var(--ui-ink); }
-  .ib:disabled { color: var(--ui-ink-3); background: none; }
+  /* selection header: 48 high, a 13/550 title, icon actions */
+  .sel { display: flex; align-items: center; gap: 4px; height: 48px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line); }
+  .sel .grow { flex: 1; }
+  .sel .dd { margin-left: -6px; font: 550 13px/22px 'Design Layer UI', Inter, system-ui, sans-serif; letter-spacing: -0.032px; }
 
-  /* ── text button ── */
-  .tb { height: 24px; padding: 0 8px; border: 0; border-radius: var(--ui-r); background: none; color: var(--ui-ink-2); white-space: nowrap; }
-  .tb:hover { background: var(--ui-field); color: var(--ui-ink); }
-  .tb[aria-pressed="true"] { color: var(--ui-accent-ink); }
-  .btn { height: 24px; padding: 0 10px; border: 1px solid var(--ui-line-strong); border-radius: var(--ui-r); background: none; color: var(--ui-ink); font-weight: 500; white-space: nowrap; }
-  .btn:hover:not(:disabled) { background: var(--ui-field); }
-  .btn--primary { border-color: var(--ui-accent); background: var(--ui-accent); color: var(--ui-on-accent); }
-  .btn--primary:hover:not(:disabled) { background: var(--ui-accent-hover); border-color: var(--ui-accent-hover); }
-  .btn:disabled { color: var(--ui-ink-3); border-color: var(--ui-line); background: none; }
+  /* ── section: 40 head, rows 4 below it, 32 pitch, 16 below the last ── */
+  .sec { border-bottom: 1px solid var(--line); }
+  .sec__h { display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 8px 0 16px; }
+  .sec__title { flex: 1; margin: 0; font-size: inherit; line-height: inherit; min-width: 0; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sec[data-empty] .sec__title { color: var(--ink-2); }
+  .sec__b { padding: 4px 8px 16px 16px; }
+  .sec[data-empty] .sec__b { display: none; }
 
-  /* ── field: the 24px box every input lives in ── */
-  .f { position: relative; display: flex; align-items: center; min-width: 0; height: var(--ui-h); border: 1px solid transparent; border-radius: var(--ui-r); background: var(--ui-field); }
-  .f:hover { border-color: var(--ui-line-strong); }
-  .f:focus-within { border-color: var(--ui-accent); }
-  .f__lead { flex: none; display: grid; place-items: center; width: 24px; height: 100%; color: var(--ui-ink-3); user-select: none; }
-  .f__lead--text { width: auto; min-width: 22px; padding: 0 2px 0 7px; }
-  .f--num .f__lead { cursor: ew-resize; }
-  .f--num .f__lead:hover, .f[data-scrubbing] .f__lead { color: var(--ui-ink); }
-  .f__input { flex: 1; min-width: 3.2ch; font-size: var(--ui-fs-value); width: 100%; height: 100%; padding: 0 4px 0 2px; border: 0; background: none; font-variant-numeric: tabular-nums; }
-  .f__input:first-child { padding-left: 8px; }
-  .f__input::placeholder { color: var(--ui-ink-3); }
-  .f__unit { flex: none; padding-right: 6px; color: var(--ui-ink-3); }
-  .f__ref { flex: none; height: 16px; margin-right: 3px; padding: 0 4px; border: 0; border-radius: 3px; background: var(--ui-raised); color: var(--ui-ink-2); font-size: var(--ui-fs); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .f__ref:hover { background: var(--ui-field-hover); color: var(--ui-ink); }
-  /* The token button floats over the field's right end on hover, so a narrow
-     two-up field keeps its whole width for the value. */
-  .f__tok { position: absolute; top: 1px; right: 1px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 3px; background: var(--ui-field); color: var(--ui-ink-3); opacity: 0; box-shadow: -6px 0 6px var(--ui-field); }
-  .f__tok svg { width: 14px; height: 14px; }
-  .f:hover .f__tok, .f:focus-within .f__tok, .f__tok[aria-expanded="true"] { opacity: 1; }
-  .f__tok:hover { background: var(--ui-field-hover); color: var(--ui-ink); box-shadow: -6px 0 6px var(--ui-field); }
+  /* ── icon button: 24, ink at rest ── */
+  .ib { position: relative; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--ink); flex: none; }
+  .ib:hover { background: var(--hover); }
+  .ib[aria-pressed="true"] { background: var(--selected); color: var(--selected-ink); }
+  .ib[aria-expanded="true"] { background: var(--pressed); }
+  .ib--dim { color: var(--ink-2); }
+  .ib[data-warn]::after { content: ''; position: absolute; top: 4px; right: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--danger); }
 
-  /* a field bound to a token: the token's name in a chip, a detach button */
-  .chip { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; height: 18px; margin: 0 2px 0 3px; padding: 0 6px 0 4px; border: 0; border-radius: 3px; background: var(--ui-chip); color: var(--ui-ink); text-align: left; }
-  .chip:hover { background: var(--ui-line-strong); }
-  .chip svg { width: 12px; height: 12px; color: var(--ui-ink-2); }
+  /* ── tabs: Figma's Design / Prototype pill ── */
+  .tabs { display: flex; gap: 0; }
+  .tabs button { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; background: none; color: var(--ink-2); font-weight: 550; white-space: nowrap; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button[aria-selected="true"] { background: var(--field); color: var(--ink); }
+  .tabs .n { margin-left: 4px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  /* ghost dropdown: text and a chevron ("20% ⌄") */
+  .dd { display: inline-flex; align-items: center; height: 24px; padding: 0 0 0 6px; border: 0; border-radius: 5px; background: none; color: var(--ink); white-space: nowrap; }
+  .dd:hover, .dd[aria-expanded="true"] { background: var(--hover); }
+  .dd svg { margin-left: -4px; }
+
+  /* buttons */
+  .btn { height: 24px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: 5px; background: none; color: var(--ink); font-weight: 450; white-space: nowrap; }
+  .btn:hover:not(:disabled) { background: var(--hover); }
+  .btn--primary { border-color: transparent; background: var(--brand); color: var(--on-brand); font-weight: 550; }
+  .btn--primary:hover:not(:disabled) { background: var(--brand-hover); }
+  .btn:disabled { border-color: transparent; background: var(--field); color: var(--ink-3); }
+  .tb { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; background: none; color: var(--ink); white-space: nowrap; }
+  .tb:hover { background: var(--hover); }
+
+  /* ── field: 24, radius 5, filled, no border ── */
+  .f { position: relative; display: flex; align-items: center; min-width: 0; height: 24px; border: 1px solid transparent; border-radius: 5px; background: var(--field); color: var(--ink); }
+  .f:hover { border-color: var(--line); }
+  .f:focus-within { border-color: var(--focus); background: var(--bg); }
+  .f--outline { background: var(--bg); border-color: var(--line); }
+  .f__pre { display: grid; place-items: center; flex: none; width: 23px; height: 22px; margin-left: -1px; color: var(--ink-2); text-align: center; }
+  .f__pre[data-scrub] { cursor: ew-resize; }
+  .f__input { flex: 1 0 32px; min-width: 32px; width: 100%; height: 100%; padding: 0; border: 0; background: none; color: inherit; font-variant-numeric: tabular-nums; text-overflow: ellipsis; }
+  /* a11y-checked: the input's keyboard focus ring is the field's own 1px focus-blue border (.f:focus-within above), Figma's ring; an inner outline as well would double it */
+  .f__input:focus-visible { outline: none; }
+  .f[data-inherited] .f__input { color: var(--ink-2); }
+  .f__suf { flex: 0 1 auto; min-width: 0; padding: 0 7px 0 4px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* the reference: a 4px dot where the value departs from it; click to use it */
+  .f__ref { flex: none; width: 12px; height: 22px; margin-right: 2px; padding: 0; border: 0; background: none; display: grid; place-items: center; }
+  .f__ref::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--brand); }
+  /* apply a variable: a 24 icon over the field's right end on hover */
+  .f__tok { position: absolute; top: -1px; right: -1px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 0 5px 5px 0; background: inherit; color: var(--ink-2); opacity: 0; }
+  .f:hover .f__tok, .f__tok[aria-expanded="true"], .f__tok:focus-visible { opacity: 1; }
+  .f__tok:hover { color: var(--ink); }
+  /* bound to a variable: the variable's name in a chip */
+  .chip { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; height: 16px; margin-right: 4px; padding: 0 4px; border: 0; border-radius: 3px; background: var(--chip); color: var(--ink); text-align: left; }
   .chip__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chip__sw { flex: none; width: 10px; height: 10px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
 
-  /* colour */
-  .sw { flex: none; width: 14px; height: 14px; margin: 0 2px 0 5px; padding: 0; border: 0; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
-  .f--color .f__input { padding-left: 6px; text-transform: lowercase; }
-  .f__meta { flex: none; padding: 0 6px; border-left: 1px solid var(--ui-line); color: var(--ui-ink-3); font-variant-numeric: tabular-nums; }
+  /* colour: a 14 swatch in the prefix slot */
+  .sw { display: block; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
+  .f--color .f__input { text-transform: uppercase; }
+  .f__name { flex: 1; min-width: 0; height: 22px; padding: 0 4px 0 0; border: 0; background: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .f__native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-  /* select: a field-shaped trigger and a menu */
-  .f--select { padding: 0 4px 0 8px; gap: 6px; text-align: left; color: var(--ui-ink); width: 100%; }
+  /* select: Figma's bordered dropdown */
+  .f--select { width: 100%; padding: 0 0 0 8px; gap: 4px; background: var(--bg); border-color: var(--line); text-align: left; }
+  .f--select:hover { border-color: var(--line); }
   .f--select .f__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .f--select .chev { width: 12px; height: 12px; color: var(--ui-ink-3); }
-  .f--select:hover .chev { color: var(--ui-ink); }
+  .f--select .f__suf { padding: 0; }
+  .f--select > svg { margin-right: -1px; color: var(--ink); }
+  .f--select[aria-expanded="true"] { border-color: var(--focus); }
 
-  /* ── segmented control ── */
-  .seg { display: flex; height: var(--ui-h); padding: 1px; gap: 1px; border-radius: var(--ui-r); background: var(--ui-field); }
-  .seg button { flex: 1; display: grid; place-items: center; min-width: 0; padding: 0 8px; border: 1px solid transparent; border-radius: 4px; background: none; color: var(--ui-ink-2); white-space: nowrap; }
-  .seg button:hover { color: var(--ui-ink); }
-  .seg button[aria-pressed="true"] { background: var(--ui-bg); border-color: var(--ui-line-strong); color: var(--ui-ink); }
-  .seg--fit { display: inline-flex; justify-self: start; }
-  .seg--fit button { flex: none; }
+  /* ── checkbox: 16, Figma's grey box ── */
+  .cb { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0; border: 0; background: none; color: var(--ink); text-align: left; }
+  .cb__box { display: grid; place-items: center; width: 16px; height: 16px; border: 1px solid var(--check-line); border-radius: 3px; background: var(--field); }
+  .cb__box svg { width: 16px; height: 16px; opacity: 0; color: var(--on-brand); }
+  .cb[aria-checked="true"] .cb__box { border-color: var(--brand); background: var(--brand); }
+  .cb[aria-checked="true"] .cb__box svg { opacity: 1; }
 
-  /* ── text tabs (panel head) ── */
-  .tabs { display: flex; align-items: center; gap: 2px; }
-  .tabs button { height: 24px; padding: 0 8px; border: 0; border-radius: var(--ui-r); background: none; color: var(--ui-ink-2); font-weight: 600; }
-  .tabs button:hover { color: var(--ui-ink); }
-  .tabs button[aria-selected="true"] { background: var(--ui-field); color: var(--ui-ink); }
-  .tabs .n { margin-left: 4px; color: var(--ui-ink-3); font-variant-numeric: tabular-nums; }
+  /* ── segmented: a choice group (selected cell white, bordered) ── */
+  .seg { display: flex; height: 24px; border-radius: 5px; background: var(--field); }
+  .seg button { flex: 1; display: grid; place-items: center; min-width: 0; height: 24px; padding: 0 6px; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--ink-2); white-space: nowrap; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--bg); border-color: var(--line); color: var(--ink); }
+  /* an icon group: cells divided by 1px of panel */
+  .seg--icons { gap: 1px; background: none; }
+  .seg--icons button { background: var(--field); border-radius: 0; color: var(--ink); }
+  .seg--icons button:first-child { border-radius: 5px 0 0 5px; }
+  .seg--icons button:last-child { border-radius: 0 5px 5px 0; }
 
-  /* ── switch (12px tall, Figma's checkbox weight) ── */
-  .sw-row { display: flex; align-items: center; justify-content: space-between; height: 24px; padding: 0; border: 0; background: none; width: 100%; color: var(--ui-ink-2); text-align: left; }
-  .sw-row:hover { color: var(--ui-ink); }
-  .track { position: relative; width: 24px; height: 14px; border-radius: 7px; background: var(--ui-line-strong); transition: background 100ms; }
-  .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--ui-ink); transition: transform 100ms; }
-  [aria-checked="true"] > .track { background: var(--ui-accent); }
-  [aria-checked="true"] > .track::after { transform: translateX(10px); }
-
-  /* ── popover + menu ── */
-  .pop { position: fixed; z-index: 2147483100; min-width: 160px; max-width: 320px; padding: 4px 0; border: 1px solid var(--ui-line); border-radius: 8px; background: var(--ui-menu);
-    box-shadow: 0 4px 16px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.4); color: var(--ui-ink); }
-  .menu { max-height: 320px; overflow-y: auto; }
-  .mi { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 6px; width: 100%; height: 24px; padding: 0 12px 0 8px; border: 0; background: none; text-align: left; white-space: nowrap; }
-  .mi svg { width: 12px; height: 12px; }
-  .mi[data-active] { background: var(--ui-accent); color: var(--ui-on-accent); }
-  .mi[data-active] .mi__meta { color: inherit; }
-  .mi__meta { color: var(--ui-ink-3); font-variant-numeric: tabular-nums; }
+  /* ── popovers: panel-coloured, radius 13; menus are dark in both themes ── */
+  .pop { position: fixed; z-index: 2147483100; min-width: 160px; max-width: 320px; border-radius: 13px; background: var(--bg); box-shadow: var(--shadow); color: var(--ink); overflow: hidden; }
+  .pop--menu { padding: 8px; background: #1e1e1e; color: #ffffff; }
+  .menu { max-height: 360px; overflow-y: auto; }
+  .mi { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 8px 0 4px; border: 0; border-radius: 5px; background: none; color: #ffffff; text-align: left; white-space: nowrap; }
+  .mi svg { width: 16px; height: 16px; }
+  .mi[data-active] { background: #0d99ff; }
+  .mi__meta { color: rgba(255, 255, 255, 0.7); font-variant-numeric: tabular-nums; }
+  .mi[data-active] .mi__meta { color: #ffffff; }
   .mi__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .mh { padding: 8px 12px 4px; color: var(--ui-ink-3); }
-  .msep { height: 1px; margin: 4px 0; background: var(--ui-line); }
+  .mh { padding: 4px 8px 4px 28px; color: rgba(255, 255, 255, 0.4); }
+  .msep { height: 1px; margin: 8px -8px; background: #383838; }
+  .mi__sw { width: 12px; height: 12px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); justify-self: center; }
+  .mi__glyph { color: rgba(255, 255, 255, 0.4); text-align: center; font-size: 9px; }
 
-  /* token picker: search, then the tokens by group */
+  /* a popover's own head: a title and a close button, 40 high */
+  .pop__h { display: flex; align-items: center; height: 40px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line); font-weight: 550; }
+  .pop__h span { flex: 1; }
+  .pop__b { padding: 12px 8px 16px 16px; }
+
+  /* token picker: a dark menu with search */
   .tp { width: 280px; max-width: 280px; padding: 0; }
-  .tp__search { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-bottom: 1px solid var(--ui-line); color: var(--ui-ink-3); }
-  .tp__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--ui-ink); outline: none; }
-  .ui .tp__search input:focus-visible { outline: none; }
-  .tp__search input::placeholder { color: var(--ui-ink-3); }
-  .tp .menu { padding: 4px 0; max-height: 300px; }
-  .tp .mi { grid-template-columns: 14px 1fr auto; }
-  .tp .mi__sw { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
-  .tp .mi__glyph { color: var(--ui-ink-3); font-size: 10px; text-align: center; }
-  .tp .mi[data-active] .mi__glyph { color: inherit; }
-  .tp__empty { padding: 12px; color: var(--ui-ink-3); }
+  .tp__search { display: flex; align-items: center; height: 40px; padding: 0 8px; border-bottom: 1px solid #383838; color: rgba(255,255,255,.4); }
+  .tp__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: #ffffff; }
+  .tp__search input::placeholder { color: rgba(255,255,255,.4); }
+  .tp .menu { padding: 8px; max-height: 320px; }
+  .tp__empty { padding: 16px; color: rgba(255,255,255,.4); }
 
-  /* palette picker: a field-shaped trigger, a grid of whole themes */
-  .pal-strip { display: flex; flex: none; width: 34px; height: 14px; border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
-  .pal-strip i { flex: 1; }
-  .pp { width: 280px; padding: 6px; }
-  .pp__group { padding: 4px 4px 6px; color: var(--ui-ink-3); }
-  .pp__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; margin-bottom: 6px; }
-  .pp__item { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 6px; border: 0; border-radius: var(--ui-r); background: none; text-align: left; white-space: nowrap; }
-  .pp__item:hover, .pp__item[data-active] { background: var(--ui-field); }
-  .pp__item[aria-pressed="true"] { background: var(--ui-select); box-shadow: inset 0 0 0 1px var(--ui-accent); }
+  /* palette picker: whole themes, by group */
+  .pp { width: 280px; max-width: 280px; }
+  .pp .pop__b { padding: 8px; max-height: 420px; overflow-y: auto; }
+  .pp__group { padding: 8px 8px 4px; color: var(--ink-2); }
+  .pp__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4px; }
+  .pp__item { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 8px 0 5px; border: 0; border-radius: 5px; background: none; text-align: left; white-space: nowrap; }
+  .pp__item:hover { background: var(--hover); }
+  .pp__item[aria-pressed="true"] { background: var(--selected); color: var(--selected-ink); }
   .pp__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .pp__off { flex: none; width: 4px; height: 4px; margin-left: auto; border-radius: 50%; background: var(--ui-fail); }
+  .pp__off { flex: none; width: 4px; height: 4px; margin-left: auto; border-radius: 50%; background: var(--danger); }
+  .pal-strip { display: flex; flex: none; width: 14px; height: 14px; border-radius: 2px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+  .pal-strip i { flex: 1; }
 
-  /* readouts: a check's numbers on one line, failures in the fail ink */
-  .readout { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--ui-ink-2); font-variant-numeric: tabular-nums; }
-  .readout .fail { color: var(--ui-fail); }
-  .grid-table { display: grid; grid-template-columns: 48px 1fr 1fr; gap: 0 8px; font-variant-numeric: tabular-nums; }
-  .grid-table > * { height: 24px; display: flex; align-items: center; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .grid-table > span { display: block; line-height: 24px; }
-  .grid-table .h { color: var(--ui-ink-3); }
-  .grid-table .fail { color: var(--ui-fail); }
-
-  /* ── the panel frame: a head (tabs, mode, collapse), a scrolling body, a foot ── */
-  .p { display: flex; flex-direction: column; width: var(--ui-w); height: 100%; border-left: 1px solid var(--ui-line); background: var(--ui-bg); }
-  .p-head { display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 4px 0 var(--ui-pad); border-bottom: 1px solid var(--ui-line); }
-  .p-head .tabs button { padding: 0 6px; }
-  .p-head .seg button { padding: 0 4px; }
-  .p-head .seg svg { width: 14px; height: 14px; }
-  .p-head .grow { flex: 1; }
-  .p-body { flex: 1; min-height: 0; overflow-y: auto; }
-  .p-foot { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 var(--ui-pad) 0 4px; border-top: 1px solid var(--ui-line); }
-  .p-foot .grow { flex: 1; }
+  /* readouts and a contrast table */
+  .note { color: var(--ink-2); }
+  .note--fail { color: var(--danger); }
+  .grid-table { display: grid; gap: 0 8px; font-variant-numeric: tabular-nums; }
+  .grid-table > span { height: 24px; line-height: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grid-table .h { color: var(--ink-2); }
+  .grid-table .fail { color: var(--danger); }
 `;

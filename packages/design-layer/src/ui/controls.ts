@@ -1,13 +1,21 @@
-// The design layer's controls, one function each. Every control is a plain DOM
-// element plus a small handle (set, bind), owns no state beyond what it shows,
-// and reports changes through the callbacks it is given, so the panel stays the
-// one place that decides what a value means.
+// The design layer's controls, one function each, matched to Figma UI3. Every
+// control is a plain DOM element plus a small handle (set, range), owns no
+// state beyond what it shows, and reports changes through its callbacks, so the
+// panel stays the one place that decides what a value means.
+//
+// No control carries a label column. A number or colour field says what it is
+// with its prefix (a letter or a 12px glyph in a 24px slot) and, where a word is
+// needed, a right-aligned suffix inside the field, as Figma writes "Fill".
 import { h, icon, type ICONS } from './dom';
 import { menu, openPopover, closePopover, type MenuItem } from './popover';
 import { boundToken, shortName, tokensFor, type Token, type TokenKind } from './tokens';
 
 type IconName = keyof typeof ICONS;
 type Root = ShadowRoot | HTMLElement;
+/** A field's prefix: a glyph, or a letter or two. */
+export type Prefix = IconName | { text: string };
+
+const prefix = (p: Prefix, title: string) => h('span', { class: 'f__pre', title, 'aria-hidden': 'true' }, typeof p === 'string' ? icon(p) : p.text);
 
 // ── icon button ────────────────────────────────────────────────────────────
 export function iconButton(name: IconName, label: string, onClick: (e: MouseEvent) => void, pressed?: boolean) {
@@ -17,21 +25,32 @@ export function iconButton(name: IconName, label: string, onClick: (e: MouseEven
 }
 
 // ── section ────────────────────────────────────────────────────────────────
-/** A 32px head with a title that folds the section and actions on the right. */
-export function section(o: { id: string; title: string; actions?: Node[]; body: Node[]; closed?: boolean; onToggle?: (closed: boolean) => void }) {
-  const el = h('section', { class: 'sec', 'data-sec': o.id, ...(o.closed ? { 'data-closed': true } : {}) });
-  const title = h('button', { type: 'button', class: 'sec__title', 'aria-expanded': String(!o.closed) }, o.title);
-  title.addEventListener('click', () => {
-    const closed = !el.hasAttribute('data-closed');
-    el.toggleAttribute('data-closed', closed);
-    title.setAttribute('aria-expanded', String(!closed));
-    o.onToggle?.(closed);
-  });
-  el.append(
-    h('div', { class: 'sec__h' }, title, h('div', { class: 'sec__actions' }, ...(o.actions ?? []))),
-    h('div', { class: 'sec__b' }, ...o.body),
-  );
-  return el;
+/** A 40px head (title, icon actions) over rows on the panel grid. An empty
+    section is its head alone with the title in secondary ink, Figma's Fill or
+    Stroke with nothing set; its plus (an action the caller supplies) fills it. */
+export function section(o: { id: string; title: string; actions?: Node[]; body: Node[]; empty?: boolean }) {
+  const el = h('section', { class: 'sec', 'data-sec': o.id, ...(o.empty ? { 'data-empty': true } : {}) },
+    h('div', { class: 'sec__h' }, h('h2', { class: 'sec__title' }, o.title), ...(o.actions ?? [])),
+    h('div', { class: 'sec__b g' }, ...o.body));
+  return { el, setEmpty(empty: boolean) { el.toggleAttribute('data-empty', empty); } };
+}
+
+// ── menus ──────────────────────────────────────────────────────────────────
+/** Figma's dark menu under an anchor. */
+export function openMenu<T>(o: { root: Root; anchor: HTMLElement; items: MenuItem<T>[]; selected: T | null; pick: (v: T) => void; alignEnd?: boolean }) {
+  const m = menu(o.items, o.selected, (v) => { pop.close(); o.anchor.focus(); o.pick(v); });
+  const pop = openPopover({ root: o.root, anchor: o.anchor, content: m.el, className: 'pop--menu', alignEnd: o.alignEnd });
+  pop.el.style.minWidth = `${Math.max(160, o.anchor.getBoundingClientRect().width)}px`;
+  m.focus();
+  return pop;
+}
+
+/** A ghost dropdown: text and a chevron, Figma's "20% ⌄". */
+export function dropdown(o: { label: string; onOpen: (anchor: HTMLButtonElement) => void }) {
+  const text = h('span', {});
+  const el = h('button', { type: 'button', class: 'dd', 'aria-label': o.label, 'aria-haspopup': 'true', 'aria-expanded': 'false' }, text, icon('chevron'));
+  el.addEventListener('click', () => o.onOpen(el));
+  return { el, set(t: string) { text.textContent = t; } };
 }
 
 // ── token picker ───────────────────────────────────────────────────────────
@@ -39,10 +58,10 @@ const glyph = (t: Token) => (t.kind === 'color'
   ? h('span', { class: 'mi__sw', style: `background:${t.value}` })
   : h('span', { class: 'mi__glyph' }, t.kind === 'weight' ? 'W' : t.kind === 'font' ? 'Aa' : '#'));
 
-/** A searchable list of the page's tokens of one kind; Enter or a click binds one. */
-export function openTokenPicker(o: { root: Root; anchor: HTMLElement; kind: TokenKind; prefer?: RegExp; current: string | null; pick: (name: string) => void }) {
+/** The page's tokens of one kind, searchable; Enter or a click binds one. */
+export function openTokenPicker(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; kind: TokenKind; prefer?: RegExp; current: string | null; pick: (name: string) => void }) {
   const all = tokensFor(o.kind, o.prefer);
-  const input = h('input', { type: 'text', placeholder: 'Search tokens', spellcheck: 'false', 'aria-label': 'Search tokens' });
+  const input = h('input', { type: 'text', placeholder: 'Search variables', spellcheck: 'false', 'aria-label': 'Search variables' });
   const body = h('div', {});
   const wrap = h('div', {}, h('div', { class: 'tp__search' }, icon('search'), input), body);
   let list: ReturnType<typeof menu<string>> | null = null;
@@ -50,10 +69,10 @@ export function openTokenPicker(o: { root: Root; anchor: HTMLElement; kind: Toke
     const q = input.value.trim().toLowerCase().replace(/^--/, '');
     const hits = all.filter((t) => !q || t.name.includes(q)).slice(0, 200);
     body.replaceChildren();
-    if (!hits.length) { body.append(h('div', { class: 'tp__empty' }, 'No tokens match')); list = null; return; }
+    if (!hits.length) { body.append(h('div', { class: 'tp__empty' }, 'No variables match')); list = null; return; }
     const items: MenuItem<string>[] = hits.map((t) => ({
       value: t.name, label: t.label, lead: glyph(t), header: t.group,
-      meta: t.kind === 'color' ? t.display.replace(/^#/, '') : t.display.length > 12 ? `${t.display.slice(0, 11)}…` : t.display,
+      meta: t.kind === 'color' ? t.display.replace(/^#/, '').toUpperCase() : t.display.length > 12 ? `${t.display.slice(0, 11)}…` : t.display,
     }));
     list = menu(items, o.current, (name) => { o.pick(name); pop.close(); });
     body.append(list.el);
@@ -64,50 +83,53 @@ export function openTokenPicker(o: { root: Root; anchor: HTMLElement; kind: Toke
     if (['ArrowDown', 'ArrowUp', 'Enter'].includes(e.key) && list) list.el.dispatchEvent(new KeyboardEvent('keydown', { key: e.key }));
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') e.preventDefault();
   });
-  const pop = openPopover({ root: o.root, anchor: o.anchor, content: wrap, className: 'tp', alignEnd: true });
+  const pop = openPopover({ root: o.root, anchor: o.anchor, content: wrap, className: 'pop--menu tp', alignEnd: true, beside: o.beside });
   render();
   input.focus();
   return pop;
 }
 
-/** The chip a bound field shows in place of its input: the token's name, click to change. */
-function tokenChip(name: string, kind: TokenKind, onClick: (e: MouseEvent) => void) {
-  const value = kind === 'color' ? getComputedStyle(document.documentElement).getPropertyValue(name).trim() : '';
-  const c = h('button', { type: 'button', class: 'chip', title: name },
-    kind === 'color' && value ? h('span', { class: 'chip__sw', style: `background:${value}` }) : icon('token'),
-    h('span', { class: 'chip__name' }, shortName(name)));
+/** A bound field's chip: the variable's name; click to change it. */
+function tokenChip(name: string, onClick: (e: MouseEvent) => void) {
+  const c = h('button', { type: 'button', class: 'chip', title: name }, h('span', { class: 'chip__name' }, shortName(name)));
   c.addEventListener('click', onClick);
   return c;
+}
+function hoverButton(name: IconName, label: string, onClick: (e: MouseEvent) => void) {
+  const b = h('button', { type: 'button', class: 'f__tok', 'aria-label': label, title: label, 'aria-expanded': 'false' }, icon(name));
+  b.addEventListener('click', (e) => { e.stopPropagation(); onClick(e); });
+  return b;
 }
 
 // ── number field ───────────────────────────────────────────────────────────
 export interface NumberFieldOptions {
   root: Root;
+  /** The accessible name and the prefix's tooltip. */
   label: string;
-  /** The scrub handle: an icon, or a short letter. */
-  lead: IconName | { text: string };
+  /** The scrub handle: a glyph or a letter. */
+  prefix: Prefix;
+  /** A word inside the field's right end (the row's name, a mode). */
+  suffix?: string;
   min: number;
   max: number;
   step: number;
-  unit?: string;
-  /** Tokens the field can bind to; omit for none. */
-  tokens?: { kind: TokenKind; prefer?: RegExp };
+  /** Variables the field can bind to; omit for none. */
+  tokens?: { kind: TokenKind; prefer?: RegExp; beside?: () => HTMLElement };
   /** A value, or var(--token) when bound. */
   onChange: (value: number | string) => void;
-  /** Reset to the reference value (shown as a dim chip when the value departs). */
+  /** Use the reference value (shown as a dot when the value departs). */
   onReference?: () => void;
-  /** Steps a value lands on are refused (350): the field skips over them. */
+  /** Values the field skips over (350). */
   refuse?: number[];
 }
 
 export function numberField(o: NumberFieldOptions) {
   const el = h('div', { class: 'f f--num' });
-  const lead = h('span', { class: 'f__lead', title: `${o.label}: drag to change` }, typeof o.lead === 'string' ? icon(o.lead) : o.lead.text);
-  if (typeof o.lead !== 'string') lead.classList.add('f__lead--text');
+  const pre = prefix(o.prefix, `${o.label}: drag to change`);
+  pre.setAttribute('data-scrub', '');
   const input = h('input', { class: 'f__input', inputmode: 'decimal', spellcheck: 'false', 'aria-label': o.label });
-  const unit = o.unit ? h('span', { class: 'f__unit' }, o.unit) : null;
+  const suf = o.suffix ? h('span', { class: 'f__suf' }, o.suffix) : null;
   const ref = h('button', { type: 'button', class: 'f__ref', hidden: true });
-  const tok = o.tokens ? h('button', { type: 'button', class: 'f__tok', 'aria-label': `Apply token to ${o.label}`, title: 'Apply token', 'aria-expanded': 'false' }, icon('token')) : null;
   let value = 0;
   let bound: string | null = null;
   let min = o.min;
@@ -121,102 +143,84 @@ export function numberField(o: NumberFieldOptions) {
   };
   const commit = (n: number) => {
     if (!Number.isFinite(n)) { input.value = String(value); return; }
-    const v = clamp(n);
-    value = v;
-    input.value = String(v);
-    o.onChange(v);
+    value = clamp(n);
+    input.value = String(value);
+    o.onChange(value);
   };
   input.addEventListener('change', () => commit(Number.parseFloat(input.value)));
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { input.blur(); return; }
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
     e.preventDefault();
-    const d = (e.key === 'ArrowUp' ? 1 : -1) * o.step * (e.shiftKey ? 10 : 1);
-    commit(value + d);
+    commit(value + (e.key === 'ArrowUp' ? 1 : -1) * o.step * (e.shiftKey ? 10 : 1));
   });
   input.addEventListener('focus', () => input.select());
 
-  // Scrub: drag the lead sideways, a step per two pixels, Shift for ten.
-  lead.addEventListener('pointerdown', (e) => {
+  // Scrub: drag the prefix sideways, a step per pixel, Shift for ten (Figma's rate).
+  pre.addEventListener('pointerdown', (e) => {
     if (bound) return;
     e.preventDefault();
-    lead.setPointerCapture(e.pointerId);
-    el.setAttribute('data-scrubbing', '');
+    pre.setPointerCapture(e.pointerId);
     const x0 = e.clientX;
     const v0 = value;
-    const move = (m: PointerEvent) => commit(v0 + Math.round((m.clientX - x0) / 2) * o.step * (m.shiftKey ? 10 : 1));
-    const up = () => {
-      el.removeAttribute('data-scrubbing');
-      lead.removeEventListener('pointermove', move);
-      lead.removeEventListener('pointerup', up);
-    };
-    lead.addEventListener('pointermove', move);
-    lead.addEventListener('pointerup', up);
+    const move = (m: PointerEvent) => commit(v0 + Math.round(m.clientX - x0) * o.step * (m.shiftKey ? 10 : 1));
+    const up = () => { pre.removeEventListener('pointermove', move); pre.removeEventListener('pointerup', up); };
+    pre.addEventListener('pointermove', move);
+    pre.addEventListener('pointerup', up);
   });
 
-  const pick = (e: MouseEvent) => {
-    e.stopPropagation();
-    openTokenPicker({ root: o.root, anchor: el, kind: o.tokens!.kind, prefer: o.tokens!.prefer, current: bound, pick: (n) => o.onChange(`var(${n})`) });
-  };
-  tok?.addEventListener('click', pick);
+  const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens?.beside?.(), kind: o.tokens!.kind, prefer: o.tokens!.prefer, current: bound, pick: (n) => o.onChange(`var(${n})`) });
+  const tok = o.tokens ? hoverButton('token', `Apply variable to ${o.label}`, pick) : null;
   ref.addEventListener('click', () => o.onReference?.());
 
   const render = () => {
-    el.replaceChildren(lead);
-    if (bound) {
-      el.append(tokenChip(bound, o.tokens?.kind ?? 'length', pick), iconButtonSmall('detach', `Detach ${shortName(bound)}`, () => o.onChange(value)));
-    } else {
-      el.append(input);
-      if (unit) el.append(unit);
-      el.append(ref);
-      if (tok) el.append(tok);
-    }
+    el.replaceChildren(pre);
+    el.classList.toggle('f--outline', !!bound);
+    if (bound) el.append(tokenChip(bound, pick), hoverButton('detach', `Detach ${shortName(bound)}`, () => o.onChange(value)));
+    else { el.append(input, ref); if (suf) el.append(suf); if (tok) el.append(tok); }
   };
   render();
 
   return {
     el,
-    /** Moves the field's range (a weight field follows the face's axis). */
+    /** Moves the field's range (a weight follows the face's axis). */
     range(lo: number, hi: number) { min = lo; max = hi; },
-    /** Shows a value (a number, or var(--token) when bound) and the reference, if it departs. */
-    set(v: number | string, opts: { reference?: { name: string; value: number } | null; setByUser?: boolean } = {}) {
+    /** Shows a value (a number, or var(--token) when bound); a dot when it departs from the reference. */
+    set(v: number | string, opts: { reference?: { name: string; value: number } | null; inherited?: boolean; resolved?: number } = {}) {
       const b = typeof v === 'string' ? boundToken(v) : null;
       if (typeof v === 'number') value = v;
-      const changed = b !== bound;
-      bound = b;
-      if (changed) render();
-      if (!bound && el.ownerDocument.activeElement !== input && (input.getRootNode() as ShadowRoot).activeElement !== input) input.value = String(value);
+      else if (opts.resolved !== undefined) value = opts.resolved;
+      if (b !== bound) { bound = b; render(); }
+      if (!bound && (input.getRootNode() as ShadowRoot).activeElement !== input) input.value = String(value);
       const r = opts.reference;
-      const departs = !!r && !bound && r.value !== value;
-      ref.hidden = !departs;
-      if (r) { ref.textContent = String(r.value); ref.title = `${r.name} ${r.value}${o.unit ?? ''}: reset to it`; }
-      el.toggleAttribute('data-set', !!opts.setByUser);
+      ref.hidden = !r || !!bound || r.value === value;
+      if (r) { ref.title = `${r.name} ${r.value}: use it`; ref.setAttribute('aria-label', `Use ${r.name} value ${r.value}`); }
+      el.toggleAttribute('data-inherited', !!opts.inherited);
     },
   };
-}
-
-function iconButtonSmall(name: IconName, label: string, onClick: () => void) {
-  const b = h('button', { type: 'button', class: 'f__tok', 'aria-label': label, title: label }, icon(name));
-  b.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
-  return b;
 }
 
 // ── colour field ───────────────────────────────────────────────────────────
 export interface ColorFieldOptions {
   root: Root;
   label: string;
-  /** Tokens it can bind to; the default is every colour token. */
-  tokens?: { prefer?: RegExp } | false;
+  /** The row's name inside the field's right end. */
+  suffix?: string;
+  /** Variables it can bind to; the default is every colour variable. */
+  tokens?: { prefer?: RegExp; beside?: () => HTMLElement } | false;
   onChange: (value: string) => void;
 }
 
+/** Figma's fill row: the swatch in the prefix slot, the hex, a name. Bound to a
+    variable, it turns into Figma's bordered chip: swatch and variable name. */
 export function colorField(o: ColorFieldOptions) {
   const el = h('div', { class: 'f f--color' });
   const native = h('input', { type: 'color', class: 'f__native', tabindex: '-1', 'aria-hidden': 'true' });
-  const sw = h('button', { type: 'button', class: 'sw', 'aria-label': `${o.label} colour` });
+  const sw = h('button', { type: 'button', class: 'sw', 'aria-label': `${o.label}: pick a colour` });
+  const pre = h('span', { class: 'f__pre' }, sw);
   const input = h('input', { class: 'f__input', maxlength: '7', spellcheck: 'false', 'aria-label': `${o.label} hex` });
-  const meta = h('span', { class: 'f__meta', hidden: true });
-  const tok = o.tokens === false ? null : h('button', { type: 'button', class: 'f__tok', 'aria-label': `Apply token to ${o.label}`, title: 'Apply token', 'aria-expanded': 'false' }, icon('token'));
+  const name = h('button', { type: 'button', class: 'f__name' });
+  const suf = o.suffix ? h('span', { class: 'f__suf' }, o.suffix) : null;
   let hex = '#000000';
   let bound: string | null = null;
 
@@ -226,76 +230,68 @@ export function colorField(o: ColorFieldOptions) {
     const v = input.value.trim().replace(/^#?/, '#').toLowerCase();
     if (/^#[0-9a-f]{6}$/.test(v)) o.onChange(v);
     else if (/^#[0-9a-f]{3}$/.test(v)) o.onChange(`#${[...v.slice(1)].map((c) => c + c).join('')}`);
-    else input.value = hex.slice(1);
+    else input.value = hex.slice(1).toUpperCase();
   };
   input.addEventListener('change', commit);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
   input.addEventListener('focus', () => input.select());
-  const pick = (e: MouseEvent) => {
-    e.stopPropagation();
-    openTokenPicker({ root: o.root, anchor: el, kind: 'color', prefer: o.tokens ? o.tokens.prefer : undefined, current: bound, pick: (n) => o.onChange(`var(${n})`) });
-  };
-  tok?.addEventListener('click', pick);
+  const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens ? o.tokens.beside?.() : undefined, kind: 'color', prefer: o.tokens ? o.tokens.prefer : undefined, current: bound, pick: (n) => o.onChange(`var(${n})`) });
+  name.addEventListener('click', pick);
+  const tok = o.tokens === false ? null : hoverButton('token', `Apply variable to ${o.label}`, pick);
 
   const render = () => {
-    el.replaceChildren(native);
-    if (bound) el.append(tokenChip(bound, 'color', pick), iconButtonSmall('detach', `Detach ${shortName(bound)}`, () => o.onChange(hex)));
-    else { el.append(sw, input, meta); if (tok) el.append(tok); }
+    el.replaceChildren(native, pre);
+    el.classList.toggle('f--outline', !!bound);
+    if (bound) {
+      name.textContent = shortName(bound);
+      name.title = bound;
+      el.append(name, hoverButton('detach', `Detach ${shortName(bound)}`, () => o.onChange(hex)));
+    } else { el.append(input); if (suf) el.append(suf); if (tok) el.append(tok); }
   };
   render();
 
   return {
     el,
-    /** Shows a colour (hex, or var(--token) when bound, with its resolved hex) and an optional readout. */
-    set(v: string, opts: { resolved?: string; meta?: string; setByUser?: boolean } = {}) {
+    /** Shows a colour (hex, or var(--token) when bound, with its resolved hex). */
+    set(v: string, opts: { resolved?: string } = {}) {
       const b = boundToken(v);
       hex = (opts.resolved ?? v).toLowerCase();
       if (b !== bound) { bound = b; render(); }
       sw.style.background = hex;
-      if ((input.getRootNode() as ShadowRoot).activeElement !== input) input.value = hex.replace(/^#/, '');
-      meta.hidden = !opts.meta;
-      meta.textContent = opts.meta ?? '';
-      el.toggleAttribute('data-set', !!opts.setByUser);
+      if ((input.getRootNode() as ShadowRoot).activeElement !== input) input.value = hex.replace(/^#/, '').toUpperCase();
     },
   };
 }
 
-// ── select ─────────────────────────────────────────────────────────────────
-export function selectField<T extends string>(o: { root: Root; label: string; options: MenuItem<T>[]; onChange: (v: T) => void; lead?: () => Node | null }) {
+// ── select: Figma's bordered dropdown ──────────────────────────────────────
+export function selectField<T extends string>(o: { root: Root; label: string; options: MenuItem<T>[]; onChange: (v: T) => void; suffix?: string }) {
   const value = h('span', { class: 'f__value' });
-  const el = h('button', { type: 'button', class: 'f f--select', 'aria-label': o.label, 'aria-haspopup': 'listbox', 'aria-expanded': 'false' }, value, icon('chevron'));
-  el.querySelector('svg')!.classList.add('chev');
+  const el = h('button', { type: 'button', class: 'f f--select', 'aria-label': o.label, 'aria-haspopup': 'listbox', 'aria-expanded': 'false' },
+    value, o.suffix ? h('span', { class: 'f__suf' }, o.suffix) : null, icon('chevron'));
   let current: T | null = null;
-  el.addEventListener('click', () => {
-    const m = menu(o.options, current, (v) => { pop.close(); el.focus(); o.onChange(v); });
-    const pop = openPopover({ root: o.root, anchor: el, content: m.el });
-    pop.el.style.minWidth = `${el.getBoundingClientRect().width}px`;
-    m.focus();
-  });
+  el.addEventListener('click', () => openMenu({ root: o.root, anchor: el, items: o.options, selected: current, pick: o.onChange }));
   el.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); el.click(); } });
   return {
     el,
     set(v: T) {
       current = v;
-      const opt = o.options.find((x) => x.value === v);
-      value.textContent = opt?.label ?? v;
-      const lead = o.lead?.();
-      el.querySelector('.f__lead-node')?.remove();
-      if (lead) { (lead as HTMLElement).classList?.add('f__lead-node'); el.prepend(lead); }
+      value.textContent = o.options.find((x) => x.value === v)?.label ?? v;
     },
   };
 }
 
 // ── segmented control and tabs ─────────────────────────────────────────────
-export function segmented<T extends string>(o: { label: string; options: { value: T; label?: string; icon?: IconName }[]; onChange: (v: T) => void; fit?: boolean }) {
-  const el = h('div', { class: `seg${o.fit ? ' seg--fit' : ''}`, role: 'group', 'aria-label': o.label });
+/** A choice group (the selected cell white and bordered), or with `icons` a
+    group of icon cells divided by 1px of panel (Figma's align buttons). */
+export function segmented<T extends string>(o: { label: string; options: { value: T; label?: string; icon?: IconName }[]; onChange: (v: T) => void; icons?: boolean }) {
+  const el = h('div', { class: `seg${o.icons ? ' seg--icons' : ''}`, role: 'group', 'aria-label': o.label });
   const buttons = o.options.map((op) => {
     const b = h('button', { type: 'button', 'aria-pressed': 'false', ...(op.icon ? { 'aria-label': op.label ?? op.value, title: op.label ?? op.value } : {}) }, op.icon ? icon(op.icon) : (op.label ?? op.value));
     b.addEventListener('click', () => o.onChange(op.value));
     el.append(b);
     return { b, v: op.value };
   });
-  return { el, set(v: T) { for (const x of buttons) x.b.setAttribute('aria-pressed', String(x.v === v)); } };
+  return { el, set(v: T | null) { for (const x of buttons) x.b.setAttribute('aria-pressed', String(x.v === v)); } };
 }
 
 export function tabs<T extends string>(o: { label: string; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
@@ -314,9 +310,9 @@ export function tabs<T extends string>(o: { label: string; options: { value: T; 
   };
 }
 
-// ── switch row ─────────────────────────────────────────────────────────────
-export function switchRow(o: { label: string; onChange: (on: boolean) => void }) {
-  const el = h('button', { type: 'button', class: 'sw-row', role: 'switch', 'aria-checked': 'false' }, h('span', {}, o.label), h('span', { class: 'track', 'aria-hidden': 'true' }));
+// ── checkbox: Figma's 16px box ─────────────────────────────────────────────
+export function checkbox(o: { label: string; onChange: (on: boolean) => void }) {
+  const el = h('button', { type: 'button', class: 'cb', role: 'checkbox', 'aria-checked': 'false' }, h('span', { class: 'cb__box' }, icon('check')), h('span', {}, o.label));
   el.addEventListener('click', () => o.onChange(el.getAttribute('aria-checked') !== 'true'));
   return { el, set(on: boolean) { el.setAttribute('aria-checked', String(on)); } };
 }
@@ -324,39 +320,33 @@ export function switchRow(o: { label: string; onChange: (on: boolean) => void })
 // ── palette picker ─────────────────────────────────────────────────────────
 export interface PaletteOption { id: string; name: string; group: string; colors: string[]; off?: string }
 
-const strip = (colors: string[]) => h('span', { class: 'pal-strip', 'aria-hidden': 'true' }, ...colors.map((c) => h('i', { style: `background:${c}` })));
+export const paletteStrip = (colors: string[]) => h('span', { class: 'pal-strip', 'aria-hidden': 'true' }, ...colors.map((c) => h('i', { style: `background:${c}` })));
 
-/** A field showing the current palette; opens a grid of every palette by group. */
-export function palettePicker(o: { root: Root; label: string; palettes: () => PaletteOption[]; onPick: (id: string) => void; emptyLabel: string }) {
-  const name = h('span', { class: 'f__value' });
-  const lead = h('span', { style: 'display:flex' });
-  const el = h('button', { type: 'button', class: 'f f--select', 'aria-label': o.label, 'aria-haspopup': 'dialog', 'aria-expanded': 'false' }, lead, name, icon('chevron'));
-  el.querySelector('svg')!.classList.add('chev');
-  let current: string | null = null;
-  el.addEventListener('click', () => {
-    const wrap = h('div', {});
-    const groups = [...new Set(o.palettes().map((p) => p.group))];
-    for (const g of groups) {
-      wrap.append(h('div', { class: 'pp__group' }, g));
-      const grid = h('div', { class: 'pp__grid' });
-      for (const p of o.palettes().filter((x) => x.group === g)) {
-        const b = h('button', { type: 'button', class: 'pp__item', 'aria-pressed': String(p.id === current), title: p.off ? `Off recipe: ${p.off}` : p.name },
-          strip(p.colors), h('span', { class: 'pp__name' }, p.name), p.off ? h('span', { class: 'pp__off', 'aria-label': 'Off recipe' }) : null);
-        b.addEventListener('click', () => { o.onPick(p.id); closePopover(); el.focus(); });
-        grid.append(b);
-      }
-      wrap.append(grid);
+/** Every palette by group, in a panel-coloured popover beside the panel. */
+export function openPalettePicker(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; palettes: PaletteOption[]; current: string | null; onPick: (id: string) => void }) {
+  const body = h('div', { class: 'pop__b' });
+  for (const g of [...new Set(o.palettes.map((p) => p.group))]) {
+    body.append(h('div', { class: 'pp__group' }, g));
+    const grid = h('div', { class: 'pp__grid' });
+    for (const p of o.palettes.filter((x) => x.group === g)) {
+      const b = h('button', { type: 'button', class: 'pp__item', 'aria-pressed': String(p.id === o.current), title: p.off ? `Off recipe: ${p.off}` : p.name },
+        paletteStrip(p.colors), h('span', { class: 'pp__name' }, p.name), p.off ? h('span', { class: 'pp__off', 'aria-label': 'Off recipe' }) : null);
+      b.addEventListener('click', () => { o.onPick(p.id); closePopover(); o.anchor.focus(); });
+      grid.append(b);
     }
-    openPopover({ root: o.root, anchor: el, content: wrap, className: 'pp' });
-    (wrap.querySelector<HTMLButtonElement>('[aria-pressed="true"]') ?? wrap.querySelector<HTMLButtonElement>('button'))?.focus();
-  });
-  return {
-    el,
-    set(id: string | null, colors: string[]) {
-      current = id;
-      const p = o.palettes().find((x) => x.id === id);
-      name.textContent = p?.name ?? o.emptyLabel;
-      lead.replaceChildren(strip(colors));
-    },
-  };
+    body.append(grid);
+  }
+  const close = iconButton('close', 'Close', () => closePopover());
+  const wrap = h('div', { class: 'pp__wrap' }, h('div', { class: 'pop__h' }, h('span', {}, 'Palettes'), close), body);
+  const pop = openPopover({ root: o.root, anchor: o.anchor, content: wrap, className: 'pp', beside: o.beside });
+  (body.querySelector<HTMLButtonElement>('[aria-pressed="true"]') ?? body.querySelector<HTMLButtonElement>('button'))?.focus();
+  return pop;
+}
+
+/** A panel-coloured popover with a title and a close button (Figma's settings popovers). */
+export function openPanelPopover(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; title: string; body: Node[]; width?: number }) {
+  const wrap = h('div', { style: `width:${o.width ?? 240}px` },
+    h('div', { class: 'pop__h' }, h('span', {}, o.title), iconButton('close', 'Close', () => closePopover())),
+    h('div', { class: 'pop__b g' }, ...o.body));
+  return openPopover({ root: o.root, anchor: o.anchor, content: wrap, beside: o.beside });
 }

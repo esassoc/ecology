@@ -32,14 +32,21 @@ import {
 } from './surfaces';
 import { GROUPS, PALETTES, paletteById, paletteRamp } from './palettes';
 import {
-  UI_CSS, h, colorField, iconButton, numberField, palettePicker, section, segmented, selectField, switchRow, tabs,
-  boundToken, closePopover, invalidateTokens, registerPanelFont, type ICONS, type PaletteOption,
+  UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover,
+  section, selectField, tabs, boundToken, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
+  type PaletteOption,
 } from './ui';
 
-/** The panel's width in px: --ui-w in ui/styles.ts, repeated here for the page margin it docks into. */
-const WIDTH = 240;
-const STRIP = 40;
-const SECTIONS_KEY = 'design-layer:closed';
+/** The panel's width: a setting, dragged on its left edge. Figma's own panel is 240; 280 gives the fields room. */
+const WIDTH = { default: 280, min: 240, max: 480 };
+const WIDTH_KEY = 'design-layer:width';
+const THEME_KEY = 'design-layer:theme';
+const LAYOUT_KEY = 'design-layer:layout-open';
+type PanelTheme = 'light' | 'dark' | 'system';
+const store = {
+  get(key: string) { try { return localStorage.getItem(key); } catch { return null; } },
+  set(key: string, v: string) { try { localStorage.setItem(key, v); } catch { /* storage blocked */ } },
+};
 
 interface Base {
   colors: Record<string, string>;
@@ -96,29 +103,28 @@ function leadFor(c: LengthControl): keyof typeof ICONS {
 // collapse button close it).
 let escapeAt = 0;
 
-// What the panel needs beyond the kit: docking, the collapsed strip, the
+// What the panel needs beyond the kit: docking, the
 // comments pane, and the page overlays (pins, the hover and picked boxes).
 const PANEL_CSS = `
   .dock { position: fixed; top: 0; right: 0; bottom: 0; z-index: 2147483000; }
-  .strip { display: flex; justify-content: center; width: ${STRIP}px; height: 100%; padding-top: 8px; border-left: 1px solid var(--ui-line); background: var(--ui-bg); }
-  .pane { display: grid; gap: 6px; padding: 8px var(--ui-pad); }
-  .picked { display: grid; gap: 2px; padding: 8px; border-radius: var(--ui-r); background: var(--ui-field); }
+  .pane { display: grid; gap: 8px; padding: 8px 8px 16px 16px; }
+  .picked { display: grid; gap: 0; padding: 4px 8px; border-radius: 5px; background: var(--field); }
   .picked__text { overflow-wrap: anywhere; }
-  .picked__where, .c-where { color: var(--ui-ink-3); overflow-wrap: anywhere; }
-  .ui textarea { display: block; width: 100%; min-height: 72px; padding: 6px 8px; border: 1px solid transparent; border-radius: var(--ui-r); background: var(--ui-field); resize: vertical; }
-  .ui textarea:focus { border-color: var(--ui-accent); }
+  .picked__where, .c-where { color: var(--ink-2); overflow-wrap: anywhere; }
+  .ui textarea { display: block; width: 100%; min-height: 64px; padding: 4px 8px; border: 1px solid transparent; border-radius: 5px; background: var(--field); resize: vertical; }
+  .ui textarea:hover { border-color: var(--line); }
+  .ui textarea:focus { border-color: var(--focus); background: var(--bg); }
   .actions { display: flex; justify-content: flex-end; gap: 8px; }
-  .clist { display: grid; margin: 0; padding: 0; list-style: none; }
-  .clist li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: start; padding: 8px 0; }
-  .clist li + li { border-top: 1px solid var(--ui-line); }
+  .clist { grid-column: 1 / -1; display: grid; margin: 0; padding: 0; list-style: none; }
+  .clist li { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: start; padding: 4px 0; }
   .clist .pin { position: static; box-shadow: none; }
   .c-text { overflow-wrap: anywhere; }
-  .fails { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; color: var(--ui-fail); }
-  .fails:empty { display: none; }
-  .pin { position: fixed; z-index: 2147482999; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
-    background: var(--ui-accent); color: var(--ui-on-accent); font-weight: 600; box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0,0,0,.35); pointer-events: none; }
-  .box { position: fixed; z-index: 2147482998; pointer-events: none; border: 2px solid var(--ui-accent); background: rgba(13, 153, 255, 0.08); border-radius: 2px; }
-  .box--picked { background: rgba(13, 153, 255, 0.16); }
+  .pin { position: fixed; z-index: 2147482999; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
+    background: #0d99ff; color: #fff; font: 550 9px/1 'Design Layer UI', Inter, system-ui, sans-serif; box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,.3); pointer-events: none; }
+  .box { position: fixed; z-index: 2147482998; pointer-events: none; border: 1px solid #0d99ff; background: rgba(13, 153, 255, 0.06); }
+  .box--picked { border-width: 2px; background: rgba(13, 153, 255, 0.12); }
+  .row-x { visibility: hidden; }
+  .row-x[data-on] { visibility: visible; }
 `;
 
 /** Draws the panel into `canvas` (a shadow root) and wires it to `host`.
@@ -150,7 +156,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   probe.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;pointer-events:none;';
 
   let open = false;
-  let collapsed = false;
+  let width = Math.min(WIDTH.max, Math.max(WIDTH.min, Number(store.get(WIDTH_KEY)) || WIDTH.default));
+  let panelTheme: PanelTheme = (['light', 'dark', 'system'] as const).find((t) => t === store.get(THEME_KEY)) ?? 'system';
+  let layoutOpen = store.get(LAYOUT_KEY) === '1';
   let tab: 'tune' | 'comments' = 'tune';
   let mode: Mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light';
   let tweaks = emptyTweaks();
@@ -351,7 +359,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const surfaceControlValue = (r: Ramp, id: SurfaceId) => (id === 'canvas' ? r.l : r.off[id]);
 
   function applyLive() {
-    const dock = open ? (collapsed ? STRIP : WIDTH) : 0;
+    const dock = open ? width : 0;
     live.textContent = buildCss(tweaks, CFG.roles, true) + (dock ? `html:root body { margin-right: ${dock}px; }\n` : '');
     const specs = [...new Set(Object.values(tweaks.shared).map((css) => FONT_OPTIONS.find((o) => o.css === css)?.google).filter((g): g is string => !!g))];
     const href = googleHref(specs);
@@ -365,27 +373,25 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
 
   // ── build ───────────────────────────────────────────────────────────
-  let closed: string[] = [];
-  try { closed = JSON.parse(localStorage.getItem(SECTIONS_KEY) ?? '[]'); } catch { /* storage blocked */ }
-  const fold = (id: string) => ({
-    closed: closed.includes(id),
-    onToggle: (isClosed: boolean) => {
-      closed = isClosed ? [...new Set([...closed, id])] : closed.filter((x) => x !== id);
-      try { localStorage.setItem(SECTIONS_KEY, JSON.stringify(closed)); } catch { /* storage blocked */ }
-    },
-  });
-  const lbl = (t: string) => h('span', { class: 'lbl', title: t }, t);
+  // No label column: a row says what it is with its prefix and its suffix,
+  // and the section title says the rest (Figma's Fill, Stroke, Typography).
+  const beside = () => panel;
+  const dimOn = (b: HTMLElement, on: boolean) => b.toggleAttribute('data-on', on);
+  /** A row's minus in the icon column: drops the override (Figma's remove-fill). */
+  const rowX = (label: string, onClick: () => void) => { const b = iconButton('minus', `Reset ${label}`, onClick); b.classList.add('row-x', 'c3'); return b; };
 
-  // Head: Tune / Comments, the mode, collapse.
+  // Top: Tune / Comments, the page's mode, Save (Figma's tabs, zoom, Share).
   const tabBar = tabs({ label: 'Panel', options: [{ value: 'tune', label: 'Tune' }, { value: 'comments', label: 'Comments' }], onChange: (t) => setTab(t) });
-  const modeSeg = segmented<Mode>({
-    label: 'Mode', fit: true,
-    options: [{ value: 'light', icon: 'sun', label: 'Light' }, { value: 'dark', icon: 'moon', label: 'Dark' }],
-    onChange: (m) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); sync(); },
+  const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); sync(); };
+  const modeDd = dropdown({
+    label: 'Page mode',
+    onOpen: (a) => openMenu<Mode>({ root, anchor: a, alignEnd: true, selected: mode, pick: setMode, items: [{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }),
   });
-  const head = h('div', { class: 'p-head' }, tabBar.el, h('span', { class: 'grow' }), modeSeg.el, iconButton('collapse', 'Collapse Panel', () => setCollapsed(true)));
+  const save = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Saved');
+  save.addEventListener('click', () => host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles) }));
+  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), modeDd.el, save);
 
-  // Palette: the whole theme, the shared hue and saturation, each surface.
+  // Selection header: the palette as the title, the reference, the menu.
   const paletteOptions = (): PaletteOption[] => PALETTES.map((p) => {
     const flags = grade(paletteRamp(p, mode), mode).flags;
     return {
@@ -393,17 +399,41 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       colors: [p[mode].bar, p[mode].canvas, p[mode].primary], off: flags.length ? flags.join('; ') : undefined,
     };
   });
-  const picker = palettePicker({ root, label: 'Palette', palettes: paletteOptions, onPick: pickPalette, emptyLabel: 'Theme Default' });
+  const paletteDd = dropdown({
+    label: 'Palette',
+    onOpen: (a) => openPalettePicker({ root, anchor: a, beside: panel, palettes: paletteOptions(), current: tweaks.palette?.[mode]?.palette ?? null, onPick: pickPalette }),
+  });
+  const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
+  const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
+  type MenuAction = 'reset-palette' | 'reset-all' | PanelTheme | 'close';
+  const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
+    root, anchor: menuBtn, alignEnd: true, selected: panelTheme,
+    items: [
+      { value: 'reset-palette', label: 'Reset Palette' },
+      { value: 'reset-all', label: 'Reset All' },
+      ...(['light', 'dark', 'system'] as const).map((t): MenuItem<MenuAction> => ({ value: t, label: t === 'system' ? 'Match System' : t === 'light' ? 'Light' : 'Dark', header: 'Panel Theme' })),
+      { value: 'close', label: 'Close Panel', meta: '⌃⌥D', header: ' ' },
+    ],
+    pick: (v) => {
+      if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
+      else if (v === 'reset-all') resetAllTweaks();
+      else if (v === 'close') host.setOpen(false);
+      else { panelTheme = v; store.set(THEME_KEY, v); applyTheme(); }
+    },
+  }));
+  const sel = h('div', { class: 'sel' }, paletteDd.el, h('span', { class: 'grow' }), refBtn, menuBtn);
+
+  // Surfaces: the palette's three chrome surfaces; hue, saturation and
+  // lightness offsets behind the adjust button, in a popover beside the panel.
   const linkBtn = iconButton('link', 'Move Together', () => { linked = !linked; sync(); }, true);
   const hsField = (label: string, key: 'h' | 's', apply: (r: Ramp, v: number) => void) =>
-    numberField({ root, label, lead: { text: key.toUpperCase() }, min: 0, max: key === 'h' ? 360 : 100, step: key === 'h' ? 1 : 0.5, onChange: (v) => { if (typeof v === 'number') editRamp((r) => apply(r, v)); } });
+    numberField({ root, label, prefix: { text: key.toUpperCase() }, min: 0, max: key === 'h' ? 360 : 100, step: key === 'h' ? 1 : 0.5, onChange: (v) => { if (typeof v === 'number') editRamp((r) => apply(r, v)); } });
   const sharedH = hsField('Shared hue', 'h', (r, v) => { r.h = v; delete r.own; });
   const sharedS = hsField('Shared saturation', 's', (r, v) => { r.s = v; delete r.own; });
-  const sharedRow = h('div', { class: 'row2' }, sharedH.el, sharedS.el);
   const surfaces = SURFACE_IDS.map((id) => {
     const label = SURFACE_LABELS[id];
     const color = colorField({
-      root, label, tokens: false,
+      root, label, suffix: label, tokens: false,
       onChange: (v) => {
         const hsl = hexToHsl(v);
         editRamp((r) => {
@@ -413,55 +443,53 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
         });
       },
     });
+    color.el.classList.add('span2');
     const range = id === 'canvas' ? CANVAS_RANGE[mode] : OFFSET_RANGE;
     const light = numberField({
-      root, label: `${label} ${id === 'canvas' ? 'lightness' : 'lightness offset'}`, lead: { text: 'L' }, min: range[0], max: range[1], step: 0.5,
+      root, label: `${label} ${id === 'canvas' ? 'lightness' : 'lightness offset'}`, prefix: { text: 'L' }, suffix: SURFACE_SHORT[id], min: range[0], max: range[1], step: 0.5,
       onChange: (v) => { if (typeof v === 'number') editRamp((r) => setSurfaceL(r, id, v)); },
     });
+    light.el.classList.add('span2');
     const ownField = (key: 'h' | 's') => numberField({
-      root, label: `${label} ${key === 'h' ? 'hue' : 'saturation'}`, lead: { text: key.toUpperCase() }, min: 0, max: key === 'h' ? 360 : 100, step: key === 'h' ? 1 : 0.5,
+      root, label: `${label} ${key === 'h' ? 'hue' : 'saturation'}`, prefix: { text: key.toUpperCase() }, suffix: key === 'h' ? SURFACE_SHORT[id] : undefined, min: 0, max: key === 'h' ? 360 : 100, step: key === 'h' ? 1 : 0.5,
       onChange: (v) => { if (typeof v === 'number') editRamp((r) => { (r.own ??= {})[id] = { ...surfaceHueSat(r, id), [key]: v }; }); },
     });
-    const ownH = ownField('h');
-    const ownS = ownField('s');
-    const name = lbl(label);
-    const row = h('div', { class: 'rowl rowl--srf' }, name, color.el, light.el);
-    const own = h('div', { class: 'row2' }, ownH.el, ownS.el);
-    return { id, color, light, ownH, ownS, name, row, own };
+    return { id, color, light, ownH: ownField('h'), ownS: ownField('s') };
   });
-  const readOffsets = h('div', { class: 'readout' });
-  const readMatch = h('div', { class: 'readout' }, 'Same Hue and Saturation');
-  const readFlags = h('ul', { class: 'fails' });
-  const paletteSec = section({
-    id: 'palette', title: 'Palette', ...fold('palette'),
-    actions: [linkBtn, iconButton('reset', 'Reset Palette', () => { setRamp('light', null, null, false); setRamp('dark', null); })],
-    body: [picker.el, sharedRow, ...surfaces.flatMap((s) => [s.row, s.own]), readOffsets, readMatch, readFlags],
-  });
+  const readOffsets = h('div', { class: 'note span3' });
+  const readMatch = h('div', { class: 'note span3' }, 'Same hue and saturation');
+  const readFlags = h('div', { class: 'span3', style: 'display:grid' });
+  const adjustBtn = iconButton('adjust', 'Surface Settings', () => openPanelPopover({
+    root, anchor: adjustBtn, beside: panel, title: 'Surfaces',
+    body: [
+      ...(linked ? [sharedH.el, sharedS.el, h('span', {})] : []),
+      ...surfaces.flatMap((s) => [s.light.el, h('span', {}), ...(linked ? [] : [s.ownH.el, s.ownS.el, h('span', {})])]),
+      readOffsets, readMatch,
+    ],
+  }));
+  const surfacesSec = section({ id: 'surfaces', title: 'Surfaces', actions: [linkBtn, adjustBtn], body: [...surfaces.map((s) => s.color.el), readFlags] });
 
-  // Colors, with the contrast of each ink on each surface.
+  // Colors: one fill row each, the contrast table behind its button.
   const colorRows = COLORS.map((c) => {
-    const f = colorField({ root, label: c.label, tokens: { prefer: /^--color-(content|background|border)-/ }, onChange: (v) => set(mode, c.cssVar, v) });
-    const name = lbl(c.label);
-    return { c, f, name, row: h('div', { class: 'rowl' }, name, f.el) };
+    const f = colorField({ root, label: c.label, suffix: c.label, tokens: { prefer: /^--color-(content|background|border)-/, beside }, onChange: (v) => set(mode, c.cssVar, v) });
+    f.el.classList.add('span2');
+    return { c, f, x: rowX(c.label, () => set(mode, c.cssVar, null)) };
   });
   const contrastCells = new Map<string, HTMLElement>();
-  const contrastTable = h('div', { class: 'grid-table', style: `grid-template-columns: 48px repeat(${INKS.length}, 1fr)` },
-    h('span', { class: 'h' }, 'Contrast'), ...INKS.map((i) => { const t = COLORS.find((c) => c.id === i)!.label; return h('span', { class: 'h', title: t }, t); }),
-    ...SURFACE_IDS.flatMap((s) => [h('span', {}, SURFACE_SHORT[s]), ...INKS.map((i) => {
+  const contrastTable = h('div', { class: 'grid-table span3', style: `grid-template-columns: 40px repeat(${INKS.length}, 1fr)` },
+    h('span', { class: 'h' }), ...INKS.map((i) => { const t = COLORS.find((c) => c.id === i)!.label; return h('span', { class: 'h', title: t }, t); }),
+    ...SURFACE_IDS.flatMap((s) => [h('span', { class: 'h' }, SURFACE_SHORT[s]), ...INKS.map((i) => {
       const cell = h('span', {});
       contrastCells.set(`${s}:${i}`, cell);
       return cell;
     })]));
-  const colorsSec = section({
-    id: 'colors', title: 'Colors', ...fold('colors'),
-    actions: [iconButton('reset', 'Reset Colors', () => { for (const c of COLORS) delete tweaks[mode][c.cssVar]; applyLive(); sync(); })],
-    body: [...colorRows.map((r) => r.row), ...(INKS.length ? [contrastTable] : [])],
-  });
+  const contrastBtn = iconButton('contrast', 'Contrast', () => openPanelPopover({ root, anchor: contrastBtn, beside: panel, title: 'Contrast', body: [contrastTable], width: 280 }));
+  const colorsSec = section({ id: 'colors', title: 'Colors', actions: INKS.length ? [contrastBtn] : [], body: colorRows.flatMap((r) => [r.f.el, r.x]) });
 
-  // Fonts.
+  // Typography: each face, then each role's size and weight.
   const fontRows = FONTS.map((f) => {
-    const sel = selectField({
-      root, label: `${f.label} font`, options: FONT_OPTIONS.map((o) => ({ value: o.id, label: o.label })),
+    const sel1 = selectField({
+      root, label: `${f.label} font`, suffix: f.label, options: FONT_OPTIONS.map((o) => ({ value: o.id, label: o.label })),
       onChange: (id) => {
         const opt = FONT_OPTIONS.find((o) => o.id === id)!;
         const isDefault = firstFamily(opt.css) === firstFamily(readBase(mode).fonts[f.id]);
@@ -475,16 +503,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
         set('shared', f.cssVar, isDefault ? null : opt.css);
       },
     });
-    const name = lbl(f.label);
-    return { f, sel, name, row: h('div', { class: 'rowl' }, name, sel.el) };
+    sel1.el.classList.add('span2');
+    return { f, sel: sel1, x: rowX(`${f.label} font`, () => set('shared', f.cssVar, null)) };
   });
-  const fontsSec = section({
-    id: 'fonts', title: 'Fonts', ...fold('fonts'),
-    actions: [iconButton('reset', 'Reset Fonts', () => { for (const f of FONTS) delete tweaks.shared[f.cssVar]; applyLive(); sync(); })],
-    body: fontRows.map((r) => r.row),
-  });
-
-  // Sizes: each type role's size and weight, then the icon sizes.
   const setSize = (s: SizeControl, v: number | string) => {
     if (typeof v === 'string') { set('shared', s.cssVar, v); return; }
     set('shared', s.cssVar, v === baseSize(s.id) ? null : `${v}px`);
@@ -497,57 +518,58 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   };
   const sizeRows = SIZES.map((s) => {
     const size = numberField({
-      root, label: `${s.label} size`, lead: 'size', min: s.min, max: s.max, step: 0.5,
-      tokens: { kind: 'length', prefer: /font-size|typography/ },
+      root, label: `${s.label} size`, prefix: 'size', suffix: s.label, min: s.min, max: s.max, step: 0.5,
+      tokens: { kind: 'length', prefer: /font-size|typography/, beside },
       onChange: (v) => setSize(s, v),
       onReference: () => { const r = refSize(s.id); if (r) setSize(s, r.size); },
     });
     const weight = numberField({
-      root, label: `${s.label} weight`, lead: { text: 'W' }, min: 100, max: 900, step: 1, refuse: [BANNED_WEIGHT],
-      tokens: { kind: 'weight' },
+      root, label: `${s.label} weight`, prefix: { text: 'W' }, min: 100, max: 900, step: 1, refuse: [BANNED_WEIGHT],
+      tokens: { kind: 'weight', beside },
       onChange: (v) => setWeight(s, v),
       onReference: () => { const r = refSize(s.id); if (r) setWeight(s, r.weight); },
     });
-    const name = lbl(s.label);
-    return { s, size, weight, name, row: h('div', { class: 'rowl rowl--2' }, name, size.el, weight.el) };
+    return { s, size, weight, x: rowX(s.label, () => { delete tweaks.shared[s.cssVar]; delete tweaks.shared[s.weightVar]; applyLive(); sync(); }) };
   });
+  const bannedList = h('div', { class: 'span3', style: 'display:grid' });
+  const typeSec = section({
+    id: 'type', title: 'Typography',
+    body: [...fontRows.flatMap((r) => [r.sel.el, r.x]), ...sizeRows.flatMap((r) => [r.size.el, r.weight.el, r.x]), bannedList],
+  });
+
+  // Layout: icon and component lengths. Closed to its head unless opened, like
+  // Figma's empty sections; the plus opens it.
   const setLength = (c: LengthControl, v: number | string) => {
     if (typeof v === 'string') { set('shared', c.cssVar, v); return; }
     set('shared', c.cssVar, v === baseComp(c.id) ? null : `${v}px`);
   };
-  const lengthRow = (c: LengthControl) => {
+  const lengthRows = COMPONENTS.map((c) => {
     const f = numberField({
-      root, label: c.label, lead: leadFor(c), min: c.min, max: c.max, step: c.step, unit: 'px',
-      tokens: { kind: 'length', prefer: /radius|spacing|size/ },
+      root, label: c.label, prefix: leadFor(c), suffix: c.label, min: c.min, max: c.max, step: c.step,
+      tokens: { kind: 'length', prefer: /radius|spacing|size/, beside },
       onChange: (v) => setLength(c, v),
       onReference: () => { const r = refLength(c.id); if (r !== null) setLength(c, r); },
     });
-    const name = lbl(c.label);
-    return { c, f, name, row: h('div', { class: 'rowl' }, name, f.el) };
-  };
-  const iconRows = COMPONENTS.filter((c) => c.group === 'sizes').map(lengthRow);
-  const compRows = COMPONENTS.filter((c) => !c.group).map(lengthRow);
-  const bannedList = h('ul', { class: 'fails' });
-  const refBtn = CFG.reference
-    ? h('button', { type: 'button', class: 'tb', 'aria-pressed': 'false', title: `Every size, weight and length at ${CFG.reference.name}'s value` }, `Use ${CFG.reference.name}`)
-    : null;
-  refBtn?.addEventListener('click', applyReference);
-  const resetVars = (vars: string[]) => { for (const v of vars) delete tweaks.shared[v]; applyLive(); sync(); };
-  const sizesSec = section({
-    id: 'sizes', title: 'Sizes', ...fold('sizes'),
-    actions: [...(refBtn ? [refBtn] : []), iconButton('reset', 'Reset Sizes', () => resetVars([...SIZES.flatMap((s) => [s.cssVar, s.weightVar]), ...iconRows.map((r) => r.c.cssVar)]))],
-    body: [...sizeRows.map((r) => r.row), ...iconRows.map((r) => r.row), bannedList],
+    f.el.classList.add('span2');
+    return { c, f, x: rowX(c.label, () => set('shared', c.cssVar, null)) };
   });
-  const compsSec = compRows.length ? section({
-    id: 'components', title: 'Components', ...fold('components'),
-    actions: [iconButton('reset', 'Reset Components', () => resetVars(compRows.map((r) => r.c.cssVar)))],
-    body: compRows.map((r) => r.row),
-  }) : null;
+  const layoutToggle = iconButton('plus', 'Show Layout', () => { layoutOpen = !layoutOpen; store.set(LAYOUT_KEY, layoutOpen ? '1' : '0'); syncLayout(); });
+  const layoutSec = lengthRows.length
+    ? section({ id: 'layout', title: 'Layout', actions: [layoutToggle], body: lengthRows.flatMap((r) => [r.f.el, r.x]), empty: !layoutOpen })
+    : null;
+  function syncLayout() {
+    if (!layoutSec) return;
+    layoutSec.setEmpty(!layoutOpen);
+    layoutToggle.replaceChildren(icon(layoutOpen ? 'minus' : 'plus'));
+    const t = layoutOpen ? 'Hide Layout' : 'Show Layout';
+    layoutToggle.setAttribute('aria-label', t);
+    layoutToggle.title = t;
+  }
 
-  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, paletteSec, colorsSec, fontsSec, sizesSec, ...(compsSec ? [compsSec] : []));
+  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
-  const commentSwitch = switchRow({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
+  const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
   const pickedText = h('div', { class: 'picked__text' });
   const pickedWhere = h('div', { class: 'picked__where' });
   const textarea = h('textarea', { 'aria-label': 'Comment', placeholder: 'Add a comment' });
@@ -556,74 +578,92 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const composer = h('div', { class: 'pane', hidden: true }, h('div', { class: 'picked' }, pickedText, pickedWhere), textarea, h('div', { class: 'actions' }, commentSave, commentCancel));
   const list = h('ol', { class: 'clist' });
   const listSec = section({ id: 'open-comments', title: 'Open', body: [list] });
-  const commentsPane = h('div', { class: 'p-body', role: 'tabpanel', hidden: true }, h('div', { class: 'pane' }, commentSwitch.el), composer, listSec);
+  const commentsPane = h('div', { class: 'p-body', role: 'tabpanel', hidden: true }, h('div', { class: 'sec' }, h('div', { class: 'sec__h' }, commentBox.el)), composer, listSec.el);
 
-  // Foot: Reset All, Save.
-  const resetAll = h('button', { type: 'button', class: 'tb' }, 'Reset All');
-  const save = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Saved');
-  const foot = h('div', { class: 'p-foot' }, resetAll, h('span', { class: 'grow' }), save);
-  resetAll.addEventListener('click', () => { tweaks = emptyTweaks(); applyLive(); sync(); });
-  save.addEventListener('click', () => host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles) }));
-
-  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, head, tunePane, commentsPane, foot);
+  const resize = h('div', { class: 'p-resize', 'aria-hidden': 'true', title: 'Drag to resize' });
+  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, commentsPane);
   const dock = h('div', { class: 'dock' }, panel);
-  const strip = h('div', { class: 'dock strip', hidden: true }, iconButton('expand', 'Expand Panel', () => setCollapsed(false)));
   const hoverBox = h('div', { class: 'box', hidden: true });
   const pickedBox = h('div', { class: 'box box--picked', hidden: true });
   const pins = h('div', {});
-  ui.append(dock, strip, hoverBox, pickedBox, pins);
+  ui.append(dock, hoverBox, pickedBox, pins);
+
+  // Width: drag the left edge; the page's margin follows; the setting persists.
+  const applyWidth = () => { ui.style.setProperty('--w', `${width}px`); };
+  resize.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    resize.setPointerCapture(e.pointerId);
+    const x0 = e.clientX;
+    const w0 = width;
+    closePopover();
+    const move = (m: PointerEvent) => { width = Math.min(WIDTH.max, Math.max(WIDTH.min, Math.round(w0 + x0 - m.clientX))); applyWidth(); applyLive(); placeOverlays(); };
+    const up = () => { resize.removeEventListener('pointermove', move); resize.removeEventListener('pointerup', up); store.set(WIDTH_KEY, String(width)); };
+    resize.addEventListener('pointermove', move);
+    resize.addEventListener('pointerup', up);
+  });
+  resize.addEventListener('dblclick', () => { width = WIDTH.default; store.set(WIDTH_KEY, String(width)); applyWidth(); applyLive(); placeOverlays(); });
+  // The panel's own theme: light, dark, or the system's (Figma's appearance setting).
+  const systemDark = matchMedia('(prefers-color-scheme: dark)');
+  const applyTheme = () => { ui.dataset.theme = panelTheme === 'system' ? (systemDark.matches ? 'dark' : 'light') : panelTheme; };
+  systemDark.addEventListener('change', applyTheme);
+  applyWidth();
+  applyTheme();
+  syncLayout();
 
   // ── render ──────────────────────────────────────────────────────────
   function sync() {
-    modeSeg.set(mode);
     tabBar.set(tab);
+    modeDd.set(mode === 'dark' ? 'Dark' : 'Light');
     syncSurfaces();
     for (const r of colorRows) {
       const hex = colorValue(r.c.id, mode);
       const raw = colorRaw(r.c.id, mode);
-      const isSet = r.c.cssVar in tweaks[mode];
-      r.f.set(raw && boundToken(raw) ? raw : hex, { resolved: hex, meta: `L ${oklchL(hex).toFixed(2)}`, setByUser: isSet });
-      r.name.toggleAttribute('data-set', isSet);
+      r.f.set(raw && boundToken(raw) ? raw : hex, { resolved: hex });
+      dimOn(r.x, r.c.cssVar in tweaks[mode]);
     }
     const ramp = rampOf(mode);
+    let fails = 0;
     for (const s of SURFACE_IDS) for (const i of INKS) {
       const ratio = contrast(colorValue(i, mode), surfaceHex(ramp, s));
       const cell = contrastCells.get(`${s}:${i}`)!;
       const pass = ratio >= 4.5;
+      if (!pass) fails++;
       cell.classList.toggle('fail', !pass);
-      cell.textContent = `${ratio.toFixed(1)} ${pass ? 'AA' : 'Fail'}`;
+      cell.textContent = `${ratio.toFixed(1)}${pass ? '' : ' Fail'}`;
     }
+    contrastBtn.toggleAttribute('data-warn', fails > 0);
+    contrastBtn.title = fails ? `Contrast: ${fails} below 4.5` : 'Contrast';
     for (const r of fontRows) {
       const opt = fontOption(r.f.id);
       if (opt) r.sel.set(opt.id);
-      r.name.toggleAttribute('data-set', r.f.cssVar in tweaks.shared);
+      dimOn(r.x, r.f.cssVar in tweaks.shared);
     }
     const ref = CFG.reference;
     for (const r of sizeRows) {
       const { s } = r;
       const ref1 = refSize(s.id);
       const size = sizeValue(s.id);
-      r.size.set(shown(s.cssVar, size), { reference: ref && ref1 ? { name: ref.name, value: ref1.size } : null, setByUser: s.cssVar in tweaks.shared });
+      r.size.set(shown(s.cssVar, size), { resolved: size, reference: ref && ref1 ? { name: ref.name, value: ref1.size } : null });
       // The weight field follows the face's axis (re-ranged when the face changes).
       const axis = axisOf(fontOption(s.font));
       r.weight.range(axis.min, axis.max);
       r.weight.el.title = axis.stops ? `Static: ${axis.stops.join(', ')}` : `Variable: ${axis.min} to ${axis.max}`;
       const w = weightValue(s.id);
-      r.weight.set(shown(s.weightVar, w), { reference: ref && ref1 ? { name: ref.name, value: ref1.weight } : null, setByUser: s.weightVar in tweaks.shared });
-      r.name.toggleAttribute('data-set', s.cssVar in tweaks.shared || s.weightVar in tweaks.shared);
+      r.weight.set(shown(s.weightVar, w), { resolved: w, reference: ref && ref1 ? { name: ref.name, value: ref1.weight } : null });
+      dimOn(r.x, s.cssVar in tweaks.shared || s.weightVar in tweaks.shared);
     }
-    for (const r of [...iconRows, ...compRows]) {
+    for (const r of lengthRows) {
       const ref1 = refLength(r.c.id);
-      r.f.set(shown(r.c.cssVar, compValue(r.c.id)), { reference: ref && ref1 !== null ? { name: ref.name, value: ref1 } : null, setByUser: r.c.cssVar in tweaks.shared });
-      r.name.toggleAttribute('data-set', r.c.cssVar in tweaks.shared);
+      const v = compValue(r.c.id);
+      r.f.set(shown(r.c.cssVar, v), { resolved: v, reference: ref && ref1 !== null ? { name: ref.name, value: ref1 } : null });
+      dimOn(r.x, r.c.cssVar in tweaks.shared);
     }
     refBtn?.setAttribute('aria-pressed', String(atReference()));
     // 350 is banned, wherever it came from (a hand-edited tweaks.json included).
-    bannedList.replaceChildren(...bannedTweaks().map((v) => h('li', {}, `${v.replace(/^--/, '')}: ${BANNED_WEIGHT} is banned; regular is 400`)));
+    bannedList.replaceChildren(...bannedTweaks().map((v) => h('div', { class: 'note note--fail' }, `${v.replace(/^--/, '')}: ${BANNED_WEIGHT} is banned; regular is 400`)));
     const dirty = !same(tweaks, saved);
     save.disabled = !dirty;
     save.textContent = dirty ? 'Save' : 'Saved';
-    resetAll.disabled = same(tweaks, emptyTweaks());
     syncComments();
   }
 
@@ -631,42 +671,39 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const ramp = rampOf(mode);
     const choice = tweaks.palette?.[mode];
     const p = choice?.palette ? paletteById(choice.palette) : null;
-    picker.set(p?.id ?? null, p ? [p[mode].bar, p[mode].canvas, p[mode].primary] : SURFACE_IDS.map((id) => surfaceHex(ramp, id)));
+    paletteDd.set(p ? (p.like ? `${p.name} (${p.like})` : p.name) : 'Theme Default');
     linkBtn.setAttribute('aria-pressed', String(linked));
-    sharedRow.hidden = !linked;
     sharedH.set(round1(ramp.h));
     sharedS.set(round1(ramp.s));
     for (const s of surfaces) {
-      const hex = surfaceHex(ramp, s.id);
-      s.color.set(hex);
+      s.color.set(surfaceHex(ramp, s.id));
       const [lo, hi] = s.id === 'canvas' ? CANVAS_RANGE[mode] : OFFSET_RANGE;
       s.light.range(lo, hi);
       s.light.set(round1(surfaceControlValue(ramp, s.id)));
       const band = s.id === 'canvas' ? RECIPE[mode].canvas : RECIPE[mode][s.id];
       s.light.el.title = `Recipe ${band.min} to ${band.max}`;
-      s.own.hidden = linked;
       const hs = surfaceHueSat(ramp, s.id);
       s.ownH.set(round1(hs.h));
       s.ownS.set(round1(hs.s));
     }
     const g = grade(ramp, mode);
-    readOffsets.replaceChildren(...SURFACE_IDS.map((id) => h('span', {}, `${SURFACE_SHORT[id]} ${signed(g.offsets[id])}`)));
+    readOffsets.textContent = SURFACE_IDS.map((id) => `${SURFACE_SHORT[id]} ${signed(g.offsets[id])}`).join('  ·  ');
     readMatch.hidden = !g.matched;
-    readFlags.replaceChildren(...g.flags.map((f) => h('li', {}, f)));
+    readFlags.replaceChildren(...g.flags.map((f) => h('div', { class: 'note note--fail' }, f)));
   }
 
   const openHere = () => feedback.filter((r) => r.status === 'open' && keyOf(r.url) === pageKey());
   function syncComments() {
     const here = openHere();
     tabBar.count('comments', here.length);
-    listSec.hidden = !here.length;
+    listSec.el.hidden = !here.length;
     list.replaceChildren(...here.map((r, n) => {
       const resolve = h('button', { type: 'button', class: 'btn' }, 'Resolve');
       resolve.addEventListener('click', () => host.send('set-status', { id: r.id, status: 'resolved' }));
       return h('li', {}, h('span', { class: 'pin' }, String(n + 1)),
         h('div', {}, h('div', { class: 'c-text' }, r.comment), h('div', { class: 'c-where' }, r.text || r.selector)), resolve);
     }));
-    commentSwitch.set(commenting);
+    commentBox.set(commenting);
     composer.hidden = !picked;
     if (picked) {
       pickedText.textContent = snippet(picked) || `<${picked.localName}>`;
@@ -685,7 +722,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     placeBox(hoverBox, commenting && hovered !== picked ? hovered : null);
     placeBox(pickedBox, picked);
     if (!open) { pins.replaceChildren(); return; }
-    const edge = innerWidth - (collapsed ? STRIP : WIDTH) - 20;
+    const edge = innerWidth - width - 20;
     pins.replaceChildren(...openHere().flatMap((r, n) => {
       let el: Element | null = null;
       try { el = document.querySelector(r.selector); } catch { /* stale selector */ }
@@ -703,21 +740,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     applyLive();
     sync();
   }
-  function setCollapsed(state: boolean) {
-    collapsed = state;
-    dock.hidden = collapsed;
-    strip.hidden = !collapsed;
-    if (collapsed) { setCommenting(false); closePopover(); }
-    applyLive();
-    placeOverlays();
-  }
   function setTab(t: 'tune' | 'comments') {
     tab = t;
     tabBar.set(t);
     tunePane.hidden = t !== 'tune';
     commentsPane.hidden = t !== 'comments';
-    foot.hidden = t !== 'tune';
-    modeSeg.el.hidden = t !== 'tune';
     if (t !== 'comments') setCommenting(false);
   }
   function setCommenting(state: boolean) {

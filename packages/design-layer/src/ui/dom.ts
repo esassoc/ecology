@@ -1,5 +1,8 @@
-// A small element builder and the kit's icons (inline Lucide paths, 24px grid,
-// drawn at 16px with a 1.5 stroke, which is how Figma's sidebar icons sit).
+// A small element builder and the kit's icons. The icons are drawn for this
+// kit to Figma UI3's weight, measured from its panel: a 24px box rendered 1:1,
+// a 12 to 14px glyph centred in it, a 1px stroke on half-pixel coordinates so
+// it lands on whole device pixels. Not Lucide: Lucide's 1.75 stroke at 16px is
+// twice Figma's ink.
 
 type Attrs = Record<string, string | number | boolean | null | undefined | EventListener>;
 type Child = Node | string | null | undefined | false;
@@ -16,36 +19,49 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = 
   return el;
 }
 
-/** An inline SVG from an icon name. */
+/** An inline SVG from an icon name, 24px, 1px stroke. */
 export function icon(name: keyof typeof ICONS): SVGSVGElement {
   const t = document.createElement('template');
-  t.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+  t.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
   return t.content.firstElementChild as SVGSVGElement;
 }
 
+const dot = (x: number, y: number, r = 1) => `<circle cx="${x}" cy="${y}" r="${r}" fill="currentColor" stroke="none"/>`;
+
 export const ICONS = {
-  /** Apply or edit a token binding: a hexagon, Figma's variable glyph. */
-  token: '<path d="M12 2.5 20.5 7.25v9.5L12 21.5 3.5 16.75v-9.5Z"/><circle cx="12" cy="12" r="2.5"/>',
-  detach: '<path d="m18.84 12.25 1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"/><path d="M8 2v3M2 8h3M16 22v-3M22 16h-3"/>',
-  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
-  reset: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
-  chevron: '<path d="m6 9 6 6 6-6"/>',
-  collapse: '<path d="m9 18 6-6-6-6"/>',
-  expand: '<path d="m15 18-6-6 6-6"/>',
-  check: '<path d="M20 6 9 17l-5-5"/>',
-  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
-  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
-  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
-  size: '<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>',
-  weight: '<path d="M6 12h8a4 4 0 0 1 0 8H6Z"/><path d="M6 4h7a4 4 0 0 1 0 8H6Z"/>',
-  radius: '<path d="M4 20V10a6 6 0 0 1 6-6h10"/>',
-  height: '<path d="M12 3v18"/><path d="m8 7 4-4 4 4"/><path d="m8 17 4 4 4-4"/>',
-  padY: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7.5h10M7 16.5h10"/>',
-  padX: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7.5 7v10M16.5 7v10"/>',
-  icon: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6M12 9v6"/>',
-  hue: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/>',
-  sat: '<path d="M12 2.69 17.66 8.35a8 8 0 1 1-11.31 0Z"/>',
-  light: '<circle cx="12" cy="12" r="9"/><path d="M12 7a5 5 0 0 1 0 10"/>',
-  comment: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
-  minus: '<path d="M5 12h14"/>',
+  // ── actions ──
+  plus: '<path d="M12 6.5v11M6.5 12h11"/>',
+  minus: '<path d="M6.5 12h11"/>',
+  chevron: '<path d="m9 10.5 3 3 3-3"/>',
+  check: '<path d="m7.5 12.5 3 3 6-6.5"/>',
+  close: '<path d="m8 8 8 8M16 8l-8 8"/>',
+  kebab: dot(7, 12) + dot(12, 12) + dot(17, 12),
+  reset: '<path d="M8.5 9.5a5 5 0 1 1-1 4"/><path d="M8.5 6.5v3h3"/>',
+  search: '<circle cx="11" cy="11" r="4.5"/><path d="m14.5 14.5 3 3"/>',
+  eye: '<path d="M5.5 12s2.5-4 6.5-4 6.5 4 6.5 4-2.5 4-6.5 4-6.5-4-6.5-4Z"/><circle cx="12" cy="12" r="1.75"/>',
+  comment: '<path d="M7.5 16.5V9a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 16.5 9v4a1.5 1.5 0 0 1-1.5 1.5h-5l-2.5 2Z"/>',
+  /** Hue and saturation move together (Figma's link glyph, horizontal). */
+  link: '<path d="M10.5 8.5H9a3.5 3.5 0 0 0 0 7h1.5M13.5 8.5H15a3.5 3.5 0 0 1 0 7h-1.5M9.5 12h5"/>',
+  /** Apply a variable: Figma's hexagon with a centre. */
+  token: '<path d="m12 6 5.2 3v6L12 18l-5.2-3V9Z"/>' + dot(12, 12, 1.25),
+  detach: '<path d="M10.5 8.5H9a3.5 3.5 0 0 0 0 7h1.5M13.5 8.5H15a3.5 3.5 0 0 1 0 7h-1.5"/><path d="M12 6v2M12 16v2"/>',
+  /** Styles and variables: Figma's four dots. */
+  styles: '<circle cx="9" cy="9" r="2"/><circle cx="15" cy="9" r="2"/><circle cx="9" cy="15" r="2"/><circle cx="15" cy="15" r="2"/>',
+  /** Advanced settings for a section (Figma's two sliders). */
+  adjust: '<path d="M9.5 6.5v3M9.5 13.5v4M14.5 6.5v4M14.5 14.5v3"/><circle cx="9.5" cy="11.5" r="1.5"/><circle cx="14.5" cy="12.5" r="1.5"/>',
+  contrast: '<circle cx="12" cy="12" r="5.5"/><path d="M12 6.5a5.5 5.5 0 0 1 0 11Z" fill="currentColor" stroke="none"/>',
+  /** Apply the reference spoke's values. */
+  reference: '<circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/>',
+  sun: '<circle cx="12" cy="12" r="2.5"/><path d="M12 6.5v1.5M12 16v1.5M6.5 12H8M16 12h1.5M8.1 8.1l1 1M14.9 14.9l1 1M8.1 15.9l1-1M14.9 9.1l1-1"/>',
+  moon: '<path d="M16.5 13.5A5 5 0 0 1 10.5 7.5a5 5 0 1 0 6 6Z"/>',
+  // ── field prefixes ──
+  /** Font size. */
+  size: '<path d="M8.5 8.5h7M12 8.5v8"/>',
+  radius: '<path d="M8.5 16.5v-4a4 4 0 0 1 4-4h4"/>',
+  /** Padding top and bottom: Figma's box with its horizontal bars. */
+  padY: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/><path d="M10 10.5h4M10 13.5h4"/>',
+  /** Padding left and right. */
+  padX: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/><path d="M10.5 10v4M13.5 10v4"/>',
+  height: '<path d="M12 7.5v9M10 9.5l2-2 2 2M10 14.5l2 2 2-2"/>',
+  icon: '<rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/><rect x="10.5" y="10.5" width="3" height="3" rx=".5"/>',
 } as const;
