@@ -171,6 +171,9 @@ export const UI_CSS = `
   /* bound to a variable: the variable's name in a chip */
   .chip { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; height: 16px; margin-right: 4px; padding: 0 4px; border: 0; border-radius: 3px; background: var(--chip); color: var(--ink); text-align: left; }
   .chip__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip { height: 18px; }
+  .chip__glyph { display: grid; place-items: center; flex: none; width: 12px; height: 12px; color: var(--ink-2); }
+  .chip__glyph svg { width: 18px; height: 18px; }
 
   /* colour: a 14 swatch in the prefix slot */
   .sw { display: block; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }

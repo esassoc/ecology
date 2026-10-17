@@ -8,7 +8,7 @@
 // needed, a right-aligned suffix inside the field, as Figma writes "Fill".
 import { h, icon, type ICONS } from './dom';
 import { menu, openPopover, closePopover, type MenuItem } from './popover';
-import { boundToken, shortName, tokensFor, type Token, type TokenKind } from './tokens';
+import { boundToken, shortName, tierOf, tokensFor, type Token, type TokenKind } from './tokens';
 
 type IconName = keyof typeof ICONS;
 type Root = ShadowRoot | HTMLElement;
@@ -111,8 +111,12 @@ export function openTokenPicker(o: { root: Root; anchor: HTMLElement; beside?: H
 }
 
 /** A bound field's chip: the variable's name; click to change it. */
+/** A long token name cut from the middle, keeping the distinctive tail (Figma's chip). */
+const midName = (n: string, max = 24) => (n.length <= max ? n : `${n.slice(0, 7)}…${n.slice(n.length - (max - 8))}`);
+const TIER_TIP: Record<number, string> = { 1: 'Primitive', 2: 'Semantic token', 3: 'Component token' };
 function tokenChip(name: string, onClick: (e: MouseEvent) => void) {
-  const c = h('button', { type: 'button', class: 'chip', title: name }, h('span', { class: 'chip__name' }, shortName(name)));
+  const c = h('button', { type: 'button', class: 'chip', title: `${name}\n${TIER_TIP[tierOf(name)] ?? ''}` },
+    h('span', { class: 'chip__glyph', 'aria-hidden': 'true' }, icon('token')), h('span', { class: 'chip__name' }, midName(shortName(name))));
   c.addEventListener('click', onClick);
   return c;
 }

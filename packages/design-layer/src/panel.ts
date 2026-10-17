@@ -172,7 +172,15 @@ const PANEL_CSS = `
   .vrow { display: flex; align-items: center; gap: 8px; min-width: 0; height: 24px; padding: 0 7px 0 8px; border: 1px solid transparent; border-radius: 5px;
     background: var(--field); color: var(--ink); text-align: left; }
   .vrow:hover { border-color: var(--line); }
-  .vrow[aria-pressed="true"] { background: var(--selected); color: var(--selected-ink); }
+  .vrow[aria-pressed="true"], .vrow[aria-pressed="true"]:hover { border-color: transparent; background: var(--selected); color: var(--selected-ink); }
+  .vrow:focus-visible { box-shadow: none; text-decoration: underline; text-underline-offset: 3px; }
+  .sel--two { border-bottom: 0; height: 40px; }
+  .sel__ctx { margin-top: -8px; padding: 0 16px 8px; border-bottom: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f--readout { background: none; border-color: transparent; }
+  .f--readout:hover { border-color: transparent; }
+  .f--readout .f__name { color: var(--ink); user-select: text; cursor: copy; }
+  .f--readout .f__suf { color: var(--ink-2); }
+  .f--readout[data-copied]::after { content: 'Copied'; position: absolute; right: 0; top: -22px; height: 18px; padding: 0 6px; border-radius: 4px; background: var(--menu-bg); color: var(--menu-ink); font-size: 11px; line-height: 18px; box-shadow: var(--shadow); pointer-events: none; }
   .vrow__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .vrow__meta { flex: none; color: var(--ink-2); }
   .vrow[aria-pressed="true"] .vrow__meta { color: inherit; opacity: .7; }
@@ -570,8 +578,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
   const isolateBtn = iconButton('isolate', 'Isolate Selection', () => setIsolating(!isolating), false);
   const sel = h('div', { class: 'sel' }, paletteDd.el, crumbs, h('span', { class: 'grow' }), refBtn, isolateBtn, clearBtn, menuBtn);
+  // What an edit applies to, under the breadcrumb: the copy and the scope.
+  const SCOPE_LABEL: Record<EditScope, string> = { component: 'Component', token: 'Token', instance: 'Instance' };
+  const selCtx = h('div', { class: 'sel__ctx', hidden: true });
   function syncHeader() {
     paletteDd.el.hidden = !!selection;
+    selCtx.hidden = !selection;
+    sel.classList.toggle('sel--two', !!selection);
     crumbs.hidden = !selection;
     clearBtn.hidden = !selection;
     isolateBtn.hidden = !selection;
@@ -603,39 +616,73 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // Tokens: what the selection reads, by tier, each editable at the scope.
   // Properties: its computed values, read only.
-  const tokensSec = section({ id: 'tokens', title: 'Tokens', body: [] });
-  const tokensBody = tokensSec.el.querySelector('.sec__b')!;
+  // The selection's editable properties, in sections named for what they
+  // change (Figma's Fill, Text, Typography, …), each shown only when the
+  // selection has it. A row is the value field for one token the element
+  // reads for that property: bound, it shows the token as a chip (the tier is
+  // in the chip's tooltip and the picker); edited, the value lands at the
+  // current scope on that token.
+  type Group = { id: string; title: string; match: RegExp };
+  const GROUPS_SEL: Group[] = [
+    { id: 'sel-fill', title: 'Fill', match: /^(background|background-color|fill)$/ },
+    { id: 'sel-text', title: 'Text', match: /^(color|-webkit-text-fill-color|text-decoration-color|caret-color)$/ },
+    { id: 'sel-type', title: 'Typography', match: /^(font|font-family|font-size|font-weight|line-height|letter-spacing|text-transform)$/ },
+    { id: 'sel-spacing', title: 'Spacing', match: /^(padding|margin|gap|row-gap|column-gap)(-|$)/ },
+    { id: 'sel-radius', title: 'Radius', match: /radius/ },
+    { id: 'sel-border', title: 'Border', match: /^(border|outline)/ },
+    { id: 'sel-effects', title: 'Effects', match: /^(box-shadow|opacity|filter|backdrop-filter|text-shadow)$/ },
+    { id: 'sel-size', title: 'Size', match: /^(width|height|min-|max-|inline-size|block-size|flex-basis)/ },
+  ];
+  const OTHER: Group = { id: 'sel-other', title: 'Other', match: /./ };
+  const groupSecs = new Map([...GROUPS_SEL, OTHER].map((g) => [g.id, section({ id: g.id, title: g.title, body: [] })]));
   let tokenRows: { sync: () => void }[] = [];
-  const TIERS: [TokenUse['tier'], string][] = [[3, 'Component'], [2, 'Semantic'], [1, 'Primitive']];
+  const TIER_LABEL: Record<TokenUse['tier'], string> = { 3: 'Component token', 2: 'Semantic token', 1: 'Primitive' };
+  const PROP_LABEL: [RegExp, string][] = [
+    [/^background/, 'Background'], [/^fill$/, 'Fill'], [/^color$/, 'Color'], [/font-family|^font$/, 'Family'], [/font-size/, 'Size'],
+    [/font-weight/, 'Weight'], [/line-height/, 'Line Height'], [/letter-spacing/, 'Letter Spacing'], [/padding-(inline|left|right)/, 'Padding X'],
+    [/padding-(block|top|bottom)/, 'Padding Y'], [/^padding$/, 'Padding'], [/gap/, 'Gap'], [/^margin/, 'Margin'], [/radius/, 'Radius'],
+    [/border.*color|outline-color/, 'Border Color'], [/border.*width|outline-width/, 'Border Width'], [/^border|^outline/, 'Border'],
+    [/box-shadow/, 'Shadow'], [/opacity/, 'Opacity'], [/height/, 'Height'], [/width/, 'Width'],
+  ];
+  const propLabel = (props: string[]) => {
+    for (const p of props) for (const [re, l] of PROP_LABEL) if (re.test(p)) return l;
+    return props[0] ?? 'Value';
+  };
   const prefixFor = (props: string[]): Prefix => {
     const has = (re: RegExp) => props.some((p) => re.test(p));
     if (has(/radius/)) return 'radius';
     if (has(/padding-(inline|left|right)/)) return 'padX';
     if (has(/padding/)) return 'padY';
     if (has(/font-size/)) return 'size';
+    if (has(/line-height/)) return { text: 'LH' };
+    if (has(/letter-spacing/)) return { text: 'LS' };
     if (has(/height/)) return 'height';
     if (has(/gap/)) return { text: 'G' };
+    if (has(/border|outline/)) return { text: 'B' };
     return { text: '#' };
   };
+  const groupOf = (u: TokenUse) => GROUPS_SEL.find((g) => u.props.some((p) => g.match.test(p))) ?? OTHER;
   function tokenRow(u: TokenUse): { nodes: Node[]; sync: () => void } {
-    const label = shortName(u.name).replace(/^color-/, '');
-    const title = `${u.name}${u.props.length ? ` → ${u.props.join(', ')}` : ''}`;
+    const label = propLabel(u.props);
+    const title = `${u.name} · ${TIER_LABEL[u.tier]}${u.props.length ? `\n${u.props.join(', ')}` : ''}`;
+    // Unedited, the field shows the token itself as its chip.
+    const shownAs = (raw: string | undefined, literal: number | string) => (raw === undefined ? `var(${u.name})` : boundToken(raw) ? raw : literal);
     if (u.kind === 'color') {
-      const f = colorField({ root, label: u.name, suffix: label, tokens: { beside }, onChange: (v) => set(mode, u.name, v) });
+      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside }, onChange: (v) => set(mode, u.name, v) });
       f.el.classList.add('span2');
       f.el.title = title;
       const x = rowX(label, () => set(mode, u.name, null));
       return { nodes: [f.el, x], sync: () => {
         const raw = layer(mode)[u.name];
         const hex = toHex(measureAt('color', raw ?? `var(${u.name})`));
-        f.set(raw && boundToken(raw) ? raw : hex, { resolved: hex });
+        f.set(String(shownAs(raw, hex)), { resolved: hex });
         dimOn(x, u.name in layer(mode));
       } };
     }
     if (u.kind === 'length' || u.kind === 'weight') {
       const weight = u.kind === 'weight';
       const f = numberField({
-        root, label: u.name, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
+        root, label: `${label}: ${u.name}`, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
         refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside },
         onChange: (v) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`),
       });
@@ -645,11 +692,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       return { nodes: [f.el, x], sync: () => {
         const raw = layer('shared')[u.name];
         const n = Number.parseFloat(measureAt(weight ? 'fontWeight' : 'width', raw ?? `var(${u.name})`));
-        f.set(raw && boundToken(raw) ? raw : weight ? n : half(n), { resolved: n });
+        const lit = weight ? n : half(n);
+        f.set(shownAs(raw, lit), { resolved: lit });
         dimOn(x, u.name in layer('shared'));
       } };
     }
-    // Faces and anything else: shown, not edited here (a face is a Typography row).
+    // Faces, shadows and the rest: the token and its value, not edited here.
     const value = h('span', { class: 'f__name' });
     const row = h('div', { class: 'f f--ro span2', title }, h('span', { class: 'f__pre', 'aria-hidden': 'true' }, u.kind === 'font' ? 'Aa' : '#'), value, h('span', { class: 'f__suf' }, label));
     return { nodes: [row, h('span', {})], sync: () => { value.textContent = selection ? getComputedStyle(selection.el).getPropertyValue(u.name).trim() : ''; } };
@@ -657,22 +705,33 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   function renderTokens() {
     tokenRows = [];
     const uses = selection ? tokensOn(selection.el) : [];
-    tokensSec.setEmpty(!uses.length);
-    const nodes: Node[] = [];
-    for (const [tier, title] of TIERS) {
-      const group = uses.filter((u) => u.tier === tier).sort((a, b) => (a.kind === 'color' ? 0 : 1) - (b.kind === 'color' ? 0 : 1) || a.name.localeCompare(b.name));
-      if (!group.length) continue;
-      nodes.push(h('div', { class: 'sub span3' }, title));
-      for (const u of group) { const r = tokenRow(u); tokenRows.push(r); nodes.push(...r.nodes); }
+    const byGroup = new Map<string, Node[]>();
+    const order = (a: TokenUse, b: TokenUse) => b.tier - a.tier || a.name.localeCompare(b.name);
+    for (const u of [...uses].sort(order)) {
+      const g = groupOf(u);
+      const r = tokenRow(u);
+      tokenRows.push(r);
+      (byGroup.get(g.id) ?? byGroup.set(g.id, []).get(g.id)!).push(...r.nodes);
     }
-    tokensBody.replaceChildren(...nodes);
+    for (const [id, sec] of groupSecs) {
+      const nodes = byGroup.get(id) ?? [];
+      sec.el.querySelector('.sec__b')!.replaceChildren(...nodes);
+      sec.el.hidden = !selection || !nodes.length;
+    }
   }
 
+  // Properties: Figma's Inspect readout. Plain text, selectable, a click copies the value.
   const ro = (pre: Prefix | Node, suffix?: string) => {
-    const value = h('span', { class: 'f__name' });
-    const el = h('div', { class: 'f f--ro' },
+    const value = h('span', { class: 'f__name', title: 'Copy' });
+    const el = h('div', { class: 'f f--ro f--readout' },
       h('span', { class: 'f__pre', 'aria-hidden': 'true' }, pre instanceof Node ? pre : typeof pre === 'string' ? icon(pre) : pre.text),
       value, suffix ? h('span', { class: 'f__suf' }, suffix) : null);
+    value.addEventListener('click', () => {
+      if (getSelection()?.toString()) return;
+      void navigator.clipboard?.writeText(value.textContent ?? '').catch(() => {});
+      el.setAttribute('data-copied', '');
+      setTimeout(() => el.removeAttribute('data-copied'), 1000);
+    });
     return { el, value };
   };
   const swText = h('span', { class: 'sw' });
@@ -693,13 +752,17 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   function syncSelection() {
     const has = !!selection;
     scopeSec.el.hidden = !has || !!activeVariant;
-    tokensSec.el.hidden = !has;
     propsSec.el.hidden = !has;
     surfacesSec.el.hidden = !atRoot();
+    // With a selection its own sections take over; the spoke's controls are the root view.
+    for (const sec of [colorsSec, typeSec, layoutSec]) if (sec) sec.el.hidden = has;
+    if (!has) for (const sec of groupSecs.values()) sec.el.hidden = true;
     syncHeader();
     if (!selection) return;
     const eff = effectiveScope();
     scopeSeg.set(eff);
+    const variant = activeVariant ? variantsHere().find((v) => v.id === activeVariant) : null;
+    selCtx.textContent = `Editing ${variant ? variant.name : 'Original'} · ${variant ? 'Variant' : SCOPE_LABEL[eff]}`;
     const [compBtn, tokenBtn, instBtn] = scopeSeg.el.querySelectorAll('button');
     compBtn.disabled = !selection.component;
     compBtn.title = selection.component ? `Every ${selection.component.name}` : 'Not inside a component';
@@ -928,8 +991,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   function renderStage() {
     if (!isolating || !selection) { stage.close(); return; }
-    const all = [{ id: 'original', label: selection.name }, ...variantsHere().map((v) => ({ id: v.id, label: v.name }))];
     const active = activeVariant ?? 'original';
+    const ctx = (id: string, name: string) => (id === active ? `Editing ${id === 'original' ? 'Original' : name} · ${id === 'original' ? SCOPE_LABEL[effectiveScope()] : 'Variant'}` : name);
+    const all = [{ id: 'original', label: ctx('original', selection.name) }, ...variantsHere().map((v) => ({ id: v.id, label: ctx(v.id, v.name) }))];
     stage.render(selection.el, compare ? all : all.filter((i) => i.id === active), { active, ...stageInset(), dark: mode === 'dark' });
   }
   function setIsolating(state: boolean) {
@@ -1155,7 +1219,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sync();
   }
 
-  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, statesSec.el, variantsSec.el, scopeSec.el, tokensSec.el, propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
+  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, selCtx, statesSec.el, variantsSec.el, scopeSec.el, ...[...groupSecs.values()].map((g) => g.el), propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
   const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
