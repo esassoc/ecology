@@ -56,6 +56,27 @@ In `design/` at the spoke root (or the config's `dataDir`):
 | `tweaks.css` | The same overrides as CSS, loaded on every dev page so they survive a reload. |
 | `feedback.jsonl` | One comment per line, `open` or `resolved`. |
 
+## Which fields a selection gets
+
+Read off what the element is and what it already uses (`src/fields.ts`), not
+a fixed list. An element can be several kinds at once (a button is text and a box).
+
+| Element | Fields, in priority order |
+|---|---|
+| A hub component's root (custom element or `data-dl-component`) | Its component tokens first, then the box fields |
+| Text (own text, or h1–h6, p, span, a, label, button…) | Color, Size, Weight, Family, Line Height, Letter Spacing |
+| Link | Color and its Hover (from the page's own `:hover` rule), Size, Weight |
+| Box (a background, border or shadow; buttons and inputs) | Fill, Radius, Padding Y, Padding X, Border Color, Border Width, Shadow |
+| Flex or grid container | Gap, Padding Y, Padding X |
+| Icon (svg) | Color, Width, Height |
+| Image | Radius, Width, Height |
+
+A field shows when a token feeds it (as the token's chip) or the element sets
+a non-default value; the rest sit behind the section's **+**. A field with no
+token writes the plain property at the current scope (instance, component or
+variant), never at the root, and Save to Source carries it like any other
+component-scope edit. The quick-edit popover takes the first four shown.
+
 ## Save to Source
 
 The override file is a proposal. **More → Save to Source…** lists every

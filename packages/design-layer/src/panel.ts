@@ -35,10 +35,11 @@ import { ancestors, candidate, firstChildComponent, select, type Selection } fro
 import { computedOn, tokensOn, type TokenUse } from './inspect';
 import { declared, dependents, invalidateGraph } from './graph';
 import { createStage } from './stage';
+import { SPECS, fieldsFor, hoverColor, kindsOf, readProp, specsFor, type FieldSpec } from './fields';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
-  SIZE_RUNGS, type PaletteOption, type PickIntent, type Prefix,
+  SIZE_RUNGS, readTokens, type PaletteOption, type PickIntent, type Prefix,
 } from './ui';
 
 /** The panel's width: a setting, dragged on its inner edge. Figma's own panel is 240; 320 gives the fields and the top row's undo and redo room. */
@@ -675,7 +676,17 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     { id: 'sel-size', title: 'Size', match: /^(width|height|min-|max-|inline-size|block-size|flex-basis)/ },
   ];
   const OTHER: Group = { id: 'sel-other', title: 'Other', match: /./ };
-  const groupSecs = new Map([...GROUPS_SEL, OTHER].map((g) => [g.id, section({ id: g.id, title: g.title, body: [] })]));
+  const addBtns = new Map<string, HTMLButtonElement>();
+  const groupSecs = new Map([...GROUPS_SEL, OTHER].map((g) => {
+    const plus = iconButton('plus', `Add to ${g.title}`, () => openMenu({
+      root, anchor: plus, alignEnd: true, selected: null,
+      items: (addable.get(g.id) ?? []).map((sp) => ({ value: sp.prop, label: sp.label })),
+      pick: (prop) => { added.add(prop); renderTokens(); sync(); },
+    }));
+    plus.hidden = true;
+    addBtns.set(g.id, plus);
+    return [g.id, section({ id: g.id, title: g.title, actions: [plus], body: [] })];
+  }));
   let tokenRows: { sync: () => void }[] = [];
   const TIER_LABEL: Record<TokenUse['tier'], string> = { 3: 'Component token', 2: 'Semantic token', 1: 'Primitive' };
   const PROP_LABEL: [RegExp, string][] = [
@@ -743,21 +754,129 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const row = h('div', { class: 'f f--ro span2', title }, h('span', { class: 'f__pre', 'aria-hidden': 'true' }, u.kind === 'font' ? 'Aa' : '#'), value, h('span', { class: 'f__suf' }, label));
     return { nodes: [row, h('span', {})], sync: () => { value.textContent = selection ? getComputedStyle(selection.el).getPropertyValue(u.name).trim() : ''; } };
   }
+  /**
+   * A field for a property the element sets without a token (or one a plus
+   * added). It writes the plain property at the current scope, never at the
+   * root: a literal has no token to edit there.
+   */
+  function propRow(spec: FieldSpec, over?: { read: () => string; layer: (create: boolean) => VarMap; write: (v: string | null) => void }): { nodes: Node[]; sync: () => void } {
+    const isColor = spec.kind === 'color';
+    const map = (create = false) => over?.layer(create) ?? layer(isColor ? mode : 'shared', create);
+    const write = (v: string | null, i?: PickIntent) => (over ? over.write(v) : set(isColor ? mode : 'shared', spec.prop, v, i));
+    const read = () => over?.read() ?? (selection ? readProp(selection.el, spec.prop) : '');
+    const x = rowX(spec.label, () => write(null));
+    const title = `${spec.prop} · no token`;
+    if (isColor) {
+      const f = colorField({ root, label: spec.label, suffix: spec.label, tokens: over ? false : { beside, at: pickAt(spec.prop) }, beside, onChange: (v, i) => write(v, i) });
+      f.el.classList.add('span2');
+      f.el.title = title;
+      return { nodes: [f.el, x], sync: () => {
+        const raw = map()[spec.prop];
+        const css = read();
+        f.set(raw && boundToken(raw) ? raw : toHex(css), { resolved: css });
+        dimOn(x, spec.prop in map());
+      } };
+    }
+    if (spec.kind === 'length' || spec.kind === 'weight') {
+      const weight = spec.kind === 'weight';
+      const ls = spec.prop === 'letter-spacing';
+      const f = numberField({
+        root, label: spec.label, prefix: weight ? { text: 'W' } : prefixFor([spec.prop]), suffix: spec.label,
+        min: weight ? 100 : ls ? -10 : 0, max: weight ? 900 : 800, step: weight ? 1 : ls ? 0.1 : 0.5, refuse: weight ? [BANNED_WEIGHT] : undefined,
+        tokens: { kind: weight ? 'weight' : 'length', beside, at: pickAt(spec.prop) },
+        onChange: (v, i) => write(typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
+      });
+      f.el.classList.add('span2');
+      f.el.title = title;
+      return { nodes: [f.el, x], sync: () => {
+        const raw = map()[spec.prop];
+        const n = Number.parseFloat(read()) || 0;
+        const lit = weight ? n : ls ? Math.round(n * 10) / 10 : half(n);
+        f.set(raw && boundToken(raw) ? raw : lit, { resolved: lit });
+        dimOn(x, spec.prop in map());
+      } };
+    }
+    // A face or a shadow: a choice, not a number.
+    const options: MenuItem<string>[] = spec.kind === 'font'
+      ? FONT_OPTIONS.map((o) => ({ value: o.css, label: o.label }))
+      : [{ value: 'none', label: 'None' }, ...readTokens().filter((t) => /^--(elevation|shadow)-\d+$/.test(t.name)).map((t) => ({ value: `var(${t.name})`, label: shortName(t.name) }))];
+    const f = selectField({ root, label: spec.label, suffix: spec.label, options, onChange: (v) => write(v) });
+    f.el.classList.add('span2');
+    f.el.title = title;
+    return { nodes: [f.el, x], sync: () => {
+      const raw = map()[spec.prop];
+      const cur = read();
+      const v = raw ?? (spec.kind === 'font' ? options.find((o) => firstFamily(o.value) === firstFamily(cur))?.value ?? cur.split(',')[0].replace(/["']/g, '') : cur === 'none' ? 'none' : 'Custom');
+      f.set(v);
+      dimOn(x, spec.prop in map());
+    } };
+  }
+
+  /** The override a link's :hover colour goes to: the target's selector plus :hover. */
+  function hoverLayer(create: boolean): VarMap {
+    const t = target();
+    if (t.kind !== 'instance' && t.kind !== 'component') return {};
+    const sel = `${t.selector}:hover`;
+    let o = tweaks.overrides?.find((x) => x.scope === t.kind && x.selector === sel && (x.page ?? '') === (t.page ?? ''));
+    if (!o) {
+      if (!create) return {};
+      o = { scope: t.kind, selector: sel, name: `${t.name} :hover`, ...(t.page ? { page: t.page } : {}), light: {}, dark: {}, shared: {} };
+      (tweaks.overrides ??= []).push(o);
+    }
+    return o[mode];
+  }
+
+  // Which fields a selection gets: what the element is and what it already
+  // uses (fields.ts). A plus on a section adds a property it does not set yet.
+  let added = new Set<string>();
+  let addedFor = '';
+  let renderedFor = '';
+  const addable = new Map<string, FieldSpec[]>();
   function renderTokens() {
     tokenRows = [];
-    const uses = selection ? tokensOn(selection.el) : [];
+    addable.clear();
     const byGroup = new Map<string, Node[]>();
-    const order = (a: TokenUse, b: TokenUse) => b.tier - a.tier || a.name.localeCompare(b.name);
-    for (const u of [...uses].sort(order)) {
-      const g = groupOf(u);
-      const r = tokenRow(u);
+    const place = (gid: string, r: { nodes: Node[]; sync: () => void }) => {
       tokenRows.push(r);
-      (byGroup.get(g.id) ?? byGroup.set(g.id, []).get(g.id)!).push(...r.nodes);
+      (byGroup.get(gid) ?? byGroup.set(gid, []).get(gid)!).push(...r.nodes);
+    };
+    const t = target();
+    renderedFor = `${selection?.instance ?? ''}|${t.kind}|${activeVariant ?? ''}`;
+    if (selection) {
+      if (addedFor !== selection.instance) { added = new Set(); addedFor = selection.instance; }
+      const el = selection.el;
+      const uses = tokensOn(el);
+      const kinds = kindsOf(el, selection.component?.root === el);
+      const usedBy = new Map<string, TokenUse>();
+      for (const u of uses) for (const p of u.props) for (const sp of specsFor(p, u.kind)) if (!usedBy.has(sp.prop)) usedBy.set(sp.prop, u);
+      const done = new Set<TokenUse>();
+      const order = (a: TokenUse, b: TokenUse) => b.tier - a.tier || a.name.localeCompare(b.name);
+      // A hub component's own tokens first.
+      if (selection.component) for (const u of uses.filter((x) => x.tier === 3).sort(order)) { place(groupOf(u).id, tokenRow(u)); done.add(u); }
+      for (const f of fieldsFor(el, kinds, new Set(usedBy.keys()), added)) {
+        const u = usedBy.get(f.spec.prop);
+        if (u) { if (!done.has(u)) { place(f.spec.group, tokenRow(u)); done.add(u); } continue; }
+        if (t.kind === 'root') continue;
+        if (!f.shown) { (addable.get(f.spec.group) ?? addable.set(f.spec.group, []).get(f.spec.group)!).push(f.spec); continue; }
+        place(f.spec.group, propRow(f.spec));
+      }
+      if (kinds.includes('link') && (t.kind === 'instance' || t.kind === 'component')) {
+        const hc = hoverColor(el);
+        if (hc) place('sel-text', propRow({ ...SPECS.color, label: 'Hover' }, { read: () => hoverLayer(false).color ?? hc, layer: hoverLayer, write: (v) => {
+          const m = hoverLayer(v !== null);
+          if (v === null) delete m.color; else m.color = v;
+          prune(); applyLive(); sync();
+        } }));
+      }
+      for (const u of [...uses].sort(order)) if (!done.has(u)) place(groupOf(u).id, tokenRow(u));
     }
     for (const [id, sec] of groupSecs) {
       const nodes = byGroup.get(id) ?? [];
       sec.el.querySelector('.sec__b')!.replaceChildren(...nodes);
-      sec.el.hidden = !selection || !nodes.length;
+      const plus = addBtns.get(id);
+      if (plus) plus.hidden = !addable.get(id)?.length;
+      sec.setEmpty(!nodes.length);
+      sec.el.hidden = !selection || (!nodes.length && !addable.get(id)?.length);
     }
   }
 
@@ -792,6 +911,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   function syncSelection() {
     const has = !!selection;
+    // A scope change can turn literal fields on or off (none at the root).
+    if (`${selection?.instance ?? ''}|${target().kind}|${activeVariant ?? ''}` !== renderedFor) renderTokens();
     scopeSec.el.hidden = !has || !!activeVariant;
     propsSec.el.hidden = !has;
     surfacesSec.el.hidden = !atRoot();
