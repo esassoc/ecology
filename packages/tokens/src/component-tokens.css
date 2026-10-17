@@ -543,9 +543,14 @@
      anywhere got this token instead of a value of its own. */
   --side-dialog-backdrop-filter: none;
 
-  /* esa-badge */
-  --badge-bg: var(--color-background-brand, #43608a);
-  --badge-text-color: var(--color-content-default-knockout, #fff);
+  /* esa-badge — the DEFAULT badge's surface, which is the quiet neutral count chip
+     (2026-10-16), not the brand fill. `variant="primary"` paints the brand directly
+     and does not read these. The border joined the fill and text because a spoke
+     re-colouring a default badge through --badge-bg (beacon-design does, a dozen
+     times) has to be able to move or drop its edge with it. */
+  --badge-bg: var(--color-background-elevation-raised, #fcfcfc);
+  --badge-text-color: var(--color-content-default-secondary, #646464);
+  --badge-border-color: var(--color-border-default, #cecece);
 
   /* esa-card */
   --card-bg: var(--color-background-elevation-raised, #ffffff);

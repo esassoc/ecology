@@ -8,7 +8,7 @@
     "the removed note), then re-run `npm run tokens:snapshot` to accept the new set."
   ],
   "generated": "node scripts/snapshot-tokens.mjs --write",
-  "count": 1604,
+  "count": 1605,
   "names": [
     "--alert-box-text-color",
     "--animation-enter",
@@ -30,6 +30,7 @@
     "--back-to-top-size",
     "--backdrop-filter",
     "--badge-bg",
+    "--badge-border-color",
     "--badge-text-color",
     "--border-width-100",
     "--border-width-200",
