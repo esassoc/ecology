@@ -13,7 +13,7 @@ import { declared } from './graph';
 import { fieldsFor, readProp, specsFor, type ElementKind } from './fields';
 import type { TokenUse } from './inspect';
 import * as R from './ramps';
-import { NON_TEXT, contrastLine, nearest, pairedIcon, rank, suggestedLeading, textBar, worst, type SchemeRatio } from './checks';
+import { NON_TEXT, contrastLine, nearest, nearest as nearestOf, pairedIcon, rank, suggestedLeading, textBar, worst, type SchemeRatio } from './checks';
 
 export type MapKey = 'shared' | 'light' | 'dark';
 export type Scheme = 'light' | 'dark';
@@ -59,6 +59,10 @@ export interface LeverRow {
   drag?(axis: 'x' | 'y' | 'both', px: number): void;
   /** The value now, for the band to start from. */
   px?(axis: 'x' | 'y'): number;
+  /** Options: steps along the ramp from where it is (false when it cannot move). */
+  move?(d: number): boolean;
+  /** Options: the rung (or role) with this name. */
+  pick?(name: string): boolean;
 }
 
 const VOID = /^(img|input|br|hr|area|col|embed|source|track|wbr|textarea|select|svg|path|use|g|circle|rect|line|polyline|polygon)$/;
@@ -105,19 +109,24 @@ export function buildLevers(host: LeverHost): LeverRow[] {
     check?: (px: number) => { text: string; warn?: boolean } | null;
     suggest?: (rungs: Rung[], pxs: number[]) => number | null;
     band?: Band;
+    /** How close a value must be to a rung to be on it (px; a ratio for line height). */
+    tol?: number;
+    /** A literal for a value off every rung. */
+    literal?: (v: number) => Rung;
   }
   function lengthRow(o: LengthOpts): LeverRow {
     const names = [...new Set(o.props.map(nameFor))];
     const fs = cs().fontSize;
     const valueOf = (r: Rung) => (r.value === '0px' || r.value === 'none' ? 0 : o.measure === 'lineHeight'
-      ? lineHeightPx(resolve('lineHeight', r.value, fs), num(fs)) : num(resolve(o.measure, r.value, fs)));
+      ? lineHeightPx(resolve('lineHeight', r.value, fs), num(fs)) / num(fs) : num(resolve(o.measure, r.value, fs)));
+    const nearest = (list: number[], v: number) => nearestOf(list, v, o.tol);
     const rungs = [...o.base];
     const pxs = rungs.map(valueOf);
     const place = (px: number) => {
       if (nearest(pxs, px) >= 0) return;
       const i = pxs.findIndex((p) => p > px);
       const at2 = i < 0 ? rungs.length : i;
-      rungs.splice(at2, 0, off(px));
+      rungs.splice(at2, 0, (o.literal ?? off)(px));
       pxs.splice(at2, 0, px);
     };
     const originPx = host.original(o.read);
@@ -160,6 +169,19 @@ export function buildLevers(host: LeverHost): LeverRow[] {
         commit(best);
       },
       px: () => o.read(),
+      move(d) {
+        const c = current();
+        const i = Math.max(0, Math.min(rungs.length - 1, c + d));
+        if (i === c) return false;
+        commit(i);
+        return true;
+      },
+      pick(name) {
+        const i = rungs.findIndex((r) => r.name === name);
+        if (i < 0 || i === current()) return false;
+        commit(i);
+        return true;
+      },
     };
   }
   const lineHeightPx = (lh: string, fontPx: number) => {
@@ -193,11 +215,17 @@ export function buildLevers(host: LeverHost): LeverRow[] {
       writes: names.map((name) => ({ name, modes: ['light', 'dark'], value: r === origin ? null : r.value })),
     });
     const lever = swatchLever({ label: o.label, rungs: o.base, more: o.more.length ? o.more : undefined, onChange: commit });
+    const now = () => { const raw = host.raw('light', names[0]); return (raw && all.find((r) => r.value === raw)) || (raw ? findRung(toHex(raw)) : origin) || origin; };
     return {
       id: o.id, group: o.group, label: o.label, el: lever.el,
+      pick(name) {
+        const r = o.base.find((x) => x.name === name);
+        if (!r || r.value === now().value) return false;
+        commit(r);
+        return true;
+      },
       sync() {
-        const raw = host.raw('light', names[0]);
-        const cur = (raw && all.find((r) => r.value === raw)) || (raw ? findRung(toHex(raw)) : origin) || origin;
+        const cur = now();
         lever.set(cur, origin);
         if (!o.judge) { lever.note(null); host.flag(o.id, null); return; }
         const fails = new Set<Rung>();
@@ -274,11 +302,13 @@ export function buildLevers(host: LeverHost): LeverRow[] {
   }
 
   if (fields.has('line-height')) {
-    const lh = () => lineHeightPx(cs().lineHeight, fontPx());
+    // Read as a ratio of the size, so a size change does not move it to another rung.
+    const ratio = () => lineHeightPx(cs().lineHeight, fontPx()) / fontPx();
     rows.push(lengthRow({
-      id: 'line-height', label: 'Line Height', group: 'Text', props: ['line-height'], base: R.lineHeights(), measure: 'lineHeight', read: lh,
-      show: (r, px) => `${r.name ?? pxText(px)}${r.name ? ` · ${Math.round(px)} px` : ''}`,
-      check: (px) => ({ text: `${Math.round(px)} px lines on ${Math.round(fontPx())} px text` }),
+      id: 'line-height', label: 'Line Height', group: 'Text', props: ['line-height'], base: R.lineHeights(), measure: 'lineHeight', read: ratio, tol: 0.03,
+      literal: (v) => ({ value: String(Math.round(v * 100) / 100), name: `${Math.round(v * 100) / 100}` }),
+      show: (r, v) => `${r.name ?? ''} · ${Math.round(v * fontPx())} px`.replace(/^ · /, ''),
+      check: (v) => ({ text: `${Math.round(v * fontPx())} px lines on ${Math.round(fontPx())} px text` }),
       suggest: (rungs) => { const s = rungs.findIndex((r) => r.token === `--line-height-${suggestedLeading(fontPx())}`); return s < 0 ? null : s; },
     }));
   }
@@ -367,6 +397,13 @@ export function buildLevers(host: LeverHost): LeverRow[] {
         if (nx !== x || ny !== y) commit(nx, ny);
       },
       px: (axis) => (axis === 'x' ? readX() : readY()),
+      move(d) {
+        const [x, y] = [idx(readX()), idx(readY())];
+        const c = (i: number) => Math.max(0, Math.min(rungs.length - 1, i + d));
+        if (c(x) === x && c(y) === y) return false;
+        commit(c(x), c(y));
+        return true;
+      },
     };
   }
 
@@ -393,13 +430,11 @@ export function buildLevers(host: LeverHost): LeverRow[] {
       writes: [{ name, modes: ['shared'], value: i === oi ? null : shadows[i].value }],
     });
     const lever = rampLever({ label: 'Shadow', rungs: shadows, show: (r) => r.name ?? '', onChange: commit });
+    const now = () => { const raw = host.raw('shared', name); const i = raw ? shadows.findIndex((r) => r.value === raw) : vals.indexOf(read()); return i < 0 ? oi : i; };
     rows.push({
       id: 'shadow', group: 'Box', label: 'Shadow', el: lever.el,
-      sync() {
-        const raw = host.raw('shared', name);
-        const i = raw ? shadows.findIndex((r) => r.value === raw) : vals.indexOf(read());
-        lever.set(i < 0 ? oi : i, oi);
-      },
+      sync() { lever.set(now(), oi); },
+      move(d) { const c = now(); const i = Math.max(0, Math.min(shadows.length - 1, c + d)); if (i === c) return false; commit(i); return true; },
     });
   }
 

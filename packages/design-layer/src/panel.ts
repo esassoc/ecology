@@ -40,6 +40,7 @@ import { buildLevers, GROUP_ORDER, type Band, type LeverChange, type LeverHost, 
 import { hueOf, hues, neutrals, themeRamps } from './ramps';
 import { CORNERS, DENSITY, NEUTRAL_SEED, TYPE_SCALE } from './recipe-seeds.mjs';
 import { contrastLine, worst } from './checks';
+import { applyDirection, directionsFor, type Direction } from './options';
 import { rampLever, swatchLever, LEVER_CSS, type Rung } from './ui/levers';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
@@ -238,6 +239,17 @@ const PANEL_CSS = `
   .shield { position: fixed; inset: 0; z-index: 2147483100; cursor: ns-resize; }
   .shield[data-axis="x"] { cursor: ew-resize; }
   .ui[data-before] .box--sel { border-style: dashed; }
+  /* options: A, B, C */
+  .opt { display: grid; gap: 6px; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--line); }
+  .opt[hidden] { display: none; }
+  .opt__row { display: flex; align-items: center; gap: 4px; }
+  .opt__row .seg { flex: 1; display: flex; min-width: 0; }
+  .opt__row .seg button { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .opt__row .seg button:first-child { flex: none; }
+  .opt__row .seg button[hidden] { display: none; }
+  .opt__row .seg button[data-fail]::after { content: ''; position: absolute; top: 3px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: var(--danger); }
+  .opt__why { color: var(--ink-2); }
+  .opt__why[data-warn] { color: var(--danger); }
 `;
 
 /** Draws the panel into `canvas` (a shadow root) and wires it to `host`.
@@ -690,7 +702,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
   const isolateBtn = iconButton('isolate', 'Isolate Selection', () => setIsolating(!isolating), false);
   const pageTitle = h('span', { class: 'crumb crumb--cur' }, 'Page');
-  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), refBtn, isolateBtn, clearBtn, menuBtn);
+  const tryBtn = h('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', title: 'Three directions to compare (1, 2, 3)' }, 'Try 3');
+  tryBtn.addEventListener('click', () => (opts ? closeOptions() : tryThree()));
+  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), refBtn, tryBtn, isolateBtn, clearBtn, menuBtn);
   // What an edit applies to, under the breadcrumb: every one like it, or this one.
   const SCOPE_LABEL: Record<EditScope, string> = { component: 'Component', token: 'Token', instance: 'Instance' };
   const targetSeg = segmented<EditScope>({
@@ -886,7 +900,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // live, and names the seed that makes it real; Density, Type Scale and
   // Borders have none yet, and their notes say so.
   const pageSec = section({ id: 'page', title: 'Theme', body: [] });
-  let pageRows: { sync(): void }[] = [];
+  type PageRow = { id: string; el: HTMLElement; sync(): void; move?(d: number): boolean; pick?(name: string): boolean };
+  let pageRows: PageRow[] = [];
   const pageNote = (field: string) => tweaks.notes?.[`page|${field}`];
   type PageWrite = { name: string; modes: MapKey[]; value: string | null };
   function commitPage(field: string, what: string, from: string, to: string, tokens: [string | null, string | null], writes: PageWrite[], seed: ChangeNote['seed']) {
@@ -917,7 +932,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   ]);
   const steps = (prefix: string): [string, number][] => Array.from({ length: 12 }, (_, i) => [`${prefix}-${i + 1}`, i + 1]);
   function renderPage() {
-    const rows: { el: HTMLElement; sync(): void }[] = [];
+    const rows: PageRow[] = [];
+    /** A ramp lever's move and pick, through its own onChange, for Options. */
+    const steer = (lever: { get(): number }, rungs: Rung[], change: (i: number) => void) => ({
+      move(d: number) { const c = lever.get(); const i = Math.max(0, Math.min(rungs.length - 1, c + d)); if (i === c) return false; change(i); return true; },
+      pick(name: string) { const i = rungs.findIndex((r) => r.name === name); if (i < 0 || i === lever.get()) return false; change(i); return true; },
+    });
     const tr = themeRamps();
     const sc = tr.scope;
     const themeFile = sc ? `theme-${sc}.json` : 'the theme recipe';
@@ -934,16 +954,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const dark = original(() => schemes(() => hexAt(sc ? `var(--${sc}-neutral-12)` : 'var(--color-gray-12)')));
       const best = (s: Scheme, f: string) => Math.max(contrast(onBrand[s], f), contrast('#ffffff', f), contrast(dark.light, f));
       const ratio = new Map(all.map((r) => { const f = fill(r); return [r.value, { light: best('light', f.light), dark: best('dark', f.dark) }]; }));
-      const lever = swatchLever({
-        label: 'Brand', rungs: [current, ...hs.lever], more: hs.all,
-        onChange: (r) => {
-          const hue = r === current || r.value === current.value ? null : hueOf(r);
-          commitPage('brand', 'Brand', 'Current', r.name ?? '', [null, r.token ?? null], rampWrites(sc ? steps(`--${sc}-brand`) : BRAND_ROLES, hue),
-            hue ? { name: 'seeds.brand', value: hexAt(`var(--color-${hue}-9)`), exists: true } : undefined);
-        },
-      });
+      const change = (r: Rung) => {
+        const hue = r === current || r.value === current.value ? null : hueOf(r);
+        commitPage('brand', 'Brand', 'Current', r.name ?? '', [null, r.token ?? null], rampWrites(sc ? steps(`--${sc}-brand`) : BRAND_ROLES, hue),
+          hue ? { name: 'seeds.brand', value: hexAt(`var(--color-${hue}-9)`), exists: true } : undefined);
+      };
+      const lever = swatchLever({ label: 'Brand', rungs: [current, ...hs.lever], more: hs.all, onChange: change });
       lever.marks((r) => worst(ratio.get(r.value)!).ratio < 4.5);
-      rows.push({ el: lever.el, sync() {
+      rows.push({ id: 'brand', el: lever.el, pick(name) { const r = all.find((x) => x.name === name); if (!r || pageNote('brand')?.toToken === r.token) return false; change(r); return true; }, sync() {
         const n = pageNote('brand');
         const cur = (n && all.find((r) => r.token === n.toToken)) || current;
         lever.set(cur, current);
@@ -961,15 +979,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const origin = ns.find((r) => hexAt(r.value) === cur9) ?? { value: cur9, name: 'Current' };
       const rungs = ns.includes(origin) ? ns : [origin, ...ns];
       const body = (r: Rung) => { const n = scaleOf(r) ?? 'gray'; return { light: contrast(hexAt(`var(--color-${n}-12)`), hexAt(`var(--color-${n}-1)`)), dark: contrast(hexAt(`var(--color-${n}-dark-12)`), hexAt(`var(--color-${n}-dark-1)`)) }; };
-      const lever = swatchLever({
-        label: 'Neutral', rungs,
-        onChange: (r) => {
-          const n = r === origin ? null : scaleOf(r);
-          commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], rampWrites(steps(`--${sc}-neutral`), n),
-            n ? { name: 'seeds.neutral', value: NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED], exists: true } : undefined);
-        },
-      });
-      rows.push({ el: lever.el, sync() {
+      const change = (r: Rung) => {
+        const n = r === origin ? null : scaleOf(r);
+        commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], rampWrites(steps(`--${sc}-neutral`), n),
+          n ? { name: 'seeds.neutral', value: NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED], exists: true } : undefined);
+      };
+      const lever = swatchLever({ label: 'Neutral', rungs, onChange: change });
+      rows.push({ id: 'neutral', el: lever.el, pick(name) { const r = rungs.find((x) => x.name === name); const cur = pageNote('neutral')?.toToken ?? origin.token; if (!r || r.token === cur) return false; change(r); return true; }, sync() {
         const n = pageNote('neutral');
         const cur = (n && rungs.find((r) => r.token === n.toToken)) || origin;
         lever.set(cur, origin);
@@ -986,16 +1002,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const found = original(() => keys.findIndex((k) => Math.abs(mdOf(k) - originMd) < 0.5));
       const rungs: Rung[] = [...(found < 0 ? [{ value: 'current', name: 'Current' }] : []), ...keys.map((k) => ({ value: k, name: titleCase(k) }))];
       const oi = found < 0 ? 0 : found;
-      const lever = rampLever({
-        label: 'Corners', rungs, show: (r) => r.name ?? r.value,
-        onChange: (i) => {
-          const k = rungs[i].value as keyof typeof CORNERS;
-          const back = i === oi;
-          const writes: PageWrite[] = (['xs', 'sm', 'md', 'lg', 'chip'] as const).map((r) => ({ name: `--radius-${r}`, modes: ['shared'], value: back ? null : CORNERS[k][r] }));
-          commitPage('corners', 'Corners', rungs[oi].name!, rungs[i].name!, [null, null], writes, back ? undefined : { name: 'seeds.corners', value: k, exists: true });
-        },
-      });
-      rows.push({ el: lever.el, sync() {
+      const change = (i: number) => {
+        const k = rungs[i].value as keyof typeof CORNERS;
+        const back = i === oi;
+        const writes: PageWrite[] = (['xs', 'sm', 'md', 'lg', 'chip'] as const).map((r) => ({ name: `--radius-${r}`, modes: ['shared'], value: back ? null : CORNERS[k][r] }));
+        commitPage('corners', 'Corners', rungs[oi].name!, rungs[i].name!, [null, null], writes, back ? undefined : { name: 'seeds.corners', value: k, exists: true });
+      };
+      const lever = rampLever({ label: 'Corners', rungs, show: (r) => r.name ?? r.value, onChange: change });
+      rows.push({ id: 'corners', el: lever.el, ...steer(lever, rungs, change), sync() {
         const n = pageNote('corners');
         const i = n ? rungs.findIndex((r) => r.name === n.to) : oi;
         lever.set(i < 0 ? oi : i, oi);
@@ -1010,13 +1024,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const originPx = original(() => pxAt('var(--border-width-default)'));
       const oi = Math.max(0, pxs.findIndex((p) => Math.abs(p - originPx) < 0.25));
       const show = (r: Rung) => `${pxs[rungs.indexOf(r)]} px`;
-      const lever = rampLever({
-        label: 'Borders', rungs, show,
-        onChange: (i) => commitPage('borders', 'Borders', show(rungs[oi]), show(rungs[i]), [rungs[oi].token ?? null, rungs[i].token ?? null],
-          [{ name: '--border-width-default', modes: ['shared'], value: i === oi ? null : rungs[i].value }],
-          i === oi ? undefined : { name: 'border width', value: rungs[i].token!, exists: false }),
-      });
-      rows.push({ el: lever.el, sync() {
+      const change = (i: number) => commitPage('borders', 'Borders', show(rungs[oi]), show(rungs[i]), [rungs[oi].token ?? null, rungs[i].token ?? null],
+        [{ name: '--border-width-default', modes: ['shared'], value: i === oi ? null : rungs[i].value }],
+        i === oi ? undefined : { name: 'border width', value: rungs[i].token!, exists: false });
+      const lever = rampLever({ label: 'Borders', rungs, show, onChange: change });
+      rows.push({ id: 'borders', el: lever.el, ...steer(lever, rungs, change), sync() {
         const n = pageNote('borders');
         const i = n ? rungs.findIndex((r) => r.token === n.toToken) : oi;
         lever.set(i < 0 ? oi : i, oi);
@@ -1028,15 +1040,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const names = readTokens().filter((t) => family.test(t.name)).map((t) => t.name);
       if (!names.length) return;
       const oi = rungs.findIndex((r) => r.value === '1');
-      const lever = rampLever({
-        label: what, rungs, show: (r) => r.name ?? r.value,
-        onChange: (i) => {
-          const f = rungs[i].value;
-          const writes: PageWrite[] = names.map((name) => { const d = declared(name, 'light'); return { name, modes: ['shared'], value: f === '1' || !d ? null : `calc(${d} * ${f})` }; });
-          commitPage(field, what, rungs[oi].name!, rungs[i].name!, [null, null], writes, f === '1' ? undefined : { name: seedName, value: rungs[i].name!.toLowerCase(), exists: false });
-        },
-      });
-      rows.push({ el: lever.el, sync() {
+      const change = (i: number) => {
+        const f = rungs[i].value;
+        const writes: PageWrite[] = names.map((name) => { const d = declared(name, 'light'); return { name, modes: ['shared'], value: f === '1' || !d ? null : `calc(${d} * ${f})` }; });
+        commitPage(field, what, rungs[oi].name!, rungs[i].name!, [null, null], writes, f === '1' ? undefined : { name: seedName, value: rungs[i].name!.toLowerCase(), exists: false });
+      };
+      const lever = rampLever({ label: what, rungs, show: (r) => r.name ?? r.value, onChange: change });
+      rows.push({ id: field, el: lever.el, ...steer(lever, rungs, change), sync() {
         const n = pageNote(field);
         const i = n ? rungs.findIndex((r) => r.name === n.to) : oi;
         lever.set(i < 0 ? oi : i, oi);
@@ -1204,6 +1214,100 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const up = () => { shield.remove(); pressing = false; removeEventListener('pointermove', move, true); removeEventListener('pointerup', up, true); };
     addEventListener('pointermove', move, true);
     addEventListener('pointerup', up, true);
+  }
+
+  // ── options: Try 3 ──────────────────────────────────────────────────
+  // Three directions (options.ts) previewed live as A, B and C. A previewed
+  // option is real lever moves on a copy of the tweaks; Keep makes it one undo
+  // step, Off or a new selection drops it. A direction whose moves fail a
+  // check carries a red dot before it is picked.
+  let previewing = false;
+  let opts: { dirs: Direction[]; base: Tweaks; active: number | null; fails: number[]; moved: number[] } | null = null;
+  const optSeg = segmented<string>({
+    label: 'Options', options: [{ value: '0', label: 'Off' }, { value: '1', label: 'A' }, { value: '2', label: 'B' }, { value: '3', label: 'C' }],
+    onChange: (v) => showOption(v === '0' ? null : Number(v) - 1),
+  });
+  const optWhy = h('div', { class: 'opt__why' });
+  const keepBtn = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Keep');
+  keepBtn.addEventListener('click', () => keepOption());
+  const optClose = iconButton('close', 'Discard Options', () => closeOptions());
+  const optBar = h('div', { class: 'opt', hidden: true }, h('div', { class: 'opt__row' }, optSeg.el, keepBtn, optClose), optWhy);
+  const steerRows = () => (selection ? leverRows : pageRows);
+  const checksNow = () => Object.values(tweaks.notes ?? {}).filter((n) => n.check).length;
+  function preview(t: Tweaks) { tweaks = normalize(structuredClone(t)); applyLive(); }
+  function tryThree() {
+    const dirs = directionsFor(steerRows(), !selection);
+    if (!dirs.length) return;
+    checkpoint(true);
+    saveNow();
+    const base = structuredClone(tweaks);
+    previewing = true;
+    const before0 = checksNow();
+    const fails: number[] = [];
+    const moved: number[] = [];
+    for (const d of dirs) { preview(base); moved.push(applyDirection(d, steerRows())); fails.push(Math.max(0, checksNow() - before0)); }
+    preview(base);
+    opts = { dirs, base, active: null, fails, moved };
+    sync();
+    showOption(moved.findIndex((m) => m > 0));
+  }
+  function showOption(i: number | null) {
+    if (!opts) return;
+    preview(opts.base);
+    opts.active = i !== null && i >= 0 && opts.moved[i] ? i : null;
+    if (opts.active !== null) applyDirection(opts.dirs[opts.active], steerRows());
+    sync();
+  }
+  function keepOption() {
+    if (!opts) return;
+    if (opts.active === null) { closeOptions(); return; }
+    opts = null;
+    previewing = false;
+    checkpoint(true);
+    sync();
+  }
+  function closeOptions() {
+    if (!opts) return;
+    const base = opts.base;
+    opts = null;
+    previewing = false;
+    preview(base);
+    sync();
+  }
+  function syncOptions() {
+    optBar.hidden = !opts || tab !== 'tune';
+    tryBtn.setAttribute('aria-pressed', String(!!opts));
+    tryBtn.hidden = !!activeVariant || !steerRows().length;
+    if (!opts) return;
+    const o = opts;
+    optSeg.set(o.active === null ? '0' : String(o.active + 1));
+    const btns = [...optSeg.el.querySelectorAll('button')];
+    btns.slice(1).forEach((b, i) => {
+      const d = o.dirs[i];
+      b.hidden = !d;
+      if (!d) return;
+      b.textContent = `${'ABC'[i]} ${d.name}`;
+      b.disabled = !o.moved[i];
+      b.toggleAttribute('data-fail', o.fails[i] > 0);
+      b.title = `${d.name} (${i + 1})${o.fails[i] ? `: ${o.fails[i]} ${o.fails[i] === 1 ? 'check fails' : 'checks fail'}` : ''}`;
+    });
+    keepBtn.disabled = o.active === null;
+    const a = o.active;
+    optWhy.hidden = a === null;
+    optWhy.textContent = a === null ? '' : `${o.dirs[a].why}${o.fails[a] ? ` ${o.fails[a]} ${o.fails[a] === 1 ? 'check fails' : 'checks fail'}.` : ''}`;
+    optWhy.toggleAttribute('data-warn', a !== null && o.fails[a] > 0);
+  }
+  /** 0 to 3 pick Off, A, B, C while options are open; Esc drops them. */
+  function optionKeys(e: KeyboardEvent) {
+    if (!open || !opts || e.metaKey || e.ctrlKey || e.altKey) return false;
+    const t = e.composedPath()[0];
+    if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return false;
+    if (e.key === 'Escape') { e.preventDefault(); closeOptions(); escapeAt = performance.now(); return true; }
+    const n = ['0', '1', '2', '3'].indexOf(e.key);
+    if (n < 0) return false;
+    e.preventDefault();
+    showOption(n === 0 ? null : n - 1);
+    return true;
   }
 
   function syncSelection() {
@@ -1508,7 +1612,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   /** `force`: a lever's notch is its own step, even mid-drag. */
   function checkpoint(force = false) {
     queued = false;
-    if ((pressing && !force) || same(tweaks, anchorT)) return;
+    if (previewing || (pressing && !force) || same(tweaks, anchorT)) return;
     past.push(anchorT);
     if (past.length > 200) past.shift();
     future.length = 0;
@@ -1680,7 +1784,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sync();
   }
 
-  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, selCtx, variantsSec.el, ...[...leverSecs.values()].map((g) => g.el), pageSec.el, statesSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
+  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, selCtx, optBar, variantsSec.el, ...[...leverSecs.values()].map((g) => g.el), pageSec.el, statesSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
   const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
@@ -1812,8 +1916,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     refBtn?.setAttribute('aria-pressed', String(atReference()));
     // 350 is banned, wherever it came from (a hand-edited tweaks.json included).
     bannedList.replaceChildren(...bannedTweaks().map((v) => h('div', { class: 'note note--fail' }, `${v.replace(/^--/, '')}: ${BANNED_WEIGHT} is banned; regular is 400`)));
-    if (!same(tweaks, saved)) autosave();
+    if (!previewing && !same(tweaks, saved)) autosave();
     syncReview();
+    syncOptions();
     syncComments();
   }
 
@@ -1915,6 +2020,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     placeOverlays();
   }
   function setSelection(s: Selection | null, fromClick = false) {
+    closeOptions();
     closeQuick();
     selection = s;
     hovered = null;
@@ -1957,6 +2063,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (type === 'keydown' && isToggleKey(k)) { k.preventDefault(); host.setOpen(!open); }
       if (type === 'keydown') historyKey(k);
       if (type !== 'keypress') beforeKeys(k);
+      if (type === 'keydown' && optionKeys(k)) { e.stopPropagation(); return; }
       if (type === 'keydown' && k.key === 'Escape' && picked) { picked = null; syncComments(); }
       else if (type === 'keydown' && k.key === 'Escape' && !quick.hidden && !ui.querySelector('.pop')) closeQuick();
       else if (type === 'keydown' && k.key === 'Escape' && selection && !ui.querySelector('.pop') && !(k.composedPath()[0] instanceof HTMLInputElement)) setSelection(null);
@@ -2023,7 +2130,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   document.addEventListener('keydown', (e) => { if (isToggleKey(e)) { e.preventDefault(); host.setOpen(!open); } });
   // On the page: Esc clears the selection (then leaves the select tool),
   // Shift+Enter selects the parent component, Enter the first one inside.
-  document.addEventListener('keydown', (e) => { if (historyKey(e) || beforeKeys(e)) e.stopImmediatePropagation(); }, true);
+  document.addEventListener('keydown', (e) => { if (historyKey(e) || optionKeys(e) || beforeKeys(e)) e.stopImmediatePropagation(); }, true);
   document.addEventListener('keyup', (e) => { if (beforeKeys(e)) e.stopImmediatePropagation(); }, true);
   document.addEventListener('keydown', (e) => {
     if (!open || commenting) return;
