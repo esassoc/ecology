@@ -556,6 +556,23 @@
   --card-bg: var(--color-background-elevation-raised, #ffffff);
   --card-border-color: var(--color-border-default, #e5e5e5);
   --card-header-bg: transparent;
+  /* Block (vertical) padding, one per band. Added 2026-10-17 under a
+     `hub-edit-approved:` note (Andrew, front-end architect): spokes were reaching
+     into .esa-card__header / __body to change it — firma2-design closes the gap a
+     removed header rule leaves by overriding both — which is the "a spoke asked"
+     test passing outright. Card padding is also SPEC.md's own named example of
+     distinctive geometry that earns a hook.
+
+     Three, not one: the bands sit at three different values today (16 / 24 / 12),
+     and a single hook could not hold all three without moving two of them. The
+     inline axis stays on the `padding` prop. So does the body's block axis for
+     any non-default `padding`: the prop is a per-instance choice and beats this
+     theme-wide default, so `--card-body-padding-y` governs default-padding cards
+     only. Header and footer read their hooks under every `padding`, as they
+     always held fixed values. */
+  --card-header-padding-y: var(--spacing-400);
+  --card-body-padding-y: var(--spacing-500);
+  --card-footer-padding-y: var(--spacing-300);
 
   /* esa-collapsible */
 
