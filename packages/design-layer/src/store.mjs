@@ -1,5 +1,6 @@
 // The design layer's persistence, on the dev server's side: reads and writes
-// <spoke>/<dataDir>/{tweaks.json, tweaks.css, feedback.jsonl}. Node only, no
+// <spoke>/<dataDir>/{tweaks.json, tweaks.css, feedback.jsonl}, and Send to
+// Claude's changes.md and changes.json. Node only, no
 // framework, so any dev adapter (Astro's today) can serve it. The real token
 // files are never touched here; Save to Source (promote.mjs) writes them, on a
 // person's click, after showing what it will change.
@@ -25,6 +26,11 @@ export function createStore(dir) {
     saveTweaks({ json, css }) {
       writeFileSync(file('tweaks.json'), `${JSON.stringify(json, null, 2)}\n`);
       writeFileSync(file('tweaks.css'), css);
+    },
+    /** Send to Claude: the changes as a brief (changes.md) and as data (changes.json). */
+    sendToClaude({ md, json }) {
+      writeFileSync(file('changes.md'), md.endsWith('\n') ? md : `${md}\n`);
+      writeFileSync(file('changes.json'), `${JSON.stringify(json, null, 2)}\n`);
     },
     addComment(record) {
       appendFileSync(file('feedback.jsonl'), `${JSON.stringify(record)}\n`);

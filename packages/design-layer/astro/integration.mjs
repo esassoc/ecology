@@ -88,6 +88,7 @@ export default function designLayer(inline = {}) {
         toolbar.on(`${EVENT}:load`, sendState);
         toolbar.on(`${EVENT}:save-tweaks`, (data) => { s.saveTweaks(data); sendState(); });
         toolbar.on(`${EVENT}:add-comment`, (record) => { s.addComment(record); sendState(); });
+        toolbar.on(`${EVENT}:send-to-claude`, (data) => { s.sendToClaude(data); });
         toolbar.on(`${EVENT}:set-status`, (data) => { s.setStatus(data); sendState(); });
         // Save to Source: the plan first, then (write) the files themselves.
         toolbar.on(`${EVENT}:promote`, ({ entries, instances, write }) => {

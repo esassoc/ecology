@@ -105,6 +105,35 @@ export interface Tweaks {
   departures?: Departure[];
   /** What a variable pick meant, per edit: the concept, not just the token it resolved to. */
   intents?: Intent[];
+  /** One per lever moved, keyed by where and what: the review's rows and changes.md's lines. */
+  notes?: Record<string, ChangeNote>;
+}
+
+/**
+ * A lever move as the review and Send to Claude describe it: "Stat Card ·
+ * Padding 16 px → 24 px", where it landed, what it wrote, and the check it
+ * fails (if any). Page levers carry the recipe seed that would make it real.
+ */
+export interface ChangeNote {
+  /** What it was done to: the component, the element, or "Page". */
+  who: string;
+  where: { kind: 'root' | 'component' | 'instance'; selector: string; page?: string };
+  field: string;
+  what: string;
+  from: string;
+  to: string;
+  fromToken: string | null;
+  toToken: string | null;
+  /** The variables or properties it wrote, and in which maps. */
+  writes: { name: string; modes: ('shared' | 'light' | 'dark')[] }[];
+  /** The failed check, as the lever worded it. */
+  check?: string;
+  /** How many elements an "All" move reached. */
+  count?: number;
+  file?: string | null;
+  /** A page lever: the recipe seed and value that make it permanent, or why there is none yet. */
+  seed?: { name: string; value: string; exists: boolean };
+  at: string;
 }
 
 /**
@@ -241,6 +270,8 @@ export interface PanelMessages {
   'set-status': { id: string; status: FeedbackRecord['status'] };
   /** Plan Save to Source, or (write) apply it; the plan comes back on the state. */
   promote: { entries: PromoteEntry[]; instances: number; write: boolean };
+  /** Send to Claude: written to <dataDir>/changes.md and changes.json. */
+  'send-to-claude': { md: string; json: unknown };
 }
 
 /** What a dev adapter gives the panel: a channel to its dev server and the open/closed state. */

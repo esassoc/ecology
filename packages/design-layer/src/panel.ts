@@ -21,7 +21,7 @@ import {
   BANNED_WEIGHT, FONT_OPTIONS, buildCss, googleHref, migrateShared, modeVars, rootSelector, scopedBlocks,
   type ColorControl, type Departure, type FeedbackRecord, type FontControl, type FontOption,
   type LengthControl, type Mode, type PanelHost, type ResolvedConfig, type ServerState,
-  type EditScope, type PageState, type PromoteEntry, type PromotePlan, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
+  type ChangeNote, type EditScope, type PageState, type PromoteEntry, type PromotePlan, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
 } from './controls';
 import { contrast, firstFamily, formatColor, formatOf, oklchL, toHex, toRgba } from './color';
 import { effectiveBackground, selectorFor, snippet, source } from './describe';
@@ -35,7 +35,12 @@ import { ancestors, candidate, firstChildComponent, select, type Selection } fro
 import { computedOn, tokensOn, type TokenUse } from './inspect';
 import { declared, dependents, invalidateGraph } from './graph';
 import { createStage } from './stage';
-import { SPECS, fieldsFor, hoverColor, kindsOf, readProp, specsFor, type FieldSpec } from './fields';
+import { kindsOf } from './fields';
+import { buildLevers, GROUP_ORDER, type Band, type LeverChange, type LeverHost, type LeverRow, type MapKey, type Scheme } from './lever-rows';
+import { hueOf, hues, neutrals, themeRamps } from './ramps';
+import { CORNERS, DENSITY, NEUTRAL_SEED, TYPE_SCALE } from './recipe-seeds.mjs';
+import { contrastLine, worst } from './checks';
+import { rampLever, swatchLever, LEVER_CSS, type Rung } from './ui/levers';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
@@ -51,8 +56,9 @@ const INSET = 12;
 /** Open, close and the side swap: one ease-out curve. */
 const MOTION = 220;
 const LAYOUT_KEY = 'design-layer:layout-open';
-const PROPS_KEY = 'design-layer:properties-open';
+const DETAILS_KEY = 'design-layer:theme-details';
 type Side = 'left' | 'right';
+type Tab = 'tune' | 'review' | 'comments';
 const store = {
   get(key: string) { try { return localStorage.getItem(key); } catch { return null; } },
   set(key: string, v: string) { try { localStorage.setItem(key, v); } catch { /* storage blocked */ } },
@@ -88,6 +94,7 @@ const normalize = (t: Partial<Tweaks> | undefined): Tweaks => ({
   ...(t?.overrides?.length ? { overrides: structuredClone(t.overrides) } : {}),
   ...(t?.variants?.length ? { variants: structuredClone(t.variants) } : {}),
   ...(t?.states?.length ? { states: structuredClone(t.states) } : {}),
+  ...(t?.notes && Object.keys(t.notes).length ? { notes: structuredClone(t.notes) } : {}),
 });
 const cloneRamp = (r: Ramp): Ramp => structuredClone(r);
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -197,6 +204,40 @@ const PANEL_CSS = `
   .ib:disabled { color: var(--ink-3); background: none; }
   .row-x { visibility: hidden; }
   .row-x[data-on] { visibility: visible; }
+  /* the target switch under the breadcrumb */
+  .sel__ctx .seg { display: flex; width: 100%; }
+  .sel__ctx .seg button { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .qe__b { display: grid; }
+  /* footer: the count, Before, Send to Claude */
+  .p-foot { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px 0 8px; border-top: 1px solid var(--line); flex: none; }
+  .p-foot .grow { flex: 1; }
+  .ft__n { height: 24px; padding: 0 8px; border: 0; border-radius: 5px; background: none; color: var(--ink-2); font: inherit; font-variant-numeric: tabular-nums; }
+  .ft__n:hover { background: var(--hover); color: var(--ink); }
+  .btn[aria-pressed="true"] { border-color: transparent; background: var(--selected); color: var(--selected-ink); }
+  /* review */
+  .rv { display: grid; padding: 8px 8px 16px 16px; }
+  .rv__r { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .rv__t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rv__who { font-weight: 550; }
+  .rv__v { grid-column: 1; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .rv__x { grid-column: 1 / -1; color: var(--danger); }
+  .rv__s { grid-column: 1 / -1; color: var(--ink-3); }
+  .rv__empty { padding: 16px 0; color: var(--ink-2); }
+  .rv__h { padding: 12px 0 4px; font-weight: 550; }
+  .rv__c { padding: 4px 0; color: var(--ink-2); overflow-wrap: anywhere; }
+  /* padding and gap on the page, Chrome's inspector colours; dragged along the spacing scale */
+  .band { position: fixed; z-index: 2147482997; background: rgba(147, 196, 125, 0.28); cursor: ns-resize; }
+  .band[data-axis="x"] { cursor: ew-resize; }
+  .band--gap { background: repeating-linear-gradient(45deg, rgba(175, 82, 222, 0.4) 0 1.5px, transparent 1.5px 6px); }
+  .band--padding[data-on], .band--padding:hover { background: rgba(147, 196, 125, 0.55); }
+  .band--gap[data-on], .band--gap:hover { background: repeating-linear-gradient(45deg, rgba(175, 82, 222, 0.75) 0 1.5px, rgba(175, 82, 222, 0.12) 1.5px 6px); }
+  .band__px { position: absolute; left: 50%; top: 50%; translate: -50% -50%; height: 14px; padding: 0 4px; border-radius: 2px; background: #3a7d22; color: #fff;
+    font: 550 10px/14px 'Design Layer UI', Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; visibility: hidden; }
+  .band--gap .band__px { background: #8a3fb3; }
+  .band[data-on] .band__px, .band:hover .band__px { visibility: visible; }
+  .shield { position: fixed; inset: 0; z-index: 2147483100; cursor: ns-resize; }
+  .shield[data-axis="x"] { cursor: ew-resize; }
+  .ui[data-before] .box--sel { border-style: dashed; }
 `;
 
 /** Draws the panel into `canvas` (a shadow root) and wires it to `host`.
@@ -210,7 +251,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   INKS = config.inks.filter((i) => COLORS.some((c) => c.id === i));
   const CSS_ROUTE = host.cssRoute;
   if (host.fontUrl) registerPanelFont(host.fontUrl);
-  canvas.innerHTML = `<style>${UI_CSS}${PANEL_CSS}</style>`;
+  canvas.innerHTML = `<style>${UI_CSS}${LEVER_CSS}${PANEL_CSS}</style>`;
   const ui = h('div', { class: 'ui' });
   canvas.append(ui);
   const html = document.documentElement;
@@ -234,7 +275,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let onEdit = () => {};
   let closing = false;
   let layoutOpen = store.get(LAYOUT_KEY) === '1';
-  let tab: 'tune' | 'comments' = 'tune';
+  /** The theme's own sections (surfaces, colours, type, layout, states) under the page levers. */
+  let details = store.get(DETAILS_KEY) === '1';
+  let tab: Tab = 'tune';
   let mode: Mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light';
   let tweaks = emptyTweaks();
   let saved = emptyTweaks();
@@ -278,10 +321,23 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (v) return { kind: 'variant', id: v.id, selector: `[data-dl-variant="${v.id}"]`, name: v.name, el: stage.copyOf(v.id) ?? selection.el };
     }
     if (forceRoot || !selection || scope === 'token') return { kind: 'root' };
-    const c = selection.component;
-    if (scope === 'component' && c) return { kind: 'component', selector: c.selector, name: c.name, el: c.root };
+    const peer = peerOf(selection);
+    if (scope === 'component' && peer) return { kind: 'component', ...peer };
     return { kind: 'instance', selector: selection.instance, name: selection.name, el: selection.el, page: location.pathname };
   }
+  /** Every element like the selection: the component, or the same part inside every instance of it. */
+  function peerOf(s: Selection): { selector: string; name: string; el: Element } | null {
+    const c = s.component;
+    if (!c) return null;
+    if (c.root === s.el) return { selector: c.selector, name: c.name, el: c.root };
+    const cls = [...s.el.classList].find((x) => !/^(is-|has-|active|open|selected|current|disabled|hidden|astro-|typography-)/.test(x));
+    const part = cls ? `.${CSS.escape(cls)}` : s.el.localName;
+    // "esa-card Title": the part's own word, not its BEM class.
+    const word = (cls ? cls.split('__').pop()! : s.el.localName).replace(/-/g, ' ');
+    return { selector: `${c.selector} ${part}`, name: `${c.name} ${word[0].toUpperCase()}${word.slice(1)}`, el: s.el };
+  }
+  /** How many elements "All" reaches. */
+  const peerCount = () => { const p = selection && peerOf(selection); if (!p) return 1; try { return document.querySelectorAll(p.selector).length; } catch { return 1; } };
   const effectiveScope = (): EditScope => (scope === 'component' && !selection?.component ? 'instance' : scope);
   const isRule = (o: ScopedOverride, t: Scoped) => o.scope === t.kind && o.selector === t.selector && (o.page ?? '') === (t.page ?? '');
   /** The map an edit at the current scope reads, and (with `create`) writes. */
@@ -575,19 +631,23 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   /** A row's minus in the icon column: drops the override (Figma's remove-fill). */
   const rowX = (label: string, onClick: () => void) => { const b = iconButton('minus', `Reset ${label}`, onClick); b.classList.add('row-x', 'c3'); return b; };
 
-  // Top: Tune / Comments, the page's mode, Save (Figma's tabs, zoom, Share).
-  const tabBar = tabs({ label: 'Panel', options: [{ value: 'tune', label: 'Tune' }, { value: 'comments', label: 'Comments' }], onChange: (t) => setTab(t) });
-  const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); invalidateGraph(); renderStage(); sync(); };
-  const modeDd = dropdown({
-    label: 'Page mode',
-    onOpen: (a) => openMenu<Mode>({ root, anchor: a, alignEnd: true, selected: mode, pick: setMode, items: [{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }),
-  });
-  const save = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Saved');
-  save.addEventListener('click', () => host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) }));
+  // Top: Tune / Review / Comments, the tools, the page's scheme. Edits save
+  // themselves (to tweaks.json, never to the token files); Send to Claude and
+  // Save to Source are the two ways a change leaves the layer.
+  const tabBar = tabs<Tab>({ label: 'Panel', options: [{ value: 'tune', label: 'Tune' }, { value: 'review', label: 'Review' }, { value: 'comments', label: 'Comments' }], onChange: (t) => setTab(t) });
+  const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); invalidateGraph(); renderStage(); renderTokens(); renderPage(); sync(); };
+  const schemeBtn = iconButton('moon', 'Dark Page', () => setMode(mode === 'dark' ? 'light' : 'dark'));
+  let saveTimer = 0;
+  const saveNow = () => {
+    clearTimeout(saveTimer);
+    if (same(tweaks, saved)) return;
+    host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) });
+  };
+  const autosave = () => { clearTimeout(saveTimer); saveTimer = window.setTimeout(saveNow, 700); };
   const pickBtn = iconButton('cursor', 'Select (Click an Element)', () => setSelecting(!selecting), false);
   const undoBtn = iconButton('undo', 'Undo (⌘Z)', () => undo());
   const redoBtn = iconButton('redo', 'Redo (⇧⌘Z)', () => redo());
-  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), undoBtn, redoBtn, pickBtn, modeDd.el, save);
+  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), undoBtn, redoBtn, pickBtn, schemeBtn);
 
   // Selection header: the palette as the title, the reference, the menu.
   const paletteOptions = (): PaletteOption[] => PALETTES.map((p) => {
@@ -603,12 +663,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'revert' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close';
+  type MenuAction = 'promote' | 'details' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close';
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
       { value: 'promote', label: 'Save to Source…' },
-      { value: 'revert', label: 'Revert to Last Save', header: ' ', disabled: same(tweaks, saved) },
+      { value: 'details', label: 'Show Theme Details', header: ' ', lead: details ? icon('check') : h('span') },
       { value: 'reset-palette', label: 'Reset Palette' },
       { value: 'reset-all', label: 'Reset All to Source' },
       { value: 'quick', label: 'Quick Edit on Select', header: ' ', lead: quickOn ? icon('check') : h('span') },
@@ -617,7 +677,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     ],
     pick: (v) => {
       if (v === 'promote') openPromote();
-      else if (v === 'revert') { tweaks = normalize(saved); applyLive(); sync(); }
+      else if (v === 'details') { details = !details; store.set(DETAILS_KEY, details ? '1' : '0'); sync(); }
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
       else if (v === 'quick') { quickOn = !quickOn; store.set(QUICK_KEY, quickOn ? '1' : '0'); if (!quickOn) closeQuick(); }
@@ -629,12 +689,19 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const crumbs = h('nav', { class: 'crumbs', 'aria-label': 'Selection', hidden: true });
   const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
   const isolateBtn = iconButton('isolate', 'Isolate Selection', () => setIsolating(!isolating), false);
-  const sel = h('div', { class: 'sel' }, paletteDd.el, crumbs, h('span', { class: 'grow' }), refBtn, isolateBtn, clearBtn, menuBtn);
-  // What an edit applies to, under the breadcrumb: the copy and the scope.
+  const pageTitle = h('span', { class: 'crumb crumb--cur' }, 'Page');
+  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), refBtn, isolateBtn, clearBtn, menuBtn);
+  // What an edit applies to, under the breadcrumb: every one like it, or this one.
   const SCOPE_LABEL: Record<EditScope, string> = { component: 'Component', token: 'Token', instance: 'Instance' };
-  const selCtx = h('div', { class: 'sel__ctx', hidden: true });
+  const targetSeg = segmented<EditScope>({
+    label: 'Apply to',
+    options: [{ value: 'component', label: 'All' }, { value: 'instance', label: 'This One' }],
+    onChange: (v) => { scope = v; renderTokens(); sync(); },
+  });
+  const selCtx = h('div', { class: 'sel__ctx', hidden: true }, targetSeg.el);
   function syncHeader() {
-    paletteDd.el.hidden = !!selection;
+    paletteDd.el.hidden = !!selection || !details;
+    pageTitle.hidden = !!selection || details;
     selCtx.hidden = !selection;
     sel.classList.toggle('sel--two', !!selection);
     crumbs.hidden = !selection;
@@ -657,283 +724,114 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     );
   }
 
-  // Scope: where an edit lands. Component (every instance) is the default.
-  const scopeSeg = segmented<EditScope>({
-    label: 'Edit scope',
-    options: [{ value: 'component', label: 'Component' }, { value: 'token', label: 'Token' }, { value: 'instance', label: 'Instance' }],
-    onChange: (v) => { scope = v; sync(); },
-  });
-  scopeSeg.el.classList.add('span2');
-  const scopeSec = section({ id: 'scope', title: 'Scope', body: [scopeSeg.el] });
-
-  // Tokens: what the selection reads, by tier, each editable at the scope.
-  // Properties: its computed values, read only.
-  // The selection's editable properties, in sections named for what they
-  // change (Figma's Fill, Text, Typography, …), each shown only when the
-  // selection has it. A row is the value field for one token the element
-  // reads for that property: bound, it shows the token as a chip (the tier is
-  // in the chip's tooltip and the picker); edited, the value lands at the
-  // current scope on that token.
-  type Group = { id: string; title: string; match: RegExp };
-  const GROUPS_SEL: Group[] = [
-    { id: 'sel-fill', title: 'Fill', match: /^(background|background-color|fill)$/ },
-    { id: 'sel-text', title: 'Text', match: /^(color|-webkit-text-fill-color|text-decoration-color|caret-color)$/ },
-    { id: 'sel-type', title: 'Typography', match: /^(font|font-family|font-size|font-weight|line-height|letter-spacing|text-transform)$/ },
-    { id: 'sel-spacing', title: 'Spacing', match: /^(padding|margin|gap|row-gap|column-gap)(-|$)/ },
-    { id: 'sel-radius', title: 'Radius', match: /radius/ },
-    { id: 'sel-border', title: 'Border', match: /^(border|outline)/ },
-    { id: 'sel-effects', title: 'Effects', match: /^(box-shadow|opacity|filter|backdrop-filter|text-shadow)$/ },
-    { id: 'sel-size', title: 'Size', match: /^(width|height|min-|max-|inline-size|block-size|flex-basis)/ },
-  ];
-  const OTHER: Group = { id: 'sel-other', title: 'Other', match: /./ };
-  const addBtns = new Map<string, HTMLButtonElement>();
-  const groupSecs = new Map([...GROUPS_SEL, OTHER].map((g) => {
-    const plus = iconButton('plus', `Add to ${g.title}`, () => openMenu({
-      root, anchor: plus, alignEnd: true, selected: null,
-      items: (addable.get(g.id) ?? []).map((sp) => ({ value: sp.prop, label: sp.label })),
-      pick: (prop) => { added.add(prop); renderTokens(); sync(); },
-    }));
-    plus.hidden = true;
-    addBtns.set(g.id, plus);
-    return [g.id, section({ id: g.id, title: g.title, actions: [plus], body: [] })];
-  }));
-  let tokenRows: { sync: () => void }[] = [];
-  const TIER_LABEL: Record<TokenUse['tier'], string> = { 3: 'Component token', 2: 'Semantic token', 1: 'Primitive' };
-  const PROP_LABEL: [RegExp, string][] = [
-    [/^background/, 'Background'], [/^fill$/, 'Fill'], [/^color$/, 'Color'], [/font-family|^font$/, 'Family'], [/font-size/, 'Size'],
-    [/font-weight/, 'Weight'], [/line-height/, 'Line Height'], [/letter-spacing/, 'Letter Spacing'], [/padding-(inline|left|right)/, 'Padding X'],
-    [/padding-(block|top|bottom)/, 'Padding Y'], [/^padding$/, 'Padding'], [/gap/, 'Gap'], [/^margin/, 'Margin'], [/radius/, 'Radius'],
-    [/border.*color|outline-color/, 'Border Color'], [/border.*width|outline-width/, 'Border Width'], [/^border|^outline/, 'Border'],
-    [/box-shadow/, 'Shadow'], [/opacity/, 'Opacity'], [/height/, 'Height'], [/width/, 'Width'],
-  ];
-  const propLabel = (props: string[]) => {
-    for (const p of props) for (const [re, l] of PROP_LABEL) if (re.test(p)) return l;
-    return props[0] ?? 'Value';
-  };
-  const prefixFor = (props: string[]): Prefix => {
-    const has = (re: RegExp) => props.some((p) => re.test(p));
-    if (has(/radius/)) return 'radius';
-    if (has(/padding-(inline|left|right)/)) return 'padX';
-    if (has(/padding/)) return 'padY';
-    if (has(/font-size/)) return 'size';
-    if (has(/line-height/)) return { text: 'LH' };
-    if (has(/letter-spacing/)) return { text: 'LS' };
-    if (has(/height/)) return 'height';
-    if (has(/gap/)) return { text: 'G' };
-    if (has(/border|outline/)) return { text: 'B' };
-    return { text: '#' };
-  };
-  const groupOf = (u: TokenUse) => GROUPS_SEL.find((g) => u.props.some((p) => g.match.test(p))) ?? OTHER;
-  function tokenRow(u: TokenUse, bes: () => HTMLElement = beside): { nodes: Node[]; sync: () => void } {
-    const label = propLabel(u.props);
-    const title = `${u.name} · ${TIER_LABEL[u.tier]}${u.props.length ? `\n${u.props.join(', ')}` : ''}`;
-    // Unedited, the field shows the token itself as its chip.
-    const shownAs = (raw: string | undefined, literal: number | string) => (raw === undefined ? `var(${u.name})` : boundToken(raw) ? raw : literal);
-    if (u.kind === 'color') {
-      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside: bes, at: pickAt(u.name, u.props) }, onChange: (v, i) => set(mode, u.name, v, i) });
-      f.el.classList.add('span2');
-      f.el.title = title;
-      const x = rowX(label, () => set(mode, u.name, null));
-      return { nodes: [f.el, x], sync: () => {
-        const raw = layer(mode)[u.name];
-        const css = measureAt('color', raw ?? `var(${u.name})`);
-        f.set(String(shownAs(raw, toHex(css))), { resolved: css });
-        dimOn(x, u.name in layer(mode));
-      } };
-    }
-    if (u.kind === 'length' || u.kind === 'weight') {
-      const weight = u.kind === 'weight';
-      const f = numberField({
-        root, label: `${label}: ${u.name}`, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
-        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside: bes, at: pickAt(u.name, u.props) },
-        onChange: (v, i) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
-      });
-      f.el.classList.add('span2');
-      f.el.title = title;
-      const x = rowX(label, () => set('shared', u.name, null));
-      return { nodes: [f.el, x], sync: () => {
-        const raw = layer('shared')[u.name];
-        const n = Number.parseFloat(measureAt(weight ? 'fontWeight' : 'width', raw ?? `var(${u.name})`));
-        const lit = weight ? n : half(n);
-        f.set(shownAs(raw, lit), { resolved: lit });
-        dimOn(x, u.name in layer('shared'));
-      } };
-    }
-    // Faces, shadows and the rest: the token and its value, not edited here.
-    const value = h('span', { class: 'f__name' });
-    const row = h('div', { class: 'f f--ro span2', title }, h('span', { class: 'f__pre', 'aria-hidden': 'true' }, u.kind === 'font' ? 'Aa' : '#'), value, h('span', { class: 'f__suf' }, label));
-    return { nodes: [row, h('span', {})], sync: () => { value.textContent = selection ? getComputedStyle(selection.el).getPropertyValue(u.name).trim() : ''; } };
-  }
-  /**
-   * A field for a property the element sets without a token (or one a plus
-   * added). It writes the plain property at the current scope, never at the
-   * root: a literal has no token to edit there.
-   */
-  function propRow(spec: FieldSpec, over?: { read: () => string; layer: (create: boolean) => VarMap; write: (v: string | null) => void }, bes: () => HTMLElement = beside): { nodes: Node[]; sync: () => void } {
-    const isColor = spec.kind === 'color';
-    const map = (create = false) => over?.layer(create) ?? layer(isColor ? mode : 'shared', create);
-    const write = (v: string | null, i?: PickIntent) => (over ? over.write(v) : set(isColor ? mode : 'shared', spec.prop, v, i));
-    const read = () => over?.read() ?? (selection ? readProp(selection.el, spec.prop) : '');
-    const x = rowX(spec.label, () => write(null));
-    const title = `${spec.prop} · no token`;
-    if (isColor) {
-      const f = colorField({ root, label: spec.label, suffix: spec.label, tokens: over ? false : { beside: bes, at: pickAt(spec.prop) }, beside: bes, onChange: (v, i) => write(v, i) });
-      f.el.classList.add('span2');
-      f.el.title = title;
-      return { nodes: [f.el, x], sync: () => {
-        const raw = map()[spec.prop];
-        const css = read();
-        f.set(raw && boundToken(raw) ? raw : toHex(css), { resolved: css });
-        dimOn(x, spec.prop in map());
-      } };
-    }
-    if (spec.kind === 'length' || spec.kind === 'weight') {
-      const weight = spec.kind === 'weight';
-      const ls = spec.prop === 'letter-spacing';
-      const f = numberField({
-        root, label: spec.label, prefix: weight ? { text: 'W' } : prefixFor([spec.prop]), suffix: spec.label,
-        min: weight ? 100 : ls ? -10 : 0, max: weight ? 900 : 800, step: weight ? 1 : ls ? 0.1 : 0.5, refuse: weight ? [BANNED_WEIGHT] : undefined,
-        tokens: { kind: weight ? 'weight' : 'length', beside: bes, at: pickAt(spec.prop) },
-        onChange: (v, i) => write(typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
-      });
-      f.el.classList.add('span2');
-      f.el.title = title;
-      return { nodes: [f.el, x], sync: () => {
-        const raw = map()[spec.prop];
-        const n = Number.parseFloat(read()) || 0;
-        const lit = weight ? n : ls ? Math.round(n * 10) / 10 : half(n);
-        f.set(raw && boundToken(raw) ? raw : lit, { resolved: lit });
-        dimOn(x, spec.prop in map());
-      } };
-    }
-    // A face or a shadow: a choice, not a number.
-    const options: MenuItem<string>[] = spec.kind === 'font'
-      ? FONT_OPTIONS.map((o) => ({ value: o.css, label: o.label }))
-      : [{ value: 'none', label: 'None' }, ...readTokens().filter((t) => /^--(elevation|shadow)-\d+$/.test(t.name)).map((t) => ({ value: `var(${t.name})`, label: shortName(t.name) }))];
-    const f = selectField({ root, label: spec.label, suffix: spec.label, options, onChange: (v) => write(v) });
-    f.el.classList.add('span2');
-    f.el.title = title;
-    return { nodes: [f.el, x], sync: () => {
-      const raw = map()[spec.prop];
-      const cur = read();
-      const v = raw ?? (spec.kind === 'font' ? options.find((o) => firstFamily(o.value) === firstFamily(cur))?.value ?? cur.split(',')[0].replace(/["']/g, '') : cur === 'none' ? 'none' : 'Custom');
-      f.set(v);
-      dimOn(x, spec.prop in map());
-    } };
-  }
-
-  /** The override a link's :hover colour goes to: the target's selector plus :hover. */
-  function hoverLayer(create: boolean): VarMap {
-    const t = target();
-    if (t.kind !== 'instance' && t.kind !== 'component') return {};
-    const sel = `${t.selector}:hover`;
-    let o = tweaks.overrides?.find((x) => x.scope === t.kind && x.selector === sel && (x.page ?? '') === (t.page ?? ''));
-    if (!o) {
-      if (!create) return {};
-      o = { scope: t.kind, selector: sel, name: `${t.name} :hover`, ...(t.page ? { page: t.page } : {}), light: {}, dark: {}, shared: {} };
-      (tweaks.overrides ??= []).push(o);
-    }
-    return o[mode];
-  }
-
-  // Which fields a selection gets: what the element is and what it already
-  // uses (fields.ts). A plus on a section adds a property it does not set yet.
-  let added = new Set<string>();
-  let addedFor = '';
+  // ── levers ──────────────────────────────────────────────────────────
+  // A selection's sections are its levers (lever-rows.ts): Text, Icon, Box,
+  // Border, Layout, each property moving along the system's ramp and
+  // measuring itself in one line. A move is one undo step and one review row.
+  const leverSecs = new Map(GROUP_ORDER.map((g) => [g, section({ id: `lv-${g.toLowerCase()}`, title: g, body: [] })]));
+  let leverRows: LeverRow[] = [];
   let renderedFor = '';
-  const addable = new Map<string, FieldSpec[]>();
-  /** What the quick-edit popover can show, in its order: a component's own tokens, then fields by QUICK_ORDER. */
-  type QuickEntry = { gid: string; rank: number; make: (bes: () => HTMLElement) => { nodes: Node[]; sync: () => void } };
-  let quickEntries: QuickEntry[] = [];
-  const QUICK_ORDER = ['background-color', 'color', 'font-size', 'font-weight', 'border-radius', 'padding-block', 'padding-inline', 'gap', 'border-color', 'border-width', 'width', 'height', 'font-family', 'line-height', 'letter-spacing', 'box-shadow'];
+  const num = (v: string) => Number.parseFloat(v) || 0;
+
+  /** Runs `fn` with the live preview and the saved sheet off: what the source renders. */
+  function original<T>(fn: () => T): T {
+    const sheet = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
+    const was = [live.disabled, sheet?.disabled ?? false];
+    live.disabled = true;
+    if (sheet) sheet.disabled = true;
+    try { return fn(); } finally { live.disabled = was[0]; if (sheet) sheet.disabled = was[1]; }
+  }
+  /** Runs `fn` in each scheme, then puts the page's scheme back. */
+  function schemes<T>(fn: (s: Scheme) => T): Record<Scheme, T> {
+    const prev = html.getAttribute('data-scheme');
+    const out = {} as Record<Scheme, T>;
+    for (const s of ['light', 'dark'] as const) { html.setAttribute('data-scheme', s); out[s] = fn(s); }
+    if (prev === null) html.removeAttribute('data-scheme'); else html.setAttribute('data-scheme', prev);
+    return out;
+  }
+  const axisFor = (el: Element) => axisOf({ id: '', label: '', css: getComputedStyle(el).fontFamily, weights: [] } as unknown as FontOption);
+  const noteKey = (t: Target, field: string) => (t.kind === 'root' ? `page|${field}` : `${t.kind}|${t.selector}|${t.page ?? ''}|${field}`);
+  const whereOf = (t: Scoped): ChangeNote['where'] => ({ kind: t.kind === 'component' ? 'component' : 'instance', selector: t.selector, ...(t.page ? { page: t.page } : {}) });
+
+  /** A lever moved: its writes land at the target, its note says what changed. One undo step. */
+  function commitLever(c: LeverChange) {
+    checkpoint(true);
+    const t = target();
+    for (const w of c.writes) for (const m of w.modes) {
+      const map = layer(m, w.value !== null);
+      if (w.value === null) delete map[w.name]; else map[w.name] = w.value;
+    }
+    if (t.kind !== 'root' && t.kind !== 'variant') {
+      const key = noteKey(t, c.field);
+      const notes = { ...(tweaks.notes ?? {}) };
+      if (c.writes.every((w) => w.value === null)) delete notes[key];
+      else {
+        notes[key] = {
+          who: t.name, where: whereOf(t), field: c.field, what: c.label, from: c.from, to: c.to, fromToken: c.fromToken, toToken: c.toToken,
+          writes: c.writes.map(({ name, modes }) => ({ name, modes })), ...(t.kind === 'component' ? { count: peerCount() } : {}),
+          file: source(t.el).sourceFile, at: new Date().toISOString(),
+        };
+      }
+      if (Object.keys(notes).length) tweaks.notes = notes; else delete tweaks.notes;
+    }
+    prune();
+    applyLive();
+    sync();
+    checkpoint(true);
+  }
+  /** Keeps a change's failed check on its note, as the lever worded it. */
+  function flagNote(field: string, check: string | null) {
+    const n = tweaks.notes?.[noteKey(target(), field)];
+    if (!n || (n.check ?? null) === check) return;
+    if (check) n.check = check; else delete n.check;
+  }
+  const leverHost = (el: Element): LeverHost => ({
+    el, uses: tokensOn(el), kinds: kindsOf(el, selection?.component?.root === el),
+    raw: (m: MapKey, name: string) => layer(m)[name],
+    original, schemes, commit: commitLever, flag: flagNote,
+    hover: (b) => { bandHover = b; placeBands(); },
+    weightOk: (n) => { const a = axisFor(el); return n >= a.min && n <= a.max && (!a.stops || a.stops.includes(n)); },
+  });
+
   function renderTokens() {
-    tokenRows = [];
-    addable.clear();
-    quickEntries = [];
-    const byGroup = new Map<string, Node[]>();
-    const place = (gid: string, r: { nodes: Node[]; sync: () => void }) => {
-      tokenRows.push(r);
-      (byGroup.get(gid) ?? byGroup.set(gid, []).get(gid)!).push(...r.nodes);
-    };
     const t = target();
     renderedFor = `${selection?.instance ?? ''}|${t.kind}|${activeVariant ?? ''}`;
-    if (selection) {
-      if (addedFor !== selection.instance) { added = new Set(); addedFor = selection.instance; }
-      const el = selection.el;
-      const uses = tokensOn(el);
-      const kinds = kindsOf(el, selection.component?.root === el);
-      const usedBy = new Map<string, TokenUse>();
-      for (const u of uses) for (const p of u.props) for (const sp of specsFor(p, u.kind)) if (!usedBy.has(sp.prop)) usedBy.set(sp.prop, u);
-      const done = new Set<TokenUse>();
-      const inQuick = new Set<TokenUse>();
-      const order = (a: TokenUse, b: TokenUse) => b.tier - a.tier || a.name.localeCompare(b.name);
-      // A hub component's own tokens first.
-      if (selection.component) for (const u of uses.filter((x) => x.tier === 3).sort(order)) {
-        place(groupOf(u).id, tokenRow(u));
-        done.add(u);
-        if (kinds.includes('component')) { inQuick.add(u); quickEntries.push({ gid: groupOf(u).id, rank: -1, make: (b) => tokenRow(u, b) }); }
-      }
-      for (const f of fieldsFor(el, kinds, new Set(usedBy.keys()), added)) {
-        const u = usedBy.get(f.spec.prop);
-        const rank = QUICK_ORDER.indexOf(f.spec.prop);
-        if (u) {
-          if (!done.has(u)) { place(f.spec.group, tokenRow(u)); done.add(u); }
-          if (!inQuick.has(u)) { inQuick.add(u); quickEntries.push({ gid: f.spec.group, rank, make: (b) => tokenRow(u, b) }); }
-          continue;
-        }
-        if (t.kind === 'root') continue;
-        if (!f.shown) { (addable.get(f.spec.group) ?? addable.set(f.spec.group, []).get(f.spec.group)!).push(f.spec); continue; }
-        place(f.spec.group, propRow(f.spec));
-        quickEntries.push({ gid: f.spec.group, rank, make: (b) => propRow(f.spec, undefined, b) });
-      }
-      quickEntries.sort((a, b) => a.rank - b.rank);
-      if (kinds.includes('link') && (t.kind === 'instance' || t.kind === 'component')) {
-        const hc = hoverColor(el);
-        if (hc) place('sel-text', propRow({ ...SPECS.color, label: 'Hover' }, { read: () => hoverLayer(false).color ?? hc, layer: hoverLayer, write: (v) => {
-          const m = hoverLayer(v !== null);
-          if (v === null) delete m.color; else m.color = v;
-          prune(); applyLive(); sync();
-        } }));
-      }
-      for (const u of [...uses].sort(order)) if (!done.has(u)) place(groupOf(u).id, tokenRow(u));
-    }
-    for (const [id, sec] of groupSecs) {
-      const nodes = byGroup.get(id) ?? [];
-      sec.el.querySelector('.sec__b')!.replaceChildren(...nodes);
-      const plus = addBtns.get(id);
-      if (plus) plus.hidden = !addable.get(id)?.length;
-      sec.setEmpty(!nodes.length);
-      sec.el.hidden = !selection || (!nodes.length && !addable.get(id)?.length);
+    leverRows = selection?.el.isConnected ? buildLevers(leverHost(selection.el)) : [];
+    for (const [g, sec] of leverSecs) {
+      const rows = leverRows.filter((r) => r.group === g);
+      sec.el.querySelector('.sec__b')!.replaceChildren(...rows.map((r) => r.el));
+      sec.el.hidden = !rows.length;
     }
     if (!quick.hidden) renderQuick();
   }
 
-  // ── quick edit: the selection's top four fields beside it on the page ──
-  // The same rows as the panel's sections, so an edit goes through the same
-  // scope, variant and undo stack. Opens on a click-select, never on hover.
+  // ── quick edit: the selection's top four levers beside it on the page ──
+  // The same levers as the panel's sections, so a move goes through the same
+  // target, variant and undo stack. Opens on a click-select, never on hover.
   const QUICK_KEY = 'design-layer:quick-edit';
+  const QUICK_ORDER = ['fill', 'color', 'icon-color', 'font-size', 'padding', 'radius', 'gap', 'font-weight', 'border-color', 'border-width', 'icon-size', 'line-height', 'shadow'];
   let quickOn = store.get(QUICK_KEY) !== '0';
-  let quickRows: { sync: () => void }[] = [];
+  let quickRows: LeverRow[] = [];
   let quickAt: { left: number; top: number } | null = null;
   const quickTitle = h('span', { class: 'qe__t' });
   const quickPanelBtn = iconButton('panel', 'Open in Panel', () => {
-    const gid = quickEntries[0]?.gid;
-    const sec = gid ? groupSecs.get(gid)?.el : null;
+    const g = quickRows[0]?.group;
+    const sec = g ? leverSecs.get(g)?.el : null;
     if (!sec) return;
     if (sec.hasAttribute('data-collapsed')) sec.querySelector<HTMLButtonElement>('.sec__toggle')?.click();
     sec.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    sec.querySelector<HTMLElement>('input, button.chip, .f button')?.focus({ preventScroll: true });
+    sec.querySelector<HTMLElement>('.lv__track, .lv__c')?.focus({ preventScroll: true });
   });
   const quickHead = h('div', { class: 'qe__h' }, quickTitle, quickPanelBtn);
-  const quickBody = h('div', { class: 'qe__b g' });
+  const quickBody = h('div', { class: 'qe__b' });
   const quick = h('div', { class: 'qe', role: 'dialog', 'aria-label': 'Quick Edit', hidden: true }, quickHead, quickBody);
   function renderQuick() {
-    const entries = quickEntries.slice(0, 4);
-    if (!selection || !entries.length) { closeQuick(); return; }
+    if (!selection) { closeQuick(); return; }
+    const rank = (r: LeverRow) => { const i = QUICK_ORDER.indexOf(r.id); return i < 0 ? 99 : i; };
+    quickRows = buildLevers(leverHost(selection.el)).sort((a, b) => rank(a) - rank(b)).slice(0, 4);
+    if (!quickRows.length) { closeQuick(); return; }
     quickTitle.textContent = selection.name;
-    const rows = entries.map((e) => e.make(() => quick));
-    quickRows = rows;
-    quickBody.replaceChildren(...rows.flatMap((r) => r.nodes));
+    quickBody.replaceChildren(...quickRows.map((r) => r.el));
     for (const r of quickRows) r.sync();
   }
   function openQuick() {
@@ -981,76 +879,356 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // A click on the page closes it and keeps the selection (a select click then reopens it on the new one).
   document.addEventListener('pointerdown', (e) => { if (!quick.hidden && !e.composedPath().includes(ui)) closeQuick(); }, true);
 
-  // Properties: Figma's Inspect readout. Plain text, selectable, a click copies the value.
-  const ro = (pre: Prefix | Node, suffix?: string) => {
-    const value = h('span', { class: 'f__name', title: 'Copy' });
-    const el = h('div', { class: 'f f--ro f--readout' },
-      h('span', { class: 'f__pre', 'aria-hidden': 'true' }, pre instanceof Node ? pre : typeof pre === 'string' ? icon(pre) : pre.text),
-      value, suffix ? h('span', { class: 'f__suf' }, suffix) : null);
-    value.addEventListener('click', () => {
-      if (getSelection()?.toString()) return;
-      void navigator.clipboard?.writeText(value.textContent ?? '').catch(() => {});
-      el.setAttribute('data-copied', '');
-      setTimeout(() => el.removeAttribute('data-copied'), 1000);
+  // ── page levers ─────────────────────────────────────────────────────
+  // With nothing selected the panel is the theme, as levers on the recipe's
+  // seeds (recipe-seeds.mjs): brand hue, neutral, corners, borders, density,
+  // type scale. Each re-points the spoke's own ramps at the root, previews
+  // live, and names the seed that makes it real; Density, Type Scale and
+  // Borders have none yet, and their notes say so.
+  const pageSec = section({ id: 'page', title: 'Theme', body: [] });
+  let pageRows: { sync(): void }[] = [];
+  const pageNote = (field: string) => tweaks.notes?.[`page|${field}`];
+  type PageWrite = { name: string; modes: MapKey[]; value: string | null };
+  function commitPage(field: string, what: string, from: string, to: string, tokens: [string | null, string | null], writes: PageWrite[], seed: ChangeNote['seed']) {
+    checkpoint(true);
+    for (const w of writes) for (const m of w.modes) { if (w.value === null) delete tweaks[m][w.name]; else tweaks[m][w.name] = w.value; }
+    const notes = { ...(tweaks.notes ?? {}) };
+    const key = `page|${field}`;
+    if (writes.every((w) => w.value === null)) delete notes[key];
+    else notes[key] = { who: 'Page', where: { kind: 'root', selector: ':root' }, field, what, from, to, fromToken: tokens[0], toToken: tokens[1], writes: writes.map(({ name, modes }) => ({ name, modes })), seed, at: new Date().toISOString() };
+    if (Object.keys(notes).length) tweaks.notes = notes; else delete tweaks.notes;
+    applyLive();
+    sync();
+    checkpoint(true);
+  }
+  const hexAt = (v: string) => toHex(measure('color', v));
+  const pxAt = (v: string) => num(measure('width', v));
+  const titleCase = (s: string) => s[0].toUpperCase() + s.slice(1);
+  /** The hub's brand roles and the step each reads, for a page with no generated theme. */
+  const BRAND_ROLES: [string, number][] = [
+    ['--color-background-brand', 9], ['--color-background-brand-hover', 10], ['--color-background-brand-active', 10], ['--color-background-brand-muted', 3],
+    ['--color-background-brand-muted-hover', 4], ['--color-background-brand-subtle', 2], ['--color-content-brand', 11], ['--color-content-link', 11],
+    ['--color-content-on-brand-muted', 11], ['--color-border-brand', 8],
+  ];
+  /** Points a ramp's twelve steps (or the hub's brand roles) at a Radix scale, light and dark. */
+  const rampWrites = (names: [string, number][], scale: string | null): PageWrite[] => names.flatMap(([name, n]) => [
+    { name, modes: ['light'], value: scale ? `var(--color-${scale}-${n})` : null },
+    { name, modes: ['dark'], value: scale ? `var(--color-${scale}-dark-${n})` : null },
+  ]);
+  const steps = (prefix: string): [string, number][] => Array.from({ length: 12 }, (_, i) => [`${prefix}-${i + 1}`, i + 1]);
+  function renderPage() {
+    const rows: { el: HTMLElement; sync(): void }[] = [];
+    const tr = themeRamps();
+    const sc = tr.scope;
+    const themeFile = sc ? `theme-${sc}.json` : 'the theme recipe';
+
+    // Brand: a hue at step 9. Judged by the button text it carries, in both schemes.
+    const hs = hues();
+    if (hs.all.length) {
+      const onBrand = original(() => schemes(() => hexAt('var(--color-content-on-brand)')));
+      const curFill = original(() => schemes(() => hexAt('var(--color-background-brand)')));
+      const current: Rung = { value: curFill.light, name: 'Current' };
+      const fill = (r: Rung) => { const hue = r === current ? null : hueOf(r); return hue ? { light: hexAt(`var(--color-${hue}-9)`), dark: hexAt(`var(--color-${hue}-dark-9)`) } : curFill; };
+      const all = [current, ...hs.all];
+      // Regenerating re-picks the foreground (white, or the darkest neutral), so a hue is judged by the better of the two.
+      const dark = original(() => schemes(() => hexAt(sc ? `var(--${sc}-neutral-12)` : 'var(--color-gray-12)')));
+      const best = (s: Scheme, f: string) => Math.max(contrast(onBrand[s], f), contrast('#ffffff', f), contrast(dark.light, f));
+      const ratio = new Map(all.map((r) => { const f = fill(r); return [r.value, { light: best('light', f.light), dark: best('dark', f.dark) }]; }));
+      const lever = swatchLever({
+        label: 'Brand', rungs: [current, ...hs.lever], more: hs.all,
+        onChange: (r) => {
+          const hue = r === current || r.value === current.value ? null : hueOf(r);
+          commitPage('brand', 'Brand', 'Current', r.name ?? '', [null, r.token ?? null], rampWrites(sc ? steps(`--${sc}-brand`) : BRAND_ROLES, hue),
+            hue ? { name: 'seeds.brand', value: hexAt(`var(--color-${hue}-9)`), exists: true } : undefined);
+        },
+      });
+      lever.marks((r) => worst(ratio.get(r.value)!).ratio < 4.5);
+      rows.push({ el: lever.el, sync() {
+        const n = pageNote('brand');
+        const cur = (n && all.find((r) => r.token === n.toToken)) || current;
+        lever.set(cur, current);
+        const line = contrastLine(ratio.get(cur.value)!, 4.5);
+        lever.note(`Button text ${line.text}`, line.fail ? 'warn' : undefined);
+        if (n) { if (line.fail) n.check = `Button text ${line.text}`; else delete n.check; }
+      } });
+    }
+
+    // Neutral: one of the six. Judged by body text on the page.
+    const ns = neutrals();
+    if (sc && tr.neutral.length === 12 && ns.length) {
+      const cur9 = original(() => hexAt(`var(--${sc}-neutral-9)`));
+      const scaleOf = (r: Rung) => r.token?.match(/^--color-([a-z]+)-9$/)?.[1] ?? null;
+      const origin = ns.find((r) => hexAt(r.value) === cur9) ?? { value: cur9, name: 'Current' };
+      const rungs = ns.includes(origin) ? ns : [origin, ...ns];
+      const body = (r: Rung) => { const n = scaleOf(r) ?? 'gray'; return { light: contrast(hexAt(`var(--color-${n}-12)`), hexAt(`var(--color-${n}-1)`)), dark: contrast(hexAt(`var(--color-${n}-dark-12)`), hexAt(`var(--color-${n}-dark-1)`)) }; };
+      const lever = swatchLever({
+        label: 'Neutral', rungs,
+        onChange: (r) => {
+          const n = r === origin ? null : scaleOf(r);
+          commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], rampWrites(steps(`--${sc}-neutral`), n),
+            n ? { name: 'seeds.neutral', value: NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED], exists: true } : undefined);
+        },
+      });
+      rows.push({ el: lever.el, sync() {
+        const n = pageNote('neutral');
+        const cur = (n && rungs.find((r) => r.token === n.toToken)) || origin;
+        lever.set(cur, origin);
+        lever.note(`Body text ${contrastLine(body(cur), 4.5).text}`);
+      } });
+    }
+
+    // Corners: the recipe's three corner languages.
+    const has = (n: string) => !!getComputedStyle(html).getPropertyValue(n).trim();
+    if (['xs', 'sm', 'md', 'lg'].every((k) => has(`--radius-${k}`))) {
+      const keys = Object.keys(CORNERS) as (keyof typeof CORNERS)[];
+      const mdOf = (k: keyof typeof CORNERS) => pxAt(CORNERS[k].md === '0' ? '0px' : CORNERS[k].md);
+      const originMd = original(() => pxAt('var(--radius-md)'));
+      const found = original(() => keys.findIndex((k) => Math.abs(mdOf(k) - originMd) < 0.5));
+      const rungs: Rung[] = [...(found < 0 ? [{ value: 'current', name: 'Current' }] : []), ...keys.map((k) => ({ value: k, name: titleCase(k) }))];
+      const oi = found < 0 ? 0 : found;
+      const lever = rampLever({
+        label: 'Corners', rungs, show: (r) => r.name ?? r.value,
+        onChange: (i) => {
+          const k = rungs[i].value as keyof typeof CORNERS;
+          const back = i === oi;
+          const writes: PageWrite[] = (['xs', 'sm', 'md', 'lg', 'chip'] as const).map((r) => ({ name: `--radius-${r}`, modes: ['shared'], value: back ? null : CORNERS[k][r] }));
+          commitPage('corners', 'Corners', rungs[oi].name!, rungs[i].name!, [null, null], writes, back ? undefined : { name: 'seeds.corners', value: k, exists: true });
+        },
+      });
+      rows.push({ el: lever.el, sync() {
+        const n = pageNote('corners');
+        const i = n ? rungs.findIndex((r) => r.name === n.to) : oi;
+        lever.set(i < 0 ? oi : i, oi);
+        lever.note(`Cards ${Math.round(pxAt('var(--radius-md)'))} px, chips ${Math.round(Math.min(pxAt('var(--radius-chip)'), 999))} px`.replace(' 999 px', ' pill'));
+      } });
+    }
+
+    // Borders: the default border width, on the border-width scale.
+    if (has('--border-width-default')) {
+      const rungs: Rung[] = readTokens().filter((t) => /^--border-width-\d+$/.test(t.name)).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).map((t) => ({ value: `var(${t.name})`, token: t.name }));
+      const pxs = rungs.map((r) => pxAt(r.value));
+      const originPx = original(() => pxAt('var(--border-width-default)'));
+      const oi = Math.max(0, pxs.findIndex((p) => Math.abs(p - originPx) < 0.25));
+      const show = (r: Rung) => `${pxs[rungs.indexOf(r)]} px`;
+      const lever = rampLever({
+        label: 'Borders', rungs, show,
+        onChange: (i) => commitPage('borders', 'Borders', show(rungs[oi]), show(rungs[i]), [rungs[oi].token ?? null, rungs[i].token ?? null],
+          [{ name: '--border-width-default', modes: ['shared'], value: i === oi ? null : rungs[i].value }],
+          i === oi ? undefined : { name: 'border width', value: rungs[i].token!, exists: false }),
+      });
+      rows.push({ el: lever.el, sync() {
+        const n = pageNote('borders');
+        const i = n ? rungs.findIndex((r) => r.token === n.toToken) : oi;
+        lever.set(i < 0 ? oi : i, oi);
+      } });
+    }
+
+    // Density and Type Scale: a multiplier over a scale, previewed on its declared values.
+    const multiplier = (field: string, what: string, family: RegExp, rungs: Rung[], seedName: string) => {
+      const names = readTokens().filter((t) => family.test(t.name)).map((t) => t.name);
+      if (!names.length) return;
+      const oi = rungs.findIndex((r) => r.value === '1');
+      const lever = rampLever({
+        label: what, rungs, show: (r) => r.name ?? r.value,
+        onChange: (i) => {
+          const f = rungs[i].value;
+          const writes: PageWrite[] = names.map((name) => { const d = declared(name, 'light'); return { name, modes: ['shared'], value: f === '1' || !d ? null : `calc(${d} * ${f})` }; });
+          commitPage(field, what, rungs[oi].name!, rungs[i].name!, [null, null], writes, f === '1' ? undefined : { name: seedName, value: rungs[i].name!.toLowerCase(), exists: false });
+        },
+      });
+      rows.push({ el: lever.el, sync() {
+        const n = pageNote(field);
+        const i = n ? rungs.findIndex((r) => r.name === n.to) : oi;
+        lever.set(i < 0 ? oi : i, oi);
+        lever.note(n ? 'Preview: needs a recipe seed' : null);
+      } });
+    };
+    multiplier('density', 'Density', /^--spacing-\d+$/, DENSITY, 'seeds.density');
+    multiplier('type-scale', 'Type Scale', /^--font-size-\d+$/, TYPE_SCALE, 'seeds.typeScale');
+
+    pageRows = rows;
+    pageSec.el.querySelector('.sec__b')!.replaceChildren(...rows.map((r) => r.el));
+    pageSec.setEmpty(!rows.length);
+    void themeFile;
+  }
+
+  // ── review: every change as one row, revertible, its failed check under it ──
+  const reviewList = h('div', { class: 'rv' });
+  const reviewPane = h('div', { class: 'p-body', role: 'tabpanel', hidden: true }, reviewList);
+  function revertNote(key: string) {
+    const n = tweaks.notes?.[key];
+    if (!n) return;
+    checkpoint(true);
+    const maps = n.where.kind === 'root' ? tweaks : tweaks.overrides?.find((o) => o.scope === n.where.kind && o.selector === n.where.selector && (o.page ?? '') === (n.where.page ?? ''));
+    if (maps) for (const w of n.writes) for (const m of w.modes) delete maps[m][w.name];
+    const notes = { ...tweaks.notes };
+    delete notes[key];
+    if (Object.keys(notes).length) tweaks.notes = notes; else delete tweaks.notes;
+    prune();
+    applyLive();
+    sync();
+    checkpoint(true);
+  }
+  function syncReview() {
+    const notes = Object.entries(tweaks.notes ?? {});
+    const n = notes.length;
+    tabBar.count('review', n);
+    changesBtn.textContent = `${n} ${n === 1 ? 'Change' : 'Changes'}`;
+    sendBtn.disabled = !n;
+    if (reviewPane.hidden) return;
+    const comments = openHere();
+    reviewList.replaceChildren(
+      ...(n ? [] : [h('div', { class: 'rv__empty' }, 'No Changes')]),
+      ...notes.map(([key, c]) => h('div', { class: 'rv__r' },
+        h('div', { class: 'rv__t', title: c.where.selector }, h('span', { class: 'rv__who' }, c.who), ` · ${c.what}`),
+        iconButton('reset', `Revert ${c.who} ${c.what}`, () => revertNote(key)),
+        h('div', { class: 'rv__v' }, `${c.from} → ${c.to}${c.count && c.count > 1 ? ` · All ${c.count}` : ''}`),
+        ...(c.check ? [h('div', { class: 'rv__x' }, c.check)] : []),
+        ...(c.seed && !c.seed.exists ? [h('div', { class: 'rv__s' }, 'Needs a recipe seed')] : []))),
+      ...(comments.length ? [h('div', { class: 'rv__h' }, 'Comments'), ...comments.map((r) => h('div', { class: 'rv__c' }, r.comment))] : []),
+    );
+  }
+
+  // ── footer: the count, Before, Send to Claude ───────────────────────
+  const changesBtn = h('button', { type: 'button', class: 'ft__n' }, '0 Changes');
+  changesBtn.addEventListener('click', () => setTab(tab === 'review' ? 'tune' : 'review'));
+  const beforeBtn = h('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', title: 'Hold B' }, 'Before');
+  const sendBtn = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Send to Claude');
+  const foot = h('div', { class: 'p-foot' }, changesBtn, h('span', { class: 'grow' }), beforeBtn, sendBtn);
+  /** The page without the layer's edits, while B is held (or the button is pressed). */
+  let before = false;
+  function setBefore(on: boolean) {
+    if (before === on) return;
+    before = on;
+    live.disabled = on;
+    const sheet = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
+    if (sheet) sheet.disabled = on;
+    beforeBtn.setAttribute('aria-pressed', String(on));
+    ui.toggleAttribute('data-before', on);
+    placeOverlays();
+  }
+  beforeBtn.addEventListener('click', () => setBefore(!before));
+  let beforeKey = false;
+  /** B held anywhere but a text field shows the page before. */
+  function beforeKeys(e: KeyboardEvent) {
+    if (!open || e.code !== 'KeyB' || e.metaKey || e.ctrlKey || e.altKey) return false;
+    const t = e.composedPath()[0];
+    if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return false;
+    e.preventDefault();
+    if (e.type === 'keydown' && !e.repeat && !before) { beforeKey = true; setBefore(true); }
+    if (e.type === 'keyup' && beforeKey) { beforeKey = false; setBefore(false); }
+    return true;
+  }
+
+  /** changes.md: one heading per change, in Andy's words first and the system's after. */
+  function changesMd(notes: ChangeNote[]) {
+    const lines = [`# Design changes`, '', `${location.pathname} · ${new Date().toISOString().slice(0, 10)} · ${notes.length} ${notes.length === 1 ? 'change' : 'changes'} from the design layer`, ''];
+    for (const n of notes) {
+      lines.push(`## ${n.who} · ${n.what}`, '', `- ${n.from} → ${n.to}${n.fromToken || n.toToken ? ` (${n.fromToken ?? 'literal'} → ${n.toToken ?? 'literal'})` : ''}`);
+      if (n.where.kind !== 'root') lines.push(`- ${n.where.kind === 'component' ? `All ${n.count ?? ''} \`${n.where.selector}\``.replace('All  ', 'All ') : `This one, \`${n.where.selector}\`${n.where.page ? ` on ${n.where.page}` : ''}`}${n.file ? `, in ${n.file.split('/src/').pop()}` : ''}`);
+      lines.push(`- Writes ${n.writes.map((w) => `\`${w.name}\``).slice(0, 6).join(', ')}${n.writes.length > 6 ? ` and ${n.writes.length - 6} more` : ''}`);
+      if (n.seed) lines.push(n.seed.exists
+        ? `- Recipe: set \`${n.seed.name}\` to \`${n.seed.value}\` in the theme recipe and regenerate (npm run theme:make); do not edit the generated CSS.`
+        : `- No recipe seed for ${n.seed.name} yet; this is a preview (${n.seed.value}). Propose the seed before applying it.`);
+      if (n.check) lines.push(`- Check failed: ${n.check}`);
+      lines.push('');
+    }
+    return lines.join('\n');
+  }
+  sendBtn.addEventListener('click', () => {
+    const notes = Object.values(tweaks.notes ?? {});
+    if (!notes.length) return;
+    saveNow();
+    host.send('send-to-claude', {
+      md: changesMd(notes),
+      json: { page: location.pathname, at: new Date().toISOString(), scheme: mode, changes: notes, comments: openHere() },
     });
-    return { el, value };
-  };
-  const swText = h('span', { class: 'sw' });
-  const swFill = h('span', { class: 'sw' });
-  const props = {
-    color: ro(swText, 'Text'), fill: ro(swFill, 'Fill'), font: ro({ text: 'Aa' }), size: ro('size'), line: ro({ text: 'LH' }),
-    padY: ro('padY'), padX: ro('padX'), radius: ro('radius'), border: ro({ text: 'B' }), w: ro({ text: 'W' }), h: ro({ text: 'H' }),
-  };
-  for (const k of ['color', 'fill', 'font'] as const) props[k].el.classList.add('span2');
-  let propsOpen = store.get(PROPS_KEY) !== '0';
-  const propsToggle = iconButton('minus', 'Hide Properties', () => { propsOpen = !propsOpen; store.set(PROPS_KEY, propsOpen ? '1' : '0'); syncSelection(); });
-  const pad = () => h('span', {});
-  const propsSec = section({
-    id: 'properties', title: 'Properties', actions: [propsToggle],
-    body: [props.color.el, pad(), props.fill.el, pad(), props.font.el, pad(), props.size.el, props.line.el, pad(),
-      props.padY.el, props.padX.el, pad(), props.radius.el, props.border.el, pad(), props.w.el, props.h.el, pad()],
+    const dir = CFG.dataDir;
+    const prompt = `Apply the design changes in ${dir}/changes.md (selectors, tokens and source files are in ${dir}/changes.json). Each one is a lever I moved in the design layer on ${location.pathname}. Make each in source: point the element at the token named, change page-wide ones through the theme recipe (never the generated CSS), and stop and ask about any marked "Check failed" before applying it.`;
+    void navigator.clipboard?.writeText(prompt).catch(() => {});
+    sendBtn.textContent = 'Copied Prompt';
+    setTimeout(() => { sendBtn.textContent = 'Send to Claude'; }, 1600);
   });
+
+  // ── bands: padding and gap on the page, dragged along the spacing scale ──
+  let bandHover: Band | null = null;
+  const bands = h('div', {});
+  function placeBands() {
+    const el = selection?.el;
+    if (!open || !el || !el.isConnected || isolating || tab !== 'tune' || before) { bands.replaceChildren(); return; }
+    const rows = new Map(leverRows.map((r) => [r.id, r]));
+    const out: HTMLElement[] = [];
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    const band = (kind: Band, row: LeverRow, box: { left: number; top: number; width: number; height: number }, axis: 'x' | 'y', dir: 1 | -1, px: number) => {
+      if (box.width < 1 || box.height < 1) return;
+      const b = h('div', { class: `band band--${kind}`, 'data-axis': axis, ...(bandHover === kind ? { 'data-on': true } : {}), title: kind === 'padding' ? 'Drag (Alt: one side)' : 'Drag' },
+        h('span', { class: 'band__px' }, `${Math.round(px)}`));
+      Object.assign(b.style, { left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px` });
+      b.addEventListener('pointerdown', (e) => startDrag(e, row, kind === 'padding' && !e.altKey ? 'both' : axis, axis, dir));
+      out.push(b);
+    };
+    const pad = rows.get('padding');
+    if (pad?.drag) {
+      const [t, rt, bt, l] = ['Top', 'Right', 'Bottom', 'Left'].map((k) => num(cs.getPropertyValue(`padding-${k.toLowerCase()}`)));
+      band('padding', pad, { left: r.left, top: r.top, width: r.width, height: t }, 'y', 1, t);
+      band('padding', pad, { left: r.left, top: r.bottom - bt, width: r.width, height: bt }, 'y', -1, bt);
+      band('padding', pad, { left: r.left, top: r.top + t, width: l, height: r.height - t - bt }, 'x', 1, l);
+      band('padding', pad, { left: r.right - rt, top: r.top + t, width: rt, height: r.height - t - bt }, 'x', -1, rt);
+    }
+    const gap = rows.get('gap');
+    if (gap?.drag) {
+      const kids = [...el.children].map((k) => k.getBoundingClientRect()).filter((k) => k.width && k.height);
+      const g = num(cs.rowGap);
+      for (let i = 1; i < kids.length; i++) {
+        const a = kids[i - 1];
+        const b = kids[i];
+        if (b.top >= a.bottom - 1) band('gap', gap, { left: Math.max(r.left, Math.min(a.left, b.left)), top: a.bottom, width: Math.min(r.width, Math.max(a.right, b.right) - Math.min(a.left, b.left)), height: b.top - a.bottom }, 'y', 1, g);
+        else if (b.left >= a.right - 1) band('gap', gap, { left: a.right, top: Math.min(a.top, b.top), width: b.left - a.right, height: Math.max(a.bottom, b.bottom) - Math.min(a.top, b.top) }, 'x', 1, num(cs.columnGap));
+      }
+    }
+    bands.replaceChildren(...out);
+  }
+  /** A band dragged: a shield takes the pointer (the bands redraw under it), each rung reached is one move. */
+  function startDrag(e: PointerEvent, row: LeverRow, which: 'x' | 'y' | 'both', axis: 'x' | 'y', dir: 1 | -1) {
+    e.preventDefault();
+    e.stopPropagation();
+    const shield = h('div', { class: 'shield', 'data-axis': axis });
+    ui.append(shield);
+    shield.setPointerCapture?.(e.pointerId);
+    const start = row.px?.(axis) ?? 0;
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    pressing = true;
+    const move = (m: PointerEvent) => row.drag?.(which, Math.max(0, start + (axis === 'y' ? m.clientY - y0 : m.clientX - x0) * dir));
+    const up = () => { shield.remove(); pressing = false; removeEventListener('pointermove', move, true); removeEventListener('pointerup', up, true); };
+    addEventListener('pointermove', move, true);
+    addEventListener('pointerup', up, true);
+  }
+
   function syncSelection() {
     const has = !!selection;
-    // A scope change can turn literal fields on or off (none at the root).
+    // A target change rebuilds the levers (they read and write at the target).
     if (`${selection?.instance ?? ''}|${target().kind}|${activeVariant ?? ''}` !== renderedFor) renderTokens();
-    scopeSec.el.hidden = !has || !!activeVariant;
-    propsSec.el.hidden = !has;
-    surfacesSec.el.hidden = !atRoot();
-    // With a selection its own sections take over; the spoke's controls are the root view.
-    for (const sec of [colorsSec, typeSec, layoutSec]) if (sec) sec.el.hidden = has;
-    if (!has) for (const sec of groupSecs.values()) sec.el.hidden = true;
+    surfacesSec.el.hidden = has || !details;
+    for (const sec of [colorsSec, typeSec, layoutSec]) if (sec) sec.el.hidden = has || !details;
+    pageSec.el.hidden = has;
+    if (!has) for (const sec of leverSecs.values()) sec.el.hidden = true;
     syncHeader();
-    if (!selection) return;
+    if (!selection) { for (const r of pageRows) r.sync(); placeBands(); return; }
     const eff = effectiveScope();
-    scopeSeg.set(eff);
-    const variant = activeVariant ? variantsHere().find((v) => v.id === activeVariant) : null;
-    selCtx.textContent = `Editing ${variant ? variant.name : 'Original'} · ${variant ? 'Variant' : SCOPE_LABEL[eff]}`;
-    const [compBtn, tokenBtn, instBtn] = scopeSeg.el.querySelectorAll('button');
-    compBtn.disabled = !selection.component;
-    compBtn.title = selection.component ? `Every ${selection.component.name}` : 'Not inside a component';
-    tokenBtn.title = 'The tokens themselves, everywhere';
-    instBtn.title = `This ${selection.name}, on this page`;
-    for (const r of tokenRows) r.sync();
+    targetSeg.set(eff === 'token' ? 'component' : eff);
+    selCtx.hidden = !!activeVariant;
+    const [allBtn, oneBtn] = targetSeg.el.querySelectorAll('button');
+    const peer = peerOf(selection);
+    const n = peerCount();
+    allBtn.disabled = !peer;
+    allBtn.textContent = peer ? `All ${n}${peer.el === selection.component?.root ? ` · ${peer.name}` : ''}` : 'All';
+    allBtn.title = peer ? `Every ${peer.name} on this page (${n})` : 'Not inside a component';
+    oneBtn.title = `This ${selection.name}, on this page`;
+    for (const r of leverRows) r.sync();
     for (const r of quickRows) r.sync();
-    propsSec.setEmpty(!propsOpen);
-    propsToggle.replaceChildren(icon(propsOpen ? 'minus' : 'plus'));
-    propsToggle.setAttribute('aria-label', propsOpen ? 'Hide Properties' : 'Show Properties');
-    const c = computedOn(selection.el);
-    const hexOf = (v: string) => (/rgba\(.*,\s*0\)$|transparent/.test(v) ? 'None' : toHex(v).slice(1).toUpperCase());
-    props.color.value.textContent = hexOf(c.color);
-    swText.style.background = c.color;
-    props.fill.value.textContent = hexOf(c.background);
-    swFill.style.background = c.background;
-    props.font.value.textContent = `${c.fontFamily} ${c.fontWeight}`;
-    props.size.value.textContent = String(c.fontSize);
-    props.line.value.textContent = c.lineHeight === 'normal' ? 'Auto' : String(Math.round(Number.parseFloat(c.lineHeight) * 10) / 10);
-    props.padY.value.textContent = String(c.padY);
-    props.padX.value.textContent = String(c.padX);
-    props.radius.value.textContent = String(c.radius);
-    props.border.value.textContent = String(c.border);
-    props.w.value.textContent = String(c.width);
-    props.h.value.textContent = String(c.height);
+    placeBands();
   }
 
   // Surfaces: the palette's three chrome surfaces; hue, saturation and
@@ -1277,7 +1455,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const statesSec = section({ id: 'states', title: 'States', actions: [addStateBtn], body: [] });
   const statesBody = statesSec.el.querySelector('.sec__b')!;
   function syncStates() {
-    statesSec.el.hidden = !!selection;
+    statesSec.el.hidden = !!selection || !details;
     const list = tweaks.states ?? [];
     statesSec.setEmpty(!list.length);
     const now = stateSnapshot();
@@ -1327,9 +1505,10 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let pressing = false;
   let queued = false;
   const syncHistory = () => { undoBtn.disabled = !past.length; redoBtn.disabled = !future.length; };
-  function checkpoint() {
+  /** `force`: a lever's notch is its own step, even mid-drag. */
+  function checkpoint(force = false) {
     queued = false;
-    if (pressing || same(tweaks, anchorT)) return;
+    if ((pressing && !force) || same(tweaks, anchorT)) return;
     past.push(anchorT);
     if (past.length > 200) past.shift();
     future.length = 0;
@@ -1501,7 +1680,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sync();
   }
 
-  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, selCtx, statesSec.el, variantsSec.el, scopeSec.el, ...[...groupSecs.values()].map((g) => g.el), propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
+  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, selCtx, variantsSec.el, ...[...leverSecs.values()].map((g) => g.el), pageSec.el, statesSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
   const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
@@ -1516,7 +1695,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const commentsPane = h('div', { class: 'p-body', role: 'tabpanel', hidden: true }, h('div', { class: 'sec' }, h('div', { class: 'sec__h' }, commentBox.el)), composer, listSec.el);
 
   const resize = h('div', { class: 'p-resize', 'aria-hidden': 'true', title: 'Drag to resize' });
-  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, commentsPane);
+  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, reviewPane, commentsPane, foot);
   const dock = h('div', { class: 'dock' }, panel);
   const hoverBox = h('div', { class: 'box', hidden: true });
   const pickedBox = h('div', { class: 'box box--picked', hidden: true });
@@ -1525,7 +1704,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const selSize = h('span', { class: 'box__size' });
   const selBox = h('div', { class: 'box box--sel', hidden: true }, selName, selSize);
   const pins = h('div', {});
-  ui.append(dock, hoverBox, pickedBox, selBox, pins, quick);
+  ui.append(dock, bands, hoverBox, pickedBox, selBox, pins, quick);
 
   // Width: drag the inner edge; the setting persists. The overlay sits over the
   // page, which keeps its full width; only the isolation stage makes room.
@@ -1583,7 +1762,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     syncVariants();
     syncStates();
     tabBar.set(tab);
-    modeDd.set(mode === 'dark' ? 'Dark' : 'Light');
+    schemeBtn.replaceChildren(icon(mode === 'dark' ? 'sun' : 'moon'));
+    schemeBtn.setAttribute('aria-label', mode === 'dark' ? 'Light Page' : 'Dark Page');
+    schemeBtn.title = mode === 'dark' ? 'Light Page' : 'Dark Page';
     syncSurfaces();
     for (const r of colorRows) {
       const hex = colorValue(r.c.id, mode);
@@ -1631,9 +1812,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     refBtn?.setAttribute('aria-pressed', String(atReference()));
     // 350 is banned, wherever it came from (a hand-edited tweaks.json included).
     bannedList.replaceChildren(...bannedTweaks().map((v) => h('div', { class: 'note note--fail' }, `${v.replace(/^--/, '')}: ${BANNED_WEIGHT} is banned; regular is 400`)));
-    const dirty = !same(tweaks, saved);
-    save.disabled = !dirty;
-    save.textContent = dirty ? 'Save' : 'Saved';
+    if (!same(tweaks, saved)) autosave();
+    syncReview();
     syncComments();
   }
 
@@ -1690,6 +1870,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   function placeOverlays() {
     placeQuick();
+    placeBands();
     placeBox(hoverBox, (commenting || selecting) && hovered !== picked && hovered !== selection?.el ? hovered : null);
     placeBox(pickedBox, picked);
     placeBox(selBox, tab === 'tune' && !isolating ? selection?.el ?? null : null);
@@ -1717,8 +1898,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     // In: start off-screen on its side, then ease to rest on the next frame.
     dock.dataset.state = 'closed';
     if (open) requestAnimationFrame(() => requestAnimationFrame(() => { dock.dataset.state = 'open'; }));
-    if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); }
-    else { setCommenting(false); setSelecting(false); setSelection(null); closePopover(); }
+    if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); renderPage(); }
+    else { setCommenting(false); setSelecting(false); setSelection(null); closePopover(); setBefore(false); saveNow(); }
     invalidateGraph();
     applyLive();
     sync();
@@ -1745,11 +1926,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sync();
     if (s && fromClick) openQuick();
   }
-  function setTab(t: 'tune' | 'comments') {
+  function setTab(t: Tab) {
     tab = t;
     tabBar.set(t);
     tunePane.hidden = t !== 'tune';
+    reviewPane.hidden = t !== 'review';
     commentsPane.hidden = t !== 'comments';
+    if (t === 'review') syncReview();
+    placeOverlays();
     if (t !== 'comments') setCommenting(false);
     if (t !== 'tune' && isolating) setIsolating(false);
   }
@@ -1772,6 +1956,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const k = e as KeyboardEvent;
       if (type === 'keydown' && isToggleKey(k)) { k.preventDefault(); host.setOpen(!open); }
       if (type === 'keydown') historyKey(k);
+      if (type !== 'keypress') beforeKeys(k);
       if (type === 'keydown' && k.key === 'Escape' && picked) { picked = null; syncComments(); }
       else if (type === 'keydown' && k.key === 'Escape' && !quick.hidden && !ui.querySelector('.pop')) closeQuick();
       else if (type === 'keydown' && k.key === 'Escape' && selection && !ui.querySelector('.pop') && !(k.composedPath()[0] instanceof HTMLInputElement)) setSelection(null);
@@ -1838,7 +2023,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   document.addEventListener('keydown', (e) => { if (isToggleKey(e)) { e.preventDefault(); host.setOpen(!open); } });
   // On the page: Esc clears the selection (then leaves the select tool),
   // Shift+Enter selects the parent component, Enter the first one inside.
-  document.addEventListener('keydown', (e) => { if (historyKey(e)) e.stopImmediatePropagation(); }, true);
+  document.addEventListener('keydown', (e) => { if (historyKey(e) || beforeKeys(e)) e.stopImmediatePropagation(); }, true);
+  document.addEventListener('keyup', (e) => { if (beforeKeys(e)) e.stopImmediatePropagation(); }, true);
   document.addEventListener('keydown', (e) => {
     if (!open || commenting) return;
     const t = e.composedPath()[0];
