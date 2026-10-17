@@ -56,12 +56,24 @@ In `design/` at the spoke root (or the config's `dataDir`):
 | `tweaks.css` | The same overrides as CSS, loaded on every dev page so they survive a reload. |
 | `feedback.jsonl` | One comment per line, `open` or `resolved`. |
 
-## Promoting a tweak (by hand, for now)
+## Save to Source
 
-The override file is a proposal. To keep a value, copy it from `tweaks.json`
-into the spoke's theme file (`src/styles/theme-<slug>.css`) or its recipe, then
-reset that row in the panel. For a generated theme, change the recipe and
-regenerate rather than editing the CSS. Writing straight to source comes later.
+The override file is a proposal. **More → Save to Source…** lists every
+component- and token-scope edit by the file it will change (old → new) and
+writes them on Save; what it wrote leaves the tweaks. Instance edits stay as
+overrides.
+
+| Edit | Lands in |
+|---|---|
+| A value already declared in a hand-authored theme file | That declaration, edited in place. A light edit in a block both schemes read restates dark's current value. |
+| A spoke's token-scope colour, with a recipe (`theme-<slug>.json`) | The recipe's `pinned` / `pinnedDark`, then `make-theme.mjs` regenerates the CSS. The generated file is never edited. |
+| Anything else in a spoke | One block between `design-layer:start` and `design-layer:end` at the end of the theme file (`theme-app.css`, else `theme-<slug>.css`), merged on each save. |
+| The hub's token scope | The DTCG json (`var(--x)` becomes `{x}`), then the token build. Dark goes to `docs-dark.css` where it is declared. |
+| The hub's component scope | `component-tokens.css`, for declared tier-3 names only. A tier-2 value on one component is refused: that is a new hook, a SPEC.md decision. |
+
+Primitives are refused at token scope. A component selector that only exists
+in dev (`[data-dl-component]`) is refused. A spoke's save never writes outside
+the spoke. `sourceFiles` in the config overrides any of the files it finds.
 
 ## Config
 

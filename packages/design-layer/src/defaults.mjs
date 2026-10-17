@@ -104,6 +104,7 @@ export function resolveConfig(spoke = {}) {
     lengths: spoke.lengths ?? DEFAULTS.lengths,
     reference: ref,
     legacy: spoke.legacy ?? DEFAULTS.legacy,
+    ...(spoke.sourceFiles ? { sourceFiles: spoke.sourceFiles } : {}),
   };
 }
 

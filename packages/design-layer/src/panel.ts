@@ -21,7 +21,7 @@ import {
   BANNED_WEIGHT, FONT_OPTIONS, buildCss, googleHref, migrateShared, modeVars, rootSelector, scopedBlocks,
   type ColorControl, type Departure, type FeedbackRecord, type FontControl, type FontOption,
   type LengthControl, type Mode, type PanelHost, type ResolvedConfig, type ServerState,
-  type EditScope, type PageState, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
+  type EditScope, type PageState, type PromoteEntry, type PromotePlan, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
 } from './controls';
 import { contrast, firstFamily, oklchL, toHex } from './color';
 import { effectiveBackground, selectorFor, snippet, source } from './describe';
@@ -33,10 +33,10 @@ import {
 import { GROUPS, PALETTES, paletteById, paletteRamp } from './palettes';
 import { ancestors, candidate, firstChildComponent, select, type Selection } from './select';
 import { computedOn, tokensOn, type TokenUse } from './inspect';
-import { dependents, invalidateGraph } from './graph';
+import { declared, dependents, invalidateGraph } from './graph';
 import { createStage } from './stage';
 import {
-  UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover,
+  UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
   type PaletteOption, type Prefix,
 } from './ui';
@@ -123,6 +123,18 @@ const PANEL_CSS = `
   .ui textarea:hover { border-color: var(--line); }
   .ui textarea:focus { border-color: var(--focus); background: var(--bg); }
   .actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .sp { width: 320px; max-width: 320px; }
+  .sp__b { max-height: 420px; overflow-y: auto; padding: 8px; }
+  .sp__file { padding: 8px 8px 4px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp__file:first-child { padding-top: 0; }
+  .sp__r { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; align-items: center; height: 24px; padding: 0 8px; }
+  .sp__n, .sp__v { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp__v { color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+  .sp__r--dim { color: var(--ink-2); }
+  .sp__sub { padding: 4px 8px 0; font-weight: 550; }
+  .sp__note { padding: 4px 8px; color: var(--ink-2); }
+  .sp__err { padding: 4px 8px; color: var(--danger); overflow-wrap: anywhere; }
+  .sp__f { padding: 8px 16px 16px; border-top: 1px solid var(--line); }
   .clist { grid-column: 1 / -1; display: grid; margin: 0; padding: 0; list-style: none; }
   .clist li { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: start; padding: 4px 0; }
   .clist .pin { position: static; box-shadow: none; }
@@ -518,17 +530,19 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'reset-palette' | 'reset-all' | PanelTheme | 'close';
+  type MenuAction = 'promote' | 'reset-palette' | 'reset-all' | PanelTheme | 'close';
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: panelTheme,
     items: [
-      { value: 'reset-palette', label: 'Reset Palette' },
+      { value: 'promote', label: 'Save to Source…' },
+      { value: 'reset-palette', label: 'Reset Palette', header: ' ' },
       { value: 'reset-all', label: 'Reset All' },
       ...(['light', 'dark', 'system'] as const).map((t): MenuItem<MenuAction> => ({ value: t, label: t === 'system' ? 'Match System' : t === 'light' ? 'Light' : 'Dark', header: 'Panel Theme' })),
       { value: 'close', label: 'Close Panel', meta: '⌃⌥D', header: ' ' },
     ],
     pick: (v) => {
-      if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
+      if (v === 'promote') openPromote();
+      else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
       else if (v === 'close') host.setOpen(false);
       else { panelTheme = v; store.set(THEME_KEY, v); applyTheme(); }
@@ -956,6 +970,122 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     input.focus();
   }
 
+  // Save to Source: every component- and token-scope edit, written into the
+  // files that declare it (promote.mjs decides where, and says so before it
+  // writes). Instance edits stay as overrides. What it wrote leaves the tweaks.
+  let promoting: { body: HTMLElement; ok: HTMLButtonElement; entries: PromoteEntry[] } | null = null;
+  const instanceCount = () => (tweaks.overrides ?? []).filter((o) => o.scope === 'instance')
+    .reduce((n, o) => n + Object.keys(o.light).length + Object.keys(o.dark).length + Object.keys(o.shared).length, 0);
+  /** Of the lineage a component edit re-declares, what an instance (or anything
+      inside it) actually reads, with what those read in turn: the live preview
+      re-declares all of it, the source only what the component needs. */
+  function readThrough(dep: VarMap, selector: string): VarMap {
+    let el: Element | null = null;
+    try { el = document.querySelector(selector); } catch { /* not a page selector */ }
+    if (!el) return dep;
+    const read = new Set<string>();
+    for (const e of [el, ...el.querySelectorAll('*')].slice(0, 400)) for (const t of tokensOn(e)) read.add(t.name);
+    const keep = new Set(Object.keys(dep).filter((k) => read.has(k)));
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const k of [...keep]) for (const m of dep[k].matchAll(/var\(\s*(--[\w-]+)/g)) if (m[1] in dep && !keep.has(m[1])) { keep.add(m[1]); grew = true; }
+    }
+    return Object.fromEntries(Object.entries(dep).filter(([k]) => keep.has(k)));
+  }
+  function promoteEntries(): PromoteEntry[] {
+    const out: PromoteEntry[] = [];
+    for (const m of ['light', 'dark'] as const) {
+      for (const [cssVar, value] of Object.entries(modeVars(tweaks, m, CFG.roles))) {
+        out.push({ scope: 'token', name: 'Root', mode: m, cssVar, value, base: declared(cssVar, m), ...(m === 'light' ? { darkBase: declared(cssVar, 'dark') } : {}) });
+      }
+    }
+    for (const [cssVar, value] of Object.entries(tweaks.shared)) out.push({ scope: 'token', name: 'Root', mode: 'shared', cssVar, value, base: declared(cssVar, 'light') });
+    for (const o of tweaks.overrides ?? []) {
+      if (o.scope !== 'component') continue;
+      for (const m of ['shared', 'light', 'dark'] as const) {
+        const raw = o[m];
+        if (!Object.keys(raw).length) continue;
+        const at: Mode = m === 'dark' ? 'dark' : 'light';
+        const base = { scope: 'component' as const, selector: o.selector, name: o.name, mode: m };
+        for (const [cssVar, value] of Object.entries(raw)) out.push({ ...base, cssVar, value, base: declared(cssVar, at) });
+        for (const [cssVar, value] of Object.entries(readThrough(dependents(raw, at), o.selector))) if (!(cssVar in raw)) out.push({ ...base, cssVar, value, expanded: true });
+      }
+    }
+    return out;
+  }
+  function openPromote() {
+    const entries = promoteEntries();
+    const instances = instanceCount();
+    const body = h('div', { class: 'sp__b' });
+    if (!entries.length) body.append(h('div', { class: 'sp__note' }, instances ? 'Only instance edits, which stay as overrides.' : 'No edits to save.'));
+    const ok = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Save') as HTMLButtonElement;
+    const cancel = h('button', { type: 'button', class: 'btn' }, 'Cancel');
+    const content = h('div', {},
+      h('div', { class: 'pop__h' }, h('span', {}, 'Save to Source'), iconButton('close', 'Close', () => closePopover())),
+      body, h('div', { class: 'sp__f actions' }, ok, cancel));
+    openPopover({ root, anchor: menuBtn, beside: panel, content, className: 'sp', onClose: () => { promoting = null; } });
+    promoting = { body, ok, entries };
+    cancel.addEventListener('click', () => closePopover());
+    ok.addEventListener('click', () => {
+      ok.disabled = true;
+      ok.textContent = 'Saving';
+      host.send('promote', { entries, instances, write: true });
+    });
+    if (entries.length) host.send('promote', { entries, instances, write: false });
+  }
+  const short = (v: string | null) => (v == null ? '' : v.replace(/^var\(--([\w-]+)\)$/, '$1'));
+  function renderPromote(plan: PromotePlan) {
+    if (!promoting) return;
+    if (plan.written && !plan.error) { finishPromote(plan); return; }
+    const { body, ok } = promoting;
+    const row = (name: string, value: string, title: string, dim = false) =>
+      h('div', { class: `sp__r${dim ? ' sp__r--dim' : ''}`, title }, h('span', { class: 'sp__n' }, name.replace(/^--/, '')), h('span', { class: 'sp__v' }, value));
+    const rows: Node[] = [];
+    if (plan.error) rows.push(h('div', { class: 'sp__err' }, plan.error));
+    for (const f of plan.files) {
+      rows.push(h('div', { class: 'sp__file', title: f.path }, f.path));
+      let group = 'Root';
+      for (const c of [...f.changes].sort((a, b) => Number(a.name !== 'Root' && a.name !== 'Dark') - Number(b.name !== 'Root' && b.name !== 'Dark'))) {
+        const named = c.name !== 'Root' && c.name !== 'Dark' && !/^(Pinned|[\w-]+\.)/.test(c.name) ? c.name : 'Root';
+        if (named !== group) { group = named; rows.push(h('div', { class: 'sp__sub' }, named)); }
+        const value = c.from == null || c.from === c.to ? short(c.to) : `${short(c.from)} → ${short(c.to)}`;
+        const mode = c.mode === 'shared' ? 'Both Modes' : c.mode === 'light' ? 'Light' : 'Dark';
+        rows.push(row(c.cssVar, value, [`${c.cssVar}: ${c.to}`, `${c.name} · ${mode}`, c.note].filter(Boolean).join('\n'), !!c.note));
+      }
+    }
+    if (plan.regenerate.length) rows.push(...plan.regenerate.map((r) => h('div', { class: 'sp__note' }, r)));
+    if (plan.skipped.length) {
+      rows.push(h('div', { class: 'sp__file' }, 'Not Saved'));
+      for (const x of plan.skipped) rows.push(row(x.cssVar, x.reason, `${x.cssVar} · ${x.name}\n${x.reason}`, true));
+    }
+    if (plan.instances) rows.push(h('div', { class: 'sp__note' }, `${plan.instances} instance ${plan.instances === 1 ? 'edit stays' : 'edits stay'} as overrides.`));
+    body.replaceChildren(...rows);
+    ok.textContent = 'Save';
+    ok.disabled = !plan.keys.length;
+  }
+  function finishPromote(plan: PromotePlan) {
+    const done = new Set(plan.keys);
+    for (const m of ['light', 'dark'] as const) {
+      for (const k of Object.keys(tweaks[m])) if (done.has(`token||${m}|${k}`)) delete tweaks[m][k];
+      const pal = tweaks.palette?.[m];
+      if (!pal) continue;
+      const vars = Object.keys(modeVars({ ...emptyTweaks(), palette: { [m]: pal } }, m, CFG.roles));
+      if (vars.every((v) => done.has(`token||${m}|${v}`))) delete tweaks.palette![m];
+    }
+    if (tweaks.palette && !Object.keys(tweaks.palette).length) delete tweaks.palette;
+    for (const k of Object.keys(tweaks.shared)) if (done.has(`token||shared|${k}`)) delete tweaks.shared[k];
+    for (const o of tweaks.overrides ?? []) {
+      if (o.scope !== 'component') continue;
+      for (const m of ['shared', 'light', 'dark'] as const) for (const k of Object.keys(o[m])) if (done.has(`component|${o.selector}|${m}|${k}`)) delete o[m][k];
+    }
+    prune();
+    closePopover();
+    host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) });
+    invalidateGraph();
+    applyLive();
+    sync();
+  }
+
   const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, statesSec.el, variantsSec.el, scopeSec.el, tokensSec.el, propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
@@ -1294,6 +1424,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     saved = incoming;
     if (wasClean) tweaks = normalize(incoming);
     feedback = s.feedback ?? [];
+    if (s.promote) renderPromote(s.promote);
     const link = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
     if (link) link.href = `${CSS_ROUTE}?${Date.now()}`;
     invalidateGraph();

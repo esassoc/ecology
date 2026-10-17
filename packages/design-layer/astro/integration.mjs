@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolveConfig } from '../src/defaults.mjs';
 import { createStore } from '../src/store.mjs';
+import { planPromotion } from '../src/promote.mjs';
 
 const EVENT = 'design-layer';
 const CSS_ROUTE = '/__design-layer/tweaks.css';
@@ -26,6 +27,9 @@ const ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="
 export default function designLayer(inline = {}) {
   /** @type {ReturnType<typeof createStore> | null} */
   let store = null;
+  /** @type {import('../src/types').ResolvedConfig | null} */
+  let cfg = null;
+  let root = '';
 
   return {
     name: '@esa/design-layer',
@@ -43,6 +47,8 @@ export default function designLayer(inline = {}) {
           }
         }
         const resolved = resolveConfig({ ...spoke, ...inline });
+        cfg = resolved;
+        root = fileURLToPath(config.root);
         store = createStore(fileURLToPath(new URL(`${resolved.dataDir.replace(/\/?$/, '/')}`, config.root)));
         updateConfig({
           vite: { define: { __DESIGN_LAYER_CONFIG__: JSON.stringify({ config: resolved, cssRoute: CSS_ROUTE, fontUrl: FONT_ROUTE }) } },
@@ -83,6 +89,18 @@ export default function designLayer(inline = {}) {
         toolbar.on(`${EVENT}:save-tweaks`, (data) => { s.saveTweaks(data); sendState(); });
         toolbar.on(`${EVENT}:add-comment`, (record) => { s.addComment(record); sendState(); });
         toolbar.on(`${EVENT}:set-status`, (data) => { s.setStatus(data); sendState(); });
+        // Save to Source: the plan first, then (write) the files themselves.
+        toolbar.on(`${EVENT}:promote`, ({ entries, instances, write }) => {
+          let promote;
+          try {
+            const { plan, apply } = planPromotion(root, cfg, { entries, instances });
+            promote = plan;
+            if (write) { apply(); promote = { ...plan, written: true }; }
+          } catch (err) {
+            promote = { context: 'spoke', files: [], skipped: [], instances, regenerate: [], keys: [], error: String(err?.stderr || err?.message || err).slice(0, 400) };
+          }
+          toolbar.send(`${EVENT}:state`, { ...s.state(), promote });
+        });
       },
     },
   };

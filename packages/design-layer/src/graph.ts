@@ -52,6 +52,9 @@ function declarations(m: Mode): Map<string, string> {
   return (cache[m] = out);
 }
 
+/** A variable's declared value at the root in a mode, from the page's own sheets (the design layer's left out). */
+export const declared = (name: string, m: Mode): string | null => declarations(m).get(name) ?? null;
+
 const REF = /var\(\s*(--[\w-]+)/g;
 
 /** The root variables that resolve through any of `vars`, transitively, with

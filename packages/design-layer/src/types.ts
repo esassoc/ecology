@@ -57,6 +57,22 @@ export interface DesignLayerConfig {
   reference?: (Partial<Reference> & { replace?: boolean }) | null;
   /** Renamed variables in old tweaks files: old → the variables it now sets. */
   legacy?: Record<string, string[]>;
+  /** Where Save to Source writes, from the spoke root. Every key is found on its own when absent. */
+  sourceFiles?: SourceFiles;
+}
+
+/** Save to Source's files in a spoke. */
+export interface SourceFiles {
+  /** The folder searched for theme files. Default "src/styles". */
+  dir?: string;
+  /** The theme's slug, as in [data-theme="x"]. Default: the recipe's, else the commonest in the theme files. */
+  theme?: string;
+  /** The make-theme recipe. Default: the theme-*.json in `dir` with seeds. */
+  recipe?: string;
+  /** Hand-authored theme files whose declarations are edited in place. Default: every css in `dir` naming the theme, less generated ones. */
+  themeFiles?: string[];
+  /** Where new rules go (component scope, and values declared nowhere). Default: theme-app.css, else theme-<slug>.css. */
+  components?: string;
 }
 
 export interface ResolvedConfig {
@@ -69,6 +85,7 @@ export interface ResolvedConfig {
   lengths: LengthControl[];
   reference: Reference | null;
   legacy: Record<string, string[]>;
+  sourceFiles?: SourceFiles;
 }
 
 export interface Tweaks {
@@ -150,7 +167,42 @@ export interface FeedbackRecord {
   status: 'open' | 'resolved';
 }
 
-export interface ServerState { tweaks: Partial<Tweaks>; feedback: FeedbackRecord[] }
+/** One value Save to Source would write: a component- or token-scope edit, or
+    (expanded) a root value re-declared so the edit reaches it inside the component. */
+export interface PromoteEntry {
+  scope: 'component' | 'token';
+  /** Component scope: the component's selector. */
+  selector?: string;
+  name: string;
+  mode: 'light' | 'dark' | 'shared';
+  cssVar: string;
+  value: string;
+  /** The value declared at the root now, for the preview. */
+  base?: string | null;
+  /** A light edit: the value declared for dark now, kept when the light value lands where both schemes read it. */
+  darkBase?: string | null;
+  /** Re-declared through the lineage, not edited by hand. */
+  expanded?: boolean;
+}
+
+export interface PromoteChange { name: string; cssVar: string; mode: PromoteEntry['mode']; from: string | null; to: string; note?: string }
+export interface PromoteFile { path: string; label: string; changes: PromoteChange[] }
+
+/** What Save to Source will write (or wrote), file by file. */
+export interface PromotePlan {
+  context: 'hub' | 'spoke';
+  files: PromoteFile[];
+  skipped: { name: string; cssVar: string; mode: PromoteEntry['mode']; reason: string }[];
+  instances: number;
+  /** What runs after the write. */
+  regenerate: string[];
+  /** The entries this plan writes, as scope|selector|mode|var, removed from the tweaks once written. */
+  keys: string[];
+  written?: boolean;
+  error?: string;
+}
+
+export interface ServerState { tweaks: Partial<Tweaks>; feedback: FeedbackRecord[]; promote?: PromotePlan }
 
 /** The messages a panel sends, and the one it receives. */
 export interface PanelMessages {
@@ -158,6 +210,8 @@ export interface PanelMessages {
   'save-tweaks': { json: Tweaks; css: string };
   'add-comment': FeedbackRecord;
   'set-status': { id: string; status: FeedbackRecord['status'] };
+  /** Plan Save to Source, or (write) apply it; the plan comes back on the state. */
+  promote: { entries: PromoteEntry[]; instances: number; write: boolean };
 }
 
 /** What a dev adapter gives the panel: a channel to its dev server and the open/closed state. */
