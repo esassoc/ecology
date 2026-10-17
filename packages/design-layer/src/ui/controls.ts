@@ -85,7 +85,7 @@ const SHOW_ALL_KEY = 'design-layer:show-all';
 export interface PickIntent { concept: string; chosen: string; value: string; size: string | null; variants: string[]; matched: boolean }
 
 /** Where the picker is opened from, so a concept can resolve its size variant. */
-export interface PickContext { cssVar?: string; current?: () => string | null; size?: () => string | null }
+export interface PickContext { cssVar?: string; /** The CSS property the field feeds, when the variable's name does not say. */ prop?: string | null; current?: () => string | null; size?: () => string | null }
 
 /**
  * The variables a field can take, one row per concept: "Label Strong" stands
@@ -93,7 +93,7 @@ export interface PickContext { cssVar?: string; current?: () => string | null; s
  * and component aliases sit behind Show All at the foot. Enter or a click binds.
  */
 export function openTokenPicker(o: { root: Root; anchor: HTMLElement; beside?: HTMLElement; kind: TokenKind; current: string | null; at?: PickContext; pick: (name: string, intent: PickIntent) => void }) {
-  const prop = typeProp(o.at?.cssVar);
+  const prop = o.at?.prop ?? typeProp(o.at?.cssVar);
   const all = conceptsFor(o.kind, prop);
   const where = { current: o.at?.current?.() ?? null, size: o.at?.size?.() ?? null };
   let showAll = (() => { try { return localStorage.getItem(SHOW_ALL_KEY) === '1'; } catch { return false; } })();

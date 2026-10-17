@@ -39,7 +39,7 @@ import { SPECS, fieldsFor, hoverColor, kindsOf, readProp, specsFor, type FieldSp
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
-  SIZE_RUNGS, readTokens, type PaletteOption, type PickIntent, type Prefix,
+  SIZE_RUNGS, readTokens, typeProp, type PaletteOption, type PickIntent, type Prefix,
 } from './ui';
 
 /** The panel's width: a setting, dragged on its inner edge. Figma's own panel is 240; 320 gives the fields and the top row's undo and redo room. */
@@ -330,7 +330,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (rest.length) tweaks.intents = rest; else delete tweaks.intents;
   }
   /** Where a field's picker resolves concepts: its variable and the selection's size. */
-  const pickAt = (cssVar: string) => ({ cssVar, size: sizeOfSelection });
+  const pickAt = (cssVar: string, props: string[] = []) => ({ cssVar, prop: typeProp(cssVar) ?? props.map(typeProp).find(Boolean) ?? null, size: sizeOfSelection });
   /** Drops scoped overrides that hold nothing. */
   function prune() {
     if (!tweaks.overrides) return;
@@ -730,7 +730,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     // Unedited, the field shows the token itself as its chip.
     const shownAs = (raw: string | undefined, literal: number | string) => (raw === undefined ? `var(${u.name})` : boundToken(raw) ? raw : literal);
     if (u.kind === 'color') {
-      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside: bes, at: pickAt(u.name) }, onChange: (v, i) => set(mode, u.name, v, i) });
+      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside: bes, at: pickAt(u.name, u.props) }, onChange: (v, i) => set(mode, u.name, v, i) });
       f.el.classList.add('span2');
       f.el.title = title;
       const x = rowX(label, () => set(mode, u.name, null));
@@ -745,7 +745,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const weight = u.kind === 'weight';
       const f = numberField({
         root, label: `${label}: ${u.name}`, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
-        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside: bes, at: pickAt(u.name) },
+        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside: bes, at: pickAt(u.name, u.props) },
         onChange: (v, i) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
       });
       f.el.classList.add('span2');
