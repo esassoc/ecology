@@ -78,8 +78,28 @@ export interface Tweaks {
   shared: VarMap;
   /** The palette picked per mode and its surfaces' ramp as tweaked. */
   palette?: Partial<Record<Mode, PaletteChoice>>;
+  /** Overrides scoped to one component (every instance) or one element on one page. */
+  overrides?: ScopedOverride[];
   /** Written on Save, never read back: every value that differs from the reference's. */
   departures?: Departure[];
+}
+
+/** Where an edit lands: every instance of a component, one element on one
+    page, or (token scope) the token itself at the root, which is Tweaks' own maps. */
+export type EditScope = 'component' | 'token' | 'instance';
+
+/** Token values re-declared under one selector, so they hold only inside it. */
+export interface ScopedOverride {
+  scope: 'component' | 'instance';
+  /** `.esa-card`, `esa-select`, or (instance) a selector unique on its page. */
+  selector: string;
+  /** What the panel calls it: the component's name, or the element's. */
+  name: string;
+  /** Instance scope: the page's path; the rule holds only there. */
+  page?: string;
+  light: VarMap;
+  dark: VarMap;
+  shared: VarMap;
 }
 
 export interface Departure { id: string; label: string; cssVar: string; value: number; reference: number }

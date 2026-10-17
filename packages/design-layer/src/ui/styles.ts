@@ -36,6 +36,12 @@ export const UI_CSS = `
     --chip: #e6e6e6;
     --danger: #dc3412;
     --shadow: 0px 2px 5px 0px #00000026, 0px 10px 16px 0px #0000001f, 0px 0px .5px 0px #0000001f;
+    --menu-bg: #ffffff;
+    --menu-ink: rgba(0, 0, 0, 0.9);
+    --menu-ink-2: rgba(0, 0, 0, 0.5);
+    --menu-ink-3: rgba(0, 0, 0, 0.3);
+    --menu-line: #e6e6e6;
+    --menu-active: #0d99ff;
     color-scheme: light;
   }
   .ui[data-theme="dark"] {
@@ -57,6 +63,12 @@ export const UI_CSS = `
     --chip: #444444;
     --danger: #fca397;
     --shadow: 0px 2px 5px 0px #00000059, 0px 10px 16px 0px #00000047, 0px 0px .5px 0px #ffffff40;
+    --menu-bg: #1e1e1e;
+    --menu-ink: #ffffff;
+    --menu-ink-2: rgba(255, 255, 255, 0.7);
+    --menu-ink-3: rgba(255, 255, 255, 0.4);
+    --menu-line: #383838;
+    --menu-active: #0c8ce9;
     color-scheme: dark;
   }
   .ui {
@@ -154,7 +166,7 @@ export const UI_CSS = `
 
   /* colour: a 14 swatch in the prefix slot */
   .sw { display: block; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
-  .f--color .f__input { text-transform: uppercase; }
+  .f--color .f__input { flex-basis: 52px; min-width: 52px; text-transform: uppercase; }
   .f__name { flex: 1; min-width: 0; height: 22px; padding: 0 4px 0 0; border: 0; background: none; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .f__native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
@@ -184,20 +196,20 @@ export const UI_CSS = `
   .seg--icons button:first-child { border-radius: 5px 0 0 5px; }
   .seg--icons button:last-child { border-radius: 0 5px 5px 0; }
 
-  /* ── popovers: panel-coloured, radius 13; menus are dark in both themes ── */
+  /* ── popovers: panel-coloured, radius 13; menus follow the panel theme ── */
   .pop { position: fixed; z-index: 2147483100; min-width: 160px; max-width: 320px; border-radius: 13px; background: var(--bg); box-shadow: var(--shadow); color: var(--ink); overflow: hidden; }
-  .pop--menu { padding: 8px; background: #1e1e1e; color: #ffffff; }
+  .pop--menu { padding: 8px; background: var(--menu-bg); color: var(--menu-ink); }
   .menu { max-height: 360px; overflow-y: auto; }
-  .mi { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 8px 0 4px; border: 0; border-radius: 5px; background: none; color: #ffffff; text-align: left; white-space: nowrap; }
+  .mi { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; width: 100%; height: 24px; padding: 0 8px 0 4px; border: 0; border-radius: 5px; background: none; color: var(--menu-ink); text-align: left; white-space: nowrap; }
   .mi svg { width: 16px; height: 16px; }
-  .mi[data-active] { background: #0d99ff; }
-  .mi__meta { color: rgba(255, 255, 255, 0.7); font-variant-numeric: tabular-nums; }
+  .mi[data-active] { background: var(--menu-active); color: #ffffff; }
+  .mi__meta { color: var(--menu-ink-2); font-variant-numeric: tabular-nums; }
   .mi[data-active] .mi__meta { color: #ffffff; }
   .mi__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .mh { padding: 4px 8px 4px 28px; color: rgba(255, 255, 255, 0.4); }
-  .msep { height: 1px; margin: 8px -8px; background: #383838; }
-  .mi__sw { width: 12px; height: 12px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); justify-self: center; }
-  .mi__glyph { color: rgba(255, 255, 255, 0.4); text-align: center; font-size: 9px; }
+  .mh { padding: 4px 8px 4px 28px; color: var(--menu-ink-3); }
+  .msep { height: 1px; margin: 8px -8px; background: var(--menu-line); }
+  .mi__sw { width: 12px; height: 12px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(128,128,128,.25); justify-self: center; }
+  .mi__glyph { color: var(--menu-ink-3); text-align: center; font-size: 9px; }
 
   /* a popover's own head: a title and a close button, 40 high */
   .pop__h { display: flex; align-items: center; height: 40px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line); font-weight: 550; }
@@ -206,11 +218,11 @@ export const UI_CSS = `
 
   /* token picker: a dark menu with search */
   .tp { width: 280px; max-width: 280px; padding: 0; }
-  .tp__search { display: flex; align-items: center; height: 40px; padding: 0 8px; border-bottom: 1px solid #383838; color: rgba(255,255,255,.4); }
-  .tp__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: #ffffff; }
-  .tp__search input::placeholder { color: rgba(255,255,255,.4); }
+  .tp__search { display: flex; align-items: center; height: 40px; padding: 0 8px; border-bottom: 1px solid var(--menu-line); color: var(--menu-ink-3); }
+  .tp__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--menu-ink); }
+  .tp__search input::placeholder { color: var(--menu-ink-3); }
   .tp .menu { padding: 8px; max-height: 320px; }
-  .tp__empty { padding: 16px; color: rgba(255,255,255,.4); }
+  .tp__empty { padding: 16px; color: var(--menu-ink-3); }
 
   /* palette picker: whole themes, by group */
   .pp { width: 280px; max-width: 280px; }

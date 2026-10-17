@@ -3,7 +3,7 @@
 export { UI_CSS } from './styles';
 export { h, icon, ICONS } from './dom';
 export { openPopover, closePopover, menu, type MenuItem } from './popover';
-export { readTokens, tokensFor, invalidateTokens, boundToken, shortName, type Token, type TokenKind } from './tokens';
+export { readTokens, tokensFor, tierOf, kindOf, invalidateTokens, boundToken, shortName, type Token, type TokenKind } from './tokens';
 export {
   iconButton, section, numberField, colorField, selectField, segmented, tabs, checkbox, dropdown, openMenu,
   openPalettePicker, openPanelPopover, openTokenPicker, paletteStrip,

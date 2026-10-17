@@ -30,6 +30,8 @@ const dot = (x: number, y: number, r = 1) => `<circle cx="${x}" cy="${y}" r="${r
 
 export const ICONS = {
   // ── actions ──
+  /** The select tool: Figma's move arrow. */
+  cursor: '<path d="M8.5 6.5v10.5l2.9-2.8 2 4.2 1.7-.8-2-4.1h4.1Z"/>',
   plus: '<path d="M12 6.5v11M6.5 12h11"/>',
   minus: '<path d="M6.5 12h11"/>',
   chevron: '<path d="m9 10.5 3 3 3-3"/>',

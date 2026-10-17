@@ -21,7 +21,7 @@ import {
   BANNED_WEIGHT, FONT_OPTIONS, buildCss, googleHref, migrateShared, modeVars,
   type ColorControl, type Departure, type FeedbackRecord, type FontControl, type FontOption,
   type LengthControl, type Mode, type PanelHost, type ResolvedConfig, type ServerState,
-  type SizeControl, type Tweaks, type WeightAxis,
+  type EditScope, type ScopedOverride, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
 } from './controls';
 import { contrast, firstFamily, oklchL, toHex } from './color';
 import { effectiveBackground, selectorFor, snippet, source } from './describe';
@@ -31,10 +31,13 @@ import {
   type Ramp, type SurfaceId,
 } from './surfaces';
 import { GROUPS, PALETTES, paletteById, paletteRamp } from './palettes';
+import { ancestors, candidate, firstChildComponent, select, type Selection } from './select';
+import { computedOn, tokensOn, type TokenUse } from './inspect';
+import { dependents, invalidateGraph } from './graph';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover,
-  section, selectField, tabs, boundToken, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
-  type PaletteOption,
+  section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
+  type PaletteOption, type Prefix,
 } from './ui';
 
 /** The panel's width: a setting, dragged on its left edge. Figma's own panel is 240; 280 gives the fields room. */
@@ -42,6 +45,7 @@ const WIDTH = { default: 280, min: 240, max: 480 };
 const WIDTH_KEY = 'design-layer:width';
 const THEME_KEY = 'design-layer:theme';
 const LAYOUT_KEY = 'design-layer:layout-open';
+const PROPS_KEY = 'design-layer:properties-open';
 type PanelTheme = 'light' | 'dark' | 'system';
 const store = {
   get(key: string) { try { return localStorage.getItem(key); } catch { return null; } },
@@ -75,6 +79,7 @@ const refLength = (id: string) => { const v = CFG.reference?.values[id]; return 
 const normalize = (t: Partial<Tweaks> | undefined): Tweaks => ({
   light: { ...(t?.light ?? {}) }, dark: { ...(t?.dark ?? {}) }, shared: migrateShared(t?.shared ?? {}, CFG),
   ...(t?.palette && Object.keys(t.palette).length ? { palette: structuredClone(t.palette) } : {}),
+  ...(t?.overrides?.length ? { overrides: structuredClone(t.overrides) } : {}),
 });
 const cloneRamp = (r: Ramp): Ramp => structuredClone(r);
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -123,6 +128,22 @@ const PANEL_CSS = `
     background: #0d99ff; color: #fff; font: 550 9px/1 'Design Layer UI', Inter, system-ui, sans-serif; box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,.3); pointer-events: none; }
   .box { position: fixed; z-index: 2147482998; pointer-events: none; border: 1px solid #0d99ff; background: rgba(13, 153, 255, 0.06); }
   .box--picked { border-width: 2px; background: rgba(13, 153, 255, 0.12); }
+  .box--sel { border-color: #0d99ff; background: none; }
+  .box__name, .box__size { position: absolute; height: 16px; padding: 0 4px; border-radius: 2px; background: #0d99ff; color: #fff;
+    font: 550 11px/16px 'Design Layer UI', Inter, system-ui, sans-serif; letter-spacing: .055px; white-space: nowrap; }
+  .box__name { left: -1px; bottom: calc(100% + 4px); }
+  .box__size { left: 50%; top: calc(100% + 4px); transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+  .crumbs { flex: 1 1 auto; display: flex; align-items: center; min-width: 0; margin-left: -4px; }
+  .crumbs:not([hidden]) ~ .grow { display: none; }
+  .crumb { flex: 0 1 auto; min-width: 0; height: 24px; padding: 0 4px; border: 0; border-radius: 5px; background: none; color: var(--ink-2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  button.crumb:hover { background: var(--hover); color: var(--ink); }
+  .crumb--cur { flex: 0 0 auto; max-width: 60%; color: var(--ink); font: 550 13px/24px 'Design Layer UI', Inter, system-ui, sans-serif; letter-spacing: -0.032px; }
+  .crumb-sep { flex: none; padding: 0 2px; color: var(--ink-3); }
+  .sub { height: 24px; line-height: 24px; color: var(--ink-2); }
+  .f--ro, .f--ro:hover { border-color: transparent; }
+  .f--ro .f__name { padding: 0; cursor: default; }
+  .f--ro .sw { pointer-events: none; }
   .row-x { visibility: hidden; }
   .row-x[data-on] { visibility: visible; }
 `;
@@ -168,6 +189,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let picked: Element | null = null;
   let hovered: Element | null = null;
   let linked = true;
+  // The select tool and what it selected; edits land at `scope` (Component by default).
+  let selecting = false;
+  let selection: Selection | null = null;
+  let scope: EditScope = 'component';
+  /** Set while reading or writing the reference, which is page-wide whatever the scope. */
+  let forceRoot = false;
   const base: Partial<Record<Mode, Base>> = {};
 
   // ── tokens ──────────────────────────────────────────────────────────
@@ -182,6 +209,52 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (!attached) probe.remove();
     return out;
   }
+  // ── where an edit lands ─────────────────────────────────────────────
+  type Scoped = { kind: 'component' | 'instance'; selector: string; name: string; el: Element; page?: string };
+  type Target = { kind: 'root' } | Scoped;
+  /** The current scope made concrete: the root (Token, or nothing selected),
+      every instance of the selection's component, or the one element. */
+  function target(): Target {
+    if (forceRoot || !selection || scope === 'token') return { kind: 'root' };
+    const c = selection.component;
+    if (scope === 'component' && c) return { kind: 'component', selector: c.selector, name: c.name, el: c.root };
+    return { kind: 'instance', selector: selection.instance, name: selection.name, el: selection.el, page: location.pathname };
+  }
+  const effectiveScope = (): EditScope => (scope === 'component' && !selection?.component ? 'instance' : scope);
+  const isRule = (o: ScopedOverride, t: Scoped) => o.scope === t.kind && o.selector === t.selector && (o.page ?? '') === (t.page ?? '');
+  /** The map an edit at the current scope reads, and (with `create`) writes. */
+  function layer(s: Mode | 'shared', create = false): VarMap {
+    const t = target();
+    if (t.kind === 'root') return tweaks[s];
+    let o = tweaks.overrides?.find((x) => isRule(x, t));
+    if (!o) {
+      if (!create) return {};
+      o = { scope: t.kind, selector: t.selector, name: t.name, ...(t.page ? { page: t.page } : {}), light: {}, dark: {}, shared: {} };
+      (tweaks.overrides ??= []).push(o);
+    }
+    return o[s];
+  }
+  /** Drops scoped overrides that hold nothing. */
+  function prune() {
+    if (!tweaks.overrides) return;
+    tweaks.overrides = tweaks.overrides.filter((o) => Object.keys(o.light).length + Object.keys(o.dark).length + Object.keys(o.shared).length);
+    if (!tweaks.overrides.length) delete tweaks.overrides;
+  }
+  const VOID = /^(img|input|br|hr|area|col|embed|source|track|wbr|textarea|select|svg|path|use)$/;
+  /** What a value computes to where the current scope lands (a var() resolves there). */
+  function measureAt(prop: Prop, value: string) {
+    const t = target();
+    if (t.kind === 'root') return measure(prop, value);
+    const host = VOID.test(t.el.localName) ? (t.el.parentElement ?? document.body) : t.el;
+    host.append(probe);
+    probe.style[prop] = value;
+    const out = getComputedStyle(probe)[prop];
+    probe.style[prop] = '';
+    probe.remove();
+    return out;
+  }
+  const atRoot = () => target().kind === 'root';
+
   // The theme's own values, read with every override switched off.
   function readBase(m: Mode): Base {
     if (base[m]) return base[m]!;
@@ -207,40 +280,47 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     return (base[m] = b);
   }
   /** A colour row's value as stored: a hex, var(--token), or undefined for the theme's own. */
-  const colorRaw = (id: string, m: Mode) => modeVars(tweaks, m, CFG.roles)[COLORS.find((c) => c.id === id)!.cssVar];
-  /** The override, else the palette's value, else the theme's own, as hex. */
+  // Each getter reads the current scope: its override, else (at the root) the
+  // palette's and then the theme's own value, else (scoped) what the variable
+  // resolves to where the scope lands.
+  const colorVar = (id: string) => COLORS.find((c) => c.id === id)!.cssVar;
+  const colorRaw = (id: string, m: Mode) => (atRoot() ? modeVars(tweaks, m, CFG.roles)[colorVar(id)] : layer(m)[colorVar(id)]);
   const colorValue = (id: string, m: Mode) => {
     const v = colorRaw(id, m);
-    if (!v) return readBase(m).colors[id];
-    return boundToken(v) ? toHex(measure('color', v)) : toHex(v);
+    if (!v) return atRoot() ? readBase(m).colors[id] : toHex(measureAt('color', `var(${colorVar(id)})`));
+    return boundToken(v) ? toHex(measureAt('color', v)) : toHex(v);
   };
   const fontOption = (id: string) => {
     const f = FONTS.find((x) => x.id === id)!;
-    const css = tweaks.shared[f.cssVar] ?? readBase(mode).fonts[id];
+    const css = layer('shared')[f.cssVar] ?? (atRoot() ? readBase(mode).fonts[id] : measureAt('fontFamily', `var(${f.cssVar})`));
     return FONT_OPTIONS.find((o) => firstFamily(o.css) === firstFamily(css));
   };
   /** A shared length as stored (Npx or var(--token)) resolved to px, else the fallback. */
   const lengthOf = (cssVar: string, fallback: number, prop: Prop = 'width') => {
-    const v = tweaks.shared[cssVar];
+    const v = layer('shared')[cssVar];
     if (!v) return fallback;
-    return boundToken(v) ? half(Number.parseFloat(measure(prop, v))) : Number.parseFloat(v);
+    return boundToken(v) ? half(Number.parseFloat(measureAt(prop, v))) : Number.parseFloat(v);
   };
-  const baseSize = (id: string) => half(readBase(mode).sizes[id]);
   const sizeOf = (id: string) => SIZES.find((s) => s.id === id)!;
+  const baseSize = (id: string) => half(atRoot() ? readBase(mode).sizes[id] : Number.parseFloat(measureAt('fontSize', `var(${sizeOf(id).cssVar})`)));
   const sizeValue = (id: string) => lengthOf(sizeOf(id).cssVar, baseSize(id), 'fontSize');
+  const baseWeight = (id: string) => (atRoot() ? readBase(mode).weights[id] : Number.parseFloat(measureAt('fontWeight', `var(${sizeOf(id).weightVar})`)));
   const weightValue = (id: string) => {
-    const v = tweaks.shared[sizeOf(id).weightVar];
-    if (!v) return readBase(mode).weights[id];
-    return Number.parseFloat(boundToken(v) ? measure('fontWeight', v) : v);
+    const v = layer('shared')[sizeOf(id).weightVar];
+    if (!v) return baseWeight(id);
+    return Number.parseFloat(boundToken(v) ? measureAt('fontWeight', v) : v);
   };
   const compOf = (id: string) => COMPONENTS.find((c) => c.id === id)!;
-  const baseComp = (id: string) => half(readBase(mode).components[id]);
+  const baseComp = (id: string) => half(atRoot() ? readBase(mode).components[id] : Number.parseFloat(measureAt('width', `var(${compOf(id).cssVar})`)));
   const compValue = (id: string) => lengthOf(compOf(id).cssVar, baseComp(id));
   /** What a field shows: the bound var(--token), else the number. */
-  const shown = (cssVar: string, n: number) => { const v = tweaks.shared[cssVar]; return v && boundToken(v) ? v : n; };
+  const shown = (cssVar: string, n: number) => { const v = layer('shared')[cssVar]; return v && boundToken(v) ? v : n; };
+  /** Runs `fn` against the root whatever the scope (the reference is page-wide). */
+  const rooted = <T>(fn: () => T): T => { forceRoot = true; try { return fn(); } finally { forceRoot = false; } };
 
   /** Every size, weight and length that differs from the reference's, for Save. */
-  function departures(): Departure[] {
+  function departures(): Departure[] { return rooted(departuresAtRoot); }
+  function departuresAtRoot(): Departure[] {
     const out: Departure[] = [];
     for (const s of SIZES) {
       const r = refSize(s.id);
@@ -260,6 +340,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   /** Every size, weight and length at the reference's value; a value that is also the theme's own stays unset. */
   function applyReference() {
+    forceRoot = true;
     const b = readBase(mode);
     for (const s of SIZES) {
       const r = refSize(s.id);
@@ -272,11 +353,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (r === null) continue;
       if (r === baseComp(c.id)) delete tweaks.shared[c.cssVar]; else tweaks.shared[c.cssVar] = `${r}px`;
     }
+    forceRoot = false;
     applyLive();
     sync();
   }
-  const atReference = () => SIZES.every((s) => { const r = refSize(s.id); return !r || (sizeValue(s.id) === r.size && weightValue(s.id) === r.weight); })
-    && COMPONENTS.every((c) => { const r = refLength(c.id); return r === null || compValue(c.id) === r; });
+  const atReference = () => rooted(() => SIZES.every((s) => { const r = refSize(s.id); return !r || (sizeValue(s.id) === r.size && weightValue(s.id) === r.weight); })
+    && COMPONENTS.every((c) => { const r = refLength(c.id); return r === null || compValue(c.id) === r; }));
 
   /** A face's weights as the page has loaded them: the wght range its
       @font-face rules declare (a variable face: every whole number in it), else
@@ -321,8 +403,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     return Number.parseFloat(t) === BANNED_WEIGHT || t === `var(--font-weight-${BANNED_WEIGHT})`;
   };
   /** Every tuned weight (any mode, any weight variable) set to the banned 350. */
-  const bannedTweaks = () => (['shared', 'light', 'dark'] as const).flatMap((k) =>
-    Object.entries(tweaks[k]).filter(([v, val]) => /weight/.test(v) && isBanned(val)).map(([v]) => v));
+  const bannedTweaks = () => [tweaks, ...(tweaks.overrides ?? [])].flatMap((maps) => (['shared', 'light', 'dark'] as const).flatMap((k) =>
+    Object.entries(maps[k]).filter(([v, val]) => /weight/.test(v) && isBanned(val)).map(([v]) => ('selector' in maps ? `${maps.name} ${v}` : v))));
 
   // ── surfaces ────────────────────────────────────────────────────────
   const baseRamp = (m: Mode) => rampFromHexes(readBase(m).surfaces);
@@ -360,14 +442,17 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   function applyLive() {
     const dock = open ? width : 0;
-    live.textContent = buildCss(tweaks, CFG.roles, true) + (dock ? `html:root body { margin-right: ${dock}px; }\n` : '');
+    live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + (dock ? `html:root body { margin-right: ${dock}px; }\n` : '');
     const specs = [...new Set(Object.values(tweaks.shared).map((css) => FONT_OPTIONS.find((o) => o.css === css)?.google).filter((g): g is string => !!g))];
     const href = googleHref(specs);
     if (href) { if (fontLink.getAttribute('href') !== href) fontLink.href = href; if (!fontLink.isConnected) document.head.append(fontLink); }
     else fontLink.remove();
   }
-  function set(scope: Mode | 'shared', cssVar: string, value: string | null) {
-    if (value === null) delete tweaks[scope][cssVar]; else tweaks[scope][cssVar] = value;
+  /** Writes one variable at the current scope (null drops the override). */
+  function set(s: Mode | 'shared', cssVar: string, value: string | null) {
+    const map = layer(s, value !== null);
+    if (value === null) delete map[cssVar]; else map[cssVar] = value;
+    prune();
     applyLive();
     sync();
   }
@@ -388,8 +473,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     onOpen: (a) => openMenu<Mode>({ root, anchor: a, alignEnd: true, selected: mode, pick: setMode, items: [{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }] }),
   });
   const save = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Saved');
-  save.addEventListener('click', () => host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles) }));
-  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), modeDd.el, save);
+  save.addEventListener('click', () => host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) }));
+  const pickBtn = iconButton('cursor', 'Select (Click an Element)', () => setSelecting(!selecting), false);
+  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), pickBtn, modeDd.el, save);
 
   // Selection header: the palette as the title, the reference, the menu.
   const paletteOptions = (): PaletteOption[] => PALETTES.map((p) => {
@@ -421,7 +507,163 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       else { panelTheme = v; store.set(THEME_KEY, v); applyTheme(); }
     },
   }));
-  const sel = h('div', { class: 'sel' }, paletteDd.el, h('span', { class: 'grow' }), refBtn, menuBtn);
+  // With a selection the header is its breadcrumb (Figma's layer path) instead of the palette.
+  const crumbs = h('nav', { class: 'crumbs', 'aria-label': 'Selection', hidden: true });
+  const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
+  const sel = h('div', { class: 'sel' }, paletteDd.el, crumbs, h('span', { class: 'grow' }), refBtn, clearBtn, menuBtn);
+  function syncHeader() {
+    paletteDd.el.hidden = !!selection;
+    crumbs.hidden = !selection;
+    clearBtn.hidden = !selection;
+    if (refBtn) refBtn.hidden = !!selection;
+    if (!selection) return;
+    const up = ancestors(selection.el);
+    const crumb = (name: string, el: Element) => {
+      const b = h('button', { type: 'button', class: 'crumb', title: `Select ${name}` }, name);
+      b.addEventListener('click', () => setSelection(select(el)));
+      return b;
+    };
+    const sep = () => h('span', { class: 'crumb-sep', 'aria-hidden': 'true' }, '/');
+    crumbs.replaceChildren(
+      ...(up.length > 2 ? [h('span', { class: 'crumb-sep', title: up.slice(0, -2).map((a) => a.name).join(' / ') }, '…'), sep()] : []),
+      ...up.slice(-2).flatMap((a) => [crumb(a.name, a.root), sep()]),
+      h('span', { class: 'crumb crumb--cur', title: selection.component?.file ?? selection.name, 'aria-current': 'true' }, selection.name),
+    );
+  }
+
+  // Scope: where an edit lands. Component (every instance) is the default.
+  const scopeSeg = segmented<EditScope>({
+    label: 'Edit scope',
+    options: [{ value: 'component', label: 'Component' }, { value: 'token', label: 'Token' }, { value: 'instance', label: 'Instance' }],
+    onChange: (v) => { scope = v; sync(); },
+  });
+  scopeSeg.el.classList.add('span2');
+  const scopeSec = section({ id: 'scope', title: 'Scope', body: [scopeSeg.el] });
+
+  // Tokens: what the selection reads, by tier, each editable at the scope.
+  // Properties: its computed values, read only.
+  const tokensSec = section({ id: 'tokens', title: 'Tokens', body: [] });
+  const tokensBody = tokensSec.el.querySelector('.sec__b')!;
+  let tokenRows: { sync: () => void }[] = [];
+  const TIERS: [TokenUse['tier'], string][] = [[3, 'Component'], [2, 'Semantic'], [1, 'Primitive']];
+  const prefixFor = (props: string[]): Prefix => {
+    const has = (re: RegExp) => props.some((p) => re.test(p));
+    if (has(/radius/)) return 'radius';
+    if (has(/padding-(inline|left|right)/)) return 'padX';
+    if (has(/padding/)) return 'padY';
+    if (has(/font-size/)) return 'size';
+    if (has(/height/)) return 'height';
+    if (has(/gap/)) return { text: 'G' };
+    return { text: '#' };
+  };
+  function tokenRow(u: TokenUse): { nodes: Node[]; sync: () => void } {
+    const label = shortName(u.name).replace(/^color-/, '');
+    const title = `${u.name}${u.props.length ? ` → ${u.props.join(', ')}` : ''}`;
+    if (u.kind === 'color') {
+      const f = colorField({ root, label: u.name, suffix: label, tokens: { beside }, onChange: (v) => set(mode, u.name, v) });
+      f.el.classList.add('span2');
+      f.el.title = title;
+      const x = rowX(label, () => set(mode, u.name, null));
+      return { nodes: [f.el, x], sync: () => {
+        const raw = layer(mode)[u.name];
+        const hex = toHex(measureAt('color', raw ?? `var(${u.name})`));
+        f.set(raw && boundToken(raw) ? raw : hex, { resolved: hex });
+        dimOn(x, u.name in layer(mode));
+      } };
+    }
+    if (u.kind === 'length' || u.kind === 'weight') {
+      const weight = u.kind === 'weight';
+      const f = numberField({
+        root, label: u.name, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
+        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside },
+        onChange: (v) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`),
+      });
+      f.el.classList.add('span2');
+      f.el.title = title;
+      const x = rowX(label, () => set('shared', u.name, null));
+      return { nodes: [f.el, x], sync: () => {
+        const raw = layer('shared')[u.name];
+        const n = Number.parseFloat(measureAt(weight ? 'fontWeight' : 'width', raw ?? `var(${u.name})`));
+        f.set(raw && boundToken(raw) ? raw : weight ? n : half(n), { resolved: n });
+        dimOn(x, u.name in layer('shared'));
+      } };
+    }
+    // Faces and anything else: shown, not edited here (a face is a Typography row).
+    const value = h('span', { class: 'f__name' });
+    const row = h('div', { class: 'f f--ro span2', title }, h('span', { class: 'f__pre', 'aria-hidden': 'true' }, u.kind === 'font' ? 'Aa' : '#'), value, h('span', { class: 'f__suf' }, label));
+    return { nodes: [row, h('span', {})], sync: () => { value.textContent = selection ? getComputedStyle(selection.el).getPropertyValue(u.name).trim() : ''; } };
+  }
+  function renderTokens() {
+    tokenRows = [];
+    const uses = selection ? tokensOn(selection.el) : [];
+    tokensSec.setEmpty(!uses.length);
+    const nodes: Node[] = [];
+    for (const [tier, title] of TIERS) {
+      const group = uses.filter((u) => u.tier === tier).sort((a, b) => (a.kind === 'color' ? 0 : 1) - (b.kind === 'color' ? 0 : 1) || a.name.localeCompare(b.name));
+      if (!group.length) continue;
+      nodes.push(h('div', { class: 'sub span3' }, title));
+      for (const u of group) { const r = tokenRow(u); tokenRows.push(r); nodes.push(...r.nodes); }
+    }
+    tokensBody.replaceChildren(...nodes);
+  }
+
+  const ro = (pre: Prefix | Node, suffix?: string) => {
+    const value = h('span', { class: 'f__name' });
+    const el = h('div', { class: 'f f--ro' },
+      h('span', { class: 'f__pre', 'aria-hidden': 'true' }, pre instanceof Node ? pre : typeof pre === 'string' ? icon(pre) : pre.text),
+      value, suffix ? h('span', { class: 'f__suf' }, suffix) : null);
+    return { el, value };
+  };
+  const swText = h('span', { class: 'sw' });
+  const swFill = h('span', { class: 'sw' });
+  const props = {
+    color: ro(swText, 'Text'), fill: ro(swFill, 'Fill'), font: ro({ text: 'Aa' }), size: ro('size'), line: ro({ text: 'LH' }),
+    padY: ro('padY'), padX: ro('padX'), radius: ro('radius'), border: ro({ text: 'B' }), w: ro({ text: 'W' }), h: ro({ text: 'H' }),
+  };
+  for (const k of ['color', 'fill', 'font'] as const) props[k].el.classList.add('span2');
+  let propsOpen = store.get(PROPS_KEY) !== '0';
+  const propsToggle = iconButton('minus', 'Hide Properties', () => { propsOpen = !propsOpen; store.set(PROPS_KEY, propsOpen ? '1' : '0'); syncSelection(); });
+  const pad = () => h('span', {});
+  const propsSec = section({
+    id: 'properties', title: 'Properties', actions: [propsToggle],
+    body: [props.color.el, pad(), props.fill.el, pad(), props.font.el, pad(), props.size.el, props.line.el, pad(),
+      props.padY.el, props.padX.el, pad(), props.radius.el, props.border.el, pad(), props.w.el, props.h.el, pad()],
+  });
+  function syncSelection() {
+    const has = !!selection;
+    scopeSec.el.hidden = !has;
+    tokensSec.el.hidden = !has;
+    propsSec.el.hidden = !has;
+    surfacesSec.el.hidden = !atRoot();
+    syncHeader();
+    if (!selection) return;
+    const eff = effectiveScope();
+    scopeSeg.set(eff);
+    const [compBtn, tokenBtn, instBtn] = scopeSeg.el.querySelectorAll('button');
+    compBtn.disabled = !selection.component;
+    compBtn.title = selection.component ? `Every ${selection.component.name}` : 'Not inside a component';
+    tokenBtn.title = 'The tokens themselves, everywhere';
+    instBtn.title = `This ${selection.name}, on this page`;
+    for (const r of tokenRows) r.sync();
+    propsSec.setEmpty(!propsOpen);
+    propsToggle.replaceChildren(icon(propsOpen ? 'minus' : 'plus'));
+    propsToggle.setAttribute('aria-label', propsOpen ? 'Hide Properties' : 'Show Properties');
+    const c = computedOn(selection.el);
+    const hexOf = (v: string) => (/rgba\(.*,\s*0\)$|transparent/.test(v) ? 'None' : toHex(v).slice(1).toUpperCase());
+    props.color.value.textContent = hexOf(c.color);
+    swText.style.background = c.color;
+    props.fill.value.textContent = hexOf(c.background);
+    swFill.style.background = c.background;
+    props.font.value.textContent = `${c.fontFamily} ${c.fontWeight}`;
+    props.size.value.textContent = String(c.fontSize);
+    props.line.value.textContent = c.lineHeight === 'normal' ? 'Auto' : String(Math.round(Number.parseFloat(c.lineHeight) * 10) / 10);
+    props.padY.value.textContent = String(c.padY);
+    props.padX.value.textContent = String(c.padX);
+    props.radius.value.textContent = String(c.radius);
+    props.border.value.textContent = String(c.border);
+    props.w.value.textContent = String(c.width);
+    props.h.value.textContent = String(c.height);
+  }
 
   // Surfaces: the palette's three chrome surfaces; hue, saturation and
   // lightness offsets behind the adjust button, in a popover beside the panel.
@@ -492,13 +734,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       root, label: `${f.label} font`, suffix: f.label, options: FONT_OPTIONS.map((o) => ({ value: o.id, label: o.label })),
       onChange: (id) => {
         const opt = FONT_OPTIONS.find((o) => o.id === id)!;
-        const isDefault = firstFamily(opt.css) === firstFamily(readBase(mode).fonts[f.id]);
+        const isDefault = atRoot() && firstFamily(opt.css) === firstFamily(readBase(mode).fonts[f.id]);
         // A row set in this face keeps its weight if the new face's axis has it, else the nearest it does.
         const axis = axisOf(opt);
         for (const s of SIZES.filter((x) => x.font === f.id)) {
           const w = weightValue(s.id);
           const fit = fitWeight(axis, w);
-          if (fit !== w) tweaks.shared[s.weightVar] = String(fit === BANNED_WEIGHT ? 400 : fit);
+          if (fit !== w) layer('shared', true)[s.weightVar] = String(fit === BANNED_WEIGHT ? 400 : fit);
         }
         set('shared', f.cssVar, isDefault ? null : opt.css);
       },
@@ -508,13 +750,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const setSize = (s: SizeControl, v: number | string) => {
     if (typeof v === 'string') { set('shared', s.cssVar, v); return; }
-    set('shared', s.cssVar, v === baseSize(s.id) ? null : `${v}px`);
+    set('shared', s.cssVar, atRoot() && v === baseSize(s.id) ? null : `${v}px`);
   };
   const setWeight = (s: SizeControl, v: number | string) => {
     if (typeof v === 'string') { if (!isBanned(v)) set('shared', s.weightVar, v); else sync(); return; }
     const fit = fitWeight(axisOf(fontOption(s.font)), v);
     const w = fit === BANNED_WEIGHT ? 400 : fit;
-    set('shared', s.weightVar, w === readBase(mode).weights[s.id] ? null : String(w));
+    set('shared', s.weightVar, atRoot() && w === baseWeight(s.id) ? null : String(w));
   };
   const sizeRows = SIZES.map((s) => {
     const size = numberField({
@@ -529,7 +771,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       onChange: (v) => setWeight(s, v),
       onReference: () => { const r = refSize(s.id); if (r) setWeight(s, r.weight); },
     });
-    return { s, size, weight, x: rowX(s.label, () => { delete tweaks.shared[s.cssVar]; delete tweaks.shared[s.weightVar]; applyLive(); sync(); }) };
+    return { s, size, weight, x: rowX(s.label, () => { const m = layer('shared'); delete m[s.cssVar]; delete m[s.weightVar]; prune(); applyLive(); sync(); }) };
   });
   const bannedList = h('div', { class: 'span3', style: 'display:grid' });
   const typeSec = section({
@@ -541,7 +783,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // Figma's empty sections; the plus opens it.
   const setLength = (c: LengthControl, v: number | string) => {
     if (typeof v === 'string') { set('shared', c.cssVar, v); return; }
-    set('shared', c.cssVar, v === baseComp(c.id) ? null : `${v}px`);
+    set('shared', c.cssVar, atRoot() && v === baseComp(c.id) ? null : `${v}px`);
   };
   const lengthRows = COMPONENTS.map((c) => {
     const f = numberField({
@@ -566,7 +808,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     layoutToggle.title = t;
   }
 
-  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
+  const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, scopeSec.el, tokensSec.el, propsSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
   const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
@@ -585,8 +827,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const dock = h('div', { class: 'dock' }, panel);
   const hoverBox = h('div', { class: 'box', hidden: true });
   const pickedBox = h('div', { class: 'box box--picked', hidden: true });
+  // The selection, Figma's way: a 1px blue frame, its name above, its size below.
+  const selName = h('span', { class: 'box__name' });
+  const selSize = h('span', { class: 'box__size' });
+  const selBox = h('div', { class: 'box box--sel', hidden: true }, selName, selSize);
   const pins = h('div', {});
-  ui.append(dock, hoverBox, pickedBox, pins);
+  ui.append(dock, hoverBox, pickedBox, selBox, pins);
 
   // Width: drag the left edge; the page's margin follows; the setting persists.
   const applyWidth = () => { ui.style.setProperty('--w', `${width}px`); };
@@ -612,6 +858,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // ── render ──────────────────────────────────────────────────────────
   function sync() {
+    // A re-render can replace the selected node: find it again by its selector, else let it go.
+    if (selection && !selection.el.isConnected) {
+      let el: Element | null = null;
+      try { el = document.querySelector(selection.instance); } catch { /* stale selector */ }
+      selection = el ? select(el) : null;
+      renderTokens();
+    }
+    syncSelection();
     tabBar.set(tab);
     modeDd.set(mode === 'dark' ? 'Dark' : 'Light');
     syncSurfaces();
@@ -619,7 +873,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const hex = colorValue(r.c.id, mode);
       const raw = colorRaw(r.c.id, mode);
       r.f.set(raw && boundToken(raw) ? raw : hex, { resolved: hex });
-      dimOn(r.x, r.c.cssVar in tweaks[mode]);
+      dimOn(r.x, r.c.cssVar in layer(mode));
     }
     const ramp = rampOf(mode);
     let fails = 0;
@@ -636,7 +890,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     for (const r of fontRows) {
       const opt = fontOption(r.f.id);
       if (opt) r.sel.set(opt.id);
-      dimOn(r.x, r.f.cssVar in tweaks.shared);
+      dimOn(r.x, r.f.cssVar in layer('shared'));
     }
     const ref = CFG.reference;
     for (const r of sizeRows) {
@@ -650,13 +904,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       r.weight.el.title = axis.stops ? `Static: ${axis.stops.join(', ')}` : `Variable: ${axis.min} to ${axis.max}`;
       const w = weightValue(s.id);
       r.weight.set(shown(s.weightVar, w), { resolved: w, reference: ref && ref1 ? { name: ref.name, value: ref1.weight } : null });
-      dimOn(r.x, s.cssVar in tweaks.shared || s.weightVar in tweaks.shared);
+      dimOn(r.x, s.cssVar in layer('shared') || s.weightVar in layer('shared'));
     }
     for (const r of lengthRows) {
       const ref1 = refLength(r.c.id);
       const v = compValue(r.c.id);
       r.f.set(shown(r.c.cssVar, v), { resolved: v, reference: ref && ref1 !== null ? { name: ref.name, value: ref1 } : null });
-      dimOn(r.x, r.c.cssVar in tweaks.shared);
+      dimOn(r.x, r.c.cssVar in layer('shared'));
     }
     refBtn?.setAttribute('aria-pressed', String(atReference()));
     // 350 is banned, wherever it came from (a hand-edited tweaks.json included).
@@ -719,8 +973,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (r && !box.hidden) Object.assign(box.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
   }
   function placeOverlays() {
-    placeBox(hoverBox, commenting && hovered !== picked ? hovered : null);
+    placeBox(hoverBox, (commenting || selecting) && hovered !== picked && hovered !== selection?.el ? hovered : null);
     placeBox(pickedBox, picked);
+    placeBox(selBox, tab === 'tune' ? selection?.el ?? null : null);
+    if (selection && !selBox.hidden) {
+      const r = selection.el.getBoundingClientRect();
+      selName.textContent = selection.name;
+      selSize.textContent = `${Math.round(r.width)} × ${Math.round(r.height)}`;
+    }
     if (!open) { pins.replaceChildren(); return; }
     const edge = innerWidth - width - 20;
     pins.replaceChildren(...openHere().flatMap((r, n) => {
@@ -736,8 +996,26 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     open = state;
     pill.hidden = open;
     if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); }
-    else { setCommenting(false); closePopover(); }
+    else { setCommenting(false); setSelecting(false); setSelection(null); closePopover(); }
+    invalidateGraph();
     applyLive();
+    sync();
+  }
+  /** The select tool: hover outlines, a click selects. */
+  function setSelecting(state: boolean) {
+    selecting = state;
+    if (state && commenting) setCommenting(false);
+    if (state && tab !== 'tune') setTab('tune');
+    hovered = null;
+    pickBtn.setAttribute('aria-pressed', String(state));
+    html.style.cursor = state ? 'default' : commenting ? 'crosshair' : '';
+    placeOverlays();
+  }
+  function setSelection(s: Selection | null) {
+    selection = s;
+    hovered = null;
+    closePopover();
+    renderTokens();
     sync();
   }
   function setTab(t: 'tune' | 'comments') {
@@ -749,6 +1027,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   function setCommenting(state: boolean) {
     commenting = state;
+    if (state && selecting) setSelecting(false);
     hovered = null;
     if (!state) { picked = null; textarea.value = ''; commentSave.disabled = true; }
     html.style.cursor = state ? 'crosshair' : '';
@@ -765,6 +1044,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const k = e as KeyboardEvent;
       if (type === 'keydown' && isToggleKey(k)) { k.preventDefault(); host.setOpen(!open); }
       if (type === 'keydown' && k.key === 'Escape' && picked) { picked = null; syncComments(); }
+      else if (type === 'keydown' && k.key === 'Escape' && selection && !ui.querySelector('.pop') && !(k.composedPath()[0] instanceof HTMLInputElement)) setSelection(null);
       e.stopPropagation();
     });
   }
@@ -800,16 +1080,19 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const t = e.target;
     return t instanceof Element && !t.closest('astro-dev-toolbar') && t !== html && t !== document.body;
   };
+  // The select tool picks the nearest component; Cmd or Alt picks the element itself (Figma's deep select).
+  const deep = (e: MouseEvent) => e.metaKey || e.altKey;
   document.addEventListener('mousemove', (e) => {
-    if (!open || !commenting) return;
-    hovered = onPage(e) ? (e.target as Element) : null;
+    if (!open || !(commenting || selecting)) return;
+    hovered = onPage(e) ? (selecting ? candidate(e.target as Element, deep(e)) : (e.target as Element)) : null;
     placeOverlays();
   }, true);
   for (const type of ['pointerdown', 'mousedown', 'mouseup', 'pointerup', 'dblclick', 'click'] as const) {
     document.addEventListener(type, (e) => {
-      if (!open || !commenting || !onPage(e)) return;
+      if (!open || !(commenting || selecting) || !onPage(e)) return;
       e.preventDefault();
       e.stopImmediatePropagation();
+      if (type === 'click' && selecting) { setSelection(select(candidate(e.target as Element, deep(e as MouseEvent)))); return; }
       if (type === 'click') {
         picked = e.target as Element;
         hovered = null;
@@ -823,6 +1106,24 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   document.fonts.addEventListener('loadingdone', refreshAxes);
   fontLink.addEventListener('load', refreshAxes);
   document.addEventListener('keydown', (e) => { if (isToggleKey(e)) { e.preventDefault(); host.setOpen(!open); } });
+  // On the page: Esc clears the selection (then leaves the select tool),
+  // Shift+Enter selects the parent component, Enter the first one inside.
+  document.addEventListener('keydown', (e) => {
+    if (!open || commenting) return;
+    const t = e.composedPath()[0];
+    if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return;
+    if (e.key === 'Escape' && (selection || selecting)) {
+      escapeAt = performance.now();
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (selection) setSelection(null); else setSelecting(false);
+    } else if (e.key === 'Enter' && selection) {
+      const next = e.shiftKey ? ancestors(selection.el).pop()?.root : firstChildComponent(selection.el)?.root;
+      if (!next) return;
+      e.preventDefault();
+      setSelection(select(next));
+    }
+  }, true);
   window.addEventListener('keyup', (e) => { if (e.key === 'Escape') escapeAt = performance.now(); }, true);
   let frame = 0;
   const replace = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; if (open) placeOverlays(); }); };
@@ -841,6 +1142,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     feedback = s.feedback ?? [];
     const link = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
     if (link) link.href = `${CSS_ROUTE}?${Date.now()}`;
+    invalidateGraph();
     applyLive();
     sync();
   });

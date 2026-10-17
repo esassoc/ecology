@@ -59,7 +59,11 @@ export default function designLayer(inline = {}) {
         // Comment mode records each element's Astro source. The toolbar's audit
         // app removes data-astro-source-* once it starts (after DOMContentLoaded),
         // so keep a copy.
-        injectScript('head-inline', `document.addEventListener('DOMContentLoaded',()=>{const m=new WeakMap();for(const e of document.querySelectorAll('[data-astro-source-file]'))m.set(e,[e.getAttribute('data-astro-source-file'),e.getAttribute('data-astro-source-loc')]);window.__designLayerSources=m;});`);
+        // The same pass stamps each Astro component's root with its name
+        // (data-dl-component), the selector a component-scoped edit falls back
+        // to when the root carries no class named for it. And the page's path
+        // goes on <html> (data-dl-page), which instance-scoped edits key on.
+        injectScript('head-inline', `document.documentElement.setAttribute('data-dl-page',location.pathname);document.addEventListener('DOMContentLoaded',()=>{const m=new WeakMap(),A='data-astro-source-file';for(const e of document.querySelectorAll('['+A+']')){const f=e.getAttribute(A);m.set(e,[f,e.getAttribute('data-astro-source-loc')]);const p=e.parentElement;if(!/\\/(pages|layouts)\\//.test(f)&&(!p||p.getAttribute(A)!==f))e.setAttribute('data-dl-component',f.split('/').pop().replace(/\\.astro$/,''));}window.__designLayerSources=m;});`);
       },
       'astro:server:setup': ({ server, toolbar }) => {
         server.middlewares.use(FONT_ROUTE, (_req, res) => {

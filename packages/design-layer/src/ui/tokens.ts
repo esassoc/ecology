@@ -44,7 +44,7 @@ function names(): Set<string> {
   return out;
 }
 
-function kindOf(name: string, value: string): TokenKind {
+export function kindOf(name: string, value: string): TokenKind {
   if (/font-family|family/.test(name)) return 'font';
   if (/weight/.test(name) && /^\d{3}$/.test(value)) return 'weight';
   if (/^(#|rgb|hsl|oklch|oklab|lab|lch|color\()/i.test(value) && CSS.supports('color', value)) return 'color';
@@ -74,12 +74,15 @@ function px(name: string): string {
   return Number.isFinite(w) ? `${Math.round(w * 10) / 10}px` : '';
 }
 
+/** A name's tier by the hub's naming: 1 primitive, 2 semantic, 3 component. */
+export const tierOf = (name: string): Token['tier'] => (TIER1.test(name) ? 1 : TIER2.test(name) ? 2 : 3);
+
 export function readTokens(): Token[] {
   if (cache) return cache;
   const cs = getComputedStyle(document.documentElement);
   cache = [...names()].sort().map((name) => {
     const value = cs.getPropertyValue(name).trim();
-    const tier: Token['tier'] = TIER1.test(name) ? 1 : TIER2.test(name) ? 2 : 3;
+    const tier = tierOf(name);
     const kind = kindOf(name, value);
     const display = kind === 'length' && !/^-?[\d.]+px$/.test(value) ? px(name) : value;
     return { name, value, kind, ...split(name), display, tier };

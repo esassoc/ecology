@@ -62,9 +62,16 @@ export function modeVars(t: Tweaks, m: Mode, roles: ResolvedConfig['roles']): Va
   return { ...(choice ? choiceVars(choice, m, roles) : {}), ...t[m] };
 }
 
+/** Root variables that resolve through the given ones, with their declared
+    values, so a scoped block can re-declare them and they re-resolve inside it
+    (graph.ts). Without it a scoped primitive would move nothing. */
+export type Expand = (vars: VarMap, mode: Mode) => VarMap;
+
+const pageAttr = (page: string) => `[data-dl-page="${page.replace(/["\\]/g, '\\$&')}"]`;
+
 /** The stylesheet for a set of tweaks. `boost` raises specificity one step so the
     live preview outranks the saved file. */
-export function buildCss(t: Tweaks, roles: ResolvedConfig['roles'], boost = false): string {
+export function buildCss(t: Tweaks, roles: ResolvedConfig['roles'], boost = false, expand?: Expand): string {
   const root = boost ? 'html:root:root[data-theme]' : 'html:root[data-theme]';
   const block = (sel: string, vars: VarMap) => {
     const keys = Object.keys(vars);
@@ -80,5 +87,15 @@ export function buildCss(t: Tweaks, roles: ResolvedConfig['roles'], boost = fals
     block(root, t.shared),
     block(`${root}:not([data-scheme="dark"])`, modeVars(t, 'light', roles)),
     block(`${root}[data-scheme="dark"]`, modeVars(t, 'dark', roles)),
+    ...(t.overrides ?? []).map((o) => {
+      const at = (sel: string) => `${sel}${o.page ? pageAttr(o.page) : ''} ${o.selector}`;
+      const vars = (v: VarMap, m: Mode) => (expand ? { ...expand(v, m), ...v } : v);
+      return [
+        `/* ${o.scope}: ${o.name} */\n`,
+        block(at(root), vars(o.shared, 'light')),
+        block(at(`${root}:not([data-scheme="dark"])`), vars(o.light, 'light')),
+        block(at(`${root}[data-scheme="dark"]`), vars(o.dark, 'dark')),
+      ].join('');
+    }),
   ].join('');
 }
