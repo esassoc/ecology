@@ -95,7 +95,7 @@ const pt = tabs({ label: 'Panel', options: [{ value: 'tune', label: 'Tune' }, { 
 pt.set('tune'); pt.count('comments', 2);
 const pm = segmented({ label: 'Mode', options: [{ value: 'light', icon: 'sun', label: 'Light' }, { value: 'dark', icon: 'moon', label: 'Dark' }], onChange: noop, fit: true });
 pm.set('light');
-head.append(pt.el, h('span', { style: 'flex:1' }), pm.el, iconButton('collapse', 'Collapse Panel', noop));
+head.append(pt.el, h('span', { class: 'grow' }), pm.el, iconButton('collapse', 'Collapse Panel', noop));
 
 const ppick = palettePicker({ root, label: 'Palette', palettes: () => palettes, onPick: noop, emptyLabel: 'Theme' });
 ppick.set('beacon', [beacon.light.bar, beacon.light.canvas, beacon.light.primary]);
@@ -106,9 +106,10 @@ const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' },
     section({ id: 'palette', title: 'Palette', actions: [iconButton('link', 'Move Together', noop, true), iconButton('reset', 'Reset Palette', noop)], body: [
       ppick.el,
       h('div', { class: 'row2' }, num('Hue', { text: 'H' }, 0, 0, 360, 1), num('Saturation', { text: 'S' }, 0, 0, 100, 0.5)),
-      h('div', { class: 'rowl' }, lbl('Top Bar'), color('Top Bar', '#efefef', '−4.3')),
-      h('div', { class: 'rowl' }, lbl('Sidenav'), color('Sidenav', '#fafafa', '0')),
-      h('div', { class: 'rowl' }, lbl('Canvas'), color('Canvas', '#fafafa', 'L 98')),
+      h('div', { class: 'rowl rowl--srf' }, lbl('Top Bar'), color('Top Bar', '#efefef'), num('Top Bar lightness offset', { text: 'L' }, -4.5, -8, 4, 0.5)),
+      h('div', { class: 'rowl rowl--srf' }, lbl('Sidenav'), color('Sidenav', '#fafafa'), num('Sidenav lightness offset', { text: 'L' }, 0, -8, 4, 0.5)),
+      h('div', { class: 'rowl rowl--srf' }, lbl('Canvas'), color('Canvas', '#fafafa'), num('Canvas lightness', { text: 'L' }, 98, 85, 100, 0.5)),
+      h('div', { class: 'readout' }, h('span', {}, 'Bar −4.5'), h('span', {}, 'Rail 0'), h('span', {}, 'Canvas 0')),
       h('div', { class: 'readout' }, h('span', {}, 'Same Hue and Saturation')),
     ] }),
     section({ id: 'colors', title: 'Colors', actions: [iconButton('reset', 'Reset Colors', noop)], body: [
@@ -140,7 +141,7 @@ const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' },
       h('div', { class: 'rowl' }, lbl('Radius'), num('Radius', 'radius', 4, 0, 16, 1, 'px', 4)),
     ] }),
   ),
-  h('div', { class: 'p-foot' }, h('button', { type: 'button', class: 'tb' }, 'Reset All'), h('span', { style: 'flex:1' }), h('button', { type: 'button', class: 'btn btn--primary' }, 'Save')),
+  h('div', { class: 'p-foot' }, h('button', { type: 'button', class: 'tb' }, 'Reset All'), h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn btn--primary' }, 'Save')),
 );
 
 ui.append(h('div', { class: 'stage' }, gallery, panel));
@@ -152,9 +153,6 @@ function SPECIMEN_CSS() {
     .cell { display: grid; gap: 8px; align-content: start; }
     .cell__t { color: var(--ui-ink-3); }
     .demo-focus { border-color: var(--ui-accent) !important; }
-    .p { position: sticky; top: 0; display: flex; flex-direction: column; width: 304px; height: 100vh; border-left: 1px solid var(--ui-line); background: var(--ui-bg); }
-    .p-head { display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 8px; border-bottom: 1px solid var(--ui-line); }
-    .p-body { flex: 1; overflow-y: auto; }
-    .p-foot { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px 0 8px; border-top: 1px solid var(--ui-line); }
+    .p { position: sticky; top: 0; height: 100vh; }
   `;
 }

@@ -128,4 +128,6 @@ export interface PanelHost {
   onToggled(cb: (state: boolean) => void): void;
   /** The URL the saved tweaks.css is served from, re-fetched after a save. */
   cssRoute: string;
+  /** Where the panel's face (assets/inter-variable.woff2) is served (the Astro adapter serves it itself); without it the panel falls back to system-ui. */
+  fontUrl?: string;
 }

@@ -17,7 +17,7 @@ export function iconButton(name: IconName, label: string, onClick: (e: MouseEven
 }
 
 // ── section ────────────────────────────────────────────────────────────────
-/** A 40px head with a title that folds the section and actions on the right. */
+/** A 32px head with a title that folds the section and actions on the right. */
 export function section(o: { id: string; title: string; actions?: Node[]; body: Node[]; closed?: boolean; onToggle?: (closed: boolean) => void }) {
   const el = h('section', { class: 'sec', 'data-sec': o.id, ...(o.closed ? { 'data-closed': true } : {}) });
   const title = h('button', { type: 'button', class: 'sec__title', 'aria-expanded': String(!o.closed) }, o.title);
@@ -110,9 +110,11 @@ export function numberField(o: NumberFieldOptions) {
   const tok = o.tokens ? h('button', { type: 'button', class: 'f__tok', 'aria-label': `Apply token to ${o.label}`, title: 'Apply token', 'aria-expanded': 'false' }, icon('token')) : null;
   let value = 0;
   let bound: string | null = null;
+  let min = o.min;
+  let max = o.max;
 
   const clamp = (n: number) => {
-    let v = Math.min(o.max, Math.max(o.min, Math.round(n / o.step) * o.step));
+    let v = Math.min(max, Math.max(min, Math.round(n / o.step) * o.step));
     v = Math.round(v * 1000) / 1000;
     if (o.refuse?.includes(v)) v = v + (n >= value ? o.step : -o.step);
     return v;
@@ -174,6 +176,8 @@ export function numberField(o: NumberFieldOptions) {
 
   return {
     el,
+    /** Moves the field's range (a weight field follows the face's axis). */
+    range(lo: number, hi: number) { min = lo; max = hi; },
     /** Shows a value (a number, or var(--token) when bound) and the reference, if it departs. */
     set(v: number | string, opts: { reference?: { name: string; value: number } | null; setByUser?: boolean } = {}) {
       const b = typeof v === 'string' ? boundToken(v) : null;

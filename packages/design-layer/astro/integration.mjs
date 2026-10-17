@@ -8,13 +8,17 @@
 //
 // The spoke's controls come from design-layer.config.mjs at its root (optional;
 // the hub defaults apply without one). Editing that file restarts the dev server.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolveConfig } from '../src/defaults.mjs';
 import { createStore } from '../src/store.mjs';
 
 const EVENT = 'design-layer';
 const CSS_ROUTE = '/__design-layer/tweaks.css';
+// The panel's face, served by the integration: the package sits outside the
+// spoke's root (a file: link resolves to the hub), where Vite refuses to serve.
+const FONT_ROUTE = '/__design-layer/inter-variable.woff2';
+const FONT_FILE = fileURLToPath(new URL('../assets/inter-variable.woff2', import.meta.url));
 const CONFIG_FILE = 'design-layer.config.mjs';
 const ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-.5a2 2 0 0 1 2-2h1.5A4.5 4.5 0 0 0 22 13 10 10 0 0 0 12 2Z"/></svg>';
 
@@ -41,7 +45,7 @@ export default function designLayer(inline = {}) {
         const resolved = resolveConfig({ ...spoke, ...inline });
         store = createStore(fileURLToPath(new URL(`${resolved.dataDir.replace(/\/?$/, '/')}`, config.root)));
         updateConfig({
-          vite: { define: { __DESIGN_LAYER_CONFIG__: JSON.stringify({ config: resolved, cssRoute: CSS_ROUTE }) } },
+          vite: { define: { __DESIGN_LAYER_CONFIG__: JSON.stringify({ config: resolved, cssRoute: CSS_ROUTE, fontUrl: FONT_ROUTE }) } },
         });
         addDevToolbarApp({
           id: 'design-layer',
@@ -58,6 +62,11 @@ export default function designLayer(inline = {}) {
         injectScript('head-inline', `document.addEventListener('DOMContentLoaded',()=>{const m=new WeakMap();for(const e of document.querySelectorAll('[data-astro-source-file]'))m.set(e,[e.getAttribute('data-astro-source-file'),e.getAttribute('data-astro-source-loc')]);window.__designLayerSources=m;});`);
       },
       'astro:server:setup': ({ server, toolbar }) => {
+        server.middlewares.use(FONT_ROUTE, (_req, res) => {
+          res.setHeader('Content-Type', 'font/woff2');
+          res.setHeader('Cache-Control', 'max-age=86400');
+          res.end(readFileSync(FONT_FILE));
+        });
         if (!store) return;
         const s = store;
         server.middlewares.use(CSS_ROUTE, (_req, res) => {
