@@ -75,7 +75,16 @@ A field shows when a token feeds it (as the token's chip) or the element sets
 a non-default value; the rest sit behind the section's **+**. A field with no
 token writes the plain property at the current scope (instance, component or
 variant), never at the root, and Save to Source carries it like any other
-component-scope edit. The quick-edit popover takes the first four shown.
+component-scope edit.
+
+**Quick edit.** A click-select (or Cmd-click) opens a 240px popover beside the
+selection, below it or above when there is no room, never over it or the
+panel, holding its first four fields (fill, text colour, size and weight,
+radius or padding, by that order). They are the panel's own rows, so an edit
+goes through the same scope, variant and undo history. Esc or a click on the
+page closes it and keeps the selection; drag its header to move it; its panel
+icon scrolls the panel to that section. **More → Quick Edit on Select** turns
+it off (remembered).
 
 ## Save to Source
 

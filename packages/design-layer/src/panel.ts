@@ -144,6 +144,14 @@ const PANEL_CSS = `
   .sp__r--dim { color: var(--ink-2); }
   .sp__sub { padding: 4px 8px 0; font-weight: 550; }
   .sp__note { padding: 4px 8px; color: var(--ink-2); }
+  /* quick edit: the panel's surface at the picker's size, beside the selection */
+  .qe { position: fixed; z-index: 2147483050; width: 240px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 13px; overflow: hidden;
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18); }
+  .qe[hidden] { display: none; }
+  .qe__h { display: flex; align-items: center; gap: 4px; height: 36px; padding: 0 6px 0 12px; border-bottom: 1px solid var(--line); cursor: grab; user-select: none; }
+  .qe__h:active { cursor: grabbing; }
+  .qe__t { flex: 1; min-width: 0; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .qe__b { padding: 8px 8px 8px 12px; }
   .sp__cands { padding: 0 8px 4px; color: var(--ink-3); font-size: 11px; overflow-wrap: anywhere; }
   .sp__err { padding: 4px 8px; color: var(--danger); overflow-wrap: anywhere; }
   .sp__f { padding: 8px 16px 16px; border-top: 1px solid var(--line); }
@@ -595,7 +603,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'revert' | 'reset-palette' | 'reset-all' | 'side' | 'close';
+  type MenuAction = 'promote' | 'revert' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close';
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
@@ -603,7 +611,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       { value: 'revert', label: 'Revert to Last Save', header: ' ', disabled: same(tweaks, saved) },
       { value: 'reset-palette', label: 'Reset Palette' },
       { value: 'reset-all', label: 'Reset All to Source' },
-      { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right', header: ' ' },
+      { value: 'quick', label: 'Quick Edit on Select', header: ' ', lead: quickOn ? icon('check') : h('span') },
+      { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right' },
       { value: 'close', label: 'Close Panel', meta: '⌃⌥D' },
     ],
     pick: (v) => {
@@ -611,6 +620,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       else if (v === 'revert') { tweaks = normalize(saved); applyLive(); sync(); }
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
+      else if (v === 'quick') { quickOn = !quickOn; store.set(QUICK_KEY, quickOn ? '1' : '0'); if (!quickOn) closeQuick(); }
       else if (v === 'side') setSide(side === 'right' ? 'left' : 'right');
       else if (v === 'close') host.setOpen(false);
     },
@@ -714,13 +724,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     return { text: '#' };
   };
   const groupOf = (u: TokenUse) => GROUPS_SEL.find((g) => u.props.some((p) => g.match.test(p))) ?? OTHER;
-  function tokenRow(u: TokenUse): { nodes: Node[]; sync: () => void } {
+  function tokenRow(u: TokenUse, bes: () => HTMLElement = beside): { nodes: Node[]; sync: () => void } {
     const label = propLabel(u.props);
     const title = `${u.name} · ${TIER_LABEL[u.tier]}${u.props.length ? `\n${u.props.join(', ')}` : ''}`;
     // Unedited, the field shows the token itself as its chip.
     const shownAs = (raw: string | undefined, literal: number | string) => (raw === undefined ? `var(${u.name})` : boundToken(raw) ? raw : literal);
     if (u.kind === 'color') {
-      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside, at: pickAt(u.name) }, onChange: (v, i) => set(mode, u.name, v, i) });
+      const f = colorField({ root, label: `${label}: ${u.name}`, suffix: label, tokens: { beside: bes, at: pickAt(u.name) }, onChange: (v, i) => set(mode, u.name, v, i) });
       f.el.classList.add('span2');
       f.el.title = title;
       const x = rowX(label, () => set(mode, u.name, null));
@@ -735,7 +745,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const weight = u.kind === 'weight';
       const f = numberField({
         root, label: `${label}: ${u.name}`, prefix: weight ? { text: 'W' } : prefixFor(u.props), suffix: label, min: weight ? 100 : 0, max: weight ? 900 : 400, step: weight ? 1 : 0.5,
-        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside, at: pickAt(u.name) },
+        refuse: weight ? [BANNED_WEIGHT] : undefined, tokens: { kind: u.kind, beside: bes, at: pickAt(u.name) },
         onChange: (v, i) => set('shared', u.name, typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
       });
       f.el.classList.add('span2');
@@ -759,7 +769,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
    * added). It writes the plain property at the current scope, never at the
    * root: a literal has no token to edit there.
    */
-  function propRow(spec: FieldSpec, over?: { read: () => string; layer: (create: boolean) => VarMap; write: (v: string | null) => void }): { nodes: Node[]; sync: () => void } {
+  function propRow(spec: FieldSpec, over?: { read: () => string; layer: (create: boolean) => VarMap; write: (v: string | null) => void }, bes: () => HTMLElement = beside): { nodes: Node[]; sync: () => void } {
     const isColor = spec.kind === 'color';
     const map = (create = false) => over?.layer(create) ?? layer(isColor ? mode : 'shared', create);
     const write = (v: string | null, i?: PickIntent) => (over ? over.write(v) : set(isColor ? mode : 'shared', spec.prop, v, i));
@@ -767,7 +777,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const x = rowX(spec.label, () => write(null));
     const title = `${spec.prop} · no token`;
     if (isColor) {
-      const f = colorField({ root, label: spec.label, suffix: spec.label, tokens: over ? false : { beside, at: pickAt(spec.prop) }, beside, onChange: (v, i) => write(v, i) });
+      const f = colorField({ root, label: spec.label, suffix: spec.label, tokens: over ? false : { beside: bes, at: pickAt(spec.prop) }, beside: bes, onChange: (v, i) => write(v, i) });
       f.el.classList.add('span2');
       f.el.title = title;
       return { nodes: [f.el, x], sync: () => {
@@ -783,7 +793,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const f = numberField({
         root, label: spec.label, prefix: weight ? { text: 'W' } : prefixFor([spec.prop]), suffix: spec.label,
         min: weight ? 100 : ls ? -10 : 0, max: weight ? 900 : 800, step: weight ? 1 : ls ? 0.1 : 0.5, refuse: weight ? [BANNED_WEIGHT] : undefined,
-        tokens: { kind: weight ? 'weight' : 'length', beside, at: pickAt(spec.prop) },
+        tokens: { kind: weight ? 'weight' : 'length', beside: bes, at: pickAt(spec.prop) },
         onChange: (v, i) => write(typeof v === 'string' ? v : weight ? String(v) : `${v}px`, i),
       });
       f.el.classList.add('span2');
@@ -832,9 +842,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let addedFor = '';
   let renderedFor = '';
   const addable = new Map<string, FieldSpec[]>();
+  /** What the quick-edit popover can show, in its order: a component's own tokens, then fields by QUICK_ORDER. */
+  type QuickEntry = { gid: string; rank: number; make: (bes: () => HTMLElement) => { nodes: Node[]; sync: () => void } };
+  let quickEntries: QuickEntry[] = [];
+  const QUICK_ORDER = ['background-color', 'color', 'font-size', 'font-weight', 'border-radius', 'padding-block', 'padding-inline', 'gap', 'border-color', 'border-width', 'width', 'height', 'font-family', 'line-height', 'letter-spacing', 'box-shadow'];
   function renderTokens() {
     tokenRows = [];
     addable.clear();
+    quickEntries = [];
     const byGroup = new Map<string, Node[]>();
     const place = (gid: string, r: { nodes: Node[]; sync: () => void }) => {
       tokenRows.push(r);
@@ -850,16 +865,28 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const usedBy = new Map<string, TokenUse>();
       for (const u of uses) for (const p of u.props) for (const sp of specsFor(p, u.kind)) if (!usedBy.has(sp.prop)) usedBy.set(sp.prop, u);
       const done = new Set<TokenUse>();
+      const inQuick = new Set<TokenUse>();
       const order = (a: TokenUse, b: TokenUse) => b.tier - a.tier || a.name.localeCompare(b.name);
       // A hub component's own tokens first.
-      if (selection.component) for (const u of uses.filter((x) => x.tier === 3).sort(order)) { place(groupOf(u).id, tokenRow(u)); done.add(u); }
+      if (selection.component) for (const u of uses.filter((x) => x.tier === 3).sort(order)) {
+        place(groupOf(u).id, tokenRow(u));
+        done.add(u);
+        if (kinds.includes('component')) { inQuick.add(u); quickEntries.push({ gid: groupOf(u).id, rank: -1, make: (b) => tokenRow(u, b) }); }
+      }
       for (const f of fieldsFor(el, kinds, new Set(usedBy.keys()), added)) {
         const u = usedBy.get(f.spec.prop);
-        if (u) { if (!done.has(u)) { place(f.spec.group, tokenRow(u)); done.add(u); } continue; }
+        const rank = QUICK_ORDER.indexOf(f.spec.prop);
+        if (u) {
+          if (!done.has(u)) { place(f.spec.group, tokenRow(u)); done.add(u); }
+          if (!inQuick.has(u)) { inQuick.add(u); quickEntries.push({ gid: f.spec.group, rank, make: (b) => tokenRow(u, b) }); }
+          continue;
+        }
         if (t.kind === 'root') continue;
         if (!f.shown) { (addable.get(f.spec.group) ?? addable.set(f.spec.group, []).get(f.spec.group)!).push(f.spec); continue; }
         place(f.spec.group, propRow(f.spec));
+        quickEntries.push({ gid: f.spec.group, rank, make: (b) => propRow(f.spec, undefined, b) });
       }
+      quickEntries.sort((a, b) => a.rank - b.rank);
       if (kinds.includes('link') && (t.kind === 'instance' || t.kind === 'component')) {
         const hc = hoverColor(el);
         if (hc) place('sel-text', propRow({ ...SPECS.color, label: 'Hover' }, { read: () => hoverLayer(false).color ?? hc, layer: hoverLayer, write: (v) => {
@@ -878,7 +905,81 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       sec.setEmpty(!nodes.length);
       sec.el.hidden = !selection || (!nodes.length && !addable.get(id)?.length);
     }
+    if (!quick.hidden) renderQuick();
   }
+
+  // ── quick edit: the selection's top four fields beside it on the page ──
+  // The same rows as the panel's sections, so an edit goes through the same
+  // scope, variant and undo stack. Opens on a click-select, never on hover.
+  const QUICK_KEY = 'design-layer:quick-edit';
+  let quickOn = store.get(QUICK_KEY) !== '0';
+  let quickRows: { sync: () => void }[] = [];
+  let quickAt: { left: number; top: number } | null = null;
+  const quickTitle = h('span', { class: 'qe__t' });
+  const quickPanelBtn = iconButton('panel', 'Open in Panel', () => {
+    const gid = quickEntries[0]?.gid;
+    const sec = gid ? groupSecs.get(gid)?.el : null;
+    if (!sec) return;
+    if (sec.hasAttribute('data-collapsed')) sec.querySelector<HTMLButtonElement>('.sec__toggle')?.click();
+    sec.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    sec.querySelector<HTMLElement>('input, button.chip, .f button')?.focus({ preventScroll: true });
+  });
+  const quickHead = h('div', { class: 'qe__h' }, quickTitle, quickPanelBtn);
+  const quickBody = h('div', { class: 'qe__b g' });
+  const quick = h('div', { class: 'qe', role: 'dialog', 'aria-label': 'Quick Edit', hidden: true }, quickHead, quickBody);
+  function renderQuick() {
+    const entries = quickEntries.slice(0, 4);
+    if (!selection || !entries.length) { closeQuick(); return; }
+    quickTitle.textContent = selection.name;
+    const rows = entries.map((e) => e.make(() => quick));
+    quickRows = rows;
+    quickBody.replaceChildren(...rows.flatMap((r) => r.nodes));
+    for (const r of quickRows) r.sync();
+  }
+  function openQuick() {
+    if (!quickOn || !selection || tab !== 'tune') return;
+    quickAt = null;
+    quick.hidden = false;
+    renderQuick();
+    placeQuick();
+  }
+  function closeQuick() { quick.hidden = true; quickRows = []; quickBody.replaceChildren(); }
+  /** Below the selection (past its size tag), above when there is no room, beside as a last resort; never over it or the panel. */
+  function placeQuick() {
+    if (quick.hidden || !selection) return;
+    if (!selection.el.isConnected || isolating) { closeQuick(); return; }
+    const w = 240;
+    const qh = quick.offsetHeight;
+    const lo = side === 'left' ? width + INSET * 2 + 8 : 8;
+    const hi = (side === 'right' ? innerWidth - width - INSET * 2 - 8 : innerWidth - 8) - w;
+    if (quickAt) { quick.style.left = `${Math.min(hi, Math.max(lo, quickAt.left))}px`; quick.style.top = `${Math.min(innerHeight - qh - 8, Math.max(8, quickAt.top))}px`; return; }
+    const r = selection.el.getBoundingClientRect();
+    const TAG = 22; // the outline's name and size tags
+    let top = r.bottom + TAG + 8;
+    let left = Math.min(hi, Math.max(lo, r.left));
+    if (top + qh > innerHeight - 8) top = r.top - TAG - 8 - qh;
+    if (top < 8) {
+      top = Math.min(innerHeight - qh - 8, Math.max(8, r.top));
+      left = r.right + 8 <= hi ? r.right + 8 : Math.max(lo, r.left - 8 - w);
+    }
+    quick.style.left = `${left}px`;
+    quick.style.top = `${top}px`;
+  }
+  // A drag on the header moves it; it stays put until the selection changes.
+  quickHead.addEventListener('pointerdown', (e) => {
+    if ((e.target as Element).closest('button')) return;
+    e.preventDefault();
+    quickHead.setPointerCapture(e.pointerId);
+    const b = quick.getBoundingClientRect();
+    const dx = e.clientX - b.left;
+    const dy = e.clientY - b.top;
+    const move = (m: PointerEvent) => { quickAt = { left: m.clientX - dx, top: m.clientY - dy }; placeQuick(); };
+    const up = () => { quickHead.removeEventListener('pointermove', move); quickHead.removeEventListener('pointerup', up); };
+    quickHead.addEventListener('pointermove', move);
+    quickHead.addEventListener('pointerup', up);
+  });
+  // A click on the page closes it and keeps the selection (a select click then reopens it on the new one).
+  document.addEventListener('pointerdown', (e) => { if (!quick.hidden && !e.composedPath().includes(ui)) closeQuick(); }, true);
 
   // Properties: Figma's Inspect readout. Plain text, selectable, a click copies the value.
   const ro = (pre: Prefix | Node, suffix?: string) => {
@@ -931,6 +1032,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     tokenBtn.title = 'The tokens themselves, everywhere';
     instBtn.title = `This ${selection.name}, on this page`;
     for (const r of tokenRows) r.sync();
+    for (const r of quickRows) r.sync();
     propsSec.setEmpty(!propsOpen);
     propsToggle.replaceChildren(icon(propsOpen ? 'minus' : 'plus'));
     propsToggle.setAttribute('aria-label', propsOpen ? 'Hide Properties' : 'Show Properties');
@@ -1423,7 +1525,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const selSize = h('span', { class: 'box__size' });
   const selBox = h('div', { class: 'box box--sel', hidden: true }, selName, selSize);
   const pins = h('div', {});
-  ui.append(dock, hoverBox, pickedBox, selBox, pins);
+  ui.append(dock, hoverBox, pickedBox, selBox, pins, quick);
 
   // Width: drag the inner edge; the setting persists. The overlay sits over the
   // page, which keeps its full width; only the isolation stage makes room.
@@ -1587,6 +1689,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (r && !box.hidden) Object.assign(box.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
   }
   function placeOverlays() {
+    placeQuick();
     placeBox(hoverBox, (commenting || selecting) && hovered !== picked && hovered !== selection?.el ? hovered : null);
     placeBox(pickedBox, picked);
     placeBox(selBox, tab === 'tune' && !isolating ? selection?.el ?? null : null);
@@ -1630,7 +1733,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     html.style.cursor = state ? 'default' : commenting ? 'crosshair' : '';
     placeOverlays();
   }
-  function setSelection(s: Selection | null) {
+  function setSelection(s: Selection | null, fromClick = false) {
+    closeQuick();
     selection = s;
     hovered = null;
     activeVariant = null;
@@ -1639,6 +1743,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     renderTokens();
     renderStage();
     sync();
+    if (s && fromClick) openQuick();
   }
   function setTab(t: 'tune' | 'comments') {
     tab = t;
@@ -1668,6 +1773,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (type === 'keydown' && isToggleKey(k)) { k.preventDefault(); host.setOpen(!open); }
       if (type === 'keydown') historyKey(k);
       if (type === 'keydown' && k.key === 'Escape' && picked) { picked = null; syncComments(); }
+      else if (type === 'keydown' && k.key === 'Escape' && !quick.hidden && !ui.querySelector('.pop')) closeQuick();
       else if (type === 'keydown' && k.key === 'Escape' && selection && !ui.querySelector('.pop') && !(k.composedPath()[0] instanceof HTMLInputElement)) setSelection(null);
       e.stopPropagation();
     });
@@ -1716,7 +1822,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (!open || !(commenting || selecting) || !onPage(e)) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (type === 'click' && selecting) { setSelection(select(candidate(e.target as Element, deep(e as MouseEvent)))); return; }
+      if (type === 'click' && selecting) { setSelection(select(candidate(e.target as Element, deep(e as MouseEvent))), true); return; }
       if (type === 'click') {
         picked = e.target as Element;
         hovered = null;
@@ -1737,8 +1843,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (!open || commenting) return;
     const t = e.composedPath()[0];
     if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return;
-    // An open popover takes Esc first: it closes, the selection stays.
+    // An open popover takes Esc first: it closes, the selection stays. Then the quick edit.
     if (e.key === 'Escape' && ui.querySelector('.pop')) return;
+    if (e.key === 'Escape' && !quick.hidden) { e.preventDefault(); e.stopImmediatePropagation(); escapeAt = performance.now(); closeQuick(); return; }
     if (e.key === 'Escape' && (selection || selecting)) {
       escapeAt = performance.now();
       e.preventDefault();

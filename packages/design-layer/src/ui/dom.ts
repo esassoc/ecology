@@ -61,6 +61,8 @@ export const ICONS = {
   /** Isolate the selection: Figma's frame corners. */
   isolate: '<path d="M7.5 10V7.5H10M14 7.5h2.5V10M16.5 14v2.5H14M10 16.5H7.5V14"/><rect x="10.5" y="10.5" width="3" height="3" rx=".5"/>',
   /** Compare variants side by side. */
+  /** Open in the panel: a window with its right-hand panel. */
+  panel: '<rect x="6.5" y="7.5" width="11" height="9" rx="1.5"/><path d="M13.5 7.5v9"/>',
   compare: '<rect x="6.5" y="8.5" width="4.5" height="7" rx="1"/><rect x="13" y="8.5" width="4.5" height="7" rx="1"/>',
   // ── field prefixes ──
   /** Font size. */
