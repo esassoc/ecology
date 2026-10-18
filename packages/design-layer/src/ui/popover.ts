@@ -103,7 +103,8 @@ export function menu<T>(items: MenuItem<T>[], selected: T | null, pick: (v: T) =
   for (const it of items) {
     if (it.header && it.header !== lastHeader) {
       if (rows.length) list.append(h('div', { class: 'msep' }));
-      list.append(h('div', { class: 'mh' }, it.header));
+      // A blank header is a separator alone, with no empty title row under it.
+      if (it.header.trim()) list.append(h('div', { class: 'mh' }, it.header));
       lastHeader = it.header;
     }
     const isSel = it.value === selected;

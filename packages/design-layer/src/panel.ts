@@ -184,6 +184,8 @@ const PANEL_CSS = `
   button.crumb:hover { background: var(--hover); color: var(--ink); }
   .crumb--cur { flex: 0 0 auto; max-width: 60%; color: var(--ink); font: 550 13px/24px 'Design Layer UI', Inter, system-ui, sans-serif; letter-spacing: -0.032px; }
   .crumb-sep { flex: none; padding: 0 2px; color: var(--ink-3); }
+  .crumb--page { margin-left: -4px; }
+  .crumb--only { flex: 1 1 auto; max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sub { height: 24px; line-height: 24px; color: var(--ink-2); }
   .f--ro, .f--ro:hover { border-color: transparent; }
   .f--ro .f__name { padding: 0; cursor: default; }
@@ -193,8 +195,10 @@ const PANEL_CSS = `
   .vrow:hover { border-color: var(--line); }
   .vrow[aria-pressed="true"], .vrow[aria-pressed="true"]:hover { border-color: transparent; background: var(--selected); color: var(--selected-ink); }
   .vrow:focus-visible { box-shadow: none; text-decoration: underline; text-underline-offset: 3px; }
-  .sel--two { border-bottom: 0; height: 40px; }
-  .sel__ctx { margin-top: -8px; padding: 0 16px 8px; border-bottom: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sel--two { border-bottom: 0; height: 48px; }
+  .tb--try { color: var(--ink-2); }
+  .tb--try:hover, .tb--try[aria-pressed="true"] { color: var(--ink); }
+  .sel__ctx { margin-top: -8px; padding: 0 16px 16px; border-bottom: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .f--readout { background: none; border-color: transparent; }
   .f--readout:hover { border-color: transparent; }
   .f--readout .f__name { color: var(--ink); user-select: text; cursor: copy; }
@@ -660,7 +664,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const pickBtn = iconButton('cursor', 'Select (Click an Element)', () => setSelecting(!selecting), false);
   const undoBtn = iconButton('undo', 'Undo (⌘Z)', () => undo());
   const redoBtn = iconButton('redo', 'Redo (⇧⌘Z)', () => redo());
-  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), undoBtn, redoBtn, pickBtn, schemeBtn);
+  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), undoBtn, redoBtn);
 
   // Selection header: the palette as the title, the reference, the menu.
   const paletteOptions = (): PaletteOption[] => PALETTES.map((p) => {
@@ -676,12 +680,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'details' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close' | `color-${ColorStudy}`;
+  type MenuAction = 'promote' | 'isolate' | 'scheme' | 'details' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close' | `color-${ColorStudy}`;
   const COLOR_CONTROLS: [ColorStudy, string][] = [['swatches', 'Swatches'], ['row', 'Row'], ['lever', 'Lever']];
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
-      { value: 'promote', label: 'Save to Source…' },
+      ...(selection ? [{ value: 'isolate' as MenuAction, label: 'Isolate Selection', lead: isolating ? icon('check') : h('span') }] : []),
+      { value: 'scheme', label: mode === 'dark' ? 'Light Page' : 'Dark Page', header: selection ? ' ' : undefined },
+      { value: 'promote', label: 'Save to Source…', header: '   ' },
       { value: 'details', label: 'Show Theme Details', header: ' ', lead: details ? icon('check') : h('span') },
       { value: 'reset-palette', label: 'Reset Palette' },
       { value: 'reset-all', label: 'Reset All to Source' },
@@ -692,6 +698,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     ],
     pick: (v) => {
       if (v === 'promote') openPromote();
+      else if (v === 'isolate') setIsolating(!isolating);
+      else if (v === 'scheme') setMode(mode === 'dark' ? 'light' : 'dark');
       else if (v === 'details') { details = !details; store.set(DETAILS_KEY, details ? '1' : '0'); sync(); }
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
@@ -705,10 +713,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const crumbs = h('nav', { class: 'crumbs', 'aria-label': 'Selection', hidden: true });
   const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
   const isolateBtn = iconButton('isolate', 'Isolate Selection', () => setIsolating(!isolating), false);
-  const pageTitle = h('span', { class: 'crumb crumb--cur' }, 'Page');
-  const tryBtn = h('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', title: 'Three directions to compare (1, 2, 3)' }, 'Try 3');
+  const pageTitle = h('span', { class: 'crumb crumb--cur crumb--page' }, 'Page');
+  const tryBtn = h('button', { type: 'button', class: 'tb tb--try', 'aria-pressed': 'false', title: 'Three directions to compare (1, 2, 3)' }, 'Try 3');
   tryBtn.addEventListener('click', () => (opts ? closeOptions() : tryThree()));
-  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), refBtn, tryBtn, isolateBtn, clearBtn, menuBtn);
+  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), refBtn, tryBtn, clearBtn);
+  top.append(menuBtn);
   // What an edit applies to, under the breadcrumb: every one like it, or this one.
   const SCOPE_LABEL: Record<EditScope, string> = { component: 'Component', token: 'Token', instance: 'Instance' };
   const targetSeg = segmented<EditScope>({
@@ -728,18 +737,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     isolateBtn.setAttribute('aria-pressed', String(isolating));
     if (refBtn) refBtn.hidden = !!selection;
     if (!selection) return;
-    const up = ancestors(selection.el);
-    const crumb = (name: string, el: Element) => {
-      const b = h('button', { type: 'button', class: 'crumb', title: `Select ${name}` }, name);
-      b.addEventListener('click', () => setSelection(select(el)));
-      return b;
-    };
-    const sep = () => h('span', { class: 'crumb-sep', 'aria-hidden': 'true' }, '/');
-    crumbs.replaceChildren(
-      ...(up.length > 2 ? [h('span', { class: 'crumb-sep', title: up.slice(0, -2).map((a) => a.name).join(' / ') }, '…'), sep()] : []),
-      ...up.slice(-2).flatMap((a) => [crumb(a.name, a.root), sep()]),
-      h('span', { class: 'crumb crumb--cur', title: selection.component?.file ?? selection.name, 'aria-current': 'true' }, selection.name),
-    );
+    // Only the selected thing's name, Figma's layer name: the component when stamped, else its class or tag.
+    crumbs.replaceChildren(h('span', { class: 'crumb crumb--cur crumb--only', title: selection.component?.file ?? selection.name, 'aria-current': 'true' }, selection.name));
   }
 
   // ── levers ──────────────────────────────────────────────────────────
@@ -853,7 +852,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (!sec) return;
     if (sec.hasAttribute('data-collapsed')) sec.querySelector<HTMLButtonElement>('.sec__toggle')?.click();
     sec.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    sec.querySelector<HTMLElement>('.lv__track, .lv__c')?.focus({ preventScroll: true });
+    sec.querySelector<HTMLElement>('.lv__track, .lv__c, .lvr__f')?.focus({ preventScroll: true });
   });
   const quickHead = h('div', { class: 'qe__h' }, quickTitle, quickPanelBtn);
   const quickBody = h('div', { class: 'qe__b' });
@@ -1348,7 +1347,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const peer = peerOf(selection);
     const n = peerCount();
     allBtn.disabled = !peer;
-    allBtn.textContent = peer ? `All ${n}${peer.el === selection.component?.root ? ` · ${peer.name}` : ''}` : 'All';
+    allBtn.textContent = peer ? `All ${n}` : 'All';
     allBtn.title = peer ? `Every ${peer.name} on this page (${n})` : 'Not inside a component';
     oneBtn.title = `This ${selection.name}, on this page`;
     for (const r of leverRows) r.sync();
@@ -2024,7 +2023,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     // In: start off-screen on its side, then ease to rest on the next frame.
     dock.dataset.state = 'closed';
     if (open) requestAnimationFrame(() => requestAnimationFrame(() => { dock.dataset.state = 'open'; }));
-    if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); renderPage(); }
+    if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); renderPage(); if (tab === 'tune') setSelecting(true); }
     else { setCommenting(false); setSelecting(false); setSelection(null); closePopover(); setBefore(false); saveNow(); }
     invalidateGraph();
     applyLive();
@@ -2063,6 +2062,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     placeOverlays();
     if (t !== 'comments') setCommenting(false);
     if (t !== 'tune' && isolating) setIsolating(false);
+    // Selecting is always on in Tune: the page is the canvas, as in Figma.
+    if (t === 'tune' && !selecting) setSelecting(true);
+    else if (t !== 'tune' && selecting) setSelecting(false);
   }
   function setCommenting(state: boolean) {
     commenting = state;
@@ -2164,7 +2166,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       escapeAt = performance.now();
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (isolating) setIsolating(false); else if (selection) setSelection(null); else setSelecting(false);
+      if (isolating) setIsolating(false); else if (selection) setSelection(null);
     } else if (e.key === 'Enter' && selection) {
       const next = e.shiftKey ? ancestors(selection.el).pop()?.root : firstChildComponent(selection.el)?.root;
       if (!next) return;

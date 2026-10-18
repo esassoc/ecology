@@ -17,7 +17,7 @@ import { contrast } from '../color';
 export type ColorControl = 'swatches' | 'row' | 'lever';
 export const COLOR_CONTROL_KEY = 'design-layer:color-control';
 export function colorControl(): ColorControl {
-  try { const v = localStorage.getItem(COLOR_CONTROL_KEY); return v === 'row' || v === 'lever' ? v : 'swatches'; } catch { return 'swatches'; }
+  try { const v = localStorage.getItem(COLOR_CONTROL_KEY); return v === 'swatches' || v === 'lever' ? v : 'row'; } catch { return 'row'; }
 }
 
 export interface ColorLeverOptions {
@@ -124,7 +124,17 @@ function rowLever(o: ColorLeverOptions): ColorLever {
     const root = el.getRootNode() as ShadowRoot;
     const pop = openPopover({ root, anchor: field, content: body, className: 'pop--menu lvr__popover', alignEnd: true, beside: (el.closest('.p') as HTMLElement | null) ?? undefined, onClose: () => { peek(null); field.setAttribute('aria-expanded', 'false'); } });
     pop.el.style.width = '240px';
-    (list.querySelector('[aria-selected="true"]') as HTMLElement | null)?.scrollIntoView({ block: 'nearest' });
+    // Focus goes into the list, so Escape closes it (and returns to the field) and arrows move through it.
+    const opts = () => [...body.querySelectorAll<HTMLButtonElement>('.lvr__mi')];
+    (opts().find((b) => b.getAttribute('aria-selected') === 'true') ?? opts()[0])?.focus({ preventScroll: true });
+    list.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+    list.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const all = opts();
+      all[Math.max(0, Math.min(all.length - 1, all.indexOf(e.target as HTMLButtonElement) + d))]?.focus();
+    });
   };
   field.addEventListener('click', open);
   // Arrows step through the roles without opening anything, as the swatch row does.
@@ -145,6 +155,7 @@ function rowLever(o: ColorLeverOptions): ColorLever {
       read.textContent = text ? o.judge(cur)?.short ?? '' : '';
       read.title = text ?? '';
       read.toggleAttribute('data-fail', tone === 'warn');
+      field.toggleAttribute('data-fail', tone === 'warn');
     },
     marks(f) { fails = f; },
   };
@@ -259,17 +270,25 @@ export const COLOR_LEVER_CSS = `
   .lvr__line { display: flex; align-items: center; gap: 8px; min-height: 24px; }
   .lvr__line .lv__reset { margin: 0 -4px; }
   .lvr__f { flex: none; width: 184px; padding: 0 8px 0 0; text-align: left; font: inherit; cursor: default; }
+  /* the swatch fills the field less 2px a side, so it reads as the colour first */
+  .lvr__f .f__pre { position: relative; width: 22px; margin-right: 2px; }
+  .lvr__f .sw { width: 20px; height: 20px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+  .lvr__f[data-fail] .f__pre::after { content: ''; position: absolute; top: -1px; right: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 1.5px var(--field); }
   .lvr__f[aria-expanded="true"] { border-color: var(--focus); }
   .lvr__chip { flex: 0 1 auto; margin-right: 0; }
-  .lvr__read { flex: 1; min-width: 0; text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; }
+  .lvr__read { flex: 1; min-width: 0; text-align: right; color: var(--ink-3); font-size: 10px; opacity: 0; transition: opacity 120ms; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; }
   .lvr__read[data-fail] { color: var(--danger); }
+  .lvr__f:hover .lvr__read, .lvr__f:focus-visible .lvr__read, .lvr__f[aria-expanded="true"] .lvr__read { opacity: 1; }
   .lvr__popover { padding: 8px; }
   .lvr__menu { max-height: 300px; }
   .lvr__mh { padding-left: 8px; }
   .lvr__mi { grid-template-columns: 12px 1fr auto; padding-left: 8px; }
   .lvr__sw { position: relative; }
   .lvr__mi[aria-selected="true"] .mi__label { font-weight: 550; }
-  .lvr__mi .mi__meta[data-fail] { color: var(--danger); }
+  .lvr__mi .mi__meta { color: var(--menu-ink-3); font-size: 10px; }
+  .lvr__mi .mi__meta[data-fail] { color: var(--menu-ink-3); }
+  .lvr__mi { grid-template-columns: 20px 1fr auto; height: 28px; }
+  .lvr__sw { width: 20px; height: 20px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
   .lvr__mi[data-active] .mi__meta[data-fail] { color: #ffffff; }
   .lvr__sw[data-fail]::after, .lvr__step[data-fail]::after { content: ''; position: absolute; top: -3px; right: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 1.5px var(--menu-bg); }
   .lvr__more { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 24px; padding: 0 0 0 8px; border: 0; border-radius: 5px; background: none; color: var(--menu-ink-2); font: inherit; }
