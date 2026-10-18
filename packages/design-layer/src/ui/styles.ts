@@ -118,6 +118,12 @@ export const UI_CSS = `
   .sec[data-collapsed] .sec__b { display: none; }
   .sec[data-collapsed] .sec__title { color: var(--ink-2); }
   .sec__toggle { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; overflow: hidden; text-overflow: ellipsis; }
+  /* Figma's section caret: a 12 box in the head's left gutter, pointing right when shut, down when open */
+  .sec__toggle { display: flex; align-items: center; }
+  .sec__caret { display: grid; place-items: center; flex: none; width: 12px; height: 12px; margin-left: -14px; margin-right: 2px; color: var(--ink-2); transition: rotate 120ms; }
+  .sec__caret svg { width: 20px; height: 20px; }
+  .sec__toggle[aria-expanded="false"] .sec__caret { rotate: -90deg; }
+  .sec__h:hover .sec__caret { color: var(--ink); }
   .sec__toggle:focus-visible { box-shadow: none; text-decoration: underline; text-decoration-color: var(--focus); text-underline-offset: 3px; }
 
   /* ── icon button: 24, ink at rest ── */

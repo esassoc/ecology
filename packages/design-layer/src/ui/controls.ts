@@ -37,7 +37,7 @@ const collapsedSet = (): Set<string> => { try { return new Set(JSON.parse(localS
     state persists per section. */
 export function section(o: { id: string; title: string; actions?: Node[]; body: Node[]; empty?: boolean }) {
   const collapsed = collapsedSet().has(o.id);
-  const toggle = h('button', { type: 'button', class: 'sec__toggle', 'aria-expanded': String(!collapsed) }, o.title);
+  const toggle = h('button', { type: 'button', class: 'sec__toggle', 'aria-expanded': String(!collapsed) }, h('span', { class: 'sec__caret', 'aria-hidden': 'true' }, icon('chevron')), o.title);
   const head = h('div', { class: 'sec__h' }, h('h2', { class: 'sec__title' }, toggle), ...(o.actions ?? []));
   const el = h('section', { class: 'sec', 'data-sec': o.id, ...(o.empty ? { 'data-empty': true } : {}), ...(collapsed ? { 'data-collapsed': true } : {}) },
     head, h('div', { class: 'sec__b g' }, ...o.body));

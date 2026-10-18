@@ -153,14 +153,6 @@ const PANEL_CSS = `
   .sp__r--dim { color: var(--ink-2); }
   .sp__sub { padding: 4px 8px 0; font-weight: 550; }
   .sp__note { padding: 4px 8px; color: var(--ink-2); }
-  /* quick edit: the panel's surface at the picker's size, beside the selection */
-  .qe { position: fixed; z-index: 2147483050; width: 240px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 13px; overflow: hidden;
-    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.18); }
-  .qe[hidden] { display: none; }
-  .qe__h { display: flex; align-items: center; gap: 4px; height: 36px; padding: 0 6px 0 12px; border-bottom: 1px solid var(--line); cursor: grab; user-select: none; }
-  .qe__h:active { cursor: grabbing; }
-  .qe__t { flex: 1; min-width: 0; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .qe__b { padding: 8px 8px 8px 12px; }
   .sp__cands { padding: 0 8px 4px; color: var(--ink-3); font-size: 11px; overflow-wrap: anywhere; }
   .sp__err { padding: 4px 8px; color: var(--danger); overflow-wrap: anywhere; }
   .sp__f { padding: 8px 16px 16px; border-top: 1px solid var(--line); }
@@ -170,7 +162,8 @@ const PANEL_CSS = `
   .c-text { overflow-wrap: anywhere; }
   .pin { position: fixed; z-index: 2147482999; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
     background: #0d99ff; color: #fff; font: 550 9px/1 'Design Layer UI', Inter, system-ui, sans-serif; box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,.3); pointer-events: none; }
-  .box { position: fixed; z-index: 2147482998; pointer-events: none; border: 1px solid #0d99ff; background: rgba(13, 153, 255, 0.06); }
+  /* outlines only: nothing fills over the design */
+  .box { position: fixed; z-index: 2147482998; pointer-events: none; border: 1px solid #0d99ff; background: none; }
   .box--picked { border-width: 2px; background: rgba(13, 153, 255, 0.12); }
   .box--sel { border-color: #0d99ff; background: none; }
   .box__name, .box__size { position: absolute; height: 16px; padding: 0 4px; border-radius: 2px; background: #0d99ff; color: #fff;
@@ -213,7 +206,6 @@ const PANEL_CSS = `
   /* the target switch under the breadcrumb */
   .sel__ctx .seg { display: flex; width: 100%; }
   .sel__ctx .seg button { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .qe__b { display: grid; }
   /* footer: the count, Before, Send to Claude */
   .p-foot { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px 0 8px; border-top: 1px solid var(--line); flex: none; }
   .p-foot .grow { flex: 1; }
@@ -232,9 +224,10 @@ const PANEL_CSS = `
   .rv__h { padding: 12px 0 4px; font-weight: 550; }
   .rv__c { padding: 4px 0; color: var(--ink-2); overflow-wrap: anywhere; }
   /* padding and gap on the page, Chrome's inspector colours; dragged along the spacing scale */
-  .band { position: fixed; z-index: 2147482997; background: rgba(147, 196, 125, 0.28); cursor: ns-resize; }
+  /* the bands are always there to drag, and paint only while their lever is hovered, they are hovered, or dragged: at rest nothing covers the design */
+  .band { position: fixed; z-index: 2147482997; background: none; cursor: ns-resize; }
   .band[data-axis="x"] { cursor: ew-resize; }
-  .band--gap { background: repeating-linear-gradient(45deg, rgba(175, 82, 222, 0.4) 0 1.5px, transparent 1.5px 6px); }
+
   .band--padding[data-on], .band--padding:hover { background: rgba(147, 196, 125, 0.55); }
   .band--gap[data-on], .band--gap:hover { background: repeating-linear-gradient(45deg, rgba(175, 82, 222, 0.75) 0 1.5px, rgba(175, 82, 222, 0.12) 1.5px 6px); }
   .band__px { position: absolute; left: 50%; top: 50%; translate: -50% -50%; height: 14px; padding: 0 4px; border-radius: 2px; background: #3a7d22; color: #fff;
@@ -680,18 +673,18 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'isolate' | 'scheme' | 'details' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close' | `color-${ColorStudy}`;
+  type MenuAction = 'reference' | 'promote' | 'isolate' | 'scheme' | 'details' | 'reset-palette' | 'reset-all' | 'side' | 'close' | `color-${ColorStudy}`;
   const COLOR_CONTROLS: [ColorStudy, string][] = [['swatches', 'Swatches'], ['row', 'Row'], ['lever', 'Lever']];
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
       ...(selection ? [{ value: 'isolate' as MenuAction, label: 'Isolate Selection', lead: isolating ? icon('check') : h('span') }] : []),
-      { value: 'scheme', label: mode === 'dark' ? 'Light Page' : 'Dark Page', header: selection ? ' ' : undefined },
+      ...(CFG.reference && !selection ? [{ value: 'reference' as MenuAction, label: `Use ${CFG.reference.name} Sizes`, lead: atReference() ? icon('check') : h('span') }] : []),
+      { value: 'scheme', label: mode === 'dark' ? 'Light Page' : 'Dark Page', header: selection || CFG.reference ? ' ' : undefined },
       { value: 'promote', label: 'Save to Source…', header: '   ' },
       { value: 'details', label: 'Show Theme Details', header: ' ', lead: details ? icon('check') : h('span') },
       { value: 'reset-palette', label: 'Reset Palette' },
       { value: 'reset-all', label: 'Reset All to Source' },
-      { value: 'quick', label: 'Quick Edit on Select', header: ' ', lead: quickOn ? icon('check') : h('span') },
       ...COLOR_CONTROLS.map(([v, label]) => ({ value: `color-${v}` as MenuAction, label, header: 'Color Control', lead: colorControl() === v ? icon('check') : h('span') })),
       { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right', header: '  ' },
       { value: 'close', label: 'Close Panel', meta: '⌃⌥D' },
@@ -699,11 +692,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     pick: (v) => {
       if (v === 'promote') openPromote();
       else if (v === 'isolate') setIsolating(!isolating);
+      else if (v === 'reference') applyReference();
       else if (v === 'scheme') setMode(mode === 'dark' ? 'light' : 'dark');
       else if (v === 'details') { details = !details; store.set(DETAILS_KEY, details ? '1' : '0'); sync(); }
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
-      else if (v === 'quick') { quickOn = !quickOn; store.set(QUICK_KEY, quickOn ? '1' : '0'); if (!quickOn) closeQuick(); }
       else if (v.startsWith('color-')) { store.set(COLOR_CONTROL_KEY, v.slice(6)); renderTokens(); sync(); }
       else if (v === 'side') setSide(side === 'right' ? 'left' : 'right');
       else if (v === 'close') host.setOpen(false);
@@ -714,9 +707,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const clearBtn = iconButton('close', 'Clear Selection (Esc)', () => setSelection(null));
   const isolateBtn = iconButton('isolate', 'Isolate Selection', () => setIsolating(!isolating), false);
   const pageTitle = h('span', { class: 'crumb crumb--cur crumb--page' }, 'Page');
-  const tryBtn = h('button', { type: 'button', class: 'tb tb--try', 'aria-pressed': 'false', title: 'Three directions to compare (1, 2, 3)' }, 'Try 3');
+  const tryBtn = h('button', { type: 'button', class: 'tb tb--try', 'aria-pressed': 'false', title: 'Three variations of this, to compare (1, 2, 3)' }, 'Variations');
   tryBtn.addEventListener('click', () => (opts ? closeOptions() : tryThree()));
-  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), refBtn, tryBtn, clearBtn);
+  const sel = h('div', { class: 'sel' }, paletteDd.el, pageTitle, crumbs, h('span', { class: 'grow' }), tryBtn, clearBtn);
   top.append(menuBtn);
   // What an edit applies to, under the breadcrumb: every one like it, or this one.
   const SCOPE_LABEL: Record<EditScope, string> = { component: 'Component', token: 'Token', instance: 'Instance' };
@@ -834,82 +827,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       sec.el.querySelector('.sec__b')!.replaceChildren(...rows.map((r) => r.el));
       sec.el.hidden = !rows.length;
     }
-    if (!quick.hidden) renderQuick();
   }
 
-  // ── quick edit: the selection's top four levers beside it on the page ──
-  // The same levers as the panel's sections, so a move goes through the same
-  // target, variant and undo stack. Opens on a click-select, never on hover.
-  const QUICK_KEY = 'design-layer:quick-edit';
-  const QUICK_ORDER = ['fill', 'color', 'icon-color', 'font-size', 'padding', 'radius', 'gap', 'font-weight', 'border-color', 'border-width', 'icon-size', 'line-height', 'shadow'];
-  let quickOn = store.get(QUICK_KEY) !== '0';
-  let quickRows: LeverRow[] = [];
-  let quickAt: { left: number; top: number } | null = null;
-  const quickTitle = h('span', { class: 'qe__t' });
-  const quickPanelBtn = iconButton('panel', 'Open in Panel', () => {
-    const g = quickRows[0]?.group;
-    const sec = g ? leverSecs.get(g)?.el : null;
-    if (!sec) return;
-    if (sec.hasAttribute('data-collapsed')) sec.querySelector<HTMLButtonElement>('.sec__toggle')?.click();
-    sec.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    sec.querySelector<HTMLElement>('.lv__track, .lv__c, .lvr__f')?.focus({ preventScroll: true });
-  });
-  const quickHead = h('div', { class: 'qe__h' }, quickTitle, quickPanelBtn);
-  const quickBody = h('div', { class: 'qe__b' });
-  const quick = h('div', { class: 'qe', role: 'dialog', 'aria-label': 'Quick Edit', hidden: true }, quickHead, quickBody);
-  function renderQuick() {
-    if (!selection) { closeQuick(); return; }
-    const rank = (r: LeverRow) => { const i = QUICK_ORDER.indexOf(r.id); return i < 0 ? 99 : i; };
-    quickRows = buildLevers(leverHost(selection.el)).sort((a, b) => rank(a) - rank(b)).slice(0, 4);
-    if (!quickRows.length) { closeQuick(); return; }
-    quickTitle.textContent = selection.name;
-    quickBody.replaceChildren(...quickRows.map((r) => r.el));
-    for (const r of quickRows) r.sync();
-  }
-  function openQuick() {
-    if (!quickOn || !selection || tab !== 'tune') return;
-    quickAt = null;
-    quick.hidden = false;
-    renderQuick();
-    placeQuick();
-  }
-  function closeQuick() { quick.hidden = true; quickRows = []; quickBody.replaceChildren(); }
-  /** Below the selection (past its size tag), above when there is no room, beside as a last resort; never over it or the panel. */
-  function placeQuick() {
-    if (quick.hidden || !selection) return;
-    if (!selection.el.isConnected || isolating) { closeQuick(); return; }
-    const w = 240;
-    const qh = quick.offsetHeight;
-    const lo = side === 'left' ? width + INSET * 2 + 8 : 8;
-    const hi = (side === 'right' ? innerWidth - width - INSET * 2 - 8 : innerWidth - 8) - w;
-    if (quickAt) { quick.style.left = `${Math.min(hi, Math.max(lo, quickAt.left))}px`; quick.style.top = `${Math.min(innerHeight - qh - 8, Math.max(8, quickAt.top))}px`; return; }
-    const r = selection.el.getBoundingClientRect();
-    const TAG = 22; // the outline's name and size tags
-    let top = r.bottom + TAG + 8;
-    let left = Math.min(hi, Math.max(lo, r.left));
-    if (top + qh > innerHeight - 8) top = r.top - TAG - 8 - qh;
-    if (top < 8) {
-      top = Math.min(innerHeight - qh - 8, Math.max(8, r.top));
-      left = r.right + 8 <= hi ? r.right + 8 : Math.max(lo, r.left - 8 - w);
-    }
-    quick.style.left = `${left}px`;
-    quick.style.top = `${top}px`;
-  }
-  // A drag on the header moves it; it stays put until the selection changes.
-  quickHead.addEventListener('pointerdown', (e) => {
-    if ((e.target as Element).closest('button')) return;
-    e.preventDefault();
-    quickHead.setPointerCapture(e.pointerId);
-    const b = quick.getBoundingClientRect();
-    const dx = e.clientX - b.left;
-    const dy = e.clientY - b.top;
-    const move = (m: PointerEvent) => { quickAt = { left: m.clientX - dx, top: m.clientY - dy }; placeQuick(); };
-    const up = () => { quickHead.removeEventListener('pointermove', move); quickHead.removeEventListener('pointerup', up); };
-    quickHead.addEventListener('pointermove', move);
-    quickHead.addEventListener('pointerup', up);
-  });
-  // A click on the page closes it and keeps the selection (a select click then reopens it on the new one).
-  document.addEventListener('pointerdown', (e) => { if (!quick.hidden && !e.composedPath().includes(ui)) closeQuick(); }, true);
 
   // ── page levers ─────────────────────────────────────────────────────
   // With nothing selected the panel is the theme, as levers on the recipe's
@@ -1103,6 +1022,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     tabBar.count('review', n);
     changesBtn.textContent = `${n} ${n === 1 ? 'Change' : 'Changes'}`;
     sendBtn.disabled = !n;
+    beforeBtn.disabled = !n && !before;
     if (reviewPane.hidden) return;
     const comments = openHere();
     reviewList.replaceChildren(
@@ -1120,7 +1040,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // ── footer: the count, Before, Send to Claude ───────────────────────
   const changesBtn = h('button', { type: 'button', class: 'ft__n' }, '0 Changes');
   changesBtn.addEventListener('click', () => setTab(tab === 'review' ? 'tune' : 'review'));
-  const beforeBtn = h('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', title: 'Hold B' }, 'Before');
+  const beforeBtn = h('button', { type: 'button', class: 'btn btn--before', 'aria-pressed': 'false', title: 'Hold the button, or B, to see the page before your changes' }, 'Hold for Before');
   const sendBtn = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Send to Claude');
   const foot = h('div', { class: 'p-foot' }, changesBtn, h('span', { class: 'grow' }), beforeBtn, sendBtn);
   /** The page without the layer's edits, while B is held (or the button is pressed). */
@@ -1132,10 +1052,15 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const sheet = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
     if (sheet) sheet.disabled = on;
     beforeBtn.setAttribute('aria-pressed', String(on));
+    beforeBtn.textContent = on ? 'Showing Before' : 'Hold for Before';
     ui.toggleAttribute('data-before', on);
     placeOverlays();
   }
-  beforeBtn.addEventListener('click', () => setBefore(!before));
+  // Held, never toggled: down shows the page before, up (or leaving) puts the changes back.
+  beforeBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); beforeBtn.setPointerCapture(e.pointerId); setBefore(true); });
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) beforeBtn.addEventListener(t, () => setBefore(false));
+  beforeBtn.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); setBefore(true); } });
+  beforeBtn.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') setBefore(false); });
   let beforeKey = false;
   /** B held anywhere but a text field shows the page before. */
   function beforeKeys(e: KeyboardEvent) {
@@ -1228,27 +1153,29 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const x0 = e.clientX;
     const y0 = e.clientY;
     pressing = true;
+    const was = bandHover;
+    bandHover = row.id as Band;
     const move = (m: PointerEvent) => row.drag?.(which, Math.max(0, start + (axis === 'y' ? m.clientY - y0 : m.clientX - x0) * dir));
-    const up = () => { shield.remove(); pressing = false; removeEventListener('pointermove', move, true); removeEventListener('pointerup', up, true); };
+    const up = () => { shield.remove(); pressing = false; bandHover = was; placeBands(); removeEventListener('pointermove', move, true); removeEventListener('pointerup', up, true); };
     addEventListener('pointermove', move, true);
     addEventListener('pointerup', up, true);
   }
 
-  // ── options: Try 3 ──────────────────────────────────────────────────
-  // Three directions (options.ts) previewed live as A, B and C. A previewed
+  // ── variations ──────────────────────────────────────────────────
+  // Three directions (options.ts) previewed live, named for what they do. A previewed
   // option is real lever moves on a copy of the tweaks; Keep makes it one undo
-  // step, Off or a new selection drops it. A direction whose moves fail a
+  // step, Original or a new selection drops it. A direction whose moves fail a
   // check carries a red dot before it is picked.
   let previewing = false;
   let opts: { dirs: Direction[]; base: Tweaks; active: number | null; fails: number[]; moved: number[] } | null = null;
   const optSeg = segmented<string>({
-    label: 'Options', options: [{ value: '0', label: 'Off' }, { value: '1', label: 'A' }, { value: '2', label: 'B' }, { value: '3', label: 'C' }],
+    label: 'Options', options: [{ value: '0', label: 'Original' }, { value: '1', label: 'A' }, { value: '2', label: 'B' }, { value: '3', label: 'C' }],
     onChange: (v) => showOption(v === '0' ? null : Number(v) - 1),
   });
   const optWhy = h('div', { class: 'opt__why' });
   const keepBtn = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Keep');
   keepBtn.addEventListener('click', () => keepOption());
-  const optClose = iconButton('close', 'Discard Options', () => closeOptions());
+  const optClose = iconButton('close', 'Close Variations', () => closeOptions());
   const optBar = h('div', { class: 'opt', hidden: true }, h('div', { class: 'opt__row' }, optSeg.el, keepBtn, optClose), optWhy);
   const steerRows = () => (selection ? leverRows : pageRows);
   const checksNow = () => Object.values(tweaks.notes ?? {}).filter((n) => n.check).length;
@@ -1306,7 +1233,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const d = o.dirs[i];
       b.hidden = !d;
       if (!d) return;
-      b.textContent = `${'ABC'[i]} ${d.name}`;
+      b.textContent = d.name;
       b.disabled = !o.moved[i];
       b.toggleAttribute('data-fail', o.fails[i] > 0);
       b.title = `${d.name} (${i + 1})${o.fails[i] ? `: ${o.fails[i]} ${o.fails[i] === 1 ? 'check fails' : 'checks fail'}` : ''}`;
@@ -1351,7 +1278,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     allBtn.title = peer ? `Every ${peer.name} on this page (${n})` : 'Not inside a component';
     oneBtn.title = `This ${selection.name}, on this page`;
     for (const r of leverRows) r.sync();
-    for (const r of quickRows) r.sync();
     placeBands();
   }
 
@@ -1828,7 +1754,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const selSize = h('span', { class: 'box__size' });
   const selBox = h('div', { class: 'box box--sel', hidden: true }, selName, selSize);
   const pins = h('div', {});
-  ui.append(dock, bands, hoverBox, pickedBox, selBox, pins, quick);
+  ui.append(dock, bands, hoverBox, pickedBox, selBox, pins);
 
   // Width: drag the inner edge; the setting persists. The overlay sits over the
   // page, which keeps its full width; only the isolation stage makes room.
@@ -1994,7 +1920,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (r && !box.hidden) Object.assign(box.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
   }
   function placeOverlays() {
-    placeQuick();
     placeBands();
     placeBox(hoverBox, (commenting || selecting) && hovered !== picked && hovered !== selection?.el ? hovered : null);
     placeBox(pickedBox, picked);
@@ -2003,6 +1928,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const r = selection.el.getBoundingClientRect();
       selName.textContent = selection.name;
       selSize.textContent = `${Math.round(r.width)} × ${Math.round(r.height)}`;
+      selSize.hidden = hovered !== selection.el;
     }
     if (!open || isolating) { pins.replaceChildren(); return; }
     const lo = side === 'left' ? width + INSET * 2 + 2 : 2;
@@ -2041,7 +1967,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   function setSelection(s: Selection | null, fromClick = false) {
     closeOptions();
-    closeQuick();
     selection = s;
     hovered = null;
     activeVariant = null;
@@ -2050,7 +1975,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     renderTokens();
     renderStage();
     sync();
-    if (s && fromClick) openQuick();
   }
   function setTab(t: Tab) {
     tab = t;
@@ -2088,7 +2012,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (type !== 'keypress') beforeKeys(k);
       if (type === 'keydown' && optionKeys(k)) { e.stopPropagation(); return; }
       if (type === 'keydown' && k.key === 'Escape' && picked) { picked = null; syncComments(); }
-      else if (type === 'keydown' && k.key === 'Escape' && !quick.hidden && !ui.querySelector('.pop')) closeQuick();
       else if (type === 'keydown' && k.key === 'Escape' && selection && !ui.querySelector('.pop') && !(k.composedPath()[0] instanceof HTMLInputElement)) setSelection(null);
       e.stopPropagation();
     });
@@ -2159,9 +2082,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (!open || commenting) return;
     const t = e.composedPath()[0];
     if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return;
-    // An open popover takes Esc first: it closes, the selection stays. Then the quick edit.
+    // An open popover takes Esc first: it closes, the selection stays.
     if (e.key === 'Escape' && ui.querySelector('.pop')) return;
-    if (e.key === 'Escape' && !quick.hidden) { e.preventDefault(); e.stopImmediatePropagation(); escapeAt = performance.now(); closeQuick(); return; }
     if (e.key === 'Escape' && (selection || selecting)) {
       escapeAt = performance.now();
       e.preventDefault();
