@@ -1,0 +1,180 @@
+// The page's tokens, read live: every custom property declared on :root,
+// html or a [data-theme] scope in the page's stylesheets, with its resolved
+// value and a kind, so a field can offer the tokens that fit it. Read from the
+// page rather than a build artifact, so a spoke's own tokens are in the list.
+
+export type TokenKind = 'color' | 'length' | 'weight' | 'font' | 'other';
+
+export interface Token {
+  name: string;
+  value: string;
+  kind: TokenKind;
+  /** The family the name belongs to, for the picker's headings: "color / background". */
+  group: string;
+  /** The name inside its group: "brand-hover" under "color / background". */
+  label: string;
+  /** What the value resolves to here, for the picker's right column: "16px" for a clamp(). */
+  display: string;
+  /** 1 primitive, 2 semantic, 3 component, by the hub's naming. */
+  tier: 1 | 2 | 3;
+}
+
+const ROOTISH = /(^|[\s,])(:root|html)(\b|[[:.])|\[data-theme/;
+let cache: Token[] | null = null;
+
+/** Forget the cached list (a stylesheet changed). */
+export const invalidateTokens = () => { cache = null; };
+
+function names(): Set<string> {
+  const out = new Set<string>();
+  const walk = (rules: CSSRuleList) => {
+    for (const r of rules) {
+      if (r instanceof CSSStyleRule) {
+        if (!ROOTISH.test(r.selectorText)) continue;
+        for (let i = 0; i < r.style.length; i++) {
+          const p = r.style[i];
+          if (p.startsWith('--') && !p.startsWith('--_')) out.add(p);
+        }
+      } else if ('cssRules' in r) walk((r as CSSGroupingRule).cssRules);
+    }
+  };
+  for (const s of document.styleSheets) {
+    try { walk(s.cssRules); } catch { /* a cross-origin sheet */ }
+  }
+  return out;
+}
+
+export function kindOf(name: string, value: string): TokenKind {
+  if (/font-family|family/.test(name)) return 'font';
+  if (/weight/.test(name) && /^\d{3}$/.test(value)) return 'weight';
+  if (/^(#|rgb|hsl|oklch|oklab|lab|lch|color\()/i.test(value) && CSS.supports('color', value)) return 'color';
+  if (/^-?[\d.]+(px|rem|em)$|^(clamp|calc|min|max)\(/.test(value)) return 'length';
+  return 'other';
+}
+
+const TIER2 = /^--(color|typography|radius|size|elevation|motion|layout|border|focus-scroll|target|touch)-/;
+const TIER1 = /^--(color-[a-z]+(-dark)?(-a)?-\d+|spacing-\d+|font-size-\d+|font-weight-\d+|radius-\d+|font-family-[a-z-]+|line-height-\d+)$/;
+
+/** The family a name belongs to (its first two words, or one for a short
+    family) and the rest of the name, the way the picker heads and lists it. */
+function split(name: string): { group: string; label: string } {
+  const parts = name.slice(2).split('-');
+  const two = ['color', 'typography', 'font', 'form', 'grid', 'sidenav', 'card', 'button'].includes(parts[0]) && parts.length > 2;
+  const head = parts.slice(0, two ? 2 : 1);
+  return { group: head.join(' / '), label: parts.slice(head.length).join('-') || parts.join('-') };
+}
+
+/** A length token as the px it computes to here (a clamp() reads at this viewport). */
+function px(name: string): string {
+  const probe = document.createElement('div');
+  probe.style.cssText = `position:fixed;visibility:hidden;width:var(${name})`;
+  document.body.append(probe);
+  const w = Number.parseFloat(getComputedStyle(probe).width);
+  probe.remove();
+  return Number.isFinite(w) ? `${Math.round(w * 10) / 10}px` : '';
+}
+
+/** A name's tier by the hub's naming: 1 primitive, 2 semantic, 3 component. */
+export const tierOf = (name: string): Token['tier'] => (TIER1.test(name) ? 1 : TIER2.test(name) ? 2 : 3);
+
+export function readTokens(): Token[] {
+  if (cache) return cache;
+  const cs = getComputedStyle(document.documentElement);
+  cache = [...names()].sort().map((name) => {
+    const value = cs.getPropertyValue(name).trim();
+    const tier = tierOf(name);
+    const kind = kindOf(name, value);
+    const display = kind === 'length' && !/^-?[\d.]+px$/.test(value) ? px(name) : value;
+    return { name, value, kind, ...split(name), display, tier };
+  }).filter((t) => t.value);
+  return cache;
+}
+
+/** The tokens a field of this kind can take, semantic before primitive. */
+export function tokensFor(kind: TokenKind, prefer?: RegExp): Token[] {
+  const all = readTokens().filter((t) => t.kind === kind);
+  const rank = (t: Token) => (prefer?.test(t.name) ? 0 : 1) * 10 + (t.tier === 2 ? 0 : t.tier === 3 ? 1 : 2);
+  return all.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+}
+
+/** The token a value is bound to, if it is exactly var(--name). */
+export const boundToken = (v: string | undefined | null) => v?.match(/^var\((--[\w-]+)\)$/)?.[1] ?? null;
+
+/** A token's name without the leading dashes, the way the chip and picker show it. */
+export const shortName = (name: string) => name.replace(/^--/, '');
+
+// ── concepts ────────────────────────────────────────────────────────────────
+// The picker lists concepts, not tokens: "Label Strong" stands for the five
+// --typography-label-<size>-strong-font-size tokens, and a semantic colour is
+// already one name for both schemes. Primitives and component aliases sit
+// behind Show All, because picking one is rarely what a designer means.
+
+export interface Concept {
+  /** "typography-label-strong:font-size", or the token's own name. */
+  id: string;
+  group: string;
+  label: string;
+  kind: TokenKind;
+  /** One per size rung; a concept with no size axis has one, size null. */
+  variants: { size: string | null; token: Token }[];
+  /** On the main list, or only under Show All. */
+  primary: boolean;
+}
+
+export const SIZES = ['2xs', 'xs', 'sm', 'md', 'lg', 'xl', '2xl'];
+const TYPE = /^--typography-([a-z]+(?:-code)?)(?:-(2xs|xs|sm|md|lg|xl|2xl))?(?:-(strong|subtle))?-(font-size|line-height|letter-spacing|font-weight|font-family|text-transform)$/;
+/** Families with no tier-2 layer, whose scale is the vocabulary itself. */
+const VOCAB = /^--(spacing-\d+|font-weight-(light|regular|medium|semibold|bold)|font-(sans|mono|display)|border-width-(default|emphasis|focus))$/;
+const ORDER = ['color / background', 'color / content', 'color / border', 'typography', 'spacing', 'radius', 'elevation', 'font', 'border'];
+const rank = (g: string) => { const i = ORDER.findIndex((o) => g === o || g.startsWith(`${o} `)); return i < 0 ? ORDER.length : i; };
+const title = (s: string) => s.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+
+/** The property a typography concept is for, read off a field's variable. */
+export const typeProp = (cssVar: string | undefined) => cssVar?.match(/(font-size|line-height|letter-spacing|font-weight|font-family|text-transform)$/)?.[1] ?? null;
+
+/** Every concept a field of this kind can take; typography only for its property. */
+export function conceptsFor(kind: TokenKind, prop: string | null): Concept[] {
+  const byId = new Map<string, Concept>();
+  for (const t of readTokens()) {
+    if (t.kind !== kind) continue;
+    const m = t.name.match(TYPE);
+    if (m) {
+      const [, role, size, weight, p] = m;
+      if (p !== prop) continue;
+      const id = `typography-${role}${weight ? `-${weight}` : ''}:${p}`;
+      let c = byId.get(id);
+      if (!c) byId.set(id, c = { id, group: 'typography', label: title(`${role}${weight ? `-${weight}` : ''}`), kind, variants: [], primary: true });
+      c.variants.push({ size: size ?? null, token: t });
+      continue;
+    }
+    const primary = (t.tier === 2 && !t.name.startsWith('--typography-')) || VOCAB.test(t.name);
+    const group = t.name.startsWith('--spacing-') ? 'spacing' : t.group;
+    byId.set(t.name, { id: t.name, group, label: t.label, kind, variants: [{ size: null, token: t }], primary });
+  }
+  for (const c of byId.values()) c.variants.sort((a, b) => SIZES.indexOf(a.size ?? '') - SIZES.indexOf(b.size ?? ''));
+  return [...byId.values()].sort((a, b) => rank(a.group) - rank(b.group) || a.group.localeCompare(b.group)
+    || (a.variants.length > 1 || b.variants.length > 1 ? a.label.localeCompare(b.label) : a.variants[0].token.name.localeCompare(b.variants[0].token.name, undefined, { numeric: true })));
+}
+
+const same = (a: string, b: string) => {
+  const n = (x: string) => x.trim().toLowerCase();
+  if (n(a) === n(b)) return true;
+  const pa = Number.parseFloat(a);
+  const pb = Number.parseFloat(b);
+  return /px$/.test(a) && /px$/.test(b) && Math.abs(pa - pb) < 0.05;
+};
+
+/**
+ * The variant a concept means here: the one whose value the field already
+ * shows (the control's size rung), then the selection's own size, then md.
+ * `matched` says the value picked it, which is what makes a mapping exact.
+ */
+export function resolveConcept(c: Concept, at: { current?: string | null; size?: string | null }) {
+  const hits = at.current ? c.variants.filter((v) => same(v.token.display, at.current!)) : [];
+  const v = (hits.length === 1 && hits[0])
+    || hits.find((x) => x.size === at.size)
+    || c.variants.find((x) => x.size === at.size)
+    || c.variants.find((x) => x.size === 'md')
+    || c.variants[0];
+  return { token: v.token, size: v.size, matched: hits.length === 1 };
+}

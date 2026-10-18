@@ -133,5 +133,12 @@ the builders own the components.
   to the exact page.
 - Invite iteration in plain language ("tell me what to change — wording,
   layout, what's missing").
+- For look-and-feel changes (palette, surfaces, type sizes and weights,
+  radius), point them at the **design layer**: Control+Option+D or the Design
+  pill in the dev server. It tunes tokens live and saves to `design/tweaks.json`;
+  comments they leave land in `design/feedback.jsonl`. Read both before the next
+  pass: apply approved tweaks to the theme file or recipe, work each open comment
+  and mark it resolved. If the spoke's `astro.config.mjs` has no `designLayer()`,
+  see `../ecology/packages/design-layer/README.md`.
 - When they're happy, suggest: **/design-qa** for a quality pass, then
   **/ship** to put it on the public site.

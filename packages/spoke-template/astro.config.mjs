@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import designLayer from '@esa/design-layer/astro';
 
 // Minimal, mirroring the ecology hub and the other spokes. The spoke ships
 // static HTML/CSS; interactivity comes from the hub's Lit web components
@@ -13,4 +14,7 @@ export default defineConfig({
   site: 'https://esassoc.github.io',
   base,
   server: { port: 4330 },
+  // Dev-only token tuning panel and click-to-comment (@esa/design-layer);
+  // absent from builds. Controls: design-layer.config.mjs, optional.
+  integrations: [designLayer()],
 });
