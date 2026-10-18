@@ -26,6 +26,8 @@ export interface ColorLeverOptions {
   kind: string;
   rungs: Rung[];
   more?: Rung[];
+  /** The label on the toggle that shows `more`: "All 12 Steps" unless given. */
+  moreLabel?: string;
   onChange: (r: Rung) => void;
   onHover?: (on: boolean) => void;
   /** Shows a rung on the page without committing it; null puts the page back. */
@@ -116,7 +118,7 @@ function rowLever(o: ColorLeverOptions): ColorLever {
         s.addEventListener('click', () => { peek(null); closePopover(); pick(r); field.focus(); });
         strip.append(s);
       }
-      const toggle = h('button', { type: 'button', class: 'lvr__more', 'aria-expanded': 'false' }, h('span', {}, 'All 12 Steps'), icon('chevron'));
+      const toggle = h('button', { type: 'button', class: 'lvr__more', 'aria-expanded': 'false' }, h('span', {}, o.moreLabel ?? 'All 12 Steps'), icon('chevron'));
       toggle.addEventListener('click', () => { strip.hidden = !strip.hidden; toggle.setAttribute('aria-expanded', String(!strip.hidden)); });
       body.append(h('div', { class: 'msep' }), toggle, strip);
     }

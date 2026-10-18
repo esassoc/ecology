@@ -37,9 +37,10 @@ import { kindsOf } from './fields';
 import { buildLevers, GROUP_ORDER, type Band, type LeverChange, type LeverHost, type LeverRow, type MapKey, type Scheme, type Write } from './lever-rows';
 import { hueOf, hues, neutrals, themeRamps } from './ramps';
 import { CORNERS, DENSITY, NEUTRAL_SEED, TYPE_SCALE } from './recipe-seeds.mjs';
-import { contrastLine, worst } from './checks';
+import { contrastLine, fmt, worst } from './checks';
 import { applyDirection, bestThree, directionsFor, type Direction } from './options';
-import { rampLever, swatchLever, LEVER_CSS, type Rung } from './ui/levers';
+import { rampLever, LEVER_CSS, type Rung } from './ui/levers';
+import { colorLever } from './ui/color-levers';
 import { reviewModel, scopeWords, overridesWithout } from './review.mjs';
 import { COLOR_LEVER_CSS, COLOR_CONTROL_KEY, colorControl, type ColorControl as ColorStudy } from './ui/color-levers';
 import {
@@ -825,13 +826,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let pageRows: PageRow[] = [];
   const pageNote = (field: string) => tweaks.notes?.[`page|${field}`];
   type PageWrite = { name: string; modes: MapKey[]; value: string | null };
-  function commitPage(field: string, what: string, from: string, to: string, tokens: [string | null, string | null], writes: PageWrite[], seed: ChangeNote['seed']) {
+  function commitPage(field: string, what: string, from: string, to: string, tokens: [string | null, string | null], writes: PageWrite[], seed: ChangeNote['seed'], extra: Partial<ChangeNote> = {}) {
     checkpoint(true);
     for (const w of writes) for (const m of w.modes) { if (w.value === null) delete tweaks[m][w.name]; else tweaks[m][w.name] = w.value; }
     const notes = { ...(tweaks.notes ?? {}) };
     const key = `page|${field}`;
     if (writes.every((w) => w.value === null)) delete notes[key];
-    else notes[key] = { who: 'Page', where: { kind: 'root', selector: ':root' }, field, what, from, to, fromToken: tokens[0], toToken: tokens[1], writes: writes.map(({ name, modes }) => ({ name, modes })), seed, at: new Date().toISOString() };
+    else notes[key] = { who: 'Page', where: { kind: 'root', selector: ':root' }, field, what, from, to, fromToken: tokens[0], toToken: tokens[1], writes: writes.map(({ name, modes }) => ({ name, modes })), seed, ...extra, at: new Date().toISOString() };
     if (Object.keys(notes).length) tweaks.notes = notes; else delete tweaks.notes;
     applyLive();
     sync();
@@ -900,20 +901,24 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const dark = original(() => schemes(() => hexAt(sc ? `var(--${sc}-neutral-12)` : 'var(--color-gray-12)')));
       const best = (s: Scheme, f: string) => Math.max(contrast(onBrand[s], f), contrast('#ffffff', f), contrast(dark.light, f));
       const ratio = new Map(all.map((r) => { const f = fill(r); return [r.value, { light: best('light', f.light), dark: best('dark', f.dark) }]; }));
+      const hueFor = (r: Rung) => (r === current || r.value === current.value ? null : hueOf(r));
+      const writesFor = (r: Rung) => rampWrites(sc ? steps(`--${sc}-brand`) : BRAND_ROLES, hueFor(r));
       const change = (r: Rung) => {
-        const hue = r === current || r.value === current.value ? null : hueOf(r);
-        commitPage('brand', 'Brand', 'Current', r.name ?? '', [null, r.token ?? null], rampWrites(sc ? steps(`--${sc}-brand`) : BRAND_ROLES, hue),
+        const hue = hueFor(r);
+        commitPage('brand', 'Brand', 'Current', r.name ?? '', [null, r.token ?? null], writesFor(r),
           hue ? { name: 'seeds.brand', value: hexAt(`var(--color-${hue}-9)`), exists: true } : undefined);
       };
-      const lever = swatchLever({ label: 'Brand', rungs: [current, ...hs.lever], more: hs.all, onChange: change });
+      const judge = (r: Rung) => { const q = ratio.get(r.value)!; const line = contrastLine(q, 4.5); return { text: `Button text ${line.text}`, short: fmt(worst(q).ratio), pair: `${fmt(q.light)} light · ${fmt(q.dark)} dark`, fail: line.fail }; };
+      const lever = colorLever({ label: 'Brand', kind: 'Brand', rungs: [current, ...hs.lever], more: hs.all, moreLabel: 'All Hues', onChange: change,
+        onPeek: (r) => peek(r ? writesFor(r) : null), hex: (r) => hexAt(r.value), judge });
       lever.marks((r) => worst(ratio.get(r.value)!).ratio < 4.5);
       rows.push({ id: 'brand', el: lever.el, pick(name) { const r = all.find((x) => x.name === name); if (!r || pageNote('brand')?.toToken === r.token) return false; change(r); return true; }, sync() {
         const n = pageNote('brand');
         const cur = (n && all.find((r) => r.token === n.toToken)) || current;
         lever.set(cur, current);
-        const line = contrastLine(ratio.get(cur.value)!, 4.5);
-        lever.note(`Button text ${line.text}`, line.fail ? 'warn' : undefined);
-        if (n) { if (line.fail) n.check = `Button text ${line.text}`; else delete n.check; }
+        const j = judge(cur);
+        lever.note(j.text, j.fail ? 'warn' : undefined);
+        if (n) { if (j.fail) n.check = j.text; else delete n.check; }
       } });
     }
 
@@ -927,22 +932,24 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const body = (r: Rung) => { const n = scaleOf(r) ?? 'gray'; return { light: contrast(hexAt(`var(--color-${n}-12)`), hexAt(`var(--color-${n}-1)`)), dark: contrast(hexAt(`var(--color-${n}-dark-12)`), hexAt(`var(--color-${n}-dark-1)`)) }; };
       // Measured once, with the layer off: which roles Radial's own CSS holds away from the ramp.
       const blocked = original(() => blockedRoles(`--${sc}-neutral`));
+      const writesFor = (r: Rung): PageWrite[] => {
+        const n = r === origin ? null : scaleOf(r);
+        return [...rampWrites(steps(`--${sc}-neutral`), n), ...blocked.map((b) => ({ name: b.name, modes: [b.scheme], value: n ? `var(--color-${n}${b.scheme === 'dark' ? '-dark' : ''}-${b.step})` : null }))];
+      };
+      const overridden = [...new Set(blocked.map((b) => b.name))];
       const change = (r: Rung) => {
         const n = r === origin ? null : scaleOf(r);
-        const direct: PageWrite[] = blocked.map((b) => ({ name: b.name, modes: [b.scheme], value: n ? `var(--color-${n}${b.scheme === 'dark' ? '-dark' : ''}-${b.step})` : null }));
-        commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], [...rampWrites(steps(`--${sc}-neutral`), n), ...direct],
-          n ? { name: 'seeds.neutral', value: NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED], exists: true } : undefined);
+        commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], writesFor(r),
+          n ? { name: 'seeds.neutral', value: NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED], exists: true } : undefined, overridden.length ? { overridden } : {});
       };
-      const temp = (r: Rung) => { const n = scaleOf(r); return n ? NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED] : ''; };
-      const roles = new Set(blocked.map((b) => b.name)).size;
-      const lever = swatchLever({ label: 'Neutral', rungs, onChange: change });
+      const judge = (r: Rung) => { const q = body(r); const line = contrastLine(q, 4.5); return { text: `Body text ${line.text}`, short: fmt(worst(q).ratio), pair: `${fmt(q.light)} light · ${fmt(q.dark)} dark`, fail: line.fail }; };
+      const lever = colorLever({ label: 'Neutral', kind: 'Neutral', rungs, onChange: change, onPeek: (r) => peek(r ? writesFor(r) : null), hex: (r) => hexAt(r.value), judge });
       rows.push({ id: 'neutral', el: lever.el, pick(name) { const r = rungs.find((x) => x.name === name); const cur = pageNote('neutral')?.toToken ?? origin.token; if (!r || r.token === cur) return false; change(r); return true; }, sync() {
         const n = pageNote('neutral');
         const cur = (n && rungs.find((r) => r.token === n.toToken)) || origin;
         lever.set(cur, origin);
-        const line = contrastLine(body(cur), 4.5).text;
-        const shift = cur === origin ? `Body text ${line}` : `${origin.name} → ${cur.name} · ${temp(cur)} · body text ${line}`;
-        lever.note(roles ? `${shift}. ${sc[0].toUpperCase()}${sc.slice(1)}'s own CSS overrides ${roles} of these roles, so the seed alone would not reach them; previewed directly.` : shift);
+        const j = judge(cur);
+        lever.note(j.text, j.fail ? 'warn' : undefined);
       } });
     }
 
@@ -1092,6 +1099,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (n.seed) lines.push(n.seed.exists
         ? `- Recipe: set \`${n.seed.name}\` to \`${n.seed.value}\` in the theme recipe and regenerate (npm run theme:make); do not edit the generated CSS.`
         : `- No recipe seed for ${n.seed.name} yet; this is a preview (${n.seed.value}). Propose the seed before applying it.`);
+      if (n.overridden?.length) lines.push(`- The spoke's own CSS re-declares ${n.overridden.length} of these roles over the ramp (${n.overridden.map((r) => `\`${r}\``).join(', ')}), so the seed alone will not reach them; the preview wrote them directly. Point them back at the ramp when applying the seed.`);
       if (n.check) lines.push(`- Check failed: ${n.check}`);
       lines.push('');
     }

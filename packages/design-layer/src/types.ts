@@ -122,6 +122,8 @@ export interface ChangeNote {
   file?: string | null;
   /** A page lever: the recipe seed and value that make it permanent, or why there is none yet. */
   seed?: { name: string; value: string; exists: boolean };
+  /** Roles the spoke's own CSS re-declares over the ramp, so the seed alone will not reach them; the preview wrote them directly. */
+  overridden?: string[];
   at: string;
 }
 
