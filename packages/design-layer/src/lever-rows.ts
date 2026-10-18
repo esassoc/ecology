@@ -6,14 +6,15 @@
 //
 // Colours are compared in both schemes, because a role is one name for both;
 // sizes against the page's own scale; spacing against what it contains.
-import { pairLever, rampLever, swatchLever, type Rung } from './ui/levers';
+import { pairLever, rampLever, type Rung } from './ui/levers';
+import { colorLever } from './ui/color-levers';
 import { toHex, contrast } from './color';
 import { effectiveBackground } from './describe';
 import { declared } from './graph';
 import { fieldsFor, readProp, specsFor, type ElementKind } from './fields';
 import type { TokenUse } from './inspect';
 import * as R from './ramps';
-import { NON_TEXT, contrastLine, nearest, nearest as nearestOf, pairedIcon, rank, suggestedLeading, textBar, worst, type SchemeRatio } from './checks';
+import { NON_TEXT, contrastLine, fmt, nearest, nearest as nearestOf, pairedIcon, rank, suggestedLeading, textBar, worst, type SchemeRatio } from './checks';
 
 export type MapKey = 'shared' | 'light' | 'dark';
 export type Scheme = 'light' | 'dark';
@@ -47,6 +48,8 @@ export interface LeverHost {
   hover(band: Band | null): void;
   /** Whether the element's face has this weight. */
   weightOk(n: number): boolean;
+  /** Shows writes on the page without committing them (a hovered option); null puts the page back. */
+  peek?(writes: Write[] | null): void;
 }
 
 export interface LeverRow {
@@ -216,7 +219,19 @@ export function buildLevers(host: LeverHost): LeverRow[] {
       field: o.id, label: o.label, from: label(origin), to: label(r), fromToken: origin.token ?? null, toToken: r.token ?? null,
       writes: names.map((name) => ({ name, modes: ['light', 'dark'], value: r === origin ? null : r.value })),
     });
-    const lever = swatchLever({ label: o.label, rungs: o.base, more: o.more.length ? o.more : undefined, onChange: commit });
+    const wordOf = (r: Rung) => {
+      const j = o.judge?.(hexOf(r));
+      if (!j) return null;
+      const line = contrastLine(j.ratio, j.bar);
+      const edge = j.info ? 'Edge ' : '';
+      return { text: line.text, short: `${edge}${fmt(worst(j.ratio).ratio)}`, pair: `${edge}${fmt(j.ratio.light)} light · ${fmt(j.ratio.dark)} dark`, fail: line.fail && !j.info };
+    };
+    const lever = colorLever({
+      label: o.label, kind: o.id === 'fill' ? 'Fill' : o.id === 'border-color' ? 'Border' : 'Text',
+      rungs: o.base, more: o.more.length ? o.more : undefined, onChange: commit,
+      hex: (r) => hexOf(r)[scheme()], judge: wordOf,
+      onPeek: (r) => host.peek?.(r ? names.map((name) => ({ name, modes: ['light', 'dark'] as MapKey[], value: r.value })) : null),
+    });
     const now = () => { const raw = host.raw('light', names[0]); return (raw && all.find((r) => r.value === raw)) || (raw ? findRung(toHex(raw)) : origin) || origin; };
     return {
       id: o.id, group: o.group, label: o.label, el: lever.el,

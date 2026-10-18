@@ -36,12 +36,13 @@ import { computedOn, tokensOn, type TokenUse } from './inspect';
 import { declared, dependents, invalidateGraph } from './graph';
 import { createStage } from './stage';
 import { kindsOf } from './fields';
-import { buildLevers, GROUP_ORDER, type Band, type LeverChange, type LeverHost, type LeverRow, type MapKey, type Scheme } from './lever-rows';
+import { buildLevers, GROUP_ORDER, type Band, type LeverChange, type LeverHost, type LeverRow, type MapKey, type Scheme, type Write } from './lever-rows';
 import { hueOf, hues, neutrals, themeRamps } from './ramps';
 import { CORNERS, DENSITY, NEUTRAL_SEED, TYPE_SCALE } from './recipe-seeds.mjs';
 import { contrastLine, worst } from './checks';
 import { applyDirection, bestThree, directionsFor, type Direction } from './options';
 import { rampLever, swatchLever, LEVER_CSS, type Rung } from './ui/levers';
+import { COLOR_LEVER_CSS, COLOR_CONTROL_KEY, colorControl, type ColorControl as ColorStudy } from './ui/color-levers';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
@@ -263,7 +264,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   INKS = config.inks.filter((i) => COLORS.some((c) => c.id === i));
   const CSS_ROUTE = host.cssRoute;
   if (host.fontUrl) registerPanelFont(host.fontUrl);
-  canvas.innerHTML = `<style>${UI_CSS}${LEVER_CSS}${PANEL_CSS}</style>`;
+  canvas.innerHTML = `<style>${UI_CSS}${LEVER_CSS}${COLOR_LEVER_CSS}${PANEL_CSS}</style>`;
   const ui = h('div', { class: 'ui' });
   canvas.append(ui);
   const html = document.documentElement;
@@ -675,7 +676,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   });
   const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'promote' | 'details' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close';
+  type MenuAction = 'promote' | 'details' | 'reset-palette' | 'reset-all' | 'quick' | 'side' | 'close' | `color-${ColorStudy}`;
+  const COLOR_CONTROLS: [ColorStudy, string][] = [['swatches', 'Swatches'], ['row', 'Row'], ['lever', 'Lever']];
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
@@ -684,7 +686,8 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       { value: 'reset-palette', label: 'Reset Palette' },
       { value: 'reset-all', label: 'Reset All to Source' },
       { value: 'quick', label: 'Quick Edit on Select', header: ' ', lead: quickOn ? icon('check') : h('span') },
-      { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right' },
+      ...COLOR_CONTROLS.map(([v, label]) => ({ value: `color-${v}` as MenuAction, label, header: 'Color Control', lead: colorControl() === v ? icon('check') : h('span') })),
+      { value: 'side', label: side === 'right' ? 'Move to Left' : 'Move to Right', header: '  ' },
       { value: 'close', label: 'Close Panel', meta: '⌃⌥D' },
     ],
     pick: (v) => {
@@ -693,6 +696,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
       else if (v === 'reset-all') resetAllTweaks();
       else if (v === 'quick') { quickOn = !quickOn; store.set(QUICK_KEY, quickOn ? '1' : '0'); if (!quickOn) closeQuick(); }
+      else if (v.startsWith('color-')) { store.set(COLOR_CONTROL_KEY, v.slice(6)); renderTokens(); sync(); }
       else if (v === 'side') setSide(side === 'right' ? 'left' : 'right');
       else if (v === 'close') host.setOpen(false);
     },
@@ -769,6 +773,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   /** A lever moved: its writes land at the target, its note says what changed. One undo step. */
   function commitLever(c: LeverChange) {
+    if (peekBase) peek(null);
     checkpoint(true);
     const t = target();
     for (const w of c.writes) for (const m of w.modes) {
@@ -805,7 +810,21 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     original, schemes, commit: commitLever, flag: flagNote,
     hover: (b) => { bandHover = b; placeBands(); },
     weightOk: (n) => { const a = axisFor(el); return n >= a.min && n <= a.max && (!a.stops || a.stops.includes(n)); },
+    peek,
   });
+  // A hovered option, shown on the page and not kept: the writes go on a copy
+  // of the tweaks, the page renders it, and leaving puts the copy back. Nothing
+  // is saved, checkpointed or noted while it is up.
+  let peekBase: Tweaks | null = null;
+  function peek(writes: Write[] | null) {
+    if (peekBase) { tweaks = peekBase; peekBase = null; }
+    if (writes) {
+      peekBase = structuredClone(tweaks);
+      for (const w of writes) for (const m of w.modes) { const map = layer(m, w.value !== null); if (w.value === null) delete map[w.name]; else map[w.name] = w.value; }
+    }
+    previewing = !!peekBase || !!opts;
+    applyLive();
+  }
 
   function renderTokens() {
     const t = target();
