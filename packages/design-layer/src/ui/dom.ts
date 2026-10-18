@@ -54,8 +54,6 @@ export const ICONS = {
   /** Advanced settings for a section (Figma's two sliders). */
   adjust: '<path d="M9.5 6.5v3M9.5 13.5v4M14.5 6.5v4M14.5 14.5v3"/><circle cx="9.5" cy="11.5" r="1.5"/><circle cx="14.5" cy="12.5" r="1.5"/>',
   contrast: '<circle cx="12" cy="12" r="5.5"/><path d="M12 6.5a5.5 5.5 0 0 1 0 11Z" fill="currentColor" stroke="none"/>',
-  /** Apply the reference spoke's values. */
-  reference: '<circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/>',
   sun: '<circle cx="12" cy="12" r="2.5"/><path d="M12 6.5v1.5M12 16v1.5M6.5 12H8M16 12h1.5M8.1 8.1l1 1M14.9 14.9l1 1M8.1 15.9l1-1M14.9 9.1l1-1"/>',
   moon: '<path d="M16.5 13.5A5 5 0 0 1 10.5 7.5a5 5 0 1 0 6 6Z"/>',
   /** Isolate the selection: Figma's frame corners. */

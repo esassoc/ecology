@@ -7,9 +7,7 @@
 // theme (palettes.ts) and tunes its chrome as one ramp (surfaces.ts); the other
 // sections override the properties the spoke config maps (defaults.mjs). Any
 // colour, size, weight or length can be bound to one of the page's tokens
-// instead of a raw value (stored as var(--token)). Sizes and Components carry
-// the reference spoke's value: a field that departs from it shows that value
-// as a chip that resets it, and "Use <reference>" applies them all. A weight is
+// instead of a raw value (stored as var(--token)). A weight is
 // a number on the face's own wght axis, read from the @font-face rules the page
 // has loaded; 350 is refused. Comments picks an element on the page and
 // appends a line to feedback.jsonl.
@@ -19,7 +17,7 @@
 // (./ui), on the tool's own palette and face.
 import {
   BANNED_WEIGHT, FONT_OPTIONS, buildCss, googleHref, migrateShared, modeVars, rootSelector, scopedBlocks,
-  type ColorControl, type Departure, type FeedbackRecord, type FontControl, type FontOption,
+  type ColorControl, type FeedbackRecord, type FontControl, type FontOption,
   type LengthControl, type Mode, type PanelHost, type ResolvedConfig, type ServerState,
   type ChangeNote, type EditScope, type PageState, type PromoteEntry, type PromotePlan, type ScopedOverride, type Variant, type SizeControl, type Tweaks, type VarMap, type WeightAxis,
 } from './controls';
@@ -42,6 +40,7 @@ import { CORNERS, DENSITY, NEUTRAL_SEED, TYPE_SCALE } from './recipe-seeds.mjs';
 import { contrastLine, worst } from './checks';
 import { applyDirection, bestThree, directionsFor, type Direction } from './options';
 import { rampLever, swatchLever, LEVER_CSS, type Rung } from './ui/levers';
+import { reviewModel, scopeWords, overridesWithout } from './review.mjs';
 import { COLOR_LEVER_CSS, COLOR_CONTROL_KEY, colorControl, type ColorControl as ColorStudy } from './ui/color-levers';
 import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
@@ -60,7 +59,7 @@ const MOTION = 220;
 const LAYOUT_KEY = 'design-layer:layout-open';
 const DETAILS_KEY = 'design-layer:theme-details';
 type Side = 'left' | 'right';
-type Tab = 'tune' | 'review' | 'comments';
+type Tab = 'tune' | 'review';
 const store = {
   get(key: string) { try { return localStorage.getItem(key); } catch { return null; } },
   set(key: string, v: string) { try { localStorage.setItem(key, v); } catch { /* storage blocked */ } },
@@ -86,10 +85,6 @@ let COMPONENTS: LengthControl[] = [];
 let INKS: string[] = [];
 
 const emptyTweaks = (): Tweaks => ({ light: {}, dark: {}, shared: {} });
-/** The reference's value for a size row, or null when it names none. */
-const refSize = (id: string) => { const v = CFG.reference?.values[id]; return typeof v === 'object' ? v : null; };
-/** The reference's value for a length row, or null when it names none. */
-const refLength = (id: string) => { const v = CFG.reference?.values[id]; return typeof v === 'number' ? v : null; };
 const normalize = (t: Partial<Tweaks> | undefined): Tweaks => ({
   light: { ...(t?.light ?? {}) }, dark: { ...(t?.dark ?? {}) }, shared: migrateShared(t?.shared ?? {}, CFG),
   ...(t?.palette && Object.keys(t.palette).length ? { palette: structuredClone(t.palette) } : {}),
@@ -204,6 +199,7 @@ const PANEL_CSS = `
   .row-x { visibility: hidden; }
   .row-x[data-on] { visibility: visible; }
   /* the target switch under the breadcrumb */
+  .sel__lbl { height: 16px; margin-bottom: 4px; color: var(--ink-3); font-size: 11px; line-height: 16px; }
   .sel__ctx .seg { display: flex; width: 100%; }
   .sel__ctx .seg button { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   /* footer: the count, Before, Send to Claude */
@@ -222,7 +218,17 @@ const PANEL_CSS = `
   .rv__s { grid-column: 1 / -1; color: var(--ink-3); }
   .rv__empty { padding: 16px 0; color: var(--ink-2); }
   .rv__h { padding: 12px 0 4px; font-weight: 550; }
-  .rv__c { padding: 4px 0; color: var(--ink-2); overflow-wrap: anywhere; }
+  .rv__r--c { grid-template-columns: 16px minmax(0, 1fr) auto; align-items: start; }
+  .rv__pin { position: static; margin-top: 2px; box-shadow: none; }
+  .rv__dot { width: 16px; }
+  .rv__ct { min-width: 0; }
+  .rv__r--done .c-text { color: var(--ink-2); }
+  .rv__resolve { color: var(--ink-2); }
+  .rv__resolve:hover { color: var(--ink); }
+  .rv__more { display: flex; align-items: center; gap: 2px; height: 32px; margin-left: -6px; padding: 0; border: 0; background: none; color: var(--ink-2); font: inherit; }
+  .rv__more svg { width: 20px; height: 20px; rotate: -90deg; transition: rotate 120ms; }
+  .rv__more[aria-expanded="true"] svg { rotate: 0deg; }
+  .rv__more:hover { color: var(--ink); }
   /* padding and gap on the page, Chrome's inspector colours; dragged along the spacing scale */
   /* the bands are always there to drag, and paint only while their lever is hovered, they are hovered, or dragged: at rest nothing covers the design */
   .band { position: fixed; z-index: 2147482997; background: none; cursor: ns-resize; }
@@ -300,7 +306,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   let selecting = false;
   let selection: Selection | null = null;
   let scope: EditScope = 'component';
-  /** Set while reading or writing the reference, which is page-wide whatever the scope. */
+  /** Set while an edit must land page-wide whatever the scope. */
   let forceRoot = false;
   // Isolation: the selection alone on a canvas, its variants beside it.
   let isolating = false;
@@ -483,50 +489,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const compValue = (id: string) => lengthOf(compOf(id).cssVar, baseComp(id));
   /** What a field shows: the bound var(--token), else the number. */
   const shown = (cssVar: string, n: number) => { const v = layer('shared')[cssVar]; return v && boundToken(v) ? v : n; };
-  /** Runs `fn` against the root whatever the scope (the reference is page-wide). */
+  /** Runs `fn` against the root whatever the scope. */
   const rooted = <T>(fn: () => T): T => { forceRoot = true; try { return fn(); } finally { forceRoot = false; } };
 
-  /** Every size, weight and length that differs from the reference's, for Save. */
-  function departures(): Departure[] { return rooted(departuresAtRoot); }
-  function departuresAtRoot(): Departure[] {
-    const out: Departure[] = [];
-    for (const s of SIZES) {
-      const r = refSize(s.id);
-      if (!r) continue;
-      const size = sizeValue(s.id);
-      const weight = weightValue(s.id);
-      if (size !== r.size) out.push({ id: `${s.id}-size`, label: `${s.label} Size`, cssVar: s.cssVar, value: size, reference: r.size });
-      if (weight !== r.weight) out.push({ id: `${s.id}-weight`, label: `${s.label} Weight`, cssVar: s.weightVar, value: weight, reference: r.weight });
-    }
-    for (const c of COMPONENTS) {
-      const r = refLength(c.id);
-      if (r === null) continue;
-      const v = compValue(c.id);
-      if (v !== r) out.push({ id: c.id, label: c.label, cssVar: c.cssVar, value: v, reference: r });
-    }
-    return out;
-  }
-  /** Every size, weight and length at the reference's value; a value that is also the theme's own stays unset. */
-  function applyReference() {
-    forceRoot = true;
-    const b = readBase(mode);
-    for (const s of SIZES) {
-      const r = refSize(s.id);
-      if (!r) continue;
-      if (r.size === baseSize(s.id)) delete tweaks.shared[s.cssVar]; else tweaks.shared[s.cssVar] = `${r.size}px`;
-      if (r.weight === b.weights[s.id]) delete tweaks.shared[s.weightVar]; else tweaks.shared[s.weightVar] = String(r.weight);
-    }
-    for (const c of COMPONENTS) {
-      const r = refLength(c.id);
-      if (r === null) continue;
-      if (r === baseComp(c.id)) delete tweaks.shared[c.cssVar]; else tweaks.shared[c.cssVar] = `${r}px`;
-    }
-    forceRoot = false;
-    applyLive();
-    sync();
-  }
-  const atReference = () => rooted(() => SIZES.every((s) => { const r = refSize(s.id); return !r || (sizeValue(s.id) === r.size && weightValue(s.id) === r.weight); })
-    && COMPONENTS.every((c) => { const r = refLength(c.id); return r === null || compValue(c.id) === r; }));
 
   /** A face's weights as the page has loaded them: the wght range its
       @font-face rules declare (a variable face: every whole number in it), else
@@ -608,10 +573,13 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   const surfaceControlValue = (r: Ramp, id: SurfaceId) => (id === 'canvas' ? r.l : r.off[id]);
 
-  function applyLive() {
+  function liveCss() {
     const root = rootSelector(true);
     const variantCss = (tweaks.variants ?? []).map((v) => scopedBlocks(root, (sel) => `${sel} [data-dl-variant="${v.id}"]`, v, dependents)).join('');
-    live.textContent = buildCss(tweaks, CFG.roles, true, dependents) + variantCss;
+    return buildCss(tweaks, CFG.roles, true, dependents) + variantCss;
+  }
+  function applyLive() {
+    live.textContent = liveCss();
     onEdit();
     const specs = [...new Set(Object.values(tweaks.shared).map((css) => FONT_OPTIONS.find((o) => o.css === css)?.google).filter((g): g is string => !!g))];
     const href = googleHref(specs);
@@ -644,22 +612,24 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // Top: Tune / Review / Comments, the tools, the page's scheme. Edits save
   // themselves (to tweaks.json, never to the token files); Send to Claude and
   // Save to Source are the two ways a change leaves the layer.
-  const tabBar = tabs<Tab>({ label: 'Panel', options: [{ value: 'tune', label: 'Tune' }, { value: 'review', label: 'Review' }, { value: 'comments', label: 'Comments' }], onChange: (t) => setTab(t) });
+  const tabBar = tabs<Tab>({ label: 'Panel', options: [{ value: 'tune', label: 'Finetune' }, { value: 'review', label: 'Review' }], onChange: (t) => setTab(t) });
   const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); invalidateGraph(); renderStage(); renderTokens(); renderPage(); sync(); };
   const schemeBtn = iconButton('moon', 'Dark Page', () => setMode(mode === 'dark' ? 'light' : 'dark'));
   let saveTimer = 0;
   const saveNow = () => {
     clearTimeout(saveTimer);
     if (same(tweaks, saved)) return;
-    host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) });
+    host.send('save-tweaks', { json: tweaks, css: buildCss(tweaks, CFG.roles, false, dependents) });
   };
   const autosave = () => { clearTimeout(saveTimer); saveTimer = window.setTimeout(saveNow, 700); };
   const pickBtn = iconButton('cursor', 'Select (Click an Element)', () => setSelecting(!selecting), false);
   const undoBtn = iconButton('undo', 'Undo (⌘Z)', () => undo());
   const redoBtn = iconButton('redo', 'Redo (⇧⌘Z)', () => redo());
-  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), undoBtn, redoBtn);
+  // The comment tool: Figma's speech bubble, toggled, C. A comment lands in Review.
+  const commentBtn = iconButton('comment', 'Comment (C)', () => setCommenting(!commenting), false);
+  const top = h('div', { class: 'p-top' }, tabBar.el, h('span', { class: 'grow' }), commentBtn, undoBtn, redoBtn);
 
-  // Selection header: the palette as the title, the reference, the menu.
+  // Selection header: the palette as the title, then the selection's actions.
   const paletteOptions = (): PaletteOption[] => PALETTES.map((p) => {
     const flags = grade(paletteRamp(p, mode), mode).flags;
     return {
@@ -671,16 +641,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     label: 'Palette',
     onOpen: (a) => openPalettePicker({ root, anchor: a, beside: panel, palettes: paletteOptions(), current: tweaks.palette?.[mode]?.palette ?? null, onPick: pickPalette }),
   });
-  const refBtn = CFG.reference ? iconButton('reference', `Use ${CFG.reference.name} sizes`, applyReference, false) : null;
   const resetAllTweaks = () => { tweaks = emptyTweaks(); applyLive(); sync(); };
-  type MenuAction = 'reference' | 'promote' | 'isolate' | 'scheme' | 'details' | 'reset-palette' | 'reset-all' | 'side' | 'close' | `color-${ColorStudy}`;
+  type MenuAction = 'promote' | 'isolate' | 'scheme' | 'details' | 'reset-palette' | 'reset-all' | 'side' | 'close' | `color-${ColorStudy}`;
   const COLOR_CONTROLS: [ColorStudy, string][] = [['swatches', 'Swatches'], ['row', 'Row'], ['lever', 'Lever']];
   const menuBtn = iconButton('kebab', 'More', () => openMenu<MenuAction>({
     root, anchor: menuBtn, alignEnd: true, selected: null,
     items: [
       ...(selection ? [{ value: 'isolate' as MenuAction, label: 'Isolate Selection', lead: isolating ? icon('check') : h('span') }] : []),
-      ...(CFG.reference && !selection ? [{ value: 'reference' as MenuAction, label: `Use ${CFG.reference.name} Sizes`, lead: atReference() ? icon('check') : h('span') }] : []),
-      { value: 'scheme', label: mode === 'dark' ? 'Light Page' : 'Dark Page', header: selection || CFG.reference ? ' ' : undefined },
+      { value: 'scheme', label: mode === 'dark' ? 'Light Page' : 'Dark Page', header: selection ? ' ' : undefined },
       { value: 'promote', label: 'Save to Source…', header: '   ' },
       { value: 'details', label: 'Show Theme Details', header: ' ', lead: details ? icon('check') : h('span') },
       { value: 'reset-palette', label: 'Reset Palette' },
@@ -692,7 +660,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     pick: (v) => {
       if (v === 'promote') openPromote();
       else if (v === 'isolate') setIsolating(!isolating);
-      else if (v === 'reference') applyReference();
       else if (v === 'scheme') setMode(mode === 'dark' ? 'light' : 'dark');
       else if (v === 'details') { details = !details; store.set(DETAILS_KEY, details ? '1' : '0'); sync(); }
       else if (v === 'reset-palette') { setRamp('light', null, null, false); setRamp('dark', null); }
@@ -715,10 +682,10 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const SCOPE_LABEL: Record<EditScope, string> = { component: 'Component', token: 'Token', instance: 'Instance' };
   const targetSeg = segmented<EditScope>({
     label: 'Apply to',
-    options: [{ value: 'component', label: 'All' }, { value: 'instance', label: 'This One' }],
+    options: [{ value: 'component', label: 'Every' }, { value: 'instance', label: 'Only This One' }],
     onChange: (v) => { scope = v; renderTokens(); sync(); },
   });
-  const selCtx = h('div', { class: 'sel__ctx', hidden: true }, targetSeg.el);
+  const selCtx = h('div', { class: 'sel__ctx', hidden: true }, h('div', { class: 'sel__lbl' }, 'Applies To'), targetSeg.el);
   function syncHeader() {
     paletteDd.el.hidden = !!selection || !details;
     pageTitle.hidden = !!selection || details;
@@ -728,7 +695,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     clearBtn.hidden = !selection;
     isolateBtn.hidden = !selection;
     isolateBtn.setAttribute('aria-pressed', String(isolating));
-    if (refBtn) refBtn.hidden = !!selection;
+    // Page mode has no selection line: Page heads its own section, Variations in that head.
+    sel.hidden = !selection && !details;
+    const pageHead = pageSec.el.querySelector('.sec__h')!;
+    if (!selection && !details) { if (tryBtn.parentElement !== pageHead) pageHead.append(tryBtn); }
+    else if (tryBtn.parentElement !== sel) sel.insertBefore(tryBtn, clearBtn);
     if (!selection) return;
     // Only the selected thing's name, Figma's layer name: the component when stamped, else its class or tag.
     crumbs.replaceChildren(h('span', { class: 'crumb crumb--cur crumb--only', title: selection.component?.file ?? selection.name, 'aria-current': 'true' }, selection.name));
@@ -747,6 +718,18 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   function original<T>(fn: () => T): T {
     const sheet = document.getElementById('design-layer-tweaks') as HTMLLinkElement | null;
     const was = [live.disabled, sheet?.disabled ?? false];
+    const t = target();
+    // A scoped target starts from what the element shows without THIS target's
+    // edits: Only This One starts from what Every made it, so its reading is
+    // true and picking the source value writes it instead of writing nothing.
+    if ((t.kind === 'instance' || t.kind === 'component') && !before) {
+      const keep = tweaks;
+      const text = live.textContent;
+      tweaks = { ...keep, overrides: overridesWithout(keep.overrides ?? [], t) };
+      live.textContent = liveCss();
+      if (sheet) sheet.disabled = true;
+      try { return fn(); } finally { tweaks = keep; live.textContent = text; if (sheet) sheet.disabled = was[1]; }
+    }
     live.disabled = true;
     if (sheet) sheet.disabled = true;
     try { return fn(); } finally { live.disabled = was[0]; if (sheet) sheet.disabled = was[1]; }
@@ -832,11 +815,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // ── page levers ─────────────────────────────────────────────────────
   // With nothing selected the panel is the theme, as levers on the recipe's
-  // seeds (recipe-seeds.mjs): brand hue, neutral, corners, borders, density,
-  // type scale. Each re-points the spoke's own ramps at the root, previews
-  // live, and names the seed that makes it real; Density, Type Scale and
-  // Borders have none yet, and their notes say so.
-  const pageSec = section({ id: 'page', title: 'Theme', body: [] });
+  // seeds (recipe-seeds.mjs): brand hue, neutral, corners, density, type
+  // scale. Each re-points the spoke's own ramps at the root, previews live,
+  // and names the seed that makes it real; Density and Type Scale have none
+  // yet, and their notes say so. Border width is per element, not page-wide.
+  // With nothing selected, Page is the first section head and its levers sit right under it.
+  const pageSec = section({ id: 'page', title: 'Page', body: [] });
   type PageRow = { id: string; el: HTMLElement; sync(): void; move?(d: number): boolean; pick?(name: string): boolean };
   let pageRows: PageRow[] = [];
   const pageNote = (field: string) => tweaks.notes?.[`page|${field}`];
@@ -868,6 +852,31 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     { name, modes: ['dark'], value: scale ? `var(--color-${scale}-dark-${n})` : null },
   ]);
   const steps = (prefix: string): [string, number][] => Array.from({ length: 12 }, (_, i) => [`${prefix}-${i + 1}`, i + 1]);
+  /**
+   * The roles a spoke's theme points at one of its scoped ramps (--radial-neutral-7)
+   * that something later overrides (Radial's theme-app.css re-points them at
+   * --rd-gray-*), per scheme. Re-pointing the ramp cannot reach these, so a lever
+   * writes them directly, and the note says the recipe seed alone would not.
+   */
+  function blockedRoles(prefix: string): { name: string; step: number; scheme: Scheme }[] {
+    const found = new Map<string, { name: string; step: number; scheme: Scheme }>();
+    const re = new RegExp(`^var\\(${prefix.replace(/[-]/g, '\\-')}-(\\d+)\\)$`);
+    const walk = (rules: CSSRuleList) => {
+      for (const r of [...rules]) {
+        if ('cssRules' in r && !(r instanceof CSSStyleRule)) { walk((r as CSSGroupingRule).cssRules); continue; }
+        if (!(r instanceof CSSStyleRule) || !/data-theme/.test(r.selectorText)) continue;
+        const scheme: Scheme = /data-scheme="?dark/.test(r.selectorText) ? 'dark' : 'light';
+        for (const name of [...r.style]) {
+          if (!name.startsWith('--color-')) continue;
+          const m = r.style.getPropertyValue(name).trim().match(re);
+          if (m) found.set(`${scheme}|${name}`, { name, step: Number(m[1]), scheme });
+        }
+      }
+    };
+    for (const sheet of [...document.styleSheets]) { if (sheet.ownerNode === live) continue; try { walk(sheet.cssRules); } catch { /* cross-origin */ } }
+    const now = schemes((sc) => [...found.values()].filter((f) => f.scheme === sc).map((f) => hexAt(`var(${f.name})`) !== hexAt(`var(${prefix}-${f.step})`)));
+    return (['light', 'dark'] as const).flatMap((sc) => [...found.values()].filter((f) => f.scheme === sc).filter((_, i) => now[sc][i]));
+  }
   function renderPage() {
     const rows: PageRow[] = [];
     /** A ramp lever's move and pick, through its own onChange, for Options. */
@@ -916,17 +925,24 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       const origin = ns.find((r) => hexAt(r.value) === cur9) ?? { value: cur9, name: 'Current' };
       const rungs = ns.includes(origin) ? ns : [origin, ...ns];
       const body = (r: Rung) => { const n = scaleOf(r) ?? 'gray'; return { light: contrast(hexAt(`var(--color-${n}-12)`), hexAt(`var(--color-${n}-1)`)), dark: contrast(hexAt(`var(--color-${n}-dark-12)`), hexAt(`var(--color-${n}-dark-1)`)) }; };
+      // Measured once, with the layer off: which roles Radial's own CSS holds away from the ramp.
+      const blocked = original(() => blockedRoles(`--${sc}-neutral`));
       const change = (r: Rung) => {
         const n = r === origin ? null : scaleOf(r);
-        commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], rampWrites(steps(`--${sc}-neutral`), n),
+        const direct: PageWrite[] = blocked.map((b) => ({ name: b.name, modes: [b.scheme], value: n ? `var(--color-${n}${b.scheme === 'dark' ? '-dark' : ''}-${b.step})` : null }));
+        commitPage('neutral', 'Neutral', origin.name ?? '', r.name ?? '', [origin.token ?? null, r.token ?? null], [...rampWrites(steps(`--${sc}-neutral`), n), ...direct],
           n ? { name: 'seeds.neutral', value: NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED], exists: true } : undefined);
       };
+      const temp = (r: Rung) => { const n = scaleOf(r); return n ? NEUTRAL_SEED[n as keyof typeof NEUTRAL_SEED] : ''; };
+      const roles = new Set(blocked.map((b) => b.name)).size;
       const lever = swatchLever({ label: 'Neutral', rungs, onChange: change });
       rows.push({ id: 'neutral', el: lever.el, pick(name) { const r = rungs.find((x) => x.name === name); const cur = pageNote('neutral')?.toToken ?? origin.token; if (!r || r.token === cur) return false; change(r); return true; }, sync() {
         const n = pageNote('neutral');
         const cur = (n && rungs.find((r) => r.token === n.toToken)) || origin;
         lever.set(cur, origin);
-        lever.note(`Body text ${contrastLine(body(cur), 4.5).text}`);
+        const line = contrastLine(body(cur), 4.5).text;
+        const shift = cur === origin ? `Body text ${line}` : `${origin.name} → ${cur.name} · ${temp(cur)} · body text ${line}`;
+        lever.note(roles ? `${shift}. ${sc[0].toUpperCase()}${sc.slice(1)}'s own CSS overrides ${roles} of these roles, so the seed alone would not reach them; previewed directly.` : shift);
       } });
     }
 
@@ -951,24 +967,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
         const i = n ? rungs.findIndex((r) => r.name === n.to) : oi;
         lever.set(i < 0 ? oi : i, oi);
         lever.note(`Cards ${Math.round(pxAt('var(--radius-md)'))} px, chips ${Math.round(Math.min(pxAt('var(--radius-chip)'), 999))} px`.replace(' 999 px', ' pill'));
-      } });
-    }
-
-    // Borders: the default border width, on the border-width scale.
-    if (has('--border-width-default')) {
-      const rungs: Rung[] = readTokens().filter((t) => /^--border-width-\d+$/.test(t.name)).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).map((t) => ({ value: `var(${t.name})`, token: t.name }));
-      const pxs = rungs.map((r) => pxAt(r.value));
-      const originPx = original(() => pxAt('var(--border-width-default)'));
-      const oi = Math.max(0, pxs.findIndex((p) => Math.abs(p - originPx) < 0.25));
-      const show = (r: Rung) => `${pxs[rungs.indexOf(r)]} px`;
-      const change = (i: number) => commitPage('borders', 'Borders', show(rungs[oi]), show(rungs[i]), [rungs[oi].token ?? null, rungs[i].token ?? null],
-        [{ name: '--border-width-default', modes: ['shared'], value: i === oi ? null : rungs[i].value }],
-        i === oi ? undefined : { name: 'border width', value: rungs[i].token!, exists: false });
-      const lever = rampLever({ label: 'Borders', rungs, show, onChange: change });
-      rows.push({ id: 'borders', el: lever.el, ...steer(lever, rungs, change), sync() {
-        const n = pageNote('borders');
-        const i = n ? rungs.findIndex((r) => r.token === n.toToken) : oi;
-        lever.set(i < 0 ? oi : i, oi);
       } });
     }
 
@@ -1016,24 +1014,35 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sync();
     checkpoint(true);
   }
+  let showResolved = false;
   function syncReview() {
-    const notes = Object.entries(tweaks.notes ?? {});
-    const n = notes.length;
-    tabBar.count('review', n);
+    const m = reviewModel({ notes: tweaks.notes, feedback, page: pageKey(), base: location.href });
+    const n = m.changes.length;
+    tabBar.count('review', m.count);
     changesBtn.textContent = `${n} ${n === 1 ? 'Change' : 'Changes'}`;
-    sendBtn.disabled = !n;
+    sendBtn.disabled = !n && !m.open.length;
     beforeBtn.disabled = !n && !before;
     if (reviewPane.hidden) return;
-    const comments = openHere();
+    const comment = (r: FeedbackRecord, i: number | null) => {
+      const resolve = r.status === 'open' ? h('button', { type: 'button', class: 'tb rv__resolve' }, 'Resolve') : h('span');
+      resolve.addEventListener('click', () => host.send('set-status', { id: r.id, status: 'resolved' }));
+      return h('div', { class: `rv__r rv__r--c${r.status === 'resolved' ? ' rv__r--done' : ''}` },
+        i === null ? h('span', { class: 'rv__dot' }) : h('span', { class: 'pin rv__pin' }, String(i + 1)),
+        h('div', { class: 'rv__ct' }, h('div', { class: 'c-text' }, r.comment), h('div', { class: 'rv__v' }, r.text || r.selector)),
+        resolve);
+    };
+    const resolvedBtn = h('button', { type: 'button', class: 'rv__more', 'aria-expanded': String(showResolved) }, icon('chevron'), `Resolved (${m.resolved.length})`);
+    resolvedBtn.addEventListener('click', () => { showResolved = !showResolved; syncReview(); });
     reviewList.replaceChildren(
-      ...(n ? [] : [h('div', { class: 'rv__empty' }, 'No Changes')]),
-      ...notes.map(([key, c]) => h('div', { class: 'rv__r' },
+      ...(m.changes.length || m.open.length || m.resolved.length ? [] : [h('div', { class: 'rv__empty' }, 'No changes or comments yet')]),
+      ...m.changes.map(([key, c]: [string, ChangeNote]) => h('div', { class: 'rv__r' },
         h('div', { class: 'rv__t', title: c.where.selector }, h('span', { class: 'rv__who' }, c.who), ` · ${c.what}`),
         iconButton('reset', `Revert ${c.who} ${c.what}`, () => revertNote(key)),
-        h('div', { class: 'rv__v' }, `${c.from} → ${c.to}${c.count && c.count > 1 ? ` · All ${c.count}` : ''}`),
+        h('div', { class: 'rv__v' }, `${c.from} → ${c.to} · ${scopeWords(c.where, c.count)}`),
         ...(c.check ? [h('div', { class: 'rv__x' }, c.check)] : []),
         ...(c.seed && !c.seed.exists ? [h('div', { class: 'rv__s' }, 'Needs a recipe seed')] : []))),
-      ...(comments.length ? [h('div', { class: 'rv__h' }, 'Comments'), ...comments.map((r) => h('div', { class: 'rv__c' }, r.comment))] : []),
+      ...(m.open.length ? [h('div', { class: 'rv__h' }, 'Comments'), ...m.open.map((r, i) => comment(r as FeedbackRecord, i))] : []),
+      ...(m.resolved.length ? [resolvedBtn, ...(showResolved ? m.resolved.map((r) => comment(r as FeedbackRecord, null)) : [])] : []),
     );
   }
 
@@ -1078,7 +1087,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const lines = [`# Design changes`, '', `${location.pathname} · ${new Date().toISOString().slice(0, 10)} · ${notes.length} ${notes.length === 1 ? 'change' : 'changes'} from the design layer`, ''];
     for (const n of notes) {
       lines.push(`## ${n.who} · ${n.what}`, '', `- ${n.from} → ${n.to}${n.fromToken || n.toToken ? ` (${n.fromToken ?? 'literal'} → ${n.toToken ?? 'literal'})` : ''}`);
-      if (n.where.kind !== 'root') lines.push(`- ${n.where.kind === 'component' ? `All ${n.count ?? ''} \`${n.where.selector}\``.replace('All  ', 'All ') : `This one, \`${n.where.selector}\`${n.where.page ? ` on ${n.where.page}` : ''}`}${n.file ? `, in ${n.file.split('/src/').pop()}` : ''}`);
+      if (n.where.kind !== 'root') lines.push(`- ${n.where.kind === 'component' ? `Every ${n.count ?? ''} \`${n.where.selector}\``.replace('Every  ', 'Every ') : `Only this one, \`${n.where.selector}\`${n.where.page ? ` on ${n.where.page}` : ''}`}${n.file ? `, in ${n.file.split('/src/').pop()}` : ''}`);
       lines.push(`- Writes ${n.writes.map((w) => `\`${w.name}\``).slice(0, 6).join(', ')}${n.writes.length > 6 ? ` and ${n.writes.length - 6} more` : ''}`);
       if (n.seed) lines.push(n.seed.exists
         ? `- Recipe: set \`${n.seed.name}\` to \`${n.seed.value}\` in the theme recipe and regenerate (npm run theme:make); do not edit the generated CSS.`
@@ -1274,7 +1283,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     const peer = peerOf(selection);
     const n = peerCount();
     allBtn.disabled = !peer;
-    allBtn.textContent = peer ? `All ${n}` : 'All';
+    allBtn.textContent = peer ? `Every ${peer.el === selection.component?.root ? peer.name : selection.name} (${n})` : 'Every';
     allBtn.title = peer ? `Every ${peer.name} on this page (${n})` : 'Not inside a component';
     oneBtn.title = `This ${selection.name}, on this page`;
     for (const r of leverRows) r.sync();
@@ -1379,13 +1388,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       root, label: `${s.label} size`, prefix: 'size', suffix: s.label, min: s.min, max: s.max, step: 0.5,
       tokens: { kind: 'length', beside, at: pickAt(s.cssVar) },
       onChange: (v, i) => setSize(s, v, i),
-      onReference: () => { const r = refSize(s.id); if (r) setSize(s, r.size); },
     });
     const weight = numberField({
       root, label: `${s.label} weight`, prefix: { text: 'W' }, min: 100, max: 900, step: 1, refuse: [BANNED_WEIGHT],
       tokens: { kind: 'weight', beside, at: pickAt(s.weightVar) },
       onChange: (v, i) => setWeight(s, v, i),
-      onReference: () => { const r = refSize(s.id); if (r) setWeight(s, r.weight); },
     });
     return { s, size, weight, x: rowX(s.label, () => { const m = layer('shared'); delete m[s.cssVar]; delete m[s.weightVar]; prune(); applyLive(); sync(); }) };
   });
@@ -1406,7 +1413,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       root, label: c.label, prefix: leadFor(c), suffix: c.label, min: c.min, max: c.max, step: c.step,
       tokens: { kind: 'length', beside, at: pickAt(c.cssVar) },
       onChange: (v, i) => setLength(c, v, i),
-      onReference: () => { const r = refLength(c.id); if (r !== null) setLength(c, r); },
     });
     f.el.classList.add('span2');
     return { c, f, x: rowX(c.label, () => set('shared', c.cssVar, null)) };
@@ -1498,7 +1504,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   // States: named snapshots of every tweak, applied whole (Figma's pages, for a design's states).
   const stateSnapshot = (): PageState['tweaks'] => {
-    const { states: _s, variants: _v, departures: _d, ...rest } = tweaks;
+    const { states: _s, variants: _v, departures: _d, ...rest } = tweaks as Tweaks & { departures?: unknown };
     return structuredClone(rest);
   };
   const addStateBtn = iconButton('plus', 'Save Page State', () => openSaveState());
@@ -1723,7 +1729,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     }
     prune();
     closePopover();
-    host.send('save-tweaks', { json: { ...tweaks, departures: departures() }, css: buildCss(tweaks, CFG.roles, false, dependents) });
+    host.send('save-tweaks', { json: tweaks, css: buildCss(tweaks, CFG.roles, false, dependents) });
     clearHistory();
     invalidateGraph();
     applyLive();
@@ -1733,19 +1739,16 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const tunePane = h('div', { class: 'p-body', role: 'tabpanel' }, sel, selCtx, optBar, variantsSec.el, ...[...leverSecs.values()].map((g) => g.el), pageSec.el, statesSec.el, surfacesSec.el, colorsSec.el, typeSec.el, layoutSec?.el);
 
   // Comments: pick an element, write a line.
-  const commentBox = checkbox({ label: 'Comment Mode', onChange: (on) => setCommenting(on) });
   const pickedText = h('div', { class: 'picked__text' });
   const pickedWhere = h('div', { class: 'picked__where' });
   const textarea = h('textarea', { 'aria-label': 'Comment', placeholder: 'Add a comment' });
   const commentSave = h('button', { type: 'button', class: 'btn btn--primary', disabled: true }, 'Save');
   const commentCancel = h('button', { type: 'button', class: 'btn' }, 'Cancel');
   const composer = h('div', { class: 'pane', hidden: true }, h('div', { class: 'picked' }, pickedText, pickedWhere), textarea, h('div', { class: 'actions' }, commentSave, commentCancel));
-  const list = h('ol', { class: 'clist' });
-  const listSec = section({ id: 'open-comments', title: 'Open', body: [list] });
-  const commentsPane = h('div', { class: 'p-body', role: 'tabpanel', hidden: true }, h('div', { class: 'sec' }, h('div', { class: 'sec__h' }, commentBox.el)), composer, listSec.el);
 
+  reviewPane.prepend(composer);
   const resize = h('div', { class: 'p-resize', 'aria-hidden': 'true', title: 'Drag to resize' });
-  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, reviewPane, commentsPane, foot);
+  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, reviewPane, foot);
   const dock = h('div', { class: 'dock' }, panel);
   const hoverBox = h('div', { class: 'box', hidden: true });
   const pickedBox = h('div', { class: 'box box--picked', hidden: true });
@@ -1839,27 +1842,23 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (opt) r.sel.set(opt.id);
       dimOn(r.x, r.f.cssVar in layer('shared'));
     }
-    const ref = CFG.reference;
     for (const r of sizeRows) {
       const { s } = r;
-      const ref1 = refSize(s.id);
       const size = sizeValue(s.id);
-      r.size.set(shown(s.cssVar, size), { resolved: size, reference: ref && ref1 ? { name: ref.name, value: ref1.size } : null });
+      r.size.set(shown(s.cssVar, size), { resolved: size });
       // The weight field follows the face's axis (re-ranged when the face changes).
       const axis = axisOf(fontOption(s.font));
       r.weight.range(axis.min, axis.max);
       r.weight.el.title = axis.stops ? `Static: ${axis.stops.join(', ')}` : `Variable: ${axis.min} to ${axis.max}`;
       const w = weightValue(s.id);
-      r.weight.set(shown(s.weightVar, w), { resolved: w, reference: ref && ref1 ? { name: ref.name, value: ref1.weight } : null });
+      r.weight.set(shown(s.weightVar, w), { resolved: w });
       dimOn(r.x, s.cssVar in layer('shared') || s.weightVar in layer('shared'));
     }
     for (const r of lengthRows) {
-      const ref1 = refLength(r.c.id);
       const v = compValue(r.c.id);
-      r.f.set(shown(r.c.cssVar, v), { resolved: v, reference: ref && ref1 !== null ? { name: ref.name, value: ref1 } : null });
+      r.f.set(shown(r.c.cssVar, v), { resolved: v });
       dimOn(r.x, r.c.cssVar in layer('shared'));
     }
-    refBtn?.setAttribute('aria-pressed', String(atReference()));
     // 350 is banned, wherever it came from (a hand-edited tweaks.json included).
     bannedList.replaceChildren(...bannedTweaks().map((v) => h('div', { class: 'note note--fail' }, `${v.replace(/^--/, '')}: ${BANNED_WEIGHT} is banned; regular is 400`)));
     if (!previewing && !same(tweaks, saved)) autosave();
@@ -1895,22 +1894,14 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   const openHere = () => feedback.filter((r) => r.status === 'open' && keyOf(r.url) === pageKey());
   function syncComments() {
-    const here = openHere();
-    tabBar.count('comments', here.length);
-    listSec.el.hidden = !here.length;
-    list.replaceChildren(...here.map((r, n) => {
-      const resolve = h('button', { type: 'button', class: 'btn' }, 'Resolve');
-      resolve.addEventListener('click', () => host.send('set-status', { id: r.id, status: 'resolved' }));
-      return h('li', {}, h('span', { class: 'pin' }, String(n + 1)),
-        h('div', {}, h('div', { class: 'c-text' }, r.comment), h('div', { class: 'c-where' }, r.text || r.selector)), resolve);
-    }));
-    commentBox.set(commenting);
+    commentBtn.setAttribute('aria-pressed', String(commenting));
     composer.hidden = !picked;
     if (picked) {
       pickedText.textContent = snippet(picked) || `<${picked.localName}>`;
       const src = source(picked);
       pickedWhere.textContent = src.sourceFile ? `${src.sourceFile.split('/src/').pop()}:${src.sourceLine ?? ''}` : selectorFor(picked);
     }
+    syncReview();
     placeOverlays();
   }
 
@@ -1967,6 +1958,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
   function setSelection(s: Selection | null, fromClick = false) {
     closeOptions();
+    // Each new selection starts on Every: a This One left over from the last
+    // selection would quietly apply the next edit to one element.
+    if (s && s.instance !== selection?.instance) scope = 'component';
     selection = s;
     hovered = null;
     activeVariant = null;
@@ -1981,13 +1975,11 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     tabBar.set(t);
     tunePane.hidden = t !== 'tune';
     reviewPane.hidden = t !== 'review';
-    commentsPane.hidden = t !== 'comments';
     if (t === 'review') syncReview();
     placeOverlays();
-    if (t !== 'comments') setCommenting(false);
     if (t !== 'tune' && isolating) setIsolating(false);
     // Selecting is always on in Tune: the page is the canvas, as in Figma.
-    if (t === 'tune' && !selecting) setSelecting(true);
+    if (t === 'tune' && !selecting && !commenting) setSelecting(true);
     else if (t !== 'tune' && selecting) setSelecting(false);
   }
   function setCommenting(state: boolean) {
@@ -1996,6 +1988,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     hovered = null;
     if (!state) { picked = null; textarea.value = ''; commentSave.disabled = true; }
     html.style.cursor = state ? 'crosshair' : '';
+    if (!state && tab === 'tune') setSelecting(true);
     syncComments();
   }
 
@@ -2064,6 +2057,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
       if (type === 'click') {
         picked = e.target as Element;
         hovered = null;
+        if (tab !== 'review') setTab('review');
         syncComments();
         textarea.focus();
       }
@@ -2076,7 +2070,16 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   document.addEventListener('keydown', (e) => { if (isToggleKey(e)) { e.preventDefault(); host.setOpen(!open); } });
   // On the page: Esc clears the selection (then leaves the select tool),
   // Shift+Enter selects the parent component, Enter the first one inside.
-  document.addEventListener('keydown', (e) => { if (historyKey(e) || optionKeys(e) || beforeKeys(e)) e.stopImmediatePropagation(); }, true);
+  /** C toggles the comment tool, anywhere but a text field. */
+  function commentKey(e: KeyboardEvent) {
+    if (!open || e.code !== 'KeyC' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return false;
+    const t = e.composedPath()[0];
+    if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return false;
+    e.preventDefault();
+    setCommenting(!commenting);
+    return true;
+  }
+  document.addEventListener('keydown', (e) => { if (historyKey(e) || optionKeys(e) || beforeKeys(e) || commentKey(e)) e.stopImmediatePropagation(); }, true);
   document.addEventListener('keyup', (e) => { if (beforeKeys(e)) e.stopImmediatePropagation(); }, true);
   document.addEventListener('keydown', (e) => {
     if (!open || commenting) return;

@@ -29,7 +29,7 @@ const BOX: Direction[] = [
 const PAGE: Direction[] = [
   { name: 'Dense', why: 'Compact spacing, smaller type and square corners: built for data.', moves: [{ id: 'density', pick: 'Compact' }, { id: 'type-scale', pick: 'Smaller' }, { id: 'corners', pick: 'Flat' }] },
   { name: 'Calm', why: 'Comfortable spacing and soft corners: the page breathes.', moves: [{ id: 'density', pick: 'Comfortable' }, { id: 'corners', pick: 'Soft' }] },
-  { name: 'Bold', why: 'Larger type, round corners and heavier borders: louder and friendlier.', moves: [{ id: 'type-scale', pick: 'Larger' }, { id: 'corners', pick: 'Round' }, { id: 'borders', d: 1 }] },
+  { name: 'Bold', why: 'Larger type and round corners: louder and friendlier.', moves: [{ id: 'type-scale', pick: 'Larger' }, { id: 'corners', pick: 'Round' }] },
 ];
 
 /** Every direction a set of levers could take, in the order offered: text first, then icon, then box. */

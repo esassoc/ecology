@@ -167,9 +167,6 @@ export const UI_CSS = `
   .f__input:focus-visible { outline: none; box-shadow: none; }
   .f[data-inherited] .f__input { color: var(--ink-2); }
   .f__suf { flex: 0 1 auto; min-width: 0; padding: 0 7px 0 4px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* the reference: a 4px dot where the value departs from it; click to use it */
-  .f__ref { flex: none; width: 12px; height: 22px; margin-right: 2px; padding: 0; border: 0; background: none; display: grid; place-items: center; }
-  .f__ref::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--brand); }
   /* apply a variable: a 24 icon over the field's right end on hover */
   .f__tok { position: absolute; top: -1px; right: -1px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 0 5px 5px 0; background: inherit; color: var(--ink-2); opacity: 0; }
   .f:hover .f__tok, .f__tok[aria-expanded="true"], .f__tok:focus-visible { opacity: 1; }

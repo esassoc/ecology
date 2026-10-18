@@ -178,8 +178,6 @@ export interface NumberFieldOptions {
   tokens?: { kind: TokenKind; beside?: () => HTMLElement; at?: PickContext };
   /** A value, or var(--token) when bound; a pick carries what it meant. */
   onChange: (value: number | string, intent?: PickIntent) => void;
-  /** Use the reference value (shown as a dot when the value departs). */
-  onReference?: () => void;
   /** Values the field skips over (350). */
   refuse?: number[];
 }
@@ -190,7 +188,6 @@ export function numberField(o: NumberFieldOptions) {
   pre.setAttribute('data-scrub', '');
   const input = h('input', { class: 'f__input', inputmode: 'decimal', spellcheck: 'false', 'aria-label': o.label });
   const suf = o.suffix ? h('span', { class: 'f__suf' }, o.suffix) : null;
-  const ref = h('button', { type: 'button', class: 'f__ref', hidden: true });
   let value = 0;
   let bound: string | null = null;
   let min = o.min;
@@ -233,13 +230,12 @@ export function numberField(o: NumberFieldOptions) {
   const pick = () => openTokenPicker({ root: o.root, anchor: el, beside: o.tokens?.beside?.(), kind: o.tokens!.kind, current: bound,
     at: { current: () => `${value}px`, ...o.tokens!.at }, pick: (n, i) => o.onChange(`var(${n})`, i) });
   const tok = o.tokens ? hoverButton('token', `Apply variable to ${o.label}`, pick) : null;
-  ref.addEventListener('click', () => o.onReference?.());
 
   const render = () => {
     el.replaceChildren(pre);
     el.classList.toggle('f--outline', !!bound);
     if (bound) el.append(tokenChip(bound, pick), hoverButton('detach', `Detach ${shortName(bound)}`, () => o.onChange(value)));
-    else { el.append(input, ref); if (suf) el.append(suf); if (tok) el.append(tok); }
+    else { el.append(input); if (suf) el.append(suf); if (tok) el.append(tok); }
   };
   render();
 
@@ -247,16 +243,13 @@ export function numberField(o: NumberFieldOptions) {
     el,
     /** Moves the field's range (a weight follows the face's axis). */
     range(lo: number, hi: number) { min = lo; max = hi; },
-    /** Shows a value (a number, or var(--token) when bound); a dot when it departs from the reference. */
-    set(v: number | string, opts: { reference?: { name: string; value: number } | null; inherited?: boolean; resolved?: number } = {}) {
+    /** Shows a value (a number, or var(--token) when bound). */
+    set(v: number | string, opts: { inherited?: boolean; resolved?: number } = {}) {
       const b = typeof v === 'string' ? boundToken(v) : null;
       if (typeof v === 'number') value = v;
       else if (opts.resolved !== undefined) value = opts.resolved;
       if (b !== bound) { bound = b; render(); }
       if (!bound && (input.getRootNode() as ShadowRoot).activeElement !== input) input.value = String(value);
-      const r = opts.reference;
-      ref.hidden = !r || !!bound || r.value === value;
-      if (r) { ref.title = `${r.name} ${r.value}: use it`; ref.setAttribute('aria-label', `Use ${r.name} value ${r.value}`); }
       el.toggleAttribute('data-inherited', !!opts.inherited);
     },
   };

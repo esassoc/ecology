@@ -35,11 +35,6 @@ export interface LengthControl {
   group?: 'sizes';
 }
 
-/** A reference spoke's values, by control id: a size row takes { size, weight }, a length a number. */
-export type ReferenceValues = Record<string, number | { size: number; weight: number }>;
-
-export interface Reference { name: string; values: ReferenceValues }
-
 /** What a spoke's design-layer.config.mjs exports. Every key is optional. */
 export interface DesignLayerConfig {
   /** Where tweaks.json, tweaks.css and feedback.jsonl land, from the spoke root. Default "design". */
@@ -52,9 +47,6 @@ export interface DesignLayerConfig {
   fonts?: FontControl[];
   sizes?: SizeControl[];
   lengths?: LengthControl[];
-  /** The reference shown as ticks and applied by its preset button. null: none.
-      Values merge over Beacon's unless `replace` is set. */
-  reference?: (Partial<Reference> & { replace?: boolean }) | null;
   /** Renamed variables in old tweaks files: old → the variables it now sets. */
   legacy?: Record<string, string[]>;
   /** Where Save to Source writes, from the spoke root. Every key is found on its own when absent. */
@@ -83,7 +75,6 @@ export interface ResolvedConfig {
   fonts: FontControl[];
   sizes: SizeControl[];
   lengths: LengthControl[];
-  reference: Reference | null;
   legacy: Record<string, string[]>;
   sourceFiles?: SourceFiles;
 }
@@ -101,8 +92,6 @@ export interface Tweaks {
   variants?: Variant[];
   /** Named snapshots of everything above, applied whole. */
   states?: PageState[];
-  /** Written on Save, never read back: every value that differs from the reference's. */
-  departures?: Departure[];
   /** What a variable pick meant, per edit: the concept, not just the token it resolved to. */
   intents?: Intent[];
   /** One per lever moved, keyed by where and what: the review's rows and changes.md's lines. */
@@ -190,7 +179,6 @@ export interface PageState {
   tweaks: Omit<Tweaks, 'states' | 'departures' | 'variants'>;
 }
 
-export interface Departure { id: string; label: string; cssVar: string; value: number; reference: number }
 
 /** A face's weights as loaded: a variable axis (any whole number in range) or a static face's weights. */
 export type WeightAxis = { min: number; max: number; stops: number[] | null };

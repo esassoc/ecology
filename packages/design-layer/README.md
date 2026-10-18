@@ -38,10 +38,6 @@ the palette icon in Astro's dev toolbar.
   the face's own axis; 350 is refused (regular is 400).
 - **Components**: lengths such as row padding and radius.
 
-Sizes and Components show the reference spoke's value (Beacon by default) as a
-tick on each slider, a note where you depart from it, and a button that applies
-all of it.
-
 **Comments**: turn on Comment Mode, click an element, write a note. Each note
 records the page, a selector, the element's text, its Astro source file and
 line, and its computed colour, background and font.
@@ -52,7 +48,7 @@ In `design/` at the spoke root (or the config's `dataDir`):
 
 | File | What |
 |---|---|
-| `tweaks.json` | The overrides: `light`, `dark`, `shared`, the palette per mode, and `departures` (every value that differs from the reference). |
+| `tweaks.json` | The overrides: `light`, `dark`, `shared`, and the palette per mode. |
 | `tweaks.css` | The same overrides as CSS, loaded on every dev page so they survive a reload. |
 | `feedback.jsonl` | One comment per line, `open` or `resolved`. |
 
@@ -150,7 +146,7 @@ A stored value keeps the format its source token is written in.
 Optional. Without one, the panel edits the hub's own tier-2 and tier-3 names
 (`src/defaults.mjs`). To change which variables it edits, add
 `design-layer.config.mjs` at the spoke root. Every key is optional; a list you
-give replaces the default list, and `roles` and `reference.values` merge per key.
+give replaces the default list, and `roles` merges per key.
 Editing the file restarts the dev server.
 
 ```js
@@ -173,8 +169,6 @@ export default defineConfig({
     // group: 'sizes' shows a length under Sizes instead of Components.
     { id: 'icon-nav', label: 'Nav Icon', cssVar: '--sidenav-icon-size', min: 12, max: 32, step: 1, group: 'sizes' },
   ],
-  // Ticks and the preset button. null turns them off; replace: true drops Beacon's values.
-  reference: { name: 'Beacon', values: { h1: { size: 24, weight: 650 }, radius: 4 } },
   // A variable renamed since tweaks.json was saved: old → the variables it now sets.
   legacy: { '--old-card-pad': ['--card-pad-y', '--card-pad-x'] },
 });

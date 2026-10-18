@@ -4,7 +4,7 @@
 // Astro) because both the dev server (Node) and the panel (the browser) read it.
 //
 // A spoke's config replaces any list it names (sizes, lengths, colors, fonts)
-// and merges per key into `roles` and `reference.values`, so it can rename one
+// and merges per key into `roles`, so it can rename one
 // surface's variable without restating the other seventeen.
 
 /** @typedef {import('./types').DesignLayerConfig} DesignLayerConfig */
@@ -67,33 +67,11 @@ export const DEFAULTS = {
     { id: 'radius', label: 'Radius', cssVar: '--radius-md', min: 0, max: 16, step: 1 },
     { id: 'icon-nav', label: 'Nav Icon', cssVar: '--sidenav-icon-size', min: 12, max: 32, step: 1, group: 'sizes' },
   ],
-  // Beacon, measured from ~/Dev/beacon-design in light mode (2026-10-16), by
-  // role. A row the reference does not name gets no tick and no note.
-  reference: {
-    name: 'Beacon',
-    values: {
-      nav: { size: 15, weight: 550 },
-      h1: { size: 24, weight: 650 },
-      h2: { size: 15, weight: 550 },
-      h3: { size: 17, weight: 550 },
-      body: { size: 14, weight: 400 },
-      meta: { size: 12, weight: 400 },
-      row: 10,
-      radius: 4,
-      'icon-nav': 16,
-    },
-  },
   legacy: {},
 };
 
 /** A spoke's config over the defaults. @param {DesignLayerConfig} [spoke] @returns {ResolvedConfig} */
 export function resolveConfig(spoke = {}) {
-  const ref = spoke.reference === null ? null : {
-    name: spoke.reference?.name ?? DEFAULTS.reference.name,
-    values: spoke.reference?.replace
-      ? { ...(spoke.reference.values ?? {}) }
-      : { ...DEFAULTS.reference.values, ...(spoke.reference?.values ?? {}) },
-  };
   return {
     dataDir: spoke.dataDir ?? DEFAULTS.dataDir,
     roles: { ...DEFAULTS.roles, ...(spoke.roles ?? {}) },
@@ -102,7 +80,6 @@ export function resolveConfig(spoke = {}) {
     fonts: spoke.fonts ?? DEFAULTS.fonts,
     sizes: spoke.sizes ?? DEFAULTS.sizes,
     lengths: spoke.lengths ?? DEFAULTS.lengths,
-    reference: ref,
     legacy: spoke.legacy ?? DEFAULTS.legacy,
     ...(spoke.sourceFiles ? { sourceFiles: spoke.sourceFiles } : {}),
   };
