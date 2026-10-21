@@ -78,13 +78,25 @@ async function shoot(page, selector, { screen = false } = {}) {
   return page.screenshot({ clip: { x, y, width, height }, animations: 'disabled', caret: 'hide', timeout: 10_000 }).catch(() => null);
 }
 
+// Seed web storage before any page script runs: a spec's `storage` gets past a
+// client-side gate through the flag the gate itself sets, so no password ever
+// enters a recipe. Capture only; it is never written into the bundle.
+async function seedStorage(context, storage) {
+  if (!storage) return;
+  await context.addInitScript((s) => {
+    for (const [k, v] of Object.entries(s.session || {})) sessionStorage.setItem(k, v);
+    for (const [k, v] of Object.entries(s.local || {})) localStorage.setItem(k, v);
+  }, storage);
+}
+
 /**
  * Sections for a route with no authored spec.
  * @returns {Promise<{label:string, selector:string}[]>}
  */
-export async function deriveSections(browser, url, { prefixes, viewport }) {
+export async function deriveSections(browser, url, { prefixes, viewport, storage }) {
   const context = await browser.newContext({ viewport });
   try {
+    await seedStorage(context, storage);
     const page = await context.newPage();
     await page.goto(url, { waitUntil: 'networkidle' });
     return await page.evaluate(DERIVE_SECTIONS, { prefixes });
@@ -97,11 +109,12 @@ export async function deriveSections(browser, url, { prefixes, viewport }) {
  * @param {import('playwright').Browser} browser
  * @param {string} url  Local preview URL to load.
  * @param {{label:string, selector:string, apply?:object[]}[]} specSections
- * @param {{tierIndex:object, classifyTokens:Function, viewports:{desktop:object, phone:object}, libraryClasses?:string[]}} opts
+ * @param {{tierIndex:object, classifyTokens:Function, viewports:{desktop:object, phone:object}, libraryClasses?:string[], storage?:{session?:object, local?:object}}} opts
  */
-export async function captureSections(browser, url, specSections, { tierIndex, classifyTokens, viewports, libraryClasses = [] }) {
+export async function captureSections(browser, url, specSections, { tierIndex, classifyTokens, viewports, libraryClasses = [], storage }) {
   const context = await browser.newContext({ viewport: viewports.desktop, deviceScaleFactor: 1 });
   try {
+    await seedStorage(context, storage);
     const page = await context.newPage();
     const sheets = await trackSheets(page);
     const logs = [];

@@ -98,7 +98,8 @@ export const READ_SECTION = ({ sel, keep = 2, variants = 3, attrMax = 400 }) => 
 // there is a <main>, its children (app chrome is shared, not the prototype), and a
 // lone wrapper is descended through. Each section gets a structural selector so a
 // fresh load can find it again, and a label from, in order: aria-label, landmark,
-// a heading, a humanized component class, the tag.
+// a heading (the element itself when it is one), a humanized component class, its
+// first line of text, then "Section N". Never a bare tag name.
 export const DERIVE_SECTIONS = ({ prefixes }) => {
   const IGNORE = /^(script|style|link|template|noscript|astro-dev-toolbar|astro-island)$/;
   const visible = (el) => !IGNORE.test(el.localName) && el.getClientRects().length > 0;
@@ -130,14 +131,16 @@ export const DERIVE_SECTIONS = ({ prefixes }) => {
   const LANDMARK = { nav: 'Nav', header: 'Header', footer: 'Footer', aside: 'Aside', form: 'Form' };
   const COMPONENT = new RegExp(`^(${prefixes.join('|')})-[a-z0-9-]+$`);
   const LAYOUT = /-(container|grid|row|col|stack|cluster|wrap|layout)(__|$)/;
-  return kids.map((el) => {
-    const heading = el.querySelector('h1,h2,h3')?.textContent?.trim().replace(/\s+/g, ' ');
+  const flat = (t) => t?.trim().replace(/\s+/g, ' ') || '';
+  const firstLine = (el) => (el.innerText || '').split('\n').map(flat).find((l) => /\p{L}{2}/u.test(l)) || '';
+  return kids.map((el, i) => {
+    const heading = flat(el.matches('h1,h2,h3,h4,h5,h6') ? el.textContent : el.querySelector('h1,h2,h3,h4')?.textContent);
     const cls = [el, ...el.querySelectorAll('[class]')]
       .flatMap((c) => [...c.classList])
       .find((c) => COMPONENT.test(c) && !c.includes('__') && !c.includes('--') && !LAYOUT.test(c));
     const humanized = cls?.replace(/^[a-z]+-/, '').replace(/-/g, ' ').replace(/^\w/, (m) => m.toUpperCase());
     const label =
-      el.getAttribute('aria-label') || LANDMARK[el.localName] || heading || humanized || el.localName;
+      el.getAttribute('aria-label') || LANDMARK[el.localName] || heading || humanized || firstLine(el) || `Section ${i + 1}`;
     return { label: label.slice(0, 60), selector: path(el) };
   });
 };

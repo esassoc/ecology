@@ -69,6 +69,7 @@ export default {
       apply: [{ click: '[data-open]' }],  // optional recipe to reach a state
       intent: '…', decisions: ['…'], gotchas: ['…'], acceptance: ['…'],
       data: { … },                         // optional, overrides the page-level data
+      js: ['src/lib/board.client.ts'],     // optional, the files behind its behaviour
     },
   ],
 };
@@ -76,6 +77,11 @@ export default {
 
 `apply` ops: `click`, `fill: [sel, text]`, `clear`, `clickText: [sel, name, role?]`,
 `key`. The same recipe drives the live page when a section is picked in the Handoff panel.
+
+A page behind a client-side gate takes a page-level `storage: { session: { key: value }, local: { … } }`,
+seeded before the page loads, so capture runs past the gate on the flag the gate sets itself.
+Never a password: `storage` is read at capture only and written into no bundle file, while an
+`apply` recipe ships in the manifest.
 
 ## Output (`<out>/`)
 

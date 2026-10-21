@@ -75,6 +75,23 @@ function componentLines(components, target) {
   return out;
 }
 
+/** The source files that drive a section's behaviour, as repo paths. They are
+    not served by the deployed site, so they are named, not linked. */
+function behaviorLines(js) {
+  const files = js == null ? [] : Array.isArray(js) ? js : [js];
+  if (!files.length) return [];
+  return ['## Behavior', '', ...files.map((f) => `- \`${f}\``), ''];
+}
+
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** A section's size as an agent meets it: the spec, then how many parts it links. */
+export function sectionSize(s) {
+  const spec = s.specBytes ?? s.bytes ?? 0;
+  const parts = (s.files ?? 1) - 1;
+  return parts > 0 ? `${kb(spec)}, ${plural(parts, 'part')}` : kb(spec);
+}
+
 const fence = (lang, body) => ['```' + lang, body, '```'];
 
 // Split text at line boundaries into pieces of at most `max` bytes. A single line
@@ -116,7 +133,8 @@ export function renderSpec(s, ctx) {
     ...bullets('Gotchas', g.gotchas),
     ...bullets('Done when', g.acceptance),
     ...componentLines(s.components, target),
-    ...dataLines(s.data)
+    ...dataLines(s.data),
+    ...behaviorLines(s.js)
   );
 
   const collapsedNote = s.stats?.collapsed
@@ -170,7 +188,7 @@ export function renderReadme(m, { urlFor }) {
     const shots = [s.shots?.desktop && `[desktop](${urlFor(s.shots.desktop)})`, s.shots?.phone && `[phone](${urlFor(s.shots.phone)})`]
       .filter(Boolean)
       .join(' · ');
-    const size = `${kb(s.bytes)}${s.files > 1 ? ` in ${s.files} files` : ''}`;
+    const size = sectionSize(s);
     lines.push(`| ${s.label} | ${oneLine(s.guide?.intent) || ''} | [${s.claudePath.split('/').pop()}](${urlFor(s.claudePath)}) ${size} | ${shots} |`);
   }
   lines.push('');
@@ -187,13 +205,12 @@ export function renderIndex(name, bundles, { baseUrl, budget = Infinity }) {
   const render = (full) => {
     const lines = [`# ${name ? `${name} ` : ''}handoff`, '', `Links are relative to ${baseUrl}`, ''];
     for (const m of bundles) {
-      const total = m.sections.reduce((n, s) => n + (s.bytes || 0), 0);
       const kind = m.generatedFrom === 'spec' ? '' : ', no authored guidance';
-      lines.push(`## ${m.title}`, '', `[README](${m.dir}/README.md) · [prototype](${m.url}) · ${m.sections.length} sections, ${kb(total)}${kind}`, '');
+      lines.push(`## ${m.title}`, '', `[README](${m.dir}/README.md) · [prototype](${m.url}) · ${plural(m.sections.length, 'section')}${kind}`, '');
       if (full)
         for (const s of m.sections) {
           const intent = oneLine(s.guide?.intent);
-          lines.push(`- [${s.label}](${m.dir}/${s.claudePath})${intent ? `: ${intent}` : ''} (${kb(s.bytes)})`);
+          lines.push(`- [${s.label}](${m.dir}/${s.claudePath})${intent ? `: ${intent}` : ''} (${sectionSize(s)})`);
         }
       else lines.push(m.sections.map((s) => s.label).join(' · '));
       lines.push('');

@@ -4,9 +4,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseRegistry, bundleSlug, routePath } from '../packages/handoff/src/registry.mjs';
 import { splitRules, rulesForClasses, isTokenDefSelector } from '../packages/handoff/src/rules.mjs';
-import { renderSpec, renderIndex, chunkLines, oneLine, normaliseData } from '../packages/handoff/src/spec.mjs';
+import { renderSpec, renderIndex, renderReadme, chunkLines, oneLine, normaliseData, sectionSize } from '../packages/handoff/src/spec.mjs';
+import { DERIVE_SECTIONS } from '../packages/handoff/src/read-section.mjs';
 import { componentsOf, blockRoot } from '../packages/handoff/src/components.mjs';
 import { deployedUrl } from '../packages/handoff/src/config.mjs';
+import { writeBundle } from '../packages/handoff/src/bundle.mjs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('registry: pages pair with their own slug, groups are skipped, escapes survive', () => {
   const src = `
@@ -98,15 +103,85 @@ test('components: hub vs spoke, page-local classes left out, target mapped', () 
 test('front door: index lists each prototype, compact when the full form passes the budget', () => {
   const bundles = [{
     dir: 'prototypes-actions', title: 'Actions', url: 'https://x/prototypes/actions/', generatedFrom: 'spec',
-    sections: [{ label: 'Board', claudePath: 'claude/board.md', bytes: 12_288, guide: { intent: 'The Kanban. More detail.' } }],
+    sections: [{ label: 'Board', claudePath: 'claude/board.md', bytes: 12_288, specBytes: 12_288, files: 1, guide: { intent: 'The Kanban. More detail.' } }],
   }];
   const md = renderIndex('Beacon', bundles, { baseUrl: 'https://x/handoff/' });
   assert.match(md, /^# Beacon handoff\n\nLinks are relative to https:\/\/x\/handoff\//);
   assert.match(md, /\[README\]\(prototypes-actions\/README\.md\)/);
   assert.match(md, /- \[Board\]\(prototypes-actions\/claude\/board\.md\): The Kanban\. \(12 KB\)/);
+  assert.match(md, /· 1 section$/m);
   const compact = renderIndex('Beacon', bundles, { baseUrl: 'https://x/handoff/', budget: 100 });
   assert.match(compact, /^Board$/m);
   assert.doesNotMatch(compact, /The Kanban/);
   assert.equal(oneLine('One. Two.'), 'One.');
   assert.deepEqual(normaliseData('src/a.ts').fixtures, ['src/a.ts']);
+});
+
+test('sizes: a split section lists its spec and part count, not the total', () => {
+  assert.equal(sectionSize({ bytes: 222_000, specBytes: 19_500, files: 6 }), '19 KB, 5 parts');
+  assert.equal(sectionSize({ bytes: 30_000, specBytes: 20_000, files: 2 }), '20 KB, 1 part');
+  assert.equal(sectionSize({ bytes: 12_288, files: 1 }), '12 KB');
+  const m = { title: 'P', url: 'u', generatedFrom: 'spec', sections: [{ label: 'List', claudePath: 'claude/list.md', bytes: 222_000, specBytes: 19_500, files: 6, shots: {} }] };
+  assert.match(renderReadme(m, { urlFor: (n) => n }), /19 KB, 5 parts/);
+});
+
+test('behavior: the js files of a section are listed after Data, before the markup', () => {
+  const [f] = renderSpec(
+    { label: 'Rail', html: '<div></div>', css: '', tokens: [], js: ['src/search/page.client.ts'], data: 'src/data/a.ts' },
+    { fileSlug: 'rail', budget: 10_000, prototype: 'P', sourceUrl: 'u', urlFor: (n) => n }
+  );
+  assert.match(f.text, /## Behavior\n\n- `src\/search\/page\.client\.ts`/);
+  assert.ok(f.text.indexOf('## Data') < f.text.indexOf('## Behavior'));
+  assert.ok(f.text.indexOf('## Behavior') < f.text.indexOf('## Markup'));
+});
+
+test('derived labels: never a bare tag', () => {
+  // A tiny DOM stand-in: DERIVE_SECTIONS runs in the page, so give it one.
+  const el = (localName, { text = '', kids = [], heading = null, aria = null } = {}) => {
+    const node = {
+      localName, id: '', children: kids, classList: [], parentElement: null,
+      innerText: text, textContent: text,
+      getClientRects: () => [1],
+      getAttribute: (n) => (n === 'aria-label' ? aria : null),
+      matches: (sel) => sel.split(',').includes(localName),
+      querySelector: (sel) => (sel.startsWith('h') && heading ? { textContent: heading } : null),
+      querySelectorAll: () => [],
+    };
+    for (const k of kids) k.parentElement = node;
+    return node;
+  };
+  const kids = [
+    el('h2', { text: 'Statement of work' }),
+    el('div', { text: '\n  12  \nFunding summary\nmore' }),
+    el('div', { text: '' }),
+  ];
+  const main = el('main', { kids });
+  globalThis.document = { querySelector: (s) => (s === 'main' ? main : null), body: main, documentElement: {} };
+  main.parentElement = globalThis.document.documentElement;
+  try {
+    assert.deepEqual(DERIVE_SECTIONS({ prefixes: ['cbf'] }).map((s) => s.label), ['Statement of work', 'Funding summary', 'Section 3']);
+  } finally {
+    delete globalThis.document;
+  }
+});
+
+test('storage: a gate flag seeds capture and reaches no bundle file', () => {
+  const root = mkdtempSync(join(tmpdir(), 'handoff-'));
+  try {
+    const secret = 'gate-flag-7c1e';
+    const storage = { session: { [secret]: secret } };
+    const cfg = { root, out: 'public/handoff', site: 'https://x.test', base: '/s/', budget: 48_000 };
+    // As if a careless spread had carried the spec's storage onto the bundle and a section.
+    writeBundle(cfg, {
+      slug: 'gated', dir: 'gated', title: 'Gated', url: 'https://x.test/s/gated/', theme: null,
+      generatedFrom: 'spec', storage,
+      sections: [{ label: 'Intro', selector: '.intro', html: '<p class="intro">Hi</p>', css: '', storage, guide: { intent: 'Hi.' } }],
+    });
+    const dir = join(root, 'public/handoff/gated');
+    const files = [dir, join(dir, 'claude')].flatMap((d) => readdirSync(d, { withFileTypes: true }).filter((f) => f.isFile()).map((f) => join(d, f.name)));
+    assert.ok(files.length >= 3);
+    for (const f of files) assert.ok(!readFileSync(f, 'utf8').includes(secret), `${f} carries the storage seed`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

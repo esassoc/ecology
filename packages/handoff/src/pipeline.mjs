@@ -130,17 +130,19 @@ export async function runAll(cfg, argv) {
       const specPath = specPathFor(cfg, t.slug);
       const spec = existsSync(specPath) ? (await import(pathToFileURL(specPath).href)).default : null;
       const specSections =
-        spec?.sections ?? (await deriveSections(browser, local, { prefixes, viewport: cfg.viewports.desktop }));
+        spec?.sections ?? (await deriveSections(browser, local, { prefixes, viewport: cfg.viewports.desktop, storage: spec?.storage }));
       const { theme, sections, logs } = await captureSections(browser, local, specSections, {
         tierIndex,
         classifyTokens,
         viewports: cfg.viewports,
         libraryClasses: cfg.libraryClasses,
+        storage: spec?.storage,
       });
       const byLabel = new Map(specSections.map((s) => [s.label, s]));
       for (const s of sections) {
         const own = byLabel.get(s.label) || {};
         s.apply = own.apply;
+        s.js = own.js;
         s.guide = guideOf(own);
         s.data = mergeData(spec?.data, own.data) ?? undefined;
         s.components = componentsOf(s, { spokePrefix: cfg.spokePrefix, index: componentIndex, target: cfg.target });

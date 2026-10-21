@@ -65,11 +65,14 @@ export function writeBundle(cfg, b) {
       tokens: s.tokens,
       components: s.components,
       data: s.data,
+      js: s.js,
       claudePath: `claude/${files[0].name}`,
       repoPath: relative(cfg.root, join(outDir, 'claude', files[0].name)),
       parts: files.slice(1).map((f) => `claude/${f.name}`),
       shots: Object.fromEntries(Object.entries(shots).map(([k, v]) => [k, `claude/${v}`])),
       bytes: files.reduce((n, f) => n + Buffer.byteLength(f.text), 0),
+      // The spec alone: what an agent reads first, and what index.md lists.
+      specBytes: Buffer.byteLength(files[0].text),
       files: files.length,
       collapsed: s.stats?.collapsed ?? 0,
     };
