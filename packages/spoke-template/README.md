@@ -36,7 +36,7 @@ A spoke depends on four packages from the sibling `../ecology` checkout:
 | `@esa/tokens` | dependency | Primitives + default semantic tokens (`tokens.css`, `component-tokens.css`). |
 | `@esa/ecology` | dependency | The `esa-*` components (`.astro` + Lit web components). |
 | `@esa/docs` | dependency | The shared `DocsShell` + token-driven foundation components (`ColorFoundation`, `TypeFoundation`, …). |
-| `@esa/handoff` | devDependency | Dev-mode handoff export (rendered prototype → de-scoped HTML/CSS bundle). |
+| `@esa/handoff` | devDependency | Handoff bundles (`npx handoff all`): per-section specs, screenshots and an index an agent can read. |
 
 Plus `astro` (dependency) and `gh-pages` (devDependency, for the GitHub Pages
 deploy). All four `@esa/*` deps use `file:../ecology/packages/*` links, so the

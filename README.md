@@ -81,7 +81,7 @@ packages/
                    plus authored partials: component-tokens.css, type-roles.css, layouts.css
   ecology/         @esa/ecology — the components (.astro presentational, .ts Lit interactive)
   docs/            @esa/docs — themeable documentation shell shared by hub + spokes
-  handoff/         @esa/handoff — dev-handoff exporter: rendered URL → de-scoped bundle
+  handoff/         @esa/handoff — handoff bundles: per-section specs, screenshots and an index per spoke
   spoke-template/  scaffold source for new spokes (never hand-copied — see /spoke-init)
 apps/
   site/            the browsable specimen + spec site (dogfoods every package)
