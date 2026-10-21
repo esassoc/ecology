@@ -11,6 +11,9 @@ half-installed spoke that started this whole effort.
       the spoke is broken; restore from `package.json.tmpl`.
 - [ ] `@esa/design-layer` (devDependency) present and `designLayer()` in
       `astro.config.mjs`'s integrations, so the dev server has the design layer.
+- [ ] `devToolbar: { enabled: false }` in `astro.config.mjs`. The Design pill
+      (dev) and the Handoff pill (every build) are the way in; `npm run doctor`
+      warns when the toolbar is on.
 - [ ] All four `@esa/*` deps use `file:../ecology/packages/*` and the spoke is a
       sibling of the `ecology` checkout (so the `file:` links resolve).
 

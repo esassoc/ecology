@@ -1,6 +1,6 @@
 # @esa/design-layer
 
-A panel in a spoke's dev toolbar for tuning its tokens live and leaving
+A panel on a spoke's dev pages for tuning its tokens live and leaving
 comments on the page. It runs only under `npm run dev`; a build never loads it.
 What you tune lands in an override file beside the spoke, never in its token
 files.
@@ -19,8 +19,9 @@ import designLayer from '@esa/design-layer/astro';
 export default defineConfig({ integrations: [designLayer()] });
 ```
 
-Open it with **Control+Option+D**, the **Design** pill at the bottom right, or
-the palette icon in Astro's dev toolbar.
+Open it with **Control+Option+D** or the **Design** pill at the bottom right.
+It mounts itself; Astro's dev toolbar plays no part, and spokes run with it off
+(`devToolbar: { enabled: false }`).
 
 ## What the panel does
 
@@ -41,6 +42,14 @@ the palette icon in Astro's dev toolbar.
 **Comments**: turn on Comment Mode, click an element, write a note. Each note
 records the page, a selector, the element's text, its Astro source file and
 line, and its computed colour, background and font.
+
+**Handoff**: the route's handoff bundle (from `@esa/handoff`), section by
+section. Pick a section to outline it on the page (a click inside one on the
+page picks it too); each shows its guidance, components, data and tokens, and
+links its spec, screenshots and parts. **Copy for Claude** copies the
+prototype's README link and the section's spec link. A deployed prototype gets
+the same pane on its own, behind a **Handoff** pill (`@esa/design-layer/handoff`,
+mounted by `@esa/handoff`'s `HandoffInspector.astro`).
 
 ## Where things land
 
@@ -189,6 +198,9 @@ goes to `--card-bg`.
   the controls and stylesheet writer, palettes, the surface recipe, colour math,
   the comment-mode helpers, the config defaults (`defaults.mjs`) and the
   file store (`store.mjs`, Node).
-- `astro/`: the Astro adapter. It holds the dev-toolbar app, the integration,
-  the tweaks route and the channel to the store. Another framework's dev server
+- `astro/`: the Astro adapter. It holds the integration, the page client that
+  mounts the panel (`client.ts`), the tweaks route, the channel to the store
+  (Vite's HMR socket), and the source stamps (`sources.mjs`): Astro writes
+  `data-astro-source-*` only while its toolbar is on, so with it off the
+  adapter writes them itself, from the compiler Astro ships. Another framework's dev server
   needs only its own version of this folder.

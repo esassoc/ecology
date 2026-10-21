@@ -1,6 +1,6 @@
 // The design layer's panel: Figma's right sidebar for a spoke's tokens, drawn
-// into a shadow root the host adapter hands it (Astro's dev toolbar canvas
-// today), so nothing leaks either way. No framework imports: an adapter
+// into a shadow root the host adapter hands it (the Astro adapter's own
+// <design-layer-host>), so nothing leaks either way. No framework imports: an adapter
 // supplies PanelHost. Every control comes from the kit in ./ui.
 //
 // Tune edits the spoke's real custom properties live: Palette picks a whole
@@ -47,20 +47,16 @@ import {
   UI_CSS, h, icon, checkbox, colorField, dropdown, iconButton, numberField, openMenu, openPalettePicker, openPanelPopover, openPopover,
   section, segmented, selectField, tabs, boundToken, shortName, closePopover, invalidateTokens, registerPanelFont, type ICONS, type MenuItem,
   SIZE_RUNGS, readTokens, typeProp, type PaletteOption, type PickIntent, type Prefix,
+  DOCK_CSS, WIDTH, INSET, MOTION, isToggleKey, mountPill,
 } from './ui';
+import { handoffPane, HANDOFF_CSS } from './handoff';
 
-/** The panel's width: a setting, dragged on its inner edge. Figma's own panel is 240; 320 gives the fields and the top row's undo and redo room. */
-const WIDTH = { default: 320, min: 260, max: 480 };
 const WIDTH_KEY = 'design-layer:width';
 const SIDE_KEY = 'design-layer:side';
-/** The overlay's distance from the viewport's edges: Figma's floating-panel gap, spacing-300. */
-const INSET = 12;
-/** Open, close and the side swap: one ease-out curve. */
-const MOTION = 220;
 const LAYOUT_KEY = 'design-layer:layout-open';
 const DETAILS_KEY = 'design-layer:theme-details';
 type Side = 'left' | 'right';
-type Tab = 'tune' | 'review';
+type Tab = 'tune' | 'review' | 'handoff';
 const store = {
   get(key: string) { try { return localStorage.getItem(key); } catch { return null; } },
   set(key: string, v: string) { try { localStorage.setItem(key, v); } catch { /* storage blocked */ } },
@@ -116,21 +112,13 @@ function leadFor(c: LengthControl): keyof typeof ICONS {
   return 'size';
 }
 
-// The toolbar closes its open app on any Escape; the panel's popovers use
-// Escape too, so the panel stays open (the toggle key, the toolbar icon and the
-// collapse button close it).
+// The panel's popovers and the selection use Escape, so Escape never closes
+// the panel (the toggle key, the menu's Close Panel and the pill's host do).
 let escapeAt = 0;
 
 // What the panel needs beyond the kit: docking, the
 // comments pane, and the page overlays (pins, the hover and picked boxes).
 const PANEL_CSS = `
-  .dock { position: fixed; top: ${INSET}px; bottom: ${INSET}px; right: ${INSET}px; z-index: 2147483000;
-    transition: transform ${MOTION}ms cubic-bezier(0.16, 1, 0.3, 1), opacity ${MOTION}ms cubic-bezier(0.16, 1, 0.3, 1); }
-  .dock[data-side="left"] { right: auto; left: ${INSET}px; }
-  .dock[data-state="closed"] { opacity: 0; transform: translateX(24px) scale(0.985); pointer-events: none; }
-  .dock[data-side="left"][data-state="closed"] { transform: translateX(-24px) scale(0.985); }
-  .dock[data-side="left"] .p-resize { left: auto; right: 0; }
-  @media (prefers-reduced-motion: reduce) { .dock { transition: none; } }
   .pane { display: grid; gap: 8px; padding: 8px 8px 16px 16px; }
   .picked { display: grid; gap: 0; padding: 4px 8px; border-radius: 5px; background: var(--field); }
   .picked__text { overflow-wrap: anywhere; }
@@ -158,14 +146,6 @@ const PANEL_CSS = `
   .c-text { overflow-wrap: anywhere; }
   .pin { position: fixed; z-index: 2147482999; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
     background: #0d99ff; color: #fff; font: 550 9px/1 'Design Layer UI', Inter, system-ui, sans-serif; box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,.3); pointer-events: none; }
-  /* outlines only: nothing fills over the design */
-  .box { position: fixed; z-index: 2147482998; pointer-events: none; border: 1px solid #0d99ff; background: none; }
-  .box--picked { border-width: 2px; background: rgba(13, 153, 255, 0.12); }
-  .box--sel { border-color: #0d99ff; background: none; }
-  .box__name, .box__size { position: absolute; height: 16px; padding: 0 4px; border-radius: 2px; background: #0d99ff; color: #fff;
-    font: 550 11px/16px 'Design Layer UI', Inter, system-ui, sans-serif; letter-spacing: .055px; white-space: nowrap; }
-  .box__name { left: -1px; bottom: calc(100% + 4px); }
-  .box__size { left: 50%; top: calc(100% + 4px); transform: translateX(-50%); font-variant-numeric: tabular-nums; }
   .crumbs { flex: 1 1 auto; display: flex; align-items: center; min-width: 0; margin-left: -4px; }
   .crumbs:not([hidden]) ~ .grow { display: none; }
   .crumb { flex: 0 1 auto; min-width: 0; height: 24px; padding: 0 4px; border: 0; border-radius: 5px; background: none; color: var(--ink-2);
@@ -268,7 +248,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   INKS = config.inks.filter((i) => COLORS.some((c) => c.id === i));
   const CSS_ROUTE = host.cssRoute;
   if (host.fontUrl) registerPanelFont(host.fontUrl);
-  canvas.innerHTML = `<style>${UI_CSS}${LEVER_CSS}${COLOR_LEVER_CSS}${PANEL_CSS}</style>`;
+  canvas.innerHTML = `<style>${UI_CSS}${DOCK_CSS}${LEVER_CSS}${COLOR_LEVER_CSS}${PANEL_CSS}${HANDOFF_CSS}</style>`;
   const ui = h('div', { class: 'ui' });
   canvas.append(ui);
   const html = document.documentElement;
@@ -613,7 +593,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // Top: Tune / Review / Comments, the tools, the page's scheme. Edits save
   // themselves (to tweaks.json, never to the token files); Send to Claude and
   // Save to Source are the two ways a change leaves the layer.
-  const tabBar = tabs<Tab>({ label: 'Panel', options: [{ value: 'tune', label: 'Finetune' }, { value: 'review', label: 'Review' }], onChange: (t) => setTab(t) });
+  const tabBar = tabs<Tab>({ label: 'Panel', options: [{ value: 'tune', label: 'Finetune' }, { value: 'review', label: 'Review' }, { value: 'handoff', label: 'Handoff' }], onChange: (t) => setTab(t) });
   const setMode = (m: Mode) => { mode = m; html.setAttribute('data-scheme', m); invalidateTokens(); invalidateGraph(); renderStage(); renderTokens(); renderPage(); sync(); };
   const schemeBtn = iconButton('moon', 'Dark Page', () => setMode(mode === 'dark' ? 'light' : 'dark'));
   let saveTimer = 0;
@@ -1756,7 +1736,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
 
   reviewPane.prepend(composer);
   const resize = h('div', { class: 'p-resize', 'aria-hidden': 'true', title: 'Drag to resize' });
-  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, reviewPane, foot);
+  // Handoff: the route's bundle, section by section, for an agent in another codebase.
+  const handoff = handoffPane({ root });
+  const panel = h('aside', { class: 'p', 'aria-label': 'Design Layer' }, resize, top, tunePane, reviewPane, handoff.el, foot);
   const dock = h('div', { class: 'dock' }, panel);
   const hoverBox = h('div', { class: 'box', hidden: true });
   const pickedBox = h('div', { class: 'box box--picked', hidden: true });
@@ -1765,7 +1747,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   const selSize = h('span', { class: 'box__size' });
   const selBox = h('div', { class: 'box box--sel', hidden: true }, selName, selSize);
   const pins = h('div', {});
-  ui.append(dock, bands, hoverBox, pickedBox, selBox, pins);
+  ui.append(dock, bands, hoverBox, pickedBox, selBox, pins, handoff.overlay);
 
   // Width: drag the inner edge; the setting persists. The overlay sits over the
   // page, which keeps its full width; only the isolation stage makes room.
@@ -1950,6 +1932,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     if (open) requestAnimationFrame(() => requestAnimationFrame(() => { dock.dataset.state = 'open'; }));
     if (open) { mode = html.getAttribute('data-scheme') === 'dark' ? 'dark' : 'light'; invalidateTokens(); host.send('load', {}); renderPage(); if (tab === 'tune') setSelecting(true); }
     else { setCommenting(false); setSelecting(false); setSelection(null); closePopover(); setBefore(false); saveNow(); }
+    handoff.setActive(open && tab === 'handoff');
     invalidateGraph();
     applyLive();
     sync();
@@ -1983,6 +1966,9 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     tabBar.set(t);
     tunePane.hidden = t !== 'tune';
     reviewPane.hidden = t !== 'review';
+    handoff.setActive(open && t === 'handoff');
+    // The footer counts and sends Tune's changes; Handoff has its own Copy for Claude.
+    foot.hidden = t === 'handoff';
     if (t === 'review') syncReview();
     placeOverlays();
     if (t !== 'tune' && isolating) setIsolating(false);
@@ -2001,8 +1987,6 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   }
 
   // ── panel events ────────────────────────────────────────────────────
-  // Control+Option+D: Option+Shift+D is taken by a global Figma shortcut on Andy's Mac.
-  const isToggleKey = (e: KeyboardEvent) => e.ctrlKey && e.altKey && !e.shiftKey && !e.metaKey && e.code === 'KeyD';
   // Keys typed in the panel stay in the panel: the app's own shortcuts (/, the
   // editor's) listen on document and would otherwise fire from a text field.
   for (const type of ['keydown', 'keyup', 'keypress'] as const) {
@@ -2047,7 +2031,7 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
   // ── comment mode on the page ────────────────────────────────────────
   const onPage = (e: Event) => {
     const t = e.target;
-    return t instanceof Element && !t.closest('astro-dev-toolbar, design-layer-stage') && t !== html && t !== document.body;
+    return t instanceof Element && !t.closest('design-layer-host, design-layer-stage, design-layer-pill') && t !== html && t !== document.body;
   };
   // The select tool picks the nearest component; Cmd or Alt picks the element itself (Figma's deep select).
   const deep = (e: MouseEvent) => e.metaKey || e.altKey;
@@ -2131,24 +2115,12 @@ export function mountPanel(canvas: ShadowRoot, host: PanelHost, config: Resolved
     sync();
   });
 
-  // An always-visible way in, so the panel never depends on a shortcut. The
-  // toolbar canvas is hidden while the app is off, so the pill lives in its own host.
-  const pillHost = document.createElement('design-layer-pill');
-  const pillRoot = pillHost.attachShadow({ mode: 'open' });
-  pillRoot.innerHTML = `<style>
-    button { position: fixed; right: 16px; bottom: 16px; z-index: 2000000000; font: 500 11px/1 'Design Layer UI', Inter, system-ui, sans-serif;
-      color: #eeeeee; background: #222222; border: 1px solid #484848; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
-    button:hover { background: #2a2a2a; }
-    button:focus-visible { outline: 2px solid #0d99ff; outline-offset: 2px; }
-    button[hidden] { display: none; }
-  </style><button type="button" title="Design (Control+Option+D)">Design</button>`;
-  const pill = pillRoot.querySelector('button') as HTMLButtonElement;
-  pill.addEventListener('click', () => host.setOpen(true));
-  document.body.append(pillHost);
+  // An always-visible way in, so the panel never depends on a shortcut.
+  const pill = mountPill('Design', () => host.setOpen(true));
   host.onToggled((state) => setOpen(state));
   setTab('tune');
   host.send('load', {});
-  // Out: the toolbar hides its canvas the moment it closes, so the first close
+  // Out: the host hides its canvas the moment it closes, so the first close
   // request plays the animation and the second, after it, is let through.
   return {
     allowClose: () => {
