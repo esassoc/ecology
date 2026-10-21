@@ -1,75 +1,109 @@
 # @esa/handoff
 
-**Dev-mode handoff export for Ecology prototypes.** Point it at a rendered
-prototype URL and it produces a self-contained, framework-free bundle a developer
-(or an AI agent) can re-implement on any stack — plus a live "dev mode" overlay,
-the way Figma's Dev Mode inspects a design.
+Turns a spoke's prototypes into bundles a coding agent in another codebase can
+read from one link: what each section is for, a picture of it, its markup and
+styles at a size a web fetch can take, its tokens, the components to reuse, and
+the data behind it.
 
-An Astro prototype already compiles to plain HTML/CSS — the hard part of a handoff
-isn't *generating* it, it's making it **legible and faithful**. This tool does the
-three things the bundler throws away:
+One pipeline for every spoke. A prototype with an authored spec
+(`src/data/handoff/<slug>.mjs`) is captured section by section with its guidance;
+one without gets sections derived from its page structure and goes through the
+same capture.
 
-1. **De-scopes** — strips Astro's `data-astro-cid-*` from both selectors and
-   markup, restoring author-intent class selectors (`.cbf-hero { … }`).
-2. **Tree-shakes + flattens** — ships only the CSS rules the page actually matched
-   (via Chrome DevTools Protocol coverage), and replaces the primitive→semantic
-   token ramps with one flat block defining each used token at its resolved value.
-3. **Re-attaches semantics** — a token contract (name → value → tier) and a
-   component manifest (which `esa-*`/`cbf-*` blocks compose the page + their source).
+## Commands
 
-## Usage
+Run from the spoke root.
 
 ```bash
-# 1. serve the prototype as it will ship (production output, no dev chrome)
-npm run build && npm run preview        # serves on :4321
-
-# 2. export a route
-npx handoff http://localhost:4321/ --name home --out public/handoff
+npx handoff all                     # every prototype in the registry
+npx handoff all actions help        # only these slugs
+npx handoff all --changed           # only routes whose inputs changed since the last run
+npx handoff all --skip-build        # reuse dist/ instead of running astro build
+npx handoff all --port 4398         # capture on another port
+npx handoff check                   # the guidance gate, every route
+npx handoff check --changed --base <ref>   # only routes touched since <ref>
+npx handoff <url> --name <dir>      # one page that is already being served
 ```
 
-Options: `--name` (bundle subfolder), `--out` (output root), `--source` (spoke
-component dir, default `./src/components`), `--public` (asset dir to copy from),
-`--ecology` / `--tokens` (hub package paths, auto-resolved when run from a spoke).
+`all` builds with `NODE_ENV=production`, serves `astro preview`, and captures
+in one shared Chromium, several routes at a time.
 
-> Capture from `preview`, not `dev` — the dev server injects its toolbar and
-> unminified CSS, which would pollute the bundle.
+## Spoke config: `handoff.config.mjs`
 
-## Output (`<out>/<name>/`)
+```js
+export default {
+  name: 'Beacon',
+  site: 'https://esassoc.github.io',   // every link in a spec is the deployed URL
+  base: '/beacon-design/',             // the production base
+  registry: 'src/data/prototypes.ts',  // slug / title / description / route rows
+  specs: 'src/data/handoff',
+  out: 'public/handoff',
+  components: 'src/components',
+  baseline: 'scripts/handoff-guidance-baseline.mjs', // slugs excused from the gate
+  port: 4399,
+  spokePrefix: 'bcn',                  // the spoke's own component classes
+  viewports: { desktop: { width: 1280, height: 900 }, phone: { width: 390, height: 844 } },
+  budget: 48000,                       // bytes per spec file before it splits
+  target: {                            // optional: what the receiving app already has
+    name: 'the Beacon app',
+    map: { 'esa-badge': 'ui-badge', 'esa-button': 'ui-button' },
+  },
+};
+```
+
+## Authored spec: `src/data/handoff/<slug>.mjs`
+
+```js
+export default {
+  data: {                                  // optional, printed as a Data section
+    fixture: 'src/data/action-tracking.ts',
+    store: 'src/lib/action-board.ts',
+    fields: { dueDate: 'ISO, or null when unscheduled' },
+    enums: { category: ['NotStarted', 'InProgress', 'Completed'] },
+    notes: ['category is prod’s ActionImplementationStatusDtoEnum.'],
+  },
+  sections: [
+    {
+      label: 'Board',
+      selector: '.bcn-aboard',
+      apply: [{ click: '[data-open]' }],  // optional recipe to reach a state
+      intent: '…', decisions: ['…'], gotchas: ['…'], acceptance: ['…'],
+      data: { … },                         // optional, overrides the page-level data
+    },
+  ],
+};
+```
+
+`apply` ops: `click`, `fill: [sel, text]`, `clear`, `clickText: [sel, name, role?]`,
+`key`. The same recipe drives the live inspector.
+
+## Output (`<out>/`)
 
 | File | What |
 |---|---|
-| `index.html` | De-scoped, standalone page (trimmed CSS inlined, assets copied). Opens anywhere. |
-| `styles.css` | Only the used rules, plain selectors, flat token block on top. |
-| `tokens.md` | Token contract grouped by tier. |
-| `components.md` | Component blocks + source paths, hub vs spoke. |
-| `manifest.json` | Per-section data (formatted code + tier-classified tokens) for the inspector. |
+| `index.md` | Every prototype: sections with a one-line intent, links, sizes. |
+| `<route>/README.md` | One prototype: its sections, specs and screenshots. |
+| `<route>/claude/<section>.md` | The section spec: picture, guidance, components, data, markup, styles, tokens. |
+| `<route>/claude/<section>.{desktop,phone}.png` | The section at both widths. |
+| `<route>/claude/<section>.markup[-n].md` | Markup and styles, when the spec would pass the budget. |
+| `<route>/manifest.json` | What the runtime inspector reads. |
 
-## Live inspector (Astro dev toolbar)
+How a spec stays readable: runs of four or more like siblings keep their first
+two (and each further class variant) and become one comment, `<script>` and
+`<style>` inside a section are dropped with a size note, long attribute values
+are cut, and whatever is still over budget splits into parts.
 
-The inspector is a first-class **Astro dev-toolbar app** — no `?dev` flag, no
-injected script. Add the integration to your spoke:
+Styles are selected deterministically: every rule of every stylesheet, kept when
+its selector names a class in the section on a word boundary, `@media` wrappers
+preserved. Chrome's coverage pass is gone; it varied with paint timing.
 
-```js
-// astro.config.mjs
-import handoff from '@esa/handoff/integration';
+## Runtime inspector
 
-export default defineConfig({
-  integrations: [handoff({ manifest: '/handoff/home/manifest.json' })],
-});
-```
-
-A **Dev Handoff** icon then appears in Astro's dev toolbar (dev only). Toggle it,
-then pick a section — by chip or by clicking the page — to inspect its
-syntax-highlighted HTML, applied CSS, and tier-grouped tokens. The inspector only
-reads `manifest.json`; the export engine is the single source of truth, so what you
-see is exactly what a developer receives. Re-run `npm run handoff` after changing
-the prototype to refresh it.
+`HandoffInspector.astro`, mounted in a spoke's BaseLayout, wakes on routes that
+have a bundle and reads `manifest.json`.
 
 ## Notes
 
-- Build-time only. Its `playwright` + `prettier` deps never reach a spoke's runtime
-  (that's why this is a separate package from `@esa/ecology`, which stays dep-free).
-- The per-section CSS split and component-source resolution are best-effort
-  (class-membership / filename match); BEM sub-blocks defined inside another
-  component file (e.g. `cbf-stat-tile` inside `cbf-stat-grid.astro`) may show no
-  source. The markup and `styles.css` are always complete and authoritative.
+- Build-time only. `playwright` and `prettier` never reach a spoke's runtime.
+- Change detection hashes each route's page, spec and local imports, plus global
+  styles, layouts, the token sheet and this package's source.
