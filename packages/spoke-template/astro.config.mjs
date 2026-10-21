@@ -14,6 +14,9 @@ export default defineConfig({
   site: 'https://esassoc.github.io',
   base,
   server: { port: 4330 },
+  // Off: the Design pill (dev) and the Handoff pill (every build) are the way
+  // into Ecology's tools, and the toolbar sits over the prototype.
+  devToolbar: { enabled: false },
   // Dev-only token tuning panel and click-to-comment (@esa/design-layer);
   // absent from builds. Controls: design-layer.config.mjs, optional.
   integrations: [designLayer()],

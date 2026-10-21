@@ -208,6 +208,22 @@ if (isSpoke) {
   }
 }
 
+// --- Astro dev toolbar ---------------------------------------------------------
+// Ecology's dev tools (the design layer's Design pill, the Handoff pill) carry
+// their own way in, and the toolbar's bar along the bottom sits over the
+// prototype. Spokes run with it off: devToolbar: { enabled: false }.
+if (isSpoke) {
+  const cfgFile = ['astro.config.mjs', 'astro.config.ts', 'astro.config.js'].map((f) => path.join(CWD, f)).find((f) => existsSync(f));
+  if (cfgFile) {
+    const src = readFileSync(cfgFile, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    warn(
+      'Astro dev toolbar is off',
+      /devToolbar\s*:\s*\{[^}]*enabled\s*:\s*false/.test(src),
+      `${path.basename(cfgFile)} leaves the dev toolbar on. Add \`devToolbar: { enabled: false }\` to defineConfig; the Design and Handoff pills replace it.`,
+    );
+  }
+}
+
 // --- Deprecated @esa/tokens names ---------------------------------------------
 // A rename in the hub reaches this spoke through the `file:` symlink with no
 // publish step to absorb it. Deprecated aliases keep the old names resolving, so

@@ -10,3 +10,4 @@ export {
   type NumberFieldOptions, type ColorFieldOptions, type PaletteOption, type Prefix, type PickIntent, type PickContext,
 } from './controls';
 export { registerPanelFont } from './fonts';
+export { DOCK_CSS, WIDTH, INSET, MOTION, isToggleKey, mountPill } from './chrome';

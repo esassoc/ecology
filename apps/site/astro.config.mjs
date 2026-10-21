@@ -80,6 +80,8 @@ const base = process.env.NODE_ENV === 'production' ? '/ecology/' : '/';
 export default defineConfig({
   site: 'https://esassoc.github.io',
   base,
+  // Off, as in every spoke: it sits over the page, and nothing here needs it.
+  devToolbar: { enabled: false },
   /*
    * /patterns/app-shell was a pattern page that predated esa-app-shell and hand-rolled
    * the same chrome from esa-app-bar + a script-wired esa-sidebar-nav. Once the shell

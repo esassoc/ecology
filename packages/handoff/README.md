@@ -75,7 +75,7 @@ export default {
 ```
 
 `apply` ops: `click`, `fill: [sel, text]`, `clear`, `clickText: [sel, name, role?]`,
-`key`. The same recipe drives the live inspector.
+`key`. The same recipe drives the live page when a section is picked in the Handoff panel.
 
 ## Output (`<out>/`)
 
@@ -86,7 +86,7 @@ export default {
 | `<route>/claude/<section>.md` | The section spec: picture, guidance, components, data, markup, styles, tokens. |
 | `<route>/claude/<section>.{desktop,phone}.png` | The section at both widths. |
 | `<route>/claude/<section>.markup[-n].md` | Markup and styles, when the spec would pass the budget. |
-| `<route>/manifest.json` | What the runtime inspector reads. |
+| `<route>/manifest.json` | What the Handoff panel reads. |
 
 How a spec stays readable: runs of four or more like siblings keep their first
 two (and each further class variant) and become one comment, `<script>` and
@@ -97,10 +97,19 @@ Styles are selected deterministically: every rule of every stylesheet, kept when
 its selector names a class in the section on a word boundary, `@media` wrappers
 preserved. Chrome's coverage pass is gone; it varied with paint timing.
 
-## Runtime inspector
+## The Handoff panel
 
-`HandoffInspector.astro`, mounted in a spoke's BaseLayout, wakes on routes that
-have a bundle and reads `manifest.json`.
+`HandoffInspector.astro`, mounted in a spoke's BaseLayout, puts a **Handoff**
+pill at the bottom right of every route that has a bundle (Control+Option+D
+also opens it). The panel lists the route's sections; picking one outlines it
+on the page and replays its `apply` recipe, and a click inside a section on the
+page picks it. Each section shows its guidance, components, data and tokens,
+links its spec, screenshots and parts, and **Copy for Claude** copies the
+prototype's README link and the section's spec link.
+
+The pane is the design layer's (`@esa/design-layer/handoff`): under `astro dev`
+with the design layer on, the same pane is its **Handoff** tab and this one
+stays out of the way.
 
 ## Notes
 

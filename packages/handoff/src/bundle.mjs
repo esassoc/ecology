@@ -81,6 +81,8 @@ export function writeBundle(cfg, b) {
     description: b.description,
     dir: b.dir,
     url: b.url,
+    // The deployed bundle, so a link copied from a dev page still points an agent somewhere it can read.
+    baseUrl: urlIn(''),
     theme: b.theme,
     generatedFrom: b.generatedFrom,
     data: b.data,
