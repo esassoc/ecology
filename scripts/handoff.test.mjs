@@ -95,14 +95,18 @@ test('components: hub vs spoke, page-local classes left out, target mapped', () 
   assert.equal(blockRoot('esa-app-bar--brand'), 'esa-app-bar');
 });
 
-test('front door: index lists each prototype with one-line intents and sizes', () => {
-  const md = renderIndex('Beacon', [{
+test('front door: index lists each prototype, compact when the full form passes the budget', () => {
+  const bundles = [{
     dir: 'prototypes-actions', title: 'Actions', url: 'https://x/prototypes/actions/', generatedFrom: 'spec',
     sections: [{ label: 'Board', claudePath: 'claude/board.md', bytes: 12_288, guide: { intent: 'The Kanban. More detail.' } }],
-  }], { urlFor: (p) => `https://x/handoff/${p}` });
-  assert.match(md, /^# Beacon handoff/);
-  assert.match(md, /\[README\]\(https:\/\/x\/handoff\/prototypes-actions\/README\.md\)/);
-  assert.match(md, /- \[Board\]\(https:\/\/x\/handoff\/prototypes-actions\/claude\/board\.md\): The Kanban\. \(12 KB\)/);
+  }];
+  const md = renderIndex('Beacon', bundles, { baseUrl: 'https://x/handoff/' });
+  assert.match(md, /^# Beacon handoff\n\nLinks are relative to https:\/\/x\/handoff\//);
+  assert.match(md, /\[README\]\(prototypes-actions\/README\.md\)/);
+  assert.match(md, /- \[Board\]\(prototypes-actions\/claude\/board\.md\): The Kanban\. \(12 KB\)/);
+  const compact = renderIndex('Beacon', bundles, { baseUrl: 'https://x/handoff/', budget: 100 });
+  assert.match(compact, /^Board$/m);
+  assert.doesNotMatch(compact, /The Kanban/);
   assert.equal(oneLine('One. Two.'), 'One.');
   assert.deepEqual(normaliseData('src/a.ts').fixtures, ['src/a.ts']);
 });

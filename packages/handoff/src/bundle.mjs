@@ -108,7 +108,7 @@ export function writeIndex(cfg, targets, bundleSlug) {
       /* unreadable manifest: leave it out rather than fail the run */
     }
   }
-  const text = renderIndex(cfg.name, bundles, { urlFor: (rel) => deployedUrl(cfg, `${served}/${rel}`) });
+  const text = renderIndex(cfg.name, bundles, { baseUrl: deployedUrl(cfg, `${served}/`), budget: cfg.budget });
   writeFileSync(join(cfg.root, cfg.out, 'index.md'), text);
   return { count: bundles.length, bytes: Buffer.byteLength(text) };
 }

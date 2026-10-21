@@ -177,23 +177,29 @@ export function renderReadme(m, { urlFor }) {
   return lines.join('\n');
 }
 
-/** handoff/index.md: every prototype the spoke has a bundle for. */
-export function renderIndex(name, bundles, { urlFor }) {
-  const lines = [`# ${name ? `${name} ` : ''}handoff`, ''];
-  for (const m of bundles) {
-    const total = m.sections.reduce((n, s) => n + (s.bytes || 0), 0);
-    const kind = m.generatedFrom === 'spec' ? '' : ', no authored guidance';
-    lines.push(
-      `## ${m.title}`,
-      '',
-      `[README](${urlFor(`${m.dir}/README.md`)}) · [prototype](${m.url}) · ${m.sections.length} sections, ${kb(total)}${kind}`,
-      ''
-    );
-    for (const s of m.sections) {
-      const intent = oneLine(s.guide?.intent);
-      lines.push(`- [${s.label}](${urlFor(`${m.dir}/${s.claudePath}`)})${intent ? `: ${intent}` : ''} (${kb(s.bytes)})`);
+/**
+ * handoff/index.md: every prototype the spoke has a bundle for. Links are relative
+ * to the index, with the absolute base stated once. When one-line intents for every
+ * section would pass the budget, sections are listed by name only and their links
+ * and intents stay in each prototype's README.
+ */
+export function renderIndex(name, bundles, { baseUrl, budget = Infinity }) {
+  const render = (full) => {
+    const lines = [`# ${name ? `${name} ` : ''}handoff`, '', `Links are relative to ${baseUrl}`, ''];
+    for (const m of bundles) {
+      const total = m.sections.reduce((n, s) => n + (s.bytes || 0), 0);
+      const kind = m.generatedFrom === 'spec' ? '' : ', no authored guidance';
+      lines.push(`## ${m.title}`, '', `[README](${m.dir}/README.md) · [prototype](${m.url}) · ${m.sections.length} sections, ${kb(total)}${kind}`, '');
+      if (full)
+        for (const s of m.sections) {
+          const intent = oneLine(s.guide?.intent);
+          lines.push(`- [${s.label}](${m.dir}/${s.claudePath})${intent ? `: ${intent}` : ''} (${kb(s.bytes)})`);
+        }
+      else lines.push(m.sections.map((s) => s.label).join(' · '));
+      lines.push('');
     }
-    lines.push('');
-  }
-  return lines.join('\n');
+    return lines.join('\n');
+  };
+  const full = render(true);
+  return full.length <= budget ? full : render(false);
 }

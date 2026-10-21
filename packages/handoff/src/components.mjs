@@ -35,15 +35,16 @@ async function walk(dir, hits = []) {
 export async function indexComponents(roots, prefixes) {
   const pattern = new RegExp(`\\.((?:${prefixes.join('|')})-[a-z0-9-]+?)(?:__|--|[\\s{,:.\\[>+~)])`, 'g');
   const index = new Map();
-  for (const { dir, rel } of roots)
-    for (const file of (await walk(dir)).sort()) {
-      const name = file.split('/').pop().replace(/\.(astro|ts)$/, '');
-      const path = relative(rel, file);
-      // A hub file is named for its block (esa-badge.astro); claim that first.
-      if (!index.has(name) && prefixes.some((p) => name.startsWith(`${p}-`))) index.set(name, path);
-      const src = await readFile(file, 'utf8');
-      for (const m of src.matchAll(pattern)) if (!index.has(m[1])) index.set(m[1], path);
-    }
+  const files = [];
+  for (const { dir, rel } of roots) for (const file of (await walk(dir)).sort()) files.push({ file, path: relative(rel, file) });
+  // A file named for its block (esa-badge.astro) owns it, whatever other files
+  // style it: esa-collapsible styles `.esa-icon`, and sorts first.
+  for (const { file, path } of files) {
+    const name = file.split('/').pop().replace(/\.(astro|ts)$/, '');
+    if (!index.has(name) && prefixes.some((p) => name.startsWith(`${p}-`))) index.set(name, path);
+  }
+  for (const { file, path } of files)
+    for (const m of (await readFile(file, 'utf8')).matchAll(pattern)) if (!index.has(m[1])) index.set(m[1], path);
   return index;
 }
 
