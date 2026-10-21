@@ -8,6 +8,10 @@ import { renderSpec, renderIndex, renderReadme, chunkLines, oneLine, normaliseDa
 import { DERIVE_SECTIONS } from '../packages/handoff/src/read-section.mjs';
 import { componentsOf, blockRoot } from '../packages/handoff/src/components.mjs';
 import { deployedUrl } from '../packages/handoff/src/config.mjs';
+import { writeBundle } from '../packages/handoff/src/bundle.mjs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('registry: pages pair with their own slug, groups are skipped, escapes survive', () => {
   const src = `
@@ -158,5 +162,26 @@ test('derived labels: never a bare tag', () => {
     assert.deepEqual(DERIVE_SECTIONS({ prefixes: ['cbf'] }).map((s) => s.label), ['Statement of work', 'Funding summary', 'Section 3']);
   } finally {
     delete globalThis.document;
+  }
+});
+
+test('storage: a gate flag seeds capture and reaches no bundle file', () => {
+  const root = mkdtempSync(join(tmpdir(), 'handoff-'));
+  try {
+    const secret = 'gate-flag-7c1e';
+    const storage = { session: { [secret]: secret } };
+    const cfg = { root, out: 'public/handoff', site: 'https://x.test', base: '/s/', budget: 48_000 };
+    // As if a careless spread had carried the spec's storage onto the bundle and a section.
+    writeBundle(cfg, {
+      slug: 'gated', dir: 'gated', title: 'Gated', url: 'https://x.test/s/gated/', theme: null,
+      generatedFrom: 'spec', storage,
+      sections: [{ label: 'Intro', selector: '.intro', html: '<p class="intro">Hi</p>', css: '', storage, guide: { intent: 'Hi.' } }],
+    });
+    const dir = join(root, 'public/handoff/gated');
+    const files = [dir, join(dir, 'claude')].flatMap((d) => readdirSync(d, { withFileTypes: true }).filter((f) => f.isFile()).map((f) => join(d, f.name)));
+    assert.ok(files.length >= 3);
+    for (const f of files) assert.ok(!readFileSync(f, 'utf8').includes(secret), `${f} carries the storage seed`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 });
