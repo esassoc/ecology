@@ -141,6 +141,7 @@ export async function runAll(cfg, argv) {
       for (const s of sections) {
         const own = byLabel.get(s.label) || {};
         s.apply = own.apply;
+        s.js = own.js;
         s.guide = guideOf(own);
         s.data = mergeData(spec?.data, own.data) ?? undefined;
         s.components = componentsOf(s, { spokePrefix: cfg.spokePrefix, index: componentIndex, target: cfg.target });

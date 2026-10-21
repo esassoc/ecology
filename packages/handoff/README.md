@@ -69,6 +69,7 @@ export default {
       apply: [{ click: '[data-open]' }],  // optional recipe to reach a state
       intent: '…', decisions: ['…'], gotchas: ['…'], acceptance: ['…'],
       data: { … },                         // optional, overrides the page-level data
+      js: ['src/lib/board.client.ts'],     // optional, the files behind its behaviour
     },
   ],
 };
