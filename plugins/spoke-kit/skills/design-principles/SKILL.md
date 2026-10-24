@@ -291,10 +291,37 @@ gaps (footer actions, sibling controls).
 - **Fewer clicks.** One-pass review of structured data against the source beats per-item approvals.
 
 ### Prototypes
-- **Real components, never lookalikes.** Build with the real beacon-design components, never CSS imitations.
+- **Real components, never lookalikes.** Build from the ecology system's real components, never CSS imitations, and look for an existing primitive before hand-rolling one. Beacon's components are not the default (narrowed 2026-10-23: "I don't necessarily want you to use the beacon components. I want you to use the ecology system and design nice things").
 - **Real prompts, real feasibility.** Mock data comes from Beacon's real prompts and logic; prototypes reflect what production can build.
 - **The prototype carries the story.** No explainer pages about the prototype.
 - **Screens map to real things.** Screens map to tangible things users already know (documents, commitments).
+
+## Andy's rules (taste harvest 2026-10-23, kept by Andy 2026-10-24)
+
+From his sessions 2026-10-17 to 2026-10-23; each one Andy answered keep. Two are conditional in his own words and say so.
+
+### Data and Visualization
+- **Say what it is and as of when.** A data page opens with what it shows and its as-of date before anything else.
+- **Headline numbers get a plain label and a small chart.** Not a bare big number, not a clever label.
+- **A visualization encodes data.** An empty track or decorative bar is not a chart.
+- **Status is a dot or an icon.** Not red text, and never a label that looks like a button.
+- **Direct manipulation over number grids.** Sliders with named stops, drag handles and row tools beat a grid of number inputs.
+
+### Layout and Hierarchy
+- **Each section has its own shape.** Give sections distinct shape and type scale, and name the page subject large ("The eye needs places to go and rest and find"). Andy: "BIG ONE".
+- **A growing page group earns a rail submenu.** Consider it when a group keeps growing, each page with its own h1. Andy: "It depends. But we should consider."
+- **Fewer layers.** Cut chrome, borders and padding layers; one way to navigate per page.
+- **Dense rows.** No big numbers in rows; footer actions sit on the right.
+- **Dense grids may scroll sideways.** A min-width with horizontal scroll is allowed for dense grids. Andy: "They can, but not always."
+
+### Detail and Polish
+- **Bar icons are matched.** Same size, vertical centering measured, icon-only with dark tooltips.
+- **Cut text that restates what's shown.** Count summaries, headlines and captions that repeat the UI go.
+- **Polish is attention.** Scale, icon and color get deliberate care (Linear is the reference); surfaces can carry a gradient, a lit edge and a shadow.
+- **Motion with character, kept crisp.** Hairline rings, smooth reveals, a random stagger.
+
+### Process
+- **Options when the form is open.** When the shape isn't settled, show three options or several specimens, not one.
 
 ---
 
