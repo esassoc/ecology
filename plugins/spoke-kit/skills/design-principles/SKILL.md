@@ -298,7 +298,7 @@ gaps (footer actions, sibling controls).
 
 ## Andy's rules (taste harvest 2026-10-23, kept by Andy 2026-10-24)
 
-From his sessions 2026-10-17 to 2026-10-23; each one Andy answered keep. Two are conditional in his own words and say so.
+From his sessions 2026-10-17 to 2026-10-23; each one Andy answered keep. Two are conditional in his own words and say so; the rail submenu one was settled on 2026-10-30.
 
 ### Data and Visualization
 - **Say what it is and as of when.** A data page opens with what it shows and its as-of date before anything else.
@@ -309,7 +309,7 @@ From his sessions 2026-10-17 to 2026-10-23; each one Andy answered keep. Two are
 
 ### Layout and Hierarchy
 - **Each section has its own shape.** Give sections distinct shape and type scale, and name the page subject large ("The eye needs places to go and rest and find"). Andy: "BIG ONE".
-- **A growing page group earns a rail submenu.** Consider it when a group keeps growing, each page with its own h1. Andy: "It depends. But we should consider."
+- **A growing page group earns a rail submenu.** Consider it when a group keeps growing, each page with its own h1. Andy: "It depends. But we should consider." Settled 2026-10-30: a section with sub-pages always gets one (below).
 - **Fewer layers.** Cut chrome, borders and padding layers; one way to navigate per page.
 - **Dense rows.** No big numbers in rows; footer actions sit on the right.
 - **Dense grids may scroll sideways.** A min-width with horizontal scroll is allowed for dense grids. Andy: "They can, but not always."
@@ -322,6 +322,32 @@ From his sessions 2026-10-17 to 2026-10-23; each one Andy answered keep. Two are
 
 ### Process
 - **Options when the form is open.** When the shape isn't settled, show three options or several specimens, not one.
+
+## Andy's rules (taste harvest 2026-10-30, kept by Andy 2026-10-30)
+
+From his sessions 2026-10-24 to 2026-10-30; each one Andy answered keep, with a scope where he gave one. WordPress and Radial rules apply only there. "Default" rules are his "Prob" answers: follow them unless the case argues otherwise. "Always" and "Never" rules have no exceptions.
+
+### Editing and Content
+- **Editable values look editable.** Flat text that is secretly a field is deceiving ("it appears like flat text in the editor and that's deceiving").
+- **Test with several items.** Fill repeated entries with realistic multi-item data; a popover fits its content without scrolling, and a wide popover with one line per item is the pattern for repeated entries.
+- **No internal field names or default empty messages.** Nothing like "Relationship Label no results found" reaches the UI.
+- **Default: name ours better, don't rename theirs.** Don't rename a platform's own menus to make room for ours; give our thing a better name instead ("I don't love that we forced WP tools to be renamed").
+
+### WordPress editors
+- **Edit in place, never the sidebar.** Fields are edited on the editing surface with popovers; never send the user to the sidebar to fill one in ("Strongly dislike this sidebar paradigm").
+- **Every editor matches its front end.** Each content type's editor is first-class and keeps the layout's integrity, and the empty or new state is designed so starting from scratch is obvious.
+
+### Layout and Navigation
+- **Always: sub-pages get a collapsible rail menu.** A section with sub-pages is a collapsible rail menu with indented sublinks. This settles the 2026-10-23 "consider it" rule above.
+- **Default: time-grid columns get a min and a max width.** A week column is never 50% of the grid or whatever space is left ("that thing looks stupidly huge").
+- **Timelines run past the end date.** Keep showing the calendar after the end: ghosted, unusable weeks behind an end line, not white space.
+
+### Radial
+- **Lists full width, person pages composable.** List and table pages (Projects, Team) are full width. A person page is composable like Workspace, with a stacked left sidebar of name, photo and metadata.
+
+### Process and Data
+- **A concept round varies the concept.** Options differ in concept, not along one simple axis like density.
+- **Never put real client financials in a repo.** Real financials never go to GitHub; show them in a private artifact with the data kept out of the repo.
 
 ---
 
