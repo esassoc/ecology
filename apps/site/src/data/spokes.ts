@@ -52,4 +52,12 @@ export const spokes: Spoke[] = [
     repo: 'https://github.com/esassoc/firma2-design',
     site: 'https://esassoc.github.io/firma2-design/',
   },
+  // hub-edit-approved: Andy Lovseth, 2026-11-24, in the due-diligence-design session
+  {
+    name: 'Due Diligence',
+    slug: 'due-diligence',
+    purpose: 'Clickable prototype of the Due Diligence site-screening app, with a handoff page for its developer',
+    repo: 'https://github.com/esassoc/due-diligence-design',
+    site: 'https://esassoc.github.io/due-diligence-design/',
+  },
 ];
